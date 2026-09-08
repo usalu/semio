@@ -1,0 +1,79 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/obj/3.0/geometry/mutation/insert-face.json",
+  "title": "InsertFace",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "index",
+    "face"
+  ],
+  "properties": {
+    "index": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "face": {
+      "$ref": "#/$defs/ObjFace"
+    },
+    "mutation": {
+      "const": "insertFace",
+      "description": "Aggregate discriminator spliced in by ObjMutation; absent when the payload stands alone."
+    }
+  },
+  "$defs": {
+    "ObjFace": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "vertices"
+      ],
+      "properties": {
+        "vertices": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ObjFaceVertex"
+          }
+        }
+      }
+    },
+    "ObjFaceVertex": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "vertex"
+      ],
+      "properties": {
+        "vertex": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "texcoord": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4294967295
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "normal": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4294967295
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    }
+  }
+}

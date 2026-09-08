@@ -1,0 +1,16 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/pdf/1.4/base/mutation/remove-page.json",
+  "title": "RemovePage",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "index"
+  ],
+  "properties": {
+    "index": {
+      "type": "integer",
+      "minimum": 0
+    }
+  }
+}

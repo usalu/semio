@@ -76,7 +76,7 @@ pub mod compiler {
         let deck_json = dsl::os_pack::json::to_string_pretty(&deck_value);
         fs::write(output_dir.join("deck.json"), &deck_json).map_err(|error| PresentationCompileError::new(error.to_string()))?;
         let index_snapshot = index_html_snapshot(&deck_json);
-        let index_text = semio_s_plugin_stdio::artifacts::html::standards::v5::subsets::any::schema::snapshot::write_html_document(&index_snapshot);
+        let index_text = semio_s_artifact_stdio_html::standards::v5::subsets::any::schema::snapshot::write_html_document(&index_snapshot);
         fs::write(output_dir.join("🌐️.html"), index_text).map_err(|error| PresentationCompileError::new(error.to_string()))?;
         fs::write(output_dir.join("styles.css"), styles_css()).map_err(|error| PresentationCompileError::new(error.to_string()))?;
         fs::write(output_dir.join("manifest.json"), dsl::os_pack::json::to_string_pretty(&site_manifest(deck))).map_err(|error| PresentationCompileError::new(error.to_string()))?;
@@ -117,8 +117,8 @@ pub mod compiler {
     /// content, so this is MORE spec-correct than the deleted emitter's `&`/`<` string-replace,
     /// which would have literally corrupted any deck JSON string containing those characters once
     /// a real browser DOM read it back via `textContent`).
-    fn index_html_snapshot(deck_json: &str) -> semio_s_plugin_stdio::artifacts::html::standards::v5::subsets::any::schema::snapshot::HtmlSnapshot {
-        use semio_s_plugin_stdio::artifacts::html::standards::v5::subsets::any::schema::snapshot::{HtmlAttr, HtmlNode, HtmlSnapshot, RawTextKind, STDIO_HTML_DOCUMENT_SCHEMA};
+    fn index_html_snapshot(deck_json: &str) -> semio_s_artifact_stdio_html::standards::v5::subsets::any::schema::snapshot::HtmlSnapshot {
+        use semio_s_artifact_stdio_html::standards::v5::subsets::any::schema::snapshot::{HtmlAttr, HtmlNode, HtmlSnapshot, RawTextKind, STDIO_HTML_DOCUMENT_SCHEMA};
 
         fn el(name: &str, attrs: Vec<HtmlAttr>, children: Vec<HtmlNode>) -> HtmlNode {
             HtmlNode::Element { name: name.into(), attributes: attrs, children }

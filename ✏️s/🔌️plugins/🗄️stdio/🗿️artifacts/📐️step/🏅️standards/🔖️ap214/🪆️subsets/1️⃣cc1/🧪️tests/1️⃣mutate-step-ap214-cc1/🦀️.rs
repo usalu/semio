@@ -121,10 +121,10 @@ fn identity_round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::{class_claim, mutable_input, no_mutation, CLASS};
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_plugin_stdio::artifacts::step::engine::ladder::{ProductIdentity, ShapeRepresentationRow};
-    use semio_s_plugin_stdio::artifacts::step::engine::part21::{parse_part21, write_part21};
-    use semio_s_plugin_stdio::artifacts::step::standards::v_ap214::subsets::cc1::schema::mutations::{apply_step_cc1_mutation_checked, inverse_step_cc1_mutation, StepCc1Mutation};
-    use semio_s_plugin_stdio::artifacts::step::StepSnapshot;
+    use crate::engine::ladder::{ProductIdentity, ShapeRepresentationRow};
+    use crate::engine::part21::{parse_part21, write_part21};
+    use crate::standards::v_ap214::subsets::cc1::schema::mutations::{apply_step_cc1_mutation_checked, inverse_step_cc1_mutation, StepCc1Mutation};
+    use crate::StepSnapshot;
     use semio_s_plugin_stdio_test_oracle::artifacts::step::standards::v_ap214::subsets::cc1::project_step_ap214_cc1;
     use semio_s_plugin_stdio_test_oracle::law::{inverse_restores, reparsed_not_copied, round_trip_preserves};
 
@@ -203,28 +203,28 @@ mod subject {
                 if schemas.is_empty() {
                     return Err("set-snapshot requires a non-empty fileSchema field".to_string());
                 }
-                semio_s_plugin_stdio::artifacts::step::engine::ladder::set_file_schema_names(&mut document, &schemas);
+                crate::engine::ladder::set_file_schema_names(&mut document, &schemas);
                 if let Some(identity) = params.get("productIdentity").filter(|value| !matches!(value, Json::Null)) {
-                    semio_s_plugin_stdio::artifacts::step::engine::ladder::set_product_identity(&mut document, Some(&identity_from(identity)?));
+                    crate::engine::ladder::set_product_identity(&mut document, Some(&identity_from(identity)?));
                 }
                 snapshot = StepSnapshot::from_part21_document(&document);
                 let _ = base;
-                StepCc1Mutation::SetSnapshot(semio_s_plugin_stdio::artifacts::step::standards::v_ap214::subsets::cc1::schema::mutations::set_snapshot::SetSnapshot { snapshot })
+                StepCc1Mutation::SetSnapshot(crate::standards::v_ap214::subsets::cc1::schema::mutations::set_snapshot::SetSnapshot { snapshot })
             }
             "set-file-schema" => {
                 let schemas = str_array(&params, "schemas");
                 if schemas.is_empty() {
                     return Err(format!("{CLASS} requires FILE_SCHEMA to declare a schema"));
                 }
-                StepCc1Mutation::SetFileSchema(semio_s_plugin_stdio::artifacts::step::standards::v_ap214::subsets::cc1::schema::mutations::set_file_schema::SetFileSchema { schemas })
+                StepCc1Mutation::SetFileSchema(crate::standards::v_ap214::subsets::cc1::schema::mutations::set_file_schema::SetFileSchema { schemas })
             }
-            "set-product-identity" => StepCc1Mutation::SetProductIdentity(semio_s_plugin_stdio::artifacts::step::standards::v_ap214::subsets::cc1::schema::mutations::set_product_identity::SetProductIdentity {
+            "set-product-identity" => StepCc1Mutation::SetProductIdentity(crate::standards::v_ap214::subsets::cc1::schema::mutations::set_product_identity::SetProductIdentity {
                 identity: match params.get("identity").filter(|value| !matches!(value, Json::Null)) {
                     Some(value) => Some(identity_from(value)?),
                     None => None,
                 },
             }),
-            "remove-shape-representation" => StepCc1Mutation::RemoveShapeRepresentation(semio_s_plugin_stdio::artifacts::step::standards::v_ap214::subsets::cc1::schema::mutations::remove_shape_representation::RemoveShapeRepresentation { id: u64_field(&params, "id")? }),
+            "remove-shape-representation" => StepCc1Mutation::RemoveShapeRepresentation(crate::standards::v_ap214::subsets::cc1::schema::mutations::remove_shape_representation::RemoveShapeRepresentation { id: u64_field(&params, "id")? }),
             other => return Err(format!("unrecognised mutation kind {other:?}")),
         })
     }

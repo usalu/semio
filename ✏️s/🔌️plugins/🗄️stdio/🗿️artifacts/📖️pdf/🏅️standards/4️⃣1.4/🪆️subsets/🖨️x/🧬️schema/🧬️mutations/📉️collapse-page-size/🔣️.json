@@ -5,7 +5,7 @@
   "displayName": "Collapse Page Size",
   "emoji": "📉️",
   "aggregateVariant": "CollapsePageSize",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

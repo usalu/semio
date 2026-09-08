@@ -7,6 +7,6 @@ use crate::artifacts::din16798::Din16798Snapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(_payload: &ChangeHumidificationProvidedKgH, base: &Din16798Snapshot) -> Vec<Din16798Mutation> {
-    vec![Din16798Mutation::ChangeHumidificationProvidedKgH(ChangeHumidificationProvidedKgH { new_humidification_provided_kg_h: base.humidification_provided_kg_h.clone() })]
+    vec![Din16798Mutation::ChangeHumidificationProvidedKgH(ChangeHumidificationProvidedKgH { new_humidification_provided_kg_h: base.humidification_provided_kg_h })]
 }
 //#endregion 🔖️Inverse

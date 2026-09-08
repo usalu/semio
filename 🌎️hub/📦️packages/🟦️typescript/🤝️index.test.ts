@@ -32,15 +32,47 @@ import { parseInviteCapabilityV1, parseSessionCapabilityV1, parseShareCapability
 const HUB_E2E = process.env.HUB_E2E === "1";
 const TEST_TIMEOUT_MS = 240_000;
 
+/** 🧬️ Binds one scope-owned draft-07 module and resolves its `$defs` exports by id. */
+function hubSchemaExport(root: string, modulePath: string): (exportId: string) => ReturnType<Ajv["compile"]> {
+  const document = JSON.parse(readFileSync(join(root, modulePath), "utf8")) as { $schema: string; $id: string };
+  expect(document.$schema, modulePath).toBe("http://json-schema.org/draft-07/schema#");
+  expect(document.$id.startsWith("https://semio.tech/schema/hub/"), modulePath).toBe(true);
+  const ajv = new Ajv({ strict: true, allErrors: true });
+  ajv.addSchema(document);
+  return (exportId: string) => {
+    const validate = ajv.getSchema(`${document.$id}#/$defs/${exportId}`);
+    if (!validate) throw new Error(`${document.$id} exports no ${exportId}`);
+    return validate as ReturnType<Ajv["compile"]>;
+  };
+}
+
 describe("canonical checkpoint pair neutral contract", () => {
   it("validates the schema and independently proves hashes, framing, order, terminal, and ETag", async () => {
     const root = getWorkspaceRoot();
     const fixtureRoot = join(root, "🌎️hub", "🛰️lag-rebootstrap", "🧪️fixtures", "🪢️canonical-pair");
     const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8"));
-    const schema = JSON.parse(readFileSync(join(fixtureRoot, "🧬️.schema.json"), "utf8"));
-    const validate = new Ajv2020({ strict: true }).compile(schema);
-    expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
-    expect(validate({ ...fixture, locator: "private" })).toBe(false);
+    const lagExport = hubSchemaExport(root, "🌎️hub/🛰️lag-rebootstrap/🧬️schema/🔣️.json");
+    const validateSelection = lagExport("CanonicalCheckpointPairSelectionV1");
+    const validateBaseline = lagExport("CanonicalCheckpointPairBaselineV1");
+    const validateBlob = lagExport("CanonicalCheckpointPairBlobV1");
+    const validateLimits = lagExport("CanonicalCheckpointPairLimitsV1");
+    expect(validateSelection(fixture.selection), JSON.stringify(validateSelection.errors)).toBe(true);
+    expect(validateLimits(fixture.limits), JSON.stringify(validateLimits.errors)).toBe(true);
+    for (const part of [fixture.pack, fixture.spr]) expect(validateBlob({ length: part.length, sha256: part.sha256 }), JSON.stringify(validateBlob.errors)).toBe(true);
+    expect(fixture.frontierCases.length).toBe(10);
+    expect(new Set(fixture.frontierCases.map((row: { id: string }) => row.id)).size).toBe(10);
+    for (const { id, accepted: _accepted, ...frontier } of fixture.frontierCases)
+      expect(validateBaseline(frontier), `${id}: ${JSON.stringify(validateBaseline.errors)}`).toBe(true);
+    expect(fixture.hostile.length).toBe(5);
+    expect(new Set(fixture.hostile.map((row: { id: string }) => row.id)).size).toBe(5);
+    for (const entry of fixture.hostile as readonly { id: string; member: string; mutation: Record<string, unknown>; stage: string; result: string; code: string }[]) {
+      expect([entry.stage, entry.result]).toEqual(["contract", "rejected"]);
+      expect(["selection", "selection.baseline"]).toContain(entry.member);
+      const mutated = entry.member === "selection"
+        ? { ...fixture.selection, ...entry.mutation }
+        : { ...fixture.selection, baseline: { ...fixture.selection.baseline, ...entry.mutation } };
+      expect(validateSelection(mutated), `${entry.id}/${entry.code}`).toBe(false);
+    }
     const exactFrontier = (row: { documentId: string; headEditOrdinal: number; headEditId: string; lastCommitSeq: number; chainHash: string }): boolean => {
       const scopeBound = row.documentId === fixture.selection.documentId;
       const zeroChain = row.chainHash === "0".repeat(64);
@@ -113,17 +145,20 @@ describe("hub harness quick contract", () => {
     const root = getWorkspaceRoot();
     const contractRoot = join(root, "🌎️hub", "🚀️local-bootstrap");
     const fixture = JSON.parse(readFileSync(join(contractRoot, "🧪️fixtures", "🚇️pipe-v1", "🔣️.json"), "utf8"));
-    const schemas = [
-      ["🚇️pipe-v1", fixture.initialize, fixture.hello, fixture.issue],
-      ["📨️credential-envelope-v1", fixture.credential],
-      ["🩺️readiness-v1", fixture.ready, fixture.bootstrapReadyButArtifactUnavailable, fixture.notReady],
+    const localBootstrapExport = hubSchemaExport(root, "🌎️hub/🚀️local-bootstrap/🧬️schema/🔣️.json");
+    const validatePipe = localBootstrapExport("LocalBootstrapPipeV1");
+    const validateReadiness = localBootstrapExport("LocalBootstrapReadinessV1");
+    const validateCredential = localBootstrapExport("LocalBootstrapCredentialEnvelopeV1");
+    const exports = [
+      [validatePipe, fixture.initialize, fixture.hello, fixture.issue],
+      [localBootstrapExport("LocalBootstrapPipeInitializeV1"), fixture.initialize],
+      [localBootstrapExport("LocalBootstrapPipeHelloV1"), fixture.hello],
+      [localBootstrapExport("LocalBootstrapPipeIssueV1"), fixture.issue],
+      [localBootstrapExport("LocalBootstrapProfileV1"), ...fixture.initialize.profiles],
+      [validateCredential, fixture.credential],
+      [validateReadiness, fixture.ready, fixture.bootstrapReadyButArtifactUnavailable, fixture.notReady],
     ] as const;
-    for (const [schemaName, ...values] of schemas) {
-      const schema = JSON.parse(readFileSync(join(contractRoot, "🧬️schema", schemaName, "🔣️.json"), "utf8"));
-      const validate = new Ajv2020({ strict: true }).compile(schema);
-      for (const value of values) expect(validate(value), JSON.stringify(validate.errors)).toBe(true);
-    }
-    const validatePipe = new Ajv2020({ strict: true }).compile(JSON.parse(readFileSync(join(contractRoot, "🧬️schema", "🚇️pipe-v1", "🔣️.json"), "utf8")));
+    for (const [validate, ...values] of exports) for (const value of values) expect(validate(value), JSON.stringify(validate.errors)).toBe(true);
     const oversizedDevice = structuredClone(fixture.issue);
     oversizedDevice.deviceInstanceId = "d".repeat(fixture.limits.deviceIdentityBytesMax + 1);
     expect(validatePipe(oversizedDevice)).toBe(false);
@@ -135,13 +170,11 @@ describe("hub harness quick contract", () => {
     expect(validatePipe(oversizedProfiles)).toBe(false);
     const unknownField = { ...fixture.issue, assertedEmail: "attacker@example.invalid" };
     expect(validatePipe(unknownField)).toBe(false);
-    const validateReadiness = new Ajv2020({ strict: true }).compile(JSON.parse(readFileSync(join(contractRoot, "🧬️schema", "🩺️readiness-v1", "🔣️.json"), "utf8")));
     expect(validateReadiness({ ...fixture.ready, capability: fixture.credential.capability })).toBe(false);
     expect(validateReadiness({ ...fixture.ready, sessionKind: fixture.credential.sessionKind })).toBe(false);
     expect(validateReadiness({ ...fixture.ready, authorizationGeneration: fixture.credential.authorizationGeneration })).toBe(false);
     expect(validateReadiness({ ...fixture.ready, artifactAuthority: { ready: false } })).toBe(false);
     expect(validateReadiness({ ...fixture.bootstrapReadyButArtifactUnavailable, status: "ready" })).toBe(false);
-    const validateCredential = new Ajv2020({ strict: true }).compile(JSON.parse(readFileSync(join(contractRoot, "🧬️schema", "📨️credential-envelope-v1", "🔣️.json"), "utf8")));
     expect(validateCredential({ ...fixture.credential, sessionKind: "external" })).toBe(false);
     expect(validateCredential({ ...fixture.credential, authorizationGeneration: 0 })).toBe(false);
     const aggregateReady = (value: any): boolean => value.authentication.bootstrapReady === true && value.directory.ready === true && value.storage.ready === true && value.artifactAuthority.ready === true && value.adminAssets.ready === true;
@@ -176,9 +209,22 @@ describe("hub harness quick contract", () => {
   it("validates typed auth capabilities and independently recomputes the socket grant with AJV and WebCrypto", async () => {
     const root = getWorkspaceRoot();
     const fixture = JSON.parse(readFileSync(join(root, "🌎️hub", "🔐️auth", "🧪️fixtures", "🔑️capability-v1", "🔣️.json"), "utf8"));
-    const schema = JSON.parse(readFileSync(join(root, "🌎️hub", "🔐️auth", "🧬️schema", "🔣️.json"), "utf8"));
-    const validate = new Ajv2020({ strict: true }).compile(schema);
+    const authExport = hubSchemaExport(root, "🌎️hub/🔐️auth/🧬️schema/🔣️.json");
+    const validate = authExport("AuthCapabilityVectorsV1");
     expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
+    for (const [exportId, value] of [
+      ["SessionCapabilityV1", fixture.session.capability],
+      ["ShareCapabilityV1", fixture.share.capability],
+      ["InviteCapabilityV1", fixture.invite.capability],
+      ["SocketGrantCapabilityV1", fixture.socket.capability],
+      ["SocketGrantReceiptV1", fixture.socket.receipt],
+      ["AuthLimitsV1", fixture.limits],
+    ] as const) {
+      const validateExport = authExport(exportId);
+      expect(validateExport(value), `${exportId}: ${JSON.stringify(validateExport.errors)}`).toBe(true);
+    }
+    const validateSocketGrant = authExport("SocketGrantCapabilityV1");
+    for (const hostile of fixture.socket.rejectedCapabilities.slice(0, 4)) expect(validateSocketGrant(hostile), hostile).toBe(false);
     const digest = (domain: string, secretHex: string): string => createHash("sha256").update(`semio/hub/${domain}/v1\0`).update(Buffer.from(secretHex, "hex")).digest("hex");
     for (const kind of ["session", "share", "invite"] as const) {
       expect(digest(kind, fixture[kind].secretHex)).toBe(fixture[kind].digestHex);
@@ -232,10 +278,7 @@ describe("hub harness quick contract", () => {
     const root = getWorkspaceRoot();
     const catalogRoot = join(root, "🌎️hub", "🗿️artifact-authority", "🔏️trusted-catalog");
     const fixture = JSON.parse(readFileSync(join(catalogRoot, "🧪️fixtures", "👥️two-package", "🔣️.json"), "utf8"));
-    const schema = JSON.parse(readFileSync(join(catalogRoot, "🧬️schema", "🔣️bundle.schema.json"), "utf8"));
-    const ajv = new Ajv2020({ strict: true });
-    ajv.addSchema(JSON.parse(readFileSync(join(root, "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🌐️browser-actor/🔣️.schema.json"), "utf8")));
-    const validate = ajv.compile(schema);
+    const validate = hubSchemaExport(root, "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🧬️schema/🔣️.json")("TrustedBundleV1");
     expect(validate(fixture.bundle), JSON.stringify(validate.errors)).toBe(true);
     expect(fixture.bundle.packages[0].pluginId).not.toBe(fixture.bundle.packages[0].packageId);
 
@@ -434,9 +477,22 @@ describe("hub harness quick contract", () => {
     const root = getWorkspaceRoot();
     const fixtureRoot = join(root, "🌎️hub", "🗿️artifact-authority", "🧪️fixtures", "🧱️artifact-chunk-cas");
     const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8"));
-    const schema = JSON.parse(readFileSync(join(fixtureRoot, "🧬️schema", "🔣️.json"), "utf8"));
-    const validate = new Ajv2020({ strict: true }).compile(schema);
-    expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
+    const scopeExport = hubSchemaExport(root, "🌎️hub/🗿️artifact-authority/🧬️schema/🔣️.json");
+    const validateManifestPlan = scopeExport("ArtifactCasManifestPlanV1");
+    const validateLedgerEvent = scopeExport("ArtifactCasRetentionLedgerEventV1");
+    const validateObjectKey = scopeExport("ArtifactCasObjectKeyV1");
+    const validateSweepCursor = scopeExport("ArtifactCasSweepCursorV1");
+    expect(fixture.version).toBe(1);
+    expect(fixture.chunkBytes).toBe(262_144);
+    expect(fixture.maximumRawBytes).toBe(67_108_864);
+    expect(fixture.maximumChunkCount).toBe(256);
+    expect(fixture.maximumManifestBytes).toBe(65_536);
+    expect(fixture.largePair.totalLength).toBe(fixture.maximumRawBytes);
+    for (const plan of [...fixture.vectors, fixture.largePair.pack, fixture.largePair.spr]) expect(validateManifestPlan(plan), JSON.stringify(validateManifestPlan.errors)).toBe(true);
+    for (const event of fixture.retentionLedger.events) expect(validateLedgerEvent(event), JSON.stringify(validateLedgerEvent.errors)).toBe(true);
+    for (const snapshot of fixture.retentionLedger.snapshots) for (const object of [...snapshot.protected, ...snapshot.eligible]) expect(validateObjectKey(object)).toBe(true);
+    expect(validateSweepCursor(fixture.sweepContinuation.expectedFirstCursor), JSON.stringify(validateSweepCursor.errors)).toBe(true);
+    expect(fixture.deleteBarrier.orders.map((order: { id: string }) => order.id)).toEqual(["delete-first", "successor-first"]);
     const u64 = (value: number): Buffer => {
       const bytes = Buffer.alloc(8);
       bytes.writeBigUInt64BE(BigInt(value));

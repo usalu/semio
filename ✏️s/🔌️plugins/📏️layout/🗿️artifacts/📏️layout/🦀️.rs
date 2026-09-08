@@ -3,7 +3,7 @@
 use protocol::{Identified, Patchable};
 use semio_framework::{Dialect, StandardId, SubsetId};
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot;
+use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot;
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Constants
@@ -541,7 +541,7 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
 /// `register_app_schema_descriptor` is not in §6's artifact-scoped function set.
 pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
     use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
-    let rows: &[(&str, &str, &str, &[(&str, &str)], Option<(&str, &str)>)] = &[
+    let rows: &[semio_framework_plugin::ArtifactCapabilityRow<'_>] = &[
         ("s.layout.layout.standard.v1", "standard", "1", &[], None),
         ("s.layout.layout.standard.v1.profile.any", "profile", "any", &[], None),
         ("s.layout.layout.schema.artifact", "schema", "s.layout.layout", &[("schema", "s.layout.layout")], None),

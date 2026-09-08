@@ -122,11 +122,11 @@ fn round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::mutable_input;
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_plugin_stdio::artifacts::gltf::standards::v2_0::subsets::any::io::{decode_glb, encode_glb};
-    use semio_s_plugin_stdio::artifacts::gltf::standards::v2_0::subsets::any::schema::mutations::{
+    use crate::standards::v2_0::subsets::any::io::{decode_glb, encode_glb};
+    use crate::standards::v2_0::subsets::any::schema::mutations::{
         bind_node_child, bind_scene_root_node, change_material_alpha_mode, change_material_double_sided, create_scene, unbind_node_child, unbind_scene_root_node, GltfMutationLeafDescriptor,
     };
-    use semio_s_plugin_stdio::artifacts::gltf::standards::v2_0::subsets::any::schema::snapshot::GltfSnapshot;
+    use crate::standards::v2_0::subsets::any::schema::snapshot::GltfSnapshot;
     use semio_s_plugin_stdio_test_oracle::artifacts::gltf::standards::v2_0::subsets::any::project_gltf;
 
     //#region 🔖️DescriptorLookup

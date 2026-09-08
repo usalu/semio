@@ -63,8 +63,8 @@
 //! @see ../🦀️.rs — this subset's conformance check, one axis per variant below.
 //! @see ../../🧾️document/🧬️schema/🧬️mutations/🦀️.rs — the DOCUMENT vocabulary this one is disjoint from.
 
-use crate::artifacts::jpg::standards::v_jfif_1_01::subsets::document::schema::diff::{JpgComponentDiff, JpgComponentModified, JpgComponentsDiff, JpgDiff, JpgFrameChange, JpgFrameFieldsDiff, JpgHuffmanTableAdded, JpgHuffmanTableKey, JpgHuffmanTablesDiff};
-use crate::artifacts::jpg::standards::v_jfif_1_01::subsets::document::schema::snapshot::{JpgFrameComponent, JpgHuffmanTable, JpgSnapshot};
+use crate::standards::v_jfif_1_01::subsets::document::schema::diff::{JpgComponentDiff, JpgComponentModified, JpgComponentsDiff, JpgDiff, JpgFrameChange, JpgFrameFieldsDiff, JpgHuffmanTableAdded, JpgHuffmanTableKey, JpgHuffmanTablesDiff};
+use crate::standards::v_jfif_1_01::subsets::document::schema::snapshot::{JpgFrameComponent, JpgHuffmanTable, JpgSnapshot};
 use protocol::{Mutation, MutationDiff};
 
 //#region 🔖️Dialect
@@ -141,7 +141,7 @@ pub fn encode_jpg_baseline_projection_json(snapshot: &JpgSnapshot) -> String {
     let quoted = |values: Vec<String>| format!("[{}]", values.into_iter().map(|value| format!("\"{value}\"")).collect::<Vec<_>>().join(","));
     let tables = quoted(snapshot.huffman_tables.iter().map(|table| format!("{:?}:{}", table.class, table.id).to_lowercase()).collect());
     let components = quoted(snapshot.frame.as_ref().map(|frame| frame.components.iter().map(|component| format!("{}:{}x{}", component.id, component.h_sampling, component.v_sampling)).collect()).unwrap_or_default());
-    let verdict = quoted(crate::artifacts::jpg::standards::v_jfif_1_01::subsets::baseline::schema::check_baseline_conformance(snapshot).into_iter().map(|finding| finding.code.0).collect());
+    let verdict = quoted(crate::standards::v_jfif_1_01::subsets::baseline::schema::check_baseline_conformance(snapshot).into_iter().map(|finding| finding.code.0).collect());
     format!(
         "{{\"format\":\"jpg-baseline\",\"sofMarker\":\"{:02x}\",\"precision\":{},\"arithmetic\":{},\"componentCount\":{},\"huffmanTables\":{tables},\"components\":{components},\"conformance\":{verdict}}}",
         snapshot.sof_marker,
@@ -155,7 +155,7 @@ pub fn encode_jpg_baseline_projection_json(snapshot: &JpgSnapshot) -> String {
 /// scenario names when it claims a kind leaves the class by its own axis.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn jpg_baseline_conformance_codes(snapshot: &JpgSnapshot) -> Vec<String> {
-    crate::artifacts::jpg::standards::v_jfif_1_01::subsets::baseline::schema::check_baseline_conformance(snapshot).into_iter().map(|finding| finding.code.0).collect()
+    crate::standards::v_jfif_1_01::subsets::baseline::schema::check_baseline_conformance(snapshot).into_iter().map(|finding| finding.code.0).collect()
 }
 //#endregion 🌉️ConformanceProjection
 //#endregion 🔖️Mutations
@@ -211,7 +211,7 @@ fn huffman<'a>(base: &'a JpgSnapshot, key: &JpgHuffmanTableKey) -> Option<&'a Jp
 // 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
 pub(crate) fn agg_diff(this: &JpgBaselineMutation, base: &JpgSnapshot) -> protocol::MutationOutcome<JpgDiff> {
         protocol::MutationOutcome::new(match this {
-            JpgBaselineMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => crate::artifacts::jpg::standards::v_jfif_1_01::subsets::document::schema::diff::diff_set_snapshot(base, snapshot),
+            JpgBaselineMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => crate::standards::v_jfif_1_01::subsets::document::schema::diff::diff_set_snapshot(base, snapshot),
             JpgBaselineMutation::SetSofMarker(set_sof_marker::SetSofMarker { marker }) => JpgDiff { sof_marker: (base.sof_marker != *marker).then_some(*marker), ..Default::default() },
             JpgBaselineMutation::SetSamplePrecision(set_sample_precision::SetSamplePrecision { precision }) => {
                 let unchanged = base.frame.as_ref().is_some_and(|frame| frame.precision == *precision);
@@ -238,7 +238,7 @@ pub(crate) fn agg_diff(this: &JpgBaselineMutation, base: &JpgSnapshot) -> protoc
                     JpgDiff::default()
                 } else {
                     let at = (*index).min(base.frame.as_ref().map_or(0, |frame| frame.components.len()));
-                    frame_diff(base, JpgFrameFieldsDiff { components: Some(JpgComponentsDiff { removed: Vec::new(), modified: Vec::new(), added: vec![crate::artifacts::jpg::standards::v_jfif_1_01::subsets::document::schema::diff::JpgComponentAdded { index: at, item: *added }] }), ..Default::default() })
+                    frame_diff(base, JpgFrameFieldsDiff { components: Some(JpgComponentsDiff { removed: Vec::new(), modified: Vec::new(), added: vec![crate::standards::v_jfif_1_01::subsets::document::schema::diff::JpgComponentAdded { index: at, item: *added }] }), ..Default::default() })
                 }
             }
             JpgBaselineMutation::RemoveFrameComponent(remove_frame_component::RemoveFrameComponent { id }) => {
@@ -305,8 +305,8 @@ pub(crate) fn agg_inverse(this: &JpgBaselineMutation, base: &JpgSnapshot) -> Vec
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::jpg::standards::v_jfif_1_01::subsets::document::schema::snapshot::{JpgFrameHeader, JpgHuffmanClass};
-    use crate::artifacts::jpg::standards::v_jfif_1_01::subsets::baseline::schema::{check_baseline_conformance, CODE_ARITHMETIC, CODE_COMPONENT_SAMPLING, CODE_HUFFMAN_TABLE_COUNT, CODE_PRECISION, CODE_SOF_MARKER};
+    use crate::standards::v_jfif_1_01::subsets::document::schema::snapshot::{JpgFrameHeader, JpgHuffmanClass};
+    use crate::standards::v_jfif_1_01::subsets::baseline::schema::{check_baseline_conformance, CODE_ARITHMETIC, CODE_COMPONENT_SAMPLING, CODE_HUFFMAN_TABLE_COUNT, CODE_PRECISION, CODE_SOF_MARKER};
 
     fn table(class: JpgHuffmanClass, id: u8) -> JpgHuffmanTable {
         JpgHuffmanTable { id, class, bits: [0u8; 16], values: vec![id] }

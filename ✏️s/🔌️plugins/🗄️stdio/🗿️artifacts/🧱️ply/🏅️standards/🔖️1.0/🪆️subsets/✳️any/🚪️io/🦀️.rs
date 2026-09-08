@@ -2,8 +2,8 @@
 //! (called once from 🔌️plugin/🔧️setup via ⚙️engine::register), not per-leaf register().
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use crate::artifacts::ply::standards::v1_0::subsets::any::schema::PlyAnalyzer;
-    use crate::artifacts::ply::PlySnapshot;
+    use crate::standards::v1_0::subsets::any::schema::PlyAnalyzer;
+    use crate::PlySnapshot;
     use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.ply", standard: StandardId("1.0"), subset: SubsetId("*") };
@@ -52,8 +52,8 @@ pub use derived_composition::*;
 // retaining every declared property's real type and every row's real typed cell values. Encode
 // walks the same generic element/property/row model back out in whichever wire format is
 // requested — round-tripping any element/property layout, not just vertex/face meshes.
-use crate::artifacts::ply::schema::snapshot::{PlyElement, PlyFormat, PlyProperty, PlyRow, PlyScalarType, PlyValue};
-use crate::artifacts::ply::{PlySnapshot, STDIO_PLY_DOCUMENT_SCHEMA};
+use crate::schema::snapshot::{PlyElement, PlyFormat, PlyProperty, PlyRow, PlyScalarType, PlyValue};
+use crate::{PlySnapshot, STDIO_PLY_DOCUMENT_SCHEMA};
 
 //#region 🔖️ScalarWire
 /// 📏 Byte width of a PLY scalar type.
@@ -469,7 +469,7 @@ pub fn decode_ply(data: &[u8]) -> Result<PlySnapshot, String> {
 
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
-    use crate::artifacts::ply::standards::v1_0::subsets::any::schema::PlyComposer as PlyRawAnyComposer;
+    use crate::standards::v1_0::subsets::any::schema::PlyComposer as PlyRawAnyComposer;
     use semio_framework_plugin::{composer_entry_of, ComposerEntry};
     use std::sync::OnceLock;
 
@@ -486,11 +486,11 @@ pub mod io_registry {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::ply::schema::diff::PlyElementsDiff;
-    use crate::artifacts::ply::schema::mutations::apply_ply_mutation;
-    use crate::artifacts::ply::schema::mutations::{add_element, insert_comment, insert_row, remove_element, remove_row, set_format, set_row_property, set_snapshot};
-    use crate::artifacts::ply::schema::{demo_ply_snapshot, empty_ply_snapshot};
-    use crate::artifacts::ply::{PlyDiff, PlyMutation};
+    use crate::schema::diff::PlyElementsDiff;
+    use crate::schema::mutations::apply_ply_mutation;
+    use crate::schema::mutations::{add_element, insert_comment, insert_row, remove_element, remove_row, set_format, set_row_property, set_snapshot};
+    use crate::schema::{demo_ply_snapshot, empty_ply_snapshot};
+    use crate::{PlyDiff, PlyMutation};
     use protocol::command::DiffAlgebra;
     use protocol::{Mutation, MutationDiff};
 
@@ -934,7 +934,7 @@ mod tests {
     /// `encode_pack`/`encode_op`/`encode_diff` bytes, and the fixture-honesty round-trip.
     mod conformance_laws {
         use super::*;
-        use crate::artifacts::ply::schema::{diff, mutations, snapshot};
+        use crate::schema::{diff, mutations, snapshot};
         use protocol::{DiffCodec, OpBinary, OpText};
 
         #[semio_framework_async_macros::async_test]

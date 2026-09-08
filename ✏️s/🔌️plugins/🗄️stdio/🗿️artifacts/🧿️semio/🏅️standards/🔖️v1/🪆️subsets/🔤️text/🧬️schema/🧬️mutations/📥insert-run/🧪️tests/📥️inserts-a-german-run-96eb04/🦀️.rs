@@ -8,9 +8,9 @@
 //! The `.op.semio`/`.spr.semio`/`.dsl.semio`/`.pack.semio`/`.patch.semio` encodings are derived
 //! from this quintet by `fixtures generate`, never hand-forged here.
 
-use crate::artifacts::semio::standards::v1::subsets::text::schema::diff::SemioTextDiff;
-use crate::artifacts::semio::standards::v1::subsets::text::schema::mutations::SemioTextMutation;
-use crate::artifacts::semio::standards::v1::subsets::text::schema::snapshot::SemioTextSnapshot;
+use crate::standards::v1::subsets::text::schema::diff::SemioTextDiff;
+use crate::standards::v1::subsets::text::schema::mutations::SemioTextMutation;
+use crate::standards::v1::subsets::text::schema::snapshot::SemioTextSnapshot;
 use protocol::{Mutation, MutationDiff};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
@@ -46,7 +46,7 @@ async fn the_undo_remove_run_takes_the_german_run_back_out() {
     let base = before();
     let mutation = insert_run();
     let undo = mutation.inverse(&base);
-    assert_eq!(undo, vec![SemioTextMutation::RemoveRun(crate::artifacts::semio::standards::v1::subsets::text::schema::mutations::remove_run::RemoveRun { index: 1 })], "insert-run at #1 must undo as remove-run at #1");
+    assert_eq!(undo, vec![SemioTextMutation::RemoveRun(crate::standards::v1::subsets::text::schema::mutations::remove_run::RemoveRun { index: 1 })], "insert-run at #1 must undo as remove-run at #1");
     let mut current = mutation.diff(&base).diff().apply(&base).expect("forward insert-run applies");
     for step in &undo {
         current = step.diff(&current).diff().apply(&current).expect("the undo remove-run applies to the post-insert state");

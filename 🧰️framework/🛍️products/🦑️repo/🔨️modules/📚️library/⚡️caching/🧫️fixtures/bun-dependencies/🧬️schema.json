@@ -10,7 +10,8 @@
     "closures",
     "mutations",
     "importers",
-    "unresolvedImports"
+    "unresolvedImports",
+    "nativeInputs"
   ],
   "properties": {
     "schemaVersion": {
@@ -135,6 +136,35 @@
       "minItems": 1,
       "items": {
         "type": "string"
+      }
+    },
+    "nativeInputs": {
+      "type": "object",
+      "required": [
+        "externalDependencies",
+        "excluded",
+        "manifestFields"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "externalDependencies": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "excluded": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "manifestFields": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
       }
     }
   }

@@ -5,7 +5,7 @@
   "displayName": "Set Page Content",
   "emoji": "✏️",
   "aggregateVariant": "SetPageContent",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "set-page-content",
   "binaryTag": 14,
   "invertibility": "explicit-mutation",

@@ -1,17 +1,61 @@
 //! 🎪 `stdio.mp3` artifact — new-format artifact (master plan "New format artifacts" table).
 
+#![allow(async_fn_in_trait)]
+#![allow(long_running_const_eval)]
+
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_schema as framework_schema;
+extern crate semio_framework_value_derive as value_derive;
+
 use semio_framework_plugin::{ArtifactKindSpec, Dialect, MediaClass, MediaForm, MediaType, OsMediaCapability, StandardId, SubsetId};
 
-pub use crate::artifacts::mp3::standards::mpeg1_layer3::subsets::any::schema::diff::Mp3Diff;
-pub use crate::artifacts::mp3::standards::mpeg1_layer3::subsets::any::schema::mutations::Mp3Mutation;
-pub use crate::artifacts::mp3::standards::mpeg1_layer3::subsets::any::schema::snapshot::Mp3Snapshot;
-pub use crate::artifacts::mp3::standards::mpeg1_layer3::subsets::any::schema::Mp3Artifact;
+pub use standards::mpeg1_layer3::subsets::any::schema::diff::Mp3Diff;
+pub use standards::mpeg1_layer3::subsets::any::schema::mutations::Mp3Mutation;
+pub use standards::mpeg1_layer3::subsets::any::schema::snapshot::Mp3Snapshot;
+pub use standards::mpeg1_layer3::subsets::any::schema::Mp3Artifact;
 
 /// 🏷️ Document schema / DSL envelope id.
 pub const STDIO_MP3_DOCUMENT_SCHEMA: &str = "stdio.mp3";
 
 /// 🧬️ Artifact schema descriptor id.
 pub const MP3_ARTIFACT_SCHEMA_ID: &str = "s.stdio.mp3";
+
+/// 📜 Schema-owned package definition.
+pub const ARTIFACT_DEFINITION_SCHEMA: &str = include_str!("🧬️schema/📜️artifact-definition.json");
+
+pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::PluginAssemblyError> {
+    let factories = native_codecs();
+    let executables = semio_s_artifact_stdio_contract::native_codec_executables(ARTIFACT_DEFINITION_SCHEMA, &factories)?;
+    semio_s_artifact_stdio_contract::definition_from_schema_with_executables(ARTIFACT_DEFINITION_SCHEMA, executables)
+}
+
+pub fn formats() -> Result<Vec<semio_framework_plugin::io::FormatDescriptor>, semio_framework_plugin::ArtifactDefinitionError> {
+    semio_s_artifact_stdio_contract::format_descriptors(ARTIFACT_DEFINITION_SCHEMA)
+}
+
+fn native_codec() -> store::ArtifactCodec {
+    let mut codec = store::ArtifactCodec::of::<Mp3Snapshot, Mp3Mutation>(STDIO_MP3_DOCUMENT_SCHEMA);
+    codec.extension = "mp3";
+    codec.pack_schema_hash = semio_framework_hash::Sha256::digest(include_bytes!("🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio"));
+    codec
+}
+
+pub fn native_codecs() -> Vec<semio_s_artifact_stdio_contract::NativeCodecFactory> {
+    vec![semio_s_artifact_stdio_contract::NativeCodecFactory { id: "stdio.native.mp3.v1", artifact: "mp3", kind: artifact_kind, codec: native_codec }]
+}
+
+pub fn contribution() -> semio_s_artifact_stdio_contract::ArtifactContribution {
+    semio_s_artifact_stdio_contract::ArtifactContribution {
+        identity: "mp3",
+        schema: ARTIFACT_DEFINITION_SCHEMA,
+        definition,
+        assembly,
+        formats,
+        native_codecs,
+    }
+}
 
 //#region 🔖️Dialect
 /// 🪪️ Surface coordinate(s) for this artifact — `artifact_kind` matches the schema descriptor
@@ -44,7 +88,7 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 //#endregion 🔖️ArtifactKind
 //#region 🔖️Declaration
 /// 🔖️ This artifact's declaration (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE g5) — replaces
-/// the side-effecting `crate::artifacts::mp3::standards::mpeg1_layer3::engine::register()` call the
+/// the side-effecting `crate::standards::mpeg1_layer3::engine::register()` call the
 /// plugin root used to make imperatively. `.composers(...)` reaches this subset's `🚪️io`-level
 /// `io_registry` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES dissolved the old
 /// `⚙️engine`; the registry moved to `🚪️io`, distinct from this file's own `🚪️DerivedIoRegistry`
@@ -56,25 +100,25 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 /// to.
 /// 🧩️ Binds this executable root to its sole schema-owned definition.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn assembly(definition: semio_framework_plugin::ArtifactDefinition) -> Result<crate::registry::ArtifactAssembly, semio_framework_plugin::PluginAssemblyError> {
-    crate::registry::runtime_assembly("mp3", definition, declaration)
+pub fn assembly() -> Result<semio_s_artifact_stdio_contract::ArtifactAssembly, semio_framework_plugin::PluginAssemblyError> {
+    semio_s_artifact_stdio_contract::runtime_assembly("mp3", definition()?, declaration)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
-    let formats = crate::registry::format_descriptors_for("mp3")?;
+    let formats = formats()?;
     semio_framework_plugin::ArtifactDeclaration::builder(definition)
-        .schema(crate::artifacts::mp3::standards::mpeg1_layer3::subsets::any::schema::mp3_artifact_schema_descriptor())
+        .schema(standards::mpeg1_layer3::subsets::any::schema::mp3_artifact_schema_descriptor())
         .formats(formats)
-        .inferences([crate::artifacts::mp3::standards::mpeg1_layer3::subsets::any::schema::inferences::mp3_artifact_inference_descriptor()])
-        .composers(crate::artifacts::mp3::standards::mpeg1_layer3::subsets::any::io::io_registry::entries())
+        .inferences([standards::mpeg1_layer3::subsets::any::schema::inferences::mp3_artifact_inference_descriptor()])
+        .composers(standards::mpeg1_layer3::subsets::any::io::io_registry::entries())
         .document_codec_bare::<Mp3Snapshot, Mp3Mutation>(STDIO_MP3_DOCUMENT_SCHEMA)
         .try_build()
 }
 //#endregion 🔖️Declaration
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
-    use crate::artifacts::mp3::standards::mpeg1_layer3::subsets::any::io::io_registry as std_composer;
+    use crate::standards::mpeg1_layer3::subsets::any::io::io_registry as std_composer;
     use semio_framework_plugin::{register_composer_entries, ComposeError, ComposedArtifact, ComposerEntry, Dialect, ErasedComposeSource};
     use std::sync::OnceLock;
 
@@ -97,3 +141,133 @@ pub mod io_registry {
     }
 }
 //#endregion 🚪️DerivedIoRegistry
+
+#[path = "."]
+pub mod standards {
+    #[path = "."]
+    pub mod mpeg1_layer3 {
+        #[path = "."]
+        pub mod subsets {
+            #[path = "."]
+            pub mod any {
+                #[path = "🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/🚪️io/🦀️.rs"]
+                pub mod io;
+                #[path = "."]
+                pub mod schema {
+                    #[path = "🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/🧬️schema/🦀️.rs"]
+                    mod component;
+                    pub use component::*;
+                    #[path = "."]
+                    pub mod snapshot {
+                        #[path = "🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                        #[path = "🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/🦀️.rs"]
+                        pub mod binary;
+                        #[path = "🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🦀️.rs"]
+                        pub mod text;
+                    }
+                    #[path = "."]
+                    pub mod inferences {
+                        #[path = "🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                        #[path = "🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/🧬️schema/💡️inferences/💾️binary/🦀️.rs"]
+                        pub mod binary;
+                        #[path = "🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/🧬️schema/💡️inferences/📝️text/🦀️.rs"]
+                        pub mod text;
+                        #[path = "."]
+                        pub mod duration {
+                            #[path = "🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/🧬️schema/💡️inferences/⏱️duration/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                    }
+                    #[path = "."]
+                    pub mod diff {
+                        #[path = "🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                        #[path = "🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/🧬️schema/🔺️diff/💾️binary/🦀️.rs"]
+                        pub mod binary;
+                        #[path = "🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/🧬️schema/🔺️diff/📝️text/🦀️.rs"]
+                        pub mod text;
+                    }
+                    #[path = "."]
+                    pub mod mutations {
+                        #[path = "🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                        #[path = "🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️.rs"]
+                        pub mod binary;
+                        #[path = "🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️.rs"]
+                        pub mod text;
+                    }
+                }
+            }
+        }
+    }
+}
+#[path = "."]
+pub mod examples {
+    #[path = "🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️.rs"]
+    pub mod demo;
+}
+
+#[cfg(feature = "component-app-assembly")]
+#[path = "."]
+pub mod editor {
+    #[path = "."]
+    pub mod mp3 {
+        #[path = "🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/✏️editor/🦀️.rs"]
+        mod component;
+        pub use component::*;
+        #[path = "."]
+        pub mod modes {
+            #[path = "."]
+            pub mod edit {
+                #[path = "🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🦀️.rs"]
+                mod component;
+                pub use component::*;
+                #[path = "."]
+                pub mod windows {
+                    #[path = "."]
+                    pub mod main {
+                        #[path = "🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+        }
+    }
+}
+
+#[cfg(feature = "component-app-assembly")]
+#[path = "."]
+pub mod viewer {
+    #[path = "."]
+    pub mod mp3 {
+        #[path = "🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/👁️viewer/🦀️.rs"]
+        mod component;
+        pub use component::*;
+        #[path = "."]
+        pub mod modes {
+            #[path = "."]
+            pub mod view {
+                #[path = "🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🦀️.rs"]
+                mod component;
+                pub use component::*;
+                #[path = "."]
+                pub mod windows {
+                    #[path = "."]
+                    pub mod main {
+                        #[path = "🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+        }
+    }
+}

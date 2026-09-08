@@ -11,6 +11,6 @@ pub fn diff(payload: &ChangeNCyclesStud, base: &En1994Snapshot) -> protocol::Mut
     if base.n_cycles_stud == payload.new_n_cycles_stud {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "N cycles stud already has this value.");
     }
-    protocol::MutationOutcome::new(En1994Diff { n_cycles_stud: Some(payload.new_n_cycles_stud.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1994Diff { n_cycles_stud: Some(payload.new_n_cycles_stud), ..Default::default() })
 }
 //#endregion 🔖️Diff

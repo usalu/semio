@@ -2,7 +2,7 @@
 /// 📦 Encodes a recognized mutation payload or declines another variant.
 pub type BmpMutationPayloadEncoder = fn(&BmpMutation) -> Option<Result<Vec<u8>, protocol::ProtocolError>>;
 
-use crate::artifacts::bmp::schema::mutations::BmpMutation;
+use crate::schema::mutations::BmpMutation;
 
 //#region Registry
 pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio");
@@ -13,11 +13,11 @@ pub struct Entry {
     pub decode: fn(&[u8]) -> Result<BmpMutation, protocol::ProtocolError>,
 }
 pub const REGISTRY: &[Entry] = &[
-    crate::artifacts::bmp::schema::mutations::change_header_fields::binary::CODEC,
-    crate::artifacts::bmp::schema::mutations::insert_palette_entry::binary::CODEC,
-    crate::artifacts::bmp::schema::mutations::remove_palette_entry::binary::CODEC,
-    crate::artifacts::bmp::schema::mutations::replace_palette_entry::binary::CODEC,
-    crate::artifacts::bmp::schema::mutations::replace_pixel_data::binary::CODEC,
+    crate::schema::mutations::change_header_fields::binary::CODEC,
+    crate::schema::mutations::insert_palette_entry::binary::CODEC,
+    crate::schema::mutations::remove_palette_entry::binary::CODEC,
+    crate::schema::mutations::replace_palette_entry::binary::CODEC,
+    crate::schema::mutations::replace_pixel_data::binary::CODEC,
 ];
 //#endregion Registry
 

@@ -3,9 +3,9 @@
 //! inside `nodes` — exactly mirrors `add-node-port` but operating on `properties` instead of
 //! `ports`; REUSES `🔢️value`'s `SemioValueEntry`).
 
-use crate::artifacts::semio::standards::v1::subsets::graph::schema::mutations::SemioGraphMutation;
-use crate::artifacts::semio::standards::v1::subsets::graph::schema::snapshot::{GraphNodeId, SemioGraphSnapshot};
-use crate::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValueEntry;
+use crate::standards::v1::subsets::graph::schema::mutations::SemioGraphMutation;
+use crate::standards::v1::subsets::graph::schema::snapshot::{GraphNodeId, SemioGraphSnapshot};
+use crate::standards::v1::subsets::value::schema::snapshot::SemioValueEntry;
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]

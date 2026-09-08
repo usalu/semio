@@ -5,9 +5,9 @@
 //! faces the shell gathered stay, and so does the solid that references it — leaving that solid
 //! pointing at a shell that no longer exists is the code's own choice, and the diff's
 //! single-collection shape is what records it.
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::decode_semio_brep_diff_json;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::mutations::{decode_semio_brep_mutation_json, SemioBrepMutation};
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::{decode_semio_brep_snapshot_json, SemioBrepSnapshot};
+use crate::standards::v1::subsets::brep::schema::diff::decode_semio_brep_diff_json;
+use crate::standards::v1::subsets::brep::schema::mutations::{decode_semio_brep_mutation_json, SemioBrepMutation};
+use crate::standards::v1::subsets::brep::schema::snapshot::{decode_semio_brep_snapshot_json, SemioBrepSnapshot};
 use pack::value::ToValue;
 use protocol::{Mutation, MutationDiff};
 

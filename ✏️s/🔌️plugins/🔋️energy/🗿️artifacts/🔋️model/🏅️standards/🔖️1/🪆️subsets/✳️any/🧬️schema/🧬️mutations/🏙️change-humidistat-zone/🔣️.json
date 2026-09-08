@@ -5,7 +5,7 @@
   "displayName": "Change Humidistat Zone",
   "emoji": "🏙️",
   "aggregateVariant": "ChangeHumidistatZone",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-humidistat-zone",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

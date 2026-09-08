@@ -1,0 +1,41 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/primitive-attribute/bind.json",
+  "title": "GltfBindPrimitiveAttributeMutation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mesh",
+    "primitive",
+    "semantic",
+    "accessor"
+  ],
+  "properties": {
+    "mesh": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "primitive": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "semantic": {
+      "type": "string"
+    },
+    "accessor": {
+      "type": "integer",
+      "minimum": 0
+    }
+  },
+  "x-semio": {
+    "id": "s.stdio.gltf.mutation.bind-primitive-attribute.v1",
+    "version": 1,
+    "phase": "mutation",
+    "kind": "bind",
+    "touchedPaths": [
+      "document/meshes/*/primitives/*/attributes"
+    ],
+    "referencePolicy": "semantic keys are unique and accessor identity is validated"
+  },
+  "x-semio-mutation": "bind-primitive-attribute"
+}

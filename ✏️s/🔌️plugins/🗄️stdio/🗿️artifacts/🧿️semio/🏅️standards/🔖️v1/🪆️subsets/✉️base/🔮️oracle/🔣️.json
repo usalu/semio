@@ -68,7 +68,7 @@
         {
           "id": "set-snapshot",
           "capability": "semio-v1-base-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -87,7 +87,7 @@
         {
           "id": "brep",
           "capability": "semio-v1-base-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -106,7 +106,7 @@
         {
           "id": "mesh",
           "capability": "semio-v1-base-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -125,7 +125,7 @@
         {
           "id": "model",
           "capability": "semio-v1-base-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -144,7 +144,7 @@
         {
           "id": "value",
           "capability": "semio-v1-base-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -163,7 +163,7 @@
         {
           "id": "document",
           "capability": "semio-v1-base-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -182,7 +182,7 @@
         {
           "id": "cad",
           "capability": "semio-v1-base-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -201,7 +201,7 @@
         {
           "id": "drawing",
           "capability": "semio-v1-base-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -220,7 +220,7 @@
         {
           "id": "image",
           "capability": "semio-v1-base-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -239,7 +239,7 @@
         {
           "id": "video",
           "capability": "semio-v1-base-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -258,7 +258,7 @@
         {
           "id": "audio",
           "capability": "semio-v1-base-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -277,7 +277,7 @@
         {
           "id": "animation",
           "capability": "semio-v1-base-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -296,7 +296,7 @@
         {
           "id": "presentation",
           "capability": "semio-v1-base-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -315,7 +315,7 @@
         {
           "id": "flow",
           "capability": "semio-v1-base-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -334,7 +334,7 @@
         {
           "id": "text",
           "capability": "semio-v1-base-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -353,7 +353,7 @@
         {
           "id": "table",
           "capability": "semio-v1-base-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -372,7 +372,7 @@
         {
           "id": "graph",
           "capability": "semio-v1-base-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -391,7 +391,7 @@
         {
           "id": "object",
           "capability": "semio-v1-base-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -410,7 +410,7 @@
         {
           "id": "kit",
           "capability": "semio-v1-base-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],

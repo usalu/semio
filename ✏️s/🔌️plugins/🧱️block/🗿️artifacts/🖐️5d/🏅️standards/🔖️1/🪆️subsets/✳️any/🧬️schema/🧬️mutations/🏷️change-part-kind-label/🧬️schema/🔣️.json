@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/block/5d/1/any/mutation/change-part-kind-label.json",
+  "title": "ChangePartKindLabel",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newLabel"
+  ],
+  "properties": {
+    "newLabel": {
+      "type": "string"
+    }
+  }
+}

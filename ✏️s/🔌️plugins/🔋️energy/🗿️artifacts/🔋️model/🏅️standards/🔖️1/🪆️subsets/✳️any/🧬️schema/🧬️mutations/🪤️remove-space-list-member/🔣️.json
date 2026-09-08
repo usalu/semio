@@ -5,7 +5,7 @@
   "displayName": "Remove Space List Member",
   "emoji": "🪤️",
   "aggregateVariant": "RemoveSpaceListMember",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "remove-space-list-member",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

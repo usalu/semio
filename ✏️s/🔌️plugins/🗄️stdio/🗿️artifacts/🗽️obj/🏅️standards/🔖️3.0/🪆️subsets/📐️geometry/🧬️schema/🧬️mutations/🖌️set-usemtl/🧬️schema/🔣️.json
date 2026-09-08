@@ -1,0 +1,41 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/obj/3.0/geometry/mutation/set-usemtl.json",
+  "title": "SetUsemtl",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "usemtl"
+  ],
+  "properties": {
+    "usemtl": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/ObjUsemtlRange"
+      }
+    },
+    "mutation": {
+      "const": "setUsemtl",
+      "description": "Aggregate discriminator spliced in by ObjMutation; absent when the payload stands alone."
+    }
+  },
+  "$defs": {
+    "ObjUsemtlRange": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "faceIndexFrom",
+        "material"
+      ],
+      "properties": {
+        "faceIndexFrom": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "material": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

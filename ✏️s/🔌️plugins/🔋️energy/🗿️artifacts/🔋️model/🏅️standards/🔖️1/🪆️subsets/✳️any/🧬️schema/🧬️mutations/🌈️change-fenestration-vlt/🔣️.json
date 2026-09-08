@@ -5,7 +5,7 @@
   "displayName": "Change Fenestration VLT",
   "emoji": "🌈️",
   "aggregateVariant": "ChangeFenestrationVlt",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-fenestration-vlt",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

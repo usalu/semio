@@ -3,6 +3,7 @@
 import { BundleScript, ScriptRouter, runBundleScriptMain } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { PrintFontProvisioningCommand } from "../../🎮️commands/🔤print-font-provisioning/🟦️.ts";
 import { PrintPipelineVerificationCommand } from "../../🎮️commands/🧪️print-pipeline-verification/🟦️.ts";
+import { PrintTokenPreviewScript } from "../../🔨️modules/🎨print-design-token-paints/📜️script.ts";
 
 //#region 🖨️RouterAdapters
 class FontsScript extends BundleScript {
@@ -20,6 +21,7 @@ class TestScript extends BundleScript {
 
 const router = new ScriptRouter(import.meta.dir)
   .register("fonts", FontsScript)
+  .register("preview-generated", PrintTokenPreviewScript)
   .register("test", TestScript);
 
 if (import.meta.main) await runBundleScriptMain(router, import.meta.url, { defaultCommand: "test" });

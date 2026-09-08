@@ -5,7 +5,7 @@ EnergyPlus and OpenStudio, and the `energyplus` weather reader already registere
 `✏️s/🔌️plugins/🗄️stdio`'s `🌦️epw` subset reads a different format for a different purpose, so it is
 deliberately not reused here. The reference is therefore a second IMPLEMENTATION, written from this
 subset's own committed `../../🧬️schema/📸️snapshot/🔣️.json`, each kind's own
-`../../🧬️schema/🧬️mutations/<dir>/🧬️.schema.json`, and
+`../../🧬️schema/🧬️mutations/<dir>/🧬️schema/🔣️.json`, and
 `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-DIRECT-LEAF-OVERHAUL/`'s `📓️taxonomy.md`
 verb table and `📓️derivation-rules.md` shape rules. It imports nothing from the Rust it judges and
 transliterates none of it.

@@ -11,6 +11,6 @@ pub fn diff(payload: &ChangeIrradianceWM2, base: &Din4108Snapshot) -> protocol::
     if base.irradiance_w_m2 == payload.new_irradiance_w_m2 {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "Irradiance wm2 already has this value.");
     }
-    protocol::MutationOutcome::new(Din4108Diff { irradiance_w_m2: Some(payload.new_irradiance_w_m2.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(Din4108Diff { irradiance_w_m2: Some(payload.new_irradiance_w_m2), ..Default::default() })
 }
 //#endregion 🔖️Diff

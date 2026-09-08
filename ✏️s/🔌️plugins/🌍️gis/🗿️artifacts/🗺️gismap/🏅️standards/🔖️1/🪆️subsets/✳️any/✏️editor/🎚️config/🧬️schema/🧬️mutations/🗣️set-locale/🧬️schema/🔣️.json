@@ -1,13 +1,24 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/gis/gismap/1/any/editor/config/mutation/set-locale.json",
+  "title": "SetLocale",
   "type": "object",
   "$defs": {
     "payload": {
       "type": "object",
-      "required": ["value"],
-      "properties": {"value": {"type": "string"}}
+      "required": [
+        "value"
+      ],
+      "properties": {
+        "value": {
+          "type": "string"
+        }
+      }
     }
   },
-  "allOf": [{"$ref": "#/$defs/payload"}],
-  "unevaluatedProperties": false
+  "allOf": [
+    {
+      "$ref": "#/$defs/payload"
+    }
+  ]
 }

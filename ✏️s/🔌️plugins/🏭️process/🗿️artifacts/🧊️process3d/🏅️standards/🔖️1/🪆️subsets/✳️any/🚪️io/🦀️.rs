@@ -36,8 +36,8 @@ pub mod derived_composition {
             for source in sources {
                 if source.dialect == DIALECT {
                     let native = match &source.payload {
-                        AnalyzeSource::Text(t) => AnalyzeSource::Text(*t),
-                        AnalyzeSource::Binary(b) => AnalyzeSource::Binary(*b),
+                        AnalyzeSource::Text(t) => AnalyzeSource::Text(t),
+                        AnalyzeSource::Binary(b) => AnalyzeSource::Binary(b),
                     };
                     let analysis = Process3dAnalyzer::analyze(&[native]);
                     if let Some(snapshot) = analysis.parts.snapshot {
@@ -136,7 +136,7 @@ pub use derived_composition::*;
 //#region 🔖️MediaImportExport
 use crate::artifacts::process3d::{Pose, Process3dSnapshot, ProcessWorkingScene, Stock, WorkingSolid};
 use semio_framework_plugin::{MeshExporter, MeshImporter};
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::{
+use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::engine::{
     Brep, BrepError, GeometryHandle, ObjSolidExporter, ObjSolidImporter, SolidExporter, SolidImporter, StepSolidExporter, StepSolidImporter, StlSolidExporter, StlSolidImporter,
 };
 use semio_framework::DslValue;

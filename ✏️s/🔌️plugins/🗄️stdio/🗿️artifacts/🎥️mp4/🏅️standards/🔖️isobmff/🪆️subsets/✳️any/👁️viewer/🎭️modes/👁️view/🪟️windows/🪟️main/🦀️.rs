@@ -1,7 +1,7 @@
 //! 👁️ `mp4` view (any) — Main window: real `MediaWindowKit`
 //! render of the current document (read-only).
 
-use crate::artifacts::mp4::standards::isobmff::subsets::any::schema::snapshot::Mp4Snapshot;
+use crate::standards::isobmff::subsets::any::schema::snapshot::Mp4Snapshot;
 use semio_framework_plugin::app::{MediaKind, MediaView, MediaWindowKit};
 use semio_framework_plugin::{BuiltNode, WindowKindDefinition, WindowKit};
 

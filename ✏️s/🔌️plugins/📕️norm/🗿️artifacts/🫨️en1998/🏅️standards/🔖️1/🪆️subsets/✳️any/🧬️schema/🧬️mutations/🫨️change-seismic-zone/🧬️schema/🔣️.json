@@ -1,0 +1,16 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/norm/en1998/1/any/mutation/change-seismic-zone.json",
+  "title": "ChangeSeismicZone",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newSeismicZone"
+  ],
+  "properties": {
+    "newSeismicZone": {
+      "type": "integer",
+      "minimum": 0
+    }
+  }
+}

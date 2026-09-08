@@ -5,7 +5,7 @@
   "displayName": "Replace Huffman Table",
   "emoji": "🌳️",
   "aggregateVariant": "ReplaceHuffmanTable",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "replace-huffman-table",
   "binaryTag": 5,
   "invertibility": "explicit-mutation",

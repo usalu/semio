@@ -2,7 +2,7 @@
 
 use flow_extension_sdk::brep_geometry::*;
 use flow_extension_sdk::build_manifest_json;
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::{operation_quality, BrepKernel};
+use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::engine::{operation_quality, BrepKernel};
 use neural_engine::{channel_output, ChannelSpec, Dictionary, EvalError, Operator, OperatorImpl, OperatorInfo, Registry, Value};
 
 /// 🎯️ Appends a node's live [`OpQuality`] (looked up by the `BrepKernel` method it wraps) to a
@@ -621,7 +621,7 @@ impl Operator for SurfaceClosestUv {
 // #endregion 🔖️Evaluate
 
 // #region 🔖️Topology
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::{Brep, GeometryHandle};
+use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::engine::{Brep, GeometryHandle};
 
 /// 📇️ A `geometry`-schema list, each entry carrying its own live [`GeometryKind`] (via
 /// `geometry_dict`) — unlike [`topology_list`], which hardcodes one fixed schema/kind for the
@@ -809,7 +809,7 @@ impl Operator for ExportDwg {
         with_kernel_read(|kernel| {
             let geometry = read_geometry(input, "geometry")?;
             let deflection = read_channel_number(input, "deflection")?;
-            let data = semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::io::dwg::export(kernel, &[geometry], deflection).map_err(map_kernel_error)?;
+            let data = semio_s_artifact_stdio_semio::standards::v1::subsets::brep::io::dwg::export(kernel, &[geometry], deflection).map_err(map_kernel_error)?;
             Ok(channel_output("dwg", text_dictionary(encode_base64(&data))))
         })
     }
@@ -821,7 +821,7 @@ impl Operator for ImportDwg {
         with_kernel(|kernel| {
             let data = decode_base64(&read_text(input, "data")?)?;
             let tolerance = read_channel_number(input, "tolerance")?;
-            let handle = semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::io::dwg::import(kernel, &data, tolerance).map_err(map_kernel_error)?;
+            let handle = semio_s_artifact_stdio_semio::standards::v1::subsets::brep::io::dwg::import(kernel, &data, tolerance).map_err(map_kernel_error)?;
             Ok(channel_output("geometry", geometry_dict(kernel, &handle)?))
         })
     }
@@ -1798,7 +1798,7 @@ mod tests {
     use super::*;
     use neural_engine::{Atom, Value};
     use flow_extension_sdk::evaluate_json;
-    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::Brep;
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::engine::Brep;
     use std::sync::{Mutex, OnceLock};
 
     async fn point(x: f64, y: f64, z: f64) -> Dictionary {
@@ -2357,4 +2357,4 @@ mod extension_guest {
 // #endregion 🔖️ExtensionGuest
 
 #[cfg(test)]
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::BREP_KERNEL_OPERATIONS;
+use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::engine::BREP_KERNEL_OPERATIONS;

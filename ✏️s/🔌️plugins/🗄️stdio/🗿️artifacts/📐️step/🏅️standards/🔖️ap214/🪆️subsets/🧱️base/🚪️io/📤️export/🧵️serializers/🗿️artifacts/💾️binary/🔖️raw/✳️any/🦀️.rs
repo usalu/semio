@@ -1,7 +1,7 @@
 //! Serialize stdio.step to stdio.binary.
 
-use crate::artifacts::binary::{BinarySnapshot, STDIO_BINARY_DOCUMENT_SCHEMA};
-use crate::artifacts::step::StepSnapshot;
+use semio_s_artifact_stdio_binary::{BinarySnapshot, STDIO_BINARY_DOCUMENT_SCHEMA};
+use crate::StepSnapshot;
 
 //#region Codec
 /// Register serializer hooks.
@@ -11,7 +11,7 @@ pub fn register() {}
 /// UTF-8 encode text into a BinarySnapshot.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn serialize(from: &StepSnapshot) -> BinarySnapshot {
-    let text = crate::artifacts::step::engine::part21::write_part21(&from.to_part21_document());
+    let text = crate::engine::part21::write_part21(&from.to_part21_document());
     BinarySnapshot { schema: STDIO_BINARY_DOCUMENT_SCHEMA.into(), bytes: text.into_bytes() }
 }
 

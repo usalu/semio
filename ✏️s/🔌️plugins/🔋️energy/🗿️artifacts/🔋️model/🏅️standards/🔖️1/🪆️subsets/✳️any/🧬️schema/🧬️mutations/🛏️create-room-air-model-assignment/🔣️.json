@@ -5,7 +5,7 @@
   "displayName": "Create Room Air Model Assignment",
   "emoji": "🛏️",
   "aggregateVariant": "CreateRoomAirModelAssignment",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "create-room-air-model-assignment",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

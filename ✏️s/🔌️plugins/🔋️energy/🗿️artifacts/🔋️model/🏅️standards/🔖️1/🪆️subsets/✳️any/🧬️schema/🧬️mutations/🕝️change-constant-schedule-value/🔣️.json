@@ -5,7 +5,7 @@
   "displayName": "Change Constant Schedule Value",
   "emoji": "🕝️",
   "aggregateVariant": "ChangeConstantScheduleValue",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-constant-schedule-value",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

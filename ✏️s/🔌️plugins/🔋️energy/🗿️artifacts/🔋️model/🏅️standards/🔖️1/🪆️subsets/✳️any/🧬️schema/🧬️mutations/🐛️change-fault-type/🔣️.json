@@ -5,7 +5,7 @@
   "displayName": "Change Fault Type",
   "emoji": "🐛️",
   "aggregateVariant": "ChangeFaultType",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-fault-type",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

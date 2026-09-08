@@ -1,9 +1,80 @@
 {
-  "$id": "https://semio.tech/schema/s.stdio.ifc.2x3.mutation/mutation.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/ifc/2x3/base/mutations.json",
   "title": "Ifc2x3Mutation",
-  "type": "object",
-  "properties": {
-    "mutation": { "type": "string", "enum": ["setSnapshot", "upsertInstance", "removeInstance", "setHeader"] }
-  },
-  "required": ["mutation"]
+  "description": "Discriminated union over this module's mutation leaves (internally tagged); every payload is the leaf's own schema, referenced, never restated.",
+  "oneOf": [
+    {
+      "allOf": [
+        {
+          "$ref": "./🗑️remove-instance/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "removeInstance"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "./📋set-header/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setHeader"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "./📸️set-snapshot/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setSnapshot"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "./🧱upsert-instance/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "upsertInstance"
+            }
+          }
+        }
+      ]
+    }
+  ]
 }

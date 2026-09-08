@@ -39,11 +39,11 @@ use std::collections::HashMap;
 
 use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId};
 
-use crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioPoint3;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::{
+use crate::standards::v1::subsets::base::schema::geometry::SemioPoint3;
+use crate::standards::v1::subsets::brep::schema::snapshot::{
     BrepCurve, BrepEdge, BrepFace, BrepLoop, BrepLoopEdge, BrepShell, BrepShellFace, BrepSolid, BrepSolidShell, BrepSurface, BrepVertex, SemioBrepSnapshot, STDIO_SEMIOBREP_DOCUMENT_SCHEMA,
 };
-use crate::artifacts::step::schema::snapshot::{StepEntity, StepSnapshot, StepValue};
+use semio_s_artifact_stdio_step::schema::snapshot::{StepEntity, StepSnapshot, StepValue};
 
 //#region 🔖️ValueAccess
 /// 🔎️ True if `e`'s primary type OR any of its complex-instance fragments match `name`
@@ -425,7 +425,7 @@ mod tests {
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn fixture_step_snapshot() -> StepSnapshot {
-        let doc = crate::artifacts::step::engine::part21::parse_part21(FIXTURE).expect("parse real AP214 fixture");
+        let doc = semio_s_artifact_stdio_step::engine::part21::parse_part21(FIXTURE).expect("parse real AP214 fixture");
         StepSnapshot::from_part21_document(&doc)
     }
 
@@ -464,7 +464,7 @@ mod tests {
         // A LINE whose `dir` points at a nonexistent VECTOR must fail loudly, not silently
         // produce a zero direction.
         let bad = FIXTURE.replace("#20=LINE('',#1,#30);", "#20=LINE('',#1,#999);");
-        let doc = crate::artifacts::step::engine::part21::parse_part21(&bad).expect("parse");
+        let doc = semio_s_artifact_stdio_step::engine::part21::parse_part21(&bad).expect("parse");
         let step = StepSnapshot::from_part21_document(&doc);
         let result = semio_framework_plugin::resolve_ready(SemioBrepFromStep::deserialize(&step));
         assert!(result.is_err(), "dangling VECTOR reference must surface as an error, not a fabricated direction");
@@ -474,7 +474,7 @@ mod tests {
     async fn unsupported_surface_kind_errors_rather_than_fabricating() {
         // Swap PLANE for a surface kind outside this leaf's supported vocabulary.
         let bad = FIXTURE.replace("#16=PLANE('',#40);", "#16=SURFACE_OF_REVOLUTION('',#20,#40);");
-        let doc = crate::artifacts::step::engine::part21::parse_part21(&bad).expect("parse");
+        let doc = semio_s_artifact_stdio_step::engine::part21::parse_part21(&bad).expect("parse");
         let step = StepSnapshot::from_part21_document(&doc);
         let result = semio_framework_plugin::resolve_ready(SemioBrepFromStep::deserialize(&step));
         assert!(result.is_err(), "an unsupported surface entity must error, never silently become a Plane");

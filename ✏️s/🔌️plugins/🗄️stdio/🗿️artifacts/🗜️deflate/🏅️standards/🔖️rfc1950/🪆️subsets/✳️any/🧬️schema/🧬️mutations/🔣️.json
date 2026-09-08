@@ -1,44 +1,80 @@
 {
-  "$id": "https://semio.tech/schema/s.stdio.deflate/mutation.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/deflate/rfc1950/any/mutations.json",
   "title": "DeflateMutation",
+  "description": "Discriminated union over this module's mutation leaves (internally tagged); every payload is the leaf's own schema, referenced, never restated.",
   "oneOf": [
     {
-      "type": "object",
-      "required": ["mutation", "snapshot"],
-      "properties": {
-        "mutation": { "const": "setSnapshot" },
-        "snapshot": { "$ref": "./📸️snapshot/🔣️.json" }
-      },
-      "additionalProperties": false
+      "allOf": [
+        {
+          "$ref": "./🧮set-compression-params/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setCompressionParams"
+            }
+          }
+        }
+      ]
     },
     {
-      "type": "object",
-      "required": ["mutation", "method", "windowBits", "levelHint"],
-      "properties": {
-        "mutation": { "const": "setCompressionParams" },
-        "method": { "type": "integer", "minimum": 0, "maximum": 15 },
-        "windowBits": { "type": "integer", "minimum": 0, "maximum": 15 },
-        "levelHint": { "type": "string", "enum": ["fastest", "fast", "default", "maximum"] }
-      },
-      "additionalProperties": false
+      "allOf": [
+        {
+          "$ref": "./📦set-payload/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setPayload"
+            }
+          }
+        }
+      ]
     },
     {
-      "type": "object",
-      "required": ["mutation", "dictId"],
-      "properties": {
-        "mutation": { "const": "setPresetDictionary" },
-        "dictId": { "type": ["integer", "null"], "minimum": 0, "maximum": 4294967295 }
-      },
-      "additionalProperties": false
+      "allOf": [
+        {
+          "$ref": "./📖set-preset-dictionary/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setPresetDictionary"
+            }
+          }
+        }
+      ]
     },
     {
-      "type": "object",
-      "required": ["mutation", "payload"],
-      "properties": {
-        "mutation": { "const": "setPayload" },
-        "payload": { "type": "array", "items": { "type": "integer", "minimum": 0, "maximum": 255 } }
-      },
-      "additionalProperties": false
+      "allOf": [
+        {
+          "$ref": "./📸️set-snapshot/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setSnapshot"
+            }
+          }
+        }
+      ]
     }
   ]
 }

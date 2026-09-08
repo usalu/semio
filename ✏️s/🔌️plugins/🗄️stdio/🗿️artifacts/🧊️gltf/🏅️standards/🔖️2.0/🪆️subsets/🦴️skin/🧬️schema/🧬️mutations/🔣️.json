@@ -1,7 +1,8 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/stdio/gltf/2.0/mutation/skin",
+  "$id": "https://semio.tech/schema/s/stdio/gltf/2.0/skin/mutations.json",
   "title": "glTF Skin Mutation",
+  "description": "View over the any subset's mutation leaves (adjacently tagged); every payload is the owning leaf's own schema, referenced, never restated.",
   "oneOf": [
     {
       "type": "object",
@@ -12,10 +13,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "create-skin"
+          "const": "createSkin"
         },
         "payload": {
-          "$ref": "🦴️skin/🌱️create/🧬️.schema.json"
+          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🦴️skin/🌱️create/🧬️schema/🔣️.json"
         }
       }
     },
@@ -28,10 +29,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "delete-skin"
+          "const": "deleteSkin"
         },
         "payload": {
-          "$ref": "🦴️skin/🗑️delete/🧬️.schema.json"
+          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🦴️skin/🗑️delete/🧬️schema/🔣️.json"
         }
       }
     },
@@ -44,10 +45,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "move-skin"
+          "const": "moveSkin"
         },
         "payload": {
-          "$ref": "🦴️skin/🚚️move/🧬️.schema.json"
+          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🦴️skin/🚚️move/🧬️schema/🔣️.json"
         }
       }
     },
@@ -60,10 +61,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "reorder-skins"
+          "const": "reorderSkins"
         },
         "payload": {
-          "$ref": "🦴️skin/🔀️reorder/🧬️.schema.json"
+          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🦴️skin/🔀️reorder/🧬️schema/🔣️.json"
         }
       }
     }

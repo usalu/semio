@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeNCycles, base: &En1999Snapshot) -> protocol::Mutatio
     if base.n_cycles == payload.new_n_cycles {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Number of fatigue cycles is already {}.", payload.new_n_cycles));
     }
-    protocol::MutationOutcome::new(En1999Diff { n_cycles: Some(payload.new_n_cycles.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1999Diff { n_cycles: Some(payload.new_n_cycles), ..Default::default() })
 }
 //#endregion 🔖️Diff

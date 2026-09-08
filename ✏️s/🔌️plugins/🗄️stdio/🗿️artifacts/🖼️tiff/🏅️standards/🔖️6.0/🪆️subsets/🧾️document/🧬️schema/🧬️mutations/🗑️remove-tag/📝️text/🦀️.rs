@@ -1,6 +1,6 @@
 //! 📝️ Direct remove-tag text codec.
 use super::*;
-use crate::artifacts::tiff::schema::mutations::text::Entry;
+use crate::schema::mutations::text::Entry;
 pub const TEXT_OPCODE: &str = "remove-tag";
 pub const CODEC: Entry = Entry { opcode: TEXT_OPCODE, print, parse };
 

@@ -38,10 +38,10 @@ impl Iso16757Diff {
                 next.part_number_inputs = value.clone();
             }
             if let Some(value) = &self.script_limits {
-                next.script_limits = value.clone();
+                next.script_limits = *value;
             }
             if let Some(value) = &self.exchange_process {
-                next.exchange_process = value.clone();
+                next.exchange_process = *value;
             }
             if let Some(value) = &self.selected_check_index {
                 next.selected_check_index = *value;
@@ -77,10 +77,10 @@ impl MutationDiff<Iso16757Snapshot> for Iso16757Diff {
                 next.part_number_inputs = value.clone();
             }
             if let Some(value) = &self.script_limits {
-                next.script_limits = value.clone();
+                next.script_limits = *value;
             }
             if let Some(value) = &self.exchange_process {
-                next.exchange_process = value.clone();
+                next.exchange_process = *value;
             }
             next
         })

@@ -5,7 +5,7 @@
   "displayName": "Delete Mechanical Ventilation",
   "emoji": "🚫️",
   "aggregateVariant": "DeleteMechanicalVentilation",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "delete-mechanical-ventilation",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

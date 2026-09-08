@@ -5,7 +5,7 @@
   "displayName": "Change Thermostat Heating Setpoint Schedule",
   "emoji": "🥵️",
   "aggregateVariant": "ChangeThermostatHeatingSetpointSchedule",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-thermostat-heating-setpoint-schedule",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

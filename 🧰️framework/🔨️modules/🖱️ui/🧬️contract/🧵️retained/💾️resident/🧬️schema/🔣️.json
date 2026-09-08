@@ -1,0 +1,17 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/framework/ui/contract/retained/resident/schema.json",
+  "title": "Ui Contract Retained Resident Schema Module",
+  "$defs": {
+    "Resident": {
+      "title": "Owned UI Shared Composition Capacity",
+      "description": "The original Shard composition injects one neutral ledger. UI owns no independent capacity or default; all metadata, storage and aliases consume this same authority.",
+      "$ref": "https://semio.tech/schema/framework/value/resident/schema.json#/$defs/Resident"
+    }
+  },
+  "allOf": [
+    {
+      "$ref": "#/$defs/Resident"
+    }
+  ]
+}

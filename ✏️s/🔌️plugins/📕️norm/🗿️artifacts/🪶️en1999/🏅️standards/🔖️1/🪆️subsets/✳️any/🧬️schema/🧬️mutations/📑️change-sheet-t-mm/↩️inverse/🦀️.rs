@@ -7,6 +7,6 @@ use crate::artifacts::en1999::En1999Snapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(_payload: &ChangeSheetTMm, base: &En1999Snapshot) -> Vec<En1999Mutation> {
-    vec![En1999Mutation::ChangeSheetTMm(ChangeSheetTMm { new_sheet_t_mm: base.sheet_t_mm.clone() })]
+    vec![En1999Mutation::ChangeSheetTMm(ChangeSheetTMm { new_sheet_t_mm: base.sheet_t_mm })]
 }
 //#endregion 🔖️Inverse

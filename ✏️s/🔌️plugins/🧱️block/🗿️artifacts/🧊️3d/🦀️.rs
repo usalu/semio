@@ -5,7 +5,7 @@
 pub use crate::artifacts::block3d::schema::snapshot::Block3dSnapshot;
 
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::{SemioKitSnapshot, SemioKitType};
+use semio_s_artifact_stdio_semio::standards::v1::subsets::kit::schema::snapshot::{SemioKitSnapshot, SemioKitType};
 
 pub const BLOCK_3D_SCHEMA: &str = "block.3d";
 
@@ -283,7 +283,7 @@ mod tests {
 pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
     use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
 
-    let rows: &[(&str, &str, &str, &[(&str, &str)], Option<(&str, &str)>)] = &[
+    let rows: &[semio_framework_plugin::ArtifactCapabilityRow<'_>] = &[
         ("s.block.block3d.standard.v1", "standard", "1", &[], None),
         ("s.block.block3d.standard.v1.profile.any", "profile", "any", &[], None),
         ("s.block.block3d.schema.artifact", "schema", "s.block.block3d", &[("schema", "s.block.block3d")], None),

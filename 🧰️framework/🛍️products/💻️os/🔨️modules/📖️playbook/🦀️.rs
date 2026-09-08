@@ -243,7 +243,7 @@ pub fn eval_playbook_expr(expr: &PlaybookExpr, values: &PlaybookValues) -> DslVa
 }
 
 pub fn is_block_visible(block: &PlaybookBlock, values: &PlaybookValues) -> bool {
-    block.condition.as_ref().map(|expr| eval_playbook_expr(expr, values).as_bool().unwrap_or(false)).unwrap_or(true)
+    block.condition.as_ref().map_or(true, |expr| eval_playbook_expr(expr, values).as_bool().unwrap_or(false))
 }
 
 pub fn default_value_for_block(block: &PlaybookBlock) -> DslValue {
@@ -763,12 +763,10 @@ pub mod generation_forms {
                 })
             }
             "vector" => {
-                let numbers: Vec<DslValue> = value.as_array().map(|slice| slice.to_vec()).unwrap_or_else(|| question.fields.as_ref().map(|fields| fields.iter().map(|field| DslValue::float(field.value.unwrap_or(0.0))).collect()).unwrap_or_default());
+                let numbers: Vec<DslValue> = value.as_array().map_or_else(|| question.fields.as_ref().map(|fields| fields.iter().map(|field| DslValue::float(field.value.unwrap_or(0.0))).collect()).unwrap_or_default(), |slice| slice.to_vec());
                 let labels: Vec<String> = question
                     .fields
-                    .as_ref()
-                    .map(|fields| fields.iter().map(|field| field.label.clone().unwrap_or_else(|| field.key.clone())).collect())
-                    .unwrap_or_else(|| numbers.iter().enumerate().map(|(index, _)| format!("Field {}", index + 1)).collect());
+                    .as_ref().map_or_else(|| numbers.iter().enumerate().map(|(index, _)| format!("Field {}", index + 1)).collect(), |fields| fields.iter().map(|field| field.label.clone().unwrap_or_else(|| field.key.clone())).collect());
                 let children: Vec<UiNode> = numbers
                     .iter()
                     .enumerate()

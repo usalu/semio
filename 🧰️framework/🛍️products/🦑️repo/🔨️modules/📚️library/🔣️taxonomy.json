@@ -25490,14 +25490,106 @@
         "🟦️typescript",
         "🔗️graphql",
         "🛰️protobuf"
-      ]
+      ],
+      "facetPathIdentities": []
     },
     "📜️interface": {
       "normativeFormat": "📜️wit",
       "formats": [
         "📜️wit"
+      ],
+      "facetPathIdentities": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️schema"
       ]
     }
+  },
+  "schemaJsonDialect": "http://json-schema.org/draft-07/schema#",
+  "schemaDefaultFacetKind": "🧬️data",
+  "schemaScopeOwnerLevels": {
+    "facetDirName": "🧬️schema",
+    "directoryKindId": "schema",
+    "levels": {
+      "plugin-root": {
+        "pathPatterns": [
+          "✏️s/🔌️plugins/*"
+        ],
+        "reason": "A plugin root owns its own identity contracts (plugin-identity, artifact-identity) that no single artifact may claim."
+      },
+      "artifact-standard-subset": {
+        "pathPatterns": [
+          "✏️s/🔌️plugins/*/🗿️artifacts/*/🏅️standards/*/🪆️subsets/*"
+        ],
+        "reason": "A subset is the only level that owns artifact data: standards own subsets, subsets own schema, io and examples."
+      },
+      "surface-state-lane": {
+        "pathPatterns": [
+          "**/✏️editor/🎚️config",
+          "**/✏️editor/👥️presence",
+          "**/✏️editor/🫧️transient"
+        ],
+        "reason": "Persisted local-only, ephemeral shared and ephemeral local-only surface state each own their own contract."
+      },
+      "framework-module": {
+        "pathPatterns": [
+          "🧰️framework/🔨️modules/**"
+        ],
+        "reason": "A domain-neutral framework module owns the contracts its two independent consumers share."
+      },
+      "product-module": {
+        "pathPatterns": [
+          "🧰️framework/🛍️products/*/🔨️modules/**"
+        ],
+        "reason": "A product module owns the contracts of the product surface it implements."
+      },
+      "hub-area-module": {
+        "pathPatterns": [
+          "🌎️hub/**"
+        ],
+        "reason": "A hub area owns its protocol contracts; os and mcp mirrors are consumers, never co-owners."
+      },
+      "mutation-leaf": {
+        "pathPatterns": [
+          "**/🧬️schema/🧬️mutations/*"
+        ],
+        "reason": "mutationPayloadSchemaAuthority makes the leaf the authority for its own payload; aggregates are $ref unions."
+      }
+    },
+    "excludedOwnerPathPatterns": [
+      "**/🧱️elements",
+      "**/🧱️elements/**",
+      "**/🎯️targets",
+      "**/🎯️targets/**",
+      "**/📦️packages",
+      "**/📦️packages/**",
+      "**/🧪️*",
+      "**/🧪️*/**",
+      "**/🧫️*",
+      "**/🧫️*/**",
+      "**/🧬️contracts",
+      "**/🧬️contracts/**"
+    ]
+  },
+  "schemaExportResolution": {
+    "uriScheme": "schema",
+    "uriPattern": "^schema://(?<scope>[a-z0-9]+(?:-[a-z0-9]+)*(?:\\.[a-z0-9]+(?:-[a-z0-9]+)*)*)/(?<export>[A-Z][A-Za-z0-9]*)$",
+    "idBase": "https://semio.tech/schema/",
+    "idFacetFilenamePattern": "^[a-z0-9]+(?:-[a-z0-9]+)*\\.json$",
+    "scopeIdSeparator": ".",
+    "scopeIdPattern": "^[a-z0-9]+(?:-[a-z0-9]+)*(?:\\.[a-z0-9]+(?:-[a-z0-9]+)*)*$",
+    "exportIdPattern": "^[A-Z][A-Za-z0-9]*$",
+    "rootExportKeyword": "title",
+    "exportsKeyword": "$defs",
+    "catalogPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️schema-catalog.json",
+    "catalogDocumentPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📓️schema-catalog.md",
+    "catalogContractId": "schema-scope-catalog-v1",
+    "generator": "bun ./📜️script.ts schema generate",
+    "forbiddenPlacementPatterns": [
+      "**/*.schema.json",
+      "**/🧬️schema.json",
+      "**/🧬️contracts",
+      "**/🧬️contracts/**"
+    ],
+    "placementExceptions": {}
   },
   "artifactComponentDirs": [
     "🧬️schema",
@@ -25792,182 +25884,8 @@
   "_testContributionComment": "🧩️ Open/closed extension point. An owner that needs a reference implementation, an oracle crate or a format-specific comparison profile declares them in `<owner>/🔣️oracle.json`. The framework test domain DISCOVERS those manifests; it never names an owner, a plugin or a format. Adding PDF, PNG or any future artifact therefore requires zero framework edits.",
   "testContributionDirName": "🔮️oracle",
   "testContributionDirectoryOverrides": {
-    "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any": "🔮️oracle",
-    "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any": "🔮️oracle",
-    "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any": "🔮️oracle",
-    "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any": "🔮️oracle",
-    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any": "🔮️oracle",
-    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🏷️metadata": "🔮️oracle",
-    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🧱️structure": "🔮️oracle",
-    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🎨️style": "🔮️oracle",
-    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🔀️transform": "🔮️oracle",
-    "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any": "🔮️oracle",
-    "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any": "🔮️oracle",
-    "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/🔗️dependency": "🔮️oracle",
-    "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/🪜️step": "🔮️oracle",
-    "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any": "🔮️oracle",
-    "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any": "🔮️oracle",
-    "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any": "🔮️oracle",
-    "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/🖼️asset": "🔮️oracle",
-    "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/🧱️block": "🔮️oracle",
-    "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/🎨️canvas": "🔮️oracle",
-    "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/📜️document": "🔮️oracle",
-    "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/🖋️ink": "🔮️oracle",
-    "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/🧮️math": "🔮️oracle",
-    "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/📊️table": "🔮️oracle",
-    "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/📝️text": "🔮️oracle",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧱️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any": "🔮️oracle",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔺️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any": "🔮️oracle",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any": "🔮️oracle",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any": "🔮️oracle",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base": "🔮️oracle",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🏢️cobie": "🔮️oracle",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🤝️cv20": "🔮️oracle",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧮️sav": "🔮️oracle",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/4️⃣4/🪆️subsets/✳️any": "🔮️oracle",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/🧱️blocks": "🔮️oracle",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/🧩️entities": "🔮️oracle",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header": "🔮️oracle",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📊️tables": "🔮️oracle",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/🧱️base": "🔮️oracle",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/🌐️iso21320": "🔮️oracle",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🏛️model": "🔮️oracle",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔊️audio": "🔮️oracle",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph": "🔮️oracle",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any": "🔮️oracle",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base": "🔮️oracle",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🛜️i-json": "🔮️oracle",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖼️image": "🔮️oracle",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔤️text": "🔮️oracle",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📊️table": "🔮️oracle",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📦️object": "🔮️oracle",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup": "🔮️oracle",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/👁️viewpoint": "🔮️oracle",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/📸️snapshot": "🔮️oracle",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry": "🔮️oracle",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/🎨️material": "🔮️oracle",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧰️kit": "🔮️oracle",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🎬️video": "🔮️oracle",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔢️value": "🔮️oracle",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base": "🔮️oracle",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🔒️strict": "🔮️oracle",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🌉️transitional": "🔮️oracle",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base": "🔮️oracle",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🔒️strict": "🔮️oracle",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🌉️transitional": "🔮️oracle",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214": "🔮️oracle",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧱️baseline": "🔮️oracle",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document": "🔮️oracle",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/7️⃣87a/🪆️subsets/✳️any": "🔮️oracle",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧩️application": "🔮️oracle",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base": "🔮️oracle",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/💬️comment": "🔮️oracle",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🎛️graphic-control": "🔮️oracle",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🧱️base": "🔮️oracle",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🔰️basic": "🔮️oracle",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🔬️tiny": "🔮️oracle",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base": "🔮️oracle",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/✅️valid": "🔮️oracle",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base": "🔮️oracle",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/📏️strict": "🔮️oracle",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🔄️transitional": "🔮️oracle",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/4️⃣ac1018/🪆️subsets/✳️any": "🔮️oracle",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any": "🔮️oracle",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🗄️a": "🔮️oracle",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base": "🔮️oracle",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🖨️x": "🔮️oracle",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🗄️a": "🔮️oracle",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base": "🔮️oracle",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/📐️e": "🔮️oracle",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/⚕️h": "🔮️oracle",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/♿️ua": "🔮️oracle",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧾️vt": "🔮️oracle",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🖨️x": "🔮️oracle",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh": "🔮️oracle",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep": "🔮️oracle",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document": "🔮️oracle",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📐️cad": "🔮️oracle",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base": "🔮️oracle",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing": "🔮️oracle",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📽️presentation": "🔮️oracle",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🌊️flow": "🔮️oracle",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🎞️animation": "🔮️oracle",
-    "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer": "🔮️oracle",
-    "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any": "🔮️oracle",
-    "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook": "🔮️oracle",
-    "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any": "🔮️oracle",
-    "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms": "🔮️oracle",
-    "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any": "🔮️oracle",
-    "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any": "🔮️oracle",
-    "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation": "🔮️oracle",
-    "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any": "🔮️oracle",
-    "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/🏅️standards/🔖️1/🪆️subsets/✳️any": "🔮️oracle",
-    "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any": "🔮️oracle",
-    "✏️s/🔌️plugins/📕️norm": "🔮️oracle",
-    "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any": "🔮️oracle",
-    "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any": "🔮️oracle",
-    "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧱️din4108/🏅️standards/🔖️1/🪆️subsets/✳️any": "🔮️oracle",
-    "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚖️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any": "🔮️oracle",
-    "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any": "🔮️oracle",
-    "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any": "🔮️oracle",
-    "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any": "🔮️oracle",
-    "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧩️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any": "🔮️oracle",
-    "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any": "🔮️oracle",
-    "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any": "🔮️oracle",
-    "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any": "🔮️oracle",
-    "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any": "🔮️oracle",
-    "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any": "🔮️oracle",
-    "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any": "🔮️oracle",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎵️mp3/🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any": "🔮️oracle",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any": "🔮️oracle",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl": "🔮️oracle",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/📇️idx1": "🔮️oracle",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎞️movi": "🔮️oracle",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any": "🔮️oracle",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any": "🔮️oracle",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any": "🔮️oracle",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🪆️subsets/✳️any": "🔮️oracle",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌦️epw/🏅️standards/🔖️energyplus/🪆️subsets/✳️any": "🔮️oracle",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any": "🔮️oracle",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any": "🔮️oracle",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧱️baseline": "🔮️oracle",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document": "🔮️oracle",
-    "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any": "🔮️oracle",
-    "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any": "🔮️oracle",
-    "✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/🏅️standards/🔖️1/🪆️subsets/✳️any": "🔮️oracle",
-    "🧰️framework/🔨️modules/🖱️ui": "🔮️oracle",
-    "🧰️framework/🔨️modules/🗺️surface/🗺️tiled-map": "🔮️oracle",
-    "🧰️framework/🔨️modules/🎠️kernel": "🔮️oracle",
-    "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any": "🔮️oracle",
-    "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow": "🔮️oracle",
     "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program": "⚖️oracle",
-    "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any": "⚖️oracle",
-    "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any": "🔮️oracle",
-    "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🏋️load": "🔮️oracle",
-    "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/📈️analysis": "🔮️oracle",
-    "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh": "🔮️oracle",
-    "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🛡️boundary": "🔮️oracle",
-    "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🧱️material": "🔮️oracle",
-    "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any": "🔮️oracle",
-    "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🏋️load": "🔮️oracle",
-    "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/📈️analysis": "🔮️oracle",
-    "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh": "🔮️oracle",
-    "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🛡️boundary": "🔮️oracle",
-    "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🧱️material": "🔮️oracle",
-    "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any": "🔮️oracle",
-    "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any": "🔮️oracle",
-    "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any": "🔮️oracle",
-    "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any": "🔮️oracle",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any": "🔮️oracle",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/🎞️animation": "🔮️oracle",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/🎥️camera": "🔮️oracle",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/💎️material": "🔮️oracle",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/🦴️skin": "🔮️oracle",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/🪪️asset": "🔮️oracle",
-    "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any": "🔮️oracle",
-    "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any": "🔮️oracle",
-    "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any": "🔮️oracle",
-    "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any": "🔮️oracle"
+    "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any": "⚖️oracle"
   },
   "_testMutationVocabularyComment": "🦠️ The directory an implementation puts a mutation vocabulary in. Named here as VOCABULARY so the contract can ask 'is this declared vocabulary claimed by a catalog?' without the framework learning any format, language or plugin. A subset that declares a vocabulary and no catalog is invisible to the completeness gate — that gap let two subsets ship handcrafted mutations with no test at all.",
   "testMutationVocabularyDirName": "🧬️mutations",
@@ -26153,7 +26071,8 @@
   ],
   "pluginChildDirs": [
     "🎮️commands",
-    "🔨️modules"
+    "🔨️modules",
+    "🧬️schema"
   ],
   "pluginRequiredChildDirs": [
     "🎮️commands"

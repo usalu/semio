@@ -2,7 +2,7 @@
 
 use crate::artifacts::curation::{CuratedItem, ObjectKindExtra};
 use schema::ArtifactSchema;
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
+use semio_s_artifact_stdio_semio::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
 
 //#region 🔖️Snapshot
 /// 📸️ Persisted curation document snapshot (persistent fields of the artifact). `catalog`/`stock_extra`

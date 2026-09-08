@@ -16,8 +16,8 @@ use crate::artifacts::fem3d::Fem3dSnapshot;
 use semio_framework::io::io_mechanism::Serializer;
 use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{ArtifactSerializer, StandardId, SubsetId};
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::mesh::io::export::serializers::artifacts::stl::v_ascii::any::SemioMeshToStl;
-use semio_s_plugin_stdio::artifacts::stl::standards::v_ascii::engine::encode_stl_ascii;
+use semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::io::export::serializers::artifacts::stl::v_ascii::any::SemioMeshToStl;
+use semio_s_artifact_stdio_stl::standards::v_ascii::engine::encode_stl_ascii;
 
 /// 🎯️ The foreign dialect this leaf writes.
 pub const STL_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.stl", standard: StandardId("ascii"), subset: SubsetId::ANY };

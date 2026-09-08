@@ -33,7 +33,11 @@ pack = { package = "semio-framework-pack", path = "../../../../../🧰️framewo
 semio-framework-ui-contract.workspace = true
 
 semio-framework-job.workspace = true
-semio-s-plugin-stdio = { path = "../../../🗄️stdio/📦️packages/🦀️rust", package = "semio-s-plugin-stdio", default-features = false, features = ["full-artifact-catalog"] }
+semio-s-artifact-stdio-csv = { workspace = true }
+semio-s-artifact-stdio-json = { workspace = true }
+semio-s-artifact-stdio-md = { workspace = true }
+semio-s-artifact-stdio-semio = { workspace = true }
+semio-s-artifact-stdio-txt = { workspace = true }
 semio-framework-os-kernel = { path = "../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
 neural_engine = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📦️packages/🦀️rust", package = "semio-framework-os-kernel-neural-engine" }
 imperative_engine = { path = "../../../../../✏️s/🔨️modules/📜️imperative/📦️packages/🦀️rust", package = "semio-s-imperative" }

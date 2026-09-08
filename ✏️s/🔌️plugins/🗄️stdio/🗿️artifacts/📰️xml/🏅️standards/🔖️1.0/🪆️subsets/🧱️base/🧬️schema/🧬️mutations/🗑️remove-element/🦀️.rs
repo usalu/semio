@@ -1,7 +1,7 @@
 //! 🧬️ Direct remove-element mutation owner.
-use crate::artifacts::xml::schema::diff::{diff_at_path, XmlChildrenDiff, XmlDiff, XmlElementDiff, XmlNodeDiff};
-use crate::artifacts::xml::schema::mutation_support::XmlNodePath;
-use crate::artifacts::xml::XmlSnapshot;
+use crate::schema::diff::{diff_at_path, XmlChildrenDiff, XmlDiff, XmlElementDiff, XmlNodeDiff};
+use crate::schema::mutation_support::XmlNodePath;
+use crate::XmlSnapshot;
 
 #[path = "📝️text/🦀️.rs"]
 pub mod text;

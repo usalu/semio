@@ -5,7 +5,7 @@
   "displayName": "Create Lighting Gain",
   "emoji": "💡️",
   "aggregateVariant": "CreateLightingGain",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "create-lighting-gain",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

@@ -1,9 +1,9 @@
 //! ⚖️ EN 1990 basis of structural design — document entities (constitutional: general).
 
 pub use crate::artifacts::en1990::schema::snapshot::En1990QkEntry;
+/// 📸️ Persisted snapshot — defined in `📸️snapshot/🧬️schema`, re-exported here.
 pub use crate::artifacts::en1990::schema::snapshot::En1990Snapshot;
 
-/// 📸️ Persisted snapshot — defined in `📸️snapshot/🧬️schema`, re-exported here.
 
 //#region 🔖️Types
 //#endregion 🔖️Types
@@ -19,18 +19,17 @@ pub use crate::artifacts::en1990::schema::snapshot::En1990Snapshot;
 /// read/write the exact child owner below and re-mint a fresh content-addressed child handle,
 /// mirroring `➗️mathematical`'s `MATH_SCRATCH`/`🕸️dag`'s/`🔀️process`'s equivalent patterns for the
 /// identical per-entry mutation-rich shape.
-
 //#region 🔖️ChildTypes
-pub type En1990QkChild = store::ArtifactChild<semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot>;
+pub type En1990QkChild = store::ArtifactChild<semio_s_artifact_stdio_semio::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot>;
 //#endregion 🔖️ChildTypes
 
 //#region 🔖️Converters
 /// 🌉 REAL bidirectional converter: `q_k` variable-action entries <-> `table` rows — two columns
 /// (`category: Str`, `value: Float`), one row per entry in list order (positionally aligned, no
 /// stable id on either side).
-pub fn en1990_qk_table_from_entries(entries: &[En1990QkEntry]) -> semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot {
-    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::table::schema::snapshot::{SemioTableCellKind, SemioTableColumn, SemioTableRow, SemioTableSnapshot, STDIO_SEMIOTABLE_DOCUMENT_SCHEMA};
-    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValue;
+pub fn en1990_qk_table_from_entries(entries: &[En1990QkEntry]) -> semio_s_artifact_stdio_semio::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot {
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::table::schema::snapshot::{SemioTableCellKind, SemioTableColumn, SemioTableRow, SemioTableSnapshot, STDIO_SEMIOTABLE_DOCUMENT_SCHEMA};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::value::schema::snapshot::SemioValue;
     SemioTableSnapshot {
         schema: STDIO_SEMIOTABLE_DOCUMENT_SCHEMA.into(),
         columns: vec![SemioTableColumn { name: "category".into(), kind: SemioTableCellKind::Str }, SemioTableColumn { name: "value".into(), kind: SemioTableCellKind::Float }],
@@ -41,9 +40,9 @@ pub fn en1990_qk_table_from_entries(entries: &[En1990QkEntry]) -> semio_s_plugin
 /// 🌉 Inverse of the converter above — real reconstruction, not a stub. A short/missing cell
 /// degrades honestly (empty category, `0.0` value) rather than panicking, since an
 /// externally-composed mismatch is possible in principle.
-pub fn en1990_qk_entries_from_table(table: &semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot) -> Vec<En1990QkEntry> {
-    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::table::schema::snapshot::SemioTableRow;
-    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValue;
+pub fn en1990_qk_entries_from_table(table: &semio_s_artifact_stdio_semio::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot) -> Vec<En1990QkEntry> {
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::table::schema::snapshot::SemioTableRow;
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::value::schema::snapshot::SemioValue;
     fn cell_str(row: &SemioTableRow, index: usize) -> String {
         match row.cells.get(index) {
             Some(SemioValue::Str { value }) => value.clone(),

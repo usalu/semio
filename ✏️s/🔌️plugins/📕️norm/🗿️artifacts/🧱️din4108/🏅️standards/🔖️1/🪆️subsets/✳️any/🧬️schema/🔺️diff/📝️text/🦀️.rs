@@ -26,16 +26,16 @@ impl Din4108Diff {
                 next.layers = list.values.clone();
             }
             if let Some(value) = &self.climate {
-                next.climate = value.clone();
+                next.climate = *value;
             }
             if let Some(value) = &self.airtightness_n50 {
-                next.airtightness_n50 = value.clone();
+                next.airtightness_n50 = *value;
             }
             if let Some(value) = &self.psi_times_l_sum {
-                next.psi_times_l_sum = value.clone();
+                next.psi_times_l_sum = *value;
             }
             if let Some(value) = &self.rh_int {
-                next.rh_int = value.clone();
+                next.rh_int = *value;
             }
             if let Some(value) = &self.catalog_id {
                 next.catalog_id = value.clone();
@@ -47,25 +47,25 @@ impl Din4108Diff {
                 next.airtightness_class = value.clone();
             }
             if let Some(value) = &self.t_int_c {
-                next.t_int_c = value.clone();
+                next.t_int_c = *value;
             }
             if let Some(value) = &self.solar_absorptance {
-                next.solar_absorptance = value.clone();
+                next.solar_absorptance = *value;
             }
             if let Some(value) = &self.irradiance_w_m2 {
-                next.irradiance_w_m2 = value.clone();
+                next.irradiance_w_m2 = *value;
             }
             if let Some(value) = &self.moisture_mu_exterior {
-                next.moisture_mu_exterior = value.clone();
+                next.moisture_mu_exterior = *value;
             }
             if let Some(value) = &self.moisture_mu_interior {
-                next.moisture_mu_interior = value.clone();
+                next.moisture_mu_interior = *value;
             }
             if let Some(value) = &self.envelope_area_m2 {
-                next.envelope_area_m2 = value.clone();
+                next.envelope_area_m2 = *value;
             }
             if let Some(value) = &self.bb2_details_conform {
-                next.bb2_details_conform = value.clone();
+                next.bb2_details_conform = *value;
             }
             if let Some(value) = &self.application_type {
                 next.application_type = value.clone();
@@ -95,16 +95,16 @@ impl MutationDiff<Din4108Snapshot> for Din4108Diff {
                 next.layers = list.values.clone();
             }
             if let Some(value) = &self.climate {
-                next.climate = value.clone();
+                next.climate = *value;
             }
             if let Some(value) = &self.airtightness_n50 {
-                next.airtightness_n50 = value.clone();
+                next.airtightness_n50 = *value;
             }
             if let Some(value) = &self.psi_times_l_sum {
-                next.psi_times_l_sum = value.clone();
+                next.psi_times_l_sum = *value;
             }
             if let Some(value) = &self.rh_int {
-                next.rh_int = value.clone();
+                next.rh_int = *value;
             }
             if let Some(value) = &self.catalog_id {
                 next.catalog_id = value.clone();
@@ -116,25 +116,25 @@ impl MutationDiff<Din4108Snapshot> for Din4108Diff {
                 next.airtightness_class = value.clone();
             }
             if let Some(value) = &self.t_int_c {
-                next.t_int_c = value.clone();
+                next.t_int_c = *value;
             }
             if let Some(value) = &self.solar_absorptance {
-                next.solar_absorptance = value.clone();
+                next.solar_absorptance = *value;
             }
             if let Some(value) = &self.irradiance_w_m2 {
-                next.irradiance_w_m2 = value.clone();
+                next.irradiance_w_m2 = *value;
             }
             if let Some(value) = &self.moisture_mu_exterior {
-                next.moisture_mu_exterior = value.clone();
+                next.moisture_mu_exterior = *value;
             }
             if let Some(value) = &self.moisture_mu_interior {
-                next.moisture_mu_interior = value.clone();
+                next.moisture_mu_interior = *value;
             }
             if let Some(value) = &self.envelope_area_m2 {
-                next.envelope_area_m2 = value.clone();
+                next.envelope_area_m2 = *value;
             }
             if let Some(value) = &self.bb2_details_conform {
-                next.bb2_details_conform = value.clone();
+                next.bb2_details_conform = *value;
             }
             if let Some(value) = &self.application_type {
                 next.application_type = value.clone();

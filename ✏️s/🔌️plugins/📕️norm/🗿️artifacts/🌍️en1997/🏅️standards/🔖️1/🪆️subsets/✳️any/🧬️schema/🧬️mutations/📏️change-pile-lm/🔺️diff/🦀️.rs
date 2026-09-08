@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangePileLM, base: &En1997Snapshot) -> protocol::Mutation
     if base.pile_l_m == payload.new_pile_l_m {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Pile length [m] is already {}.", payload.new_pile_l_m));
     }
-    protocol::MutationOutcome::new(En1997Diff { pile_l_m: Some(payload.new_pile_l_m.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1997Diff { pile_l_m: Some(payload.new_pile_l_m), ..Default::default() })
 }
 //#endregion 🔖️Diff

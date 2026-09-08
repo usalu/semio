@@ -123,9 +123,9 @@ fn spec_vector_oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::{mutable_input, spec_vector_text};
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_plugin_stdio::artifacts::txt::standards::v_utf_8::subsets::any::schema::mutations::{InsertLineMutation, RemoveLineMutation, SetLineEndingMutation, SetLineMutation, SetTrailingNewlineMutation, apply_txt_mutation};
-    use semio_s_plugin_stdio::artifacts::txt::standards::v_utf_8::subsets::any::schema::snapshot::LineEnding;
-    use semio_s_plugin_stdio::artifacts::txt::{STDIO_TXT_DOCUMENT_SCHEMA, TxtMutation, TxtSnapshot};
+    use crate::standards::v_utf_8::subsets::any::schema::mutations::{InsertLineMutation, RemoveLineMutation, SetLineEndingMutation, SetLineMutation, SetTrailingNewlineMutation, apply_txt_mutation};
+    use crate::standards::v_utf_8::subsets::any::schema::snapshot::LineEnding;
+    use crate::{STDIO_TXT_DOCUMENT_SCHEMA, TxtMutation, TxtSnapshot};
     use semio_s_plugin_stdio_test_oracle::artifacts::txt::standards::v_utf_8::subsets::any::project_txt;
     use semio_s_plugin_stdio_test_oracle::law::{carrier_is_exact, inverse_restores, round_trip_preserves};
 

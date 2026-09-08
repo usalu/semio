@@ -1,11 +1,11 @@
 //! 🧪️ Preserved raster sparse-diff and codec regression laws.
-use crate::artifacts::png::schema::diff::PngDiff;
-use crate::artifacts::png::schema::snapshot::{PngBackground, PngChromaticities, PngChunk, PngColorType, PngPhysicalDims, PngRgb, PngSrgbIntent, PngTextChunk, PngTimestamp, PngTransparency};
-use crate::artifacts::png::PngSnapshot;
+use crate::schema::diff::PngDiff;
+use crate::schema::snapshot::{PngBackground, PngChromaticities, PngChunk, PngColorType, PngPhysicalDims, PngRgb, PngSrgbIntent, PngTextChunk, PngTimestamp, PngTransparency};
+use crate::PngSnapshot;
 use protocol::OpBinary;
 use protocol::{Mutation, MutationDiff, OpText};
 
-use crate::artifacts::png::schema::mutations::*;
+use crate::schema::mutations::*;
 //#region 🔖️DemoMutationCases
 /// 🧪️ P2-P2: shared demo mutation fixtures — `⚙️engine/🦀️.rs`'s `conformance_laws`
 /// module calls `regression_mutation_cases()` directly (`ops_grammar_conformance_law`/
@@ -14,12 +14,12 @@ use crate::artifacts::png::schema::mutations::*;
 /// only the `pub(crate)`/`#[cfg(test)]` visibility changed).
 #[cfg(test)]
 fn demo_text_chunk(keyword: &str, value: &str) -> PngTextChunk {
-    PngTextChunk { keyword: keyword.into(), value: value.into(), compressed: false, kind: crate::artifacts::png::schema::snapshot::PngTextKind::Text, language_tag: String::new(), translated_keyword: String::new() }
+    PngTextChunk { keyword: keyword.into(), value: value.into(), compressed: false, kind: crate::schema::snapshot::PngTextKind::Text, language_tag: String::new(), translated_keyword: String::new() }
 }
 
 #[cfg(test)]
 pub(crate) fn demo_base_snapshot() -> PngSnapshot {
-    use crate::artifacts::png::schema::snapshot::PngChunkMarker;
+    use crate::schema::snapshot::PngChunkMarker;
     PngSnapshot {
         schema: "stdio.png".into(),
         width: 4,
@@ -76,7 +76,7 @@ pub(crate) fn regression_mutation_cases() -> Vec<PngMutation> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::png::schema::snapshot::{PngChunkMarker, PngTextKind};
+    use crate::schema::snapshot::{PngChunkMarker, PngTextKind};
     use protocol::command::DiffAlgebra;
 
     //#region 🔖️Fixtures
@@ -314,11 +314,11 @@ mod tests {
             Ok(b) if !b.is_empty() => b,
             // No usable fixture on disk at test time (or a different workspace layout) — fall
             // back to a synthetic encode -> decode -> re-encode -> re-decode identity check.
-            _ => crate::artifacts::png::engine::encode_png(&base_snapshot()).expect("encode synthetic fallback"),
+            _ => crate::engine::encode_png(&base_snapshot()).expect("encode synthetic fallback"),
         };
-        let decoded = crate::artifacts::png::engine::decode_png(&bytes).expect("decode fixture");
-        let reencoded = crate::artifacts::png::engine::encode_png(&decoded).expect("re-encode fixture");
-        let redecoded = crate::artifacts::png::engine::decode_png(&reencoded).expect("re-decode fixture");
+        let decoded = crate::engine::decode_png(&bytes).expect("decode fixture");
+        let reencoded = crate::engine::encode_png(&decoded).expect("re-encode fixture");
+        let redecoded = crate::engine::decode_png(&reencoded).expect("re-decode fixture");
         // Engine's EncodeScopeNote: encode always canonicalizes to color type 6 / bit depth 8 /
         // interlace 0 — pixel CONTENT is the retained invariant, not the original header/chunks.
         assert_eq!(decoded.width, redecoded.width);

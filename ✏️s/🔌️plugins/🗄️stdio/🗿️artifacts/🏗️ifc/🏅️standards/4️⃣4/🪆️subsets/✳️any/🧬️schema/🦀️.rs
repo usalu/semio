@@ -3,9 +3,9 @@
 //! `IfcSnapshot`'s prior worst-offender defect (`document: step::engine::part21::Part21Document`
 //! verbatim) — now mirrors `IfcSnapshot`'s own typed `header`/`entities` fields.
 
-use crate::artifacts::ifc::schema::snapshot::{IfcEntity, IfcHeader};
-use crate::artifacts::ifc::{IfcMutation, IfcSnapshot, STDIO_IFC_DOCUMENT_SCHEMA};
-use schema::ArtifactSchema;
+use crate::schema::snapshot::{IfcEntity, IfcHeader};
+use crate::{IfcMutation, IfcSnapshot, STDIO_IFC_DOCUMENT_SCHEMA};
+use framework_schema::ArtifactSchema;
 
 //#region 🔖️Artifact
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
@@ -53,40 +53,40 @@ impl IfcArtifact {
     /// stored; builds the shared generic Part-21 graph on the fly via `to_part21_document`
     /// (the analyzer's own relationship-graph traversal still walks that generic shape).
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn spatial(&self) -> crate::artifacts::ifc::engine::spatial::SpatialAnalysis {
-        let document = crate::artifacts::ifc::schema::snapshot::to_part21_document(&self.to_snapshot());
-        crate::artifacts::ifc::engine::spatial::analyze_spatial(&document)
+    pub fn spatial(&self) -> crate::engine::spatial::SpatialAnalysis {
+        let document = crate::schema::snapshot::to_part21_document(&self.to_snapshot());
+        crate::engine::spatial::analyze_spatial(&document)
     }
 }
 //#endregion 🔖️Conversions
 
 //#region 🔖️Descriptor
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn ifc_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
-    schema::ArtifactSchemaDescriptor {
+pub fn ifc_artifact_schema_descriptor() -> framework_schema::ArtifactSchemaDescriptor {
+    framework_schema::ArtifactSchemaDescriptor {
         id: "s.stdio.ifc",
-        artifact: schema::FacetLeaves {
+        artifact: framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),
             json_schema: include_str!("🔣️.json"),
             proto: include_str!("🛰️.proto"),
         },
-        snapshot: schema::FacetLeaves {
+        snapshot: framework_schema::FacetLeaves {
             rust: include_str!("📸️snapshot/🦀️.rs"),
             typescript: include_str!("📸️snapshot/🟦️.ts"),
             graphql: include_str!("📸️snapshot/🔗️.graphql"),
             json_schema: include_str!("📸️snapshot/🔣️.json"),
             proto: include_str!("📸️snapshot/🛰️.proto"),
         },
-        diff: schema::FacetLeaves {
+        diff: framework_schema::FacetLeaves {
             rust: include_str!("🔺️diff/🦀️.rs"),
             typescript: include_str!("🔺️diff/🟦️.ts"),
             graphql: include_str!("🔺️diff/🔗️.graphql"),
             json_schema: include_str!("🔺️diff/🔣️.json"),
             proto: include_str!("🔺️diff/🛰️.proto"),
         },
-        mutations: schema::FacetLeaves {
+        mutations: framework_schema::FacetLeaves {
             rust: include_str!("🧬️mutations/🦀️.rs"),
             typescript: include_str!("🧬️mutations/🟦️.ts"),
             graphql: include_str!("🧬️mutations/🔗️.graphql"),
@@ -98,7 +98,7 @@ pub fn ifc_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
 //#endregion 🔖️Descriptor
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use crate::artifacts::ifc::{IfcDiff, IfcMutation, IfcSnapshot};
+    use crate::{IfcDiff, IfcMutation, IfcSnapshot};
     use semio_framework_plugin::ArtifactBuilder;
 
     //#region 🔖️Builder
@@ -126,7 +126,7 @@ pub mod derived_construction {
             Ok(Self::from_snapshot(<IfcSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
         fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
-            let diff = crate::artifacts::ifc::schema::mutations::apply_ifc_mutation(&mut self.snapshot, &mutation);
+            let diff = crate::schema::mutations::apply_ifc_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
         fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
@@ -148,7 +148,7 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use crate::artifacts::ifc::IfcSnapshot;
+    use crate::IfcSnapshot;
     use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     //#region 🔖️Parts
@@ -217,9 +217,9 @@ semio_framework_plugin::derive_artifact_facets!(
 //#region 🔖️DocumentHelpers
 /// 🌱 Empty persisted snapshot. Dissolved out of `⚙️engine`
 /// (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) — reached as
-/// `crate::artifacts::ifc::standards::v4::engine::empty_ifc_snapshot` through the `engine` barrel
-/// shim, and (via the root `crate::artifacts::ifc::engine` shim, glob-imported from v4) as
-/// `crate::artifacts::ifc::engine::empty_ifc_snapshot` too.
+/// `crate::standards::v4::engine::empty_ifc_snapshot` through the `engine` barrel
+/// shim, and (via the root `crate::engine` shim, glob-imported from v4) as
+/// `crate::engine::empty_ifc_snapshot` too.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn empty_ifc_snapshot() -> IfcSnapshot {
     IfcSnapshot::default()
@@ -233,7 +233,7 @@ pub fn empty_ifc_snapshot() -> IfcSnapshot {
 /// demo_mutation_cases()`/`diff::demo_diff_cases()`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn demo_ifc_snapshot() -> IfcSnapshot {
-    use crate::artifacts::ifc::schema::snapshot::{IfcEntity as _IfcEntity, IfcHeader as _IfcHeader, IfcValue};
+    use crate::schema::snapshot::{IfcEntity as _IfcEntity, IfcHeader as _IfcHeader, IfcValue};
     IfcSnapshot {
         schema: STDIO_IFC_DOCUMENT_SCHEMA.into(),
         header: _IfcHeader {
@@ -262,17 +262,17 @@ pub fn demo_ifc_snapshot() -> IfcSnapshot {
 /// APP-STATE-MACHINES, per the ticket's own explicit instruction: "leave ifc's registration
 /// alone" — see the artifact root `🦀️.rs`'s own doc comment for why `ArtifactDeclaration`
 /// structurally cannot hold both `4`'s and `2x3`'s independent descriptors/codecs at once). Only
-/// physically dissolved out of `⚙️engine`; reached as `crate::artifacts::ifc::standards::v4::
+/// physically dissolved out of `⚙️engine`; reached as `crate::standards::v4::
 /// engine::register()` through the `engine` barrel shim below, which is exactly the path
 /// `🦀️.rs`'s root `ifc::engine::register()` override calls explicitly (alongside `v2x3::
 /// engine::register()`) — and, since the root shim's `pub use super::standards::v4::engine::*;`
-/// glob otherwise re-exports this standard, also the plugin root's own `crate::artifacts::ifc::
+/// glob otherwise re-exports this standard, also the plugin root's own `crate::
 /// engine::register()` entry point before that override's `fn register()` shadows it.
 ///
 /// Registers codecs and the artifact schema descriptor.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn register() {
-    crate::artifacts::ifc::io_registry::register();
+    crate::io_registry::register();
     register_artifact_schema();
     register_artifact_inferences();
     register_pilot_languages();
@@ -291,28 +291,28 @@ pub fn register_pilot_languages() {
         id: "stdio.ifc",
         extension: Some("ifc"),
         role: dsl::LanguageRole::Document,
-        grammar: Some(crate::artifacts::ifc::schema::snapshot::text::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::ifc::schema::snapshot::text::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::artifacts::ifc::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::ifc::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
+        grammar: Some(crate::schema::snapshot::text::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::schema::snapshot::text::COMPONENT_GRAMMAR_PATH),
+        protocol: Some(crate::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("stdio.ifc"),
     });
     dsl::register_language(dsl::LanguageSpec {
         id: "stdio.ifc.op",
         extension: None,
         role: dsl::LanguageRole::Ops,
-        grammar: Some(crate::artifacts::ifc::schema::mutations::text::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::ifc::schema::mutations::text::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::artifacts::ifc::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::ifc::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
+        grammar: Some(crate::schema::mutations::text::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::schema::mutations::text::COMPONENT_GRAMMAR_PATH),
+        protocol: Some(crate::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("stdio.ifc.op"),
     });
     dsl::register_language(dsl::LanguageSpec {
         id: "stdio.ifc.diff",
         extension: None,
         role: dsl::LanguageRole::Diff,
-        grammar: Some(crate::artifacts::ifc::schema::diff::text::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::ifc::schema::diff::text::COMPONENT_GRAMMAR_PATH),
+        grammar: Some(crate::schema::diff::text::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::schema::diff::text::COMPONENT_GRAMMAR_PATH),
         protocol: None,
         protocol_path: None,
         hooks: dsl::passthrough_hooks("stdio.ifc.diff"),
@@ -323,8 +323,8 @@ pub fn register_pilot_languages() {
         role: dsl::LanguageRole::Pack,
         grammar: None,
         grammar_path: None,
-        protocol: Some(crate::artifacts::ifc::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::ifc::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
+        protocol: Some(crate::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("stdio.ifc.pack"),
     });
     dsl::register_language(dsl::LanguageSpec {
@@ -333,8 +333,8 @@ pub fn register_pilot_languages() {
         role: dsl::LanguageRole::Spr,
         grammar: None,
         grammar_path: None,
-        protocol: Some(crate::artifacts::ifc::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::ifc::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
+        protocol: Some(crate::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("stdio.ifc.spr"),
     });
 }
@@ -347,7 +347,7 @@ pub fn register_pilot_languages() {
 /// 📌️ Registers schema leaves for `s.stdio.ifc`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn register_artifact_schema() {
-    ::schema::register_artifact_schema_descriptor(ifc_artifact_schema_descriptor());
+    ::framework_schema::register_artifact_schema_descriptor(ifc_artifact_schema_descriptor());
 }
 
 /// 💡️ Registers `s.stdio.ifc.inference`'s facet leaves into the OS-wide inference catalog —
@@ -355,6 +355,6 @@ pub fn register_artifact_schema() {
 /// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn register_artifact_inferences() {
-    ::schema::register_artifact_inference_descriptor(crate::artifacts::ifc::standards::v4::subsets::any::schema::inferences::ifc_artifact_inference_descriptor());
+    ::framework_schema::register_artifact_inference_descriptor(crate::standards::v4::subsets::any::schema::inferences::ifc_artifact_inference_descriptor());
 }
 //#endregion 🔖️Register

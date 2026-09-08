@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/process/process3d/1/any/mutation/rename-machine.json",
+  "title": "RenameMachine",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newLabel"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "newLabel": {
+      "type": "string"
+    }
+  }
+}

@@ -1,0 +1,416 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/md/commonmark/any/mutation/replace-block.json",
+  "title": "ReplaceBlock",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "path",
+    "index",
+    "block"
+  ],
+  "properties": {
+    "path": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/MdPathStep"
+      }
+    },
+    "index": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "block": {
+      "$ref": "#/$defs/MdBlock"
+    },
+    "mutation": {
+      "const": "replaceBlock",
+      "description": "Aggregate discriminator spliced in by MdMutation; absent when the payload stands alone."
+    }
+  },
+  "$defs": {
+    "MdPathStep": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "step",
+            "index"
+          ],
+          "properties": {
+            "step": {
+              "const": "blockQuote"
+            },
+            "index": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "step",
+            "index",
+            "item"
+          ],
+          "properties": {
+            "step": {
+              "const": "listItem"
+            },
+            "index": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "item": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        }
+      ]
+    },
+    "MdBlock": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "level",
+            "inlines"
+          ],
+          "properties": {
+            "kind": {
+              "const": "heading"
+            },
+            "level": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 255
+            },
+            "inlines": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/MdInline"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "inlines"
+          ],
+          "properties": {
+            "kind": {
+              "const": "paragraph"
+            },
+            "inlines": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/MdInline"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "ordered",
+            "tight",
+            "items"
+          ],
+          "properties": {
+            "kind": {
+              "const": "list"
+            },
+            "ordered": {
+              "type": "boolean"
+            },
+            "start": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 4294967295
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "tight": {
+              "type": "boolean"
+            },
+            "items": {
+              "type": "array",
+              "items": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/$defs/MdBlock"
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "literal"
+          ],
+          "properties": {
+            "kind": {
+              "const": "codeBlock"
+            },
+            "info": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "literal": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "blocks"
+          ],
+          "properties": {
+            "kind": {
+              "const": "blockQuote"
+            },
+            "blocks": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/MdBlock"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "thematicBreak"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "raw"
+          ],
+          "properties": {
+            "kind": {
+              "const": "htmlBlock"
+            },
+            "raw": {
+              "type": "string"
+            }
+          }
+        }
+      ]
+    },
+    "MdInline": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "text"
+          ],
+          "properties": {
+            "kind": {
+              "const": "text"
+            },
+            "text": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "inlines"
+          ],
+          "properties": {
+            "kind": {
+              "const": "emphasis"
+            },
+            "inlines": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/MdInline"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "inlines"
+          ],
+          "properties": {
+            "kind": {
+              "const": "strong"
+            },
+            "inlines": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/MdInline"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "literal"
+          ],
+          "properties": {
+            "kind": {
+              "const": "code"
+            },
+            "literal": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "text",
+            "url"
+          ],
+          "properties": {
+            "kind": {
+              "const": "link"
+            },
+            "text": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/MdInline"
+              }
+            },
+            "url": {
+              "type": "string"
+            },
+            "title": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "alt",
+            "url"
+          ],
+          "properties": {
+            "kind": {
+              "const": "image"
+            },
+            "alt": {
+              "type": "string"
+            },
+            "url": {
+              "type": "string"
+            },
+            "title": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "softBreak"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "hardBreak"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "raw"
+          ],
+          "properties": {
+            "kind": {
+              "const": "htmlInline"
+            },
+            "raw": {
+              "type": "string"
+            }
+          }
+        }
+      ]
+    }
+  }
+}

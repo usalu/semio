@@ -1,25 +1,332 @@
 {
-  "$id": "https://semio.tech/schema/s.stdio.dxf/mutation.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/dxf/r12/header/mutations.json",
   "title": "DxfMutation",
-  "description": "Discriminated on `mutation` (serde tag), one oneOf branch per DxfMutation Rust variant.",
+  "description": "Discriminated union over this module's mutation leaves (internally tagged); every payload is the leaf's own schema, referenced, never restated.",
   "oneOf": [
-    { "type": "object", "properties": { "mutation": { "const": "setSnapshot" }, "snapshot": { "type": "object" } }, "required": ["mutation", "snapshot"] },
-    { "type": "object", "properties": { "mutation": { "const": "setHeaderVar" }, "name": { "type": "string" }, "headerVar": { "type": "object" } }, "required": ["mutation", "name", "headerVar"] },
-    { "type": "object", "properties": { "mutation": { "const": "removeHeaderVar" }, "name": { "type": "string" } }, "required": ["mutation", "name"] },
-    { "type": "object", "properties": { "mutation": { "const": "insertLayer" }, "index": { "type": "integer" }, "layer": { "type": "object" } }, "required": ["mutation", "index", "layer"] },
-    { "type": "object", "properties": { "mutation": { "const": "removeLayer" }, "name": { "type": "string" } }, "required": ["mutation", "name"] },
-    { "type": "object", "properties": { "mutation": { "const": "setLayer" }, "name": { "type": "string" }, "layer": { "type": "object" } }, "required": ["mutation", "name", "layer"] },
-    { "type": "object", "properties": { "mutation": { "const": "insertStyle" }, "index": { "type": "integer" }, "style": { "type": "object" } }, "required": ["mutation", "index", "style"] },
-    { "type": "object", "properties": { "mutation": { "const": "removeStyle" }, "name": { "type": "string" } }, "required": ["mutation", "name"] },
-    { "type": "object", "properties": { "mutation": { "const": "setStyle" }, "name": { "type": "string" }, "style": { "type": "object" } }, "required": ["mutation", "name", "style"] },
-    { "type": "object", "properties": { "mutation": { "const": "insertLinetype" }, "index": { "type": "integer" }, "linetype": { "type": "object" } }, "required": ["mutation", "index", "linetype"] },
-    { "type": "object", "properties": { "mutation": { "const": "removeLinetype" }, "name": { "type": "string" } }, "required": ["mutation", "name"] },
-    { "type": "object", "properties": { "mutation": { "const": "setLinetype" }, "name": { "type": "string" }, "linetype": { "type": "object" } }, "required": ["mutation", "name", "linetype"] },
-    { "type": "object", "properties": { "mutation": { "const": "insertEntity" }, "index": { "type": "integer" }, "entity": { "type": "object" } }, "required": ["mutation", "index", "entity"] },
-    { "type": "object", "properties": { "mutation": { "const": "removeEntity" }, "index": { "type": "integer" } }, "required": ["mutation", "index"] },
-    { "type": "object", "properties": { "mutation": { "const": "setEntity" }, "index": { "type": "integer" }, "entity": { "type": "object" } }, "required": ["mutation", "index", "entity"] },
-    { "type": "object", "properties": { "mutation": { "const": "insertBlock" }, "index": { "type": "integer" }, "block": { "type": "object" } }, "required": ["mutation", "index", "block"] },
-    { "type": "object", "properties": { "mutation": { "const": "removeBlock" }, "index": { "type": "integer" } }, "required": ["mutation", "index"] },
-    { "type": "object", "properties": { "mutation": { "const": "setBlock" }, "index": { "type": "integer" }, "block": { "type": "object" } }, "required": ["mutation", "index", "block"] }
+    {
+      "allOf": [
+        {
+          "$ref": "./📦insert-block/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "insertBlock"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "./🧩insert-entity/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "insertEntity"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "./🧱insert-layer/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "insertLayer"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "./🧵insert-linetype/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "insertLinetype"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "./🎨insert-style/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "insertStyle"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "./🪓remove-block/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "removeBlock"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "./🗑️remove-entity/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "removeEntity"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "./🧹remove-header-var/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "removeHeaderVar"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "./🪨remove-layer/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "removeLayer"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "./🪚remove-linetype/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "removeLinetype"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "./🧽remove-style/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "removeStyle"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "./🔲set-block/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setBlock"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "./🔧set-entity/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setEntity"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "./🏷️set-header-var/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setHeaderVar"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "./🎚️set-layer/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setLayer"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "./🪡set-linetype/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setLinetype"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "./📸️set-snapshot/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setSnapshot"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "./🖌️set-style/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setStyle"
+            }
+          }
+        }
+      ]
+    }
   ]
 }

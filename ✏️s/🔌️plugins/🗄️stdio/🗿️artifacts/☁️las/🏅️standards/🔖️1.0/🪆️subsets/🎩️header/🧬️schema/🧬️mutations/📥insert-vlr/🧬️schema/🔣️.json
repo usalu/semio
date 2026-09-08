@@ -1,0 +1,57 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/las/1.0/header/mutation/insert-vlr.json",
+  "title": "InsertVlr",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "index",
+    "vlr"
+  ],
+  "properties": {
+    "index": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "vlr": {
+      "$ref": "#/$defs/LasVlr"
+    },
+    "mutation": {
+      "const": "insertVlr",
+      "description": "Aggregate discriminator spliced in by LasMutation; absent when the payload stands alone."
+    }
+  },
+  "$defs": {
+    "LasVlr": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "userId",
+        "recordId",
+        "description",
+        "data"
+      ],
+      "properties": {
+        "userId": {
+          "type": "string"
+        },
+        "recordId": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "description": {
+          "type": "string"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          }
+        }
+      }
+    }
+  }
+}

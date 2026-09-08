@@ -1,0 +1,200 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/ifc/2x3/base/mutation/set-header.json",
+  "title": "SetHeader",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "header"
+  ],
+  "properties": {
+    "header": {
+      "$ref": "#/$defs/Part21Header"
+    },
+    "mutation": {
+      "const": "setHeader",
+      "description": "Aggregate discriminator spliced in by Ifc2x3Mutation; absent when the payload stands alone."
+    }
+  },
+  "$defs": {
+    "Part21Header": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "file_description",
+        "file_name",
+        "file_schema"
+      ],
+      "properties": {
+        "file_description": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Part21Value"
+          }
+        },
+        "file_name": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Part21Value"
+          }
+        },
+        "file_schema": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Part21Value"
+          }
+        }
+      }
+    },
+    "Part21Value": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "Ref"
+          ],
+          "properties": {
+            "Ref": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "Str"
+          ],
+          "properties": {
+            "Str": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "Enum"
+          ],
+          "properties": {
+            "Enum": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "Int"
+          ],
+          "properties": {
+            "Int": {
+              "type": "integer"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "Real"
+          ],
+          "properties": {
+            "Real": {
+              "$ref": "#/$defs/Part21Decimal"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "List"
+          ],
+          "properties": {
+            "List": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Part21Value"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "Typed"
+          ],
+          "properties": {
+            "Typed": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "items": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/$defs/Part21Value"
+                  }
+                }
+              },
+              "required": [
+                "name",
+                "items"
+              ]
+            }
+          }
+        },
+        {
+          "type": "string",
+          "const": "Unset"
+        },
+        {
+          "type": "string",
+          "const": "Derived"
+        }
+      ]
+    },
+    "Part21Decimal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "negative",
+        "coefficient",
+        "scale"
+      ],
+      "properties": {
+        "negative": {
+          "type": "boolean"
+        },
+        "coefficient": {
+          "type": "string"
+        },
+        "scale": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "exponent": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": -2147483648,
+              "maximum": 2147483647
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    }
+  }
+}

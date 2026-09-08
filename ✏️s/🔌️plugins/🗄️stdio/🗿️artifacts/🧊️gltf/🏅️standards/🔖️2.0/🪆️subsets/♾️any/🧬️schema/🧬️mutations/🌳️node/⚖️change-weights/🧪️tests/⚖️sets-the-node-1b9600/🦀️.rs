@@ -11,10 +11,10 @@
 //! leaf's own oracle. The derived `.op.semio`/`.spr.semio`/`.dsl.semio`/`.pack.semio`/
 //! `.patch.semio` encodings come from `fixtures generate`, not from here.
 
-use crate::artifacts::gltf::schema::mutations::change_node_morph_weights::diff::GltfChangeNodeMorphWeightsDiff;
-use crate::artifacts::gltf::schema::mutations::change_node_morph_weights::GltfChangeNodeMorphWeightsPayload;
-use crate::artifacts::gltf::schema::mutations::change_node_morph_weights::{diff, inverse, mutation};
-use crate::artifacts::gltf::GltfSnapshot;
+use crate::schema::mutations::change_node_morph_weights::diff::GltfChangeNodeMorphWeightsDiff;
+use crate::schema::mutations::change_node_morph_weights::GltfChangeNodeMorphWeightsPayload;
+use crate::schema::mutations::change_node_morph_weights::{diff, inverse, mutation};
+use crate::GltfSnapshot;
 
 const CASE: &str = "change-node-morph-weights/sets-the-node-morph-weights-to-a-half-and-a-quarter";
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");

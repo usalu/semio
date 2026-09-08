@@ -1,7 +1,7 @@
 //! 🔒 Private typed-reference repair and family-bounded sparse diff mechanics.
-use crate::artifacts::gltf::schema::diff::*;
-use crate::artifacts::gltf::schema::snapshot::*;
-use crate::artifacts::gltf::GltfSnapshot;
+use crate::schema::diff::*;
+use crate::schema::snapshot::*;
+use crate::GltfSnapshot;
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct GltfTopLevelMutationRejection {

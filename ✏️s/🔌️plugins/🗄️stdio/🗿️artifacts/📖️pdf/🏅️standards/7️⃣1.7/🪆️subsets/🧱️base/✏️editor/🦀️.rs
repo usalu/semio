@@ -1,6 +1,6 @@
 //! 📄️ PDF Document (1.7) editor -- one of stdio's 10 real PDF subset editors (ticket
 //! 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET). All 10 PDF dialects (standards 1.4/1.7 x
-//! their real subsets) share ONE unified logical object model -- `crate::artifacts::pdf::PdfSnapshot`/
+//! their real subsets) share ONE unified logical object model -- `crate::PdfSnapshot`/
 //! `PdfMutation`, canonically the 1.7-shaped page/object/trailer graph (1.7 folds 1.0-1.7 in
 //! leniently, per that standard's own doc comment) -- the artifact kind root re-exports both bare,
 //! and its own `document_codec_bare::<PdfSnapshot, PdfMutation>(...)` call binds them to the 1.7
@@ -11,8 +11,8 @@
 //! real window, `main` (`DocumentWindowKit`) -- see its own module doc comment for the render/
 //! mutation-mapping strategy and its honest scope limit.
 
-use crate::artifacts::pdf::standards::v1_7::subsets::base::schema::mutations::AppendPageContent;
-use crate::artifacts::pdf::{PdfMutation, PdfSnapshot, PDF_ARTIFACT_SCHEMA_ID, STDIO_PDF_DOCUMENT_SCHEMA};
+use crate::standards::v1_7::subsets::base::schema::mutations::AppendPageContent;
+use crate::{PdfMutation, PdfSnapshot, PDF_ARTIFACT_SCHEMA_ID, STDIO_PDF_DOCUMENT_SCHEMA};
 use crate::editor::pdf17::modes::edit;
 use crate::editor::pdf17::modes::edit::windows::main;
 use semio_framework_plugin::{

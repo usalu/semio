@@ -74,6 +74,7 @@ pub mod icon_atlas;
 #[path = "../⏰️deadlines/🦀️.rs"]
 mod deadlines;
 
+#[cfg(test)]
 #[path = "../🪢️kernel-seam/🦀️.rs"]
 mod kernel_seam;
 
@@ -3341,7 +3342,7 @@ pub(crate) mod kernel_runtime {
             let index = self.oldest_ready_index()?;
             let slot = &mut self.slots[index];
             slot.state = JobProgressPresentationState::CheckedOut;
-            Some(JobProgressPresentationLease { token: JobProgressPresentationToken { index, epoch: slot.epoch }, identity: slot.identity, kind: slot.kind, applied_progress: slot.applied_progress, terminal: false })
+            Some(JobProgressPresentationLease { token: JobProgressPresentationToken { index, epoch: slot.epoch }, kind: slot.kind, applied_progress: slot.applied_progress, terminal: false })
         }
 
         fn oldest_ready_index(&self) -> Option<usize> {
@@ -3388,7 +3389,6 @@ pub(crate) mod kernel_runtime {
 
     pub(crate) struct JobProgressPresentationLease {
         token: JobProgressPresentationToken,
-        identity: JobProgressIdentity,
         kind: JobProgressKind,
         applied_progress: u64,
         terminal: bool,
@@ -4084,7 +4084,6 @@ pub(crate) mod kernel_runtime {
 
     struct RetainedMountedProductReplayRequest {
         instance: u32,
-        job: u64,
         job_kind: [u8; PRODUCT_REPLAY_KIND_BYTES],
         job_kind_length: u16,
         request: JobReplayRequest,
@@ -4122,12 +4121,6 @@ pub(crate) mod kernel_runtime {
         fn instance(&self) -> u32 {
             match self {
                 Self::Request(request) | Self::Claim { request, .. } | Self::Authority { request, .. } => request.instance,
-            }
-        }
-
-        fn job(&self) -> u64 {
-            match self {
-                Self::Request(request) | Self::Claim { request, .. } | Self::Authority { request, .. } => request.job,
             }
         }
 
@@ -4322,7 +4315,7 @@ pub(crate) mod kernel_runtime {
         fn into_retained(mut self) -> (MountedProductReplayRecoveryToken, RetainedMountedProductReplayRequest) {
             let recovery = self.recovery.take().expect("mounted product replay recovery authority transfers once");
             let raw = self.raw.take().expect("mounted product replay raw SpawnJob transfers once");
-            let retained = RetainedMountedProductReplayRequest { instance: self.instance, job: self.job, job_kind: self.job_kind, job_kind_length: self.job_kind_length, request: self.request, placement: self.placement, raw };
+            let retained = RetainedMountedProductReplayRequest { instance: self.instance, job_kind: self.job_kind, job_kind_length: self.job_kind_length, request: self.request, placement: self.placement, raw };
             (recovery, retained)
         }
 
@@ -4338,7 +4331,7 @@ pub(crate) mod kernel_runtime {
             let Some(recovery) = self.recovery.take() else { return };
             let Some(mut raw) = self.raw.take() else { return };
             raw.reject();
-            let retained = RetainedMountedProductReplayRequest { instance: self.instance, job: self.job, job_kind: self.job_kind, job_kind_length: self.job_kind_length, request: self.request, placement: self.placement, raw };
+            let retained = RetainedMountedProductReplayRequest { instance: self.instance, job_kind: self.job_kind, job_kind_length: self.job_kind_length, request: self.request, placement: self.placement, raw };
             mounted_product_replay_recovery_registry().lock().expect("product replay recovery lock").publish(recovery, MountedProductReplayRecoveryOwner::Request(retained));
         }
     }
@@ -5402,7 +5395,6 @@ pub(crate) mod kernel_runtime {
     }
 
     struct RetainedDocumentBuild {
-        generation: u64,
         revision: UiRevision,
         cursor: usize,
         builder: Option<UiDocumentBuilder>,
@@ -5539,7 +5531,7 @@ pub(crate) mod kernel_runtime {
                     return;
                 }
             };
-            let mut build = RetainedDocumentBuild { generation, revision: state.revision, cursor: 0, builder: Some(builder), rejected_record: None, closing: false };
+            let mut build = RetainedDocumentBuild { revision: state.revision, cursor: 0, builder: Some(builder), rejected_record: None, closing: false };
             if reservation.commit().is_err() {
                 build.closing = true;
                 self.build = Some(build);
@@ -11152,6 +11144,7 @@ impl RuntimeDispatchCursor {
         None
     }
 
+    #[cfg(test)]
     fn close_step(&mut self) -> bool {
         self.events.pointer_move = None;
         self.events.scroll = None;
@@ -11287,10 +11280,12 @@ impl FrameDeferredCursor {
         true
     }
 
+    #[cfg(any(not(target_arch = "wasm32"), test))]
     fn begin_close(&mut self) {
         self.closing = true;
     }
 
+    #[cfg(any(not(target_arch = "wasm32"), test))]
     fn return_shell_maintenance(&mut self) {
         self.phase = 0;
         self.shell_maintenance = true;
@@ -11535,6 +11530,7 @@ enum RuntimeApply {
         interaction: Option<AppInteractionState>,
         cursor: Option<FrameDeferredCursor>,
     },
+    #[cfg(not(target_arch = "wasm32"))]
     RestoreInteraction(Option<AppInteractionState>),
     #[cfg(not(target_arch = "wasm32"))]
     PluginReload(Option<Result<Vec<program_bridge::ProgramBridgeEntry>, String>>),
@@ -11688,6 +11684,7 @@ impl RuntimeApply {
                 }
                 return Self::start_frame_deferred(cursor, runtime, handle);
             }
+            #[cfg(not(target_arch = "wasm32"))]
             Self::RestoreInteraction(interaction) => runtime.interaction = interaction.take(),
             #[cfg(not(target_arch = "wasm32"))]
             Self::PluginReload(result) => match result.take() {
@@ -12468,6 +12465,7 @@ impl RuntimeMailbox {
         *self.0.frame_inputs.lock().expect("runtime frame inputs lock") = frame_job::FrameBuildInputs { wheel_zoom_deadline_ms: runtime.wheel_zoom_deadline_ms, now_ms: app_now_ms() };
     }
 
+    #[cfg(not(target_arch = "wasm32"))]
     fn reserve_future(&self, key: Option<&'static str>) -> bool {
         self.0.completions.lock().expect("runtime completion mailbox lock").reserve(key)
     }
@@ -12476,6 +12474,7 @@ impl RuntimeMailbox {
         self.0.completions.lock().expect("runtime completion mailbox lock").reserve_interaction()
     }
 
+    #[cfg(not(target_arch = "wasm32"))]
     fn cancel_interaction_future_reservation(&self) -> bool {
         match self.0.completions.try_lock() {
             Ok(mut completions) => completions.cancel_interaction_reservation(),
@@ -12504,18 +12503,7 @@ impl RuntimeMailbox {
         });
     }
 
-    #[cfg(target_arch = "wasm32")]
-    fn spawn_interaction_reserved<F>(&self, _key: Option<&'static str>, future: F)
-    where
-        F: Future<Output = AppInteractionState> + 'static,
-    {
-        let mailbox = self.clone();
-        let revision = mailbox.0.next_revision.fetch_add(1, Ordering::Relaxed);
-        spawn_app_task(async move {
-            let interaction = future.await;
-            mailbox.0.finish(RuntimeCompletion { key: None, revision, requires_interaction: false, apply: RuntimeApply::RestoreInteraction(Some(interaction)) });
-        });
-    }
+
 
     #[cfg(not(target_arch = "wasm32"))]
     fn spawn_dispatch_reserved<F>(&self, future: F)
@@ -12773,24 +12761,7 @@ impl AppRuntime {
         true
     }
 
-    #[cfg(target_arch = "wasm32")]
-    fn submit_interaction<F, Fut>(&mut self, handle: &AppHandle, key: Option<&'static str>, work: F) -> bool
-    where
-        F: FnOnce(AppInteractionState) -> Fut,
-        Fut: Future<Output = AppInteractionState> + 'static,
-    {
-        let Some(interaction) = self.interaction.take() else { return false };
-        let Some(mailbox) = handle.upgrade().map(RuntimeMailbox) else {
-            self.interaction = Some(interaction);
-            return false;
-        };
-        if !mailbox.reserve_interaction_future() {
-            self.interaction = Some(interaction);
-            return false;
-        }
-        mailbox.spawn_interaction_reserved(key, work(interaction));
-        true
-    }
+
 }
 
 //#endregion 🎮️AppInteractionState
@@ -13376,7 +13347,7 @@ impl FrameTransaction {
                     return AppFrameTransactionStep::Pending;
                 }
                 let Some(cursor) = self.build_cursor.as_mut() else { return AppFrameTransactionStep::Pending };
-                match app.frame_before_input_step(handle, directives, self.dpr, cursor) {
+                match app.frame_before_input_step(handle, directives, cursor) {
                     FrameBuildBoundaryStep::Pending => AppFrameTransactionStep::Pending,
                     FrameBuildBoundaryStep::Complete(partial) => {
                         self.build_cursor = None;
@@ -13917,9 +13888,6 @@ impl FrameTransaction {
         true
     }
 
-    pub(crate) fn stage(&self) -> FrameTransactionStage {
-        self.stage
-    }
 
     fn stage_label(&self) -> &'static str {
         match self.stage {
@@ -15074,7 +15042,7 @@ impl AppRuntime {
     }
 
     /// 🧵️ Advances exactly one retained pre-input frame owner or chrome child.
-    fn frame_before_input_step(&mut self, handle: &AppHandle, build_directives: &frame_job::FrameDirectives, dpr: f32, cursor: &mut FrameBuildCursor) -> FrameBuildBoundaryStep {
+    fn frame_before_input_step(&mut self, handle: &AppHandle, build_directives: &frame_job::FrameDirectives, cursor: &mut FrameBuildCursor) -> FrameBuildBoundaryStep {
         match cursor.phase {
             FrameBuildPhase::Deferred => {
                 if !ui_wgpu::wgpu::PreparedAtlasPages::close_abandoned_step() {
@@ -15241,7 +15209,7 @@ impl AppRuntime {
                 cursor.phase = FrameBuildPhase::EngineResources;
             }
             FrameBuildPhase::EngineResources => {
-                cursor.engine_resources = Some(engine_canvas::EngineCanvasBuildContext::new(dpr as f64, cursor.presentation_witness.input_generation, cursor.presentation_witness.scene_revision));
+                cursor.engine_resources = Some(engine_canvas::EngineCanvasBuildContext::default());
                 cursor.phase = FrameBuildPhase::WorldResources;
             }
             FrameBuildPhase::WorldResources => {
@@ -15250,11 +15218,11 @@ impl AppRuntime {
                 cursor.phase = FrameBuildPhase::Chrome;
             }
             FrameBuildPhase::Chrome => {
-                let Some(engine_resources) = cursor.engine_resources.as_mut() else { return FrameBuildBoundaryStep::Fault("frame chrome lost engine resources") };
-                let Some(world_resources) = cursor.world_resources.as_mut() else { return FrameBuildBoundaryStep::Fault("frame chrome lost world resources") };
+                if cursor.engine_resources.is_none() { return FrameBuildBoundaryStep::Fault("frame chrome lost engine resources") }
+                if cursor.world_resources.is_none() { return FrameBuildBoundaryStep::Fault("frame chrome lost world resources") }
                 let AppRuntime { atlas, icons, interaction, draw, overlay, .. } = self;
                 let Some(interaction) = interaction.as_mut() else { return FrameBuildBoundaryStep::Fault("frame chrome lost interaction state") };
-                if interaction.shell.render_chrome_step(&mut cursor.chrome, draw, overlay, atlas, icons, &mut interaction.input, &interaction.theme, engine_resources, world_resources) {
+                if interaction.shell.render_chrome_step(&mut cursor.chrome, draw, overlay, atlas, icons, &mut interaction.input, &interaction.theme) {
                     cursor.phase = FrameBuildPhase::JobProgressTake;
                 }
             }
@@ -15773,6 +15741,7 @@ impl AppInteractionState {
 // before/after per site.
 //#endregion 🔖️OsHostDecomposition — SemioApp deletion
 
+#[cfg(not(target_arch = "wasm32"))]
 async fn boot_runtime(
     window: Arc<Window>,
     plugin_filter: String,

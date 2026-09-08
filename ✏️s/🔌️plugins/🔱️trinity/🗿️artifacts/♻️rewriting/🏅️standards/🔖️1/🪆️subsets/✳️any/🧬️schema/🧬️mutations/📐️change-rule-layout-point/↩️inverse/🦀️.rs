@@ -6,7 +6,7 @@ use crate::artifacts::rewriting::RewritingSnapshot;
 //#region 🔖️Inverse
 pub fn inverse(payload: &super::ChangeRuleLayoutPoint, base: &RewritingSnapshot) -> Vec<RewriteRuleMutation> {
     match base.rule_layout.get(&payload.key) {
-        Some(old) => vec![change_rule_layout_point(payload.key.clone(), old.clone())],
+        Some(old) => vec![change_rule_layout_point(payload.key.clone(), *old)],
         None => vec![remove_rule_layout_point(payload.key.clone())],
     }
 }

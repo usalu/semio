@@ -82,7 +82,7 @@
         {
           "id": "insert-sample",
           "capability": "mp4-isobmff-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -101,7 +101,7 @@
         {
           "id": "insert-track",
           "capability": "mp4-isobmff-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -120,7 +120,7 @@
         {
           "id": "remove-sample",
           "capability": "mp4-isobmff-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -139,7 +139,7 @@
         {
           "id": "remove-track",
           "capability": "mp4-isobmff-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -158,7 +158,7 @@
         {
           "id": "set-ftyp",
           "capability": "mp4-isobmff-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -177,7 +177,7 @@
         {
           "id": "set-sample-sync",
           "capability": "mp4-isobmff-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -196,7 +196,7 @@
         {
           "id": "set-snapshot",
           "capability": "mp4-isobmff-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -215,7 +215,7 @@
         {
           "id": "set-track-codec",
           "capability": "mp4-isobmff-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -234,7 +234,7 @@
         {
           "id": "set-track-dimensions",
           "capability": "mp4-isobmff-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],

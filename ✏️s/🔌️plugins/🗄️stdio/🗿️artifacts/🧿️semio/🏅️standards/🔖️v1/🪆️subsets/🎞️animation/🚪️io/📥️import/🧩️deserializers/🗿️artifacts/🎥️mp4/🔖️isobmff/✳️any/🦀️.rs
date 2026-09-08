@@ -11,8 +11,8 @@
 //! `dts + cts_offset` pts derivation `video↔mp4` uses, converted to SECONDS via `timescale`
 //! (`pts_ticks / timescale`) so timelines from different tracks/timescales are directly comparable.
 
-use crate::artifacts::mp4::Mp4Snapshot;
-use crate::artifacts::semio::standards::v1::subsets::animation::schema::snapshot::{AnimChannel, AnimInterpolation, AnimKeyframe, AnimTarget, AnimTargetProperty, AnimTimeline, AnimValue, SemioAnimationSnapshot, STDIO_SEMIOANIMATION_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_mp4::Mp4Snapshot;
+use crate::standards::v1::subsets::animation::schema::snapshot::{AnimChannel, AnimInterpolation, AnimKeyframe, AnimTarget, AnimTargetProperty, AnimTimeline, AnimValue, SemioAnimationSnapshot, STDIO_SEMIOANIMATION_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId};
 
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.mp4", standard: StandardId("isobmff"), subset: SubsetId("*") };
@@ -55,7 +55,7 @@ impl ArtifactDeserializer for SemioAnimationFromMp4 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::mp4::standards::isobmff::subsets::any::schema::snapshot::{Mp4Codec, Mp4Ftyp, Mp4Sample, Mp4Track};
+    use semio_s_artifact_stdio_mp4::standards::isobmff::subsets::any::schema::snapshot::{Mp4Codec, Mp4Ftyp, Mp4Sample, Mp4Track};
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn real_world_mp4() -> Mp4Snapshot {

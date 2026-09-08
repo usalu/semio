@@ -4,7 +4,7 @@ Nothing outside this repository reads `.shome.dsl.semio` or its `.pack.semio` tw
 category this subset's history already records is empty, not merely unexplored. The reference is
 therefore a second IMPLEMENTATION, written from this subset's own committed
 `../../🧬️schema/📸️snapshot/🔣️.json` and
-`../../🧬️schema/🧬️mutations/🔢️change-catalog-generation/🧬️.schema.json`, and from
+`../../🧬️schema/🧬️mutations/🔢️change-catalog-generation/🧬️schema/🔣️.json`, and from
 `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-DIRECT-LEAF-OVERHAUL/📓️taxonomy.md`'s
 `change` verb entry ("set one scalar field to a new value … inverse partner: `change` (old value)").
 It imports nothing from the Rust it judges and transliterates none of it.

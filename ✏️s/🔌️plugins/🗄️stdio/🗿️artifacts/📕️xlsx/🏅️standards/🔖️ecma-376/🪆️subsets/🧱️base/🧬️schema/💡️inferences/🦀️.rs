@@ -4,8 +4,8 @@
 //! slug dirs directly — `🦀️.rs` is the sole mounting mechanism, same as mutations); each named
 //! inference gets its own `<emoji><slug>/` child (currently: `🧾outline/`).
 
-use crate::artifacts::xlsx::XlsxSnapshot;
-use schema::ArtifactSchema;
+use crate::XlsxSnapshot;
+use framework_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 
 use super::outline::XlsxOutline;
@@ -41,7 +41,7 @@ impl protocol::InferenceSpec<XlsxSnapshot> for XlsxInference {
 //#endregion 🔖️Inference
 
 //#region 🔖️ArtifactInferrer
-impl ArtifactInferrer for crate::artifacts::xlsx::standards::v_ecma_376::subsets::base::schema::XlsxBuilder {
+impl ArtifactInferrer for crate::standards::v_ecma_376::subsets::base::schema::XlsxBuilder {
     type Snapshot = XlsxSnapshot;
     type Inference = XlsxInference;
 }
@@ -51,10 +51,10 @@ impl ArtifactInferrer for crate::artifacts::xlsx::standards::v_ecma_376::subsets
 /// 💡️ Registers `s.stdio.xlsx.inference`'s facet leaves into the OS-wide inference catalog —
 /// call once at plugin init, alongside `xlsx_artifact_schema_descriptor`'s registration.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn xlsx_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
-    schema::ArtifactInferenceDescriptor {
+pub fn xlsx_artifact_inference_descriptor() -> framework_schema::ArtifactInferenceDescriptor {
+    framework_schema::ArtifactInferenceDescriptor {
         id: "s.stdio.xlsx.inference",
-        inference: schema::FacetLeaves {
+        inference: framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),

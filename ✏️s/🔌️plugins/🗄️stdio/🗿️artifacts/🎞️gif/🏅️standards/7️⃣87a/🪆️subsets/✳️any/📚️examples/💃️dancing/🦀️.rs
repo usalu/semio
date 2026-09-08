@@ -21,8 +21,8 @@ pub const DANCING_GIF_BYTES: &[u8] = include_bytes!("🖼️assets/🧪️dancin
 /// time, not at runtime for end users) if the fixture ever stops decoding — that's a real
 /// regression this example exists to catch, not something to paper over with a fallback.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn decoded_snapshot() -> crate::artifacts::gif::standards::v89a::subsets::any::schema::snapshot::GifSnapshot {
-    crate::artifacts::gif::standards::v89a::engine::decode_gif(DANCING_GIF_BYTES).expect("dancing.gif fixture must decode via the real GIF89a codec")
+pub fn decoded_snapshot() -> crate::standards::v89a::subsets::any::schema::snapshot::GifSnapshot {
+    crate::standards::v89a::engine::decode_gif(DANCING_GIF_BYTES).expect("dancing.gif fixture must decode via the real GIF89a codec")
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

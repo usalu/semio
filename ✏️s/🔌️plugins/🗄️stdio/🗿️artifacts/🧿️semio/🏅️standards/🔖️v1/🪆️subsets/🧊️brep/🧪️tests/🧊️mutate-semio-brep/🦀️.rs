@@ -85,9 +85,9 @@ fn plan_mutations(ctx: &Context) -> Result<(Vec<Json>, Json), String> {
 #[cfg(feature = "sut")]
 mod subject {
     use semio_repo_test_host::{parse_json, Context, Json, Outcome};
-    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::base::schema::mutations::semio_mutation_refusals;
-    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::mutations::{apply_semio_brep_mutation, decode_semio_brep_mutation_json, inverse_semio_brep_mutation, SemioBrepMutation};
-    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::{decode_semio_brep_pack, decode_semio_brep_snapshot_json, encode_semio_brep_pack, encode_semio_brep_snapshot_json, parse_semio_brep_dsl, print_semio_brep_dsl, SemioBrepSnapshot};
+    use crate::standards::v1::subsets::base::schema::mutations::semio_mutation_refusals;
+    use crate::standards::v1::subsets::brep::schema::mutations::{apply_semio_brep_mutation, decode_semio_brep_mutation_json, inverse_semio_brep_mutation, SemioBrepMutation};
+    use crate::standards::v1::subsets::brep::schema::snapshot::{decode_semio_brep_pack, decode_semio_brep_snapshot_json, encode_semio_brep_pack, encode_semio_brep_snapshot_json, parse_semio_brep_dsl, print_semio_brep_dsl, SemioBrepSnapshot};
     use semio_s_plugin_stdio_test_oracle::law::carrier_is_exact;
 
     //#region 🔖️Bridges

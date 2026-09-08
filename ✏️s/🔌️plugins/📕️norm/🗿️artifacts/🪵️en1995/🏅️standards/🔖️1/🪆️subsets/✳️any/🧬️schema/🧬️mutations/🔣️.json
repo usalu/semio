@@ -1,127 +1,89 @@
 {
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://semio.tech/schema/s/norm/en1995/mutation.json",
   "title": "En1995Mutation",
-  "type": "object",
-  "additionalProperties": false,
-  "required": [
-    "annex",
-    "mEdKnm",
-    "nEdKn",
-    "vEdKn",
-    "wMm3",
-    "aMm2",
-    "bMm",
-    "hMm",
-    "fMK",
-    "fC0K",
-    "serviceClass",
-    "loadDuration",
-    "mCritKnm",
-    "fEdKn",
-    "aEfMm2",
-    "fVK",
-    "fireDurationMin",
-    "sectionDepthMm",
-    "aVertMS2",
-    "nCyclesBridge"
-  ],
-  "properties": {
-    "annex": {
-      "type": "string",
-      "x-semio-state": "artifact"
+  "oneOf": [
+    {
+      "$ref": "./🧩️change-a-ef-mm2/🧬️schema/🔣️.json"
     },
-    "mEdKnm": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./📐️change-a-mm2/🧬️schema/🔣️.json"
     },
-    "nEdKn": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🦶️change-a-vert-ms2/🧬️schema/🔣️.json"
     },
-    "vEdKn": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🌍️change-annex/🧬️schema/🔣️.json"
     },
-    "wMm3": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./↔️change-b-mm/🧬️schema/🔣️.json"
     },
-    "aMm2": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🔩️change-f-ed-kn/🧬️schema/🔣️.json"
     },
-    "bMm": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🗜️change-fc0-k/🧬️schema/🔣️.json"
     },
-    "hMm": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🔥️change-fire-duration-min/🧬️schema/🔣️.json"
     },
-    "fMK": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🛡️change-fmk/🧬️schema/🔣️.json"
     },
-    "fC0K": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./✂️change-fvk/🧬️schema/🔣️.json"
     },
-    "serviceClass": {
-      "type": "string",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./↕️change-h-mm/🧬️schema/🔣️.json"
     },
-    "loadDuration": {
-      "type": "string",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./⏳️change-load-duration/🧬️schema/🔣️.json"
     },
-    "mCritKnm": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./⚠️change-m-crit-knm/🧬️schema/🔣️.json"
     },
-    "fEdKn": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./⤴️change-m-ed-knm/🧬️schema/🔣️.json"
     },
-    "aEfMm2": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🔁️change-n-cycles-bridge/🧬️schema/🔣️.json"
     },
-    "fVK": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🏋️change-n-ed-kn/🧬️schema/🔣️.json"
     },
-    "fireDurationMin": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./📏️change-section-depth-mm/🧬️schema/🔣️.json"
     },
-    "sectionDepthMm": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🌧️change-service-class/🧬️schema/🔣️.json"
     },
-    "aVertMS2": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🪚️change-v-ed-kn/🧬️schema/🔣️.json"
     },
-    "nCyclesBridge": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./📊️change-w-mm3/🧬️schema/🔣️.json"
     }
-  }
+  ],
+  "x-semio-mutationKinds": [
+    "change-a-ef-mm2",
+    "change-a-mm2",
+    "change-a-vert-ms2",
+    "change-annex",
+    "change-b-mm",
+    "change-f-ed-kn",
+    "change-fc0-k",
+    "change-fire-duration-min",
+    "change-fmk",
+    "change-fvk",
+    "change-h-mm",
+    "change-load-duration",
+    "change-m-crit-knm",
+    "change-m-ed-knm",
+    "change-n-cycles-bridge",
+    "change-n-ed-kn",
+    "change-section-depth-mm",
+    "change-service-class",
+    "change-v-ed-kn",
+    "change-w-mm3"
+  ]
 }

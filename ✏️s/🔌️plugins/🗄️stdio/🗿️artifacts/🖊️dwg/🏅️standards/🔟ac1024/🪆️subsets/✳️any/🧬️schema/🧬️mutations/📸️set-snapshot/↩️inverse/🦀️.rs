@@ -1,5 +1,5 @@
-use crate::artifacts::dwg::schema::mutations::DwgMutation;
-use crate::artifacts::dwg::DwgSnapshot;
+use crate::schema::mutations::DwgMutation;
+use crate::DwgSnapshot;
 use protocol::Mutation;
 
 /// ↩️ Inverse of set-snapshot.

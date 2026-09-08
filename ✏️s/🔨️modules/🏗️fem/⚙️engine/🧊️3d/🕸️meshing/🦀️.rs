@@ -3,11 +3,14 @@
 //! which needs a meshed solid's top surface) into `crate::model::Model` inputs — shared by
 //! `crate::fem3d_engine`'s `build_model`/`fem3d_solve_all` and `modal_buckling.rs`.
 
+/// 🌬️ Translated nodal loads and member-addressed distributed loads.
+pub type TranslatedLoads = (Vec<NodalLoad>, Vec<(String, MemberUdl)>);
+
 use crate::artifacts::fem3d::{Fem3dSnapshot, FemElement, FemLoad};
 use crate::fem3d_engine::Fem3dError;
 use crate::model::{Bar3, Dof, Elements, Frame3, MemberUdl, NodalLoad, Node, Support};
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioPoint3;
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::{SemioMesh, SemioMeshSnapshot, SemioPrimitive, SemioTopology};
+use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::SemioPoint3;
+use semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::schema::snapshot::{SemioMesh, SemioMeshSnapshot, SemioPrimitive, SemioTopology};
 use std::collections::HashMap;
 
 // #region 🔖️SolidMeshing
@@ -163,7 +166,7 @@ pub(crate) fn build_semio_mesh_snapshot(doc: &Fem3dSnapshot) -> SemioMeshSnapsho
 /// 🌬️ Translates one `FemLoadCase`'s loads into `(nodal_loads, member_loads)`, resolving `Area` loads
 /// against the already-meshed `solids` — shared by `build_model`, `fem3d_solve_all`, and buckling's
 /// reference-case resolution.
-pub fn translate_loads(loads: &[FemLoad], solids: &[MeshedSolid]) -> Result<(Vec<NodalLoad>, Vec<(String, MemberUdl)>), Fem3dError> {
+pub fn translate_loads(loads: &[FemLoad], solids: &[MeshedSolid]) -> Result<TranslatedLoads, Fem3dError> {
     let mut nodal_loads = Vec::new();
     let mut member_loads = Vec::new();
     for load in loads {

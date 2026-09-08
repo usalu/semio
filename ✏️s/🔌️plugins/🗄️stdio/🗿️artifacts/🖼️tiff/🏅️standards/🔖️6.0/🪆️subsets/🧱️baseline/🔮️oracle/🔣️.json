@@ -70,7 +70,7 @@
         {
           "id": "insert-tile-tags",
           "capability": "tiff-6-0-baseline-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -90,7 +90,7 @@
         {
           "id": "remove-strip-offsets",
           "capability": "tiff-6-0-baseline-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -110,7 +110,7 @@
         {
           "id": "remove-tile-tags",
           "capability": "tiff-6-0-baseline-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -130,7 +130,7 @@
         {
           "id": "set-bits-per-sample",
           "capability": "tiff-6-0-baseline-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -150,7 +150,7 @@
         {
           "id": "set-compression",
           "capability": "tiff-6-0-baseline-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -170,7 +170,7 @@
         {
           "id": "set-photometric-interpretation",
           "capability": "tiff-6-0-baseline-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -190,7 +190,7 @@
         {
           "id": "set-snapshot",
           "capability": "tiff-6-0-baseline-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -210,7 +210,7 @@
         {
           "id": "set-strip-offsets",
           "capability": "tiff-6-0-baseline-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],

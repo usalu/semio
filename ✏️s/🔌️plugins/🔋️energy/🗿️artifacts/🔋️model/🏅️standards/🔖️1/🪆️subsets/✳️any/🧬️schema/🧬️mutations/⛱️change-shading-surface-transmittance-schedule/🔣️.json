@@ -5,7 +5,7 @@
   "displayName": "Change Shading Surface Transmittance Schedule",
   "emoji": "⛱️",
   "aggregateVariant": "ChangeShadingSurfaceTransmittanceSchedule",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-shading-surface-transmittance-schedule",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

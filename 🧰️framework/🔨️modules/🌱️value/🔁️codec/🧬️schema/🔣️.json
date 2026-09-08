@@ -1,0 +1,93 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/framework/value/codec/schema.json",
+  "title": "Value Codec Schema Module",
+  "$defs": {
+    "CodecFixture": {
+      "title": "Exact Integer Value Codec Corpus",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "integerTokensOnly",
+        "targets",
+        "raw",
+        "directFloatDenied"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.value.exact-integer-codec.v1"
+        },
+        "integerTokensOnly": {
+          "const": true
+        },
+        "targets": {
+          "type": "array",
+          "minItems": 8,
+          "maxItems": 8,
+          "uniqueItems": true,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "bits",
+              "signed"
+            ],
+            "properties": {
+              "name": {
+                "enum": [
+                  "u8",
+                  "i8",
+                  "u16",
+                  "i16",
+                  "u32",
+                  "i32",
+                  "u64",
+                  "i64"
+                ]
+              },
+              "bits": {
+                "enum": [
+                  8,
+                  16,
+                  32,
+                  64
+                ]
+              },
+              "signed": {
+                "type": "boolean"
+              }
+            }
+          }
+        },
+        "raw": {
+          "type": "array",
+          "minItems": 38,
+          "maxItems": 38,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64
+          }
+        },
+        "directFloatDenied": {
+          "const": [
+            "nan",
+            "positive-infinity",
+            "negative-infinity",
+            "positive-zero",
+            "negative-zero",
+            "whole-one"
+          ]
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "$ref": "#/$defs/CodecFixture"
+    }
+  ]
+}

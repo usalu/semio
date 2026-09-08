@@ -1,0 +1,2187 @@
+[
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🧬️contracts/🎟️invite-capability/🧬️.schema.json",
+    "blob": "842007fb844d36e985aba46d8a9bd245849b0731",
+    "role": "renderer UI interaction-FSM contract, misnamed+mislocated",
+    "classification": "c-per-contract-directory-in-ineligible-element-scope",
+    "owner": "🏛️ShellHost (🧱️elements member, kind=ui, NOT an eligible schema owner per taxonomy semanticCollections/semanticAllowedOwnerLevels)",
+    "intendedOwner": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/ (new versioned dir, e.g. 🎟️invite-capability-transfer-v1/🔣️.json), sibling to 🌱️space-artifact-creation-v1 and 📣️checkpoint-publication-command-v1",
+    "exports": [
+      "semio.directory.invite-capability-transfer.v1"
+    ],
+    "consumers": [
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🧬️contracts/🎟️invite-capability/🔣️.json",
+        "kind": "example-fixture"
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/📜️script.ts:160-206 (directoryInviteCapabilityOracle, join(repoRoot,...)+Ajv2020)",
+        "kind": "test-harness-oracle"
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/📋️project.json:21-25 (directory-invite-capability-check target)",
+        "kind": "nx-target"
+      },
+      {
+        "path": ".vscode/launch.json:6952-6955 (gate🎟️directory-invite-capability🌐️browser-worker)",
+        "kind": "launch-gate"
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx:154,1261,1329,1362,2143 (copyDirectoryInviteCapabilityV1 etc.)",
+        "kind": "renderer-implementation"
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛂️SpaceAdministration/🟦️.tsx:19-299 (inviteCapabilityStatus UI)",
+        "kind": "renderer-implementation"
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts (requestDirectoryAdministrationCapability/settleDirectoryAdministrationCapability)",
+        "kind": "renderer-implementation"
+      },
+      {
+        "path": "🌎️hub/📇️directory/🦀️.rs:805,1048,1081,1118,2501 (InviteCapability::mint/verify/redeem — DIFFERENT token type, real issuer+verifier)",
+        "kind": "cross-app-domain-owner (not a consumer of THIS schema)"
+      }
+    ],
+    "decision": "Relocate JSON Schema (draft-07, not 2020-12) to 💻️os/🔨️modules/📇️directory/🧬️schema/🎟️invite-capability-transfer-v1/🔣️.json; keep the FSM fixture as an example only, validated against the relocated schema; ShellHost/SpaceAdministration/backbone-worker remain pure consumers.",
+    "evidence": "$id says https://semio.tech/schema/directory/invite-capability-transfer.v1.json (namespaced 'directory', not 'shellhost'); fixture.shellRoute.actionId is 'os.directory.open-administration'; the ONLY issuer+verifier of an actual InviteCapability token is hub/📇️directory/🦀️.rs (mint/verify/redeem) and hub/🔐️auth/🧬️schema/{🔣️.json,🟦️.ts} (the real multi-format InviteCapability data type, unrelated schema, already correctly owned by hub); this ShellHost schema instead describes a renderer-local clipboard-copy state machine used only by ShellHost+SpaceAdministration+backbone-worker inside 💻️os -- it never crosses into hub, so its owner is the os-side 📇️directory module, not hub.",
+    "open": "Is 'invite-capability-transfer' (a UI copy-flow FSM) truly a 📇️directory domain contract, or should os/🔨️modules/📇️directory even own UI-presentation state machines (as opposed to wire/data contracts)? No other 📇️directory/🧬️schema/ entry is a pure UI FSM (all are data/wire schemas). An alternative would be a new os-level 'space-administration' module."
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🧬️contracts/🌱️artifact-creation/🧬️.schema.json",
+    "blob": "6a32fa870a7e3650c8680fc0157942b1aadab550",
+    "role": "renderer localized-progress-UI contract, misnamed+mislocated",
+    "classification": "c-per-contract-directory-in-ineligible-element-scope",
+    "owner": "🏛️ShellHost",
+    "intendedOwner": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/ (new dir, e.g. 🌱️artifact-creation-progress-ui-v1/), sibling to 🌱️space-artifact-creation-v1",
+    "exports": [
+      "semio.os.artifact-creation-progress-ui/v1"
+    ],
+    "consumers": [
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🧬️contracts/🌱️artifact-creation/🔣️.json",
+        "kind": "example-fixture (en/de locale strings)"
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🧬️contracts/🌱️artifact-creation/🏦️.tsx (reduceArtifactCreationProgressUiV1 etc.)",
+        "kind": "renderer-implementation"
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/🔬️index.test.ts:31-33,408-515",
+        "kind": "test-harness (static import of fixture+schema)"
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🌱️space-artifact-creation-v1/{🔣️.json,🟦️.ts,🦀️.rs,🧬️.schema.json}",
+        "kind": "sibling domain schema (creation business data, correctly located but also misnamed)"
+      },
+      {
+        "path": "🌎️hub/🗿️artifact-authority/🌱️creation/*.rs, 🌎️hub/📇️directory/{🐘️postgres,🪶️sqlite,🌐️neo4j}/🌱️creation-v1/*.rs",
+        "kind": "cross-app-domain-owner (real artifact-creation business logic in hub)"
+      }
+    ],
+    "decision": "Relocate to 💻️os/🔨️modules/📇️directory/🧬️schema/ as a properly formatted 🔣️.json; this is UI copy/labels for the same creation flow that 📇️directory/🧬️schema/🌱️space-artifact-creation-v1 already models structurally.",
+    "evidence": "$id 'https://semio.tech/schemas/os/artifact-creation-progress-ui-v1.json' -- namespaced 'os', confirming it is not ShellHost-private; fixture contains only en/de label strings + phase/catalog state names, no rendering-target-specific data; 📇️directory module already owns the underlying business schema (🌱️space-artifact-creation-v1) for the same flow.",
+    "open": "Should UI locale-string bundles live in the same 🧬️schema/ as data contracts, or does the taxonomy need a distinct facet for i18n-label schemas? Not resolved by current taxonomy.json (no dedicated 'labels' schemaFacetKind)."
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🧬️contracts/👥️presence-scope/🧬️.schema.json",
+    "blob": "89d935f89ee175cdcfdd9f85bb25d4d8f89c2bd3",
+    "role": "renderer presence-runtime-key/surface-routing contract, misnamed+mislocated",
+    "classification": "c-per-contract-directory-in-ineligible-element-scope",
+    "owner": "🏛️ShellHost",
+    "intendedOwner": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/🧬️schema/ (existing module-owned schema dir; sibling to 📌️peer-commit.schema.json, 🛂️peer-admission.schema.json, 🧹️retirement.schema.json)",
+    "exports": [
+      "semio.shell.presence-scope-fixture.v1"
+    ],
+    "consumers": [
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🧬️contracts/👥️presence-scope/🔣️.json",
+        "kind": "example-fixture"
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🧬️contracts/👥️presence-scope/🟦️.ts",
+        "kind": "renderer-implementation (typed exports)"
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/📜️script.ts:219-254 (scopedPresenceOracle)",
+        "kind": "test-harness-oracle"
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/🧬️schema/{📌️peer-commit.schema.json,🛂️peer-admission.schema.json,🧹️retirement.schema.json}",
+        "kind": "sibling module-owned presence schemas (peer lifecycle, correctly located but yet a THIRD filename convention)"
+      }
+    ],
+    "decision": "Relocate to 🏪️store/👥️presence/🧬️schema/ as 🔣️.json; keep ShellHost's 🟦️.ts as a pure consumer import.",
+    "evidence": "schema id 'semio.shell.presence-scope-fixture.v1' names 'shell' but describes spaceId/documentId scoped runtime-key derivation + surface routing for presence -- a peer-lifecycle/presence-domain concern; 💻️os already has a dedicated, taxonomy-correct 🏪️store/👥️presence/🧬️schema/ module (not under 🧱️elements) that owns adjacent presence contracts (peer-commit, peer-admission, retirement).",
+    "open": "Is the ShellHost runtime-key/surface-routing concern the SAME contract level as store/👥️presence's peer-commit/peer-admission, or a distinct UI-routing sub-contract that needs its own versioned entry there? Needs a decision, not just a file move."
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🧬️contracts/📇️directory-bootstrap/🧬️.schema.json",
+    "blob": "669987e1f0565b400d3ca5a6c78b239e88fa459f",
+    "role": "renderer directory-projection bootstrap/receipt contract, misnamed+mislocated",
+    "classification": "c-per-contract-directory-in-ineligible-element-scope",
+    "owner": "🏛️ShellHost",
+    "intendedOwner": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/ (new dir, e.g. 📇️home-bootstrap-v1/)",
+    "exports": [
+      "semio.space.home.directory-projection-receipt.v1"
+    ],
+    "consumers": [
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🧬️contracts/📇️directory-bootstrap/🔣️.json",
+        "kind": "example-fixture"
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/📜️script.ts:99-149 (directoryHomeBootstrapOracle, DirectoryHomeBootstrapCheckScript)",
+        "kind": "test-harness-oracle+nx-target"
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🦀️.rs, 🧬️schema/🦀️.rs",
+        "kind": "sibling domain implementation (directory module already owns projection/receipt semantics)"
+      }
+    ],
+    "decision": "Relocate to 📇️directory/🧬️schema/ as 🔣️.json; the schema string itself ('semio.space.home.directory-projection-receipt.v1') already names the 📇️directory domain.",
+    "evidence": "schema field values reference 'semio.directory.event-page.v1' and 'directory-projection-receipt'; oracle name is 'directoryHomeBootstrapOracle'; entirely about validating a directory event-page/receipt handshake used to bootstrap ShellHost's home view -- ShellHost is a pure UI consumer of the directory projection, not the schema's semantic owner.",
+    "open": ""
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🧬️contracts/🗨️dialog-origin/🧬️.schema.json",
+    "blob": "23a8b29f36b6655baed45395b1ddc3be68a5b8a9",
+    "role": "renderer internal modal/dialog-origin FSM contract, misnamed+mislocated, no external module consumer",
+    "classification": "c-per-contract-directory-in-ineligible-element-scope",
+    "owner": "🏛️ShellHost",
+    "intendedOwner": "No existing eligible module owns 'dialog/modal origin' today; needs either a new 💻️os/🔨️modules/🗨️dialog (or similar) module with its own 🧬️schema/, OR -- since ALL consumers (🐚️Shell, ShellHost, ShellHelpers) are 🧱️elements themselves with no cross-module/cross-app consumer -- a taxonomy exception/clarification for renderer-shell-internal UI FSMs may be needed.",
+    "exports": [
+      "ShellDialogOriginV1",
+      "shellDialogOriginIsCurrentV1",
+      "shellDialogOriginV1",
+      "shellEffectSourceIsCurrentV1",
+      "createAdmittedShellInstanceV1"
+    ],
+    "consumers": [
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🧬️contracts/🗨️dialog-origin/🔣️.json",
+        "kind": "example-fixture"
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🧬️contracts/🗨️dialog-origin/🟦️.ts",
+        "kind": "renderer-implementation"
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🟦️.tsx",
+        "kind": "renderer-implementation"
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx",
+        "kind": "renderer-implementation"
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛠️ShellHelpers/🟦️.tsx",
+        "kind": "renderer-implementation"
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/🔬️index.test.ts:26-30",
+        "kind": "test-harness (static import)"
+      }
+    ],
+    "decision": "Uniquely among the six, this one uses the CORRECT draft-07 dialect already; still needs relocation out of an 🧱️elements/🧬️contracts per-contract directory into a proper module 🧬️schema/. No $id is set (only the config-mutations/dialog-origin-family schemas lack an $id at all).",
+    "evidence": "Every consumer found (🐚️Shell, 🏛️ShellHost, 🛠️ShellHelpers) is itself a 🧱️elements member inside the SAME renderer engine; no hub, no other os module, no other product references dialog-origin -- this is the weakest case among the six for crossing an application/module boundary, but the taxonomy still forbids elements from owning schema.",
+    "open": "No natural non-element scope currently exists for pure renderer-shell UI machinery (Shell/ShellHost/ShellHelpers are all 🧱️elements). Recommend the ticket owner decide whether to (a) create a new eligible module e.g. 🔨️modules/🐚️shell-ui/🧬️schema, or (b) special-case renderer-internal-only UI FSMs in the taxonomy instead of forcing a module split."
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🧬️contracts/🗨️dialog-origin/🚪️opening/🧬️.schema.json",
+    "blob": "755e095420236fea1ac6bdc8debfe66bc996d6fb",
+    "role": "renderer admitted-shell-instance sub-contract of dialog-origin",
+    "classification": "c-per-contract-directory-in-ineligible-element-scope",
+    "owner": "🏛️ShellHost",
+    "intendedOwner": "Same destination as parent 🗨️dialog-origin (see above) -- nested as a sibling schema entry, not a nested directory.",
+    "exports": [
+      "AdmittedShellInstance (opening variant)"
+    ],
+    "consumers": [
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🧬️contracts/🗨️dialog-origin/🚪️opening/🔣️.json",
+        "kind": "example-fixture"
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/🔬️index.test.ts:29-30 (admittedInstanceFixture/admittedInstanceSchema)",
+        "kind": "test-harness (static import)"
+      }
+    ],
+    "decision": "Fold into the relocated dialog-origin schema module as a variant, not a separate nested per-contract directory.",
+    "evidence": "Imported alongside the parent dialog-origin fixture/schema in the same test file (index.test.ts lines 26-30); no independent consumer found.",
+    "open": "Note: NOT the same concept as the sibling top-level 🏛️ShellHost/🧭️opening/🧪️fixtures/📍️scope/ directory (see separate entry) -- two unrelated 'opening' concepts share a name inside ShellHost, which is confusing and worth flagging even though only one is in scope here."
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🧬️contracts/🗨️dialog-origin/🎥️tutorial/🧬️.schema.json",
+    "blob": "dc8f19075f00950adfce7f209a03da2326f630e4",
+    "role": "renderer tutorial-run sub-contract of dialog-origin",
+    "classification": "c-per-contract-directory-in-ineligible-element-scope",
+    "owner": "🏛️ShellHost",
+    "intendedOwner": "Same destination as parent 🗨️dialog-origin.",
+    "exports": [
+      "OwnedTutorialRunV1",
+      "TutorialDriveV1",
+      "runPausedTutorialSeekV1"
+    ],
+    "consumers": [
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🧬️contracts/🗨️dialog-origin/🎥️tutorial/🔣️.json",
+        "kind": "example-fixture"
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🧬️contracts/🗨️dialog-origin/🎥️tutorial/🟦️.ts",
+        "kind": "renderer-implementation"
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/🔬️index.test.ts:35-37",
+        "kind": "test-harness (static import)"
+      }
+    ],
+    "decision": "Fold into the relocated dialog-origin schema module.",
+    "evidence": "index.test.ts imports tutorialRunFixture/tutorialRunSchema alongside dialog-origin/opening fixtures; no consumer outside the react target test suite.",
+    "open": "CAVEAT: at audit time (2026-09-08) this directory shows uncommitted local modifications (git status M on 🔣️.json/🟦️.ts/🧬️.schema.json) plus two new untracked subdirectories (⏩️seek/, 🧵️serial/) -- a concurrent session appears to be actively extending this exact contract. This record's content/evidence reflects the working-tree snapshot at audit time, not a stable committed state; re-verify blob id before acting."
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🧬️contracts/🪪️host-bootstrap/🔣️.schema.json",
+    "blob": "e3f479d64b48d6908b6ba9998314dde843162643",
+    "role": "React-target host/landing-app resolution contract, misnamed+mislocated, third filename convention",
+    "classification": "c-per-contract-directory-in-ineligible-element-scope",
+    "owner": "🏛️ShellHost",
+    "intendedOwner": "Unclear -- content ($id 'https://semio.tech/schema/react/host-identity-bootstrap-v1.json') is React-target-specific (resolveRequiredHostApps/BootstrapStatusNotice), not a cross-app or even cross-target domain contract. Candidate: 📺️renderer/🧑‍🎨engine/📦️packages/🟦️typescript/🎯️targets/⚛️react's own module root if that becomes schema-eligible, else keep as a documented exception.",
+    "exports": [
+      "BootstrapStatusNotice",
+      "reduceBootstrapUiState",
+      "resolveRequiredHostApps",
+      "BootstrapUiStatus"
+    ],
+    "consumers": [
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🧬️contracts/🪪️host-bootstrap/🧪️fixtures/🔣️.json",
+        "kind": "example-fixture (note: fixture is nested one level deeper than its 5 sibling contracts)"
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🧬️contracts/🪪️host-bootstrap/🟦️.tsx",
+        "kind": "renderer-implementation"
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/⚡️quick.test.ts:8-40",
+        "kind": "test-harness (static import + Ajv2020)"
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/👥️scoped-presence.test.tsx",
+        "kind": "test reference"
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📤️distribution/🧾️manifest.json:11212-11222",
+        "kind": "generated distribution manifest (lists file, not a real behavioral consumer)"
+      }
+    ],
+    "decision": "Filename uses 🔣️.schema.json (a THIRD convention distinct from both 🔣️.json and 🧬️.schema.json used elsewhere in the same ShellHost/🧬️contracts/ tree) -- itself proof the per-contract-directory pattern has no single naming convention even internally. Needs an ownership decision before relocation target can be finalized.",
+    "evidence": "$id namespaces under 'react' (a rendering TARGET) rather than any domain ('os', 'directory', 'shell'); resolveRequiredHostApps/landingApp/hostApp resolution is intrinsic to how the React target boots the shell chrome, with no cross-module or cross-app consumer found.",
+    "open": "Should target-specific (not domain-specific) UI bootstrap contracts be schema-owned at all under this taxonomy, or are they implementation detail that never needed a JSON Schema in the first place? semanticAllowedOwnerLevels has no 'target' level."
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🧪️fixtures/🧬️.schema.json",
+    "blob": "09810a643bee2bbb27a9f7511cc6a9aecb417cb2",
+    "role": "bare fixture-owned schema validating 🔣️extension-invocation.json (extension request/response/fault contract)",
+    "classification": "b-fixture-owned-contract",
+    "owner": "🏛️ShellHost (🧱️elements, not eligible)",
+    "intendedOwner": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️schema/ (plugin extension invocation is a plugin-domain wire contract, not ShellHost-owned UI)",
+    "exports": [
+      "extension-invocation request/response/completion/fault shape"
+    ],
+    "consumers": [
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🧪️fixtures/🔣️extension-invocation.json",
+        "kind": "example-fixture"
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/🔬️index.test.ts",
+        "kind": "test-harness"
+      }
+    ],
+    "decision": "Relocate to the plugin module's schema location; ShellHost only renders extension UI, it does not define the extension protocol.",
+    "evidence": "$schema is draft-07 (correct dialect); required fields (instanceId/requestId/extensionId/capability/request/genericRequests/response/completion/...) describe the plugin-extension request/response wire shape, a plugin-domain concern, not a ShellHost UI concern.",
+    "open": ""
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🧪️fixtures/🔬️mounted-gis-map-probe-v1/🧬️.schema.json",
+    "blob": "edab61738b8dcd7f359e6bd0f97d862124d2ba23",
+    "role": "fixture-owned schema for a mounted-GIS-map production probe (cross-checks backbone-worker + ShellHost source-of-truth projection)",
+    "classification": "b-fixture-owned-contract",
+    "owner": "🏛️ShellHost",
+    "intendedOwner": "Ambiguous -- probe cross-references 🧵️backbone-worker.ts and ShellHost/🟦️.tsx directly by source-grep, not by schema-typed contract; may be legitimately test-only regression tooling rather than an application contract at all.",
+    "exports": [
+      "mounted GIS map probe fixture shape (source/expected projection)"
+    ],
+    "consumers": [
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🧪️fixtures/🔬️mounted-gis-map-probe-v1/🔣️.json",
+        "kind": "example-fixture"
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/📜️script.ts:536-570 (proveMountedGisMapProbe)",
+        "kind": "test-harness-oracle (product-root script.ts, dynamic join())"
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/🔬️index.test.ts",
+        "kind": "test-harness (static import)"
+      }
+    ],
+    "decision": "Flag for owner review rather than immediate relocation -- this may be a pure regression probe (source-substring assertions against worker+shell files) rather than a schema-typed application contract; if kept as a probe, the schema should still not sit beside the fixture per the goal's literal rule.",
+    "evidence": "proveMountedGisMapProbe cross-checks the fixture's 'expected' block against an independently recomputed projection AND greps 🧵️backbone-worker.ts / ShellHost/🟦️.tsx source for literal strings -- it behaves like a regression oracle, not a consumer of a reusable domain schema.",
+    "open": "Is a probe fixture whose 'contract' is really 'these two files must contain these literal substrings' in scope for the goal's schema-ownership rule at all? Recommend ticket owner clarify whether probes are exempt."
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🧭️opening/🧪️fixtures/📍️scope/🧬️.schema.json",
+    "blob": "c680fd7785e79ecd9e317f168078039e220359c1",
+    "role": "fixture-owned schema for opening-scope resolution, sibling concept confusingly named like dialog-origin/opening",
+    "classification": "b-fixture-owned-contract",
+    "owner": "🏛️ShellHost",
+    "intendedOwner": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/ or a new 🧵️backbone module schema dir (both backbone-worker.ts and ShellHost consume it for space-opening scope resolution)",
+    "exports": [
+      "opening-scope resolution fixture shape"
+    ],
+    "consumers": [
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🧭️opening/🧪️fixtures/📍️scope/🔣️.json",
+        "kind": "example-fixture"
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts",
+        "kind": "consumer (product-root worker, NOT ShellHost-local)"
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/🚪️opening.test.ts",
+        "kind": "test-harness"
+      }
+    ],
+    "decision": "Relocate; note this '🧭️opening' directory is a DIFFERENT concept from '🧬️contracts/🗨️dialog-origin/🚪️opening' despite the shared name -- rename collision worth resolving during the move.",
+    "evidence": "Consumed by 🧵️backbone-worker.ts, a product-root file outside ShellHost entirely, which is itself strong evidence ShellHost is not the right owner (the contract already crosses out of the 🧱️elements boundary).",
+    "open": "Confirm with ticket owner whether '🧭️opening' (top-level ShellHost dir) and '🗨️dialog-origin/🚪️opening' (nested contract) should be merged, renamed, or kept distinct once relocated."
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🔗️remote/🧩️pair/🧫️fixtures/🧬️.schema.json",
+    "blob": "3886e37ef731fa7a91a31321114c476a5ff9d470",
+    "role": "fixture-owned schema (test/regression fixture with its own private JSON Schema)",
+    "classification": "b-fixture-owned-contract",
+    "owner": "module leaf at 🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace (module itself, not an 🧱️elements member)",
+    "intendedOwner": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🧬️schema/ (module's own schema module, as 🔣️.json)",
+    "exports": [
+      "(fixture-local; not re-exported as a named domain type outside the module)"
+    ],
+    "consumers": [
+      {
+        "path": "🧰️framework/📦️packages/🟦️typescript/🟦️.ts",
+        "kind": "consumer (script.ts oracle, test, or sibling implementation)"
+      },
+      {
+        "path": "📜️script.ts",
+        "kind": "consumer (script.ts oracle, test, or sibling implementation)"
+      },
+      {
+        "path": "🌎️hub/📦️packages/🦀️rust/📜️script.ts",
+        "kind": "consumer (script.ts oracle, test, or sibling implementation)"
+      },
+      {
+        "path": "🌎️hub/📦️packages/🦀️rust/🚀️bin.rs",
+        "kind": "consumer (script.ts oracle, test, or sibling implementation)"
+      },
+      {
+        "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts",
+        "kind": "consumer (script.ts oracle, test, or sibling implementation)"
+      }
+    ],
+    "decision": "Relocate the JSON Schema into the owning module's 🧬️schema/ as 🔣️.json; keep the fixture as a plain example validated against it.",
+    "evidence": "Consumer scan (rg over *.ts/*.tsx/*.rs) found 5 referencing file(s) for the fixture's directory-name slug; pattern matches the repo-wide convention of one module-local 📜️script.ts oracle reading its own 🧪️fixtures|🧫️fixtures/<slug>/{🔣️.json,🧬️.schema.json} pair via readFileSync+join+Ajv.",
+    "open": ""
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🧫️fixtures/🔐️canonical-checkpoint-resource/🧬️.schema.json",
+    "blob": "26aa23ade189baba2aab2b1415baf19d6fe94b45",
+    "role": "fixture-owned schema (test/regression fixture with its own private JSON Schema)",
+    "classification": "b-fixture-owned-contract",
+    "owner": "module leaf at 🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace (module itself, not an 🧱️elements member)",
+    "intendedOwner": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🧬️schema/ (module's own schema module, as 🔣️.json)",
+    "exports": [
+      "(fixture-local; not re-exported as a named domain type outside the module)"
+    ],
+    "consumers": [
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust/📜️script.ts",
+        "kind": "consumer (script.ts oracle, test, or sibling implementation)"
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🦀️.rs",
+        "kind": "consumer (script.ts oracle, test, or sibling implementation)"
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🔗️remote/🧩️pair/🦀️.rs",
+        "kind": "consumer (script.ts oracle, test, or sibling implementation)"
+      }
+    ],
+    "decision": "Relocate the JSON Schema into the owning module's 🧬️schema/ as 🔣️.json; keep the fixture as a plain example validated against it.",
+    "evidence": "Consumer scan (rg over *.ts/*.tsx/*.rs) found 3 referencing file(s) for the fixture's directory-name slug; pattern matches the repo-wide convention of one module-local 📜️script.ts oracle reading its own 🧪️fixtures|🧫️fixtures/<slug>/{🔣️.json,🧬️.schema.json} pair via readFileSync+join+Ajv.",
+    "open": ""
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🧫️fixtures/🔐️hub-live-catalog/🧬️.schema.json",
+    "blob": "f03c30f64cede8300a83b9ae5ceb15e178e287ef",
+    "role": "fixture-owned schema (test/regression fixture with its own private JSON Schema)",
+    "classification": "b-fixture-owned-contract",
+    "owner": "module leaf at 🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace (module itself, not an 🧱️elements member)",
+    "intendedOwner": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🧬️schema/ (module's own schema module, as 🔣️.json)",
+    "exports": [
+      "(fixture-local; not re-exported as a named domain type outside the module)"
+    ],
+    "consumers": [
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust/📜️script.ts",
+        "kind": "consumer (script.ts oracle, test, or sibling implementation)"
+      }
+    ],
+    "decision": "Relocate the JSON Schema into the owning module's 🧬️schema/ as 🔣️.json; keep the fixture as a plain example validated against it.",
+    "evidence": "Consumer scan (rg over *.ts/*.tsx/*.rs) found 1 referencing file(s) for the fixture's directory-name slug; pattern matches the repo-wide convention of one module-local 📜️script.ts oracle reading its own 🧪️fixtures|🧫️fixtures/<slug>/{🔣️.json,🧬️.schema.json} pair via readFileSync+join+Ajv.",
+    "open": ""
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/💡️inference/🧪️fixtures/🗺️gis-discovery/🧬️.schema.json",
+    "blob": "1770f4d7da7140a18bcc6161d9b36937e1df2b61",
+    "role": "fixture-owned schema (test/regression fixture with its own private JSON Schema)",
+    "classification": "b-fixture-owned-contract",
+    "owner": "module leaf at 🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/💡️inference (module itself, not an 🧱️elements member)",
+    "intendedOwner": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/💡️inference/🧬️schema/ (module's own schema module, as 🔣️.json)",
+    "exports": [
+      "(fixture-local; not re-exported as a named domain type outside the module)"
+    ],
+    "consumers": [
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust/📜️script.ts",
+        "kind": "consumer (script.ts oracle, test, or sibling implementation)"
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/💡️inference/🦀️.rs",
+        "kind": "consumer (script.ts oracle, test, or sibling implementation)"
+      }
+    ],
+    "decision": "Relocate the JSON Schema into the owning module's 🧬️schema/ as 🔣️.json; keep the fixture as a plain example validated against it.",
+    "evidence": "Consumer scan (rg over *.ts/*.tsx/*.rs) found 2 referencing file(s) for the fixture's directory-name slug; pattern matches the repo-wide convention of one module-local 📜️script.ts oracle reading its own 🧪️fixtures|🧫️fixtures/<slug>/{🔣️.json,🧬️.schema.json} pair via readFileSync+join+Ajv.",
+    "open": ""
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🧪️fixtures/🚀️browser-startup/🧬️.schema.json",
+    "blob": "94050b3ec9b41f765e22ccdffd2554b53a17d9be",
+    "role": "fixture-owned schema (test/regression fixture with its own private JSON Schema)",
+    "classification": "b-fixture-owned-contract",
+    "owner": "module leaf at 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm (module itself, not an 🧱️elements member)",
+    "intendedOwner": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🧬️schema/ (module's own schema module, as 🔣️.json)",
+    "exports": [
+      "(fixture-local; not re-exported as a named domain type outside the module)"
+    ],
+    "consumers": [
+      {
+        "path": "NONE FOUND in .ts/.tsx/.rs pass",
+        "kind": "unresolved"
+      }
+    ],
+    "decision": "Relocate the JSON Schema into the owning module's 🧬️schema/ as 🔣️.json; keep the fixture as a plain example validated against it.",
+    "evidence": "Consumer scan (rg over *.ts/*.tsx/*.rs) found 0 referencing file(s) for the fixture's directory-name slug; pattern matches the repo-wide convention of one module-local 📜️script.ts oracle reading its own 🧪️fixtures|🧫️fixtures/<slug>/{🔣️.json,🧬️.schema.json} pair via readFileSync+join+Ajv.",
+    "open": "No .ts/.tsx/.rs consumer found in this pass -- likely Rust-only via a differently-named entry point, or possibly orphaned; needs a closer look before any relocation/deletion."
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🧪️fixtures/🧑‍🤝‍🧑️browser-runtime/🧬️.schema.json",
+    "blob": "0465077488c7a43ff33cf8e1751b97910e5ffead",
+    "role": "fixture-owned schema (test/regression fixture with its own private JSON Schema)",
+    "classification": "b-fixture-owned-contract",
+    "owner": "module leaf at 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm (module itself, not an 🧱️elements member)",
+    "intendedOwner": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🧬️schema/ (module's own schema module, as 🔣️.json)",
+    "exports": [
+      "(fixture-local; not re-exported as a named domain type outside the module)"
+    ],
+    "consumers": [
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/🔬️index.test.ts",
+        "kind": "consumer (script.ts oracle, test, or sibling implementation)"
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🦀️component.rs",
+        "kind": "consumer (script.ts oracle, test, or sibling implementation)"
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/📡️protocol.rs",
+        "kind": "consumer (script.ts oracle, test, or sibling implementation)"
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/📜️script.ts",
+        "kind": "consumer (script.ts oracle, test, or sibling implementation)"
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/📦️packages/🦀️rust/📜️script.ts",
+        "kind": "consumer (script.ts oracle, test, or sibling implementation)"
+      }
+    ],
+    "decision": "Relocate the JSON Schema into the owning module's 🧬️schema/ as 🔣️.json; keep the fixture as a plain example validated against it.",
+    "evidence": "Consumer scan (rg over *.ts/*.tsx/*.rs) found 5 referencing file(s) for the fixture's directory-name slug; pattern matches the repo-wide convention of one module-local 📜️script.ts oracle reading its own 🧪️fixtures|🧫️fixtures/<slug>/{🔣️.json,🧬️.schema.json} pair via readFileSync+join+Ajv.",
+    "open": ""
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🧪️fixtures/🧹️session-close/🧬️.schema.json",
+    "blob": "9c9ee0313fe24830f683db11b40a42867668c779",
+    "role": "fixture-owned schema (test/regression fixture with its own private JSON Schema)",
+    "classification": "b-fixture-owned-contract",
+    "owner": "module leaf at 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm (module itself, not an 🧱️elements member)",
+    "intendedOwner": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🧬️schema/ (module's own schema module, as 🔣️.json)",
+    "exports": [
+      "(fixture-local; not re-exported as a named domain type outside the module)"
+    ],
+    "consumers": [
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🦀️component.rs",
+        "kind": "consumer (script.ts oracle, test, or sibling implementation)"
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/📡️protocol.rs",
+        "kind": "consumer (script.ts oracle, test, or sibling implementation)"
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/📜️script.ts",
+        "kind": "consumer (script.ts oracle, test, or sibling implementation)"
+      }
+    ],
+    "decision": "Relocate the JSON Schema into the owning module's 🧬️schema/ as 🔣️.json; keep the fixture as a plain example validated against it.",
+    "evidence": "Consumer scan (rg over *.ts/*.tsx/*.rs) found 3 referencing file(s) for the fixture's directory-name slug; pattern matches the repo-wide convention of one module-local 📜️script.ts oracle reading its own 🧪️fixtures|🧫️fixtures/<slug>/{🔣️.json,🧬️.schema.json} pair via readFileSync+join+Ajv.",
+    "open": ""
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🌱️value/🧪️fixtures/🧮️wire-materialization/🧬️.schema.json",
+    "blob": "43183e0cfd1f42228cf0e4a5963e3608462b27b4",
+    "role": "fixture-owned schema (test/regression fixture with its own private JSON Schema)",
+    "classification": "b-fixture-owned-contract",
+    "owner": "module leaf at 🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🌱️value (module itself, not an 🧱️elements member)",
+    "intendedOwner": "🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🌱️value/🧬️schema/ (module's own schema module, as 🔣️.json)",
+    "exports": [
+      "(fixture-local; not re-exported as a named domain type outside the module)"
+    ],
+    "consumers": [
+      {
+        "path": "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🦀️.rs",
+        "kind": "consumer (script.ts oracle, test, or sibling implementation)"
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🌱️value/📜️script.ts",
+        "kind": "consumer (script.ts oracle, test, or sibling implementation)"
+      }
+    ],
+    "decision": "Relocate the JSON Schema into the owning module's 🧬️schema/ as 🔣️.json; keep the fixture as a plain example validated against it.",
+    "evidence": "Consumer scan (rg over *.ts/*.tsx/*.rs) found 2 referencing file(s) for the fixture's directory-name slug; pattern matches the repo-wide convention of one module-local 📜️script.ts oracle reading its own 🧪️fixtures|🧫️fixtures/<slug>/{🔣️.json,🧬️.schema.json} pair via readFileSync+join+Ajv.",
+    "open": ""
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧪️fixtures/🧬️.schema.json",
+    "blob": "a98cbf31ab3006729ffbc4e34090be8b570a76b8",
+    "role": "fixture-owned schema (test/regression fixture with its own private JSON Schema)",
+    "classification": "b-fixture-owned-contract",
+    "owner": "module leaf at 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition (module itself, not an 🧱️elements member)",
+    "intendedOwner": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🧬️schema/ (module's own schema module, as 🔣️.json)",
+    "exports": [
+      "(fixture-local; not re-exported as a named domain type outside the module)"
+    ],
+    "consumers": [
+      {
+        "path": "📜️script.ts",
+        "kind": "consumer (script.ts oracle, test, or sibling implementation)"
+      },
+      {
+        "path": "🧰️framework/📦️packages/🟦️typescript/📜️script.ts",
+        "kind": "consumer (script.ts oracle, test, or sibling implementation)"
+      },
+      {
+        "path": "🌎️hub/📦️packages/🟦️typescript/🤝️index.test.ts",
+        "kind": "consumer (script.ts oracle, test, or sibling implementation)"
+      },
+      {
+        "path": "🧰️framework/🔨️modules/🛂️manifest/🦀️.rs",
+        "kind": "consumer (script.ts oracle, test, or sibling implementation)"
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/📜️script.ts",
+        "kind": "consumer (script.ts oracle, test, or sibling implementation)"
+      }
+    ],
+    "decision": "Relocate the JSON Schema into the owning module's 🧬️schema/ as 🔣️.json; keep the fixture as a plain example validated against it.",
+    "evidence": "Consumer scan (rg over *.ts/*.tsx/*.rs) found 5 referencing file(s) for the fixture's directory-name slug; pattern matches the repo-wide convention of one module-local 📜️script.ts oracle reading its own 🧪️fixtures|🧫️fixtures/<slug>/{🔣️.json,🧬️.schema.json} pair via readFileSync+join+Ajv.",
+    "open": ""
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🕸️NodeGraph/🧪️fixtures/🧬️.schema.json",
+    "blob": "99f816f583ae94b19ed30c9cdf9cf9cb6b0c9f73",
+    "role": "fixture-owned schema (test/regression fixture with its own private JSON Schema)",
+    "classification": "b-fixture-owned-contract",
+    "owner": "module leaf at 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine (module itself, not an 🧱️elements member)",
+    "intendedOwner": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧬️schema/ (module's own schema module, as 🔣️.json)",
+    "exports": [
+      "(fixture-local; not re-exported as a named domain type outside the module)"
+    ],
+    "consumers": [
+      {
+        "path": "🧰️framework/📦️packages/🟦️typescript/📜️script.ts",
+        "kind": "consumer (script.ts oracle, test, or sibling implementation)"
+      },
+      {
+        "path": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/🟦️.tsx",
+        "kind": "consumer (script.ts oracle, test, or sibling implementation)"
+      },
+      {
+        "path": "🧰️framework/🔨️modules/🧵️job/🦀️.rs",
+        "kind": "consumer (script.ts oracle, test, or sibling implementation)"
+      },
+      {
+        "path": "🧰️framework/🔨️modules/🌉️abi/🦀️.rs",
+        "kind": "consumer (script.ts oracle, test, or sibling implementation)"
+      },
+      {
+        "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts",
+        "kind": "consumer (script.ts oracle, test, or sibling implementation)"
+      }
+    ],
+    "decision": "Relocate the JSON Schema into the owning module's 🧬️schema/ as 🔣️.json; keep the fixture as a plain example validated against it.",
+    "evidence": "Consumer scan (rg over *.ts/*.tsx/*.rs) found 5 referencing file(s) for the fixture's directory-name slug; pattern matches the repo-wide convention of one module-local 📜️script.ts oracle reading its own 🧪️fixtures|🧫️fixtures/<slug>/{🔣️.json,🧬️.schema.json} pair via readFileSync+join+Ajv.",
+    "open": ""
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛠️ShellHelpers/🧫️fixtures/🧬️.schema.json",
+    "blob": "8cbcf3ddde93a66ee77046a8ccbbffe828c58d16",
+    "role": "fixture-owned schema (test/regression fixture with its own private JSON Schema)",
+    "classification": "b-fixture-owned-contract",
+    "owner": "module leaf at 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine (module itself, not an 🧱️elements member)",
+    "intendedOwner": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧬️schema/ (module's own schema module, as 🔣️.json)",
+    "exports": [
+      "(fixture-local; not re-exported as a named domain type outside the module)"
+    ],
+    "consumers": [
+      {
+        "path": "📜️script.ts",
+        "kind": "consumer (script.ts oracle, test, or sibling implementation)"
+      },
+      {
+        "path": "🌎️hub/📦️packages/🦀️rust/📜️script.ts",
+        "kind": "consumer (script.ts oracle, test, or sibling implementation)"
+      },
+      {
+        "path": "🌎️hub/📦️packages/🦀️rust/🚀️bin.rs",
+        "kind": "consumer (script.ts oracle, test, or sibling implementation)"
+      },
+      {
+        "path": "✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🏛️bestest/🦀️.rs",
+        "kind": "consumer (script.ts oracle, test, or sibling implementation)"
+      },
+      {
+        "path": "🌎️hub/📇️directory/🦀️.rs",
+        "kind": "consumer (script.ts oracle, test, or sibling implementation)"
+      }
+    ],
+    "decision": "Relocate the JSON Schema into the owning module's 🧬️schema/ as 🔣️.json; keep the fixture as a plain example validated against it.",
+    "evidence": "Consumer scan (rg over *.ts/*.tsx/*.rs) found 5 referencing file(s) for the fixture's directory-name slug; pattern matches the repo-wide convention of one module-local 📜️script.ts oracle reading its own 🧪️fixtures|🧫️fixtures/<slug>/{🔣️.json,🧬️.schema.json} pair via readFileSync+join+Ajv.",
+    "open": ""
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🧪️fixtures/🌊️actor-import/🧬️.schema.json",
+    "blob": "335035b863554908ce3cf28227b8bab19f946c32",
+    "role": "fixture-owned schema (test/regression fixture with its own private JSON Schema)",
+    "classification": "b-fixture-owned-contract",
+    "owner": "module leaf at 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle (module itself, not an 🧱️elements member)",
+    "intendedOwner": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🧬️schema/ (module's own schema module, as 🔣️.json)",
+    "exports": [
+      "(fixture-local; not re-exported as a named domain type outside the module)"
+    ],
+    "consumers": [
+      {
+        "path": "NONE FOUND in .ts/.tsx/.rs pass",
+        "kind": "unresolved"
+      }
+    ],
+    "decision": "Relocate the JSON Schema into the owning module's 🧬️schema/ as 🔣️.json; keep the fixture as a plain example validated against it.",
+    "evidence": "Consumer scan (rg over *.ts/*.tsx/*.rs) found 0 referencing file(s) for the fixture's directory-name slug; pattern matches the repo-wide convention of one module-local 📜️script.ts oracle reading its own 🧪️fixtures|🧫️fixtures/<slug>/{🔣️.json,🧬️.schema.json} pair via readFileSync+join+Ajv.",
+    "open": "No .ts/.tsx/.rs consumer found in this pass -- likely Rust-only via a differently-named entry point, or possibly orphaned; needs a closer look before any relocation/deletion."
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🧪️fixtures/🌐️host-activation/🧬️.schema.json",
+    "blob": "ae5ad7133991a7a74829cfb277f7897c702db55a",
+    "role": "fixture-owned schema (test/regression fixture with its own private JSON Schema)",
+    "classification": "b-fixture-owned-contract",
+    "owner": "module leaf at 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle (module itself, not an 🧱️elements member)",
+    "intendedOwner": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🧬️schema/ (module's own schema module, as 🔣️.json)",
+    "exports": [
+      "(fixture-local; not re-exported as a named domain type outside the module)"
+    ],
+    "consumers": [
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/📜️script.ts",
+        "kind": "consumer (script.ts oracle, test, or sibling implementation)"
+      }
+    ],
+    "decision": "Relocate the JSON Schema into the owning module's 🧬️schema/ as 🔣️.json; keep the fixture as a plain example validated against it.",
+    "evidence": "Consumer scan (rg over *.ts/*.tsx/*.rs) found 1 referencing file(s) for the fixture's directory-name slug; pattern matches the repo-wide convention of one module-local 📜️script.ts oracle reading its own 🧪️fixtures|🧫️fixtures/<slug>/{🔣️.json,🧬️.schema.json} pair via readFileSync+join+Ajv.",
+    "open": ""
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🧪️fixtures/🌐️wasi-activation/🧬️.schema.json",
+    "blob": "71ee85935d0d088cbc10fca16d3767c8400b81fe",
+    "role": "fixture-owned schema (test/regression fixture with its own private JSON Schema)",
+    "classification": "b-fixture-owned-contract",
+    "owner": "module leaf at 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle (module itself, not an 🧱️elements member)",
+    "intendedOwner": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🧬️schema/ (module's own schema module, as 🔣️.json)",
+    "exports": [
+      "(fixture-local; not re-exported as a named domain type outside the module)"
+    ],
+    "consumers": [
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/📜️script.ts",
+        "kind": "consumer (script.ts oracle, test, or sibling implementation)"
+      }
+    ],
+    "decision": "Relocate the JSON Schema into the owning module's 🧬️schema/ as 🔣️.json; keep the fixture as a plain example validated against it.",
+    "evidence": "Consumer scan (rg over *.ts/*.tsx/*.rs) found 1 referencing file(s) for the fixture's directory-name slug; pattern matches the repo-wide convention of one module-local 📜️script.ts oracle reading its own 🧪️fixtures|🧫️fixtures/<slug>/{🔣️.json,🧬️.schema.json} pair via readFileSync+join+Ajv.",
+    "open": ""
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🧪️fixtures/📸️compiler-sources/🧬️.schema.json",
+    "blob": "10f9f2754784e9704013b3ea054abf2bcd6441ec",
+    "role": "fixture-owned schema (test/regression fixture with its own private JSON Schema)",
+    "classification": "b-fixture-owned-contract",
+    "owner": "module leaf at 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle (module itself, not an 🧱️elements member)",
+    "intendedOwner": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🧬️schema/ (module's own schema module, as 🔣️.json)",
+    "exports": [
+      "(fixture-local; not re-exported as a named domain type outside the module)"
+    ],
+    "consumers": [
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/📜️script.ts",
+        "kind": "consumer (script.ts oracle, test, or sibling implementation)"
+      }
+    ],
+    "decision": "Relocate the JSON Schema into the owning module's 🧬️schema/ as 🔣️.json; keep the fixture as a plain example validated against it.",
+    "evidence": "Consumer scan (rg over *.ts/*.tsx/*.rs) found 1 referencing file(s) for the fixture's directory-name slug; pattern matches the repo-wide convention of one module-local 📜️script.ts oracle reading its own 🧪️fixtures|🧫️fixtures/<slug>/{🔣️.json,🧬️.schema.json} pair via readFileSync+join+Ajv.",
+    "open": ""
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🧪️fixtures/🔒️compiler-capsule/🧬️.schema.json",
+    "blob": "2c3fd7802d8e09bbc0db33c2d6c331a1a59840e4",
+    "role": "fixture-owned schema (test/regression fixture with its own private JSON Schema)",
+    "classification": "b-fixture-owned-contract",
+    "owner": "module leaf at 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle (module itself, not an 🧱️elements member)",
+    "intendedOwner": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🧬️schema/ (module's own schema module, as 🔣️.json)",
+    "exports": [
+      "(fixture-local; not re-exported as a named domain type outside the module)"
+    ],
+    "consumers": [
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/📜️script.ts",
+        "kind": "consumer (script.ts oracle, test, or sibling implementation)"
+      }
+    ],
+    "decision": "Relocate the JSON Schema into the owning module's 🧬️schema/ as 🔣️.json; keep the fixture as a plain example validated against it.",
+    "evidence": "Consumer scan (rg over *.ts/*.tsx/*.rs) found 1 referencing file(s) for the fixture's directory-name slug; pattern matches the repo-wide convention of one module-local 📜️script.ts oracle reading its own 🧪️fixtures|🧫️fixtures/<slug>/{🔣️.json,🧬️.schema.json} pair via readFileSync+join+Ajv.",
+    "open": ""
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🧪️fixtures/🧊️actor-factory/🧬️.schema.json",
+    "blob": "6d20d4453d7f83fc97e661b437189a0318a3b2dc",
+    "role": "fixture-owned schema (test/regression fixture with its own private JSON Schema)",
+    "classification": "b-fixture-owned-contract",
+    "owner": "module leaf at 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle (module itself, not an 🧱️elements member)",
+    "intendedOwner": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🧬️schema/ (module's own schema module, as 🔣️.json)",
+    "exports": [
+      "(fixture-local; not re-exported as a named domain type outside the module)"
+    ],
+    "consumers": [
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/📜️script.ts",
+        "kind": "consumer (script.ts oracle, test, or sibling implementation)"
+      }
+    ],
+    "decision": "Relocate the JSON Schema into the owning module's 🧬️schema/ as 🔣️.json; keep the fixture as a plain example validated against it.",
+    "evidence": "Consumer scan (rg over *.ts/*.tsx/*.rs) found 1 referencing file(s) for the fixture's directory-name slug; pattern matches the repo-wide convention of one module-local 📜️script.ts oracle reading its own 🧪️fixtures|🧫️fixtures/<slug>/{🔣️.json,🧬️.schema.json} pair via readFileSync+join+Ajv.",
+    "open": ""
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🧪️fixtures/🧊️component-factory/🧬️.schema.json",
+    "blob": "7c79be6f81c78599880b50aa2b65694126d8ab15",
+    "role": "fixture-owned schema (test/regression fixture with its own private JSON Schema)",
+    "classification": "b-fixture-owned-contract",
+    "owner": "module leaf at 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle (module itself, not an 🧱️elements member)",
+    "intendedOwner": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🧬️schema/ (module's own schema module, as 🔣️.json)",
+    "exports": [
+      "(fixture-local; not re-exported as a named domain type outside the module)"
+    ],
+    "consumers": [
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/📜️script.ts",
+        "kind": "consumer (script.ts oracle, test, or sibling implementation)"
+      }
+    ],
+    "decision": "Relocate the JSON Schema into the owning module's 🧬️schema/ as 🔣️.json; keep the fixture as a plain example validated against it.",
+    "evidence": "Consumer scan (rg over *.ts/*.tsx/*.rs) found 1 referencing file(s) for the fixture's directory-name slug; pattern matches the repo-wide convention of one module-local 📜️script.ts oracle reading its own 🧪️fixtures|🧫️fixtures/<slug>/{🔣️.json,🧬️.schema.json} pair via readFileSync+join+Ajv.",
+    "open": ""
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️builder/🧪️fixtures/📇️topic-contributions/🧬️.schema.json",
+    "blob": "c72eba60566fda983806d97bf6f2d07843b8890b",
+    "role": "fixture-owned schema (test/regression fixture with its own private JSON Schema)",
+    "classification": "b-fixture-owned-contract",
+    "owner": "module leaf at 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️builder (module itself, not an 🧱️elements member)",
+    "intendedOwner": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️builder/🧬️schema/ (module's own schema module, as 🔣️.json)",
+    "exports": [
+      "(fixture-local; not re-exported as a named domain type outside the module)"
+    ],
+    "consumers": [
+      {
+        "path": "🌎️hub/📦️packages/🦀️rust/📜️script.ts",
+        "kind": "consumer (script.ts oracle, test, or sibling implementation)"
+      },
+      {
+        "path": "✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/🧪️tests/📇️native-openable-provider/🦀️.rs",
+        "kind": "consumer (script.ts oracle, test, or sibling implementation)"
+      }
+    ],
+    "decision": "Relocate the JSON Schema into the owning module's 🧬️schema/ as 🔣️.json; keep the fixture as a plain example validated against it.",
+    "evidence": "Consumer scan (rg over *.ts/*.tsx/*.rs) found 2 referencing file(s) for the fixture's directory-name slug; pattern matches the repo-wide convention of one module-local 📜️script.ts oracle reading its own 🧪️fixtures|🧫️fixtures/<slug>/{🔣️.json,🧬️.schema.json} pair via readFileSync+join+Ajv.",
+    "open": ""
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧫️fixtures/🌳️plugin-root-ownership/🧬️.schema.json",
+    "blob": "a68013263a12a2625c0dbe0ba99c20ed2d7f4ad7",
+    "role": "fixture-owned schema (test/regression fixture with its own private JSON Schema)",
+    "classification": "b-fixture-owned-contract",
+    "owner": "module leaf at 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry (module itself, not an 🧱️elements member)",
+    "intendedOwner": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧬️schema/ (module's own schema module, as 🔣️.json)",
+    "exports": [
+      "(fixture-local; not re-exported as a named domain type outside the module)"
+    ],
+    "consumers": [
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📜️script.ts",
+        "kind": "consumer (script.ts oracle, test, or sibling implementation)"
+      }
+    ],
+    "decision": "Relocate the JSON Schema into the owning module's 🧬️schema/ as 🔣️.json; keep the fixture as a plain example validated against it.",
+    "evidence": "Consumer scan (rg over *.ts/*.tsx/*.rs) found 1 referencing file(s) for the fixture's directory-name slug; pattern matches the repo-wide convention of one module-local 📜️script.ts oracle reading its own 🧪️fixtures|🧫️fixtures/<slug>/{🔣️.json,🧬️.schema.json} pair via readFileSync+join+Ajv.",
+    "open": ""
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧫️fixtures/📦️native-catalog-selection/🧬️.schema.json",
+    "blob": "ffc6a0790a9b41d00e9b1d1c884e92f4b127a405",
+    "role": "fixture-owned schema (test/regression fixture with its own private JSON Schema)",
+    "classification": "b-fixture-owned-contract",
+    "owner": "module leaf at 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry (module itself, not an 🧱️elements member)",
+    "intendedOwner": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧬️schema/ (module's own schema module, as 🔣️.json)",
+    "exports": [
+      "(fixture-local; not re-exported as a named domain type outside the module)"
+    ],
+    "consumers": [
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📜️script.ts",
+        "kind": "consumer (script.ts oracle, test, or sibling implementation)"
+      }
+    ],
+    "decision": "Relocate the JSON Schema into the owning module's 🧬️schema/ as 🔣️.json; keep the fixture as a plain example validated against it.",
+    "evidence": "Consumer scan (rg over *.ts/*.tsx/*.rs) found 1 referencing file(s) for the fixture's directory-name slug; pattern matches the repo-wide convention of one module-local 📜️script.ts oracle reading its own 🧪️fixtures|🧫️fixtures/<slug>/{🔣️.json,🧬️.schema.json} pair via readFileSync+join+Ajv.",
+    "open": ""
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧫️fixtures/🕸️rust-taxonomy-mounts/🧬️.schema.json",
+    "blob": "ce581ab4d5ff3b425b632aac32d4d0eb02f46a49",
+    "role": "fixture-owned schema (test/regression fixture with its own private JSON Schema)",
+    "classification": "b-fixture-owned-contract",
+    "owner": "module leaf at 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry (module itself, not an 🧱️elements member)",
+    "intendedOwner": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧬️schema/ (module's own schema module, as 🔣️.json)",
+    "exports": [
+      "(fixture-local; not re-exported as a named domain type outside the module)"
+    ],
+    "consumers": [
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📜️script.ts",
+        "kind": "consumer (script.ts oracle, test, or sibling implementation)"
+      }
+    ],
+    "decision": "Relocate the JSON Schema into the owning module's 🧬️schema/ as 🔣️.json; keep the fixture as a plain example validated against it.",
+    "evidence": "Consumer scan (rg over *.ts/*.tsx/*.rs) found 1 referencing file(s) for the fixture's directory-name slug; pattern matches the repo-wide convention of one module-local 📜️script.ts oracle reading its own 🧪️fixtures|🧫️fixtures/<slug>/{🔣️.json,🧬️.schema.json} pair via readFileSync+join+Ajv.",
+    "open": ""
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🧪️fixtures/⏱️emission-budget/🧬️.schema.json",
+    "blob": "2b5e316e459e4f0430ede379fb1c918df6b237c0",
+    "role": "fixture-owned schema (test/regression fixture with its own private JSON Schema)",
+    "classification": "b-fixture-owned-contract",
+    "owner": "module leaf at 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe (module itself, not an 🧱️elements member)",
+    "intendedOwner": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🧬️schema/ (module's own schema module, as 🔣️.json)",
+    "exports": [
+      "(fixture-local; not re-exported as a named domain type outside the module)"
+    ],
+    "consumers": [
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/✅️catalog-complete.test.ts",
+        "kind": "consumer (script.ts oracle, test, or sibling implementation)"
+      }
+    ],
+    "decision": "Relocate the JSON Schema into the owning module's 🧬️schema/ as 🔣️.json; keep the fixture as a plain example validated against it.",
+    "evidence": "Consumer scan (rg over *.ts/*.tsx/*.rs) found 1 referencing file(s) for the fixture's directory-name slug; pattern matches the repo-wide convention of one module-local 📜️script.ts oracle reading its own 🧪️fixtures|🧫️fixtures/<slug>/{🔣️.json,🧬️.schema.json} pair via readFileSync+join+Ajv.",
+    "open": ""
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🧪️fixtures/🧊️fresh-staging/🧬️.schema.json",
+    "blob": "46990aeca8c9a419162ca0361c92a667bd3a1b52",
+    "role": "fixture-owned schema (test/regression fixture with its own private JSON Schema)",
+    "classification": "b-fixture-owned-contract",
+    "owner": "module leaf at 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe (module itself, not an 🧱️elements member)",
+    "intendedOwner": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🧬️schema/ (module's own schema module, as 🔣️.json)",
+    "exports": [
+      "(fixture-local; not re-exported as a named domain type outside the module)"
+    ],
+    "consumers": [
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/📦️packages/🦀️rust/📜️script.ts",
+        "kind": "consumer (script.ts oracle, test, or sibling implementation)"
+      }
+    ],
+    "decision": "Relocate the JSON Schema into the owning module's 🧬️schema/ as 🔣️.json; keep the fixture as a plain example validated against it.",
+    "evidence": "Consumer scan (rg over *.ts/*.tsx/*.rs) found 1 referencing file(s) for the fixture's directory-name slug; pattern matches the repo-wide convention of one module-local 📜️script.ts oracle reading its own 🧪️fixtures|🧫️fixtures/<slug>/{🔣️.json,🧬️.schema.json} pair via readFileSync+join+Ajv.",
+    "open": ""
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🧪️fixtures/🧵️fresh-process/🧬️.schema.json",
+    "blob": "c3d68d2dfbb506d57d187e80860df6e6f27677b0",
+    "role": "fixture-owned schema (test/regression fixture with its own private JSON Schema)",
+    "classification": "b-fixture-owned-contract",
+    "owner": "module leaf at 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe (module itself, not an 🧱️elements member)",
+    "intendedOwner": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🧬️schema/ (module's own schema module, as 🔣️.json)",
+    "exports": [
+      "(fixture-local; not re-exported as a named domain type outside the module)"
+    ],
+    "consumers": [
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/📦️packages/🦀️rust/📜️script.ts",
+        "kind": "consumer (script.ts oracle, test, or sibling implementation)"
+      }
+    ],
+    "decision": "Relocate the JSON Schema into the owning module's 🧬️schema/ as 🔣️.json; keep the fixture as a plain example validated against it.",
+    "evidence": "Consumer scan (rg over *.ts/*.tsx/*.rs) found 1 referencing file(s) for the fixture's directory-name slug; pattern matches the repo-wide convention of one module-local 📜️script.ts oracle reading its own 🧪️fixtures|🧫️fixtures/<slug>/{🔣️.json,🧬️.schema.json} pair via readFileSync+join+Ajv.",
+    "open": ""
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🧪️fixtures/🧾️fresh-source-epoch/🧬️.schema.json",
+    "blob": "1a169fc96226c14ca1aa6b9027fb9c4cb5966c60",
+    "role": "fixture-owned schema (test/regression fixture with its own private JSON Schema)",
+    "classification": "b-fixture-owned-contract",
+    "owner": "module leaf at 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe (module itself, not an 🧱️elements member)",
+    "intendedOwner": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🧬️schema/ (module's own schema module, as 🔣️.json)",
+    "exports": [
+      "(fixture-local; not re-exported as a named domain type outside the module)"
+    ],
+    "consumers": [
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/📦️packages/🦀️rust/📜️script.ts",
+        "kind": "consumer (script.ts oracle, test, or sibling implementation)"
+      }
+    ],
+    "decision": "Relocate the JSON Schema into the owning module's 🧬️schema/ as 🔣️.json; keep the fixture as a plain example validated against it.",
+    "evidence": "Consumer scan (rg over *.ts/*.tsx/*.rs) found 1 referencing file(s) for the fixture's directory-name slug; pattern matches the repo-wide convention of one module-local 📜️script.ts oracle reading its own 🧪️fixtures|🧫️fixtures/<slug>/{🔣️.json,🧬️.schema.json} pair via readFileSync+join+Ajv.",
+    "open": ""
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️fixtures/🌱️artifact-document-id-v1/🧬️.schema.json",
+    "blob": "f63d331d8bc0c318a93b1070698394ff575b897e",
+    "role": "fixture-owned schema (test/regression fixture with its own private JSON Schema)",
+    "classification": "b-fixture-owned-contract",
+    "owner": "module leaf at 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️fixtures (module itself, not an 🧱️elements member)",
+    "intendedOwner": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️fixtures/🧬️schema/ (module's own schema module, as 🔣️.json)",
+    "exports": [
+      "(fixture-local; not re-exported as a named domain type outside the module)"
+    ],
+    "consumers": [
+      {
+        "path": "✏️s/🔌️plugins/🌍️gis/📦️packages/🦀️rust/📜️script.ts",
+        "kind": "consumer (script.ts oracle, test, or sibling implementation)"
+      },
+      {
+        "path": "✏️s/🔌️plugins/🌍️gis/📇️native-codecs/🧪️tests/🦀️.rs",
+        "kind": "consumer (script.ts oracle, test, or sibling implementation)"
+      },
+      {
+        "path": "✏️s/🔌️plugins/🌿️vcs/📦️packages/🦀️rust/📜️script.ts",
+        "kind": "consumer (script.ts oracle, test, or sibling implementation)"
+      },
+      {
+        "path": "✏️s/🔌️plugins/🌿️vcs/📇️native-codecs/🧪️tests/🦀️.rs",
+        "kind": "consumer (script.ts oracle, test, or sibling implementation)"
+      }
+    ],
+    "decision": "Relocate the JSON Schema into the owning module's 🧬️schema/ as 🔣️.json; keep the fixture as a plain example validated against it.",
+    "evidence": "Consumer scan (rg over *.ts/*.tsx/*.rs) found 4 referencing file(s) for the fixture's directory-name slug; pattern matches the repo-wide convention of one module-local 📜️script.ts oracle reading its own 🧪️fixtures|🧫️fixtures/<slug>/{🔣️.json,🧬️.schema.json} pair via readFileSync+join+Ajv.",
+    "open": ""
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🚪️document-mount/🧪️fixtures/🧬️.schema.json",
+    "blob": "05dfb8859f5bb5d8adba5574dbe93c2146cb7007",
+    "role": "fixture-owned schema (test/regression fixture with its own private JSON Schema)",
+    "classification": "b-fixture-owned-contract",
+    "owner": "module leaf at 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine (module itself, not an 🧱️elements member)",
+    "intendedOwner": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🧬️schema/ (module's own schema module, as 🔣️.json)",
+    "exports": [
+      "(fixture-local; not re-exported as a named domain type outside the module)"
+    ],
+    "consumers": [
+      {
+        "path": "🧰️framework/📦️packages/🟦️typescript/📜️script.ts",
+        "kind": "consumer (script.ts oracle, test, or sibling implementation)"
+      },
+      {
+        "path": "📜️script.ts",
+        "kind": "consumer (script.ts oracle, test, or sibling implementation)"
+      },
+      {
+        "path": "🌎️hub/📦️packages/🟦️typescript/🤝️index.test.ts",
+        "kind": "consumer (script.ts oracle, test, or sibling implementation)"
+      },
+      {
+        "path": "🌎️hub/📦️packages/🦀️rust/📜️script.ts",
+        "kind": "consumer (script.ts oracle, test, or sibling implementation)"
+      },
+      {
+        "path": "🌎️hub/📦️packages/🦀️rust/🚀️bin.rs",
+        "kind": "consumer (script.ts oracle, test, or sibling implementation)"
+      }
+    ],
+    "decision": "Relocate the JSON Schema into the owning module's 🧬️schema/ as 🔣️.json; keep the fixture as a plain example validated against it.",
+    "evidence": "Consumer scan (rg over *.ts/*.tsx/*.rs) found 5 referencing file(s) for the fixture's directory-name slug; pattern matches the repo-wide convention of one module-local 📜️script.ts oracle reading its own 🧪️fixtures|🧫️fixtures/<slug>/{🔣️.json,🧬️.schema.json} pair via readFileSync+join+Ajv.",
+    "open": ""
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🧪️fixtures/📖️catalog-read-ownership/🧬️.schema.json",
+    "blob": "c99a950f35cbd5551108ea2ec6bde4092ecb2b89",
+    "role": "fixture-owned schema (test/regression fixture with its own private JSON Schema)",
+    "classification": "b-fixture-owned-contract",
+    "owner": "module leaf at 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine (module itself, not an 🧱️elements member)",
+    "intendedOwner": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🧬️schema/ (module's own schema module, as 🔣️.json)",
+    "exports": [
+      "(fixture-local; not re-exported as a named domain type outside the module)"
+    ],
+    "consumers": [
+      {
+        "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📜️script.ts",
+        "kind": "consumer (script.ts oracle, test, or sibling implementation)"
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🦀️.rs",
+        "kind": "consumer (script.ts oracle, test, or sibling implementation)"
+      }
+    ],
+    "decision": "Relocate the JSON Schema into the owning module's 🧬️schema/ as 🔣️.json; keep the fixture as a plain example validated against it.",
+    "evidence": "Consumer scan (rg over *.ts/*.tsx/*.rs) found 2 referencing file(s) for the fixture's directory-name slug; pattern matches the repo-wide convention of one module-local 📜️script.ts oracle reading its own 🧪️fixtures|🧫️fixtures/<slug>/{🔣️.json,🧬️.schema.json} pair via readFileSync+join+Ajv.",
+    "open": ""
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🧪️fixtures/📜️history-completion/🧬️.schema.json",
+    "blob": "978d936fa93cb283a263821b77d057df2c0c509e",
+    "role": "fixture-owned schema (test/regression fixture with its own private JSON Schema)",
+    "classification": "b-fixture-owned-contract",
+    "owner": "module leaf at 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine (module itself, not an 🧱️elements member)",
+    "intendedOwner": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🧬️schema/ (module's own schema module, as 🔣️.json)",
+    "exports": [
+      "(fixture-local; not re-exported as a named domain type outside the module)"
+    ],
+    "consumers": [
+      {
+        "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📜️script.ts",
+        "kind": "consumer (script.ts oracle, test, or sibling implementation)"
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🦀️.rs",
+        "kind": "consumer (script.ts oracle, test, or sibling implementation)"
+      }
+    ],
+    "decision": "Relocate the JSON Schema into the owning module's 🧬️schema/ as 🔣️.json; keep the fixture as a plain example validated against it.",
+    "evidence": "Consumer scan (rg over *.ts/*.tsx/*.rs) found 2 referencing file(s) for the fixture's directory-name slug; pattern matches the repo-wide convention of one module-local 📜️script.ts oracle reading its own 🧪️fixtures|🧫️fixtures/<slug>/{🔣️.json,🧬️.schema.json} pair via readFileSync+join+Ajv.",
+    "open": ""
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🧪️fixtures/📬️capability-completion/🧬️.schema.json",
+    "blob": "a985f5416fb63372f08828ed4e969d2a52e0d494",
+    "role": "fixture-owned schema (test/regression fixture with its own private JSON Schema)",
+    "classification": "b-fixture-owned-contract",
+    "owner": "module leaf at 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine (module itself, not an 🧱️elements member)",
+    "intendedOwner": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🧬️schema/ (module's own schema module, as 🔣️.json)",
+    "exports": [
+      "(fixture-local; not re-exported as a named domain type outside the module)"
+    ],
+    "consumers": [
+      {
+        "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📜️script.ts",
+        "kind": "consumer (script.ts oracle, test, or sibling implementation)"
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🦀️.rs",
+        "kind": "consumer (script.ts oracle, test, or sibling implementation)"
+      }
+    ],
+    "decision": "Relocate the JSON Schema into the owning module's 🧬️schema/ as 🔣️.json; keep the fixture as a plain example validated against it.",
+    "evidence": "Consumer scan (rg over *.ts/*.tsx/*.rs) found 2 referencing file(s) for the fixture's directory-name slug; pattern matches the repo-wide convention of one module-local 📜️script.ts oracle reading its own 🧪️fixtures|🧫️fixtures/<slug>/{🔣️.json,🧬️.schema.json} pair via readFileSync+join+Ajv.",
+    "open": ""
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🧪️fixtures/🚪️shutdown/🧬️.schema.json",
+    "blob": "f185621d3f749e688e94308816c2ceb88a223fd3",
+    "role": "fixture-owned schema (test/regression fixture with its own private JSON Schema)",
+    "classification": "b-fixture-owned-contract",
+    "owner": "module leaf at 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine (module itself, not an 🧱️elements member)",
+    "intendedOwner": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🧬️schema/ (module's own schema module, as 🔣️.json)",
+    "exports": [
+      "(fixture-local; not re-exported as a named domain type outside the module)"
+    ],
+    "consumers": [
+      {
+        "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📜️script.ts",
+        "kind": "consumer (script.ts oracle, test, or sibling implementation)"
+      }
+    ],
+    "decision": "Relocate the JSON Schema into the owning module's 🧬️schema/ as 🔣️.json; keep the fixture as a plain example validated against it.",
+    "evidence": "Consumer scan (rg over *.ts/*.tsx/*.rs) found 1 referencing file(s) for the fixture's directory-name slug; pattern matches the repo-wide convention of one module-local 📜️script.ts oracle reading its own 🧪️fixtures|🧫️fixtures/<slug>/{🔣️.json,🧬️.schema.json} pair via readFileSync+join+Ajv.",
+    "open": ""
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📝️wal/🧪️fixtures/📏️capacity/🧬️.schema.json",
+    "blob": "4e05344aec2d4358309089ac2d2921e2fa958759",
+    "role": "fixture-owned schema (test/regression fixture with its own private JSON Schema)",
+    "classification": "b-fixture-owned-contract",
+    "owner": "module leaf at 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📝️wal (module itself, not an 🧱️elements member)",
+    "intendedOwner": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📝️wal/🧬️schema/ (module's own schema module, as 🔣️.json)",
+    "exports": [
+      "(fixture-local; not re-exported as a named domain type outside the module)"
+    ],
+    "consumers": [
+      {
+        "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📜️script.ts",
+        "kind": "consumer (script.ts oracle, test, or sibling implementation)"
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📝️wal/🦀️.rs",
+        "kind": "consumer (script.ts oracle, test, or sibling implementation)"
+      }
+    ],
+    "decision": "Relocate the JSON Schema into the owning module's 🧬️schema/ as 🔣️.json; keep the fixture as a plain example validated against it.",
+    "evidence": "Consumer scan (rg over *.ts/*.tsx/*.rs) found 2 referencing file(s) for the fixture's directory-name slug; pattern matches the repo-wide convention of one module-local 📜️script.ts oracle reading its own 🧪️fixtures|🧫️fixtures/<slug>/{🔣️.json,🧬️.schema.json} pair via readFileSync+join+Ajv.",
+    "open": ""
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📝️wal/🧪️fixtures/📖️retained-decoder/🧬️.schema.json",
+    "blob": "da8f44767284532d9b082d7aa83ca2606faf6d66",
+    "role": "fixture-owned schema (test/regression fixture with its own private JSON Schema)",
+    "classification": "b-fixture-owned-contract",
+    "owner": "module leaf at 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📝️wal (module itself, not an 🧱️elements member)",
+    "intendedOwner": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📝️wal/🧬️schema/ (module's own schema module, as 🔣️.json)",
+    "exports": [
+      "(fixture-local; not re-exported as a named domain type outside the module)"
+    ],
+    "consumers": [
+      {
+        "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📜️script.ts",
+        "kind": "consumer (script.ts oracle, test, or sibling implementation)"
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🔄️sync/🦀️.rs",
+        "kind": "consumer (script.ts oracle, test, or sibling implementation)"
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📝️wal/🦀️.rs",
+        "kind": "consumer (script.ts oracle, test, or sibling implementation)"
+      }
+    ],
+    "decision": "Relocate the JSON Schema into the owning module's 🧬️schema/ as 🔣️.json; keep the fixture as a plain example validated against it.",
+    "evidence": "Consumer scan (rg over *.ts/*.tsx/*.rs) found 3 referencing file(s) for the fixture's directory-name slug; pattern matches the repo-wide convention of one module-local 📜️script.ts oracle reading its own 🧪️fixtures|🧫️fixtures/<slug>/{🔣️.json,🧬️.schema.json} pair via readFileSync+join+Ajv.",
+    "open": ""
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📝️wal/🧪️fixtures/🚑️recovery/🧬️.schema.json",
+    "blob": "89a526b937c77f01f13553a959ec777f56b2ab8f",
+    "role": "fixture-owned schema (test/regression fixture with its own private JSON Schema)",
+    "classification": "b-fixture-owned-contract",
+    "owner": "module leaf at 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📝️wal (module itself, not an 🧱️elements member)",
+    "intendedOwner": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📝️wal/🧬️schema/ (module's own schema module, as 🔣️.json)",
+    "exports": [
+      "(fixture-local; not re-exported as a named domain type outside the module)"
+    ],
+    "consumers": [
+      {
+        "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📜️script.ts",
+        "kind": "consumer (script.ts oracle, test, or sibling implementation)"
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📝️wal/🦀️.rs",
+        "kind": "consumer (script.ts oracle, test, or sibling implementation)"
+      }
+    ],
+    "decision": "Relocate the JSON Schema into the owning module's 🧬️schema/ as 🔣️.json; keep the fixture as a plain example validated against it.",
+    "evidence": "Consumer scan (rg over *.ts/*.tsx/*.rs) found 2 referencing file(s) for the fixture's directory-name slug; pattern matches the repo-wide convention of one module-local 📜️script.ts oracle reading its own 🧪️fixtures|🧫️fixtures/<slug>/{🔣️.json,🧬️.schema.json} pair via readFileSync+join+Ajv.",
+    "open": ""
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📝️wal/🧪️fixtures/🚪️open-rejection/🧬️.schema.json",
+    "blob": "6d8c506f899f8d05a330bbc2669f7bdd810d39d7",
+    "role": "fixture-owned schema (test/regression fixture with its own private JSON Schema)",
+    "classification": "b-fixture-owned-contract",
+    "owner": "module leaf at 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📝️wal (module itself, not an 🧱️elements member)",
+    "intendedOwner": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📝️wal/🧬️schema/ (module's own schema module, as 🔣️.json)",
+    "exports": [
+      "(fixture-local; not re-exported as a named domain type outside the module)"
+    ],
+    "consumers": [
+      {
+        "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📜️script.ts",
+        "kind": "consumer (script.ts oracle, test, or sibling implementation)"
+      }
+    ],
+    "decision": "Relocate the JSON Schema into the owning module's 🧬️schema/ as 🔣️.json; keep the fixture as a plain example validated against it.",
+    "evidence": "Consumer scan (rg over *.ts/*.tsx/*.rs) found 1 referencing file(s) for the fixture's directory-name slug; pattern matches the repo-wide convention of one module-local 📜️script.ts oracle reading its own 🧪️fixtures|🧫️fixtures/<slug>/{🔣️.json,🧬️.schema.json} pair via readFileSync+join+Ajv.",
+    "open": ""
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📝️wal/🧪️fixtures/🛑️fail-stop/🧬️.schema.json",
+    "blob": "143556adbe72690beb7e8bffc9178cd8d695b067",
+    "role": "fixture-owned schema (test/regression fixture with its own private JSON Schema)",
+    "classification": "b-fixture-owned-contract",
+    "owner": "module leaf at 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📝️wal (module itself, not an 🧱️elements member)",
+    "intendedOwner": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📝️wal/🧬️schema/ (module's own schema module, as 🔣️.json)",
+    "exports": [
+      "(fixture-local; not re-exported as a named domain type outside the module)"
+    ],
+    "consumers": [
+      {
+        "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📜️script.ts",
+        "kind": "consumer (script.ts oracle, test, or sibling implementation)"
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📝️wal/🦀️.rs",
+        "kind": "consumer (script.ts oracle, test, or sibling implementation)"
+      }
+    ],
+    "decision": "Relocate the JSON Schema into the owning module's 🧬️schema/ as 🔣️.json; keep the fixture as a plain example validated against it.",
+    "evidence": "Consumer scan (rg over *.ts/*.tsx/*.rs) found 2 referencing file(s) for the fixture's directory-name slug; pattern matches the repo-wide convention of one module-local 📜️script.ts oracle reading its own 🧪️fixtures|🧫️fixtures/<slug>/{🔣️.json,🧬️.schema.json} pair via readFileSync+join+Ajv.",
+    "open": ""
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📝️wal/🧪️fixtures/🧾️committed-transactions/🧬️.schema.json",
+    "blob": "269369bc27969bde515fbf28135fa1add84efc8f",
+    "role": "fixture-owned schema (test/regression fixture with its own private JSON Schema)",
+    "classification": "b-fixture-owned-contract",
+    "owner": "module leaf at 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📝️wal (module itself, not an 🧱️elements member)",
+    "intendedOwner": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📝️wal/🧬️schema/ (module's own schema module, as 🔣️.json)",
+    "exports": [
+      "(fixture-local; not re-exported as a named domain type outside the module)"
+    ],
+    "consumers": [
+      {
+        "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📜️script.ts",
+        "kind": "consumer (script.ts oracle, test, or sibling implementation)"
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⌨️cli/🦀️.rs",
+        "kind": "consumer (script.ts oracle, test, or sibling implementation)"
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🔄️sync/🦀️.rs",
+        "kind": "consumer (script.ts oracle, test, or sibling implementation)"
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📝️wal/🦀️.rs",
+        "kind": "consumer (script.ts oracle, test, or sibling implementation)"
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🦀️.rs",
+        "kind": "consumer (script.ts oracle, test, or sibling implementation)"
+      }
+    ],
+    "decision": "Relocate the JSON Schema into the owning module's 🧬️schema/ as 🔣️.json; keep the fixture as a plain example validated against it.",
+    "evidence": "Consumer scan (rg over *.ts/*.tsx/*.rs) found 5 referencing file(s) for the fixture's directory-name slug; pattern matches the repo-wide convention of one module-local 📜️script.ts oracle reading its own 🧪️fixtures|🧫️fixtures/<slug>/{🔣️.json,🧬️.schema.json} pair via readFileSync+join+Ajv.",
+    "open": ""
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🔐️writer/🧪️fixtures/🌐️remote-guard/🧬️.schema.json",
+    "blob": "c0aff23ca537f638b494df719bdac8793d3c0844",
+    "role": "fixture-owned schema (test/regression fixture with its own private JSON Schema)",
+    "classification": "b-fixture-owned-contract",
+    "owner": "module leaf at 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage (module itself, not an 🧱️elements member)",
+    "intendedOwner": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🧬️schema/ (module's own schema module, as 🔣️.json)",
+    "exports": [
+      "(fixture-local; not re-exported as a named domain type outside the module)"
+    ],
+    "consumers": [
+      {
+        "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📜️script.ts",
+        "kind": "consumer (script.ts oracle, test, or sibling implementation)"
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🪶️sqlite/🦀️.rs",
+        "kind": "consumer (script.ts oracle, test, or sibling implementation)"
+      }
+    ],
+    "decision": "Relocate the JSON Schema into the owning module's 🧬️schema/ as 🔣️.json; keep the fixture as a plain example validated against it.",
+    "evidence": "Consumer scan (rg over *.ts/*.tsx/*.rs) found 2 referencing file(s) for the fixture's directory-name slug; pattern matches the repo-wide convention of one module-local 📜️script.ts oracle reading its own 🧪️fixtures|🧫️fixtures/<slug>/{🔣️.json,🧬️.schema.json} pair via readFileSync+join+Ajv.",
+    "open": ""
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🔐️writer/🧪️fixtures/🧬️.schema.json",
+    "blob": "d26779ad4bb1db64843ab934601d5ae2df554858",
+    "role": "fixture-owned schema (test/regression fixture with its own private JSON Schema)",
+    "classification": "b-fixture-owned-contract",
+    "owner": "module leaf at 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage (module itself, not an 🧱️elements member)",
+    "intendedOwner": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🧬️schema/ (module's own schema module, as 🔣️.json)",
+    "exports": [
+      "(fixture-local; not re-exported as a named domain type outside the module)"
+    ],
+    "consumers": [
+      {
+        "path": "📜️script.ts",
+        "kind": "consumer (script.ts oracle, test, or sibling implementation)"
+      },
+      {
+        "path": "🧰️framework/📦️packages/🟦️typescript/📜️script.ts",
+        "kind": "consumer (script.ts oracle, test, or sibling implementation)"
+      },
+      {
+        "path": "🌎️hub/📦️packages/🟦️typescript/🤝️index.test.ts",
+        "kind": "consumer (script.ts oracle, test, or sibling implementation)"
+      },
+      {
+        "path": "🌎️hub/🛰️lag-rebootstrap/🦀️.rs",
+        "kind": "consumer (script.ts oracle, test, or sibling implementation)"
+      },
+      {
+        "path": "🌎️hub/💡️inference/🏃️runtime/🦀️.rs",
+        "kind": "consumer (script.ts oracle, test, or sibling implementation)"
+      }
+    ],
+    "decision": "Relocate the JSON Schema into the owning module's 🧬️schema/ as 🔣️.json; keep the fixture as a plain example validated against it.",
+    "evidence": "Consumer scan (rg over *.ts/*.tsx/*.rs) found 5 referencing file(s) for the fixture's directory-name slug; pattern matches the repo-wide convention of one module-local 📜️script.ts oracle reading its own 🧪️fixtures|🧫️fixtures/<slug>/{🔣️.json,🧬️.schema.json} pair via readFileSync+join+Ajv.",
+    "open": ""
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🧪️fixtures/📁️directory-durability/🧬️.schema.json",
+    "blob": "f799c539c38b18ea92882ab19f79c6c19df87d23",
+    "role": "fixture-owned schema (test/regression fixture with its own private JSON Schema)",
+    "classification": "b-fixture-owned-contract",
+    "owner": "module leaf at 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage (module itself, not an 🧱️elements member)",
+    "intendedOwner": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🧬️schema/ (module's own schema module, as 🔣️.json)",
+    "exports": [
+      "(fixture-local; not re-exported as a named domain type outside the module)"
+    ],
+    "consumers": [
+      {
+        "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📜️script.ts",
+        "kind": "consumer (script.ts oracle, test, or sibling implementation)"
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🦀️.rs",
+        "kind": "consumer (script.ts oracle, test, or sibling implementation)"
+      }
+    ],
+    "decision": "Relocate the JSON Schema into the owning module's 🧬️schema/ as 🔣️.json; keep the fixture as a plain example validated against it.",
+    "evidence": "Consumer scan (rg over *.ts/*.tsx/*.rs) found 2 referencing file(s) for the fixture's directory-name slug; pattern matches the repo-wide convention of one module-local 📜️script.ts oracle reading its own 🧪️fixtures|🧫️fixtures/<slug>/{🔣️.json,🧬️.schema.json} pair via readFileSync+join+Ajv.",
+    "open": ""
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🧪️fixtures/🔐️backend-pool-use/🧬️.schema.json",
+    "blob": "d8a31435ca043abe4d899eb2bf49fda922711c8d",
+    "role": "fixture-owned schema (test/regression fixture with its own private JSON Schema)",
+    "classification": "b-fixture-owned-contract",
+    "owner": "module leaf at 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage (module itself, not an 🧱️elements member)",
+    "intendedOwner": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🧬️schema/ (module's own schema module, as 🔣️.json)",
+    "exports": [
+      "(fixture-local; not re-exported as a named domain type outside the module)"
+    ],
+    "consumers": [
+      {
+        "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📜️script.ts",
+        "kind": "consumer (script.ts oracle, test, or sibling implementation)"
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🦀️.rs",
+        "kind": "consumer (script.ts oracle, test, or sibling implementation)"
+      }
+    ],
+    "decision": "Relocate the JSON Schema into the owning module's 🧬️schema/ as 🔣️.json; keep the fixture as a plain example validated against it.",
+    "evidence": "Consumer scan (rg over *.ts/*.tsx/*.rs) found 2 referencing file(s) for the fixture's directory-name slug; pattern matches the repo-wide convention of one module-local 📜️script.ts oracle reading its own 🧪️fixtures|🧫️fixtures/<slug>/{🔣️.json,🧬️.schema.json} pair via readFileSync+join+Ajv.",
+    "open": ""
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🧪️fixtures/🧮️memory-backing/🧬️.schema.json",
+    "blob": "2a652aecd6ab3c51daa054444486f82219a5099e",
+    "role": "fixture-owned schema (test/regression fixture with its own private JSON Schema)",
+    "classification": "b-fixture-owned-contract",
+    "owner": "module leaf at 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage (module itself, not an 🧱️elements member)",
+    "intendedOwner": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🧬️schema/ (module's own schema module, as 🔣️.json)",
+    "exports": [
+      "(fixture-local; not re-exported as a named domain type outside the module)"
+    ],
+    "consumers": [
+      {
+        "path": "🌎️hub/📦️packages/🦀️rust/📜️script.ts",
+        "kind": "consumer (script.ts oracle, test, or sibling implementation)"
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📜️script.ts",
+        "kind": "consumer (script.ts oracle, test, or sibling implementation)"
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🦀️.rs",
+        "kind": "consumer (script.ts oracle, test, or sibling implementation)"
+      }
+    ],
+    "decision": "Relocate the JSON Schema into the owning module's 🧬️schema/ as 🔣️.json; keep the fixture as a plain example validated against it.",
+    "evidence": "Consumer scan (rg over *.ts/*.tsx/*.rs) found 3 referencing file(s) for the fixture's directory-name slug; pattern matches the repo-wide convention of one module-local 📜️script.ts oracle reading its own 🧪️fixtures|🧫️fixtures/<slug>/{🔣️.json,🧬️.schema.json} pair via readFileSync+join+Ajv.",
+    "open": ""
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗜️compact/🧪️fixtures/🧾️committed-effects/🧬️.schema.json",
+    "blob": "8825259390a39dff35ae676950aaf525f8d1c1c5",
+    "role": "fixture-owned schema (test/regression fixture with its own private JSON Schema)",
+    "classification": "b-fixture-owned-contract",
+    "owner": "module leaf at 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗜️compact (module itself, not an 🧱️elements member)",
+    "intendedOwner": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗜️compact/🧬️schema/ (module's own schema module, as 🔣️.json)",
+    "exports": [
+      "(fixture-local; not re-exported as a named domain type outside the module)"
+    ],
+    "consumers": [
+      {
+        "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📜️script.ts",
+        "kind": "consumer (script.ts oracle, test, or sibling implementation)"
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗜️compact/🦀️.rs",
+        "kind": "consumer (script.ts oracle, test, or sibling implementation)"
+      }
+    ],
+    "decision": "Relocate the JSON Schema into the owning module's 🧬️schema/ as 🔣️.json; keep the fixture as a plain example validated against it.",
+    "evidence": "Consumer scan (rg over *.ts/*.tsx/*.rs) found 2 referencing file(s) for the fixture's directory-name slug; pattern matches the repo-wide convention of one module-local 📜️script.ts oracle reading its own 🧪️fixtures|🧫️fixtures/<slug>/{🔣️.json,🧬️.schema.json} pair via readFileSync+join+Ajv.",
+    "open": ""
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🧪️fixtures/📓️durable-group-journal/🧬️.schema.json",
+    "blob": "d91a3e15885347947454661a0cc663525b554c2e",
+    "role": "fixture-owned schema (test/regression fixture with its own private JSON Schema)",
+    "classification": "b-fixture-owned-contract",
+    "owner": "module leaf at 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact (module itself, not an 🧱️elements member)",
+    "intendedOwner": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🧬️schema/ (module's own schema module, as 🔣️.json)",
+    "exports": [
+      "(fixture-local; not re-exported as a named domain type outside the module)"
+    ],
+    "consumers": [
+      {
+        "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📜️script.ts",
+        "kind": "consumer (script.ts oracle, test, or sibling implementation)"
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🦀️.rs",
+        "kind": "consumer (script.ts oracle, test, or sibling implementation)"
+      }
+    ],
+    "decision": "Relocate the JSON Schema into the owning module's 🧬️schema/ as 🔣️.json; keep the fixture as a plain example validated against it.",
+    "evidence": "Consumer scan (rg over *.ts/*.tsx/*.rs) found 2 referencing file(s) for the fixture's directory-name slug; pattern matches the repo-wide convention of one module-local 📜️script.ts oracle reading its own 🧪️fixtures|🧫️fixtures/<slug>/{🔣️.json,🧬️.schema.json} pair via readFileSync+join+Ajv.",
+    "open": ""
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧫️fixtures/📇️folder/📣️canonical-bootstrap-folder-mirror-v1/🧬️.schema.json",
+    "blob": "fb3514b807daf5b23932d0f852106157be2f0f77",
+    "role": "fixture-owned schema (test/regression fixture with its own private JSON Schema)",
+    "classification": "b-fixture-owned-contract",
+    "owner": "module leaf at 🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧫️fixtures (module itself, not an 🧱️elements member)",
+    "intendedOwner": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧫️fixtures/🧬️schema/ (module's own schema module, as 🔣️.json)",
+    "exports": [
+      "(fixture-local; not re-exported as a named domain type outside the module)"
+    ],
+    "consumers": [
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts",
+        "kind": "consumer (script.ts oracle, test, or sibling implementation)"
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts",
+        "kind": "consumer (script.ts oracle, test, or sibling implementation)"
+      }
+    ],
+    "decision": "Relocate the JSON Schema into the owning module's 🧬️schema/ as 🔣️.json; keep the fixture as a plain example validated against it.",
+    "evidence": "Consumer scan (rg over *.ts/*.tsx/*.rs) found 2 referencing file(s) for the fixture's directory-name slug; pattern matches the repo-wide convention of one module-local 📜️script.ts oracle reading its own 🧪️fixtures|🧫️fixtures/<slug>/{🔣️.json,🧬️.schema.json} pair via readFileSync+join+Ajv.",
+    "open": ""
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧫️fixtures/🦀️wasm-profile-policy/🧬️v1/🧬️.schema.json",
+    "blob": "9b343ee31eb1ab35b58c27505200b9dd6514651f",
+    "role": "fixture-owned schema (test/regression fixture with its own private JSON Schema)",
+    "classification": "b-fixture-owned-contract",
+    "owner": "module leaf at 🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧫️fixtures (module itself, not an 🧱️elements member)",
+    "intendedOwner": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧫️fixtures/🧬️schema/ (module's own schema module, as 🔣️.json)",
+    "exports": [
+      "(fixture-local; not re-exported as a named domain type outside the module)"
+    ],
+    "consumers": [
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts",
+        "kind": "consumer (script.ts oracle, test, or sibling implementation)"
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🚀️launch.test.ts",
+        "kind": "consumer (script.ts oracle, test, or sibling implementation)"
+      },
+      {
+        "path": "✏️s/🔌️plugins/🌿️vcs/📦️packages/🦀️rust/🧪️tests/🪪️native-openable-identity/🦀️.rs",
+        "kind": "consumer (script.ts oracle, test, or sibling implementation)"
+      },
+      {
+        "path": "✏️s/🔌️plugins/🌿️vcs/📦️packages/🦀️rust/📜️script.ts",
+        "kind": "consumer (script.ts oracle, test, or sibling implementation)"
+      }
+    ],
+    "decision": "Relocate the JSON Schema into the owning module's 🧬️schema/ as 🔣️.json; keep the fixture as a plain example validated against it.",
+    "evidence": "Consumer scan (rg over *.ts/*.tsx/*.rs) found 4 referencing file(s) for the fixture's directory-name slug; pattern matches the repo-wide convention of one module-local 📜️script.ts oracle reading its own 🧪️fixtures|🧫️fixtures/<slug>/{🔣️.json,🧬️.schema.json} pair via readFileSync+join+Ajv.",
+    "open": ""
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/🧵️retirement/🧫️fixtures/🗃️cache-retirement/🧬️.schema.json",
+    "blob": "72a7e399623694855cfb7ae2906895be96a62073",
+    "role": "fixture-owned schema (test/regression fixture with its own private JSON Schema)",
+    "classification": "b-fixture-owned-contract",
+    "owner": "module leaf at 🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine (module itself, not an 🧱️elements member)",
+    "intendedOwner": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/🧬️schema/ (module's own schema module, as 🔣️.json)",
+    "exports": [
+      "(fixture-local; not re-exported as a named domain type outside the module)"
+    ],
+    "consumers": [
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/🧵️retirement/🧫️fixtures/📜️script.ts",
+        "kind": "consumer (script.ts oracle, test, or sibling implementation)"
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/🧵️retirement/🧪️tests/🦀️.rs",
+        "kind": "consumer (script.ts oracle, test, or sibling implementation)"
+      }
+    ],
+    "decision": "Relocate the JSON Schema into the owning module's 🧬️schema/ as 🔣️.json; keep the fixture as a plain example validated against it.",
+    "evidence": "Consumer scan (rg over *.ts/*.tsx/*.rs) found 2 referencing file(s) for the fixture's directory-name slug; pattern matches the repo-wide convention of one module-local 📜️script.ts oracle reading its own 🧪️fixtures|🧫️fixtures/<slug>/{🔣️.json,🧬️.schema.json} pair via readFileSync+join+Ajv.",
+    "open": ""
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/🧵️retirement/🧫️fixtures/🧬️.schema.json",
+    "blob": "a812c13d3da11b7821d39827f99648b09085f360",
+    "role": "fixture-owned schema (test/regression fixture with its own private JSON Schema)",
+    "classification": "b-fixture-owned-contract",
+    "owner": "module leaf at 🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine (module itself, not an 🧱️elements member)",
+    "intendedOwner": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/🧬️schema/ (module's own schema module, as 🔣️.json)",
+    "exports": [
+      "(fixture-local; not re-exported as a named domain type outside the module)"
+    ],
+    "consumers": [
+      {
+        "path": "📜️script.ts",
+        "kind": "consumer (script.ts oracle, test, or sibling implementation)"
+      },
+      {
+        "path": "🧰️framework/📦️packages/🟦️typescript/🟦️.ts",
+        "kind": "consumer (script.ts oracle, test, or sibling implementation)"
+      },
+      {
+        "path": "🌎️hub/🗿️artifact-authority/🌱️creation/🦀️.rs",
+        "kind": "consumer (script.ts oracle, test, or sibling implementation)"
+      },
+      {
+        "path": "🌎️hub/📇️directory/🦀️.rs",
+        "kind": "consumer (script.ts oracle, test, or sibling implementation)"
+      },
+      {
+        "path": "🌎️hub/📦️packages/🦀️rust/📜️script.ts",
+        "kind": "consumer (script.ts oracle, test, or sibling implementation)"
+      }
+    ],
+    "decision": "Relocate the JSON Schema into the owning module's 🧬️schema/ as 🔣️.json; keep the fixture as a plain example validated against it.",
+    "evidence": "Consumer scan (rg over *.ts/*.tsx/*.rs) found 5 referencing file(s) for the fixture's directory-name slug; pattern matches the repo-wide convention of one module-local 📜️script.ts oracle reading its own 🧪️fixtures|🧫️fixtures/<slug>/{🔣️.json,🧬️.schema.json} pair via readFileSync+join+Ajv.",
+    "open": ""
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/🧵️retirement/🧫️fixtures/🧮️evaluation-owners/🧬️.schema.json",
+    "blob": "72764e9ed75e2d3055caf575b1bcf2c0ceb3349c",
+    "role": "fixture-owned schema (test/regression fixture with its own private JSON Schema)",
+    "classification": "b-fixture-owned-contract",
+    "owner": "module leaf at 🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine (module itself, not an 🧱️elements member)",
+    "intendedOwner": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/🧬️schema/ (module's own schema module, as 🔣️.json)",
+    "exports": [
+      "(fixture-local; not re-exported as a named domain type outside the module)"
+    ],
+    "consumers": [
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/🧵️retirement/🧫️fixtures/📜️script.ts",
+        "kind": "consumer (script.ts oracle, test, or sibling implementation)"
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/🧵️retirement/🧪️tests/🦀️.rs",
+        "kind": "consumer (script.ts oracle, test, or sibling implementation)"
+      }
+    ],
+    "decision": "Relocate the JSON Schema into the owning module's 🧬️schema/ as 🔣️.json; keep the fixture as a plain example validated against it.",
+    "evidence": "Consumer scan (rg over *.ts/*.tsx/*.rs) found 2 referencing file(s) for the fixture's directory-name slug; pattern matches the repo-wide convention of one module-local 📜️script.ts oracle reading its own 🧪️fixtures|🧫️fixtures/<slug>/{🔣️.json,🧬️.schema.json} pair via readFileSync+join+Ajv.",
+    "open": ""
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🧪️fixtures/↩️gis-map-approval-history-v1/🧬️.schema.json",
+    "blob": "dc19021e38ba9a944b7bafca20f324ba57e323c1",
+    "role": "fixture-owned schema (test/regression fixture with its own private JSON Schema)",
+    "classification": "b-fixture-owned-contract",
+    "owner": "module leaf at 🧰️framework/🛍️products/💻️os/🧪️fixtures/↩️gis-map-approval-history-v1 (module itself, not an 🧱️elements member)",
+    "intendedOwner": "🧰️framework/🛍️products/💻️os/🧪️fixtures/↩️gis-map-approval-history-v1/🧬️schema/ (module's own schema module, as 🔣️.json)",
+    "exports": [
+      "(fixture-local; not re-exported as a named domain type outside the module)"
+    ],
+    "consumers": [
+      {
+        "path": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/📜️script.ts",
+        "kind": "consumer (script.ts oracle, test, or sibling implementation)"
+      }
+    ],
+    "decision": "Relocate the JSON Schema into the owning module's 🧬️schema/ as 🔣️.json; keep the fixture as a plain example validated against it. DUPLICATE PAIR: near-identical sibling exists at 🧰️framework/🛍️products/💻️os/🧫️fixtures/↩️gis-map-approval-history-v1/🧬️.schema.json (diverged: 🧫️fixtures/ version has 9 hostile cases + oldOwnerRetired, 🧪️fixtures/ version has 8/lacks it); only the 🧫️fixtures/ copy is read by script.ts:163 -- the 🧪️fixtures/ copy appears orphaned/stale.",
+    "evidence": "Consumer scan (rg over *.ts/*.tsx/*.rs) found 1 referencing file(s) for the fixture's directory-name slug; pattern matches the repo-wide convention of one module-local 📜️script.ts oracle reading its own 🧪️fixtures|🧫️fixtures/<slug>/{🔣️.json,🧬️.schema.json} pair via readFileSync+join+Ajv.",
+    "open": ""
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🧫️fixtures/↩️gis-map-approval-history-v1/🧬️.schema.json",
+    "blob": "5d3b5026d32dba88ef344d2db02bf17421ca5ba1",
+    "role": "fixture-owned schema (test/regression fixture with its own private JSON Schema)",
+    "classification": "b-fixture-owned-contract",
+    "owner": "module leaf at 🧰️framework/🛍️products/💻️os/🧫️fixtures/↩️gis-map-approval-history-v1 (module itself, not an 🧱️elements member)",
+    "intendedOwner": "🧰️framework/🛍️products/💻️os/🧫️fixtures/↩️gis-map-approval-history-v1/🧬️schema/ (module's own schema module, as 🔣️.json)",
+    "exports": [
+      "(fixture-local; not re-exported as a named domain type outside the module)"
+    ],
+    "consumers": [
+      {
+        "path": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/📜️script.ts",
+        "kind": "consumer (script.ts oracle, test, or sibling implementation)"
+      }
+    ],
+    "decision": "Relocate the JSON Schema into the owning module's 🧬️schema/ as 🔣️.json; keep the fixture as a plain example validated against it. DUPLICATE PAIR: near-identical sibling exists at 🧰️framework/🛍️products/💻️os/🧪️fixtures/↩️gis-map-approval-history-v1/🧬️.schema.json (diverged: 🧫️fixtures/ version has 9 hostile cases + oldOwnerRetired, 🧪️fixtures/ version has 8/lacks it); only the 🧫️fixtures/ copy is read by script.ts:163 -- the 🧪️fixtures/ copy appears orphaned/stale.",
+    "evidence": "Consumer scan (rg over *.ts/*.tsx/*.rs) found 1 referencing file(s) for the fixture's directory-name slug; pattern matches the repo-wide convention of one module-local 📜️script.ts oracle reading its own 🧪️fixtures|🧫️fixtures/<slug>/{🔣️.json,🧬️.schema.json} pair via readFileSync+join+Ajv.",
+    "open": ""
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🎒️pack-dynamic-integer-v1/🧬️.schema.json",
+    "blob": "9b3f61afc27667f1ef22453c6f32fdf74671a7b6",
+    "role": "fixture-owned schema (test/regression fixture with its own private JSON Schema)",
+    "classification": "b-fixture-owned-contract",
+    "owner": "module leaf at 🧰️framework/🛍️products/💻️os/🧫️fixtures/🎒️pack-dynamic-integer-v1 (module itself, not an 🧱️elements member)",
+    "intendedOwner": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🎒️pack-dynamic-integer-v1/🧬️schema/ (module's own schema module, as 🔣️.json)",
+    "exports": [
+      "(fixture-local; not re-exported as a named domain type outside the module)"
+    ],
+    "consumers": [
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🟦️.ts",
+        "kind": "consumer (script.ts oracle, test, or sibling implementation)"
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🌱️value/🦀️.rs",
+        "kind": "consumer (script.ts oracle, test, or sibling implementation)"
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+        "kind": "consumer (script.ts oracle, test, or sibling implementation)"
+      }
+    ],
+    "decision": "Relocate the JSON Schema into the owning module's 🧬️schema/ as 🔣️.json; keep the fixture as a plain example validated against it.",
+    "evidence": "Consumer scan (rg over *.ts/*.tsx/*.rs) found 3 referencing file(s) for the fixture's directory-name slug; pattern matches the repo-wide convention of one module-local 📜️script.ts oracle reading its own 🧪️fixtures|🧫️fixtures/<slug>/{🔣️.json,🧬️.schema.json} pair via readFileSync+join+Ajv.",
+    "open": ""
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🧫️fixtures/💡️gis-map-inference-port-v1/🧬️.schema.json",
+    "blob": "d497bfb4996040275f48da0e59630ce521d7b909",
+    "role": "fixture-owned schema (test/regression fixture with its own private JSON Schema)",
+    "classification": "b-fixture-owned-contract",
+    "owner": "module leaf at 🧰️framework/🛍️products/💻️os/🧫️fixtures/💡️gis-map-inference-port-v1 (module itself, not an 🧱️elements member)",
+    "intendedOwner": "🧰️framework/🛍️products/💻️os/🧫️fixtures/💡️gis-map-inference-port-v1/🧬️schema/ (module's own schema module, as 🔣️.json)",
+    "exports": [
+      "(fixture-local; not re-exported as a named domain type outside the module)"
+    ],
+    "consumers": [
+      {
+        "path": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/📜️script.ts",
+        "kind": "consumer (script.ts oracle, test, or sibling implementation)"
+      }
+    ],
+    "decision": "Relocate the JSON Schema into the owning module's 🧬️schema/ as 🔣️.json; keep the fixture as a plain example validated against it.",
+    "evidence": "Consumer scan (rg over *.ts/*.tsx/*.rs) found 1 referencing file(s) for the fixture's directory-name slug; pattern matches the repo-wide convention of one module-local 📜️script.ts oracle reading its own 🧪️fixtures|🧫️fixtures/<slug>/{🔣️.json,🧬️.schema.json} pair via readFileSync+join+Ajv.",
+    "open": ""
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🗺️gis-map-peer-rebootstrap-v1/🧬️.schema.json",
+    "blob": "41a405e8d1b9e26d17230f68b0c37fb71409e0fa",
+    "role": "fixture-owned schema (test/regression fixture with its own private JSON Schema)",
+    "classification": "b-fixture-owned-contract",
+    "owner": "module leaf at 🧰️framework/🛍️products/💻️os/🧫️fixtures/🗺️gis-map-peer-rebootstrap-v1 (module itself, not an 🧱️elements member)",
+    "intendedOwner": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🗺️gis-map-peer-rebootstrap-v1/🧬️schema/ (module's own schema module, as 🔣️.json)",
+    "exports": [
+      "(fixture-local; not re-exported as a named domain type outside the module)"
+    ],
+    "consumers": [
+      {
+        "path": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/📜️script.ts",
+        "kind": "consumer (script.ts oracle, test, or sibling implementation)"
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts",
+        "kind": "consumer (script.ts oracle, test, or sibling implementation)"
+      }
+    ],
+    "decision": "Relocate the JSON Schema into the owning module's 🧬️schema/ as 🔣️.json; keep the fixture as a plain example validated against it.",
+    "evidence": "Consumer scan (rg over *.ts/*.tsx/*.rs) found 2 referencing file(s) for the fixture's directory-name slug; pattern matches the repo-wide convention of one module-local 📜️script.ts oracle reading its own 🧪️fixtures|🧫️fixtures/<slug>/{🔣️.json,🧬️.schema.json} pair via readFileSync+join+Ajv.",
+    "open": ""
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/📌️set-default-app/🧬️.schema.json",
+    "blob": "83167b9e4cbee06ef0860c2e359b4cf91d0b7862",
+    "role": "mutation payload schema for os/🎚️config, correctly-owned module (product-level config), wrong depth AND wrong filename",
+    "classification": "a-misplaced-depth-and-filename (mutationPayloadSchemaLocation violation)",
+    "owner": "💻️os/🎚️config (eligible product-level scope; osChildDirs includes 🎚️config, and it already owns 🧬️schema/🟦️.ts/🦀️.rs/🔗️.graphql/🛰️.proto at its root)",
+    "intendedOwner": "🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/📌️set-default-app/🧬️schema/🔣️.json (nested one level deeper, matching the compliant pattern seen at e.g. ♾️infinite/🎲️board/.../🧬️mutations/↔️move-node/🧬️schema/🔣️.json)",
+    "exports": [
+      "set-default-app mutation payload"
+    ],
+    "consumers": [
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/📌️set-default-app/🔣️.json",
+        "kind": "mutation descriptor (payloadSchema-referencing, correctly named)"
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/📌️set-default-app/🟦️.ts",
+        "kind": "sibling format (correct location+name)"
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/📌️set-default-app/🦀️.rs",
+        "kind": "sibling format (correct location+name)"
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/📌️set-default-app/🧪️tests/",
+        "kind": "mutation test fixtures (📸️snapshot/🔺️diff/🎯️outcome)"
+      }
+    ],
+    "decision": "Move to a nested 🧬️schema/🔣️.json per taxonomy.mutationPayloadSchemaLocation (directoryKindId 'schema', directoryName '🧬️schema', fileKindId 'json' -> canonical filename 🔣️.json).",
+    "evidence": "taxonomy.json mutationPayloadSchemaLocation requires the payload schema at <mutation-slug>/🧬️schema/🔣️.json; the ♾️infinite/🎲️board DAG-ports module's mutations (e.g. 🧬️mutations/↔️move-node/🧬️schema/🔣️.json) already follow this exactly, proving it is the live, working convention elsewhere in the SAME partition -- os/🎚️config/🧬️schema/🧬️mutations/* is the outlier.",
+    "open": ""
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🚪️sign-out/🧬️.schema.json",
+    "blob": "b7b2f027a42abadde35cb9cdcc18321c3a79c3d4",
+    "role": "mutation payload schema for os/🎚️config, correctly-owned module (product-level config), wrong depth AND wrong filename",
+    "classification": "a-misplaced-depth-and-filename (mutationPayloadSchemaLocation violation)",
+    "owner": "💻️os/🎚️config (eligible product-level scope; osChildDirs includes 🎚️config, and it already owns 🧬️schema/🟦️.ts/🦀️.rs/🔗️.graphql/🛰️.proto at its root)",
+    "intendedOwner": "🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🚪️sign-out/🧬️schema/🔣️.json (nested one level deeper, matching the compliant pattern seen at e.g. ♾️infinite/🎲️board/.../🧬️mutations/↔️move-node/🧬️schema/🔣️.json)",
+    "exports": [
+      "sign-out mutation payload"
+    ],
+    "consumers": [
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🚪️sign-out/🔣️.json",
+        "kind": "mutation descriptor (payloadSchema-referencing, correctly named)"
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🚪️sign-out/🟦️.ts",
+        "kind": "sibling format (correct location+name)"
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🚪️sign-out/🦀️.rs",
+        "kind": "sibling format (correct location+name)"
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🚪️sign-out/🧪️tests/",
+        "kind": "mutation test fixtures (📸️snapshot/🔺️diff/🎯️outcome)"
+      }
+    ],
+    "decision": "Move to a nested 🧬️schema/🔣️.json per taxonomy.mutationPayloadSchemaLocation (directoryKindId 'schema', directoryName '🧬️schema', fileKindId 'json' -> canonical filename 🔣️.json).",
+    "evidence": "taxonomy.json mutationPayloadSchemaLocation requires the payload schema at <mutation-slug>/🧬️schema/🔣️.json; the ♾️infinite/🎲️board DAG-ports module's mutations (e.g. 🧬️mutations/↔️move-node/🧬️schema/🔣️.json) already follow this exactly, proving it is the live, working convention elsewhere in the SAME partition -- os/🎚️config/🧬️schema/🧬️mutations/* is the outlier.",
+    "open": ""
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🛡️change-merge-policy/🧬️.schema.json",
+    "blob": "713fa2f55805e8aaa2db78ee6514f7c42689c4d6",
+    "role": "mutation payload schema for os/🎚️config, correctly-owned module (product-level config), wrong depth AND wrong filename",
+    "classification": "a-misplaced-depth-and-filename (mutationPayloadSchemaLocation violation)",
+    "owner": "💻️os/🎚️config (eligible product-level scope; osChildDirs includes 🎚️config, and it already owns 🧬️schema/🟦️.ts/🦀️.rs/🔗️.graphql/🛰️.proto at its root)",
+    "intendedOwner": "🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🛡️change-merge-policy/🧬️schema/🔣️.json (nested one level deeper, matching the compliant pattern seen at e.g. ♾️infinite/🎲️board/.../🧬️mutations/↔️move-node/🧬️schema/🔣️.json)",
+    "exports": [
+      "change-merge-policy mutation payload"
+    ],
+    "consumers": [
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🛡️change-merge-policy/🔣️.json",
+        "kind": "mutation descriptor (payloadSchema-referencing, correctly named)"
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🛡️change-merge-policy/🟦️.ts",
+        "kind": "sibling format (correct location+name)"
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🛡️change-merge-policy/🦀️.rs",
+        "kind": "sibling format (correct location+name)"
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🛡️change-merge-policy/🧪️tests/",
+        "kind": "mutation test fixtures (📸️snapshot/🔺️diff/🎯️outcome)"
+      }
+    ],
+    "decision": "Move to a nested 🧬️schema/🔣️.json per taxonomy.mutationPayloadSchemaLocation (directoryKindId 'schema', directoryName '🧬️schema', fileKindId 'json' -> canonical filename 🔣️.json).",
+    "evidence": "taxonomy.json mutationPayloadSchemaLocation requires the payload schema at <mutation-slug>/🧬️schema/🔣️.json; the ♾️infinite/🎲️board DAG-ports module's mutations (e.g. 🧬️mutations/↔️move-node/🧬️schema/🔣️.json) already follow this exactly, proving it is the live, working convention elsewhere in the SAME partition -- os/🎚️config/🧬️schema/🧬️mutations/* is the outlier.",
+    "open": ""
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🧹clear-default-app/🧬️.schema.json",
+    "blob": "81a08d480bf24fc3e3b40322f73c81812c28adfd",
+    "role": "mutation payload schema for os/🎚️config, correctly-owned module (product-level config), wrong depth AND wrong filename",
+    "classification": "a-misplaced-depth-and-filename (mutationPayloadSchemaLocation violation)",
+    "owner": "💻️os/🎚️config (eligible product-level scope; osChildDirs includes 🎚️config, and it already owns 🧬️schema/🟦️.ts/🦀️.rs/🔗️.graphql/🛰️.proto at its root)",
+    "intendedOwner": "🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🧹clear-default-app/🧬️schema/🔣️.json (nested one level deeper, matching the compliant pattern seen at e.g. ♾️infinite/🎲️board/.../🧬️mutations/↔️move-node/🧬️schema/🔣️.json)",
+    "exports": [
+      "clear-default-app mutation payload"
+    ],
+    "consumers": [
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🧹clear-default-app/🔣️.json",
+        "kind": "mutation descriptor (payloadSchema-referencing, correctly named)"
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🧹clear-default-app/🟦️.ts",
+        "kind": "sibling format (correct location+name)"
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🧹clear-default-app/🦀️.rs",
+        "kind": "sibling format (correct location+name)"
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🧹clear-default-app/🧪️tests/",
+        "kind": "mutation test fixtures (📸️snapshot/🔺️diff/🎯️outcome)"
+      }
+    ],
+    "decision": "Move to a nested 🧬️schema/🔣️.json per taxonomy.mutationPayloadSchemaLocation (directoryKindId 'schema', directoryName '🧬️schema', fileKindId 'json' -> canonical filename 🔣️.json).",
+    "evidence": "taxonomy.json mutationPayloadSchemaLocation requires the payload schema at <mutation-slug>/🧬️schema/🔣️.json; the ♾️infinite/🎲️board DAG-ports module's mutations (e.g. 🧬️mutations/↔️move-node/🧬️schema/🔣️.json) already follow this exactly, proving it is the live, working convention elsewhere in the SAME partition -- os/🎚️config/🧬️schema/🧬️mutations/* is the outlier.",
+    "open": ""
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🪪️sign-in/🧬️.schema.json",
+    "blob": "4f062d31dcc76a9f6f0798a72e7d5403f3a69223",
+    "role": "mutation payload schema for os/🎚️config, correctly-owned module (product-level config), wrong depth AND wrong filename",
+    "classification": "a-misplaced-depth-and-filename (mutationPayloadSchemaLocation violation)",
+    "owner": "💻️os/🎚️config (eligible product-level scope; osChildDirs includes 🎚️config, and it already owns 🧬️schema/🟦️.ts/🦀️.rs/🔗️.graphql/🛰️.proto at its root)",
+    "intendedOwner": "🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🪪️sign-in/🧬️schema/🔣️.json (nested one level deeper, matching the compliant pattern seen at e.g. ♾️infinite/🎲️board/.../🧬️mutations/↔️move-node/🧬️schema/🔣️.json)",
+    "exports": [
+      "sign-in mutation payload"
+    ],
+    "consumers": [
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🪪️sign-in/🔣️.json",
+        "kind": "mutation descriptor (payloadSchema-referencing, correctly named)"
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🪪️sign-in/🟦️.ts",
+        "kind": "sibling format (correct location+name)"
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🪪️sign-in/🦀️.rs",
+        "kind": "sibling format (correct location+name)"
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🪪️sign-in/🧪️tests/",
+        "kind": "mutation test fixtures (📸️snapshot/🔺️diff/🎯️outcome)"
+      }
+    ],
+    "decision": "Move to a nested 🧬️schema/🔣️.json per taxonomy.mutationPayloadSchemaLocation (directoryKindId 'schema', directoryName '🧬️schema', fileKindId 'json' -> canonical filename 🔣️.json).",
+    "evidence": "taxonomy.json mutationPayloadSchemaLocation requires the payload schema at <mutation-slug>/🧬️schema/🔣️.json; the ♾️infinite/🎲️board DAG-ports module's mutations (e.g. 🧬️mutations/↔️move-node/🧬️schema/🔣️.json) already follow this exactly, proving it is the live, working convention elsewhere in the SAME partition -- os/🎚️config/🧬️schema/🧬️mutations/* is the outlier.",
+    "open": ""
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🌱️space-artifact-creation-v1/🧬️.schema.json",
+    "blob": "12680bbef9d41a164752d5c45f7c887f98ff9b4a",
+    "role": "versioned module-schema entry in the correctly-located 📇️directory/🧬️schema/ module, filename-only violation",
+    "classification": "a-filename-only-violation",
+    "owner": "💻️os/🔨️modules/📇️directory (eligible module scope, already owns this exact directory)",
+    "intendedOwner": "same directory, renamed to 🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🌱️space-artifact-creation-v1/🔣️.json",
+    "exports": [
+      "🌱️space-artifact-creation-v1 contract"
+    ],
+    "consumers": [
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🌱️space-artifact-creation-v1/🔣️.json",
+        "kind": "N/A -- see note: current JSON Schema is misnamed 🧬️.schema.json, not 🔣️.json"
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🌱️space-artifact-creation-v1/🟦️.ts",
+        "kind": "sibling format"
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🌱️space-artifact-creation-v1/🦀️.rs",
+        "kind": "sibling format"
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/📇️document-index-v1/🔣️.json",
+        "kind": "sibling module entry using the CORRECT 🔣️.json filename"
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🌐️browser-actor/🔣️.schema.json",
+        "kind": "sibling module entry using a THIRD, also-incorrect 🔣️.schema.json filename"
+      }
+    ],
+    "decision": "Simple rename to 🔣️.json -- location is already correct (directly under the module's own 🧬️schema/, versioned-slug pattern, same shape as 📇️document-index-v1).",
+    "evidence": "artifactSchemaSpecFileKinds['🧬️schema']='json' -> fileKinds.json.emoji='🔣️' -> canonical name is bare '🔣️.json'; within this ONE 📇️directory/🧬️schema/ directory there are three different filename conventions in use (🔣️.json, 🔣️.schema.json, 🧬️.schema.json), proving the drift is filename-convention chaos, not a location/ownership problem, for this pair.",
+    "open": ""
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/📣️checkpoint-publication-command-v1/🧬️.schema.json",
+    "blob": "6162f3bd07d389c6409bd3f749544cf8ba62cbce",
+    "role": "versioned module-schema entry in the correctly-located 📇️directory/🧬️schema/ module, filename-only violation",
+    "classification": "a-filename-only-violation",
+    "owner": "💻️os/🔨️modules/📇️directory (eligible module scope, already owns this exact directory)",
+    "intendedOwner": "same directory, renamed to 🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/📣️checkpoint-publication-command-v1/🔣️.json",
+    "exports": [
+      "📣️checkpoint-publication-command-v1 contract"
+    ],
+    "consumers": [
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/📣️checkpoint-publication-command-v1/🔣️.json",
+        "kind": "N/A -- see note: current JSON Schema is misnamed 🧬️.schema.json, not 🔣️.json"
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/📣️checkpoint-publication-command-v1/🟦️.ts",
+        "kind": "sibling format"
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/📣️checkpoint-publication-command-v1/🦀️.rs",
+        "kind": "sibling format"
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/📇️document-index-v1/🔣️.json",
+        "kind": "sibling module entry using the CORRECT 🔣️.json filename"
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🌐️browser-actor/🔣️.schema.json",
+        "kind": "sibling module entry using a THIRD, also-incorrect 🔣️.schema.json filename"
+      }
+    ],
+    "decision": "Simple rename to 🔣️.json -- location is already correct (directly under the module's own 🧬️schema/, versioned-slug pattern, same shape as 📇️document-index-v1).",
+    "evidence": "artifactSchemaSpecFileKinds['🧬️schema']='json' -> fileKinds.json.emoji='🔣️' -> canonical name is bare '🔣️.json'; within this ONE 📇️directory/🧬️schema/ directory there are three different filename conventions in use (🔣️.json, 🔣️.schema.json, 🧬️.schema.json), proving the drift is filename-convention chaos, not a location/ownership problem, for this pair.",
+    "open": ""
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎚️parameter/📨️intent/🧪️fixture/🧬️.schema.json",
+    "blob": "5ec9d326347320881370dc4a0a09ce860e8c13c1",
+    "role": "fixture-owned schema (singular '🧪️fixture' dir, same anti-pattern as the plural 🧪️fixtures/🧫️fixtures cases)",
+    "classification": "b-fixture-owned-contract",
+    "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎚️parameter (module)",
+    "intendedOwner": "🌊️flow/🎚️parameter/🧬️schema/ (new, as 🔣️.json)",
+    "exports": [
+      "parameter-intent payload"
+    ],
+    "consumers": [
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/🦀️.rs",
+        "kind": "consumer"
+      }
+    ],
+    "decision": "Relocate into a proper 🧬️schema/ under 🌊️flow/🎚️parameter/, as 🔣️.json.",
+    "evidence": "Directory is literally named '🧪️fixture' (singular) rather than the usual '🧪️fixtures' -- confirms this is a one-off fixture-adjacent schema like the other 55, just missed by a naive 'fixtures'-substring scan.",
+    "open": ""
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧬️.schema.json",
+    "blob": "3df1d8be0323e084070ebe425ae5fccde3fc77d4",
+    "role": "module-leaf domain schema (host retirement), correct module+leaf but missing the required 🧬️schema/ wrapper dir, and wrong filename",
+    "classification": "a-missing-schema-wrapper-and-filename",
+    "owner": "💻️os/🔨️modules/🌊️flow/🖥️host (module; 🧹️retirement is its own leaf with a local 📜️script.ts + 🧪️tests, i.e. an artifact-shaped leaf)",
+    "intendedOwner": "🌊️flow/🖥️host/🧹️retirement/🧬️schema/🔣️.json (add the missing 🧬️schema/ wrapper matching artifactComponentDirs=['🧬️schema','🚪️io'])",
+    "exports": [
+      "host retirement payload"
+    ],
+    "consumers": [
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🔣️.json",
+        "kind": "example/data"
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/📜️script.ts",
+        "kind": "module-local harness"
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧪️tests/🦀️.rs",
+        "kind": "test"
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🦀️.rs",
+        "kind": "consumer"
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/📦️packages/🦀️rust/📜️script.ts",
+        "kind": "consumer"
+      }
+    ],
+    "decision": "Wrap in a 🧬️schema/ child directory and rename to 🔣️.json; this leaf already behaves like an owned artifact (has its own script.ts+tests) so it is the right owner, just missing taxonomy's required component-dir shape.",
+    "evidence": "artifactComponentDirs=['🧬️schema','🚪️io'] implies any artifact/module-leaf that owns a schema should nest it under a child '🧬️schema' directory rather than placing 🧬️.schema.json directly at the leaf root; 🧹️retirement does the latter.",
+    "open": ""
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🧬️codegen-manifest/🧬️.schema.json",
+    "blob": "fcdcf9e8ca5a15770a14761ea3740c0c185b2ce6",
+    "role": "module-level per-contract directory named with the 🧬️ (schema-facet) emoji itself, mimicking but not matching the canonical '🧬️schema' directory name",
+    "classification": "c-per-contract-directory (directory name collides with, but is not, '🧬️schema')",
+    "owner": "💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle (eligible module)",
+    "intendedOwner": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🧬️schema/manifest-v1/🔣️.json (fold both into the module's real 🧬️schema/, which does not yet exist at this module's root)",
+    "exports": [
+      "codegen manifest contract"
+    ],
+    "consumers": [
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/📜️script.ts",
+        "kind": "module-local harness (readFileSync+join)"
+      }
+    ],
+    "decision": "Rename directory away from the confusing '🧬️codegen-manifest' (which LOOKS like a schema-facet dir because it starts with 🧬️) into a real 🧬️schema/ module, and rename the file to 🔣️.json.",
+    "evidence": "Directory name '🧬️codegen-manifest' borrows the 🧬️ emoji used for schemaFacetKinds/artifactSchemaSpecFileKinds but the taxonomy's canonical directory name is exactly '🧬️schema' (schemaChildDirs/mutationPayloadSchemaLocation) -- '🧬️codegen-manifest' is neither the canonical name nor a fixture dir, it is a bespoke per-contract directory, i.e. the goal's textbook violation pattern applied at module level instead of under 🧧️fixtures.",
+    "open": ""
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🧬️codegen-policy/🧬️.schema.json",
+    "blob": "47bf9d6f046a7602d9460a72ff0c8adf71d93c82",
+    "role": "module-level per-contract directory named with the 🧬️ (schema-facet) emoji itself, mimicking but not matching the canonical '🧬️schema' directory name",
+    "classification": "c-per-contract-directory (directory name collides with, but is not, '🧬️schema')",
+    "owner": "💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle (eligible module)",
+    "intendedOwner": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🧬️schema/policy-v1/🔣️.json (fold both into the module's real 🧬️schema/, which does not yet exist at this module's root)",
+    "exports": [
+      "codegen policy contract"
+    ],
+    "consumers": [
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/📜️script.ts",
+        "kind": "module-local harness (readFileSync+join)"
+      }
+    ],
+    "decision": "Rename directory away from the confusing '🧬️codegen-policy' (which LOOKS like a schema-facet dir because it starts with 🧬️) into a real 🧬️schema/ module, and rename the file to 🔣️.json.",
+    "evidence": "Directory name '🧬️codegen-policy' borrows the 🧬️ emoji used for schemaFacetKinds/artifactSchemaSpecFileKinds but the taxonomy's canonical directory name is exactly '🧬️schema' (schemaChildDirs/mutationPayloadSchemaLocation) -- '🧬️codegen-policy' is neither the canonical name nor a fixture dir, it is a bespoke per-contract directory, i.e. the goal's textbook violation pattern applied at module level instead of under 🧧️fixtures.",
+    "open": ""
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🧬️.schema.json",
+    "blob": "5de955bc5e75c935b56c90c0f11b993437264370",
+    "role": "module-leaf activation-session domain schema, missing the required 🧬️schema/ wrapper dir, wrong filename",
+    "classification": "a-missing-schema-wrapper-and-filename",
+    "owner": "💻️os/🔨️modules/🧑‍💻dev (module; ♻️activation is its own leaf with 🥒️.feature + 🧫️cases.json + 🟦️.ts)",
+    "intendedOwner": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🧬️schema/🔣️.json",
+    "exports": [
+      "activation session contract"
+    ],
+    "consumers": [
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🌐️browser-host/🔣️.json",
+        "kind": "nested variant example"
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/⚙️vite.config.ts",
+        "kind": "consumer"
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts",
+        "kind": "consumer"
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/🔌️vite-plugins.ts",
+        "kind": "consumer"
+      }
+    ],
+    "decision": "Wrap in 🧬️schema/ and rename to 🔣️.json; fold the 🌐️browser-host variant in as a sibling entry rather than a nested per-contract directory.",
+    "evidence": "Same missing-wrapper pattern as 🌊️flow/🖥️host/🧹️retirement -- a real module leaf (has 🧬️session.d.ts, 🥒️.feature, 🧫️cases.json) placing its schema directly at its own root instead of under a 🧬️schema child.",
+    "open": ""
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🌐️browser-host/🧬️.schema.json",
+    "blob": "b9d25c6fe02fccdd3e008056278859e330e0e983",
+    "role": "nested per-contract-directory variant of ♻️activation (browser-host specialization)",
+    "classification": "c-per-contract-directory (nested under an already-noncanonical leaf)",
+    "owner": "💻️os/🔨️modules/🧑‍💻dev",
+    "intendedOwner": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🧬️schema/ as a sibling entry (e.g. 🌐️browser-host-v1/🔣️.json) once the parent is fixed",
+    "exports": [
+      "browser-host activation variant"
+    ],
+    "consumers": [
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🌐️browser-host/🔣️.json",
+        "kind": "example-fixture"
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🟦️.ts",
+        "kind": "sibling implementation"
+      }
+    ],
+    "decision": "Fold into the relocated ♻️activation schema module as a variant entry, not a further-nested directory.",
+    "evidence": "Same consumer set as the parent ♻️activation entry; no independent cross-module consumer found.",
+    "open": ""
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🔣️.json",
+    "blob": "2d529fff4773ac79af6b84146593b1480ea6b707",
+    "role": "authoritative module-root JSON Schema for os product-level config (5-format set: 🔣️.json+🟦️.ts+🦀️.rs+🔗️.graphql+🛰️.proto present at this same 🧬️schema/ root)",
+    "classification": "a-authoritative (sample/representative entry, not a violation)",
+    "owner": "💻️os/🎚️config (eligible product-level scope; osChildDirs member)",
+    "intendedOwner": "N/A -- already correctly owned/located/named",
+    "exports": [
+      "os config root contract"
+    ],
+    "consumers": [
+      {
+        "path": "consumers not individually enumerated for this representative sample -- see 📓️wp0-os-shellhost.md task-3 section",
+        "kind": "n/a"
+      }
+    ],
+    "decision": "No action -- cited as positive-control evidence for what a compliant 🧬️schema/ module looks like.",
+    "evidence": "Sits directly beside 🟦️.ts, 🦀️.rs, 🔗️.graphql, 🛰️.proto at the SAME path stem, i.e. the full 5-format schemaFacetKinds['🧬️data'].formats set, and its 5 child 🧬️mutations/<slug>/ dirs additionally hold correctly-named-but-shallow payload schemas (see the 5 os/config mutation records above).",
+    "open": ""
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/🧬️schema/🧬️mutations/↔️move-node/🧬️schema/🔣️.json",
+    "blob": "5b674a1d991f07a260871725dfa45f976feadb92",
+    "role": "authoritative nested mutation-payload schema exactly matching taxonomy.mutationPayloadSchemaLocation (<mutation-slug>/🧬️schema/🔣️.json)",
+    "classification": "a-authoritative (sample/representative entry, not a violation)",
+    "owner": "💻️os/🔨️modules/♾️infinite/🎲️board (module)",
+    "intendedOwner": "N/A -- already correctly owned/located/named",
+    "exports": [
+      "move-node mutation payload"
+    ],
+    "consumers": [
+      {
+        "path": "consumers not individually enumerated for this representative sample",
+        "kind": "n/a"
+      }
+    ],
+    "decision": "No action -- cited as the positive-control example that the config-mutations and other 'a-misplaced-depth' violations above should be reshaped to match.",
+    "evidence": "This exact depth+filename pattern repeats identically ~15 times under this one module's 🧬️mutations/ (♾️infinite/🎲️board) and hundreds of times across the wider os partition (♾️infinite, 🌊️flow/🌿️vcs, 🏪️store, 📇️directory, 📡️spr, 🔁️workflow, 🔌️plugin test-fixture mutations, 🗣️dsl, 🖥️host) -- confirming it, not the dotted-filename variants, is the dominant repo convention.",
+    "open": ""
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/🧬️schema/📌️peer-commit.schema.json",
+    "blob": "4e254159d28f1b7b8609306c8e82ab8c0067d6b0",
+    "role": "module-root schema using a FOURTH filename convention ('<slug>.schema.json', no 🧬️ emoji prefix, no bare 🔣️.json) -- correctly located, non-canonically named",
+    "classification": "a-filename-only-violation (sample; not deep-dived)",
+    "owner": "💻️os/🔨️modules/🏪️store/👥️presence (eligible module; already the recommended relocation target for ShellHost's 👥️presence-scope contract)",
+    "intendedOwner": "Rename to 🔣️.json within the same directory (or split per-slug if peer-commit/peer-admission/retirement need independent versioning)",
+    "exports": [
+      "peer-commit payload"
+    ],
+    "consumers": [
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/📌️peer-commit.json",
+        "kind": "sibling data file"
+      }
+    ],
+    "decision": "Flagged for completeness while investigating the 👥️presence-scope relocation target; not deep-dived (outside the ShellHost seed focus) but the same filename-convention fix applies.",
+    "evidence": "Confirms the naming chaos is not unique to ShellHost/📇️directory: at least 4 distinct schema-file-naming conventions coexist across the os partition (🔣️.json, 🔣️.schema.json, 🧬️.schema.json, '<slug>.schema.json').",
+    "open": ""
+  }
+]

@@ -5,7 +5,7 @@
   "displayName": "Move Page",
   "emoji": "🔀️",
   "aggregateVariant": "MovePage",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "move-page",
   "binaryTag": 13,
   "invertibility": "explicit-mutation",

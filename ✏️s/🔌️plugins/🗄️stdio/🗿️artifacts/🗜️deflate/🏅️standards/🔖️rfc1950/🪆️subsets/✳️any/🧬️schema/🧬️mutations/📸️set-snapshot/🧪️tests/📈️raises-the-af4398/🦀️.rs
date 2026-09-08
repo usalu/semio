@@ -14,9 +14,9 @@
 //! trip, so no committed fixture may express it. This fixture keeps FDICT clear on both sides so
 //! `dict_id` stays `None` and is omitted from the diff entirely.
 
-use crate::artifacts::deflate::schema::diff::DeflateDiff;
-use crate::artifacts::deflate::schema::mutations::{apply_deflate_mutation, DeflateMutation};
-use crate::artifacts::deflate::schema::snapshot::{DeflateLevelHint, DeflateSnapshot};
+use crate::schema::diff::DeflateDiff;
+use crate::schema::mutations::{apply_deflate_mutation, DeflateMutation};
+use crate::schema::snapshot::{DeflateLevelHint, DeflateSnapshot};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");

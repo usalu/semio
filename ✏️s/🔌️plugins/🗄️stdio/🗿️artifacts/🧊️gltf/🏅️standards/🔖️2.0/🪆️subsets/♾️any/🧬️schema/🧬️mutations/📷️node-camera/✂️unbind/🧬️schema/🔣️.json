@@ -1,0 +1,27 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/node-camera/unbind.json",
+  "title": "GltfUnbindNodeCameraMutation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "node"
+  ],
+  "properties": {
+    "node": {
+      "type": "integer",
+      "minimum": 0
+    }
+  },
+  "x-semio": {
+    "id": "s.stdio.gltf.mutation.unbind-node-camera.v1",
+    "version": 1,
+    "phase": "mutation",
+    "kind": "unbind",
+    "touchedPaths": [
+      "document/nodes/*/camera"
+    ],
+    "referencePolicy": "clears only the optional node camera reference"
+  },
+  "x-semio-mutation": "unbind-node-camera"
+}

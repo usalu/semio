@@ -8,11 +8,11 @@
 //! `absorb_id_keyed_*`); `other_segments` is an index-keyed triple (position-transported absorb,
 //! mirrors png's `text_chunks`).
 
-use crate::artifacts::jpg::schema::snapshot::{JfifDensityUnits, JfifThumbnail, JpgFrameComponent, JpgFrameHeader, JpgHuffmanClass, JpgHuffmanTable, JpgQuantTable, JpgSegment};
-use crate::artifacts::jpg::JpgSnapshot;
+use crate::schema::snapshot::{JfifDensityUnits, JfifThumbnail, JpgFrameComponent, JpgFrameHeader, JpgHuffmanClass, JpgHuffmanTable, JpgQuantTable, JpgSegment};
+use crate::JpgSnapshot;
 use protocol::command::DiffAlgebra;
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
-use schema::ArtifactSchema;
+use framework_schema::ArtifactSchema;
 use std::collections::{BTreeMap, HashMap};
 
 //#region 🔖️ComponentsDiff

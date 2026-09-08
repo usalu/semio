@@ -1,5 +1,5 @@
 {
-  "schema": "semio.value.ordered-map",
+  "schema": "https://semio.tech/schema/framework/value/ordered/schema.json#/$defs/OrderedMapFixture",
   "ownership": {
     "liveOwners": ["map", "update", "lookup", "retirement"],
     "liveDrop": "reject-without-payload-destruction",

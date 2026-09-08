@@ -4,10 +4,10 @@
 //! `DocxDocument.body` block and editing it through the artifact's own
 //! `DocxMutation::SetBlockContent`.
 
-use crate::artifacts::docx::schema::diff::DocxBlockPath;
-use crate::artifacts::docx::schema::mutations::set_block_content;
-use crate::artifacts::docx::schema::snapshot::{DocxBlock, DocxRun};
-use crate::artifacts::docx::{DocxMutation, DocxSnapshot, STDIO_DOCX_DOCUMENT_SCHEMA};
+use crate::schema::diff::DocxBlockPath;
+use crate::schema::mutations::set_block_content;
+use crate::schema::snapshot::{DocxBlock, DocxRun};
+use crate::{DocxMutation, DocxSnapshot, STDIO_DOCX_DOCUMENT_SCHEMA};
 use crate::editor::docx::standards::v_ecma_376::subsets::strict::modes::edit;
 use crate::editor::docx::standards::v_ecma_376::subsets::strict::modes::edit::windows::main;
 use semio_framework_plugin::{
@@ -186,7 +186,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn set_page_on_a_table_block_is_a_documented_no_op() {
         let mut snapshot = DocxSnapshot::default();
-        snapshot.document.body.push(DocxBlock::Table(crate::artifacts::docx::schema::snapshot::DocxTable::default()));
+        snapshot.document.body.push(DocxBlock::Table(crate::schema::snapshot::DocxTable::default()));
         assert!(build_set_page_mutation(&snapshot, 0, "text").is_none());
     }
 

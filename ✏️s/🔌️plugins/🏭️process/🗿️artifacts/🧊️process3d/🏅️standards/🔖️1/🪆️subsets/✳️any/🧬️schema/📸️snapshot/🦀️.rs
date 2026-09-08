@@ -9,8 +9,8 @@
 
 use crate::artifacts::process3d::{Capability, CapabilityParameter, CapabilityRule, MeasureRecipe, Pose, ProcessMeasure, ProcessStep, StepOrigin, Stock, StockQuantity, WorkingSolid, Workshop, WorkshopMachine};
 use schema::ArtifactSchema;
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot;
+use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
+use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot;
 use semio_framework_os_kernel::{FromValue, ToValue};
 
 //#region 🔖️Snapshot
@@ -65,7 +65,7 @@ fn hex_encode(bytes: &[u8]) -> String {
     bytes.iter().map(|b| format!("{b:02x}")).collect()
 }
 fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
-    if s.len() % 2 != 0 {
+    if !s.len().is_multiple_of(2) {
         return Err(format!("odd hex length: {s:?}"));
     }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
@@ -657,7 +657,7 @@ impl Process3dRetainedChildCursor {
         }
         let Some(uri) = self.string.step(reader)? else { return Ok(None) };
         self.string = Process3dRetainedStringCursor::default();
-        let target = store::os_io::ArtifactRef::parse_uri(&uri).map_err(|error| error.to_string())?;
+        let target = store::os_io::ArtifactRef::parse_uri(&uri).map_err(|error| error)?;
         self.target = Some(target);
         Ok(Some(store::ArtifactChild::new(self.child_id.take().unwrap_or_default(), self.target.take().expect("Process3d retained child target exists"))))
     }
@@ -1378,7 +1378,7 @@ impl Process3dRetainedSnapshotReader {
                 let cursor = self.active_pose.get_or_insert_with(Process3dRetainedPoseCursor::default);
                 if let Some(value) = retained_advance(bytes, &mut self.offset, |reader| cursor.step(reader))? {
                     self.candidate.as_mut().expect("Process3d retained shell exists").stock_pose = value;
-                    drop(self.active_pose.take());
+                    self.active_pose = None;
                     self.phase = Process3dRetainedSnapshotPhase::StockPayload;
                 }
             }
@@ -1875,8 +1875,8 @@ pub fn process3d_identity_report_json(dsl_text: &str) -> Result<String, String> 
         ("parsed".to_string(), semio_framework_os_kernel::json::from_dsl_value(&ToValue::to_value(&parsed))),
         ("reparsed".to_string(), semio_framework_os_kernel::json::from_dsl_value(&ToValue::to_value(&reparsed))),
         ("packDecoded".to_string(), semio_framework_os_kernel::json::from_dsl_value(&ToValue::to_value(&unpacked))),
-        ("canonicalText".to_string(), semio_framework_os_kernel::json::Value::String(canonical.clone())),
-        ("canonicalTextAgain".to_string(), semio_framework_os_kernel::json::Value::String(canonical_again.clone())),
+        ("canonicalText".to_string(), semio_framework_os_kernel::json::Value::String(canonical)),
+        ("canonicalTextAgain".to_string(), semio_framework_os_kernel::json::Value::String(canonical_again)),
     ]);
     Ok(semio_framework_os_kernel::json::to_string(&report))
 }

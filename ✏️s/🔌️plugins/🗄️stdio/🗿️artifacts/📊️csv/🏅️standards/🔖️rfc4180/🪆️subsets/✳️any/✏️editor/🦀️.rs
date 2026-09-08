@@ -3,7 +3,7 @@
 //! (`TableWindowKit`), directly editing `CsvSnapshot.records` through the artifact's own
 //! `CsvMutation::SetField`.
 
-use crate::artifacts::csv::{CsvMutation, CsvSnapshot, STDIO_CSV_DOCUMENT_SCHEMA};
+use crate::{CsvMutation, CsvSnapshot, STDIO_CSV_DOCUMENT_SCHEMA};
 use crate::editor::csv::modes::edit;
 use crate::editor::csv::modes::edit::windows::main;
 use semio_framework_plugin::{
@@ -11,7 +11,7 @@ use semio_framework_plugin::{
 };
 
 //#region 🔖️Dialect
-/// 🪪️ Artifact coordinate — verified against `crate::artifacts::csv::schema::derived_analysis::
+/// 🪪️ Artifact coordinate — verified against `crate::schema::derived_analysis::
 /// CsvAnalyzerAnalysis::DIALECT` (the artifact's own real analysis-capability row), not guessed.
 /// Duplicated (not imported) in the sibling `👁️viewer` surface root — never shared through an
 /// `editor`-rooted import, so a viewer file can never depend on this module.
@@ -116,7 +116,7 @@ impl ArtifactEditor for CsvEditor {
         let record_index = grid_row_to_record_index(doc.snapshot.has_header, *row);
         let Some(record) = doc.snapshot.records.get(record_index) else { return Ok(Emit::default()) };
         let quoted = record.fields.get(*column as usize).is_some_and(|field| field.quoted);
-        Ok(Emit { artifact_mutations: vec![CsvMutation::SetField(crate::artifacts::csv::schema::mutations::set_field::SetField { record_index, field_index: *column as usize, value: value.clone(), quoted })], description: Some(format!("Set cell {row},{column}")), ..Default::default() })
+        Ok(Emit { artifact_mutations: vec![CsvMutation::SetField(crate::schema::mutations::set_field::SetField { record_index, field_index: *column as usize, value: value.clone(), quoted })], description: Some(format!("Set cell {row},{column}")), ..Default::default() })
     }
 
     fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {

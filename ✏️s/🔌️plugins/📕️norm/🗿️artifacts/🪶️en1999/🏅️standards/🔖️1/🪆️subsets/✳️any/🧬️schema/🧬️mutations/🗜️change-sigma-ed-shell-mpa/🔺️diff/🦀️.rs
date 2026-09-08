@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeSigmaEdShellMpa, base: &En1999Snapshot) -> protocol:
     if base.sigma_ed_shell_mpa == payload.new_sigma_ed_shell_mpa {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Shell design stress [MPa] is already {}.", payload.new_sigma_ed_shell_mpa));
     }
-    protocol::MutationOutcome::new(En1999Diff { sigma_ed_shell_mpa: Some(payload.new_sigma_ed_shell_mpa.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1999Diff { sigma_ed_shell_mpa: Some(payload.new_sigma_ed_shell_mpa), ..Default::default() })
 }
 //#endregion 🔖️Diff

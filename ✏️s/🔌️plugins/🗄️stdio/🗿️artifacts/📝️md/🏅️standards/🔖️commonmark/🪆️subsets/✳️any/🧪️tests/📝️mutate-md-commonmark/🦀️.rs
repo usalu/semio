@@ -117,11 +117,11 @@ fn round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::{mutable_input, INPUT};
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_plugin_stdio::artifacts::md::schema::diff::navigate_container;
-    use semio_s_plugin_stdio::artifacts::md::schema::mutations::{apply_md_mutation, MdPathStep};
-    use semio_s_plugin_stdio::artifacts::md::schema::mutations::{insert_block::InsertBlock, remove_block::RemoveBlock, replace_block::ReplaceBlock, set_inlines::SetInlines, set_snapshot::SetSnapshot};
-    use semio_s_plugin_stdio::artifacts::md::schema::snapshot::{MdBlock, MdInline};
-    use semio_s_plugin_stdio::artifacts::md::{MdMutation, MdSnapshot};
+    use crate::schema::diff::navigate_container;
+    use crate::schema::mutations::{apply_md_mutation, MdPathStep};
+    use crate::schema::mutations::{insert_block::InsertBlock, remove_block::RemoveBlock, replace_block::ReplaceBlock, set_inlines::SetInlines, set_snapshot::SetSnapshot};
+    use crate::schema::snapshot::{MdBlock, MdInline};
+    use crate::{MdMutation, MdSnapshot};
     use semio_s_plugin_stdio_test_oracle::artifacts::md::standards::v_commonmark::subsets::any::project_md;
 
     //#region 🔖️Json
@@ -209,7 +209,7 @@ mod subject {
 
     fn build_snapshot(json: &Json) -> Result<MdSnapshot, String> {
         let blocks = json.array("blocks").iter().map(build_block).collect::<Result<Vec<_>, _>>()?;
-        Ok(MdSnapshot { schema: semio_s_plugin_stdio::artifacts::md::STDIO_MD_DOCUMENT_SCHEMA.to_string(), blocks })
+        Ok(MdSnapshot { schema: crate::STDIO_MD_DOCUMENT_SCHEMA.to_string(), blocks })
     }
 
     /// 🦠️ Builds the real `MdMutation` the spec describes — the same shape `oracle_apply_mutation`

@@ -5,9 +5,9 @@
 //! `Vec<BrepSolidShell>` — shell id plus an `is_void` flag distinguishing an internal cavity from
 //! the outer boundary — and the second solid takes the same shell as a VOID, so that flag carries
 //! the whole semantic difference between the two solids.
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::decode_semio_brep_diff_json;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::mutations::{decode_semio_brep_mutation_json, SemioBrepMutation};
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::{decode_semio_brep_snapshot_json, SemioBrepSnapshot};
+use crate::standards::v1::subsets::brep::schema::diff::decode_semio_brep_diff_json;
+use crate::standards::v1::subsets::brep::schema::mutations::{decode_semio_brep_mutation_json, SemioBrepMutation};
+use crate::standards::v1::subsets::brep::schema::snapshot::{decode_semio_brep_snapshot_json, SemioBrepSnapshot};
 use pack::value::ToValue;
 use protocol::{Mutation, MutationDiff};
 

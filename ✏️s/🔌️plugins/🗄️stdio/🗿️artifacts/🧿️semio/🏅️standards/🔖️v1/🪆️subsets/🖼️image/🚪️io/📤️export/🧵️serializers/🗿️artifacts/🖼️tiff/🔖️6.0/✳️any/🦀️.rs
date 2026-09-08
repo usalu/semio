@@ -13,8 +13,8 @@
 //!   came from a non-Ascii source type on import re-emit as text, a real, honest normalization,
 //!   not a byte-exact inverse of every possible TIFF field type).
 
-use crate::artifacts::semio::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
-use crate::artifacts::tiff::{
+use crate::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
+use semio_s_artifact_stdio_tiff::{
     schema::snapshot::{TiffFieldType, TiffIfd, TiffTag, TiffValues, TAG_IMAGE_LENGTH, TAG_IMAGE_WIDTH},
     TiffSnapshot,
 };
@@ -44,7 +44,7 @@ impl ArtifactSerializer for SemioImageToTiff {
             }
         }
         entries.sort_by_key(|t| t.tag);
-        Ok(TiffSnapshot { schema: crate::artifacts::tiff::STDIO_TIFF_DOCUMENT_SCHEMA.into(), byte_order: Default::default(), ifds: vec![TiffIfd { pixels: Vec::new(), entries }], pixels: frame.rgba8.clone() })
+        Ok(TiffSnapshot { schema: semio_s_artifact_stdio_tiff::STDIO_TIFF_DOCUMENT_SCHEMA.into(), byte_order: Default::default(), ifds: vec![TiffIfd { pixels: Vec::new(), entries }], pixels: frame.rgba8.clone() })
     }
 }
 //#endregion 🔖️Serializer
@@ -53,7 +53,7 @@ impl ArtifactSerializer for SemioImageToTiff {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::semio::standards::v1::subsets::image::schema::snapshot::{SemioColorspace, SemioImageFrame, SemioImageMetadataEntry};
+    use crate::standards::v1::subsets::image::schema::snapshot::{SemioColorspace, SemioImageFrame, SemioImageMetadataEntry};
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn sample_semio() -> SemioImageSnapshot {
@@ -75,8 +75,8 @@ mod tests {
     async fn real_byte_round_trip_through_tiff_codec() {
         let semio = sample_semio();
         let tiff = semio_framework_plugin::resolve_ready(SemioImageToTiff::serialize(&semio)).expect("serialize");
-        let bytes = crate::artifacts::tiff::engine::encode_tiff(&tiff).expect("encode real tiff bytes");
-        let decoded = crate::artifacts::tiff::engine::decode_tiff(&bytes).expect("decode real tiff bytes");
+        let bytes = semio_s_artifact_stdio_tiff::engine::encode_tiff(&tiff).expect("encode real tiff bytes");
+        let decoded = semio_s_artifact_stdio_tiff::engine::decode_tiff(&bytes).expect("decode real tiff bytes");
         assert_eq!(decoded.width(), Some(2));
         assert_eq!(decoded.height(), Some(1));
         for (a, b) in decoded.pixels.chunks_exact(4).zip(semio.frames[0].rgba8.chunks_exact(4)) {

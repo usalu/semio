@@ -188,6 +188,197 @@
     "✏️s/🔌️plugins/🔱️trinity/🔨️modules/🔌️jack/🧠️lsp/📦️packages/🦀️rust": {
       "name": "@semio-tech/trinity-jack-lsp",
     },
+    "✏️s/🔌️plugins/🗄️stdio/📦️packages/🟦️typescript": {
+      "name": "@semio-tech/stdio-js",
+      "version": "0.1.0",
+      "dependencies": {
+        "@semio-tech/framework": "workspace:*",
+        "@semio-tech/stdio-avi": "workspace:*",
+        "@semio-tech/stdio-bcf": "workspace:*",
+        "@semio-tech/stdio-binary": "workspace:*",
+        "@semio-tech/stdio-bmp": "workspace:*",
+        "@semio-tech/stdio-csv": "workspace:*",
+        "@semio-tech/stdio-deflate": "workspace:*",
+        "@semio-tech/stdio-docx": "workspace:*",
+        "@semio-tech/stdio-dwg": "workspace:*",
+        "@semio-tech/stdio-dxf": "workspace:*",
+        "@semio-tech/stdio-epw": "workspace:*",
+        "@semio-tech/stdio-gif": "workspace:*",
+        "@semio-tech/stdio-gltf": "workspace:*",
+        "@semio-tech/stdio-html": "workspace:*",
+        "@semio-tech/stdio-ifc": "workspace:*",
+        "@semio-tech/stdio-jpg": "workspace:*",
+        "@semio-tech/stdio-json": "workspace:*",
+        "@semio-tech/stdio-las": "workspace:*",
+        "@semio-tech/stdio-md": "workspace:*",
+        "@semio-tech/stdio-mp3": "workspace:*",
+        "@semio-tech/stdio-mp4": "workspace:*",
+        "@semio-tech/stdio-obj": "workspace:*",
+        "@semio-tech/stdio-pdf": "workspace:*",
+        "@semio-tech/stdio-ply": "workspace:*",
+        "@semio-tech/stdio-png": "workspace:*",
+        "@semio-tech/stdio-pptx": "workspace:*",
+        "@semio-tech/stdio-semio": "workspace:*",
+        "@semio-tech/stdio-step": "workspace:*",
+        "@semio-tech/stdio-stl": "workspace:*",
+        "@semio-tech/stdio-svg": "workspace:*",
+        "@semio-tech/stdio-tiff": "workspace:*",
+        "@semio-tech/stdio-tsv": "workspace:*",
+        "@semio-tech/stdio-txt": "workspace:*",
+        "@semio-tech/stdio-wav": "workspace:*",
+        "@semio-tech/stdio-xlsx": "workspace:*",
+        "@semio-tech/stdio-xml": "workspace:*",
+        "@semio-tech/stdio-zip": "workspace:*",
+      },
+      "devDependencies": {
+        "typescript": "^5.9.3",
+        "vitest": "^4.0.17",
+      },
+    },
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/📦️packages/🟦️typescript": {
+      "name": "@semio-tech/stdio-las",
+      "version": "0.1.0",
+    },
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/📦️packages/🟦️typescript": {
+      "name": "@semio-tech/stdio-html",
+      "version": "0.1.0",
+    },
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌦️epw/📦️packages/🟦️typescript": {
+      "name": "@semio-tech/stdio-epw",
+      "version": "0.1.0",
+    },
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/📦️packages/🟦️typescript": {
+      "name": "@semio-tech/stdio-zip",
+      "version": "0.1.0",
+    },
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/📦️packages/🟦️typescript": {
+      "name": "@semio-tech/stdio-gif",
+      "version": "0.1.0",
+    },
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/📦️packages/🟦️typescript": {
+      "name": "@semio-tech/stdio-mp4",
+      "version": "0.1.0",
+    },
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/📦️packages/🟦️typescript": {
+      "name": "@semio-tech/stdio-svg",
+      "version": "0.1.0",
+    },
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎵️mp3/📦️packages/🟦️typescript": {
+      "name": "@semio-tech/stdio-mp3",
+      "version": "0.1.0",
+    },
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📦️packages/🟦️typescript": {
+      "name": "@semio-tech/stdio-ifc",
+      "version": "0.1.0",
+    },
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/📦️packages/🟦️typescript": {
+      "name": "@semio-tech/stdio-bcf",
+      "version": "0.1.0",
+    },
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/📦️packages/🟦️typescript": {
+      "name": "@semio-tech/stdio-binary",
+      "version": "0.1.0",
+    },
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/📦️packages/🟦️typescript": {
+      "name": "@semio-tech/stdio-csv",
+      "version": "0.1.0",
+    },
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/📦️packages/🟦️typescript": {
+      "name": "@semio-tech/stdio-step",
+      "version": "0.1.0",
+    },
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/📦️packages/🟦️typescript": {
+      "name": "@semio-tech/stdio-tsv",
+      "version": "0.1.0",
+    },
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/📦️packages/🟦️typescript": {
+      "name": "@semio-tech/stdio-xlsx",
+      "version": "0.1.0",
+    },
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/📦️packages/🟦️typescript": {
+      "name": "@semio-tech/stdio-pdf",
+      "version": "0.1.0",
+    },
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/📦️packages/🟦️typescript": {
+      "name": "@semio-tech/stdio-docx",
+      "version": "0.1.0",
+    },
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/📦️packages/🟦️typescript": {
+      "name": "@semio-tech/stdio-md",
+      "version": "0.1.0",
+    },
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/📦️packages/🟦️typescript": {
+      "name": "@semio-tech/stdio-xml",
+      "version": "0.1.0",
+    },
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/📦️packages/🟦️typescript": {
+      "name": "@semio-tech/stdio-png",
+      "version": "0.1.0",
+    },
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/📦️packages/🟦️typescript": {
+      "name": "@semio-tech/stdio-jpg",
+      "version": "0.1.0",
+    },
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/📦️packages/🟦️typescript": {
+      "name": "@semio-tech/stdio-avi",
+      "version": "0.1.0",
+    },
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/📦️packages/🟦️typescript": {
+      "name": "@semio-tech/stdio-pptx",
+      "version": "0.1.0",
+    },
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/📦️packages/🟦️typescript": {
+      "name": "@semio-tech/stdio-wav",
+      "version": "0.1.0",
+    },
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/📦️packages/🟦️typescript": {
+      "name": "@semio-tech/stdio-txt",
+      "version": "0.1.0",
+    },
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔺️stl/📦️packages/🟦️typescript": {
+      "name": "@semio-tech/stdio-stl",
+      "version": "0.1.0",
+    },
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/📦️packages/🟦️typescript": {
+      "name": "@semio-tech/stdio-dwg",
+      "version": "0.1.0",
+    },
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/📦️packages/🟦️typescript": {
+      "name": "@semio-tech/stdio-dxf",
+      "version": "0.1.0",
+    },
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/📦️packages/🟦️typescript": {
+      "name": "@semio-tech/stdio-tiff",
+      "version": "0.1.0",
+    },
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/📦️packages/🟦️typescript": {
+      "name": "@semio-tech/stdio-deflate",
+      "version": "0.1.0",
+    },
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/📦️packages/🟦️typescript": {
+      "name": "@semio-tech/stdio-obj",
+      "version": "0.1.0",
+    },
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/📦️packages/🟦️typescript": {
+      "name": "@semio-tech/stdio-gltf",
+      "version": "0.1.0",
+    },
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧱️ply/📦️packages/🟦️typescript": {
+      "name": "@semio-tech/stdio-ply",
+      "version": "0.1.0",
+    },
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/📦️packages/🟦️typescript": {
+      "name": "@semio-tech/stdio-json",
+      "version": "0.1.0",
+    },
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/📦️packages/🟦️typescript": {
+      "name": "@semio-tech/stdio-semio",
+      "version": "0.1.0",
+    },
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/📦️packages/🟦️typescript": {
+      "name": "@semio-tech/stdio-bmp",
+      "version": "0.1.0",
+    },
     "✏️s/🔌️plugins/🧩️puzzle/📦️packages/🟦️typescript": {
       "name": "@semio-tech/puzzle-js",
       "version": "0.1.0",
@@ -1516,6 +1707,80 @@
     "@semio-tech/s-2d-js": ["@semio-tech/s-2d-js@workspace:🧰️framework/🔨️modules/◻️2d/📦️packages/🟦️typescript"],
 
     "@semio-tech/s-3d-js": ["@semio-tech/s-3d-js@workspace:🧰️framework/🔨️modules/🧊️3d/📦️packages/🟦️typescript"],
+
+    "@semio-tech/stdio-avi": ["@semio-tech/stdio-avi@workspace:✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/📦️packages/🟦️typescript"],
+
+    "@semio-tech/stdio-bcf": ["@semio-tech/stdio-bcf@workspace:✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/📦️packages/🟦️typescript"],
+
+    "@semio-tech/stdio-binary": ["@semio-tech/stdio-binary@workspace:✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/📦️packages/🟦️typescript"],
+
+    "@semio-tech/stdio-bmp": ["@semio-tech/stdio-bmp@workspace:✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/📦️packages/🟦️typescript"],
+
+    "@semio-tech/stdio-csv": ["@semio-tech/stdio-csv@workspace:✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/📦️packages/🟦️typescript"],
+
+    "@semio-tech/stdio-deflate": ["@semio-tech/stdio-deflate@workspace:✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/📦️packages/🟦️typescript"],
+
+    "@semio-tech/stdio-docx": ["@semio-tech/stdio-docx@workspace:✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/📦️packages/🟦️typescript"],
+
+    "@semio-tech/stdio-dwg": ["@semio-tech/stdio-dwg@workspace:✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/📦️packages/🟦️typescript"],
+
+    "@semio-tech/stdio-dxf": ["@semio-tech/stdio-dxf@workspace:✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/📦️packages/🟦️typescript"],
+
+    "@semio-tech/stdio-epw": ["@semio-tech/stdio-epw@workspace:✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌦️epw/📦️packages/🟦️typescript"],
+
+    "@semio-tech/stdio-gif": ["@semio-tech/stdio-gif@workspace:✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/📦️packages/🟦️typescript"],
+
+    "@semio-tech/stdio-gltf": ["@semio-tech/stdio-gltf@workspace:✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/📦️packages/🟦️typescript"],
+
+    "@semio-tech/stdio-html": ["@semio-tech/stdio-html@workspace:✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/📦️packages/🟦️typescript"],
+
+    "@semio-tech/stdio-ifc": ["@semio-tech/stdio-ifc@workspace:✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📦️packages/🟦️typescript"],
+
+    "@semio-tech/stdio-jpg": ["@semio-tech/stdio-jpg@workspace:✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/📦️packages/🟦️typescript"],
+
+    "@semio-tech/stdio-js": ["@semio-tech/stdio-js@workspace:✏️s/🔌️plugins/🗄️stdio/📦️packages/🟦️typescript"],
+
+    "@semio-tech/stdio-json": ["@semio-tech/stdio-json@workspace:✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/📦️packages/🟦️typescript"],
+
+    "@semio-tech/stdio-las": ["@semio-tech/stdio-las@workspace:✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/📦️packages/🟦️typescript"],
+
+    "@semio-tech/stdio-md": ["@semio-tech/stdio-md@workspace:✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/📦️packages/🟦️typescript"],
+
+    "@semio-tech/stdio-mp3": ["@semio-tech/stdio-mp3@workspace:✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎵️mp3/📦️packages/🟦️typescript"],
+
+    "@semio-tech/stdio-mp4": ["@semio-tech/stdio-mp4@workspace:✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/📦️packages/🟦️typescript"],
+
+    "@semio-tech/stdio-obj": ["@semio-tech/stdio-obj@workspace:✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/📦️packages/🟦️typescript"],
+
+    "@semio-tech/stdio-pdf": ["@semio-tech/stdio-pdf@workspace:✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/📦️packages/🟦️typescript"],
+
+    "@semio-tech/stdio-ply": ["@semio-tech/stdio-ply@workspace:✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧱️ply/📦️packages/🟦️typescript"],
+
+    "@semio-tech/stdio-png": ["@semio-tech/stdio-png@workspace:✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/📦️packages/🟦️typescript"],
+
+    "@semio-tech/stdio-pptx": ["@semio-tech/stdio-pptx@workspace:✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/📦️packages/🟦️typescript"],
+
+    "@semio-tech/stdio-semio": ["@semio-tech/stdio-semio@workspace:✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/📦️packages/🟦️typescript"],
+
+    "@semio-tech/stdio-step": ["@semio-tech/stdio-step@workspace:✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/📦️packages/🟦️typescript"],
+
+    "@semio-tech/stdio-stl": ["@semio-tech/stdio-stl@workspace:✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔺️stl/📦️packages/🟦️typescript"],
+
+    "@semio-tech/stdio-svg": ["@semio-tech/stdio-svg@workspace:✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/📦️packages/🟦️typescript"],
+
+    "@semio-tech/stdio-tiff": ["@semio-tech/stdio-tiff@workspace:✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/📦️packages/🟦️typescript"],
+
+    "@semio-tech/stdio-tsv": ["@semio-tech/stdio-tsv@workspace:✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/📦️packages/🟦️typescript"],
+
+    "@semio-tech/stdio-txt": ["@semio-tech/stdio-txt@workspace:✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/📦️packages/🟦️typescript"],
+
+    "@semio-tech/stdio-wav": ["@semio-tech/stdio-wav@workspace:✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/📦️packages/🟦️typescript"],
+
+    "@semio-tech/stdio-xlsx": ["@semio-tech/stdio-xlsx@workspace:✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/📦️packages/🟦️typescript"],
+
+    "@semio-tech/stdio-xml": ["@semio-tech/stdio-xml@workspace:✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/📦️packages/🟦️typescript"],
+
+    "@semio-tech/stdio-zip": ["@semio-tech/stdio-zip@workspace:✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/📦️packages/🟦️typescript"],
 
     "@semio-tech/trinity-jack-lsp": ["@semio-tech/trinity-jack-lsp@workspace:✏️s/🔌️plugins/🔱️trinity/🔨️modules/🔌️jack/🧠️lsp/📦️packages/🦀️rust"],
 

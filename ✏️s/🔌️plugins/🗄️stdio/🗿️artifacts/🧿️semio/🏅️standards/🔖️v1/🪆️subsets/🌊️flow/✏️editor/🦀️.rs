@@ -2,8 +2,8 @@
 //! 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §2.1). `SemioFlowEditor`
 //! implements `ArtifactEditor`, wiring the shared `MeshWindowKit` to a single Main window.
 
-use crate::artifacts::semio::standards::v1::subsets::flow::schema::mutations::SemioFlowMutation;
-use crate::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot;
+use crate::standards::v1::subsets::flow::schema::mutations::SemioFlowMutation;
+use crate::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot;
 use crate::editor::semio_flow::modes::edit;
 use crate::editor::semio_flow::modes::edit::windows::main;
 use semio_framework_plugin::app::InteractionView;

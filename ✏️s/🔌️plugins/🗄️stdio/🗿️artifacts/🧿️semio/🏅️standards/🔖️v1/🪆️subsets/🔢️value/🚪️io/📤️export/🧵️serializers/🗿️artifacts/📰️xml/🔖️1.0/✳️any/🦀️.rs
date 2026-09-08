@@ -15,10 +15,10 @@
 //! - `Ref{id}` is dereferenced the same way the value↔json serializer does (XML has no graph
 //!   either) — dangling refs and cycles are hard errors, never silently truncated.
 
-use crate::artifacts::semio::standards::v1::subsets::value::schema::snapshot::{SemioValue, SemioValueEntry, SemioValueSnapshot, ValueId};
-use crate::artifacts::xml::schema::snapshot::{XmlAttr, XmlDeclaration, XmlDoctype, XmlDocument, XmlDtdDeclaration, XmlExternalId, XmlNode};
-use crate::artifacts::xml::XmlSnapshot;
-use crate::artifacts::xml::STDIO_XML_DOCUMENT_SCHEMA;
+use crate::standards::v1::subsets::value::schema::snapshot::{SemioValue, SemioValueEntry, SemioValueSnapshot, ValueId};
+use semio_s_artifact_stdio_xml::schema::snapshot::{XmlAttr, XmlDeclaration, XmlDoctype, XmlDocument, XmlDtdDeclaration, XmlExternalId, XmlNode};
+use semio_s_artifact_stdio_xml::XmlSnapshot;
+use semio_s_artifact_stdio_xml::STDIO_XML_DOCUMENT_SCHEMA;
 use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
 use std::collections::{HashMap, HashSet};
 
@@ -242,7 +242,7 @@ pub fn xml_document_from_semio(v: &SemioValue, nodes: &HashMap<&ValueId, &SemioV
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::semio::standards::v1::subsets::value::io::import::deserializers::artifacts::xml::v1_0::any::semio_value_from_xml_document;
+    use crate::standards::v1::subsets::value::io::import::deserializers::artifacts::xml::v1_0::any::semio_value_from_xml_document;
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn round_trip(doc: XmlDocument) -> XmlDocument {

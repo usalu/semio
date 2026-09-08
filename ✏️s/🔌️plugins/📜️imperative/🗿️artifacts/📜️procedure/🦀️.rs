@@ -62,9 +62,9 @@ pub struct PathRef {
 /// initial variable dictionary) maps onto `text`'s run list as ONE literal-JSON run — an honest,
 /// documented, non-prose use of the `text` subset (see `text_content_snapshot_from_seed`'s own doc
 /// comment for why), the only persisted-content field left once `path` claims `flow`.
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioPoint2;
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::{FlowEdge, FlowNode, FlowParam, PortRef, SemioFlowSnapshot, STDIO_SEMIOFLOW_DOCUMENT_SCHEMA};
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::text::schema::snapshot::{SemioTextRun, SemioTextSnapshot, STDIO_SEMIOTEXT_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::SemioPoint2;
+use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::{FlowEdge, FlowNode, FlowParam, PortRef, SemioFlowSnapshot, STDIO_SEMIOFLOW_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_semio::standards::v1::subsets::text::schema::snapshot::{SemioTextRun, SemioTextSnapshot, STDIO_SEMIOTEXT_DOCUMENT_SCHEMA};
 
 pub type ProcedureFlowChild = store::ArtifactChild<SemioFlowSnapshot>;
 pub type ProcedureTextChild = store::ArtifactChild<SemioTextSnapshot>;
@@ -272,7 +272,7 @@ pub fn diff_replace_flow(path: &Path) -> ProcedureDiff {
 /// its former `pub(crate)`) since the app engine module now reaches it by the same long qualified path.
 pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
     use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
-    let rows: &[(&str, &str, &str, &[(&str, &str)], Option<(&str, &str)>)] = &[
+    let rows: &[semio_framework_plugin::ArtifactCapabilityRow<'_>] = &[
         ("s.imperative.procedure.standard.v1", "standard", "1", &[], None),
         ("s.imperative.procedure.standard.v1.profile.any", "profile", "any", &[], None),
         ("s.imperative.procedure.schema.artifact", "schema", "s.imperative.procedure", &[("schema", "s.imperative.procedure")], None),

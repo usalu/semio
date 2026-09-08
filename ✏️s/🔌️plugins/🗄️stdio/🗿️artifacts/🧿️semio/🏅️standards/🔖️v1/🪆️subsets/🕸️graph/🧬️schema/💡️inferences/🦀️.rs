@@ -7,8 +7,8 @@
 //! trinity's own `jack` and sibling `🌊️flow` inference facets establish for their own node/edge
 //! graphs).
 
-use crate::artifacts::semio::standards::v1::subsets::graph::schema::snapshot::SemioGraphSnapshot;
-use schema::ArtifactSchema;
+use crate::standards::v1::subsets::graph::schema::snapshot::SemioGraphSnapshot;
+use framework_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 
 use super::topology::{compute_semio_graph_topology, SemioGraphTopology};
@@ -48,7 +48,7 @@ impl protocol::InferenceSpec<SemioGraphSnapshot> for SemioGraphInference {
 /// `infer_cached` passthrough (just calls `infer`) is exactly right here, no `InferredField`
 /// chain needed (there is no honest per-node incremental decomposition of a global topological
 /// sort) — same ruling trinity's `jack` and sibling `🌊️flow` inference facets document.
-impl ArtifactInferrer for crate::artifacts::semio::standards::v1::subsets::graph::schema::SemioGraphBuilder {
+impl ArtifactInferrer for crate::standards::v1::subsets::graph::schema::SemioGraphBuilder {
     type Snapshot = SemioGraphSnapshot;
     type Inference = SemioGraphInference;
 }
@@ -58,10 +58,10 @@ impl ArtifactInferrer for crate::artifacts::semio::standards::v1::subsets::graph
 /// 💡️ Registers `s.stdio.semio.graph.inference`'s facet leaves into the OS-wide inference catalog
 /// — call once at plugin init, alongside `semio_graph_artifact_schema_descriptor`'s registration.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn semio_graph_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
-    schema::ArtifactInferenceDescriptor {
+pub fn semio_graph_artifact_inference_descriptor() -> framework_schema::ArtifactInferenceDescriptor {
+    framework_schema::ArtifactInferenceDescriptor {
         id: "s.stdio.semio.graph.inference",
-        inference: schema::FacetLeaves {
+        inference: framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),

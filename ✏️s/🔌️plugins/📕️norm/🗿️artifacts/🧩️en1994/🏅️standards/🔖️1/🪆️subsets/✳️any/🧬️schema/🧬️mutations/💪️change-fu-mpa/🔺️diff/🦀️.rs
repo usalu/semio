@@ -11,6 +11,6 @@ pub fn diff(payload: &ChangeFUMpa, base: &En1994Snapshot) -> protocol::MutationO
     if base.f_u_mpa == payload.new_f_u_mpa {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "Fu mpa already has this value.");
     }
-    protocol::MutationOutcome::new(En1994Diff { f_u_mpa: Some(payload.new_f_u_mpa.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1994Diff { f_u_mpa: Some(payload.new_f_u_mpa), ..Default::default() })
 }
 //#endregion 🔖️Diff

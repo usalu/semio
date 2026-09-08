@@ -6,11 +6,11 @@
 //! actually differs, so a width-only change would emit a width-only diff. The before-snapshot is
 //! frameless on purpose: `set-dimensions` does not resize pixel buffers, so a fixture with frames
 //! would encode an inconsistent `width*height*4` after-state.
-use crate::artifacts::semio::standards::v1::subsets::image::schema::diff::SemioImageDiff;
-use crate::artifacts::semio::standards::v1::subsets::image::schema::mutations::{apply_semio_image_mutation, SemioImageMutation};
-use crate::artifacts::semio::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
+use crate::standards::v1::subsets::image::schema::diff::SemioImageDiff;
+use crate::standards::v1::subsets::image::schema::mutations::{apply_semio_image_mutation, SemioImageMutation};
+use crate::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
 use protocol::{Mutation, MutationDiff};
-use crate::artifacts::semio::standards::v1::subsets::image::schema::mutations::set_dimensions;
+use crate::standards::v1::subsets::image::schema::mutations::set_dimensions;
 
 /// 🔗️ This leaf's own `🔺️diff` oracle, mounted directly: `🦀️.rs` mounts only
 /// `📸️set-snapshot`'s triad for this subset, and the enum-level `Mutation::diff` deliberately

@@ -11,6 +11,6 @@ pub fn diff(payload: &ChangeVLRd, base: &En1994Snapshot) -> protocol::MutationOu
     if base.v_l_rd == payload.new_v_l_rd {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "Vl rd already has this value.");
     }
-    protocol::MutationOutcome::new(En1994Diff { v_l_rd: Some(payload.new_v_l_rd.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1994Diff { v_l_rd: Some(payload.new_v_l_rd), ..Default::default() })
 }
 //#endregion 🔖️Diff

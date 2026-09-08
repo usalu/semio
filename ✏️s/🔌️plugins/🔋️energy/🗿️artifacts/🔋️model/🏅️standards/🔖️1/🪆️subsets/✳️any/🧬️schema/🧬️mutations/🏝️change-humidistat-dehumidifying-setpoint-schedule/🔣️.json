@@ -5,7 +5,7 @@
   "displayName": "Change Humidistat Dehumidifying Setpoint Schedule",
   "emoji": "🏝️",
   "aggregateVariant": "ChangeHumidistatDehumidifyingSetpointSchedule",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-humidistat-dehumidifying-setpoint-schedule",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

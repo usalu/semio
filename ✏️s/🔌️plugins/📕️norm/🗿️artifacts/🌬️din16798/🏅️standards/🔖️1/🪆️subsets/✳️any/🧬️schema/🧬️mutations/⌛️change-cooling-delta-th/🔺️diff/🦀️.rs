@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeCoolingDeltaTH, base: &Din16798Snapshot) -> protocol
     if base.cooling_delta_t_h == payload.new_cooling_delta_t_h {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Cooling degree hours is already {}.", payload.new_cooling_delta_t_h));
     }
-    protocol::MutationOutcome::new(Din16798Diff { cooling_delta_t_h: Some(payload.new_cooling_delta_t_h.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(Din16798Diff { cooling_delta_t_h: Some(payload.new_cooling_delta_t_h), ..Default::default() })
 }
 //#endregion 🔖️Diff

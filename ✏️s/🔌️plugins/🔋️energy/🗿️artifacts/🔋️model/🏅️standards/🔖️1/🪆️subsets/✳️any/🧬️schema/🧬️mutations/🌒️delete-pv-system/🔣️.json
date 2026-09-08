@@ -5,7 +5,7 @@
   "displayName": "Delete Pv System",
   "emoji": "🌒️",
   "aggregateVariant": "DeletePvSystem",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "delete-pv-system",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

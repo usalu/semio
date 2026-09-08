@@ -5,7 +5,7 @@
   "displayName": "Change Infiltration Constant Term Coefficient",
   "emoji": "🅰️",
   "aggregateVariant": "ChangeInfiltrationConstantTermCoefficient",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-infiltration-constant-term-coefficient",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

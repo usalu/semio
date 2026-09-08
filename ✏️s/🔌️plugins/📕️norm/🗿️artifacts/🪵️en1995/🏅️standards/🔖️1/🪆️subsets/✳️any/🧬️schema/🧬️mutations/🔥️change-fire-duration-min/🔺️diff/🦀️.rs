@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeFireDurationMin, base: &En1995Snapshot) -> protocol:
     if base.fire_duration_min == payload.new_fire_duration_min {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "Fire duration min already has this value.");
     }
-    protocol::MutationOutcome::new(En1995Diff { fire_duration_min: Some(payload.new_fire_duration_min.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1995Diff { fire_duration_min: Some(payload.new_fire_duration_min), ..Default::default() })
 }
 //#endregion 🔖️Diff

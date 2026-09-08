@@ -31,7 +31,7 @@ mod subject {
     use super::spec;
     use semio_repo_test_host::{Context, Outcome};
     use semio_s_plugin_stdio_test_oracle::mesh::{oracle_create_obj, project_obj};
-    use semio_s_plugin_stdio::artifacts::obj::standards::v3_0::subsets::any::io::{decode_obj, encode_obj};
+    use crate::standards::v3_0::subsets::any::io::{decode_obj, encode_obj};
 
     pub fn run(ctx: &Context) -> Result<Outcome, String> {
         let reference = oracle_create_obj(&spec(ctx)?)?;

@@ -3,8 +3,8 @@
 //! mutation-capable surface — the same slide-to-page mapping, no edit affordances
 //! (`window_kind()`, the read-only variant, not the editable one).
 
-use crate::artifacts::pptx::schema::snapshot::{PptxParagraph, PptxShape};
-use crate::artifacts::pptx::PptxSnapshot;
+use crate::schema::snapshot::{PptxParagraph, PptxShape};
+use crate::PptxSnapshot;
 use semio_framework_plugin::app::{DocumentPage, DocumentView, DocumentWindowKit, WindowKit};
 use semio_framework_plugin::{BuiltNode, LocalizedLabel, WindowKindDefinition};
 
@@ -47,7 +47,7 @@ pub fn render(document: &PptxSnapshot) -> semio_framework_plugin::UiAssemblyResu
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::pptx::schema::snapshot::PptxSlide;
+    use crate::schema::snapshot::PptxSlide;
 
     #[semio_framework_async_macros::async_test]
     async fn definition_declares_a_document_window() {

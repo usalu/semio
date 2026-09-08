@@ -4,7 +4,7 @@
 //! (framework SDK) is the sole runtime adapter, so this file can never structurally emit an artifact
 //! mutation. Must not import anything from the sibling mutation-capable surface (viewer purity).
 
-use crate::artifacts::pdf::{PdfMutation, PdfSnapshot, PDF_ARTIFACT_SCHEMA_ID, STDIO_PDF_DOCUMENT_SCHEMA};
+use crate::{PdfMutation, PdfSnapshot, PDF_ARTIFACT_SCHEMA_ID, STDIO_PDF_DOCUMENT_SCHEMA};
 use crate::viewer::pdf17vt::modes::view;
 use crate::viewer::pdf17vt::modes::view::windows::main;
 use semio_framework_plugin::{

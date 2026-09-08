@@ -706,8 +706,6 @@ semio_framework_plugin::plugin_exports!(plugin::plugin, LayoutApps);
 pub mod examples {
     #[path = "../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🦀️.rs"]
     pub mod app_layout_demo_session;
-    #[path = "../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️.rs"]
-    pub mod art_layout_demo;
     #[cfg(test)]
     #[path = "../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🦀️.rs"]
     mod art_layout_demo_tests;

@@ -5,7 +5,7 @@
   "displayName": "Create Mechanical Ventilation",
   "emoji": "🌪️",
   "aggregateVariant": "CreateMechanicalVentilation",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "create-mechanical-ventilation",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

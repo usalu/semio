@@ -1,54 +1,224 @@
 {
-  "$id": "https://semio.tech/schema/s.stdio.semio.flow/mutations.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/flow/mutations.json",
   "title": "SemioFlowMutation",
-  "description": "🧬️ Real facet mirror of 🦀️.rs — discriminated union on the `mutation` tag.",
-  "type": "object",
-  "definitions": {
-    "SemioPoint2": { "type": "object", "properties": { "x": { "type": "number" }, "y": { "type": "number" } } },
-    "PortRef": { "type": "object", "properties": { "node": { "type": "string" }, "port": { "type": "string" } } },
-    "FlowParam": { "type": "object", "properties": { "key": { "type": "string" }, "value": { "type": "string" } } },
-    "FlowNode": {
-      "type": "object",
-      "properties": {
-        "id": { "type": "string" },
-        "kind": { "type": "string" },
-        "label": { "type": "string" },
-        "params": { "type": "array", "items": { "$ref": "#/definitions/FlowParam" } },
-        "position": { "$ref": "#/definitions/SemioPoint2" }
-      }
-    },
-    "FlowEdge": {
-      "type": "object",
-      "properties": { "id": { "type": "string" }, "from": { "$ref": "#/definitions/PortRef" }, "to": { "$ref": "#/definitions/PortRef" }, "kind": { "type": "string" } }
-    },
-    "SemioFlowSnapshot": {
-      "type": "object",
-      "properties": {
-        "schema": { "type": "string" },
-        "nodes": { "type": "array", "items": { "$ref": "#/definitions/FlowNode" } },
-        "edges": { "type": "array", "items": { "$ref": "#/definitions/FlowEdge" } }
-      }
-    }
-  },
-  "properties": {
-    "mutation": {
-      "type": "string",
-      "enum": [
-        "setSnapshot", "insertNode", "removeNode", "setNodeKind", "setNodeLabel", "setNodePosition",
-        "setNodeParam", "removeNodeParam", "insertEdge", "removeEdge", "setEdgeEndpoints", "setEdgeKind"
+  "description": "Discriminated union over this module's mutation leaves (internally tagged); every payload is the leaf's own schema, referenced, never restated.",
+  "oneOf": [
+    {
+      "allOf": [
+        {
+          "$ref": "./🌉️insert-edge/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "insertEdge"
+            }
+          }
+        }
       ]
     },
-    "snapshot": { "$ref": "#/definitions/SemioFlowSnapshot" },
-    "node": { "$ref": "#/definitions/FlowNode" },
-    "edge": { "$ref": "#/definitions/FlowEdge" },
-    "id": { "type": "string" },
-    "kind": { "type": "string" },
-    "label": { "type": "string" },
-    "position": { "$ref": "#/definitions/SemioPoint2" },
-    "key": { "type": "string" },
-    "value": { "type": "string" },
-    "from": { "$ref": "#/definitions/PortRef" },
-    "to": { "$ref": "#/definitions/PortRef" }
-  },
-  "required": ["mutation"]
+    {
+      "allOf": [
+        {
+          "$ref": "./➕️insert-node/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "insertNode"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "./✂️remove-edge/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "removeEdge"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "./🗑️remove-node/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "removeNode"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "./🧹️remove-node-param/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "removeNodeParam"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "./🔌️set-edge-endpoints/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setEdgeEndpoints"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "./🎨️set-edge-kind/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setEdgeKind"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "./🏷️set-node-kind/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setNodeKind"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "./🔤️set-node-label/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setNodeLabel"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "./🎛️set-node-param/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setNodeParam"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "./📍️set-node-position/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setNodePosition"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "./📸️set-snapshot/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setSnapshot"
+            }
+          }
+        }
+      ]
+    }
+  ]
 }

@@ -108,10 +108,10 @@ fn round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::{mutable_input, IDENTITY_INPUT, MUTATE_INPUT};
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_plugin_stdio::artifacts::deflate::standards::v_rfc1950::subsets::any::io::{decode_deflate_snapshot, encode_deflate_snapshot};
-    use semio_s_plugin_stdio::artifacts::deflate::standards::v_rfc1950::subsets::any::schema::mutations::{apply_deflate_mutation, set_compression_params, set_payload, set_preset_dictionary, set_snapshot};
-    use semio_s_plugin_stdio::artifacts::deflate::standards::v_rfc1950::subsets::any::schema::snapshot::DeflateLevelHint;
-    use semio_s_plugin_stdio::artifacts::deflate::{DeflateMutation, DeflateSnapshot};
+    use crate::standards::v_rfc1950::subsets::any::io::{decode_deflate_snapshot, encode_deflate_snapshot};
+    use crate::standards::v_rfc1950::subsets::any::schema::mutations::{apply_deflate_mutation, set_compression_params, set_payload, set_preset_dictionary, set_snapshot};
+    use crate::standards::v_rfc1950::subsets::any::schema::snapshot::DeflateLevelHint;
+    use crate::{DeflateMutation, DeflateSnapshot};
     use semio_s_plugin_stdio_test_oracle::artifacts::deflate::standards::v_rfc1950::subsets::any::project_deflate;
 
     /// 🎚️ Independent of `DeflateLevelHint::from_bits`/`to_bits` — mirrors the oracle module's own

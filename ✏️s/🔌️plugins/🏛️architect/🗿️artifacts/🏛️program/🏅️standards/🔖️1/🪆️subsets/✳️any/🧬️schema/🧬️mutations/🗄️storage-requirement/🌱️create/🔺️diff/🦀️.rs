@@ -10,7 +10,7 @@ use crate::artifacts::program::ProgramSnapshot;
 pub fn diff(payload: &CreateStorageRequirement, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
     let id = payload.storage_requirement.header.id.clone();
     if base.storage.iter().any(|row| row.header.id == id) {
-        return protocol::MutationOutcome::fatal("mutation.duplicate-id", "A storage requirement already exists with this id.", [id.0.clone()]);
+        return protocol::MutationOutcome::fatal("mutation.duplicate-id", "A storage requirement already exists with this id.", [id.0]);
     }
     protocol::MutationOutcome::new(ProgramDiff { storage: Some(ProgramStorageDelta { added: vec![payload.storage_requirement.clone()], ..Default::default() }), ..Default::default() })
 }

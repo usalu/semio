@@ -5,7 +5,7 @@
   "displayName": "Replace Compliance Record",
   "emoji": "♻️",
   "aggregateVariant": "ReplaceComplianceRecord",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

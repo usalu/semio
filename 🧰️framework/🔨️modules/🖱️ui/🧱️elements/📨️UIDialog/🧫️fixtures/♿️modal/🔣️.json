@@ -1,0 +1,9 @@
+{
+  "schema": "semio.ui.dialog-accessibility-fixture.v1",
+  "cases": [
+    { "locale": "en", "title": "Create Artifact", "description": "Choose the artifact kind.", "field": "Name", "kind": "Kind", "cancel": "Cancel", "submit": "Create" },
+    { "locale": "de", "title": "Artefakt erstellen", "description": "Artefaktart auswählen.", "field": "Name", "kind": "Art", "cancel": "Abbrechen", "submit": "Erstellen" }
+  ],
+  "expected": { "role": "dialog", "modal": "true", "isolated": "true", "focusReturns": true, "escapeCancels": 1, "outsideCancels": 1, "buttonEnterSubmits": 0, "requiredMissingSubmits": 0, "validSubmits": 1 },
+  "scoped": { "modal": "false", "ownAppIsolated": true, "siblingShellIsolated": false, "bodySiblingIsolated": false, "position": "absolute", "foreignEscapeCancels": 0, "ownEscapeCancels": 1 }
+}

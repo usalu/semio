@@ -1,0 +1,56 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/obj/3.0/geometry/mutation/insert-vertex.json",
+  "title": "InsertVertex",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "index",
+    "vertex"
+  ],
+  "properties": {
+    "index": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "vertex": {
+      "$ref": "#/$defs/ObjVertex"
+    },
+    "mutation": {
+      "const": "insertVertex",
+      "description": "Aggregate discriminator spliced in by ObjMutation; absent when the payload stands alone."
+    }
+  },
+  "$defs": {
+    "ObjVertex": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y",
+        "z"
+      ],
+      "properties": {
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "z": {
+          "type": "number"
+        },
+        "w": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    }
+  }
+}

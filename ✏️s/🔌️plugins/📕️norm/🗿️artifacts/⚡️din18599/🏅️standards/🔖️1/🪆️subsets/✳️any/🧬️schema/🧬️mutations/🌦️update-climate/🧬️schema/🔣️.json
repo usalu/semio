@@ -1,0 +1,39 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/norm/din18599/1/any/mutation/update-climate.json",
+  "title": "UpdateClimate",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newClimate"
+  ],
+  "properties": {
+    "newClimate": {
+      "title": "MonthlyClimate",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "gHWM2",
+        "thetaEC"
+      ],
+      "properties": {
+        "thetaEC": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 12,
+          "maxItems": 12
+        },
+        "gHWM2": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 12,
+          "maxItems": 12
+        }
+      }
+    }
+  }
+}

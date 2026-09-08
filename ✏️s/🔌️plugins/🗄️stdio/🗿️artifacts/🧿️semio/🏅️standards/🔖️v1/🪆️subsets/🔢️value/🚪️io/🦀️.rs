@@ -4,8 +4,8 @@
 //! 📤️export/🧵️serializers.
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use crate::artifacts::semio::standards::v1::subsets::value::schema::snapshot::{SemioValue, SemioValueSnapshot, ValueId};
-    use crate::artifacts::semio::standards::v1::subsets::value::schema::SemioValueAnalyzer;
+    use crate::standards::v1::subsets::value::schema::snapshot::{SemioValue, SemioValueSnapshot, ValueId};
+    use crate::standards::v1::subsets::value::schema::SemioValueAnalyzer;
     use semio_framework_plugin::{
         deserializer_entry_of, register_composer_entries, register_subset_validator, serializer_entry_of, subset_validator_entry_of, AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, ComposerEntry, Composition, Dialect, IoPayload,
         StandardId, SubsetId, SubsetValidator, SubsetValidatorEntry,
@@ -117,9 +117,9 @@ pub mod derived_composition {
     /// this artifact's standard-level `engine::register()`.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn register() {
-        ::schema::register_artifact_schema_descriptor(crate::artifacts::semio::standards::v1::subsets::value::schema::semio_value_artifact_schema_descriptor());
-        store::register_document_codec(store::ArtifactCodec::of::<SemioValueSnapshot, crate::artifacts::semio::standards::v1::subsets::value::schema::mutations::SemioValueMutation>(
-            crate::artifacts::semio::standards::v1::subsets::value::schema::snapshot::STDIO_SEMIOVALUE_DOCUMENT_SCHEMA,
+        ::framework_schema::register_artifact_schema_descriptor(crate::standards::v1::subsets::value::schema::semio_value_artifact_schema_descriptor());
+        store::register_document_codec(store::ArtifactCodec::of::<SemioValueSnapshot, crate::standards::v1::subsets::value::schema::mutations::SemioValueMutation>(
+            crate::standards::v1::subsets::value::schema::snapshot::STDIO_SEMIOVALUE_DOCUMENT_SCHEMA,
         )).expect("static Stdio registration must be available and conflict-free");
         register_subset_validator(validator_entry()).expect("static Stdio registration must be available and conflict-free");
         register_composer_entries(io_bridge_entries()).expect("static Stdio registration must be available and conflict-free");
@@ -131,7 +131,7 @@ pub mod derived_composition {
     /// ticket 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn register_artifact_inferences() {
-        ::schema::register_artifact_inference_descriptor(crate::artifacts::semio::standards::v1::subsets::value::schema::inferences::semio_value_artifact_inference_descriptor());
+        ::framework_schema::register_artifact_inference_descriptor(crate::standards::v1::subsets::value::schema::inferences::semio_value_artifact_inference_descriptor());
     }
     //#endregion 🔖️Register
 
@@ -150,7 +150,7 @@ pub mod derived_composition {
         /// `🎹️composer/🦀️.rs` use.
         mod conformance_laws {
 
-            use crate::artifacts::semio::standards::v1::subsets::value::schema::{diff, mutations, snapshot};
+            use crate::standards::v1::subsets::value::schema::{diff, mutations, snapshot};
             use protocol::{DiffCodec, OpBinary, OpText};
 
             /// ✅️ "committed files parse": all 6 handcrafted `.grammar.semio`/`.protocol.semio` files
@@ -266,12 +266,12 @@ pub mod derived_composition {
         ENTRIES
             .get_or_init(|| {
                 vec![
-                    deserializer_entry_of::<crate::artifacts::semio::standards::v1::subsets::value::io::import::deserializers::artifacts::json::v_rfc8259::any::SemioValueFromJson>(),
-                    serializer_entry_of::<crate::artifacts::semio::standards::v1::subsets::value::io::export::serializers::artifacts::json::v_rfc8259::any::SemioValueToJson>(),
-                    deserializer_entry_of::<crate::artifacts::semio::standards::v1::subsets::value::io::import::deserializers::artifacts::xml::v1_0::any::SemioValueFromXml>(),
-                    serializer_entry_of::<crate::artifacts::semio::standards::v1::subsets::value::io::export::serializers::artifacts::xml::v1_0::any::SemioValueToXml>(),
-                    deserializer_entry_of::<crate::artifacts::semio::standards::v1::subsets::value::io::import::deserializers::artifacts::csv::v_rfc4180::any::SemioValueFromCsv>(),
-                    serializer_entry_of::<crate::artifacts::semio::standards::v1::subsets::value::io::export::serializers::artifacts::csv::v_rfc4180::any::SemioValueToCsv>(),
+                    deserializer_entry_of::<crate::standards::v1::subsets::value::io::import::deserializers::artifacts::json::v_rfc8259::any::SemioValueFromJson>(),
+                    serializer_entry_of::<crate::standards::v1::subsets::value::io::export::serializers::artifacts::json::v_rfc8259::any::SemioValueToJson>(),
+                    deserializer_entry_of::<crate::standards::v1::subsets::value::io::import::deserializers::artifacts::xml::v1_0::any::SemioValueFromXml>(),
+                    serializer_entry_of::<crate::standards::v1::subsets::value::io::export::serializers::artifacts::xml::v1_0::any::SemioValueToXml>(),
+                    deserializer_entry_of::<crate::standards::v1::subsets::value::io::import::deserializers::artifacts::csv::v_rfc4180::any::SemioValueFromCsv>(),
+                    serializer_entry_of::<crate::standards::v1::subsets::value::io::export::serializers::artifacts::csv::v_rfc4180::any::SemioValueToCsv>(),
                 ]
             })
             .as_slice()

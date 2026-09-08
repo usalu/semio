@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeHEdKn, base: &En1997Snapshot) -> protocol::MutationO
     if base.h_ed_kn == payload.new_h_ed_kn {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Design horizontal load H_Ed [kN] is already {}.", payload.new_h_ed_kn));
     }
-    protocol::MutationOutcome::new(En1997Diff { h_ed_kn: Some(payload.new_h_ed_kn.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1997Diff { h_ed_kn: Some(payload.new_h_ed_kn), ..Default::default() })
 }
 //#endregion 🔖️Diff

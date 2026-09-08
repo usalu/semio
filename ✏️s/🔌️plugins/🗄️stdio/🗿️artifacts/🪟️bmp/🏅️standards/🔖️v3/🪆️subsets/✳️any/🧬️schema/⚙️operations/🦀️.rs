@@ -1,6 +1,6 @@
 //! ⚙️ Shared application and inversion of BmpMutation.
-use crate::artifacts::bmp::schema::{diff::BmpDiff, mutations::BmpMutation};
-use crate::artifacts::bmp::BmpSnapshot;
+use crate::schema::{diff::BmpDiff, mutations::BmpMutation};
+use crate::BmpSnapshot;
 
 //#region Operations
 pub fn apply_bmp_mutation(snapshot: &mut BmpSnapshot, mutation: &BmpMutation) -> protocol::MutationOutcome<BmpDiff> {

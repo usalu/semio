@@ -1,0 +1,31 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/energy/model/1/any/mutation/update-run-period.json",
+  "title": "UpdateRunPeriod",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "startMonth",
+    "startDay",
+    "endMonth",
+    "endDay",
+    "year"
+  ],
+  "properties": {
+    "startMonth": {
+      "type": "integer"
+    },
+    "startDay": {
+      "type": "integer"
+    },
+    "endMonth": {
+      "type": "integer"
+    },
+    "endDay": {
+      "type": "integer"
+    },
+    "year": {
+      "type": "integer"
+    }
+  }
+}

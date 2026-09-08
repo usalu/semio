@@ -5,7 +5,7 @@
   "displayName": "Change Annual Schedule Default Daily Schedule",
   "emoji": "🎌️",
   "aggregateVariant": "ChangeAnnualScheduleDefaultDailySchedule",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-annual-schedule-default-daily-schedule",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

@@ -1,234 +1,430 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "kernel-return-builder-binding.v1",
-  "type": "object",
-  "additionalProperties": false,
-  "required": [
-    "version",
-    "methods",
-    "uiMethods",
-    "phases",
-    "fieldFields",
-    "witnessFields",
-    "binding",
-    "metadata",
-    "work",
-    "rules"
-  ],
-  "properties": {
-    "version": {
-      "const": 1
-    },
-    "methods": {
+  "$id": "https://semio.tech/schema/framework/kernel/return/content/input/builder/schema.json",
+  "title": "Kernel Return Content Input Builder Schema Module",
+  "$defs": {
+    "Builder": {
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "detach",
-        "observe",
-        "settle",
-        "settled"
+        "version",
+        "methods",
+        "uiMethods",
+        "phases",
+        "fieldFields",
+        "witnessFields",
+        "binding",
+        "metadata",
+        "work",
+        "rules"
       ],
       "properties": {
-        "detach": {
-          "const": "field.detachBuilder(builder,proof,grant)"
-        },
-        "observe": {
-          "const": "OwnedKernelReturnInputField.matchesBuilderDetached(field,proof)"
-        },
-        "settle": {
-          "const": "field.settleBuilder(proof,grant)"
-        },
-        "settled": {
-          "const": "OwnedKernelReturnInputField.matchesBuilderSettled(field,proof)"
-        }
-      }
-    },
-    "uiMethods": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "const": [
-        "OwnedUiResidentBuilderRetirement.matchesBody(proof,builder,field)",
-        "OwnedUiResidentBuilderRetirement.matchesDetached(proof,field)",
-        "OwnedUiResidentBuilderRetirement.matchesSourceBinding(proof,field)"
-      ]
-    },
-    "phases": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "const": [
-        "unbound",
-        "bound",
-        "detached",
-        "settled"
-      ]
-    },
-    "fieldFields": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "const": [
-        "state",
-        "value",
-        "builder",
-        "fragment",
-        "release",
-        "consumed",
-        "advanced",
-        "start",
-        "complete",
-        "closing",
-        "payload",
-        "payloadDetachment"
-      ]
-    },
-    "witnessFields": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "const": [
-        "builder",
-        "phase"
-      ]
-    },
-    "binding": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "const": [
-        "null",
-        "originalBuilder",
-        "originalWitness",
-        "consumedSentinel"
-      ]
-    },
-    "metadata": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "recordBytes",
-        "fieldBytes",
-        "fieldBytesTotal",
-        "witnessBytes",
-        "additionalFieldWords",
-        "additionalPerFieldAllocations",
-        "sourceAdmitted",
-        "witnessAlreadyAdmittedByUi"
-      ],
-      "properties": {
-        "recordBytes": {
-          "const": 16
-        },
-        "fieldBytes": {
-          "const": 8
-        },
-        "fieldBytesTotal": {
-          "const": 112
-        },
-        "witnessBytes": {
-          "const": 32
-        },
-        "additionalFieldWords": {
-          "const": 0
-        },
-        "additionalPerFieldAllocations": {
-          "const": 0
-        },
-        "sourceAdmitted": {
-          "const": false
-        },
-        "witnessAlreadyAdmittedByUi": {
-          "const": true
-        }
-      }
-    },
-    "work": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "maxItems",
-        "phaseBytes",
-        "refusedBytes"
-      ],
-      "properties": {
-        "maxItems": {
+        "version": {
           "const": 1
         },
-        "phaseBytes": {
-          "const": 64
+        "methods": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "detach",
+            "observe",
+            "settle",
+            "settled"
+          ],
+          "properties": {
+            "detach": {
+              "const": "field.detachBuilder(builder,proof,grant)"
+            },
+            "observe": {
+              "const": "OwnedKernelReturnInputField.matchesBuilderDetached(field,proof)"
+            },
+            "settle": {
+              "const": "field.settleBuilder(proof,grant)"
+            },
+            "settled": {
+              "const": "OwnedKernelReturnInputField.matchesBuilderSettled(field,proof)"
+            }
+          }
         },
-        "refusedBytes": {
-          "const": 0
+        "uiMethods": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "const": [
+            "OwnedUiResidentBuilderRetirement.matchesBody(proof,builder,field)",
+            "OwnedUiResidentBuilderRetirement.matchesDetached(proof,field)",
+            "OwnedUiResidentBuilderRetirement.matchesSourceBinding(proof,field)"
+          ]
+        },
+        "phases": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "const": [
+            "unbound",
+            "bound",
+            "detached",
+            "settled"
+          ]
+        },
+        "fieldFields": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "const": [
+            "state",
+            "value",
+            "builder",
+            "fragment",
+            "release",
+            "consumed",
+            "advanced",
+            "start",
+            "complete",
+            "closing",
+            "payload",
+            "payloadDetachment"
+          ]
+        },
+        "witnessFields": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "const": [
+            "builder",
+            "phase"
+          ]
+        },
+        "binding": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "const": [
+            "null",
+            "originalBuilder",
+            "originalWitness",
+            "consumedSentinel"
+          ]
+        },
+        "metadata": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "recordBytes",
+            "fieldBytes",
+            "fieldBytesTotal",
+            "witnessBytes",
+            "additionalFieldWords",
+            "additionalPerFieldAllocations",
+            "sourceAdmitted",
+            "witnessAlreadyAdmittedByUi"
+          ],
+          "properties": {
+            "recordBytes": {
+              "const": 16
+            },
+            "fieldBytes": {
+              "const": 8
+            },
+            "fieldBytesTotal": {
+              "const": 112
+            },
+            "witnessBytes": {
+              "const": 32
+            },
+            "additionalFieldWords": {
+              "const": 0
+            },
+            "additionalPerFieldAllocations": {
+              "const": 0
+            },
+            "sourceAdmitted": {
+              "const": false
+            },
+            "witnessAlreadyAdmittedByUi": {
+              "const": true
+            }
+          }
+        },
+        "work": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "maxItems",
+            "phaseBytes",
+            "refusedBytes"
+          ],
+          "properties": {
+            "maxItems": {
+              "const": 1
+            },
+            "phaseBytes": {
+              "const": 64
+            },
+            "refusedBytes": {
+              "const": 0
+            }
+          }
+        },
+        "rules": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "sameOriginalParentSlot",
+            "bodyRetiredBeforeDetach",
+            "noOutstandingSourceRelease",
+            "untransferredRawFragmentRetained",
+            "bodyProofNotWholeBuilderTerminal",
+            "abandonmentConsumesBinding",
+            "originalUiObservationForSettledCheck",
+            "operationLivenessRequiredForClose",
+            "mutatingReplay",
+            "rebindAfterSettlement",
+            "newProofAllocated",
+            "rawPageAcknowledged",
+            "wholeSourceRetired",
+            "builderRefundBeforeUiObservation"
+          ],
+          "properties": {
+            "sameOriginalParentSlot": {
+              "const": true
+            },
+            "bodyRetiredBeforeDetach": {
+              "const": true
+            },
+            "noOutstandingSourceRelease": {
+              "const": true
+            },
+            "untransferredRawFragmentRetained": {
+              "const": true
+            },
+            "bodyProofNotWholeBuilderTerminal": {
+              "const": true
+            },
+            "abandonmentConsumesBinding": {
+              "const": true
+            },
+            "originalUiObservationForSettledCheck": {
+              "const": true
+            },
+            "operationLivenessRequiredForClose": {
+              "const": false
+            },
+            "mutatingReplay": {
+              "const": false
+            },
+            "rebindAfterSettlement": {
+              "const": false
+            },
+            "newProofAllocated": {
+              "const": false
+            },
+            "rawPageAcknowledged": {
+              "const": false
+            },
+            "wholeSourceRetired": {
+              "const": false
+            },
+            "builderRefundBeforeUiObservation": {
+              "const": false
+            }
+          }
         }
       }
     },
-    "rules": {
+    "BuilderFixture": {
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "sameOriginalParentSlot",
-        "bodyRetiredBeforeDetach",
-        "noOutstandingSourceRelease",
-        "untransferredRawFragmentRetained",
-        "bodyProofNotWholeBuilderTerminal",
-        "abandonmentConsumesBinding",
-        "originalUiObservationForSettledCheck",
-        "operationLivenessRequiredForClose",
-        "mutatingReplay",
-        "rebindAfterSettlement",
-        "newProofAllocated",
-        "rawPageAcknowledged",
-        "wholeSourceRetired",
-        "builderRefundBeforeUiObservation"
+        "version",
+        "traces",
+        "readiness"
       ],
       "properties": {
-        "sameOriginalParentSlot": {
-          "const": true
+        "version": {
+          "const": 1
         },
-        "bodyRetiredBeforeDetach": {
-          "const": true
+        "traces": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 4,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "mode",
+              "initial",
+              "trace"
+            ],
+            "properties": {
+              "mode": {
+                "enum": [
+                  "bound",
+                  "abandoned",
+                  "source-release-pending",
+                  "revoked"
+                ]
+              },
+              "initial": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "phase",
+                  "binding",
+                  "body",
+                  "uiSource",
+                  "observation",
+                  "evidence"
+                ],
+                "properties": {
+                  "phase": {
+                    "enum": [
+                      "unbound",
+                      "bound",
+                      "detached",
+                      "settled"
+                    ]
+                  },
+                  "binding": {
+                    "enum": [
+                      "null",
+                      "originalBuilder",
+                      "originalWitness",
+                      "consumedSentinel"
+                    ]
+                  },
+                  "body": {
+                    "type": "boolean"
+                  },
+                  "uiSource": {
+                    "type": "boolean"
+                  },
+                  "observation": {
+                    "type": "boolean"
+                  },
+                  "evidence": {
+                    "type": "boolean"
+                  }
+                }
+              },
+              "trace": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "action",
+                    "expected"
+                  ],
+                  "properties": {
+                    "action": {
+                      "enum": [
+                        "detach",
+                        "body-retire",
+                        "detach-short",
+                        "observe-detached-after-wrapper-fault",
+                        "settle",
+                        "ui-detach",
+                        "settle-short",
+                        "observe-settled-after-wrapper-fault",
+                        "rebind",
+                        "ui-forget",
+                        "detach-foreign",
+                        "evidence-settled",
+                        "settle-foreign",
+                        "operation-revoked"
+                      ]
+                    },
+                    "expected": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "kind",
+                        "bytes",
+                        "phase",
+                        "binding",
+                        "body",
+                        "uiSource",
+                        "observation"
+                      ],
+                      "properties": {
+                        "kind": {
+                          "enum": [
+                            "pending",
+                            "ready",
+                            "complete",
+                            "blocked",
+                            "rejected"
+                          ]
+                        },
+                        "bytes": {
+                          "enum": [
+                            0,
+                            64
+                          ]
+                        },
+                        "phase": {
+                          "enum": [
+                            "unbound",
+                            "bound",
+                            "detached",
+                            "settled"
+                          ]
+                        },
+                        "binding": {
+                          "enum": [
+                            "null",
+                            "originalBuilder",
+                            "originalWitness",
+                            "consumedSentinel"
+                          ]
+                        },
+                        "body": {
+                          "type": "boolean"
+                        },
+                        "uiSource": {
+                          "type": "boolean"
+                        },
+                        "observation": {
+                          "type": "boolean"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
         },
-        "noOutstandingSourceRelease": {
-          "const": true
-        },
-        "untransferredRawFragmentRetained": {
-          "const": true
-        },
-        "bodyProofNotWholeBuilderTerminal": {
-          "const": true
-        },
-        "abandonmentConsumesBinding": {
-          "const": true
-        },
-        "originalUiObservationForSettledCheck": {
-          "const": true
-        },
-        "operationLivenessRequiredForClose": {
-          "const": false
-        },
-        "mutatingReplay": {
-          "const": false
-        },
-        "rebindAfterSettlement": {
-          "const": false
-        },
-        "newProofAllocated": {
-          "const": false
-        },
-        "rawPageAcknowledged": {
-          "const": false
-        },
-        "wholeSourceRetired": {
-          "const": false
-        },
-        "builderRefundBeforeUiObservation": {
-          "const": false
+        "readiness": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "runtimeBodyWitness",
+            "rawPageAcknowledged",
+            "wholeSourceRetired",
+            "sourceMetadataAdmitted"
+          ],
+          "properties": {
+            "runtimeBodyWitness": {
+              "const": false
+            },
+            "rawPageAcknowledged": {
+              "const": false
+            },
+            "wholeSourceRetired": {
+              "const": false
+            },
+            "sourceMetadataAdmitted": {
+              "const": false
+            }
+          }
         }
       }
     }

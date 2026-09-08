@@ -4,8 +4,8 @@ use semio_framework::io::io_mechanism::Deserializer;
 use semio_framework::io_schema::{Confidence, Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{resolve_ready, ArtifactDeserializer};
 use semio_framework_plugin::{StandardId, SubsetId};
-use semio_s_plugin_stdio::artifacts::las::standards::v1_0::engine::decode_las;
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::mesh::io::import::deserializers::artifacts::las::v1_0::any::SemioMeshFromLas;
+use semio_s_artifact_stdio_las::standards::v1_0::engine::decode_las;
+use semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::io::import::deserializers::artifacts::las::v1_0::any::SemioMeshFromLas;
 
 /// 🎯️ The foreign dialect this leaf reads.
 pub const LAS_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.las", standard: StandardId("1.0"), subset: SubsetId::ANY };

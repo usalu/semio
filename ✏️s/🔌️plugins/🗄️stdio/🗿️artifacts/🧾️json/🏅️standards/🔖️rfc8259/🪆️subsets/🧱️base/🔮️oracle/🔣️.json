@@ -57,7 +57,7 @@
         {
           "id": "insert-array-element",
           "capability": "json-rfc8259-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -76,7 +76,7 @@
         {
           "id": "remove-array-element",
           "capability": "json-rfc8259-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -95,7 +95,7 @@
         {
           "id": "remove-member",
           "capability": "json-rfc8259-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -114,7 +114,7 @@
         {
           "id": "set-member",
           "capability": "json-rfc8259-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -133,7 +133,7 @@
         {
           "id": "set-scalar",
           "capability": "json-rfc8259-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],

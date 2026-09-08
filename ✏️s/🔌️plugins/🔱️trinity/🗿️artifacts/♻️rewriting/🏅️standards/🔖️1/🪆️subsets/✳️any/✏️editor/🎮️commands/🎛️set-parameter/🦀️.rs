@@ -6,14 +6,14 @@ use crate::artifacts::rewriting::op::RewriteRuleMutation;
 use crate::artifacts::rewriting::schema::{ParameterKind, Rhs};
 use crate::artifacts::rewriting::RewritingSnapshot;
 use crate::editor::rewriting::config::RewritingConfigMutation;
-use semio_framework_plugin::{Emit, Fault};
+use semio_framework_plugin::Emit;
 
-pub(crate) fn set_parameter(state: &RewritingSnapshot, name: &str, value: &str) -> Result<Emit<RewriteRuleMutation, RewritingConfigMutation>, Fault> {
+pub(crate) fn set_parameter(state: &RewritingSnapshot, name: &str, value: &str) -> Emit<RewriteRuleMutation, RewritingConfigMutation> {
     if name.is_empty() {
-        return Ok(Emit::default());
+        return Emit::default();
     }
     let Ok(rhs) = pack::from_json_str::<Rhs>(&state.rhs_json) else {
-        return Ok(Emit::default());
+        return Emit::default();
     };
     let kind = rhs.parameters.iter().find(|param| param.name == name).map(|param| param.kind.clone());
     let parsed = match kind {
@@ -25,8 +25,8 @@ pub(crate) fn set_parameter(state: &RewritingSnapshot, name: &str, value: &str) 
         Some(parsed) => {
             let mut next = state.clone();
             next.parameter_bindings.insert(name.to_string(), parsed);
-            Ok(Emit::mutations(rewriting_snapshot_mutations(state, &next)))
+            Emit::mutations(rewriting_snapshot_mutations(state, &next))
         }
-        None => Ok(Emit::default()),
+        None => Emit::default(),
     }
 }

@@ -6,7 +6,7 @@
 
 // #region 🔌️Adapters
 import { NextRequest, NextResponse } from "next/server";
-import { ownedSchema as z } from "../../../../✅️validation.ts";
+import { parseDiffIngestRequest } from "../../../../../../🧬️schema/🟦️.ts";
 // #endregion 🔌️Adapters
 
 import { replaceScopes, upsertClaim, listConflicts, replaceWarnings, newId, type Warning, type Scope } from "@/lib";
@@ -17,13 +17,6 @@ import { readFileSync } from "fs";
 import { join } from "path";
 
 const REPO_ROOT = process.env.COMPOSE_SERVER_REPO_ROOT || process.cwd();
-
-const DiffIngestSchema = z.object({
-  ticket_id: z.string().min(1),
-  repo_id: z.string().default(""),
-  patch: z.string().min(1),
-  snapshots: z.array(z.object({ path: z.string(), content: z.string() })).default([]),
-});
 
 export async function POST(request: NextRequest) {
   const auth = await requireAuth(request);
@@ -36,7 +29,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "invalid JSON" }, { status: 400 });
   }
 
-  const parsed = DiffIngestSchema.safeParse(body);
+  const parsed = parseDiffIngestRequest(body);
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.message }, { status: 400 });
   }

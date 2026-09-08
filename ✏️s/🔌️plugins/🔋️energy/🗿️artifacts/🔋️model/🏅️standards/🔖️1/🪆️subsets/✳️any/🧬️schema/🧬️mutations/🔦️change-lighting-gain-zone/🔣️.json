@@ -5,7 +5,7 @@
   "displayName": "Change Lighting Gain Zone",
   "emoji": "🔦️",
   "aggregateVariant": "ChangeLightingGainZone",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-lighting-gain-zone",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

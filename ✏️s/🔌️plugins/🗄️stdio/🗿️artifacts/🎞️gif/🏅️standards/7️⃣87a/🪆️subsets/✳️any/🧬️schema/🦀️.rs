@@ -1,9 +1,9 @@
 //! 🧬️ GifArtifact schema — full artifact state.
 
-// 🔀️ S-6: `crate::artifacts::gif::schema` now shims to 89a (canonical) -- 87a's own schema uses
+// 🔀️ S-6: `crate::schema` now shims to 89a (canonical) -- 87a's own schema uses
 // its own standard-local snapshot type directly rather than the shared root re-export.
-use crate::artifacts::gif::standards::v87a::subsets::any::schema::snapshot::{GifColorTable, GifImage, GifSnapshot};
-use schema::ArtifactSchema;
+use crate::standards::v87a::subsets::any::schema::snapshot::{GifColorTable, GifImage, GifSnapshot};
+use framework_schema::ArtifactSchema;
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
@@ -57,31 +57,31 @@ impl GifArtifact {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn gif_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
-    schema::ArtifactSchemaDescriptor {
+pub fn gif_artifact_schema_descriptor() -> framework_schema::ArtifactSchemaDescriptor {
+    framework_schema::ArtifactSchemaDescriptor {
         id: "s.stdio.gif",
-        artifact: schema::FacetLeaves {
+        artifact: framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),
             json_schema: include_str!("🔣️.json"),
             proto: include_str!("🛰️.proto"),
         },
-        snapshot: schema::FacetLeaves {
+        snapshot: framework_schema::FacetLeaves {
             rust: include_str!("📸️snapshot/🦀️.rs"),
             typescript: include_str!("📸️snapshot/🟦️.ts"),
             graphql: include_str!("📸️snapshot/🔗️.graphql"),
             json_schema: include_str!("📸️snapshot/🔣️.json"),
             proto: include_str!("📸️snapshot/🛰️.proto"),
         },
-        diff: schema::FacetLeaves {
+        diff: framework_schema::FacetLeaves {
             rust: include_str!("🔺️diff/🦀️.rs"),
             typescript: include_str!("🔺️diff/🟦️.ts"),
             graphql: include_str!("🔺️diff/🔗️.graphql"),
             json_schema: include_str!("🔺️diff/🔣️.json"),
             proto: include_str!("🔺️diff/🛰️.proto"),
         },
-        mutations: schema::FacetLeaves {
+        mutations: framework_schema::FacetLeaves {
             rust: include_str!("🧬️mutations/🦀️.rs"),
             typescript: include_str!("🧬️mutations/🟦️.ts"),
             graphql: include_str!("🧬️mutations/🔗️.graphql"),
@@ -92,7 +92,7 @@ pub fn gif_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
 }
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use crate::artifacts::gif::standards::v87a::subsets::any::schema::{diff::GifDiff, mutations::GifMutation, snapshot::GifSnapshot};
+    use crate::standards::v87a::subsets::any::schema::{diff::GifDiff, mutations::GifMutation, snapshot::GifSnapshot};
     use semio_framework_plugin::ArtifactBuilder;
 
     //#region 🔖️Builder
@@ -120,7 +120,7 @@ pub mod derived_construction {
             Ok(Self::from_snapshot(<GifSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
         fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
-            let diff = crate::artifacts::gif::standards::v87a::subsets::any::schema::mutations::apply_gif_mutation(&mut self.snapshot, &mutation);
+            let diff = crate::standards::v87a::subsets::any::schema::mutations::apply_gif_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
         fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
@@ -142,7 +142,7 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use crate::artifacts::gif::standards::v87a::subsets::any::schema::snapshot::GifSnapshot;
+    use crate::standards::v87a::subsets::any::schema::snapshot::GifSnapshot;
     use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     //#region 🔖️Parts
@@ -162,7 +162,7 @@ pub mod derived_analysis {
         const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.gif", standard: StandardId("87a"), subset: SubsetId("*") };
 
         fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
-            crate::artifacts::gif::standards::v87a::engine::sniff_magic(source, b"GIF87a")
+            crate::standards::v87a::engine::sniff_magic(source, b"GIF87a")
         }
 
         fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
@@ -214,7 +214,7 @@ semio_framework_plugin::derive_artifact_facets!(
 // document type, destination rule 5); `GifEngine` (zero construction sites) deleted outright;
 // the real byte-level LZW/sub-block/color-table/quantize/interlace codec (`pub`, reused verbatim
 // by 89a's own engine) + `encode_gif`/`decode_gif` + `sniff_magic` + the protected `register()`
-// cluster (`crate::artifacts::gif::engine::register()` is one of stdio's 10 deliberate imperative
+// cluster (`crate::engine::register()` is one of stdio's 10 deliberate imperative
 // plugin-root calls — untouched, reached via this standard's own inline `engine` barrel) +
 // `io_registry` all moved to `../🚪️io`; tests moved beside what they now test.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -229,10 +229,10 @@ pub fn empty_gif_snapshot() -> GifSnapshot {
 /// `demo_png_snapshot()` precedent.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn demo_gif_snapshot() -> GifSnapshot {
-    use crate::artifacts::gif::standards::v87a::subsets::any::schema::snapshot::GifRgb;
+    use crate::standards::v87a::subsets::any::schema::snapshot::GifRgb;
     let gct = GifColorTable { sorted: false, colors: vec![GifRgb { r: 0, g: 0, b: 0 }, GifRgb { r: 255, g: 255, b: 255 }] };
     let image_a = GifImage { left: 0, top: 0, width: 2, height: 2, interlace: false, lct: None, indices: vec![0, 1, 1, 0] };
     let image_b = GifImage { left: 0, top: 0, width: 2, height: 2, interlace: false, lct: Some(GifColorTable { sorted: true, colors: vec![GifRgb { r: 10, g: 20, b: 30 }, GifRgb { r: 200, g: 100, b: 50 }] }), indices: vec![1, 0, 0, 1] };
-    GifSnapshot { schema: crate::artifacts::gif::STDIO_GIF_DOCUMENT_SCHEMA.into(), width: 2, height: 2, gct: Some(gct), background_color_index: 0, pixel_aspect_ratio: 0, images: vec![image_a, image_b] }
+    GifSnapshot { schema: crate::STDIO_GIF_DOCUMENT_SCHEMA.into(), width: 2, height: 2, gct: Some(gct), background_color_index: 0, pixel_aspect_ratio: 0, images: vec![image_a, image_b] }
 }
 //#endregion 🔖️DocumentHelpers

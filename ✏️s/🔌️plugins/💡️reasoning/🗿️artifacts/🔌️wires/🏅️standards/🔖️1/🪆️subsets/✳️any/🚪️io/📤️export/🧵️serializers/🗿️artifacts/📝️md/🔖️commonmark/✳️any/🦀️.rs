@@ -7,7 +7,7 @@ use crate::artifacts::wires::WiresSnapshot;
 use semio_framework::io::io_mechanism::Serializer;
 use semio_framework::io_schema::{Dialect, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};
-use semio_s_plugin_stdio::artifacts::md::MdSnapshot;
+use semio_s_artifact_stdio_md::MdSnapshot;
 
 pub const MD_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.md", standard: StandardId("commonmark"), subset: SubsetId::ANY };
 

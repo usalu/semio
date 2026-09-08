@@ -5,7 +5,7 @@
   "displayName": "Bind Node Mesh",
   "emoji": "🔗️",
   "aggregateVariant": "BindNodeMesh",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

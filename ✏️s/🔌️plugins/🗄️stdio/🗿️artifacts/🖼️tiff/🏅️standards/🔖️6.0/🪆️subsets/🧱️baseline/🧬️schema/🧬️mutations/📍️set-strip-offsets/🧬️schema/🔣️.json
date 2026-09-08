@@ -1,0 +1,20 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/tiff/6.0/baseline/mutation/set-strip-offsets.json",
+  "title": "SetStripOffsets",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "offsets"
+  ],
+  "properties": {
+    "offsets": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 4294967295
+      }
+    }
+  }
+}

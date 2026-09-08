@@ -1,0 +1,44 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/morph-attribute/reorder.json",
+  "title": "GltfReorderMorphTargetAttributesMutation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mesh",
+    "primitive",
+    "target",
+    "order"
+  ],
+  "properties": {
+    "mesh": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "primitive": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "target": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "order": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "x-semio": {
+    "id": "s.stdio.gltf.mutation.reorder-morph-target-attributes.v1",
+    "version": 1,
+    "phase": "mutation",
+    "kind": "reorder",
+    "touchedPaths": [
+      "document/meshes/*/primitives/*/targets/*/attributes"
+    ],
+    "referencePolicy": "accepts only the complete target semantic permutation"
+  },
+  "x-semio-mutation": "reorder-morph-target-attributes"
+}

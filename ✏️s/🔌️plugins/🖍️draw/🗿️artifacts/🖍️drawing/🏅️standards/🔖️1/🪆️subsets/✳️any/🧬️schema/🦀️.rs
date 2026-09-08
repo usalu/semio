@@ -1181,7 +1181,7 @@ fn decode_drawing_image_asset_luma(asset: &DrawingImageAsset) -> Option<(u32, u3
     let target_height = asset.height.unwrap_or(decoded.height);
     let rgba = if target_width == decoded.width && target_height == decoded.height { decoded } else { semio_framework_pixels::resize_bilinear(&decoded, target_width, target_height) };
     let mut luma = vec![0u8; (target_width as usize) * (target_height as usize)];
-    for (index, pixel) in rgba.pixels.chunks_exact(4).enumerate() {
+    for (index, pixel) in rgba.pixels.as_chunks::<4>().0.iter().enumerate() {
         let [r, g, b, a] = [pixel[0], pixel[1], pixel[2], pixel[3]];
         luma[index] = ((r as f64 * 0.299 + g as f64 * 0.587 + b as f64 * 0.114) * (a as f64 / 255.0)).round() as u8;
     }

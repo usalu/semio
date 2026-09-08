@@ -8,7 +8,7 @@
 
 use std::collections::BTreeSet;
 
-use crate::artifacts::bcf::standards::v2_1::subsets::any::schema::snapshot::BcfSnapshot;
+use crate::standards::v2_1::subsets::any::schema::snapshot::BcfSnapshot;
 
 //#region 🔖️TopicStats
 /// 🗒️ Bcf's topic/comment/viewpoint/author counts.
@@ -46,8 +46,8 @@ pub fn compute_bcf_topic_stats(snapshot: &BcfSnapshot) -> BcfTopicStats {
 //#region 🧪️Tests
 mod tests {
     use super::*;
-    use crate::artifacts::bcf::standards::v2_1::subsets::any::schema::snapshot::{BcfComment, BcfTopic, BcfViewpoint};
-    use crate::artifacts::bcf::STDIO_BCF_DOCUMENT_SCHEMA;
+    use crate::standards::v2_1::subsets::any::schema::snapshot::{BcfComment, BcfTopic, BcfViewpoint};
+    use crate::STDIO_BCF_DOCUMENT_SCHEMA;
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn comment(guid: &str, author: &str) -> BcfComment {

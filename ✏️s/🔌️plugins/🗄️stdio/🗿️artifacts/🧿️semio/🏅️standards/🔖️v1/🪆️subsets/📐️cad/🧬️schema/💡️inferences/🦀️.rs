@@ -5,8 +5,8 @@
 //! inference gets its own `<emoji><slug>/` child (currently: `📦bounds/`, honestly derivable from
 //! `entities` and `blocks[].entities` alone).
 
-use crate::artifacts::semio::standards::v1::subsets::cad::schema::snapshot::SemioCadSnapshot;
-use schema::ArtifactSchema;
+use crate::standards::v1::subsets::cad::schema::snapshot::SemioCadSnapshot;
+use framework_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 
 use super::bounds::{compute_semio_cad_bounds, SemioCadBounds};
@@ -55,7 +55,7 @@ impl protocol::InferenceSpec<SemioCadSnapshot> for SemioCadInference {
 /// entity count with no honest per-entity incremental decomposition (a merkle dep-chain over this
 /// flat entity list costs more than the fold it would cache) — the default `infer_cached`
 /// passthrough is exact.
-impl ArtifactInferrer for crate::artifacts::semio::standards::v1::subsets::cad::schema::SemioCadBuilder {
+impl ArtifactInferrer for crate::standards::v1::subsets::cad::schema::SemioCadBuilder {
     type Snapshot = SemioCadSnapshot;
     type Inference = SemioCadInference;
 }
@@ -65,10 +65,10 @@ impl ArtifactInferrer for crate::artifacts::semio::standards::v1::subsets::cad::
 /// 💡️ Registers `s.stdio.semio.cad.inference`'s facet leaves into the OS-wide inference catalog —
 /// call once at plugin init, alongside `semio_cad_artifact_schema_descriptor`'s registration.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn semio_cad_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
-    schema::ArtifactInferenceDescriptor {
+pub fn semio_cad_artifact_inference_descriptor() -> framework_schema::ArtifactInferenceDescriptor {
+    framework_schema::ArtifactInferenceDescriptor {
         id: "s.stdio.semio.cad.inference",
-        inference: schema::FacetLeaves {
+        inference: framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),

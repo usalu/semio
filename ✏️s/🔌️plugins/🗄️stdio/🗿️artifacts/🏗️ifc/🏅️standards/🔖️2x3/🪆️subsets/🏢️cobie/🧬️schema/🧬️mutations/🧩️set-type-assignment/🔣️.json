@@ -5,7 +5,7 @@
   "displayName": "Set Type Assignment",
   "emoji": "🏷",
   "aggregateVariant": "SetTypeAssignment",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

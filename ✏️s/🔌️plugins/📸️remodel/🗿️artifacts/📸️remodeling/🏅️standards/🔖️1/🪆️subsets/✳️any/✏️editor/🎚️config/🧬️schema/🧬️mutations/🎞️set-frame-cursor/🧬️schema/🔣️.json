@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/remodel/remodeling/1/any/editor/config/mutation/set-frame-cursor.json",
+  "title": "SetFrameCursor",
+  "type": "object",
+  "properties": {
+    "stream_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "frame_index": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 4294967295
+    }
+  },
+  "required": [
+    "frame_index"
+  ],
+  "additionalProperties": false
+}

@@ -1,7 +1,7 @@
 //! ser json to txt
-use crate::artifacts::json::schema::snapshot::write_json_pretty;
-use crate::artifacts::json::JsonSnapshot;
-use crate::artifacts::txt::TxtSnapshot;
+use crate::schema::snapshot::write_json_pretty;
+use crate::JsonSnapshot;
+use semio_s_artifact_stdio_txt::TxtSnapshot;
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn register() {}
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

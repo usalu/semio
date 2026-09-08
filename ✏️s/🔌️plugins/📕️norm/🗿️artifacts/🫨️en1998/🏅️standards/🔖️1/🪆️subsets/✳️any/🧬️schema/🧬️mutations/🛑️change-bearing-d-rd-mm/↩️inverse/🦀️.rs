@@ -7,6 +7,6 @@ use crate::artifacts::en1998::En1998Snapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(_payload: &ChangeBearingDRdMm, base: &En1998Snapshot) -> Vec<En1998Mutation> {
-    vec![En1998Mutation::ChangeBearingDRdMm(ChangeBearingDRdMm { new_bearing_d_rd_mm: base.bearing_d_rd_mm.clone() })]
+    vec![En1998Mutation::ChangeBearingDRdMm(ChangeBearingDRdMm { new_bearing_d_rd_mm: base.bearing_d_rd_mm })]
 }
 //#endregion 🔖️Inverse

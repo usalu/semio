@@ -3,7 +3,7 @@ name = "semio-s-plugin-stdio"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
-description = "Stdio plugin - zero-app library of well-known file-format artifacts"
+description = "Stdio plugin composition over independently compiled artifact packages"
 
 [lints]
 workspace = true
@@ -18,60 +18,61 @@ role = "plugin"
 crate-type = ["cdylib", "rlib"]
 path = "🦀️.rs"
 
-[[test]]
-name = "flow_retained_decode"
-path = "../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🌊️flow/🧬️schema/📸️snapshot/💾️binary/🧪️tests/🦀️.rs"
-
-# 🔌️ Only the ROOT plugin of a component may emit `plugin_exports!`'s `#[no_mangle]` installer
-# symbols. stdio is unusual: it is a plugin in its own right AND an rlib dependency of other plugins
-# (space's `🚪️io` deserializers). When a dependent links it, both crates emitted
-# `semio_plugin_install_bundle`/`semio_plugin_bundle_installer_link_shim` and rust-lld failed with
-# `duplicate symbol` — i.e. no plugin could depend on another. Dependents therefore take stdio with
-# `default-features = false`; only its own component build keeps `plugin-root`.
 [features]
 default = ["plugin-root"]
-plugin-root = ["component-app-assembly"]
-component-app-assembly = ["full-artifact-catalog"]
-full-artifact-catalog = []
-home-io = []
+plugin-root = ["component-app-assembly", "semio-framework-plugin/component-guest"]
+component-app-assembly = ["full-artifact-catalog", "semio-s-artifact-stdio-binary/component-app-assembly", "semio-s-artifact-stdio-txt/component-app-assembly", "semio-s-artifact-stdio-json/component-app-assembly", "semio-s-artifact-stdio-xml/component-app-assembly", "semio-s-artifact-stdio-csv/component-app-assembly", "semio-s-artifact-stdio-md/component-app-assembly", "semio-s-artifact-stdio-deflate/component-app-assembly", "semio-s-artifact-stdio-zip/component-app-assembly", "semio-s-artifact-stdio-step/component-app-assembly", "semio-s-artifact-stdio-ifc/component-app-assembly", "semio-s-artifact-stdio-las/component-app-assembly", "semio-s-artifact-stdio-gltf/component-app-assembly", "semio-s-artifact-stdio-obj/component-app-assembly", "semio-s-artifact-stdio-ply/component-app-assembly", "semio-s-artifact-stdio-dxf/component-app-assembly", "semio-s-artifact-stdio-stl/component-app-assembly", "semio-s-artifact-stdio-svg/component-app-assembly", "semio-s-artifact-stdio-bmp/component-app-assembly", "semio-s-artifact-stdio-dwg/component-app-assembly", "semio-s-artifact-stdio-png/component-app-assembly", "semio-s-artifact-stdio-pdf/component-app-assembly", "semio-s-artifact-stdio-jpg/component-app-assembly", "semio-s-artifact-stdio-gif/component-app-assembly", "semio-s-artifact-stdio-tiff/component-app-assembly", "semio-s-artifact-stdio-docx/component-app-assembly", "semio-s-artifact-stdio-pptx/component-app-assembly", "semio-s-artifact-stdio-xlsx/component-app-assembly", "semio-s-artifact-stdio-bcf/component-app-assembly", "semio-s-artifact-stdio-semio/component-app-assembly", "semio-s-artifact-stdio-mp4/component-app-assembly", "semio-s-artifact-stdio-avi/component-app-assembly", "semio-s-artifact-stdio-mp3/component-app-assembly", "semio-s-artifact-stdio-wav/component-app-assembly", "semio-s-artifact-stdio-epw/component-app-assembly", "semio-s-artifact-stdio-tsv/component-app-assembly", "semio-s-artifact-stdio-html/component-app-assembly"]
+full-artifact-catalog = ["dep:semio-s-artifact-stdio-binary", "dep:semio-s-artifact-stdio-txt", "dep:semio-s-artifact-stdio-json", "dep:semio-s-artifact-stdio-xml", "dep:semio-s-artifact-stdio-csv", "dep:semio-s-artifact-stdio-md", "dep:semio-s-artifact-stdio-deflate", "dep:semio-s-artifact-stdio-zip", "dep:semio-s-artifact-stdio-step", "dep:semio-s-artifact-stdio-ifc", "dep:semio-s-artifact-stdio-las", "dep:semio-s-artifact-stdio-gltf", "dep:semio-s-artifact-stdio-obj", "dep:semio-s-artifact-stdio-ply", "dep:semio-s-artifact-stdio-dxf", "dep:semio-s-artifact-stdio-stl", "dep:semio-s-artifact-stdio-svg", "dep:semio-s-artifact-stdio-bmp", "dep:semio-s-artifact-stdio-dwg", "dep:semio-s-artifact-stdio-png", "dep:semio-s-artifact-stdio-pdf", "dep:semio-s-artifact-stdio-jpg", "dep:semio-s-artifact-stdio-gif", "dep:semio-s-artifact-stdio-tiff", "dep:semio-s-artifact-stdio-docx", "dep:semio-s-artifact-stdio-pptx", "dep:semio-s-artifact-stdio-xlsx", "dep:semio-s-artifact-stdio-bcf", "dep:semio-s-artifact-stdio-semio", "dep:semio-s-artifact-stdio-mp4", "dep:semio-s-artifact-stdio-avi", "dep:semio-s-artifact-stdio-mp3", "dep:semio-s-artifact-stdio-wav", "dep:semio-s-artifact-stdio-epw", "dep:semio-s-artifact-stdio-tsv", "dep:semio-s-artifact-stdio-html"]
+home-io = ["dep:semio-s-artifact-stdio-binary", "dep:semio-s-artifact-stdio-txt", "dep:semio-s-artifact-stdio-json", "dep:semio-s-artifact-stdio-xml", "dep:semio-s-artifact-stdio-csv", "dep:semio-s-artifact-stdio-deflate", "dep:semio-s-artifact-stdio-zip", "dep:semio-s-artifact-stdio-xlsx"]
 
 [dependencies]
-semio-framework-ui-contract = { path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust", package = "semio-framework-ui-contract" }
-semio-framework = { path = "../../../../../🧰️framework/📦️packages/🦀️rust", package = "semio-framework" }
-semio-framework-dispatch-macros = { path = "../../../../../🧰️framework/🔨️modules/🔀️dispatch/📦️packages/🦀️rust", package = "semio-framework-dispatch-macros" }
-semio-framework-geometry = { path = "../../../../../🧰️framework/🔨️modules/📐️geometry/📦️packages/🦀️rust", package = "semio-framework-geometry" }
-semio-framework-graph = { path = "../../../../../🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust", package = "semio-framework-graph" }
-semio-framework-hash = { path = "../../../../../🧰️framework/🔨️modules/🔏️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
-semio-framework-job = { workspace = true }
-semio-framework-math = { path = "../../../../../🧰️framework/🔨️modules/🧮️math/📦️packages/🦀️rust", package = "semio-framework-math" }
-semio-framework-mesh-engine = { path = "../../../../../🧰️framework/🔨️modules/🏗️mesh-engine/📦️packages/🦀️rust", package = "semio-framework-mesh-engine" }
-semio-framework-number = { path = "../../../../../🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust", package = "semio-framework-number" }
-semio-framework-os-kernel = { path = "../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
-semio-framework-plugin = { workspace = true, features = ["component-guest"] }
-semio-framework-schema = { path = "../../../../../🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust", package = "semio-framework-schema" }
-semio-framework-value-derive = { path = "../../../../../🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
-pack = { path = "../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust", package = "semio-framework-pack" }
-# 🚧️ INTERIM, not final: conversion to `ToValue`/`FromValue` is IN PROGRESS across this crate (see
-# `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS/
-# 🔍️research/📓️serde-fanout-stdio-trinity-space.md`) — most `#[derive(Serialize, Deserialize)]` +
-# `#[serde(...)]` call sites are converted, but real `serde_json::` call sites and a handful of
-# `#[serde(flatten/transparent/bound/alias/serialize_with/deserialize_with)]` structs still need
-# these. Matches the sanctioned pilot pattern (`📖️playbook`'s manifest keeps them mid-conversion
-# too) — do NOT remove until the research doc's remaining-file list is empty.
+semio-framework = { workspace = true }
+semio-framework-dispatch-macros = { workspace = true }
+semio-framework-hash = { workspace = true }
+semio-framework-os-kernel = { workspace = true }
+semio-framework-plugin = { workspace = true }
+semio-framework-value-derive = { workspace = true }
+semio-s-artifact-stdio-contract = { workspace = true }
+pack = { workspace = true }
+semio-s-artifact-stdio-binary = { workspace = true, optional = true }
+semio-s-artifact-stdio-txt = { workspace = true, optional = true }
+semio-s-artifact-stdio-json = { workspace = true, optional = true }
+semio-s-artifact-stdio-xml = { workspace = true, optional = true }
+semio-s-artifact-stdio-csv = { workspace = true, optional = true }
+semio-s-artifact-stdio-md = { workspace = true, optional = true }
+semio-s-artifact-stdio-deflate = { workspace = true, optional = true }
+semio-s-artifact-stdio-zip = { workspace = true, optional = true }
+semio-s-artifact-stdio-step = { workspace = true, optional = true }
+semio-s-artifact-stdio-ifc = { workspace = true, optional = true }
+semio-s-artifact-stdio-las = { workspace = true, optional = true }
+semio-s-artifact-stdio-gltf = { workspace = true, optional = true }
+semio-s-artifact-stdio-obj = { workspace = true, optional = true }
+semio-s-artifact-stdio-ply = { workspace = true, optional = true }
+semio-s-artifact-stdio-dxf = { workspace = true, optional = true }
+semio-s-artifact-stdio-stl = { workspace = true, optional = true }
+semio-s-artifact-stdio-svg = { workspace = true, optional = true }
+semio-s-artifact-stdio-bmp = { workspace = true, optional = true }
+semio-s-artifact-stdio-dwg = { workspace = true, optional = true }
+semio-s-artifact-stdio-png = { workspace = true, optional = true }
+semio-s-artifact-stdio-pdf = { workspace = true, optional = true }
+semio-s-artifact-stdio-jpg = { workspace = true, optional = true }
+semio-s-artifact-stdio-gif = { workspace = true, optional = true }
+semio-s-artifact-stdio-tiff = { workspace = true, optional = true }
+semio-s-artifact-stdio-docx = { workspace = true, optional = true }
+semio-s-artifact-stdio-pptx = { workspace = true, optional = true }
+semio-s-artifact-stdio-xlsx = { workspace = true, optional = true }
+semio-s-artifact-stdio-bcf = { workspace = true, optional = true }
+semio-s-artifact-stdio-semio = { workspace = true, optional = true }
+semio-s-artifact-stdio-mp4 = { workspace = true, optional = true }
+semio-s-artifact-stdio-avi = { workspace = true, optional = true }
+semio-s-artifact-stdio-mp3 = { workspace = true, optional = true }
+semio-s-artifact-stdio-wav = { workspace = true, optional = true }
+semio-s-artifact-stdio-epw = { workspace = true, optional = true }
+semio-s-artifact-stdio-tsv = { workspace = true, optional = true }
+semio-s-artifact-stdio-html = { workspace = true, optional = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
-
-[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-
-[dev-dependencies]
-semio-framework-async-macros = { path = "../../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
-semio-framework-ui-scene = { path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust", package = "semio-framework-ui-scene" }
 
 [[test]]
 name = "native_openable_provider"
 path = "🧪️tests/📇️native-openable-provider/🦀️.rs"
-
-[[bench]]
-name = "brep_kernel"
-path = "🏃️benches/⏱️brep-kernel.rs"
-harness = false

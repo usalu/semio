@@ -1,0 +1,221 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/framework/ui/contract/retained/resident/evidence/copied/schema.json",
+  "title": "Ui Contract Retained Resident Evidence Copied Schema Module",
+  "$defs": {
+    "CopiedFixture": {
+      "title": "UI Resident Copied Range Fixture",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "length",
+        "windows",
+        "sourceStepBytes",
+        "sourceObservationBytes",
+        "rangeObservationBytes",
+        "sourcePhases",
+        "extraWords",
+        "cancelFenceBytes",
+        "remainingRetirementGrants",
+        "bound",
+        "childResults",
+        "faults",
+        "cancellationPrefixes",
+        "revoked",
+        "empty"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "length": {
+          "const": 257
+        },
+        "windows": {
+          "const": [
+            256,
+            1
+          ]
+        },
+        "sourceStepBytes": {
+          "const": 1
+        },
+        "sourceObservationBytes": {
+          "const": 64
+        },
+        "rangeObservationBytes": {
+          "const": 64
+        },
+        "sourcePhases": {
+          "const": [
+            "source-consuming",
+            "source-observing"
+          ]
+        },
+        "extraWords": {
+          "const": 0
+        },
+        "cancelFenceBytes": {
+          "const": 64
+        },
+        "remainingRetirementGrants": {
+          "const": [
+            64,
+            64,
+            64,
+            64,
+            64
+          ]
+        },
+        "bound": {
+          "const": "two-turns-per-source-byte-then-existing-evidence-and-range-observation"
+        },
+        "childResults": {
+          "const": [
+            {
+              "kind": "blocked",
+              "bytes": 0,
+              "actual": false,
+              "expected": "blocked"
+            },
+            {
+              "kind": "rejected",
+              "bytes": 4096,
+              "actual": false,
+              "expected": "rejected"
+            },
+            {
+              "kind": "pending",
+              "bytes": 4096,
+              "actual": true,
+              "expected": "pending"
+            },
+            {
+              "kind": "pending",
+              "bytes": 4097,
+              "actual": true,
+              "expected": "rejected"
+            }
+          ]
+        },
+        "faults": {
+          "const": [
+            {
+              "after": false
+            },
+            {
+              "after": true
+            }
+          ]
+        },
+        "cancellationPrefixes": {
+          "const": [
+            {
+              "name": "available",
+              "grants": [],
+              "consumed": 0
+            },
+            {
+              "name": "issued",
+              "grants": [
+                64,
+                128
+              ],
+              "consumed": 0
+            },
+            {
+              "name": "source-byte",
+              "grants": [
+                64,
+                128,
+                1
+              ],
+              "consumed": 1
+            },
+            {
+              "name": "source-observed",
+              "grants": [
+                64,
+                128,
+                1,
+                64
+              ],
+              "consumed": 1
+            }
+          ]
+        },
+        "revoked": {
+          "const": [
+            false,
+            true
+          ]
+        },
+        "empty": {
+          "const": {
+            "fixtureIndex": 0,
+            "sourceStepBytes": 0,
+            "sourceSteps": 1
+          }
+        }
+      }
+    },
+    "Copied": {
+      "title": "UI Resident Copied Range Domain",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "identity",
+        "inventory",
+        "admission",
+        "release",
+        "source",
+        "empty",
+        "retirement",
+        "cancel",
+        "fault",
+        "next",
+        "grant"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "identity": {
+          "const": "same-original-copied-token-fragment-field-builder-and-parent-slot"
+        },
+        "inventory": {
+          "const": "reuse-evidence-phase-builder-inputOffset-sourceKind-copyProof-no-new-words"
+        },
+        "admission": {
+          "const": "destination-range-complete-and-input-reader-detached-before-eleven-phase-copied-evidence-admission"
+        },
+        "release": {
+          "const": "original-fragment-release128-before-source-consuming-no-InputAck"
+        },
+        "source": {
+          "const": "actual-Field.advance-one-byte-child-then-independent-observation64-before-bookkeeping"
+        },
+        "empty": {
+          "const": "zero-length-range-still-requires-actual-source-completion-result"
+        },
+        "retirement": {
+          "const": "original-source-detach-ui-alias-detach-source-settle-capsule-registration-refund-before-builder-range-observation"
+        },
+        "cancel": {
+          "const": "same-copied-token-close-only-source-fence64-no-replacement-token-no-synthetic-consumed-or-EOF"
+        },
+        "fault": {
+          "const": "original-first-source-or-wrapper-fault-held-no-forward-replay"
+        },
+        "next": {
+          "const": "only-original-new-source-fragment-or-actual-EOF-no-invented-next-page"
+        },
+        "grant": {
+          "const": "actual-child-result-forwarded-without-wrapper-work-terminal-observation-on-next-grant"
+        }
+      }
+    }
+  }
+}

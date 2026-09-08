@@ -6,8 +6,8 @@
 //! for the write-side scope: `set-page` only ever replaces `Paragraph` blocks, never `Table`
 //! blocks).
 
-use crate::artifacts::docx::schema::snapshot::DocxBlock;
-use crate::artifacts::docx::DocxSnapshot;
+use crate::schema::snapshot::DocxBlock;
+use crate::DocxSnapshot;
 use semio_framework_plugin::app::{DocumentPage, DocumentView, DocumentWindowKit, WindowKit};
 use semio_framework_plugin::{BuiltNode, LocalizedLabel, WindowKindDefinition};
 

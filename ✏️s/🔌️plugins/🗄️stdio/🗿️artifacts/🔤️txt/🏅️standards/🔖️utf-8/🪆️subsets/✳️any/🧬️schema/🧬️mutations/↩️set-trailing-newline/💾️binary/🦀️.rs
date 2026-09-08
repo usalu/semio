@@ -1,7 +1,7 @@
 //! 💾️ Canonical binary payload codec for set-trailing-newline/SetTrailingNewline.
 //#region 💾️PayloadCodec
 use super::SetTrailingNewlinePayload;
-use crate::artifacts::txt::schema::mutations::TxtMutation;
+use crate::schema::mutations::TxtMutation;
 pub const BINARY_TAG: u32 = 1;
 pub fn encode_payload(value: &SetTrailingNewlinePayload) -> Result<Vec<u8>, String> {
     Ok(pack::to_json_string(value).into_bytes())

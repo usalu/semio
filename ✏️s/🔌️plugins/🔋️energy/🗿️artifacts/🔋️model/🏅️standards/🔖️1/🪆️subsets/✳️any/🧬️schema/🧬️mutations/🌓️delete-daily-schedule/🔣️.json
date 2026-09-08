@@ -5,7 +5,7 @@
   "displayName": "Delete Daily Schedule",
   "emoji": "🌓️",
   "aggregateVariant": "DeleteDailySchedule",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "delete-daily-schedule",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

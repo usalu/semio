@@ -6,8 +6,8 @@
 pub mod derived_composition {
     use super::super::export::serializers::artifacts::pptx::v_ecma_376::any::SemioPresentationToPptx;
     use super::super::import::deserializers::artifacts::pptx::v_ecma_376::any::SemioPresentationFromPptx;
-    use crate::artifacts::semio::standards::v1::subsets::presentation::schema::snapshot::SemioPresentationSnapshot;
-    use crate::artifacts::semio::standards::v1::subsets::presentation::schema::SemioPresentationAnalyzer;
+    use crate::standards::v1::subsets::presentation::schema::snapshot::SemioPresentationSnapshot;
+    use crate::standards::v1::subsets::presentation::schema::SemioPresentationAnalyzer;
     use dsl::{Diagnostic, TextSpan};
     use semio_framework_plugin::{
         deserializer_entry_of, register_composer_entries, register_subset_validator, serializer_entry_of, subset_validator_entry_of, AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, ComposerEntry, Composition, Dialect, IoPayload,
@@ -120,9 +120,9 @@ pub mod derived_composition {
     /// presentation<->pptx io bridge row. Called from this artifact's standard-level `engine::register()`.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn register() {
-        ::schema::register_artifact_schema_descriptor(crate::artifacts::semio::standards::v1::subsets::presentation::schema::semio_presentation_artifact_schema_descriptor());
-        store::register_document_codec(store::ArtifactCodec::of::<SemioPresentationSnapshot, crate::artifacts::semio::standards::v1::subsets::presentation::schema::mutations::SemioPresentationMutation>(
-            crate::artifacts::semio::standards::v1::subsets::presentation::schema::snapshot::STDIO_SEMIOPRESENTATION_DOCUMENT_SCHEMA,
+        ::framework_schema::register_artifact_schema_descriptor(crate::standards::v1::subsets::presentation::schema::semio_presentation_artifact_schema_descriptor());
+        store::register_document_codec(store::ArtifactCodec::of::<SemioPresentationSnapshot, crate::standards::v1::subsets::presentation::schema::mutations::SemioPresentationMutation>(
+            crate::standards::v1::subsets::presentation::schema::snapshot::STDIO_SEMIOPRESENTATION_DOCUMENT_SCHEMA,
         )).expect("static Stdio registration must be available and conflict-free");
         register_subset_validator(validator_entry()).expect("static Stdio registration must be available and conflict-free");
         register_composer_entries(io_entries()).expect("static Stdio registration must be available and conflict-free");
@@ -134,7 +134,7 @@ pub mod derived_composition {
     /// registry, ticket 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn register_artifact_inferences() {
-        ::schema::register_artifact_inference_descriptor(crate::artifacts::semio::standards::v1::subsets::presentation::schema::inferences::semio_presentation_artifact_inference_descriptor());
+        ::framework_schema::register_artifact_inference_descriptor(crate::standards::v1::subsets::presentation::schema::inferences::semio_presentation_artifact_inference_descriptor());
     }
     //#endregion 🔖️Register
 
@@ -142,7 +142,7 @@ pub mod derived_composition {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use crate::artifacts::semio::standards::v1::subsets::presentation::schema::snapshot::{Slide, SlideLayout, SlideMaster};
+        use crate::standards::v1::subsets::presentation::schema::snapshot::{Slide, SlideLayout, SlideMaster};
         use semio_framework_plugin::{ArtifactDeserializer, ArtifactSerializer};
 
         // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -204,9 +204,9 @@ pub mod derived_composition {
         /// comparison exercises TextBox/Picture/Placeholder shape fidelity end to end).
         #[semio_framework_async_macros::async_test]
         async fn pptx_round_trip_is_stable() {
-            use crate::artifacts::pptx::schema::snapshot::{PptxParagraph, PptxPresentation, PptxRun, PptxShape, PptxSlide, PptxTransform};
-            use crate::artifacts::pptx::PptxSnapshot;
-            use crate::artifacts::zip::opc::OpcPackage;
+            use semio_s_artifact_stdio_pptx::schema::snapshot::{PptxParagraph, PptxPresentation, PptxRun, PptxShape, PptxSlide, PptxTransform};
+            use semio_s_artifact_stdio_pptx::PptxSnapshot;
+            use semio_s_artifact_stdio_zip::opc::OpcPackage;
 
             let pptx1 = PptxSnapshot::from_parts(
                 OpcPackage::default(),
@@ -238,7 +238,7 @@ pub mod derived_composition {
         /// ticket's `📽️presentation/`-only edit scope anyway).
         mod conformance_laws {
 
-            use crate::artifacts::semio::standards::v1::subsets::presentation::schema::{diff, mutations, snapshot};
+            use crate::standards::v1::subsets::presentation::schema::{diff, mutations, snapshot};
             use protocol::{DiffCodec, OpBinary, OpText};
 
             /// ✅️ "committed files parse": all 6 handcrafted `.grammar.semio`/`.protocol.semio` files

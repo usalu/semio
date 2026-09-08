@@ -1,0 +1,53 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/graph/mutation/add-node-port.json",
+  "title": "AddNodePort",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "index",
+    "nodeId",
+    "port"
+  ],
+  "properties": {
+    "nodeId": {
+      "title": "GraphNodeId",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "value"
+      ],
+      "properties": {
+        "value": {
+          "type": "string"
+        }
+      }
+    },
+    "index": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "port": {
+      "title": "SemioGraphPort",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "name"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "In",
+            "Out",
+            "InOut"
+          ]
+        }
+      }
+    }
+  }
+}

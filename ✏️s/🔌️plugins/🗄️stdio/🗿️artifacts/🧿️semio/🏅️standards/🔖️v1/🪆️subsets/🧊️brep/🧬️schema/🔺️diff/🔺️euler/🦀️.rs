@@ -20,18 +20,18 @@ pub type ParametricEdge = (EdgeId, bool, Option<Curve2Id>, (f64, f64));
 pub type LoopWalk = (Vec<VertexId>, Vec<(EdgeId, bool)>);
 
 
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::{ArenaId, CoedgeId, Curve2Id, Curve3Id, EdgeId, FaceId, LoopId, ShellId, SolidId, SurfaceId, VertexId};
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::curve_ops::closest_parameter;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::{Curve2, Curve3};
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::error::KernelError;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::surface::Surface;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::tolerance::Tol;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::history::OpRecorder;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::{Body, Coedge, Edge, Face, Loop, Shell, Solid, Vertex};
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Frame3;
+use crate::standards::v1::subsets::brep::schema::snapshot::arena::{ArenaId, CoedgeId, Curve2Id, Curve3Id, EdgeId, FaceId, LoopId, ShellId, SolidId, SurfaceId, VertexId};
+use crate::standards::v1::subsets::brep::schema::snapshot::curve::curve_ops::closest_parameter;
+use crate::standards::v1::subsets::brep::schema::snapshot::curve::{Curve2, Curve3};
+use crate::standards::v1::subsets::brep::schema::snapshot::error::KernelError;
+use crate::standards::v1::subsets::brep::schema::snapshot::surface::Surface;
+use crate::standards::v1::subsets::brep::schema::snapshot::tolerance::Tol;
+use crate::standards::v1::subsets::brep::schema::snapshot::topology::history::OpRecorder;
+use crate::standards::v1::subsets::brep::schema::snapshot::topology::{Body, Coedge, Edge, Face, Loop, Shell, Solid, Vertex};
+use crate::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Frame3;
 #[cfg(test)]
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::Vec3;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::{Pnt2, Pnt3};
+use crate::standards::v1::subsets::brep::schema::snapshot::vector::Vec3;
+use crate::standards::v1::subsets::brep::schema::snapshot::vector::{Pnt2, Pnt3};
 
 // #region 🔖️Make
 
@@ -57,7 +57,7 @@ pub fn make_edge(body: &mut Body, curve: Curve3Id, range: (f64, f64), v0: Vertex
 }
 
 /// ✂️ Builds a closed coedge ring from `members` (one `(edge, forward)` pair per coedge, in ring
-/// order) and links it into a new [`Loop`]. Loops/coedges have no [`crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::history::PersistentLabel`]
+/// order) and links it into a new [`Loop`]. Loops/coedges have no [`crate::standards::v1::subsets::brep::schema::snapshot::topology::history::PersistentLabel`]
 /// of their own (they are structural, not independently document-nameable), so nothing is recorded.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn make_loop(body: &mut Body, face: FaceId, members: &[(EdgeId, bool)]) -> LoopId {
@@ -122,7 +122,7 @@ pub fn split_edge(body: &mut Body, edge_id: EdgeId, t: f64, position: Pnt3, rec:
 /// p-curve (when present) is split proportionally alongside the 3D curve, using the SAME
 /// normalized split fraction on both — pcurve `prange` and edge `range` share one parametrization
 /// convention (`t = edge.range.0 + (edge.range.1 - edge.range.0)·s`, `p = prange.0 +
-/// (prange.1-prange.0)·s`, always in the edge's own curve order per [`crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::primitives`]'s
+/// (prange.1-prange.0)·s`, always in the edge's own curve order per [`crate::standards::v1::subsets::brep::schema::diff::primitives`]'s
 /// documented convention) — this was the previous version's own latent bug (it dropped every
 /// split coedge's pcurve to `None`, silently breaking validation's `missing-pcurve` check on any
 /// face that had ever been imprinted).
@@ -838,8 +838,8 @@ fn resolve_edge_containing_param(body: &Body, e1: EdgeId, e2: EdgeId, t: f64) ->
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::primitives::{make_planar_face_from_wire, make_rectangle_wire};
-    use crate::artifacts::semio::standards::v1::subsets::brep::schema::inferences::validation_report::validate_body;
+    use crate::standards::v1::subsets::brep::schema::diff::primitives::{make_planar_face_from_wire, make_rectangle_wire};
+    use crate::standards::v1::subsets::brep::schema::inferences::validation_report::validate_body;
 
     /// ✂️ Builds the topology of a unit tetrahedron (4 vertices, 6 edges, 4 triangular faces, 1
     /// shell, 1 solid) purely through the checked editors above — the flagship "assemble a real
@@ -1030,7 +1030,7 @@ mod tests {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
         let face =
-            crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::primitives::make_planar_face_from_points(&mut body, &[Pnt3::new(0.0, 0.0, 0.0), Pnt3::new(4.0, 0.0, 0.0), Pnt3::new(4.0, 2.0, 0.0), Pnt3::new(0.0, 2.0, 0.0)], &mut rec)
+            crate::standards::v1::subsets::brep::schema::diff::primitives::make_planar_face_from_points(&mut body, &[Pnt3::new(0.0, 0.0, 0.0), Pnt3::new(4.0, 0.0, 0.0), Pnt3::new(4.0, 2.0, 0.0), Pnt3::new(0.0, 2.0, 0.0)], &mut rec)
                 .expect("rect face");
         let outer = body.faces.get(face).unwrap().outer.unwrap();
         let edge = body.coedges.get(body.loop_coedges(outer)[0]).unwrap().edge;

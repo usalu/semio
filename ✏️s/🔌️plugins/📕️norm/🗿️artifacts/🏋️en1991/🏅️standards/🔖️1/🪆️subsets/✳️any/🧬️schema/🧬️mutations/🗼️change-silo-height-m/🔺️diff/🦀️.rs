@@ -11,6 +11,6 @@ pub fn diff(payload: &ChangeSiloHeightM, base: &En1991Snapshot) -> protocol::Mut
     if base.silo_height_m == payload.new_silo_height_m {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "Silo height m already has this value.");
     }
-    protocol::MutationOutcome::new(En1991Diff { silo_height_m: Some(payload.new_silo_height_m.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1991Diff { silo_height_m: Some(payload.new_silo_height_m), ..Default::default() })
 }
 //#endregion 🔖️Diff

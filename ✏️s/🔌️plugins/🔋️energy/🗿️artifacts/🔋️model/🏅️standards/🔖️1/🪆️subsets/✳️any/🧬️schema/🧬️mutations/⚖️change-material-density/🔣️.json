@@ -5,7 +5,7 @@
   "displayName": "Change Material Density",
   "emoji": "⚖️",
   "aggregateVariant": "ChangeMaterialDensity",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-material-density",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

@@ -1,50 +1,116 @@
 {
-  "$id": "https://semio.tech/schema/s.stdio.stl/mutation.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/stl/ascii/any/mutations.json",
   "title": "StlMutation",
-  "$defs": {
-    "StlTriangle": {
-      "type": "object",
-      "required": ["normal", "vertices"],
-      "properties": {
-        "normal": { "type": "array", "items": { "type": "number" }, "minItems": 3, "maxItems": 3 },
-        "vertices": {
-          "type": "array",
-          "minItems": 3,
-          "maxItems": 3,
-          "items": { "type": "array", "items": { "type": "number" }, "minItems": 3, "maxItems": 3 }
+  "description": "Discriminated union over this module's mutation leaves (internally tagged); every payload is the leaf's own schema, referenced, never restated.",
+  "oneOf": [
+    {
+      "allOf": [
+        {
+          "$ref": "./➕insert-triangle/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "insertTriangle"
+            }
+          }
         }
-      }
-    },
-    "StlSnapshot": {
-      "type": "object",
-      "required": ["schema"],
-      "properties": {
-        "schema": { "type": "string" },
-        "solidName": { "type": "string" },
-        "triangles": { "type": "array", "items": { "$ref": "#/$defs/StlTriangle" } }
-      }
-    }
-  },
-  "type": "object",
-  "required": ["mutation"],
-  "properties": {
-    "mutation": {
-      "type": "string",
-      "enum": [
-        "setSnapshot", "setSolidName", "insertTriangle", "removeTriangle",
-        "setTriangleNormal", "setTriangleVertices"
       ]
     },
-    "snapshot": { "$ref": "#/$defs/StlSnapshot", "description": "present when mutation = setSnapshot" },
-    "name": { "type": "string", "description": "present when mutation = setSolidName" },
-    "index": { "type": "integer", "minimum": 0 },
-    "triangle": { "$ref": "#/$defs/StlTriangle", "description": "present when mutation = insertTriangle" },
-    "normal": { "type": "array", "items": { "type": "number" }, "minItems": 3, "maxItems": 3 },
-    "vertices": {
-      "type": "array",
-      "minItems": 3,
-      "maxItems": 3,
-      "items": { "type": "array", "items": { "type": "number" }, "minItems": 3, "maxItems": 3 }
+    {
+      "allOf": [
+        {
+          "$ref": "./➖remove-triangle/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "removeTriangle"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "./📸️set-snapshot/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setSnapshot"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "./🏷️set-solid-name/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setSolidName"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "./🧭set-triangle-normal/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setTriangleNormal"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "./📐set-triangle-vertices/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setTriangleVertices"
+            }
+          }
+        }
+      ]
     }
-  }
+  ]
 }

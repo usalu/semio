@@ -318,12 +318,12 @@ impl Element for Frame3 {
     fn recover(&self, ctx: &ElementContext, u_elem: &VecD, udl: Option<&MemberUdl>) -> ElementResult {
         let (l, k_local, t) = self.local_system(ctx);
         let u_loc = t.mul_vec(u_elem);
-        let f_udl_local = udl.map(|u| local_udl(l, &t, u)).unwrap_or_else(|| VecD::zeros(12));
+        let f_udl_local = udl.map_or_else(|| VecD::zeros(12), |u| local_udl(l, &t, u));
         let f = k_local.mul_vec(&u_loc).sub(&f_udl_local);
         let n = -f.get(0);
         let v1 = f.get(2);
         let m1 = f.get(4);
-        let wz_l = udl.map(|u| local_udl_components(&t, u).2).unwrap_or(0.0);
+        let wz_l = udl.map_or(0.0, |u| local_udl_components(&t, u).2);
         let stations = (0..11)
             .map(|i| {
                 let x = l * (i as f64) / 10.0;

@@ -1,0 +1,26 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/svg/1.1/base/mutation/remove-element.json",
+  "title": "RemoveElementPayload",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "parent",
+    "index"
+  ],
+  "properties": {
+    "parent": {
+      "type": "array",
+      "items": {
+        "type": [
+          "object",
+          "integer"
+        ]
+      }
+    },
+    "index": {
+      "type": "integer",
+      "minimum": 0
+    }
+  }
+}

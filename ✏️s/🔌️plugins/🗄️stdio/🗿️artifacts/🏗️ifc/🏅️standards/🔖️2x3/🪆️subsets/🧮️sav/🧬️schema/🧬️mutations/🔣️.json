@@ -1,0 +1,68 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/ifc/2x3/sav/mutations.json",
+  "title": "Ifc2x3SavMutation",
+  "description": "Discriminated union over this module's mutation leaves (externally tagged); every payload is the leaf's own schema, referenced, never restated.",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "SetAnalysisModel"
+      ],
+      "properties": {
+        "SetAnalysisModel": {
+          "$ref": "./🧮️set-analysis-model/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "SetGroupAssignment"
+      ],
+      "properties": {
+        "SetGroupAssignment": {
+          "$ref": "./👥️set-group-assignment/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "SetLoadGroup"
+      ],
+      "properties": {
+        "SetLoadGroup": {
+          "$ref": "./🏋️set-load-group/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "SetSnapshot"
+      ],
+      "properties": {
+        "SetSnapshot": {
+          "$ref": "./📸️set-snapshot/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "SetViewDefinition"
+      ],
+      "properties": {
+        "SetViewDefinition": {
+          "$ref": "./👁️set-view-definition/🧬️schema/🔣️.json"
+        }
+      }
+    }
+  ]
+}

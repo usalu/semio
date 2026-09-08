@@ -4,6 +4,6 @@
 //! lives in `subsets::any::{io,schema}`; this stays an inline barrel") rather than `#[path]`-ing
 //! into this file — every stdio sibling with more than one `🏅️standards` version (`📄️pdf`
 //! 1.4/1.7, `🖊️dwg` ac1018/ac1024, `🎞️gif` 87a/89a, `🏗️ifc` 2x3/4) leaves this same position
-//! unmounted too. Not part of any `mod` tree; `crate::artifacts::gltf` resolves through
+//! unmounted too. Not part of any `mod` tree; `crate` resolves through
 //! `../../🦀️.rs` instead.
 //#endregion 🧊️Gltf20Standard

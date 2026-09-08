@@ -3,8 +3,15 @@
   "$id": "https://semio.tech/schema/s/gis/gisterrain/mutation.json",
   "title": "GisTerrainMutation",
   "oneOf": [
-    {"$ref": "./🎚️change-exaggeration/🧬️.schema.json"},
-    {"$ref": "./📥change-imported-features/🧬️.schema.json"}
+    {
+      "$ref": "./🎚️change-exaggeration/🧬️schema/🔣️.json"
+    },
+    {
+      "$ref": "./📥change-imported-features/🧬️schema/🔣️.json"
+    }
   ],
-  "x-semio-mutationKinds": ["change-exaggeration", "change-imported-features"]
+  "x-semio-mutationKinds": [
+    "change-exaggeration",
+    "change-imported-features"
+  ]
 }

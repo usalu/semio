@@ -1,5 +1,5 @@
-use crate::artifacts::ply::schema::mutations::PlyMutation;
-use crate::artifacts::ply::PlySnapshot;
+use crate::schema::mutations::PlyMutation;
+use crate::PlySnapshot;
 use protocol::Mutation;
 
 /// ↩️ Inverse of set-snapshot.

@@ -1,7 +1,7 @@
 //! 🧬️ Authoritative remove-ifd mutation.
-use crate::artifacts::tiff::schema::diff::*;
-use crate::artifacts::tiff::schema::mutations::TiffMutation;
-use crate::artifacts::tiff::schema::snapshot::*;
+use crate::schema::diff::*;
+use crate::schema::mutations::TiffMutation;
+use crate::schema::snapshot::*;
 
 //#region Payload
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
@@ -33,7 +33,7 @@ impl protocol::MutationKind<TiffSnapshot, TiffMutation> for RemoveIfdMutation {
             return Vec::new();
         }
         match base.ifds.get(*index) {
-            Some(ifd) => vec![TiffMutation::InsertIfd(crate::artifacts::tiff::schema::mutations::InsertIfdMutation { index: *index, ifd: ifd.clone() })],
+            Some(ifd) => vec![TiffMutation::InsertIfd(crate::schema::mutations::InsertIfdMutation { index: *index, ifd: ifd.clone() })],
             None => Vec::new(),
         }
     }

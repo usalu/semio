@@ -1,8 +1,8 @@
 //! ✏️ `jpg` edit (baseline) — Main window: real `ImageWindowKit`
 //! render of the current document (editable variant).
 
-use crate::artifacts::jpg::standards::v_jfif_1_01::subsets::document::io::encode_jpg;
-use crate::artifacts::jpg::standards::v_jfif_1_01::subsets::baseline::schema::snapshot::JpgSnapshot;
+use crate::standards::v_jfif_1_01::subsets::document::io::encode_jpg;
+use crate::standards::v_jfif_1_01::subsets::baseline::schema::snapshot::JpgSnapshot;
 use semio_framework_plugin::app::{ImageView, ImageWindowKit};
 use semio_framework_plugin::{BuiltNode, WindowKindDefinition, WindowKit};
 

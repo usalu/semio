@@ -11,6 +11,6 @@ pub fn diff(payload: &ChangeSiloBulkDensityKnM3, base: &En1991Snapshot) -> proto
     if base.silo_bulk_density_kn_m3 == payload.new_silo_bulk_density_kn_m3 {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "Silo bulk density kn m3 already has this value.");
     }
-    protocol::MutationOutcome::new(En1991Diff { silo_bulk_density_kn_m3: Some(payload.new_silo_bulk_density_kn_m3.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1991Diff { silo_bulk_density_kn_m3: Some(payload.new_silo_bulk_density_kn_m3), ..Default::default() })
 }
 //#endregion 🔖️Diff

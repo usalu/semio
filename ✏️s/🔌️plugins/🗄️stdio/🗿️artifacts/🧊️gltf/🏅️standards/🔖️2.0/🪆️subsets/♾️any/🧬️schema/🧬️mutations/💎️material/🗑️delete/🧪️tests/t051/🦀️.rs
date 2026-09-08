@@ -9,10 +9,10 @@
 //! leaf's own oracle. The derived `.op.semio`/`.spr.semio`/`.dsl.semio`/`.pack.semio`/
 //! `.patch.semio` encodings come from `fixtures generate`, not from here.
 
-use crate::artifacts::gltf::schema::mutations::delete_material::diff::GltfDeleteMaterialDiff;
-use crate::artifacts::gltf::schema::mutations::delete_material::GltfDeleteMaterialPayload;
-use crate::artifacts::gltf::schema::mutations::delete_material::{diff, inverse, mutation};
-use crate::artifacts::gltf::GltfSnapshot;
+use crate::schema::mutations::delete_material::diff::GltfDeleteMaterialDiff;
+use crate::schema::mutations::delete_material::GltfDeleteMaterialPayload;
+use crate::schema::mutations::delete_material::{diff, inverse, mutation};
+use crate::GltfSnapshot;
 
 const CASE: &str = "delete-material/removes-the-glass-material-and-renumbers-the-primitive-binding";
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");

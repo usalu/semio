@@ -1,0 +1,26 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/puzzle/2d/1/any/mutation/change-edge-visible.json",
+  "title": "ChangeEdgeVisible",
+  "description": "The `change-edge-visible` mutation record — internally tagged `\"mutation\": \"changeEdgeVisible\"`, the one branch the aggregate `../🔣️.json` union carries for this kind.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeEdgeVisible"
+    },
+    "id": {
+      "type": "string"
+    },
+    "newVisible": {
+      "type": [
+        "boolean",
+        "null"
+      ]
+    }
+  }
+}

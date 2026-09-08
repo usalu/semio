@@ -9,10 +9,10 @@
 //! leaf's own oracle. The derived `.op.semio`/`.spr.semio`/`.dsl.semio`/`.pack.semio`/
 //! `.patch.semio` encodings come from `fixtures generate`, not from here.
 
-use crate::artifacts::gltf::schema::mutations::unbind_scene_root_node::diff::GltfUnbindSceneRootNodeDiff;
-use crate::artifacts::gltf::schema::mutations::unbind_scene_root_node::GltfUnbindSceneRootNodePayload;
-use crate::artifacts::gltf::schema::mutations::unbind_scene_root_node::{diff, inverse, mutation};
-use crate::artifacts::gltf::GltfSnapshot;
+use crate::schema::mutations::unbind_scene_root_node::diff::GltfUnbindSceneRootNodeDiff;
+use crate::schema::mutations::unbind_scene_root_node::GltfUnbindSceneRootNodePayload;
+use crate::schema::mutations::unbind_scene_root_node::{diff, inverse, mutation};
+use crate::GltfSnapshot;
 
 const CASE: &str = "unbind-scene-root-node/demotes-the-root-node-out-of-the-main-scene";
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");

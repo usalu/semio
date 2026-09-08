@@ -1,0 +1,27 @@
+[package]
+name = "semio-s-artifact-norm-contract"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Shared package-neutral contract for independently compiled norm artifacts"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework = { workspace = true }
+semio-framework-dispatch-macros = { workspace = true }
+semio-framework-job = { workspace = true }
+semio-framework-os-kernel = { workspace = true }
+semio-framework-plugin = { workspace = true }
+semio-framework-schema = { workspace = true }
+semio-framework-value-derive = { workspace = true }
+pack = { workspace = true }
+
+[dev-dependencies]
+semio-framework-async-macros = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }

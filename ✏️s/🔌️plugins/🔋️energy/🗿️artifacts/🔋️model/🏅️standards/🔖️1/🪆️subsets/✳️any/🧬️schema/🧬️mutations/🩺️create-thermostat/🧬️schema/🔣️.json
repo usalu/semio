@@ -1,0 +1,35 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/energy/model/1/any/mutation/create-thermostat.json",
+  "title": "CreateThermostat",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "zoneId",
+    "heatingSetpointScheduleId",
+    "coolingSetpointScheduleId",
+    "heatingThrottleRangeK",
+    "coolingThrottleRangeK"
+  ],
+  "properties": {
+    "id": {
+      "type": "integer"
+    },
+    "zoneId": {
+      "type": "integer"
+    },
+    "heatingSetpointScheduleId": {
+      "type": "integer"
+    },
+    "coolingSetpointScheduleId": {
+      "type": "integer"
+    },
+    "heatingThrottleRangeK": {
+      "type": "number"
+    },
+    "coolingThrottleRangeK": {
+      "type": "number"
+    }
+  }
+}

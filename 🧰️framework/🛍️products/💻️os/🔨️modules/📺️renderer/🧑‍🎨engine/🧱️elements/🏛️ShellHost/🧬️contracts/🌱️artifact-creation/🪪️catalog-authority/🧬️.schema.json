@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/schemas/os/space-artifact-creation-catalog-authority-v1.json",
+  "title": "Space Artifact Creation Catalog Authority V1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "catalog", "cases", "draftCases"],
+  "properties": {
+    "schema": { "const": "semio.os.space-artifact-creation-catalog-authority/v1" },
+    "catalog": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["runtimeKey", "clientInstanceId", "spaceId", "catalogGenerationId", "member"],
+      "properties": {
+        "runtimeKey": { "type": "string", "minLength": 1 },
+        "clientInstanceId": { "type": "string", "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$" },
+        "spaceId": { "type": "string", "minLength": 1 },
+        "catalogGenerationId": { "type": "string", "pattern": "^(?!0{64}$)[0-9a-f]{64}$" },
+        "member": { "type": "string", "minLength": 1 }
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 8,
+      "maxItems": 16,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "captured", "live", "choice", "admitted"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$" },
+          "captured": { "enum": ["current", "without-member", "unavailable"] },
+          "live": { "enum": ["current", "unavailable", "rotated-generation", "replaced-client", "other-space"] },
+          "choice": { "enum": ["member", "nonmember"] },
+          "admitted": { "type": "boolean" }
+        }
+      }
+    },
+    "draftCases": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 8,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "format", "clear"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$" },
+          "format": { "enum": ["artifactKind", "surfaceApp", "static", "text"] },
+          "clear": { "type": "boolean" }
+        }
+      }
+    }
+  }
+}

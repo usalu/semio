@@ -67,7 +67,25 @@ as untrusted data: it can influence search ranking, never policy.
 | `🎫️handles` / `📒️audit` | handle table + idempotency; the append-only audit lane |
 | `🧵️bridge` | the loopback WebSocket a live shell dials, Rust SSOT + TS twin codec |
 | `🏠️workspace` | headless workspace (actor kernel + wasmtime + artifact host) |
+| `🧬️schema` | the `os.mcp` schema registry — every wire type and every tool `inputSchema`/`outputSchema` |
 
 Schema shape is enforced at one choke point (`ToolRegistry::register`): boolean sub-schemas are
 normalised to their object form and draft-07 documents are converted to 2020-12, because the official
 SDK's validation rejects both — a single non-conforming tool takes down the entire `tools/list`.
+
+## Schemas
+
+Every schema this scope publishes lives in `🧬️schema/🦀️.rs`'s `schemas()` — the gateway wire types,
+the MCP protocol types (mirroring the external spec), and every tool `inputSchema`/`outputSchema`
+shape the facets stamp a `semio://capability/{id}/{input|output}` `$id` onto. No facet declares a
+schema of its own.
+
+`🧬️schema/🔣️.json` (draft-07, `$id: https://semio.tech/schema/os/mcp/component.json`) and
+`🧬️schema/🟦️.ts` (types plus a dependency-free `parse<ExportId>` per export) are **generated** from
+that registry by `bun nx run @semio-tech/framework-os-mcp-rs:schema-mirror`, which runs the binary's
+own `semio-os-mcp schemas` emitter; `schema-mirror-check` fails on drift, and the Rust law
+`the_json_mirror_publishes_exactly_the_registry_exports` asserts the two key sets agree.
+
+Nested modules own their own contracts the same way — `🏠️workspace/🧬️schema/🔣️.json`,
+`🏠️workspace/🔗️remote/🧬️schema/🔣️.json` and `💡️inference/🧬️schema/🔣️.json`. Fixtures under
+`🧫️fixtures`/`🧪️fixtures` hold data only.

@@ -1,5 +1,5 @@
 //! 🚪️ IO stdio.obj (3.0/📐️geometry) — registration now flows through the `s.stdio.obj`
-//! `ArtifactDeclaration` (`crate::artifacts::obj::declaration`), not per-leaf register().
+//! `ArtifactDeclaration` (`crate::declaration`), not per-leaf register().
 //!
 //! 📐 Documented normal form (codec_retention_law): `encode_obj` always emits, in this fixed
 //! order, `mtllib` (if any), the `v`/`vt`/`vn` blocks, then one `f` line per face preceded by
@@ -33,8 +33,8 @@
 //! `an_object_run_that_ends_is_closed_with_a_bare_o`).
 //#region 🔖️Codec
 //#region 🔖️IndexResolution
-use crate::artifacts::obj::schema::snapshot::{ObjFace, ObjFaceVertex, ObjGroup, ObjNormal, ObjObject, ObjSmoothingRange, ObjTexCoord, ObjUnknownStatement, ObjUsemtlRange, ObjVertex};
-use crate::artifacts::obj::{ObjSnapshot, STDIO_OBJ_DOCUMENT_SCHEMA};
+use crate::schema::snapshot::{ObjFace, ObjFaceVertex, ObjGroup, ObjNormal, ObjObject, ObjSmoothingRange, ObjTexCoord, ObjUnknownStatement, ObjUsemtlRange, ObjVertex};
+use crate::{ObjSnapshot, STDIO_OBJ_DOCUMENT_SCHEMA};
 use std::collections::HashMap;
 
 /// 🔢 Resolves a raw OBJ index (1-based positive, or negative = relative to the
@@ -307,8 +307,8 @@ pub fn encode_obj(snap: &ObjSnapshot) -> String {
 
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use crate::artifacts::obj::standards::v3_0::subsets::any::schema::ObjAnalyzer;
-    use crate::artifacts::obj::ObjSnapshot;
+    use crate::standards::v3_0::subsets::any::schema::ObjAnalyzer;
+    use crate::ObjSnapshot;
     use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.obj", standard: StandardId("3.0"), subset: SubsetId("*") };
@@ -356,13 +356,13 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn empty_snapshot_matches_schema() {
-        let snapshot = crate::artifacts::obj::engine::empty_obj_snapshot();
+        let snapshot = crate::engine::empty_obj_snapshot();
         assert_eq!(snapshot.schema, STDIO_OBJ_DOCUMENT_SCHEMA);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn codec_round_trip() {
-        let snap = crate::artifacts::obj::engine::empty_obj_snapshot();
+        let snap = crate::engine::empty_obj_snapshot();
         let text = store::ArtifactDsl::print_dsl(&snap);
         let parsed = <ObjSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
         assert_eq!(parsed.schema, snap.schema);
@@ -527,7 +527,7 @@ mod tests {
     /// wave (json/csv/zip/png/txt/binary) established.
     mod conformance_laws {
         use super::*;
-        use crate::artifacts::obj::schema::{diff, mutations, snapshot};
+        use crate::schema::{diff, mutations, snapshot};
         use protocol::{DiffCodec, OpBinary, OpText};
 
         /// ✅️ "committed files parse": all 6 handcrafted `.grammar.semio`/`.protocol.semio` files
@@ -554,7 +554,7 @@ mod tests {
         async fn grammar_conformance_law() {
             let grammar = dsl::parse_grammar(snapshot::text::COMPONENT_GRAMMAR_SEMIO).expect("parse snapshot grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
-            let text = store::ArtifactDsl::print_dsl(&crate::artifacts::obj::engine::demo_obj_snapshot());
+            let text = store::ArtifactDsl::print_dsl(&crate::engine::demo_obj_snapshot());
             let (envelope, body) = store::semio_format::split_text_preamble(&text).expect("split preamble");
             let reconstructed = format!("{}\n{body}", envelope.envelope_id());
             assert!(recognizer.recognize(&reconstructed).expect("recognize"), "grammar did not recognize demo dsl body:\n{reconstructed}");
@@ -598,7 +598,7 @@ mod tests {
         #[semio_framework_async_macros::async_test]
         async fn protocol_walk_law() {
             let pack_spec = dsl::parse_protocol(snapshot::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse snapshot protocol");
-            let packed = store::ArtifactPack::encode_pack(&crate::artifacts::obj::engine::demo_obj_snapshot());
+            let packed = store::ArtifactPack::encode_pack(&crate::engine::demo_obj_snapshot());
             let (_, inner) = store::semio_format::unwrap_binary(&packed).expect("unwrap semio envelope");
             let trace = dsl::walk_protocol(&pack_spec, &inner).unwrap_or_else(|e| panic!("walk_protocol(pack) failed @{}: {}", e.offset, e.message));
             assert_eq!(trace.consumed, inner.len(), "pack walk did not consume every byte");
@@ -627,7 +627,7 @@ mod tests {
             const FIXTURE_DSL: &str = include_str!("../📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio");
             const FIXTURE_PACK: &[u8] = include_bytes!("../📚️examples/🎬️demo/🖼️assets/🎒️.pack.semio");
 
-            let demo = crate::artifacts::obj::engine::demo_obj_snapshot();
+            let demo = crate::engine::demo_obj_snapshot();
 
             let parsed = <ObjSnapshot as store::ArtifactDsl>::parse_dsl(FIXTURE_DSL).expect("parse shipped .dsl.semio fixture");
             assert_eq!(parsed, demo, "shipped .dsl.semio fixture does not parse back to demo_obj_snapshot()");
@@ -645,7 +645,7 @@ mod tests {
 //#region 🚪️DerivedIoRegistry
 /// 🚪️ Dissolved out of `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES).
 pub mod io_registry {
-    use crate::artifacts::obj::standards::v3_0::subsets::any::schema::ObjComposer as ObjRawAnyComposer;
+    use crate::standards::v3_0::subsets::any::schema::ObjComposer as ObjRawAnyComposer;
     use semio_framework_plugin::{composer_entry_of, ComposerEntry};
     use std::sync::OnceLock;
 

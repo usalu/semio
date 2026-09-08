@@ -1,0 +1,354 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/docx/ecma-376/base/mutation/set-block-content.json",
+  "title": "SetBlockContent",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "path",
+    "block"
+  ],
+  "properties": {
+    "path": {
+      "$ref": "#/$defs/DocxBlockPath"
+    },
+    "block": {
+      "$ref": "#/$defs/DocxBlock"
+    },
+    "mutation": {
+      "const": "setBlockContent",
+      "description": "Aggregate discriminator spliced in by DocxMutation; absent when the payload stands alone."
+    }
+  },
+  "$defs": {
+    "DocxBlockPath": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index"
+      ],
+      "properties": {
+        "segments": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/DocxPathSegment"
+          }
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "DocxPathSegment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "blockIndex",
+        "row",
+        "cell"
+      ],
+      "properties": {
+        "blockIndex": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "row": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "cell": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "DocxBlock": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "paragraph"
+            },
+            "runs": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/DocxRun"
+              }
+            },
+            "style": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "extraParagraphProperties": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/XmlNode"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "table"
+            },
+            "rows": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/DocxTableRow"
+              }
+            },
+            "extraTableProperties": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/XmlNode"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "DocxParagraph": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "runs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/DocxRun"
+          }
+        },
+        "style": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "extraParagraphProperties": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/XmlNode"
+          }
+        }
+      }
+    },
+    "DocxRun": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "text"
+      ],
+      "properties": {
+        "text": {
+          "type": "string"
+        },
+        "bold": {
+          "type": "boolean"
+        },
+        "italic": {
+          "type": "boolean"
+        },
+        "underline": {
+          "type": "boolean"
+        },
+        "extraRunProperties": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/XmlNode"
+          }
+        }
+      }
+    },
+    "XmlNode": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "name"
+          ],
+          "properties": {
+            "kind": {
+              "const": "element"
+            },
+            "name": {
+              "type": "string"
+            },
+            "attrs": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/XmlAttr"
+              }
+            },
+            "children": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/XmlNode"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "text"
+          ],
+          "properties": {
+            "kind": {
+              "const": "text"
+            },
+            "text": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "text"
+          ],
+          "properties": {
+            "kind": {
+              "const": "cData"
+            },
+            "text": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "text"
+          ],
+          "properties": {
+            "kind": {
+              "const": "comment"
+            },
+            "text": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "target",
+            "data"
+          ],
+          "properties": {
+            "kind": {
+              "const": "processingInstruction"
+            },
+            "target": {
+              "type": "string"
+            },
+            "data": {
+              "type": "string"
+            }
+          }
+        }
+      ]
+    },
+    "XmlAttr": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "value"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        }
+      }
+    },
+    "DocxTable": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "rows": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/DocxTableRow"
+          }
+        },
+        "extraTableProperties": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/XmlNode"
+          }
+        }
+      }
+    },
+    "DocxTableRow": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "cells": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/DocxTableCell"
+          }
+        },
+        "extraRowProperties": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/XmlNode"
+          }
+        }
+      }
+    },
+    "DocxTableCell": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "blocks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/DocxBlock"
+          }
+        },
+        "extraCellProperties": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/XmlNode"
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,120 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/document/mutation/set-paragraph-style.json",
+  "title": "SetParagraphStyle",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "path"
+  ],
+  "properties": {
+    "path": {
+      "$ref": "#/$defs/DocBlockPath"
+    },
+    "style_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "kind": {
+      "const": "setParagraphStyle",
+      "description": "Aggregate discriminator spliced in by DocPathSegment; absent when the payload stands alone."
+    }
+  },
+  "$defs": {
+    "DocBlockPath": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index"
+      ],
+      "properties": {
+        "segments": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/DocPathSegment"
+          }
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "DocPathSegment": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "blockIndex"
+          ],
+          "properties": {
+            "kind": {
+              "const": "quote"
+            },
+            "blockIndex": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "blockIndex",
+            "item"
+          ],
+          "properties": {
+            "kind": {
+              "const": "listItem"
+            },
+            "blockIndex": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "item": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "blockIndex",
+            "row",
+            "cell"
+          ],
+          "properties": {
+            "kind": {
+              "const": "tableCell"
+            },
+            "blockIndex": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "row": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "cell": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        }
+      ]
+    }
+  }
+}

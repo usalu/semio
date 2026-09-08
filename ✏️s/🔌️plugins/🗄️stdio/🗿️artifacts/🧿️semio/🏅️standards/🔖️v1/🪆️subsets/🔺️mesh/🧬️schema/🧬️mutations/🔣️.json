@@ -1,37 +1,212 @@
 {
-  "$id": "https://semio.tech/schema/s.stdio.semio.mesh/mutations.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/mesh/mutations.json",
   "title": "SemioMeshMutation",
-  "description": "Named-variant enum, tag field 'mutation', camelCase. Seventeen-verb mesh vocabulary (create/delete-{mesh,primitive,material,texture}, set-primitive-{topology,material}, replace-primitive-geometry, change-material-{base-color,metallic,roughness}, change-texture-mime, replace-texture-bytes, move-vertex). See the sibling 🦀️.rs for the real source of truth.",
+  "description": "Discriminated union over this module's mutation leaves (externally tagged); every payload is the leaf's own schema, referenced, never restated.",
   "oneOf": [
-    { "type": "object", "properties": { "mutation": { "const": "createMesh" }, "mesh": { "type": "object" } }, "required": ["mutation", "mesh"] },
-    { "type": "object", "properties": { "mutation": { "const": "deleteMesh" }, "id": { "type": "string" } }, "required": ["mutation", "id"] },
-    { "type": "object", "properties": { "mutation": { "const": "createPrimitive" }, "meshId": { "type": "string" }, "primitive": { "type": "object" } }, "required": ["mutation", "meshId", "primitive"] },
-    { "type": "object", "properties": { "mutation": { "const": "deletePrimitive" }, "meshId": { "type": "string" }, "primitiveId": { "type": "string" } }, "required": ["mutation", "meshId", "primitiveId"] },
-    { "type": "object", "properties": { "mutation": { "const": "setPrimitiveTopology" }, "meshId": { "type": "string" }, "primitiveId": { "type": "string" }, "topology": { "type": "string" } }, "required": ["mutation", "meshId", "primitiveId", "topology"] },
     {
       "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeMaterialBaseColor"
+      ],
       "properties": {
-        "mutation": { "const": "replacePrimitiveGeometry" },
-        "meshId": { "type": "string" },
-        "primitiveId": { "type": "string" },
-        "positions": { "type": "array" },
-        "normals": { "type": "array" },
-        "uvs": { "type": "array" },
-        "colors": { "type": "array" },
-        "indices": { "type": "array" }
-      },
-      "required": ["mutation", "meshId", "primitiveId", "positions", "normals", "uvs", "colors", "indices"]
+        "ChangeMaterialBaseColor": {
+          "$ref": "./🌈change-material-base-color/🧬️schema/🔣️.json"
+        }
+      }
     },
-    { "type": "object", "properties": { "mutation": { "const": "setPrimitiveMaterial" }, "meshId": { "type": "string" }, "primitiveId": { "type": "string" }, "materialId": { "type": ["string", "null"] } }, "required": ["mutation", "meshId", "primitiveId", "materialId"] },
-    { "type": "object", "properties": { "mutation": { "const": "createMaterial" }, "material": { "type": "object" } }, "required": ["mutation", "material"] },
-    { "type": "object", "properties": { "mutation": { "const": "deleteMaterial" }, "id": { "type": "string" } }, "required": ["mutation", "id"] },
-    { "type": "object", "properties": { "mutation": { "const": "changeMaterialBaseColor" }, "id": { "type": "string" }, "newBaseColor": { "type": "object" } }, "required": ["mutation", "id", "newBaseColor"] },
-    { "type": "object", "properties": { "mutation": { "const": "changeMaterialMetallic" }, "id": { "type": "string" }, "newMetallic": { "type": "number" } }, "required": ["mutation", "id", "newMetallic"] },
-    { "type": "object", "properties": { "mutation": { "const": "changeMaterialRoughness" }, "id": { "type": "string" }, "newRoughness": { "type": "number" } }, "required": ["mutation", "id", "newRoughness"] },
-    { "type": "object", "properties": { "mutation": { "const": "createTexture" }, "texture": { "type": "object" } }, "required": ["mutation", "texture"] },
-    { "type": "object", "properties": { "mutation": { "const": "deleteTexture" }, "id": { "type": "string" } }, "required": ["mutation", "id"] },
-    { "type": "object", "properties": { "mutation": { "const": "changeTextureMime" }, "id": { "type": "string" }, "newMime": { "type": "string" } }, "required": ["mutation", "id", "newMime"] },
-    { "type": "object", "properties": { "mutation": { "const": "replaceTextureBytes" }, "id": { "type": "string" }, "newBytes": { "type": "array" } }, "required": ["mutation", "id", "newBytes"] },
-    { "type": "object", "properties": { "mutation": { "const": "moveVertex" }, "meshId": { "type": "string" }, "primitiveId": { "type": "string" }, "vertexIndex": { "type": "integer" }, "newPoint": { "type": "object" } }, "required": ["mutation", "meshId", "primitiveId", "vertexIndex", "newPoint"] }
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeMaterialMetallic"
+      ],
+      "properties": {
+        "ChangeMaterialMetallic": {
+          "$ref": "./⚙️change-material-metallic/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeMaterialRoughness"
+      ],
+      "properties": {
+        "ChangeMaterialRoughness": {
+          "$ref": "./🧱change-material-roughness/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeTextureMime"
+      ],
+      "properties": {
+        "ChangeTextureMime": {
+          "$ref": "./🏷️change-texture-mime/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "CreateMaterial"
+      ],
+      "properties": {
+        "CreateMaterial": {
+          "$ref": "./🎨create-material/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "CreateMesh"
+      ],
+      "properties": {
+        "CreateMesh": {
+          "$ref": "./🕸️create-mesh/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "CreatePrimitive"
+      ],
+      "properties": {
+        "CreatePrimitive": {
+          "$ref": "./🔺create-primitive/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "CreateTexture"
+      ],
+      "properties": {
+        "CreateTexture": {
+          "$ref": "./🖼️create-texture/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "DeleteMaterial"
+      ],
+      "properties": {
+        "DeleteMaterial": {
+          "$ref": "./🚮delete-material/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "DeleteMesh"
+      ],
+      "properties": {
+        "DeleteMesh": {
+          "$ref": "./🗑️delete-mesh/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "DeletePrimitive"
+      ],
+      "properties": {
+        "DeletePrimitive": {
+          "$ref": "./✂️delete-primitive/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "DeleteTexture"
+      ],
+      "properties": {
+        "DeleteTexture": {
+          "$ref": "./🕳️delete-texture/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "MoveVertex"
+      ],
+      "properties": {
+        "MoveVertex": {
+          "$ref": "./📍move-vertex/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ReplacePrimitiveGeometry"
+      ],
+      "properties": {
+        "ReplacePrimitiveGeometry": {
+          "$ref": "./📐replace-primitive-geometry/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ReplaceTextureBytes"
+      ],
+      "properties": {
+        "ReplaceTextureBytes": {
+          "$ref": "./📀replace-texture-bytes/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "SetPrimitiveMaterial"
+      ],
+      "properties": {
+        "SetPrimitiveMaterial": {
+          "$ref": "./🧲️set-primitive-material/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "SetPrimitiveTopology"
+      ],
+      "properties": {
+        "SetPrimitiveTopology": {
+          "$ref": "./🔀set-primitive-topology/🧬️schema/🔣️.json"
+        }
+      }
+    }
   ]
 }

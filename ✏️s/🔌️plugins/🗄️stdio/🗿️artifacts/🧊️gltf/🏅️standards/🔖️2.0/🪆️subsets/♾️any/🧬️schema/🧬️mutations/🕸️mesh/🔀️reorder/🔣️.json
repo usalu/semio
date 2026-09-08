@@ -5,7 +5,7 @@
   "displayName": "Reorder Meshs",
   "emoji": "🔀️",
   "aggregateVariant": "ReorderMeshs",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

@@ -1,7 +1,7 @@
 //! 🧬️ Ifc2x3Snapshot schema (2x3/🏢️cobie) — reuses the ✳️base subset's `Ifc2x3Snapshot` verbatim.
 //! Basic FM Handover (carries COBie 2.4) is a validation-gated dialect STAMP, not a new type.
 
-pub use crate::artifacts::ifc::standards::v2x3::subsets::base::schema::*;
+pub use crate::standards::v2x3::subsets::base::schema::*;
 
 //#region 🧬️Mutations
 /// 🧬️ This subset's OWN mutation vocabulary — one kind per Basic FM Handover conformance rule, not a copy of
@@ -13,13 +13,13 @@ pub mod mutations;
 //#endregion 🧬️Mutations
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use crate::artifacts::ifc::standards::v2x3::subsets::base::schema::diff::Ifc2x3Diff;
-    use crate::artifacts::ifc::standards::v2x3::subsets::base::schema::mutations::{apply_ifc2x3_mutation, upsert_instance, Ifc2x3Mutation};
+    use crate::standards::v2x3::subsets::base::schema::diff::Ifc2x3Diff;
+    use crate::standards::v2x3::subsets::base::schema::mutations::{apply_ifc2x3_mutation, upsert_instance, Ifc2x3Mutation};
     #[cfg(test)]
-    use crate::artifacts::ifc::standards::v2x3::subsets::base::schema::mutations::{set_snapshot};
-    use crate::artifacts::ifc::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot;
-    use crate::artifacts::ifc::standards::v2x3::subsets::cobie::schema::check_cobie_conformance;
-    use crate::artifacts::step::engine::part21::{Part21Document, Part21Header, Part21Instance, Part21Value};
+    use crate::standards::v2x3::subsets::base::schema::mutations::{set_snapshot};
+    use crate::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot;
+    use crate::standards::v2x3::subsets::cobie::schema::check_cobie_conformance;
+    use semio_s_artifact_stdio_step::engine::part21::{Part21Document, Part21Header, Part21Instance, Part21Value};
     use dsl::{Diagnostic, Severity};
     use semio_framework_plugin::ArtifactBuilder;
 
@@ -135,7 +135,7 @@ pub mod derived_construction {
             bad.document.header.file_schema = vec![Part21Value::List(vec![Part21Value::Str("IFC4".into())])];
             let (mutated, _diff) = Ifc2x3CobieBuilderConstruction::from_snapshot(Ifc2x3Snapshot::default()).mutate(Ifc2x3Mutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: Box::new(bad) }));
             let err = mutated.build().expect_err("a non-IFC2X3 FILE_SCHEMA must fail build()");
-            assert!(err.iter().any(|d| d.code.0 == crate::artifacts::ifc::standards::v2x3::subsets::cobie::schema::CODE_FILE_SCHEMA));
+            assert!(err.iter().any(|d| d.code.0 == crate::standards::v2x3::subsets::cobie::schema::CODE_FILE_SCHEMA));
         }
     }
 }
@@ -144,8 +144,8 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use crate::artifacts::ifc::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot;
-    use crate::artifacts::ifc::standards::v2x3::subsets::base::schema::{Ifc2x3Analyzer as Ifc2x3AnyAnalyzer, Ifc2x3Parts};
+    use crate::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot;
+    use crate::standards::v2x3::subsets::base::schema::{Ifc2x3Analyzer as Ifc2x3AnyAnalyzer, Ifc2x3Parts};
     use dsl::{Diagnostic, FaultCode, FaultScope, Severity, TextSpan};
     use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
@@ -249,7 +249,7 @@ pub mod derived_analysis {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use crate::artifacts::step::engine::part21::{Part21Document, Part21Header, Part21Instance, Part21Value};
+        use semio_s_artifact_stdio_step::engine::part21::{Part21Document, Part21Header, Part21Instance, Part21Value};
 
         // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         fn header(view: &str) -> Part21Header {

@@ -6,8 +6,8 @@ use crate::artifacts::writer::{writer_text, WriterSnapshot};
 use semio_framework::io::io_mechanism::Serializer;
 use semio_framework::io_schema::{IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{Dialect, StandardId, SubsetId};
-use semio_s_plugin_stdio::artifacts::docx::schema::snapshot::DocxBlock;
-use semio_s_plugin_stdio::artifacts::docx::DocxSnapshot;
+use semio_s_artifact_stdio_docx::schema::snapshot::DocxBlock;
+use semio_s_artifact_stdio_docx::DocxSnapshot;
 
 pub const DOCX_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.docx", standard: StandardId("ecma-376"), subset: SubsetId("*") };
 
@@ -19,8 +19,8 @@ impl Serializer<WriterSnapshot> for WriterIntoDocx {
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
     async fn serialize(from: &WriterSnapshot) -> IoResult<IoPayload> {
         let body: Vec<DocxBlock> = writer_text(from).split('\n').map(DocxBlock::paragraph).collect();
-        let document = semio_s_plugin_stdio::artifacts::docx::schema::snapshot::DocxDocument { body, styles: Vec::new() };
-        let docx = semio_s_plugin_stdio::artifacts::docx::engine::build_minimal_docx(document);
+        let document = semio_s_artifact_stdio_docx::schema::snapshot::DocxDocument { body, styles: Vec::new() };
+        let docx = semio_s_artifact_stdio_docx::engine::build_minimal_docx(document);
         Ok(IoOutcome { value: IoPayload::Binary(<DocxSnapshot as store::ArtifactPack>::encode_pack(&docx)), diagnostics: Vec::new() })
     }
 }

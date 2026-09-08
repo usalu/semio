@@ -277,7 +277,7 @@ impl EpwRecord {
 }
 //#endregion 🔖️Record
 
-use schema::ArtifactSchema;
+use framework_schema::ArtifactSchema;
 
 //#region 🔖️Ids
 pub const STDIO_EPW_DOCUMENT_SCHEMA: &str = "stdio.epw";
@@ -359,10 +359,10 @@ impl store::ArtifactDsl for EpwSnapshot {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
-        crate::artifacts::epw::standards::energyplus::subsets::any::io::decode_epw(body).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        crate::standards::energyplus::subsets::any::io::decode_epw(body).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
     fn print_dsl(&self) -> String {
-        let body = crate::artifacts::epw::standards::energyplus::subsets::any::io::encode_epw(self);
+        let body = crate::standards::energyplus::subsets::any::io::encode_epw(self);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
@@ -371,7 +371,7 @@ impl store::ArtifactDsl for EpwSnapshot {
 impl store::ArtifactPack for EpwSnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
-        let raw = crate::artifacts::epw::standards::energyplus::subsets::any::io::encode_epw(self).into_bytes();
+        let raw = crate::standards::energyplus::subsets::any::io::encode_epw(self).into_bytes();
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
@@ -382,7 +382,7 @@ impl store::ArtifactPack for EpwSnapshot {
         }
         let _ = options;
         let text = String::from_utf8(inner).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        crate::artifacts::epw::standards::energyplus::subsets::any::io::decode_epw(&text).map_err(store::PackError::Schema)
+        crate::standards::energyplus::subsets::any::io::decode_epw(&text).map_err(store::PackError::Schema)
     }
 }
 //#endregion 🔖️HandcraftedArtifactCodecs

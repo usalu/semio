@@ -5,7 +5,7 @@
   "displayName": "Replace Pixels",
   "emoji": "🔲️",
   "aggregateVariant": "ReplacePixels",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "replace-pixels",
   "binaryTag": 10,
   "invertibility": "explicit-mutation",

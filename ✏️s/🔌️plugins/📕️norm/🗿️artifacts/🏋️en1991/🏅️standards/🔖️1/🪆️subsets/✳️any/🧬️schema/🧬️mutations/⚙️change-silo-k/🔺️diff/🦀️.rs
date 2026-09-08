@@ -11,6 +11,6 @@ pub fn diff(payload: &ChangeSiloK, base: &En1991Snapshot) -> protocol::MutationO
     if base.silo_k == payload.new_silo_k {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "Silo k already has this value.");
     }
-    protocol::MutationOutcome::new(En1991Diff { silo_k: Some(payload.new_silo_k.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1991Diff { silo_k: Some(payload.new_silo_k), ..Default::default() })
 }
 //#endregion 🔖️Diff

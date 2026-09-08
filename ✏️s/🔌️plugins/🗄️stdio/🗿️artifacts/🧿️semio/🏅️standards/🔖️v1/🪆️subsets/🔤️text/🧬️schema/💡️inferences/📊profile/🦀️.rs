@@ -5,7 +5,7 @@
 //! outline. `languages` excludes the unspecified tag (`""`, "inherits from context" per
 //! `SemioTextRun`'s own doc comment) — an empty tag names no language.
 
-use crate::artifacts::semio::standards::v1::subsets::text::schema::snapshot::SemioTextSnapshot;
+use crate::standards::v1::subsets::text::schema::snapshot::SemioTextSnapshot;
 
 //#region 🔖️Profile
 /// 📊️ Semio text word/mark census.
@@ -45,7 +45,7 @@ pub fn compute_semio_text_profile(snapshot: &SemioTextSnapshot) -> SemioTextProf
 //#region 🧪️Tests
 mod tests {
     use super::*;
-    use crate::artifacts::semio::standards::v1::subsets::text::schema::snapshot::{SemioTextMark, SemioTextMarkKind, SemioTextRun, STDIO_SEMIOTEXT_DOCUMENT_SCHEMA};
+    use crate::standards::v1::subsets::text::schema::snapshot::{SemioTextMark, SemioTextMarkKind, SemioTextRun, STDIO_SEMIOTEXT_DOCUMENT_SCHEMA};
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn populated() -> SemioTextSnapshot {

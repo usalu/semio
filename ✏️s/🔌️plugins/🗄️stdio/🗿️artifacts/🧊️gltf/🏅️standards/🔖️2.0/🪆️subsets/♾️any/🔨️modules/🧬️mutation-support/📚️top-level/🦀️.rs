@@ -6,7 +6,7 @@ pub struct GltfTopLevelMutationRejection { pub code: String, pub path: String, p
 pub fn reject(code: impl Into<String>, path: impl Into<String>, detail: impl Into<String>) -> GltfTopLevelMutationRejection { GltfTopLevelMutationRejection { code: code.into(), path: path.into(), detail: detail.into() } }
 
 /// 📨️ Converts a glTF mutation rejection into its protocol severity, target and owned detail.
-pub(crate) fn rejection_outcome(code: &str, path: &str, detail: String) -> protocol::MutationOutcome<crate::artifacts::gltf::schema::diff::GltfDiff> {
+pub(crate) fn rejection_outcome(code: &str, path: &str, detail: String) -> protocol::MutationOutcome<crate::schema::diff::GltfDiff> {
     let target = path.split('/').filter(|part| !part.is_empty()).map(str::to_string).collect::<Vec<_>>();
     if code.contains("no-observable-change") {
         return protocol::MutationOutcome::new(Default::default()).warn("mutation.no-op", detail);

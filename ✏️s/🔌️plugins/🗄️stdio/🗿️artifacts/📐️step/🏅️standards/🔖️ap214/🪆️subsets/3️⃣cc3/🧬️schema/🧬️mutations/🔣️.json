@@ -1,0 +1,68 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/step/ap214/cc3/mutations.json",
+  "title": "StepCc3Mutation",
+  "description": "Discriminated union over this module's mutation leaves (externally tagged); every payload is the leaf's own schema, referenced, never restated.",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "DemoteShapeRepresentation"
+      ],
+      "properties": {
+        "DemoteShapeRepresentation": {
+          "$ref": "./⬇️demote-shape-representation/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "SetFileSchema"
+      ],
+      "properties": {
+        "SetFileSchema": {
+          "$ref": "./🏷️set-file-schema/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "SetProductIdentity"
+      ],
+      "properties": {
+        "SetProductIdentity": {
+          "$ref": "./🪪set-product-identity/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "SetShapeRepresentation"
+      ],
+      "properties": {
+        "SetShapeRepresentation": {
+          "$ref": "./🪜set-shape-representation/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "SetSnapshot"
+      ],
+      "properties": {
+        "SetSnapshot": {
+          "$ref": "./📸️set-snapshot/🧬️schema/🔣️.json"
+        }
+      }
+    }
+  ]
+}

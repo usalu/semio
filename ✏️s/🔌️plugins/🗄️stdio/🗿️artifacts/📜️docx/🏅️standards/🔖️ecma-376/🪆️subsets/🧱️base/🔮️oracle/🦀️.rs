@@ -297,7 +297,7 @@ mod oracles {
 
     /// 📍 The `*.rels` part path that carries `owner`'s relationships (`""` = package root ->
     /// `_rels/.rels`; `"word/document.xml"` -> `"word/_rels/document.xml.rels"`). Independent
-    /// reimplementation of the same OPC §9 convention `crate::artifacts::zip::opc` encodes.
+    /// reimplementation of the same OPC §9 convention `semio_s_artifact_stdio_zip::opc` encodes.
     fn rels_part_path_for(owner: &str) -> String {
         if owner.is_empty() {
             "_rels/.rels".to_string()
@@ -588,7 +588,7 @@ mod oracles {
     /// 📄 `word/document.xml`'s `<w:document><w:body>...</w:body></w:document>` into a block tree,
     /// independently re-derived by re-parsing the part's own bytes through `quick-xml` rather than
     /// trusting whatever produced them. Mirrors the exact WordprocessingML shape
-    /// `crate::artifacts::docx::…::io::import::deserializers::document_from_xml` reads, reimplemented
+    /// `crate::…::io::import::deserializers::document_from_xml` reads, reimplemented
     /// here against this file's own `XNode` (no shared code, no shared dependency).
     fn document_body_from_xnode(root: &XNode) -> Result<Vec<WBlock>, String> {
         let XNode::Element { name, children, .. } = root else { return Err("word/document.xml: root is not an element".to_string()) };
@@ -886,7 +886,7 @@ mod oracles {
 
     //#region 🔖️PathAddressing
     /// 🔎️ Resolves the block list `path`'s segments navigate to (the parent list `path.index` slots
-    /// into), immutable form. Mirrors `crate::artifacts::docx::…::diff::resolve_blocks`'s exact
+    /// into), immutable form. Mirrors `crate::…::diff::resolve_blocks`'s exact
     /// `Table -> rows -> cells -> blocks` traversal, reimplemented independently.
     fn resolve_blocks<'a>(body: &'a [WBlock], segments: &[DPathSegment]) -> Option<&'a [WBlock]> {
         match segments.split_first() {

@@ -1,0 +1,436 @@
+{
+  "taxonomySchemaKeys": {
+    "sourceFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+    "sourceFileBytes": 1064258,
+    "schemaFormats": {
+      "🦀️rust": { "fileKindId": "rust-source", "fieldCasing": "snake" },
+      "🟦️typescript": { "fileKindId": "typescript-source", "fieldCasing": "camel" },
+      "🔗️graphql": { "fileKindId": "graphql", "fieldCasing": "camel" },
+      "🔣️jsonschema": { "fileKindId": "json", "fieldCasing": "camel" },
+      "🛰️protobuf": { "fileKindId": "protobuf", "fieldCasing": "snake" },
+      "📜️wit": { "fileKindId": "wit", "fieldCasing": "kebab" }
+    },
+    "schemaFacetKinds": {
+      "🧬️data": { "normativeFormat": "🔣️jsonschema", "formats": ["🔣️jsonschema", "🦀️rust", "🟦️typescript", "🔗️graphql", "🛰️protobuf"] },
+      "📜️interface": { "normativeFormat": "📜️wit", "formats": ["📜️wit"] }
+    },
+    "artifactSchemaSpecFileKinds": {
+      "🧬️schema": "json",
+      "🧬️schema/📸️snapshot": "json",
+      "🧬️schema/🔺️diff": "json",
+      "🧬️schema/💡️inferences": "json",
+      "🚪️io/📸️snapshot/📝️text": "json",
+      "🚪️io/🔺️diff/📝️text": "json",
+      "🚪️io/💡️inferences/📝️text": "json",
+      "🚪️io/🧬️mutations/📝️text": "json"
+    },
+    "surfaceSchemaSpecFileKinds": {
+      "🎚️config/🧬️schema": "json",
+      "👥️presence/🧬️schema": "json",
+      "🫧️transient/🧬️schema": "json"
+    },
+    "mutationPayloadSchemaLocation": { "directoryKindId": "schema", "directoryName": "🧬️schema", "fileKindId": "json" },
+    "mutationPayloadSchemaAuthority": {
+      "contractKind": "descriptor-linked-mutation-payload-schema",
+      "ownerAuthority": "mutationOwnerIdentity",
+      "descriptorFileKindId": "json",
+      "descriptorField": "payloadSchema",
+      "descriptorSchemaVersion": 1,
+      "descriptorCardinality": "one-canonical-no-competing-descriptor",
+      "descriptorOwnerField": "owner",
+      "descriptorIdentityField": "semanticKind",
+      "jsonSchemaDialect": "http://json-schema.org/draft-07/schema#",
+      "targetAuthority": "owner-relative-regular-json-schema"
+    },
+    "schemaChildDirs": ["📸️snapshot", "🔺️diff", "🧬️mutations", "💡️inferences"],
+    "testSchemaLocation": { "directoryPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema", "fileKindId": "json" },
+    "fileKindsWithSchemaRole": {
+      "graphql": ".graphql", "json": ".json", "json-expect": ".expect.json", "json-fixture": ".fixture.json",
+      "json-patch-fixture": ".patch.json", "json-schema": ".schema.json", "json-snapshot": ".snapshot.json",
+      "protobuf": ".proto", "wit": ".wit"
+    },
+    "fileKindResolutionRules": {
+      "physical-json-schema-json": { "extensionChain": ".schema.json", "fileKindId": "json-schema", "priority": 0 }
+    },
+    "semanticDirectoryKinds_schemaFamily": {
+      "schema": { "emoji": "🧬️", "slugPattern": "^(schema|mutations|contract|wire)$", "allowEmojiOnly": false },
+      "kernel-fixture-schema": { "emoji": "📐️", "slugPattern": "^fixture-schema$" },
+      "fixture-shape": { "emoji": "📐️", "slugPattern": "^schema$" },
+      "resident-fixture-member": { "emoji": "🧪️", "slugPattern": "^(fixture|schema)$" },
+      "schema-artifact-subject": { "emoji": "🔣️", "slugPattern": "^(?!schema$|mutations$|contract$)[a-z0-9]+(?:-[a-z0-9]+)*$", "parentKindIds": ["schema"] },
+      "retained": { "emoji": "🧵️", "slugPattern": "^retained$", "parentKindIds": ["schema", "editor"] },
+      "test-fixture-schema-authority": { "emoji": "🛂️", "slugPattern": "^schema$" },
+      "ui-contract-copy": { "emoji": "🪞️", "slugPattern": "^copy$", "parentKindIds": ["schema"] },
+      "ui-contract-typed": { "emoji": "🧾️", "slugPattern": "^typed$", "parentKindIds": ["schema"] },
+      "ui-contract-document": { "emoji": "📃️", "slugPattern": "^document$", "parentKindIds": ["schema", "compare"] }
+    },
+    "placementKeys": {
+      "artifactComponentDirs[0]": "🧬️schema",
+      "artifactChildDirs[0]": "🧬️schema",
+      "subsetComponentDirs[0]": "🧬️schema",
+      "subsetChildDirs[0]": "🧬️schema",
+      "configChildDirs[0]": "🧬️schema",
+      "presenceChildDirs[0]": "🧬️schema",
+      "transientChildDirs[0]": "🧬️schema",
+      "mutationOrganizationalFacetDirs[3]": "🧬️schema",
+      "taxonomyLeafParentDirs[0]": "🧬️schema"
+    },
+    "scopedFileKinds": {
+      "note": "8 entries, all internal taxonomy-tool transaction/crash-safety bookkeeping (backup/edit/restore staging). None schema-related.",
+      "entryIds": ["transaction-backup-candidate", "transaction-backup-write-candidate", "transaction-edit-candidate", "transaction-edit-preimage", "transaction-edit-write-candidate", "transaction-json-previous", "transaction-postimage-candidate"]
+    },
+    "fixedDirectoryContracts": { "note": "Full-text scan for the substring 'schema' across the entire ~55KB value returned zero matches. Directory-shape enforcement for schema facets happens through schemaChildDirs/artifactChildDirs/subsetChildDirs plus the policy*SchemaBreaches functions, not through fixedDirectoryContracts." },
+    "fixedFilenameContracts": {
+      "ui-components-config": { "pathPattern": "🧰️framework/🔨️modules/🖱️ui/components.json", "reason": "The existing UI configuration uses shadcn's schema and its reserved components.json basename" },
+      "cargo-cache-tag": { "pathPattern": "**/.🧬semio/🦑️repo/🎫️tickets/🎆️[0-9][0-9]/🌙️[0-9][0-9]/☀️[0-9][0-9]/*/**/CACHEDIR.TAG", "reason": "Cargo target cache marker at a schema-registered canonical or embedded ticket-local Cargo target evidence root" }
+    },
+    "fixedFilenameRejectionContracts": { "nested-ticket-manifests": { "disposition": "relocate", "note": "unrelated to schema; ticket-relocation rule for nested 🎫️ticket.json files" } },
+    "configurableEntryContracts": {
+      "note": "Package entry-point conventions (Cargo lib.path/bin[].path, package.json exports/main/types, vitest config). Uses an explicit configurationSources string per contract (e.g. 'Cargo.toml:lib.path') — a possible template for how a scope could declare its schema export catalog location.",
+      "entries": ["rust-library-entry", "rust-build-entry", "vitest-config-entry", "rust-binary-entry", "typescript-library-entry", "typescript-react-entry"]
+    },
+    "packageBoundaryRules": {
+      "note": "Per-ecosystem (rust/typescript/javascript/go/python/dotnet) allow-lists of file/directory kinds inside a 📦️packages/<lang>/ boundary. None reference schema directly; 📦️packages/ is a sibling of 🧬️schema/, not a container for it.",
+      "ecosystems": ["🦀️rust", "🟦️typescript", "🟨️javascript", "🐹️go", "🐍️python", "🔷️dotnet"]
+    },
+    "mutationCatalogProjection": {
+      "projectionContractId": "artifact-mutation-tests-v1",
+      "projectedMemberKindId": "mutation-test-subject",
+      "descendantContractId": "mutation-scenario-bundle-v1",
+      "catalogContractId": "mutation-catalog-vectors-v1",
+      "note": "Strongest existing precedent for 'declare a catalog contract in taxonomy.json, generate/verify it via script.ts' — ties semanticPathProjectionContracts + semanticDescendantContracts + semanticPathProjectionCatalogContracts together into one named pipeline."
+    },
+    "semanticPathProjectionCatalogContracts": {
+      "mutation-catalog-vectors-v1": { "coverage": "every-physical-bundle-exactly-once", "uniquenessFields": ["mutationId", "mutationDirectoryName", "scenarioId"] },
+      "cad-model-catalog-v1": {
+        "note": "Hand-authored, CAD-specific manifest catalog. categoryRules[] map source directory names to 'manifestSchema' dotted-string ids (e.g. 'spatial.action', 'spatial.typology') that look like intended (scope,export-id) identifiers but this audit found no $defs/file backing that currently resolves them.",
+        "coverage": "every-source-file-and-destination-node-exactly-once"
+      },
+      "draw-editor-command-vectors-v1": {
+        "contractKind": "exact-owner-vectors",
+        "note": "Literal, hand-maintained vectors array of {artifactId,standardVersion,subsetId,commandDirectoryName} — the taxonomy-JSON analog of the POLICY_ARTIFACT_SCHEMA_PREFIXES table (script.ts)."
+      }
+    },
+    "otherCatalogFamiliesInspected": {
+      "semanticOwnedFileProjectionContracts": ["artifact-empty-facet-primary-markdown-v1", "readme-license-owner-leaves-v1", "ticket-document-primary-markdown-v1", "ticket-important-history-markdown-v1", "ticket-important-markdown-v1"],
+      "semanticPathProjectionReferenceConsumerContracts": ["cad-editor-interaction", "cad-editor-runtime", "cad-interaction-spec", "draw-package-cargo", "draw-package-library", "draw-workspace-cargo", "draw-dependency-registry", "draw-workspace-script", "cad-spatial-kernel-geometry"],
+      "note": "14 entries across both families, none schema-export related — markdown-ownership and reference-consumer-path contracts for specific plugins (CAD/draw)."
+    },
+    "mutationDomainOwners_entryCount": 2,
+    "mutationCatalogSourceOwners_entryCount": 8,
+    "note_mutationOwnerTables": "mutationDomainOwners and mutationCatalogSourceOwners are hand-authored per-owner CREATE/DELETE/RENAME/... mutation-verb vocabularies keyed by full subset path — a different axis from schema field contracts, but the same 'hand-maintained JSON table keyed by owner path' shape recurs here for a third time (after POLICY_ARTIFACT_SCHEMA_PREFIXES and draw-editor-command-vectors-v1's vectors array)."
+  },
+
+  "scriptCommands": [
+    { "file": "📜️script.ts", "command": "generate taxonomy census|duplicates --ticket <id>", "function": "GenerateScript.generateTaxonomy", "lines": "1101-1120" },
+    { "file": "📜️script.ts", "command": "generate taxonomy package-adapter [preview|apply]", "function": "GenerateScript.generateTaxonomy (branch)", "lines": "1102-1105" },
+    { "file": "📜️script.ts", "command": "generate neo4j [<db-name>] / bare generate", "function": "GenerateScript.run", "lines": "1054-1098" },
+    { "file": "📜️script.ts", "command": "generate plugin-glue [--dry] [<plugin>]", "function": "GenerateScript.generatePluginGlue", "lines": "1123-1153" },
+    { "file": "📜️script.ts", "command": "(none — no 'generate schema' exists)", "function": "n/a", "lines": "n/a" },
+    { "file": "📜️script.ts", "command": "verify taxonomy report|enforce [--scope]", "function": "VerifyScript.runTaxonomy", "lines": "10754-10763" },
+    { "file": "📜️script.ts", "command": "verify mutation-outcome-law", "function": "VerifyScript.runMutationOutcomeLaw", "lines": "10774-10782" },
+    { "file": "📜️script.ts", "command": "verify rust-warnings [--target] [-p]", "function": "VerifyScript.runRustWarnings", "lines": "10797-10814" },
+    { "file": "📜️script.ts", "command": "verify interactivity [tool-jobs|apps|p1q-b1-b6|p1w|p1x|p1y|p1z|p5d|p5e|p3mn]", "function": "VerifyScript.run (branches)", "lines": "10698-10740" },
+    { "file": "📜️script.ts", "command": "verify gate / bare verify", "function": "VerifyScript.run -> runGate()", "lines": "10748-10752" },
+    { "file": "📜️script.ts", "command": "(none — no 'verify schema' exists; schema checks run only inside the 'policy' lint export via lint/verify gate)", "function": "n/a", "lines": "n/a" },
+    { "file": "📜️script.ts", "command": "lint (bun ./📜️script.ts lint)", "function": "LintScript / export const policy = defineLint(...)", "lines": "1159 (LintScript), end-of-file (policy export)" },
+    { "file": "📜️script.ts", "command": "policy: artifact schema checks", "function": "policyArtifactSchemaBreaches", "lines": "30676-30684" },
+    { "file": "📜️script.ts", "command": "policy: artifact schema facet completeness", "function": "policyArtifactSchemaFacetCompletenessBreaches", "lines": "30381-30422" },
+    { "file": "📜️script.ts", "command": "policy: artifact schema field parity", "function": "policyArtifactSchemaFieldParityBreaches", "lines": "30442-30507" },
+    { "file": "📜️script.ts", "command": "policy: artifact schema state parity", "function": "policyArtifactSchemaStateParityBreaches", "lines": "30509-30567" },
+    { "file": "📜️script.ts", "command": "policy: artifact schema diff coverage", "function": "policyArtifactSchemaDiffCoverageBreaches", "lines": "30568-30622" },
+    { "file": "📜️script.ts", "command": "policy: artifact schema type-name parity", "function": "policyArtifactSchemaTypeNameParityBreaches", "lines": "30623-30675" },
+    { "file": "📜️script.ts", "command": "policy: app/surface schema checks", "function": "policyAppSchemaBreaches", "lines": "31145-31151 (approx end)" },
+    { "file": "📜️script.ts", "command": "policy: app schema owner discovery", "function": "policyDiscoverAppSchemaOwners", "lines": "30728-30768" },
+    { "file": "📜️script.ts", "command": "policy: app schema facet leaf loader", "function": "policyLoadAppSchemaFacetLeaves", "lines": "30780-30823" },
+    { "file": "📜️script.ts", "command": "policy: artifact list discovery", "function": "policyListPluginArtifactDirs", "lines": "27913-27924" },
+    { "file": "📜️script.ts", "command": "policy: schema field extractors (rust/ts/graphql/json/protobuf)", "function": "policyExtractRustSchemaFields / policyExtractTypescriptSchemaFields / policyExtractGraphqlSchemaFields / policyExtractJsonSchemaFields / policyExtractProtobufSchemaFields", "lines": "30052-30331" },
+    { "file": "📜️script.ts", "command": "policy: schema declaration locator", "function": "policyFindSchemaDeclaration", "lines": "29996-30011" },
+    { "file": "📜️script.ts", "command": "policy: artifact-schema owner prefix table + lookup", "function": "POLICY_ARTIFACT_SCHEMA_PREFIXES (const) / policyArtifactSchemaPrefix", "lines": "29889-29948 (table), 29974-29981 (lookup)" },
+    { "file": "📜️script.ts", "command": "verify taxonomy / mutation taxonomy inventory subsystem", "function": "inventoryMutationTaxonomy / planMutationTaxonomy / runMutationTaxonomyCli", "lines": "21153-21286 (approx)" },
+    { "file": "📜️script.ts", "command": "policy: mutation payload schema placement", "function": "policyMutationPayloadSchemaProblems", "lines": "28259-28266" },
+    { "file": "📜️script.ts", "command": "stdio: definition catalog load + validate", "function": "stdioDefinitionCatalog / stdioAssertDefinition", "lines": "19519-19544" },
+    { "file": "📜️script.ts", "command": "stdio: canonical dotted/versioned identity checks", "function": "stdioDefinitionIdentity / stdioVersionedLeaf", "lines": "19472-19479" },
+    { "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts", "command": "(library, not CLI) resolve a facet's schema kind from disk", "function": "resolveSchemaFacetKind", "lines": "2670-2679" },
+    { "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts", "command": "(library, not CLI) resolve a facet's expected schemaFormats entries", "function": "schemaFacetFormatEntries", "lines": "2684-2691" },
+    { "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts", "command": "(library, not CLI) package/owner discovery (unrelated 'owner' meaning)", "function": "discoverPackages / discoverOwners / discoverPackageProblems", "lines": "9289-9300" },
+    { "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📜️script.ts", "command": "discover", "function": "DiscoverScript.run", "lines": "825-838" },
+    { "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📜️script.ts", "command": "contract (validateAllContracts)", "function": "ContractScript.run", "lines": "838-850" },
+    { "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📜️script.ts", "command": "oracle", "function": "OracleScript.run", "lines": "851-857" },
+    { "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📜️script.ts", "command": "subject", "function": "SubjectScript.run", "lines": "858-864" },
+    { "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📜️script.ts", "command": "parity", "function": "ParityScript.run", "lines": "865-871" },
+    { "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📜️script.ts", "command": "run", "function": "RunScript.run", "lines": "872-884" },
+    { "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📜️script.ts", "command": "report", "function": "ReportScript.run", "lines": "885-896" },
+    { "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📜️script.ts", "command": "clean", "function": "CleanScript.run", "lines": "897-919" },
+    { "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📜️script.ts", "command": "dependency", "function": "DependencyScript.run", "lines": "920-963" },
+    { "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📜️script.ts", "command": "dsl", "function": "DslScript.run", "lines": "964-970" },
+    { "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📜️script.ts", "command": "metrics", "function": "MetricsScript.run", "lines": "971-989" },
+    { "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📜️script.ts", "command": "nx", "function": "NxScript.run", "lines": "990-996" },
+    { "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📜️script.ts", "command": "doctor", "function": "DoctorScript.run", "lines": "997-1027" },
+    { "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📜️script.ts", "command": "inventory", "function": "InventoryScript.run", "lines": "1028-1077" },
+    { "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📜️script.ts", "command": "fixture generate|reproduce|verify|audit", "function": "FixtureScript.run", "lines": "1078-1197" },
+    { "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📜️script.ts", "command": "probe", "function": "ProbeScript.run", "lines": "1198-1218" },
+    { "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📜️script.ts", "command": "matrix", "function": "MatrixScript.run", "lines": "1219-1244" },
+    { "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📜️script.ts", "command": "gc", "function": "GcScript.run", "lines": "1245-1263" },
+    { "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📜️script.ts", "command": "gap", "function": "GapScript.run", "lines": "1352-1438" },
+    { "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📜️script.ts", "command": "manifest scaffold|payload-schema / bare manifest", "function": "ManifestScript.run / payloadSchemaCommand", "lines": "1439-1485 (class), 1281-1310 (payloadSchemaCommand)" }
+  ],
+
+  "harnessDiscovery": [
+    {
+      "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/🟦️.ts",
+      "lines": "3579-3596",
+      "behavior": "scaffoldLeafDescriptor: dual payload-schema convention accepted interchangeably — schemaCandidates array tries '🧬️schema/<canonical-json-filename>' then flat '🔣️.schema.json' beside the leaf, first existsSync() match wins. No single source of truth for where a mutation's payload schema physically lives."
+    },
+    {
+      "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/🟦️.ts",
+      "lines": "3825-3931",
+      "behavior": "rustTypeIndex: repo-wide walkDirectories(repoRoot, ...) scan of every .rs file (except excluded test paths), indexing pub struct newtypes, pub type aliases, composite pub struct bodies (brace-matched), #[serde(tag=...)] tagged enums, and fieldless pub enums — all keyed by BARE NAME with no scope qualification. This is the mechanism payload-schema derivation depends on."
+    },
+    {
+      "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/🟦️.ts",
+      "lines": "4028-4060",
+      "behavior": "resolveSnapshot (inside derivePayloadSchema, set-snapshot case): when a composite struct name is ambiguous (declared in multiple files), picks the definition whose file path shares the LONGEST COMMON PATH-PREFIX with the mutation leaf's owner path — a nearest-parent heuristic, first of three near-identical call sites."
+    },
+    {
+      "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/🟦️.ts",
+      "lines": "4102-4119",
+      "behavior": "nearest() helper inside derivePayloadSchema's resolve(): identical longest-common-path-prefix heuristic applied to ambiguous ENUM names via the placedEnums map (second call site of the same mechanism)."
+    },
+    {
+      "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/🟦️.ts",
+      "lines": "4130-4165",
+      "behavior": "resolve() inside derivePayloadSchema (general struct case): identical longest-common-path-prefix heuristic applied to ambiguous COMPOSITE STRUCT names via the placed map (third call site of the same mechanism — 'Rust resolves by module path; so does this')."
+    },
+    {
+      "file": "📜️script.ts",
+      "lines": "29996-30011",
+      "behavior": "policyFindSchemaDeclaration: scans a schema leaf file for every matching declaration; if the expected type name (from a hardcoded prefix table or a derived config type) is found among them, returns it, but if NOT found, silently falls back to returning the FIRST declaration in the file rather than failing — a positional fallback that can mask a naming mismatch as a shape mismatch instead."
+    },
+    {
+      "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts",
+      "lines": "2670-2679",
+      "behavior": "resolveSchemaFacetKind: infers whether a 🧬️schema/ directory is kind '🧬️data' or '📜️interface' by checking which kind's normative-format canonical filename ALREADY EXISTS on disk in that directory (first schemaFacetKinds entry whose normative file is present wins), defaulting to '🧬️data' if neither is found. Kind is inferred from current file layout rather than declared by the owner."
+    },
+    {
+      "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/🟦️.ts",
+      "lines": "970-973",
+      "behavior": "oracleHostPackagesFor: 'walking up to the nearest contributor' — filters registry.contributions by owner===entry.owner OR owner.startsWith(entry.owner+'/'), i.e. an ancestor-prefix match rather than an exact scope match. Lower-risk than the rustTypeIndex heuristics (bounded to registered contributions) but still a prefix-walk rather than an explicit binding."
+    },
+    {
+      "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/🟦️.ts",
+      "lines": "1094-1096",
+      "behavior": "buildCasePlan: 'A case is scoped by the manifest whose owner it lives under, walking up to the nearest one' — same ancestor-prefix-match pattern as above, applied to resolving a test case's owning mutation manifest. Explicitly documented as returning null (not a guess) when no owning manifest is found, which is safer than the rustTypeIndex heuristics but still a walk-up rather than an explicit id reference."
+    },
+    {
+      "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/🟦️.ts",
+      "lines": "996-1015",
+      "behavior": "resolveFixtures — CONTRAST CASE, not a heuristic: fixture URIs (shared://, local://, asset://) are resolved by an EXPLICIT scheme against exact owner/case fixture directories, no shadowing, no nearest-dir search, path-escape-guarded, digest-pinned. This is the pattern the ticket's 'fixtures bind explicitly to exports' goal should generalize, not a discovery mechanism to remove."
+    }
+  ],
+
+  "buildIntegration": {
+    "nxJson": {
+      "namedInputsForSchemaFixtureTaxonomy": "none — the only 'schema' hit in nx.json is line 2, the config file's own `\"$schema\": \"./node_modules/nx/schemas/nx-schema.json\"` pointer (nx's own JSON-schema, unrelated to this mechanism). Zero hits for 'fixture' or 'taxonomy'."
+    },
+    "rootProjectJson": {
+      "file": "📋️project.json",
+      "lines": "1011 total",
+      "metadataBlock": { "lines": "6-8", "content": "\"metadata\": { \"semio\": { \"taxonomy\": \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json\" } }" },
+      "targets": [
+        { "name": "scale-fixture-check", "lines": "12-19", "runs": "bun ./📜️script.ts scale-fixture check" },
+        { "name": "generate", "lines": "232-239", "runs": "bun ./📜️script.ts generate" },
+        { "name": "generate-taxonomy-census", "lines": "248-255", "runs": "bun ./📜️script.ts generate taxonomy census" },
+        { "name": "generate-taxonomy-duplicates", "lines": "256-263", "runs": "bun ./📜️script.ts generate taxonomy duplicates" },
+        { "name": "clean-taxonomy-inventory", "lines": "418-425", "runs": "bun ./📜️script.ts clean taxonomy inventory" },
+        { "name": "clean-taxonomy-plan", "lines": "427-434", "runs": "bun ./📜️script.ts clean taxonomy plan" },
+        { "name": "clean-taxonomy-apply", "lines": "436-443", "runs": "bun ./📜️script.ts clean taxonomy apply" },
+        { "name": "clean-taxonomy-verify", "lines": "445-452", "runs": "bun ./📜️script.ts clean taxonomy verify" },
+        { "name": "new-taxonomy-mutation", "lines": "454-461", "runs": "bun ./📜️script.ts new mutation" },
+        { "name": "stdio-schema-parity", "lines": "568-575", "runs": "bun ./📜️script.ts stdio schema-parity", "dependsOn": ["stdio-quick"], "note": "the field-parity checker for the json/rust/ts/graphql/protobuf schema siblings, run as its own nx target (not only via lint)" },
+        { "name": "mutation-outcome-law", "lines": "604-610", "runs": "bun ./📜️script.ts verify mutation-outcome-law" },
+        { "name": "verify", "lines": "647-654", "runs": "bun ./📜️script.ts verify" },
+        { "name": "verify-taxonomy-report", "lines": "673-680", "runs": "bun ./📜️script.ts verify taxonomy report" },
+        { "name": "verify-taxonomy-enforce", "lines": "681-688", "runs": "bun ./📜️script.ts verify taxonomy enforce" },
+        { "name": "verify-dependencies-freeze / verify-dependencies-freeze-write-baseline", "lines": "704-718", "runs": "bun ./📜️script.ts verify dependencies / verify dependencies write-baseline" },
+        { "name": "verify-layering / verify-layering-write-baseline", "lines": "719-732", "runs": "bun ./📜️script.ts verify layering / verify layering write-baseline" }
+      ]
+    },
+    "packageJson": {
+      "note": "No script literally named schema/fixture/taxonomy. All generate/verify/lint/test/build scripts are thin `bun nx run workspace:<target>` wrappers delegating to the 📋️project.json targets above — no independent schema/taxonomy logic lives in package.json itself. Some dev scripts pass 'fixture' as a CLI *argument* value, e.g. `\"dev:puzzle:3d:concrete-forest\": \"bun nx run workspace:dev -- 3d fixture concrete\"`."
+    },
+    "vscodeLaunchJson": {
+      "file": ".vscode/launch.json",
+      "totalLines": 26771,
+      "namingConvention": "Emoji-prefixed segments <verb-emoji>verb<noun-emoji>noun<detail-emoji>detail (e.g. 📦️generate🧩️taxonomy📊️census), every entry is {\"name\", \"type\": \"node-terminal\", \"request\": \"launch\", \"command\": \"bun nx run workspace:<target>\" (or \"<project>:<target>\"), \"cwd\": \"${workspaceFolder}\", \"presentation\": {\"group\", \"order\"}}. Groups seen: 0_dev, 1_keyboard, 2_mouse, 3_dev, 4_build, 4_gate, 5_publish. `order` is a float so new entries insert between existing ones (e.g. 209, 209.1, 209.15, 209.2, 209.3) without renumbering siblings. A new schema/taxonomy dev command belongs in group 4_build (or 4_gate for verification-only ⚖️gate* entries), placed immediately after the sibling verify-taxonomy-*/clean-taxonomy-* block, using the next available fractional order.",
+      "schemaTaxonomyFixtureEntries": [
+        { "name": "⚖️gate📕️norm🧬️mutation-leaf-taxonomy", "line": 3871 },
+        { "name": "taxonomy generate/verify/new-artifact group", "lines": "10185-10284" },
+        { "name": "📦️build🦀️@semio-tech/framework-schema", "line": 11494 },
+        { "name": "🧪️test🦀️@semio-tech/framework-schema", "line": 11505 },
+        { "name": "📦️build🦀️@semio-tech/schema-derive-rs", "line": 12220 },
+        { "name": "🔎️check🦀️@semio-tech/schema-derive-rs", "line": 12231 },
+        { "name": "⚖️gate🧬️schema-representation", "line": 8735 },
+        { "name": "⚖️gate🕸️dag🧬️payload-schema", "line": 8746 },
+        { "name": "🧹clean🧩️taxonomy🧪️* (shrink-only fixture-migration gates, ~50 entries)", "lines": "4744-8724" },
+        { "name": "⚖️gate🔌️plugin🧬️declaration🧪️direct-fixtures / ⚖️gate*🧪️direct-fixtures (multiple)", "lines": "8768-9021" }
+      ],
+      "verbatimExamples": [
+        { "lines": "10185-10193", "json": "{ \"name\": \"📦️generate🧩️taxonomy📊️census\", \"type\": \"node-terminal\", \"request\": \"launch\", \"command\": \"bun nx run workspace:generate-taxonomy-census -- --ticket 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS\", \"cwd\": \"${workspaceFolder}\", \"presentation\": { \"group\": \"4_build\", \"order\": 207 } }" },
+        { "lines": "10207-10215", "json": "{ \"name\": \"📦️verify🧩️taxonomy📋️report\", \"type\": \"node-terminal\", \"request\": \"launch\", \"command\": \"bun nx run workspace:verify-taxonomy-report\", \"cwd\": \"${workspaceFolder}\", \"presentation\": { \"group\": \"4_build\", \"order\": 209 } }" },
+        { "lines": "10218-10226", "json": "{ \"name\": \"📦️verify🧩️taxonomy🚦️enforce\", \"type\": \"node-terminal\", \"request\": \"launch\", \"command\": \"bun nx run workspace:verify-taxonomy-enforce\", \"cwd\": \"${workspaceFolder}\", \"presentation\": { \"group\": \"4_build\", \"order\": 209.1 } }" },
+        { "lines": "10251-10259", "json": "{ \"name\": \"📦️new🧩️taxonomy🗿️artifact\", \"type\": \"node-terminal\", \"request\": \"launch\", \"command\": \"bun nx run workspace:new -- artifact\", \"cwd\": \"${workspaceFolder}\", \"presentation\": { \"group\": \"4_build\", \"order\": 209.3 } }" }
+      ]
+    },
+    "rootRatchetFiles": {
+      "dependenciesJson": {
+        "path": "🔒️dependencies.json",
+        "purpose": "Generated (line 2: \"generatedAt\": \"2026-09-03T15:25:05.508Z\") flat array of every external dependency (js/python/cargo/etc.) with ecosystem, name, version, kinds (e.g. production-runtime, repository-tooling), users (consuming package.json/Cargo.toml paths), productionReachable.",
+        "schemaReferences": "Lines 2019/2073/2492/2369: 🧬️schema module's own Cargo.toml files (🧰️framework/🔨️modules/🧬️schema/✨️derive/📦️packages/🦀️rust/Cargo.toml, 🧬️schema/📦️packages/🦀️rust/Cargo.toml) are tracked 'users' of external deps; line 2203: \"name\": \"schemars\" — the schemars crate itself is a tracked dependency."
+      },
+      "layeringJson": {
+        "path": "🧅️layering.json",
+        "purpose": "Shrink-only layering ratchet (line 1 _comment): each entry is a file pattern -> max allowed count of cross-area references (per areaLayers in taxonomy.json), regenerated only via `verify layering write-baseline`.",
+        "schemaReferences": "Line 16: 🧰️framework/🔨️modules/🧬️schema/⚛️component.rs: 1; line 27: …📇️directory/🧬️schema/🦀️component.rs: 1 — the schema component file itself is a ratcheted layering-violation source, capped at 1 reference."
+      },
+      "migrationJson": {
+        "path": "🚚️migration.json",
+        "purpose": "Repo-wide shrink-only test-migration ratchet (line 3 _comment) counting unmanagedTests (executable test files still outside the canonical owner-root test tree) by area: { total: 48, byArea: { .storybook: 10, ✏️s: 1, 🌎️hub: 2, 🧰️framework: 35 } }.",
+        "schemaReferences": "none — no 'schema' hit besides the file's own schemaVersion key; unrelated to the scope-owner schema mechanism."
+      }
+    },
+    "cargoMetadataSemio": {
+      "note": "Confirmed field vocabulary across plugin Cargo.toml [package.metadata.semio] blocks: role (\"plugin\"/\"tool\"/\"extension\"), extends, depends-on, consumes, contributes, plus repeatable [[package.metadata.semio.playground]] tables (variant, app, aliases, ports, engines). NO 'subset' field exists in this TOML block anywhere in ✏️s/🔌️plugins — 'subset' is a taxonomy filesystem-path segment (🪆️subsets/✳️any), not a Cargo metadata key.",
+      "examples": [
+        { "file": "✏️s/🔌️plugins/🔱️trinity/🔨️modules/🔌️jack/🐚️shell/📦️packages/🦀️rust/Cargo.toml", "lines": "15-16", "toml": "[package.metadata.semio]\nrole = \"tool\"" },
+        { "file": "✏️s/🔌️plugins/🔱️trinity/📦️packages/🦀️rust/Cargo.toml", "lines": "14-27", "toml": "[package.metadata.semio]\nrole = \"plugin\"\n[[package.metadata.semio.playground]]\nvariant = \"trinity-jack\"\napp = \"s.trinity.jack@1/*#editor\"\naliases = [\"trinity jack\"]\nports = { react = 6054, wgpu = 6154 }" },
+        { "file": "✏️s/🔌️plugins/🌊️flow/📦️packages/🦀️rust/Cargo.toml", "lines": "14-21", "toml": "[package.metadata.semio]\nrole = \"plugin\"\nconsumes = [\"flow.extension\"]\n[[package.metadata.semio.playground]]\nvariant = \"flow\"\nports = { react = 6016, wgpu = 6116 }\nengines = [\"./🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/📦️packages/🦀️rust\"]" },
+        { "file": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📖️dictionary/📦️packages/🦀️rust/Cargo.toml", "lines": "14-17", "toml": "[package.metadata.semio]\nrole = \"extension\"\nextends = \"flow\"\ncontributes = [\"flow.extension\"]" },
+        { "file": "✏️s/🔌️plugins/🎪️demonstrator/📦️packages/🦀️rust/Cargo.toml", "lines": "23-26", "toml": "[package.metadata.semio]\nrole = \"plugin\"\nconsumes = [\"forms.questionKind\", \"flow.extension\", \"process.machines\"]\ndepends-on = [\"cad\", \"gis\", \"procedural\", \"process\", \"puzzle\", \"sourcing\"]" }
+      ]
+    }
+  },
+
+  "launchEntries": [
+    { "name": "⚖️gate📕️norm🧬️mutation-leaf-taxonomy", "line": 3871 },
+    { "name": "📦️generate🧩️taxonomy📊️census", "lines": "10185-10193", "command": "bun nx run workspace:generate-taxonomy-census -- --ticket <id>", "group": "4_build", "order": 207 },
+    { "name": "📦️generate🧩️taxonomy📊️duplicates (sibling entry in the 10185-10284 block)", "lines": "10185-10284" },
+    { "name": "📦️verify🧩️taxonomy📋️report", "lines": "10207-10215", "command": "bun nx run workspace:verify-taxonomy-report", "group": "4_build", "order": 209 },
+    { "name": "📦️verify🧩️taxonomy🚦️enforce", "lines": "10218-10226", "command": "bun nx run workspace:verify-taxonomy-enforce", "group": "4_build", "order": 209.1 },
+    { "name": "📦️new🧩️taxonomy🗿️artifact", "lines": "10251-10259", "command": "bun nx run workspace:new -- artifact", "group": "4_build", "order": 209.3 },
+    { "name": "📦️build🦀️@semio-tech/framework-schema", "line": 11494 },
+    { "name": "🧪️test🦀️@semio-tech/framework-schema", "line": 11505 },
+    { "name": "📦️build🦀️@semio-tech/schema-derive-rs", "line": 12220 },
+    { "name": "🔎️check🦀️@semio-tech/schema-derive-rs", "line": 12231 },
+    { "name": "⚖️gate🧬️schema-representation", "line": 8735 },
+    { "name": "⚖️gate🕸️dag🧬️payload-schema", "line": 8746 },
+    { "name": "🧹clean🧩️taxonomy🧪️* (~50 shrink-only fixture-migration gate entries)", "lines": "4744-8724" },
+    { "name": "⚖️gate🔌️plugin🧬️declaration🧪️direct-fixtures and siblings (multiple)", "lines": "8768-9021" }
+  ],
+
+  "runtimeValidators": [
+    {
+      "kind": "test/conformance only, not shipped",
+      "detail": "318 TypeScript files match ajv|zod; ~297 are node_modules/zod source or inline .test.ts/🧫️fixtures/📜️script.ts build tooling. validateAllContracts (harness 🟦️.ts:1869) has NO Ajv import — it does hand-written structural checks, not validator-driven ones, despite the harness's own wire-format schema (🧬️schema/🔣️.json) being a real draft-2020-12 JSON Schema document."
+    },
+    {
+      "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript/🧬️schema-validation.ts",
+      "lines": "19 lines total, exports isValidJsonSchema2020_12",
+      "kind": "conformance-suite oracle, not production",
+      "detail": "Docstring line 1: 'JSON Schema draft 2020-12 validation for the conformance suite'; only callers confirmed via grep -rln are 💡️inference-bridge.test.ts and 🏛️legacy-conformance.test.ts."
+    },
+    {
+      "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🔗️remote/🧩️pair/🧪️oracle/🟦️.ts",
+      "lines": "12-15",
+      "kind": "standalone Bun-script oracle, lives in a 🧪️oracle/ dir, not imported by app code",
+      "detail": "Reads fixture+schema off disk and throws if invalid."
+    },
+    {
+      "file": "🧰️framework/🔨️modules/🧬️schema/✅️validator.rs",
+      "lines": "475 lines total",
+      "kind": "GENUINE PRODUCTION RUNTIME (Rust)",
+      "detail": "The repo's own hand-rolled JSON-Schema compiler/validator (OwnedJsonSchemaValidator; pub fn compile/validate_json/is_valid_json; cancellation support via ValidationControl) — no external `jsonschema` crate dependency, consistent with CLAUDE.md's 'no runtime deps on external libraries' rule."
+    },
+    {
+      "file": "🧰️framework/🔨️modules/🧬️schema/⚛️component.rs",
+      "lines": "40, 60",
+      "kind": "production wiring",
+      "detail": "SchemaCatalog.register_json compiles a validator per registered schema id via the hand-rolled validator above."
+    },
+    {
+      "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🧬️schema/🦀️.rs",
+      "lines": "289, 295",
+      "kind": "production wiring",
+      "detail": "compile_validator/validate wrap the hand-rolled validator for the MCP module."
+    },
+    {
+      "kind": "GENUINE PRODUCTION RUNTIME (Rust) — schemars-derived MCP tool schemas",
+      "detail": "schemars::JsonSchema derives (dozens of hits) in 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/🦀️.rs and …/🌉️mcp/⚠️errors/🦀️.rs, 🧭️protocol/🦀️.rs generate real MCP tool inputSchema/outputSchema documents at server-registration time.",
+      "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🦀️.rs",
+      "lines": "384, 524",
+      "example": "schemars::schema_for!(PreparedActionReport) / schemars::schema_for!(InvocationReport) — served live to real MCP clients, confirmed production runtime."
+    }
+  ],
+
+  "productionFixtureReads": {
+    "conclusion": "No production-facing code reads a plugin's 🧪️fixtures/ directory at runtime — shipping a plugin without its 🧪️fixtures/ dir would not break runtime behavior, only its own test/verify targets (stdio-schema-parity, verify-taxonomy-*, any 📜️script.ts-driven conformance checks that read fixtures at build/CI time).",
+    "checkedHits": [
+      { "file": "🧰️framework/🔨️modules/🧵️job/🦀️.rs", "line": 485, "verdict": "the include!(\"🧪️fixtures/…\") call sits inside a function only reachable from the file's own #[test] block (starting ~line 486)." },
+      { "file": "🧰️framework/🔨️modules/📡️replication/🔗️causal/🦀️.rs", "line": 981, "verdict": "the string \"…/🧪️fixtures/🧬️mutations/➕️causal-add\" is a descriptor label/owner path, not a filesystem read." }
+    ]
+  },
+
+  "packagingEmbeds": {
+    "coreMechanism": {
+      "pattern": "include_str! embedding of the sibling 🧬️schema/ representation files, GENUINE WIDESPREAD PRODUCTION CODE — not test-only. One 🧬️schema/🦀️.rs per artifact/subset, four facets (artifact/snapshot/diff/mutations) x five languages = up to 20 include_str! calls per schema module.",
+      "occurrenceCount": "3,804 distinct files repo-wide contain a schema-related include_str! call (22,958 total matching lines for `grep -rn \"include_str!\"` filtered to lines mentioning 'schema').",
+      "representativeExample": {
+        "file": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs",
+        "lines": "201-230",
+        "function": "jack_artifact_schema_descriptor() — NOT inside #[cfg(test)] (that block starts later at line 244 for an unrelated test)",
+        "snippet": "pub fn jack_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor { ...artifact: FacetLeaves { rust: include_str!(\"🦀️.rs\"), typescript: include_str!(\"🟦️.ts\"), graphql: include_str!(\"🔗️.graphql\"), json_schema: include_str!(\"🔣️.json\"), proto: include_str!(\"🛰️.proto\") }, snapshot: FacetLeaves { rust: include_str!(\"📸️snapshot/🦀️.rs\"), ... }, diff: FacetLeaves { rust: include_str!(\"🔺️diff/🦀️.rs\"), ... }, mutations: FacetLeaves { rust: include_str!(\"🧬️mutations/🦀️.rs\"), ... } }"
+      },
+      "descriptorType": {
+        "file": "🧰️framework/🔨️modules/🧬️schema/⚛️component.rs",
+        "lines": "166-172",
+        "type": "ArtifactSchemaDescriptor { id, artifact: FacetLeaves, snapshot: FacetLeaves, diff: FacetLeaves, mutations: FacetLeaves }"
+      },
+      "productionConsumption": {
+        "registration": { "file": "🧰️framework/🔨️modules/🧬️schema/⚛️component.rs", "lines": "319, 346", "detail": "register_artifact_schema_descriptor/register_artifact_schema_descriptors feed a runtime by_id: HashMap<&'static str, ArtifactSchemaDescriptor> registry (line 196)." },
+        "pluginBuilderIntegration": { "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs", "lines": "2992, 3050, 3095", "detail": "pub fn schema(self, descriptor: ::semio_framework_schema::ArtifactSchemaDescriptor) -> ArtifactDeclarationBuilder<DeclarationReady> — every plugin's declared artifact registration takes this descriptor as an argument." }
+      },
+      "conclusion": "Every plugin embeds its own five-language schema siblings directly into its compiled wasm/native binary at build time via include_str!, and registers them at plugin-init runtime. No separate asset-copy step, no build.rs involvement, no Vite bundling."
+    },
+    "buildRs": {
+      "filesFound": ["🧰️framework/…/♾️infinite/📦️packages/🦀️rust/build.rs", "✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/build.rs", "🧰️framework/…/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/build.rs"],
+      "conclusion": "None of the 3 build.rs files in the repo mention 'schema' at all. Schema packaging is entirely include_str!-based, not build.rs-driven."
+    },
+    "viteConfig": {
+      "gotcha": "Every Vite config in this repo is emoji-prefixed (⚙️vite.config.ts), never bare vite.config.ts — a naive `--include=vite.config.ts` glob finds nothing.",
+      "filesChecked": ["♻️mit-bestand/🧺️demonstrator/⚙️vite.config.ts", "🌎️hub/🔨️modules/🛡️admin/📦️packages/🟦️typescript/⚙️vite.config.ts", "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/⚙️vite.config.ts", "and others"],
+      "conclusion": "None reference 'schema'. No Vite plugin bundles schema/json resources for this mechanism; it is purely a Rust-side include_str! embed, consumed on the TS side (if at all) only through the generated 🟦️.ts facet file, not through Vite config."
+    }
+  },
+
+  "methodologyNote": "On this machine's BSD grep, \"a\\|b\" is NOT alternation (it silently degrades to a literal-backslash match) — must use `grep -E \"a|b\"`. This bit the sub-audit's ajv/zod search and inflated an early false-positive count before re-running with -E. Worth remembering for any future grep-based audit on this repo/host.",
+
+  "extensionPoints": [
+    { "concern": "VERIFIED, directly read (not inferred) — the nearest existing skeleton for '(scope id, export id, format)'", "file": "🧰️framework/🔨️modules/🧬️schema/⚛️component.rs", "location": "FacetLeaves struct (130-138: rust/typescript/graphql/json_schema/proto fields), ArtifactSchemaDescriptor struct (166-172: id + 4 fixed FacetLeaves fields artifact/snapshot/diff/mutations), registration + dedup (register_artifact_schema_descriptor[s]/preflight_artifact_schema_descriptors, 317-347, backed by with_artifact_schema_registry's by_id: HashMap<&'static str, ArtifactSchemaDescriptor> at line 196)", "why": "ArtifactSchemaDescriptor.id is ALREADY a dotted scope identity (verified example: \"s.trinity.jack\" in ✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs:203), and id-collision-with-differing-body is already a hard registration error. What's MISSING is the export-id dimension: FacetLeaves hard-codes exactly 5 fixed format fields for exactly 4 fixed facet names (artifact/snapshot/diff/mutations) — no arbitrary named export beyond those 4, no per-facet multiplicity. Extending this to a keyed collection (e.g. exports: BTreeMap<&'static str, FacetLeaves>) is the most direct path from today's mechanism to the ticket's target model — prefer this over inventing a parallel type." },
+    { "concern": "Declare a scope's eligible schema exports", "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json", "location": "new top-level key, sibling to schemaFacetKinds/artifactSchemaSpecFileKinds", "why": "Keeps the already-generic 'what formats/filenames are expected' layer next to a new 'what exports exist' layer." },
+    { "concern": "Resolve (scope, export id) -> formats/filenames", "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts", "location": "schemaFacetFormatEntries (2684-2691) / resolveSchemaFacetKind (2670-2679)", "why": "Already the one general-purpose choke point every schema policy check calls through." },
+    { "concern": "Replace hand-maintained artifact-schema owner table", "file": "📜️script.ts", "location": "POLICY_ARTIFACT_SCHEMA_PREFIXES (29889-29948) + policyArtifactSchemaPrefix (29974-29981)", "why": "Direct swap target; mirror policyDiscoverAppSchemaOwners's source-derived approach instead of a hardcoded map." },
+    { "concern": "Generalize explicit fixture binding to schema exports", "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/🟦️.ts", "location": "resolveFixtures (996-1015) / fixtureUrisIn (982-987)", "why": "Working template for an explicit URI-scheme reference mechanism; would replace the schemaCandidates.find(existsSync) fallback at 3579-3596." },
+    { "concern": "Retire the rustTypeIndex nearest-parent heuristic", "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/🟦️.ts", "location": "rustTypeIndex (3825-3931), resolution call sites (4028-4060, 4102-4119, 4130-4165)", "why": "Once payload schemas are scope-declared exports resolved by explicit id, this repo-wide scan-and-guess mechanism should no longer be needed for that purpose." },
+    { "concern": "New catalog contract shape", "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json", "location": "mutationCatalogProjection + semanticPathProjectionContracts/semanticDescendantContracts/semanticPathProjectionCatalogContracts", "why": "Existing, working precedent for declaring {projection, descendant, catalog} contract ids and generating/verifying via script.ts; clone this shape for a schema-export catalog." },
+    { "concern": "Named/versioned identity precedent", "file": "📜️script.ts", "location": "stdioDefinitionCatalog (19519-19544), stdioDefinitionIdentity/stdioVersionedLeaf (19472-19479)", "why": "Closest existing model for '(scope id, export id)' naming: explicit catalog array cross-checked against a full-tree walk, dotted+versioned ids (s.stdio.<slug>.v<N>). Currently stdio-only, describes container/mutation definitions rather than JSON-Schema field contracts." },
+    { "concern": "Decide catalog-based vs convention-based discovery deliberately", "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📇️registry/🔣️.json", "location": "line 4 comment", "why": "States oracle registries are discovered BY CONVENTION (<owner>/🔣️oracle.json), not centrally cataloged — this tension (convention vs catalog) coexists with mutationCatalogProjection's catalog-based approach today; WP1+ should pick one deliberately for schema exports rather than accidentally blending both." }
+  ],
+
+  "ownerTermDisambiguation": [
+    { "sense": "Package owner", "definedAt": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts:9294-9296 (discoverOwners)", "meaning": "Any directory carrying a 📦️packages/ child; used for clean-mechanism/packaging-purity burndown. Unrelated to schema." },
+    { "sense": "Artifact-schema owner", "definedAt": "📜️script.ts: policyListPluginArtifactDirs (27913-27924) + POLICY_ARTIFACT_SCHEMA_PREFIXES (29889-29948)", "meaning": "A plugin/artifact pair, hand-listed in a literal table." },
+    { "sense": "App/surface-schema owner", "definedAt": "📜️script.ts: policyDiscoverAppSchemaOwners (30728-30768)", "meaning": "A 🎚️config/🧮️config directory, derived from a `type Config = X` binding found in source." },
+    { "sense": "Mutation owner", "definedAt": "🔣️taxonomy.json: mutationPayloadSchemaAuthority.ownerAuthority ('mutationOwnerIdentity'), mutationDomainOwners, mutationCatalogSourceOwners", "meaning": "A subset path declaring the create/delete/rename/... verb vocabulary for one mutation family." },
+    { "sense": "Test-contribution owner", "definedAt": "harness 🟦️.ts: registry.contributions[].owner, testContributionDirName ('🔮️oracle'), testContributionDirectoryOverrides", "meaning": "A subset path that contributes oracle/fixture/mutation-manifest data to the test registry." }
+  ]
+}

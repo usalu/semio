@@ -183,8 +183,8 @@ fn invalid_splice_oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::{bytes_field, inverse_spec, json_obj, mutable_input, projection_of, usize_field};
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_plugin_stdio::artifacts::binary::standards::v_raw::subsets::any::schema::mutations::{append_bytes, apply_binary_mutation, set_snapshot, splice, truncate_at, BinaryMutation};
-    use semio_s_plugin_stdio::artifacts::binary::standards::v_raw::subsets::any::schema::snapshot::BinarySnapshot;
+    use crate::standards::v_raw::subsets::any::schema::mutations::{append_bytes, apply_binary_mutation, set_snapshot, splice, truncate_at, BinaryMutation};
+    use crate::standards::v_raw::subsets::any::schema::snapshot::BinarySnapshot;
     use semio_s_plugin_stdio_test_oracle::artifacts::binary::standards::v_raw::subsets::any::oracle_apply_mutation;
 use semio_s_plugin_stdio_test_oracle::law::{carrier_is_exact, inverse_restores};
 

@@ -7,8 +7,8 @@
 //! buildingSMART Coordination View 2.0-era Part-21 entity keyword IFC4 uses, since 2x3 rides the
 //! identical ISO 10303-21 syntax with an older EXPRESS schema).
 
-use crate::artifacts::ifc::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot;
-use schema::ArtifactSchema;
+use crate::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot;
+use framework_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 
 use super::bounds::{compute_ifc2x3_bounds, Ifc2x3Bounds};
@@ -57,7 +57,7 @@ impl protocol::InferenceSpec<Ifc2x3Snapshot> for Ifc2x3Inference {
 /// with no honest per-entity incremental decomposition (a merkle dep-chain over this flat
 /// instance list costs more than the fold it would cache) — the default `infer_cached`
 /// passthrough is exact.
-impl ArtifactInferrer for crate::artifacts::ifc::standards::v2x3::subsets::base::schema::Ifc2x3Builder {
+impl ArtifactInferrer for crate::standards::v2x3::subsets::base::schema::Ifc2x3Builder {
     type Snapshot = Ifc2x3Snapshot;
     type Inference = Ifc2x3Inference;
 }
@@ -67,10 +67,10 @@ impl ArtifactInferrer for crate::artifacts::ifc::standards::v2x3::subsets::base:
 /// 💡️ Registers `s.stdio.ifc.2x3.inference`'s facet leaves into the OS-wide inference catalog —
 /// call once at plugin init, alongside `ifc2x3_artifact_schema_descriptor`'s registration.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn ifc2x3_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
-    schema::ArtifactInferenceDescriptor {
+pub fn ifc2x3_artifact_inference_descriptor() -> framework_schema::ArtifactInferenceDescriptor {
+    framework_schema::ArtifactInferenceDescriptor {
         id: "s.stdio.ifc.2x3.inference",
-        inference: schema::FacetLeaves {
+        inference: framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),

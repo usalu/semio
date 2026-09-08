@@ -15,7 +15,7 @@
       ],
       "license": "AGPL-3.0-only",
       "testOnly": true,
-      "rationale": "🐍️ No third-party library reads or writes s.vcs.vcs's .vcs.dsl.semio/.vcs.pack.semio carriers — grammars this repository defines and nobody else reads. The reference is therefore a SECOND IMPLEMENTATION rather than a third-party distribution. The implementation is ../../../🧪️tests/mutate-vcs-1/🐍️component.py, written from this subset's own committed ../🧬️schema/📸️snapshot/🔣️.json and each mutation's 🔣️.schema.json, and from .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-DIRECT-LEAF-OVERHAUL/📓️taxonomy.md's change/rename/add/remove verb entries. It imports nothing from the Rust it judges and transliterates none of it — remove-tag's inverse reinserts the captured tag at its captured BASE-state index rather than appending, which the committed fixture's two-tag ordering is built to catch (a first standalone run caught exactly this bug in this file, fixed before registration). All six kinds' forward and inverse scenarios were executed standalone via the repository's own 🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🐍️python/🐍️.py host against a hand-built plan — all twelve passed.",
+      "rationale": "🐍️ No third-party library reads or writes s.vcs.vcs's .vcs.dsl.semio/.vcs.pack.semio carriers — grammars this repository defines and nobody else reads. The reference is therefore a SECOND IMPLEMENTATION rather than a third-party distribution. The implementation is ../../../🧪️tests/mutate-vcs-1/🐍️component.py, written from this subset's own committed ../🧬️schema/📸️snapshot/🔣️.json and each mutation's 🧬️schema/🔣️.json, and from .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-DIRECT-LEAF-OVERHAUL/📓️taxonomy.md's change/rename/add/remove verb entries. It imports nothing from the Rust it judges and transliterates none of it — remove-tag's inverse reinserts the captured tag at its captured BASE-state index rather than appending, which the committed fixture's two-tag ordering is built to catch (a first standalone run caught exactly this bug in this file, fixed before registration). All six kinds' forward and inverse scenarios were executed standalone via the repository's own 🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🐍️python/🐍️.py host against a hand-built plan — all twelve passed.",
       "kind": "verified-native-second-implementation",
       "engine": {
         "family": "none",
@@ -146,7 +146,7 @@
         {
           "id": "add-tag",
           "capability": "vcs-1-mutate",
-          "payloadSchema": "📋️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -165,7 +165,7 @@
         {
           "id": "change-counter",
           "capability": "vcs-1-mutate",
-          "payloadSchema": "📋️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -184,7 +184,7 @@
         {
           "id": "change-notes",
           "capability": "vcs-1-mutate",
-          "payloadSchema": "📋️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -203,7 +203,7 @@
         {
           "id": "change-status",
           "capability": "vcs-1-mutate",
-          "payloadSchema": "📋️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -222,7 +222,7 @@
         {
           "id": "remove-tag",
           "capability": "vcs-1-mutate",
-          "payloadSchema": "📋️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied",
             "rejected"
@@ -242,7 +242,7 @@
         {
           "id": "rename-vcs",
           "capability": "vcs-1-mutate",
-          "payloadSchema": "📋️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],

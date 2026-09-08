@@ -70,7 +70,7 @@
         {
           "id": "insert-block",
           "capability": "md-commonmark-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -89,7 +89,7 @@
         {
           "id": "remove-block",
           "capability": "md-commonmark-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -108,7 +108,7 @@
         {
           "id": "replace-block",
           "capability": "md-commonmark-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -127,7 +127,7 @@
         {
           "id": "set-inlines",
           "capability": "md-commonmark-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -146,7 +146,7 @@
         {
           "id": "set-snapshot",
           "capability": "md-commonmark-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],

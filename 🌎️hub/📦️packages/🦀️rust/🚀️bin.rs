@@ -9270,6 +9270,7 @@ mod tests {
         use semio_hub::artifact_authority::creation::{
             ARTIFACT_CREATION_DEADLINE_MS, ArtifactCreationClaimV1, ArtifactCreationFactAppendV1, ArtifactCreationFactBodyV1, ArtifactCreationIntentV1, ArtifactCreationPreparedV1, artifact_creation_command_digest_v1,
         };
+        let accepted_at_ms = 1;
         let scope = DocumentScope::new(&descriptor.space_id, &descriptor.document_id);
         let pack_hash = os_directory::ArtifactHash(Sha256::digest(pack));
         let spr_hash = os_directory::ArtifactHash(Sha256::digest(spr));
@@ -9434,8 +9435,8 @@ mod tests {
         let parent_dialect = selection.parent_dialect;
         state.openable_catalog = Some(configured.catalog);
         let document = db_artifact_id(&scope);
-        let snapshot_value = semio_s_plugin_stdio::artifacts::json::schema::snapshot::demo_json_snapshot();
-        let pack = <semio_s_plugin_stdio::artifacts::json::JsonSnapshot as directory::os_store::ArtifactPack>::encode_pack(&snapshot_value);
+        let snapshot_value = semio_s_artifact_stdio_json::schema::snapshot::demo_json_snapshot();
+        let pack = <semio_s_artifact_stdio_json::JsonSnapshot as directory::os_store::ArtifactPack>::encode_pack(&snapshot_value);
         let spr = directory::os_store::empty_document_spr(&document.0, &descriptor.artifact_schema).await;
         let mut descriptor = descriptor;
         descriptor.bootstrap_snapshot_hash = os_directory::hex_lower(&Sha256::digest(&pack));

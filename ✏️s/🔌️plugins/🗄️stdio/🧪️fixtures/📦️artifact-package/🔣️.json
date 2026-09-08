@@ -1,0 +1,91 @@
+{
+  "schemaVersion": 1,
+  "accepted": [
+    {
+      "schemaVersion": 1,
+      "packages": [
+        {
+          "artifact": "pdf",
+          "directory": "📖️pdf",
+          "identity": "s.stdio.pdf",
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🧬️schema/📜️artifact-definition.json",
+          "dependencies": ["s.stdio.binary", "s.stdio.deflate"],
+          "rust": {
+            "cargoName": "semio-s-artifact-stdio-pdf",
+            "nxName": "@semio-tech/stdio-pdf-rs",
+            "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/📦️packages/🦀️rust/Cargo.toml"
+          },
+          "typescript": {
+            "name": "@semio-tech/stdio-pdf",
+            "nxName": "@semio-tech/stdio-pdf",
+            "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/📦️packages/🟦️typescript/package.json",
+            "entry": {
+              "types": "./dist/🟦️.d.ts",
+              "import": "./dist/🟦️.js"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "rejected": [
+    {
+      "id": "umbrella-rust-package",
+      "value": {
+        "schemaVersion": 1,
+        "packages": [
+          {
+            "artifact": "pdf",
+            "directory": "📖️pdf",
+            "identity": "s.stdio.pdf",
+            "source": "artifact-definition.json",
+            "dependencies": [],
+            "rust": {
+              "cargoName": "semio-s-plugin-stdio",
+              "nxName": "@semio-tech/stdio-pdf-rs",
+              "manifest": "Cargo.toml"
+            },
+            "typescript": {
+              "name": "@semio-tech/stdio-pdf",
+              "nxName": "@semio-tech/stdio-pdf",
+              "manifest": "package.json",
+              "entry": {
+                "types": "./dist/🟦️.d.ts",
+                "import": "./dist/🟦️.js"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "escaping-typescript-entry",
+      "value": {
+        "schemaVersion": 1,
+        "packages": [
+          {
+            "artifact": "pdf",
+            "directory": "📖️pdf",
+            "identity": "s.stdio.pdf",
+            "source": "artifact-definition.json",
+            "dependencies": [],
+            "rust": {
+              "cargoName": "semio-s-artifact-stdio-pdf",
+              "nxName": "@semio-tech/stdio-pdf-rs",
+              "manifest": "Cargo.toml"
+            },
+            "typescript": {
+              "name": "@semio-tech/stdio-pdf",
+              "nxName": "@semio-tech/stdio-pdf",
+              "manifest": "package.json",
+              "entry": {
+                "types": "../../🟦️.d.ts",
+                "import": "../../🟦️.js"
+              }
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -5,7 +5,7 @@
   "displayName": "Change Byte Order",
   "emoji": "🧭️",
   "aggregateVariant": "ChangeByteOrder",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-byte-order",
   "binaryTag": 2,
   "invertibility": "explicit-mutation",

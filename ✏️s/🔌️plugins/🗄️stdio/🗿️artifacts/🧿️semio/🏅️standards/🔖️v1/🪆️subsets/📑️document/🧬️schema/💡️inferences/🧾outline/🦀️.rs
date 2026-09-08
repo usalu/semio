@@ -6,7 +6,7 @@
 //! is a whitespace-split word count over every Paragraph/Heading run's text plus every Code
 //! block's literal text).
 
-use crate::artifacts::semio::standards::v1::subsets::document::schema::snapshot::{DocBlock, DocRun, SemioDocumentSnapshot};
+use crate::standards::v1::subsets::document::schema::snapshot::{DocBlock, DocRun, SemioDocumentSnapshot};
 
 //#region 🔖️Outline
 /// 🧾️ One `sectionOutline` entry — a heading's level + flattened run text.
@@ -96,7 +96,7 @@ pub fn compute_semio_document_outline(snapshot: &SemioDocumentSnapshot) -> Semio
 //#region 🧪️Tests
 mod tests {
     use super::*;
-    use crate::artifacts::semio::standards::v1::subsets::document::schema::snapshot::{DocListItem, DocTableCell, DocTableRow, STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA};
+    use crate::standards::v1::subsets::document::schema::snapshot::{DocListItem, DocTableCell, DocTableRow, STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA};
 
     #[semio_framework_async_macros::async_test]
     async fn collects_headings_and_counts_words_and_blocks() {

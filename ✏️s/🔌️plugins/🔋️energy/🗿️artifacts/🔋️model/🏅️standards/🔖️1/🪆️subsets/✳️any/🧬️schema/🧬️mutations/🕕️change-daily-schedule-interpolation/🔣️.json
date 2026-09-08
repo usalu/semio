@@ -5,7 +5,7 @@
   "displayName": "Change Daily Schedule Interpolation",
   "emoji": "🕕️",
   "aggregateVariant": "ChangeDailyScheduleInterpolation",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-daily-schedule-interpolation",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

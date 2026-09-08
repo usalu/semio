@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "host": "demonstrator.entwerfen.mit-bestand.de",
+  "assetsDirectory": "♻️mit-bestand/🧺️demonstrator/🖼️asset",
+  "panes": [
+    {
+      "variant": "generator",
+      "runtimeVariant": "generation3d"
+    },
+    {
+      "variant": "koordinator",
+      "runtimeVariant": "koordinator"
+    },
+    {
+      "variant": "aggregator",
+      "runtimeVariant": "aggregator"
+    },
+    {
+      "variant": "aussuchen",
+      "runtimeVariant": "aussuchen"
+    },
+    {
+      "variant": "bearbeiten",
+      "runtimeVariant": "bearbeiten"
+    },
+    {
+      "variant": "verfolgen",
+      "runtimeVariant": "verfolgen"
+    }
+  ]
+}

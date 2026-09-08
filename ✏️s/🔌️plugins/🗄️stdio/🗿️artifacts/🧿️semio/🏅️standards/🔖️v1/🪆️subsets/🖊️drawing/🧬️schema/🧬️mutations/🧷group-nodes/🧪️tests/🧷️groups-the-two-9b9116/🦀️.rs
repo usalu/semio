@@ -6,9 +6,9 @@
 //! new `Group` node back at `indices[0]`, carrying the grouped children inside it — so the node
 //! content travels in the diff rather than being reconstructed by the applier.
 
-use crate::artifacts::semio::standards::v1::subsets::drawing::schema::diff::SemioDrawingDiff;
-use crate::artifacts::semio::standards::v1::subsets::drawing::schema::mutations::SemioDrawingMutation;
-use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{DrawNode, SemioDrawingSnapshot};
+use crate::standards::v1::subsets::drawing::schema::diff::SemioDrawingDiff;
+use crate::standards::v1::subsets::drawing::schema::mutations::SemioDrawingMutation;
+use crate::standards::v1::subsets::drawing::schema::snapshot::{DrawNode, SemioDrawingSnapshot};
 use protocol::{Mutation, MutationDiff};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
@@ -103,7 +103,7 @@ async fn committed_diff_is_canonical_and_narrowly_scoped() {
     let layer_diff = &layers.modified[0].diff;
     assert!(layer_diff.id.is_none() && layer_diff.name.is_none() && layer_diff.visible.is_none(), "a node-level edit must not touch the layer's own scalar fields");
     let root = layer_diff.root.as_ref().expect("the layer diff must carry a root node diff");
-    let crate::artifacts::semio::standards::v1::subsets::drawing::schema::diff::DrawNodeDiff::Group(root_group) = root else { panic!("the layer root is a group, so its diff must be the Group arm") };
+    let crate::standards::v1::subsets::drawing::schema::diff::DrawNodeDiff::Group(root_group) = root else { panic!("the layer root is a group, so its diff must be the Group arm") };
     let children = root_group.children.as_ref().expect("the root group diff must carry a children triple");
     assert!(root_group.transform.is_none(), "editing a child must not rewrite the root group's own transform");
     assert_eq!(children.removed, vec![0usize, 1], "both grouped indices leave the parent");

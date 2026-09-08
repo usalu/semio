@@ -1,0 +1,24 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/deflate/rfc1950/any/mutation/set-payload.json",
+  "title": "SetPayload",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "payload"
+  ],
+  "properties": {
+    "payload": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 255
+      }
+    },
+    "mutation": {
+      "const": "setPayload",
+      "description": "Aggregate discriminator spliced in by DeflateMutation; absent when the payload stands alone."
+    }
+  }
+}

@@ -1,8 +1,8 @@
 //! 🧬️ ZipArtifact schema — full artifact state.
 
-use crate::artifacts::zip::schema::snapshot::ZipEntry;
-use crate::artifacts::zip::{ZipSnapshot, STDIO_ZIP_DOCUMENT_SCHEMA};
-use schema::ArtifactSchema;
+use crate::schema::snapshot::ZipEntry;
+use crate::{ZipSnapshot, STDIO_ZIP_DOCUMENT_SCHEMA};
+use framework_schema::ArtifactSchema;
 
 //#region Artifact
 /// 🧬️ Full `stdio.zip` artifact state.
@@ -80,31 +80,31 @@ pub fn demo_zip_snapshot() -> ZipSnapshot {
 //#region Descriptor
 /// 🧬️ Descriptor for `s.stdio.zip`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn zip_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
-    schema::ArtifactSchemaDescriptor {
+pub fn zip_artifact_schema_descriptor() -> framework_schema::ArtifactSchemaDescriptor {
+    framework_schema::ArtifactSchemaDescriptor {
         id: "s.stdio.zip",
-        artifact: schema::FacetLeaves {
+        artifact: framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),
             json_schema: include_str!("🔣️.json"),
             proto: include_str!("🛰️.proto"),
         },
-        snapshot: schema::FacetLeaves {
+        snapshot: framework_schema::FacetLeaves {
             rust: include_str!("📸️snapshot/🦀️.rs"),
             typescript: include_str!("📸️snapshot/🟦️.ts"),
             graphql: include_str!("📸️snapshot/🔗️.graphql"),
             json_schema: include_str!("📸️snapshot/🔣️.json"),
             proto: include_str!("📸️snapshot/🛰️.proto"),
         },
-        diff: schema::FacetLeaves {
+        diff: framework_schema::FacetLeaves {
             rust: include_str!("🔺️diff/🦀️.rs"),
             typescript: include_str!("🔺️diff/🟦️.ts"),
             graphql: include_str!("🔺️diff/🔗️.graphql"),
             json_schema: include_str!("🔺️diff/🔣️.json"),
             proto: include_str!("🔺️diff/🛰️.proto"),
         },
-        mutations: schema::FacetLeaves {
+        mutations: framework_schema::FacetLeaves {
             rust: include_str!("🧬️mutations/🦀️.rs"),
             typescript: include_str!("🧬️mutations/🟦️.ts"),
             graphql: include_str!("🧬️mutations/🔗️.graphql"),
@@ -116,8 +116,8 @@ pub fn zip_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
 //#endregion Descriptor
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use crate::artifacts::zip::schema::snapshot::ZipEntry;
-    use crate::artifacts::zip::{ZipDiff, ZipMutation, ZipSnapshot};
+    use crate::schema::snapshot::ZipEntry;
+    use crate::{ZipDiff, ZipMutation, ZipSnapshot};
     use semio_framework_plugin::ArtifactBuilder;
 
     //#region 🔖️Builder
@@ -145,7 +145,7 @@ pub mod derived_construction {
             Ok(Self::from_snapshot(<ZipSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
         fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
-            let diff = crate::artifacts::zip::schema::mutations::apply_zip_mutation(&mut self.snapshot, &mutation);
+            let diff = crate::schema::mutations::apply_zip_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
         fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
@@ -199,7 +199,7 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use crate::artifacts::zip::ZipSnapshot;
+    use crate::ZipSnapshot;
     use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     //#region 🔖️Parts
@@ -223,7 +223,7 @@ pub mod derived_analysis {
             // constant. `AnalyzeSource::Text` is the hex-envelope DSL form, not raw container bytes,
             // so it can't be magic-sniffed the same way — treated as low confidence here (the DSL
             // envelope preamble, not this sniff, is what actually recognizes it).
-            use crate::artifacts::zip::standards::v2_0::subsets::base::io::{sniff_zip_bytes, SniffConfidence};
+            use crate::standards::v2_0::subsets::base::io::{sniff_zip_bytes, SniffConfidence};
             match source {
                 AnalyzeSource::Binary(bytes) => match sniff_zip_bytes(bytes) {
                     SniffConfidence::High => IoConfidence::High,
@@ -248,8 +248,8 @@ pub mod derived_analysis {
                         }
                     },
                     AnalyzeSource::Binary(bytes) => {
-                        let result = if matches!(crate::artifacts::zip::standards::v2_0::subsets::base::io::sniff_zip_bytes(bytes), crate::artifacts::zip::standards::v2_0::subsets::base::io::SniffConfidence::High) {
-                            crate::artifacts::zip::standards::v2_0::subsets::base::io::decode_zip(bytes).map_err(|err| err.to_string())
+                        let result = if matches!(crate::standards::v2_0::subsets::base::io::sniff_zip_bytes(bytes), crate::standards::v2_0::subsets::base::io::SniffConfidence::High) {
+                            crate::standards::v2_0::subsets::base::io::decode_zip(bytes).map_err(|err| err.to_string())
                         } else {
                             <ZipSnapshot as store::ArtifactPack>::decode_pack(bytes).map_err(|err| err.to_string())
                         };

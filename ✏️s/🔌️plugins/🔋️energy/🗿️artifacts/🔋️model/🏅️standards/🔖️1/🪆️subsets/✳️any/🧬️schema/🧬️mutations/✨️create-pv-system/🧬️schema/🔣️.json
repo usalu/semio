@@ -1,0 +1,43 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/energy/model/1/any/mutation/create-pv-system.json",
+  "title": "CreatePvSystem",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "index",
+    "id",
+    "dcCapacityW",
+    "areaM2",
+    "tiltDeg",
+    "azimuthDeg",
+    "moduleEfficiency",
+    "inverterEfficiency"
+  ],
+  "properties": {
+    "index": {
+      "type": "integer"
+    },
+    "id": {
+      "type": "integer"
+    },
+    "dcCapacityW": {
+      "type": "number"
+    },
+    "areaM2": {
+      "type": "number"
+    },
+    "tiltDeg": {
+      "type": "number"
+    },
+    "azimuthDeg": {
+      "type": "number"
+    },
+    "moduleEfficiency": {
+      "type": "number"
+    },
+    "inverterEfficiency": {
+      "type": "number"
+    }
+  }
+}

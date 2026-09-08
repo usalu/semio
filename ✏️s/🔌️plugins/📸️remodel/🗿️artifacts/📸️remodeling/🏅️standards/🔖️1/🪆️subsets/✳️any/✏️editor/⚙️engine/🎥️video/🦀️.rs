@@ -1,7 +1,7 @@
 //! 🎞️ Video container demuxing and baseline decode: ISO-BMFF/MP4 and RIFF/AVI demux via stdio's
 //! real `mp4`/`avi` engines (in-process, same-crate-family call — no wasm/IPC), a hand-rolled H.264
 //! baseline-profile PIXEL decoder (the one piece stdio's own mp4 engine deliberately does NOT do —
-//! see `semio_s_plugin_stdio::artifacts::mp4::standards::isobmff::engine::h264`'s own doc comment,
+//! see `semio_s_artifact_stdio_mp4::standards::isobmff::engine::h264`'s own doc comment,
 //! "the full pixel decoder remains at its original remodeling location... for a future wave to lift" —
 //! this file, W5a, is that wave), minimal fixture-synthesis muxers built on stdio's real
 //! `encode_mp4`/`encode_avi`, and a lazy frame-extraction API sitting on top of [`remodeling_image`].
@@ -11,30 +11,31 @@
 //! W5a: the box-level ISO-BMFF/RIFF demux/mux this file used to hand-roll (`🔖️Bmff`/`🔖️Avi`/`🔖️Mux`
 //! regions, ~1000 LOC) was a real duplicate of stdio's now-complete `mp4`/`avi` artifacts (moved
 //! wholesale from this very file in W3) — deleted here and replaced by real in-process calls to
-//! `semio_s_plugin_stdio::artifacts::{mp4,avi}::standards::{isobmff,v1_0}::engine::{decode_mp4,
+//! `semio_s_artifact_stdio_mp4` and `semio_s_artifact_stdio_avi` standards engines (`decode_mp4,
 //! encode_mp4,decode_avi,encode_avi}`. The H.264 macroblock reconstruction pipeline (`🔖️Bits`
 //! through `🔖️Decoder`, plus its `🔖️H264Enc` test-fixture synthesizer) has no stdio equivalent —
 //! stdio's mp4 `h264` accessor is container-metadata-only by design — so it stays exactly as it was.
 
 // 🔗️ Sibling engine topic files, aliased to their pre-merge crate names so every path in
 // this file is byte-identical to the crate it was moved from (see 🦀️.rs for the wiring).
+/// 🎞️ AVC sequence parameters, picture parameters and NAL length width.
+type AvcDecoderConfiguration = (Vec<Vec<u8>>, Vec<Vec<u8>>, u8);
+
 use crate::editor::remodeling::engine::images as remodeling_image;
-use semio_s_plugin_stdio::artifacts::{
-    avi::{
+use semio_s_artifact_stdio_avi::{
         standards::v1_0::{
             subsets::any::io as avi_engine,
             subsets::any::schema::snapshot::{AviChunk, AviMainHeader, AviSnapshot, AviStream, AviStreamFormat, AviStreamHeader},
         },
         STDIO_AVI_DOCUMENT_SCHEMA,
-    },
-    mp4::{
+    };
+use semio_s_artifact_stdio_mp4::{
         standards::isobmff::{
             subsets::any::io as mp4_engine,
             subsets::any::schema::snapshot::{Mp4Codec, Mp4Ftyp, Mp4Sample, Mp4Snapshot, Mp4Track},
         },
         STDIO_MP4_DOCUMENT_SCHEMA,
-    },
-};
+    };
 
 // #region 🔖️Bytes
 /// 🧭️ Four-character box/chunk code (ISO-BMFF box types, RIFF FourCCs); compared and hashed by raw bytes.
@@ -168,7 +169,7 @@ pub struct Mp4Info {
     pub frame_count: u32,
     pub codec: VideoCodec,
     samples: Vec<SampleInfo>,
-    avc_config: Option<(Vec<Vec<u8>>, Vec<Vec<u8>>, u8)>,
+    avc_config: Option<AvcDecoderConfiguration>,
 }
 
 /// 🎞️ Probed RIFF/AVI video stream metadata, mirroring [`Mp4Info`] for the AVI container family.

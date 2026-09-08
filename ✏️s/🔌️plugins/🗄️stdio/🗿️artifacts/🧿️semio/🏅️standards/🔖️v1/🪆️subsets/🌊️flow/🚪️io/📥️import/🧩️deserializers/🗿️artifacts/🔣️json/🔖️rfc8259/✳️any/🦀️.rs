@@ -3,10 +3,10 @@
 //! `FlowNode`/`FlowEdge` field has a 1:1 JSON member. Malformed/missing members are real
 //! errors (`store::PackError::Schema`), never silently defaulted away.
 
-use crate::artifacts::json::schema::snapshot::{JsonMember, JsonValue};
-use crate::artifacts::json::JsonSnapshot;
-use crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioPoint2;
-use crate::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::{FlowEdge, FlowNode, FlowParam, PortRef, SemioFlowSnapshot, STDIO_SEMIOFLOW_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_json::schema::snapshot::{JsonMember, JsonValue};
+use semio_s_artifact_stdio_json::JsonSnapshot;
+use crate::standards::v1::subsets::base::schema::geometry::SemioPoint2;
+use crate::standards::v1::subsets::flow::schema::snapshot::{FlowEdge, FlowNode, FlowParam, PortRef, SemioFlowSnapshot, STDIO_SEMIOFLOW_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId};
 
 //#region 🔖️JsonAccessors
@@ -106,7 +106,7 @@ mod tests {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(crate) fn sample_json() -> JsonSnapshot {
         let text = r#"{"nodes":[{"id":"n1","kind":"source","label":"Source","params":[{"key":"count","value":"3"}],"position":{"x":0,"y":0}},{"id":"n2","kind":"sink","label":"Sink","params":[],"position":{"x":100,"y":50}}],"edges":[{"id":"e1","from":{"node":"n1","port":"out"},"to":{"node":"n2","port":"in"},"kind":"data"}]}"#;
-        JsonSnapshot { schema: crate::artifacts::json::STDIO_JSON_DOCUMENT_SCHEMA.into(), value: crate::artifacts::json::schema::snapshot::parse_json_text(text).expect("valid json fixture") }
+        JsonSnapshot { schema: semio_s_artifact_stdio_json::STDIO_JSON_DOCUMENT_SCHEMA.into(), value: semio_s_artifact_stdio_json::schema::snapshot::parse_json_text(text).expect("valid json fixture") }
     }
 
     #[semio_framework_async_macros::async_test]
@@ -123,7 +123,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn missing_required_member_is_a_real_error() {
-        let bad = JsonSnapshot { schema: crate::artifacts::json::STDIO_JSON_DOCUMENT_SCHEMA.into(), value: crate::artifacts::json::schema::snapshot::parse_json_text("{}").unwrap() };
+        let bad = JsonSnapshot { schema: semio_s_artifact_stdio_json::STDIO_JSON_DOCUMENT_SCHEMA.into(), value: semio_s_artifact_stdio_json::schema::snapshot::parse_json_text("{}").unwrap() };
         assert!(semio_framework_plugin::resolve_ready(SemioFlowFromJson::deserialize(&bad)).is_err());
     }
 }

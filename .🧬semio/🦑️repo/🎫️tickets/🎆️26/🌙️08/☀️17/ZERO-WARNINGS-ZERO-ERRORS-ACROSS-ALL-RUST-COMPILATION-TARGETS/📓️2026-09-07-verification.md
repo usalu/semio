@@ -169929,3 +169929,13 @@ failures:
 test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.01s
 
 
+
+
+## Pass 420 — Native Targeted Laws: semio-framework-os-kernel
+
+[{"package":"semio-framework-os-kernel","target":{"kind":"lib"},"executable":"/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/ZERO-WARNINGS-ZERO-ERRORS-ACROSS-ALL-RUST-COMPILATION-TARGETS/🗑️generated/target/debug/deps/semio_framework_os_kernel-00d4a62f6e957ed3","sha256":"3d85cb64017fd20924c506ca29f5d04dfb54b402db393968e84d01293c2cb519","laws":["os_store::component::tests::register_document_codec_rejects_a_duplicate_schema_without_replacing_the_first","os_store::component::tests::dialect_migration_preflight_and_batch_commit_are_conflict_free_or_noop"],"assertions":2,"artifactDir":"/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/ZERO-WARNINGS-ZERO-ERRORS-ACROSS-ALL-RUST-COMPILATION-TARGETS/🗑️generated/native-laws420/exact-cargo-laws-hekA2L/00","cargoTargetDir":"/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/ZERO-WARNINGS-ZERO-ERRORS-ACROSS-ALL-RUST-COMPILATION-TARGETS/🗑️generated/target"}]
+
+
+## Pass 420 — Native Targeted Laws: semio-s-plugin-stdio
+
+[{"package":"semio-s-plugin-stdio","target":{"kind":"test","name":"flow_retained_decode"},"executable":"/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/ZERO-WARNINGS-ZERO-ERRORS-ACROSS-ALL-RUST-COMPILATION-TARGETS/🗑️generated/target/debug/deps/flow_retained_decode-5a4101dbc1465164","sha256":"e686f20f4335b4e2a443b43ae7b8afb7aa32e8399b9b0aa48c206c4636ba1f8a","laws":["semio_flow_retained_snapshot_matches_neutral_wire_and_retains_failures","semio_flow_retained_snapshot_rejects_retired_requests_and_closes_exact_bytes"],"assertions":2,"artifactDir":"/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/ZERO-WARNINGS-ZERO-ERRORS-ACROSS-ALL-RUST-COMPILATION-TARGETS/🗑️generated/native-laws420/exact-cargo-laws-t0FMUH/00","cargoTargetDir":"/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/ZERO-WARNINGS-ZERO-ERRORS-ACROSS-ALL-RUST-COMPILATION-TARGETS/🗑️generated/target"}]

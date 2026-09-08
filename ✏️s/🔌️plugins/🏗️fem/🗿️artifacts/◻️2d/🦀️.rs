@@ -309,7 +309,7 @@ pub fn computation_artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
 /// artifact-scoped function set.
 pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
     use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
-    let rows: &[(&str, &str, &str, &[(&str, &str)], Option<(&str, &str)>)] = &[
+    let rows: &[semio_framework_plugin::ArtifactCapabilityRow<'_>] = &[
         ("s.fem.fem2d.standard.v1", "standard", "1", &[], None),
         ("s.fem.fem2d.standard.v1.profile.any", "profile", "any", &[], None),
         ("s.fem.fem2d.schema.artifact", "schema", "s.fem.fem2d", &[("schema", "s.fem.fem2d")], None),

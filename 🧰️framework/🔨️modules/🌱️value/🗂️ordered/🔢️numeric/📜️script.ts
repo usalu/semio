@@ -9,9 +9,9 @@ import ts from "typescript";
 import { BundleScript, ScriptRouter, runBundleScriptMain } from "@semio-tech/repo-lib";
 import { NumericIndex, type NumericIndexEdit, type NumericIndexRetirement } from "./🟦️.ts";
 import fixture from "./🧪️fixtures/🔢️numeric-index.json";
-import schema from "./🧪️fixtures/🧬️numeric-index.schema.json";
+import schema from "./🧬️schema/🔣️.json";
 import referenceFixture from "./🧪️fixtures/🔗️references.json";
-import referenceSchema from "./🧪️fixtures/🛡️references.schema.json";
+const referenceSchema = schema;
 
 function close<V>(owner: NumericIndexRetirement<V>, bytes: number, retired: V[]): void {
   for (let turns = 0; turns < 100_000; turns++) {
@@ -283,7 +283,7 @@ function nativeStripOnlyLaws(): { laws: number; operations: number; cancellation
 class TestScript extends BundleScript {
   async run(): Promise<void> {
     enableMapSet();
-    const validate = new Ajv({ strict: true, allErrors: true }).compile(schema);
+    const validate = new Ajv({ strict: true, allErrors: true }).addSchema(schema).getSchema(`${schema.$id}#/$defs/NumericIndexFixture`)!;
     assert(validate(fixture), JSON.stringify(validate.errors));
     assert(!validate({ ...fixture, extra: true }));
     let laws = 0;
@@ -340,7 +340,7 @@ class TestScript extends BundleScript {
     const ordinals = ordinalLaws();
     const stress = stressLaws();
     const native = nativeStripOnlyLaws();
-    assert(new Ajv({ strict: true, allErrors: true }).compile(referenceSchema)(referenceFixture));
+    assert(new Ajv({ strict: true, allErrors: true }).addSchema(schema).getSchema(`${schema.$id}#/$defs/ReferencesFixture`)!(referenceFixture));
     const source = await Bun.file(`${import.meta.dir}/🟦️.ts`).text();
     const probe = ts.transpileModule(`${source}\nnumericReferenceSaturation();`, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.CommonJS } }).outputText;
     const references: unknown = JSON.parse(JSON.stringify(runInNewContext(probe, { exports: {} })));

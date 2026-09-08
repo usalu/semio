@@ -1,0 +1,80 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/pptx/ecma-376/transitional/mutations.json",
+  "title": "PptxTransitionalMutation",
+  "description": "Discriminated union over this module's mutation leaves (externally tagged); every payload is the leaf's own schema, referenced, never restated.",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "RemoveConformanceAttribute"
+      ],
+      "properties": {
+        "RemoveConformanceAttribute": {
+          "$ref": "./🏷️remove-conformance-attribute/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "SetConformanceAttribute"
+      ],
+      "properties": {
+        "SetConformanceAttribute": {
+          "$ref": "./🔖️set-conformance-attribute/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "SetDrawingNamespace"
+      ],
+      "properties": {
+        "SetDrawingNamespace": {
+          "$ref": "./🎨️set-drawing-namespace/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "SetMainNamespace"
+      ],
+      "properties": {
+        "SetMainNamespace": {
+          "$ref": "./🏛️set-main-namespace/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "SetRelationshipBase"
+      ],
+      "properties": {
+        "SetRelationshipBase": {
+          "$ref": "./🔗️set-relationship-base/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "SetSnapshot"
+      ],
+      "properties": {
+        "SetSnapshot": {
+          "$ref": "./📸️set-snapshot/🧬️schema/🔣️.json"
+        }
+      }
+    }
+  ]
+}

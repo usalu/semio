@@ -1,0 +1,10 @@
+{
+  "title": "Composable Stdio Artifact Packages",
+  "emoji": "📦️",
+  "status": "open",
+  "description": "Turn every stdio artifact into an independently compilable composable package. Keep declarations under artifact 📦️packages and implementations in the domain-driven package-neutral taxonomy. Integrate Cargo, Nx, Bun scripts, launch configurations and schema-first language-agnostic validation. Actual fleet: GPT 6 Astra xhigh coordination, GPT 5.6 Sol xhigh execution, GPT 5.6 Terra xhigh read-only audits. Preserve concurrent work.",
+  "goal": "🎯aioptimizedrepo🎯repomechanisms🎯repoprojectmechanism",
+  "sessions": [
+    "⚪37b5677d2c804e19b8d06339c32f5042"
+  ]
+}

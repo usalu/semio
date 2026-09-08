@@ -1,8 +1,8 @@
 //! 🧬️ Direct set-view-box mutation owner.
-use crate::artifacts::svg::schema::diff::SvgDiff;
-use crate::artifacts::svg::schema::mutation_support::attribute_diff_at_path;
-use crate::artifacts::svg::schema::snapshot::{view_box_to_string, NodePath, ViewBox};
-use crate::artifacts::svg::SvgSnapshot;
+use crate::schema::diff::SvgDiff;
+use crate::schema::mutation_support::attribute_diff_at_path;
+use crate::schema::snapshot::{view_box_to_string, NodePath, ViewBox};
+use crate::SvgSnapshot;
 
 #[path = "📝️text/🦀️.rs"]
 pub mod text;

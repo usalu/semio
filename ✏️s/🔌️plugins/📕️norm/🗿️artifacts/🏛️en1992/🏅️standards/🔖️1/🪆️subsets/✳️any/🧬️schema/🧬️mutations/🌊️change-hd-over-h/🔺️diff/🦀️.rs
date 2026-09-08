@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeHdOverH, base: &En1992Snapshot) -> protocol::Mutatio
     if base.hd_over_h == payload.new_hd_over_h {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "Hd over h already has this value.");
     }
-    protocol::MutationOutcome::new(En1992Diff { hd_over_h: Some(payload.new_hd_over_h.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1992Diff { hd_over_h: Some(payload.new_hd_over_h), ..Default::default() })
 }
 //#endregion 🔖️Diff

@@ -12,11 +12,11 @@
 //! `.pack.semio`/`.patch.semio` encodings are derived from it by `fixtures generate` and are
 //! asserted by the shared codec-matrix harness, not here.
 
-use crate::artifacts::md::standards::v_commonmark::subsets::any::schema::diff::MdBlockDiff;
-use crate::artifacts::md::standards::v_commonmark::subsets::any::schema::diff::MdDiff;
-use crate::artifacts::md::standards::v_commonmark::subsets::any::schema::mutations::{apply_md_mutation, MdMutation};
-use crate::artifacts::md::standards::v_commonmark::subsets::any::schema::snapshot::MdSnapshot;
-use crate::artifacts::md::standards::v_commonmark::subsets::any::schema::snapshot::{MdBlock, MdInline};
+use crate::standards::v_commonmark::subsets::any::schema::diff::MdBlockDiff;
+use crate::standards::v_commonmark::subsets::any::schema::diff::MdDiff;
+use crate::standards::v_commonmark::subsets::any::schema::mutations::{apply_md_mutation, MdMutation};
+use crate::standards::v_commonmark::subsets::any::schema::snapshot::MdSnapshot;
+use crate::standards::v_commonmark::subsets::any::schema::snapshot::{MdBlock, MdInline};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");

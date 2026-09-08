@@ -6,7 +6,7 @@
 
 // #region 🔌️Adapters
 import { NextRequest, NextResponse } from "next/server";
-import { ownedSchema as z } from "../../../../✅️validation.ts";
+import { parseCommandAction, parseIndexFileRequest, parseReindexRequest } from "../../../../../../🧬️schema/🟦️.ts";
 import { readFileSync, readdirSync, statSync } from "fs";
 import { join, relative } from "path";
 // #endregion 🔌️Adapters
@@ -17,16 +17,6 @@ import { publishEvent } from "@/lib";
 import { buildScopesForFile } from "@/lib";
 
 const REPO_ROOT = process.env.COMPOSE_SERVER_REPO_ROOT || process.cwd();
-
-const IndexFileSchema = z.object({
-  action: z.literal("index-file"),
-  file_path: z.string().min(1),
-  content: z.string().default(""),
-});
-
-const ReindexSchema = z.object({
-  action: z.literal("reindex"),
-});
 
 function walkFiles(dir: string): string[] {
   const files: string[] = [];
@@ -59,14 +49,14 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "invalid JSON" }, { status: 400 });
   }
 
-  const actionCheck = z.object({ action: z.string() }).safeParse(body);
+  const actionCheck = parseCommandAction(body);
   if (!actionCheck.success) {
-    return NextResponse.json({ error: "action required" }, { status: 400 });
+    return NextResponse.json({ error: actionCheck.error.message }, { status: 400 });
   }
 
-  switch (actionCheck.data.action) {
+  switch (actionCheck.data) {
     case "index-file": {
-      const parsed = IndexFileSchema.safeParse(body);
+      const parsed = parseIndexFileRequest(body);
       if (!parsed.success) {
         return NextResponse.json({ error: parsed.error.message }, { status: 400 });
       }
@@ -86,6 +76,10 @@ export async function POST(request: NextRequest) {
     }
 
     case "reindex": {
+      const parsed = parseReindexRequest(body);
+      if (!parsed.success) {
+        return NextResponse.json({ error: parsed.error.message }, { status: 400 });
+      }
       const files = walkFiles(REPO_ROOT);
       let indexed = 0;
       for (const file of files) {

@@ -51,7 +51,7 @@ mod oracles {
 
     //#region 🔖️Tree
     /// 🌳 Owned HTML node, independent of
-    /// `crate::artifacts::html::standards::v5::subsets::any::schema::snapshot::HtmlNode` (this crate
+    /// `crate::standards::v5::subsets::any::schema::snapshot::HtmlNode` (this crate
     /// never depends on `semio-s-plugin-stdio`, the production crate that type lives in — see this
     /// file's own header) but shaped identically variant for variant, so a spec written for the
     /// oracle reads the same as one written for the subject.
@@ -178,7 +178,7 @@ mod oracles {
 
     //#region 🔖️PathAddressing
     /// 🔎️ Immutable walk of `path` (a chain of child indices) from `root`, mirroring
-    /// `crate::artifacts::html::standards::v5::subsets::any::schema::snapshot::node_at` — `path ==
+    /// `crate::standards::v5::subsets::any::schema::snapshot::node_at` — `path ==
     /// []` addresses `root` itself.
     fn resolve<'a>(root: Option<&'a HNode>, path: &[usize]) -> Option<&'a HNode> {
         let mut current = root?;
@@ -537,7 +537,7 @@ mod oracles {
     /// it is what `HtmlMutation::inverse`'s OWN law already assumes at the model level (`apply(base,
     /// m)` then `apply(_, inverse(m, base)) == base`, no serialization step named anywhere in it) —
     /// and it is genuinely independent of the subject: this oracle's tree, dispatch and serializer
-    /// share no code with `crate::artifacts::html::standards::v5::subsets::any`.
+    /// share no code with `crate::standards::v5::subsets::any`.
     pub fn apply_mutation_inverse(input: &[u8], kind: &str, params: &Json) -> Result<Vec<u8>, String> {
         let base = parse(input)?;
         let inverse = inverse_spec(&base, kind, params);

@@ -1,5 +1,5 @@
 //! 📝️ Framing and direct codec registry for TiffMutation.
-use crate::artifacts::tiff::schema::mutations::TiffMutation;
+use crate::schema::mutations::TiffMutation;
 
 //#region Registry
 pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
@@ -10,12 +10,12 @@ pub struct Entry {
     pub parse: fn(&str) -> Result<TiffMutation, String>,
 }
 pub const REGISTRY: &[Entry] = &[
-    crate::artifacts::tiff::schema::mutations::change_byte_order::text::CODEC,
-    crate::artifacts::tiff::schema::mutations::insert_ifd::text::CODEC,
-    crate::artifacts::tiff::schema::mutations::remove_ifd::text::CODEC,
-    crate::artifacts::tiff::schema::mutations::replace_tag::text::CODEC,
-    crate::artifacts::tiff::schema::mutations::remove_tag::text::CODEC,
-    crate::artifacts::tiff::schema::mutations::replace_pixels::text::CODEC,
+    crate::schema::mutations::change_byte_order::text::CODEC,
+    crate::schema::mutations::insert_ifd::text::CODEC,
+    crate::schema::mutations::remove_ifd::text::CODEC,
+    crate::schema::mutations::replace_tag::text::CODEC,
+    crate::schema::mutations::remove_tag::text::CODEC,
+    crate::schema::mutations::replace_pixels::text::CODEC,
 ];
 //#endregion Registry
 

@@ -5,7 +5,7 @@
   "displayName": "Change Setpoint Manager Schedule",
   "emoji": "🎼️",
   "aggregateVariant": "ChangeSetpointManagerSchedule",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-setpoint-manager-schedule",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

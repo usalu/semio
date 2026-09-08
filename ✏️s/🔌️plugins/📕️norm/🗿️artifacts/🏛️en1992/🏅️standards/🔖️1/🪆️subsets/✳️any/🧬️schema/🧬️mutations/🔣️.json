@@ -1,215 +1,149 @@
 {
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://semio.tech/schema/s/norm/en1992/mutation.json",
   "title": "En1992Mutation",
-  "type": "object",
-  "additionalProperties": false,
-  "required": [
-    "annex",
-    "mEdKnm",
-    "vEdKn",
-    "fCk",
-    "bMm",
-    "dMm",
-    "aSMm2",
-    "fYk",
-    "rhoL",
-    "nEdKn",
-    "pKn",
-    "aCMm2",
-    "useFem",
-    "spanM",
-    "udlKnM",
-    "fireRating",
-    "providedAxisDistanceMm",
-    "bridgeSigmaCMpa",
-    "bridgeDeltaSigmaSMpa",
-    "tightnessClass",
-    "hdOverH",
-    "liquidSigmaSMpa",
-    "liquidRhoPEff",
-    "liquidFCtEffMpa",
-    "liquidESMpa",
-    "liquidSRMaxMm",
-    "anchorHEfMm",
-    "anchorCracked",
-    "anchorFUkMpa",
-    "anchorFYkMpa",
-    "anchorASMm2",
-    "anchorDMm",
-    "anchorC1Mm",
-    "anchorNEdKn",
-    "anchorVEdKn"
-  ],
-  "properties": {
-    "annex": {
-      "type": "string",
-      "x-semio-state": "artifact"
+  "oneOf": [
+    {
+      "$ref": "./📐️change-ac-mm2/🧬️schema/🔣️.json"
     },
-    "mEdKnm": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🔩️change-anchor-as-mm2/🧬️schema/🔣️.json"
     },
-    "vEdKn": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./📍️change-anchor-c1-mm/🧬️schema/🔣️.json"
     },
-    "fCk": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./💥️change-anchor-cracked/🧬️schema/🔣️.json"
     },
-    "bMm": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./⭕️change-anchor-d-mm/🧬️schema/🔣️.json"
     },
-    "dMm": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./💪️change-anchor-f-uk-mpa/🧬️schema/🔣️.json"
     },
-    "aSMm2": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🛡️change-anchor-f-yk-mpa/🧬️schema/🔣️.json"
     },
-    "fYk": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./⚓️change-anchor-h-ef-mm/🧬️schema/🔣️.json"
     },
-    "rhoL": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🪝️change-anchor-n-ed-kn/🧬️schema/🔣️.json"
     },
-    "nEdKn": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./✂️change-anchor-v-ed-kn/🧬️schema/🔣️.json"
     },
-    "pKn": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🌍️change-annex/🧬️schema/🔣️.json"
     },
-    "aCMm2": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🪜️change-as-mm2/🧬️schema/🔣️.json"
     },
-    "useFem": {
-      "type": "boolean",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./↔️change-b-mm/🧬️schema/🔣️.json"
     },
-    "spanM": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🔁️change-bridge-delta-sigma-s-mpa/🧬️schema/🔣️.json"
     },
-    "udlKnM": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🛣️change-bridge-sigma-c-mpa/🧬️schema/🔣️.json"
     },
-    "fireRating": {
-      "type": "string",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./↕️change-d-mm/🧬️schema/🔣️.json"
     },
-    "providedAxisDistanceMm": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🪨️change-f-ck/🧬️schema/🔣️.json"
     },
-    "bridgeSigmaCMpa": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🔧️change-f-yk/🧬️schema/🔣️.json"
     },
-    "bridgeDeltaSigmaSMpa": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🔥️change-fire-rating/🧬️schema/🔣️.json"
     },
-    "tightnessClass": {
-      "type": "string",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🌊️change-hd-over-h/🧬️schema/🔣️.json"
     },
-    "hdOverH": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🌀️change-liquid-es-mpa/🧬️schema/🔣️.json"
     },
-    "liquidSigmaSMpa": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🧱️change-liquid-f-ct-eff-mpa/🧬️schema/🔣️.json"
     },
-    "liquidRhoPEff": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🧷️change-liquid-rho-p-eff/🧬️schema/🔣️.json"
     },
-    "liquidFCtEffMpa": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🧲️change-liquid-sigma-s-mpa/🧬️schema/🔣️.json"
     },
-    "liquidESMpa": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🕳️change-liquid-sr-max-mm/🧬️schema/🔣️.json"
     },
-    "liquidSRMaxMm": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./⤴️change-m-ed-knm/🧬️schema/🔣️.json"
     },
-    "anchorHEfMm": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🏋️change-n-ed-kn/🧬️schema/🔣️.json"
     },
-    "anchorCracked": {
-      "type": "boolean",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🏹️change-p-kn/🧬️schema/🔣️.json"
     },
-    "anchorFUkMpa": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./📏️change-provided-axis-distance-mm/🧬️schema/🔣️.json"
     },
-    "anchorFYkMpa": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🧮️change-rho-l/🧬️schema/🔣️.json"
     },
-    "anchorASMm2": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🌉️change-span-m/🧬️schema/🔣️.json"
     },
-    "anchorDMm": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./💧️change-tightness-class/🧬️schema/🔣️.json"
     },
-    "anchorC1Mm": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./⬇️change-udl-kn-m/🧬️schema/🔣️.json"
     },
-    "anchorNEdKn": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🕸️change-use-fem/🧬️schema/🔣️.json"
     },
-    "anchorVEdKn": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🪚️change-v-ed-kn/🧬️schema/🔣️.json"
     }
-  }
+  ],
+  "x-semio-mutationKinds": [
+    "change-ac-mm2",
+    "change-anchor-as-mm2",
+    "change-anchor-c1-mm",
+    "change-anchor-cracked",
+    "change-anchor-d-mm",
+    "change-anchor-f-uk-mpa",
+    "change-anchor-f-yk-mpa",
+    "change-anchor-h-ef-mm",
+    "change-anchor-n-ed-kn",
+    "change-anchor-v-ed-kn",
+    "change-annex",
+    "change-as-mm2",
+    "change-b-mm",
+    "change-bridge-delta-sigma-s-mpa",
+    "change-bridge-sigma-c-mpa",
+    "change-d-mm",
+    "change-f-ck",
+    "change-f-yk",
+    "change-fire-rating",
+    "change-hd-over-h",
+    "change-liquid-es-mpa",
+    "change-liquid-f-ct-eff-mpa",
+    "change-liquid-rho-p-eff",
+    "change-liquid-sigma-s-mpa",
+    "change-liquid-sr-max-mm",
+    "change-m-ed-knm",
+    "change-n-ed-kn",
+    "change-p-kn",
+    "change-provided-axis-distance-mm",
+    "change-rho-l",
+    "change-span-m",
+    "change-tightness-class",
+    "change-udl-kn-m",
+    "change-use-fem",
+    "change-v-ed-kn"
+  ]
 }

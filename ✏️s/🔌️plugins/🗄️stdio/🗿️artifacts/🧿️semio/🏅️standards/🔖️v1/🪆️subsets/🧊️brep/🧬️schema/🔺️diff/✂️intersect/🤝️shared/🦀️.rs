@@ -10,13 +10,13 @@
 pub type SplineFitBasis = (KnotVector, Vec<(usize, Vec<f64>)>);
 
 
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::bezier::RationalBezier3;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::bspline::{basis_functions, insert_knot, KnotVector};
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::{Curve2, Curve3, NurbsCurve3};
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::error::IntersectError;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::surface::surface_ops::closest_uv;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::surface::Surface;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::{Pnt2, Pnt3, Vec3};
+use crate::standards::v1::subsets::brep::schema::snapshot::curve::bezier::RationalBezier3;
+use crate::standards::v1::subsets::brep::schema::snapshot::curve::bspline::{basis_functions, insert_knot, KnotVector};
+use crate::standards::v1::subsets::brep::schema::snapshot::curve::{Curve2, Curve3, NurbsCurve3};
+use crate::standards::v1::subsets::brep::schema::snapshot::error::IntersectError;
+use crate::standards::v1::subsets::brep::schema::snapshot::surface::surface_ops::closest_uv;
+use crate::standards::v1::subsets::brep::schema::snapshot::surface::Surface;
+use crate::standards::v1::subsets::brep::schema::snapshot::vector::{Pnt2, Pnt3, Vec3};
 
 // #region 🔖️LinearAlgebra
 
@@ -374,7 +374,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn exact_uv_matches_cylinder_eval() {
-        let frame = crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Frame3::WORLD;
+        let frame = crate::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Frame3::WORLD;
         let surface = Surface::Cylinder { frame, radius: 2.0 };
         let p = surface.eval(0.7, 1.3);
         let (u, v) = exact_uv(&surface, p);

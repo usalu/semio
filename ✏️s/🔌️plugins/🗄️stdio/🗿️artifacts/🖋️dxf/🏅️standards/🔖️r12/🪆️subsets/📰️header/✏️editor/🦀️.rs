@@ -2,8 +2,8 @@
 //! 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §2.1). `DxfAnyEditor`
 //! implements `ArtifactEditor`, wiring the shared `MeshWindowKit` to a single Main window.
 
-use crate::artifacts::dxf::standards::v_r12::subsets::any::schema::mutations::DxfMutation;
-use crate::artifacts::dxf::standards::v_r12::subsets::any::schema::snapshot::DxfSnapshot;
+use crate::standards::v_r12::subsets::any::schema::mutations::DxfMutation;
+use crate::standards::v_r12::subsets::any::schema::snapshot::DxfSnapshot;
 use crate::editor::dxf::modes::edit;
 use crate::editor::dxf::modes::edit::windows::main;
 use semio_framework_plugin::app::InteractionView;

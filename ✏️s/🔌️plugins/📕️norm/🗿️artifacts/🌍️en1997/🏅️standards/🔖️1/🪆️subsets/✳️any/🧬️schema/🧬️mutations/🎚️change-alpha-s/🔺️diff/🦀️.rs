@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeAlphaS, base: &En1997Snapshot) -> protocol::Mutation
     if base.alpha_s == payload.new_alpha_s {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Shaft resistance factor alpha_s is already {}.", payload.new_alpha_s));
     }
-    protocol::MutationOutcome::new(En1997Diff { alpha_s: Some(payload.new_alpha_s.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1997Diff { alpha_s: Some(payload.new_alpha_s), ..Default::default() })
 }
 //#endregion 🔖️Diff

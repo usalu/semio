@@ -206,7 +206,7 @@ pub fn handle(payload: &ImportVideoFramePayload, doc: &ArtifactView<'_, Remodeli
     let asset = ImageAsset { mime: "image/jpeg".into(), data: base64_codec::base64_standard_encode(&bytes), width: image.width, height: image.height };
     let mut mutations = vec![create_asset(asset_key.clone(), asset)];
     match scene.streams.iter().any(|stream| stream.id == stream_id) {
-        true => mutations.push(add_stream_frame(stream_id.clone(), FrameRef { index: payload.frame_index, timestamp_ms: payload.timestamp_ms, asset_id: asset_key.clone() }, MediaKind::Video)),
+        true => mutations.push(add_stream_frame(stream_id.clone(), FrameRef { index: payload.frame_index, timestamp_ms: payload.timestamp_ms, asset_id: asset_key }, MediaKind::Video)),
         false => mutations.push(create_stream(MediaStream {
             id: stream_id.clone(),
             name: payload.name.clone(),
@@ -214,7 +214,7 @@ pub fn handle(payload: &ImportVideoFramePayload, doc: &ArtifactView<'_, Remodeli
             camera_id: None,
             sync_offset_ms: 0.0,
             fps_hint: 0.0,
-            frames: vec![FrameRef { index: payload.frame_index, timestamp_ms: payload.timestamp_ms, asset_id: asset_key.clone() }],
+            frames: vec![FrameRef { index: payload.frame_index, timestamp_ms: payload.timestamp_ms, asset_id: asset_key }],
             source: None,
         })),
     }

@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeCKpa, base: &En1997Snapshot) -> protocol::MutationOu
     if base.c_kpa == payload.new_c_kpa {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Cohesion c [kPa] is already {}.", payload.new_c_kpa));
     }
-    protocol::MutationOutcome::new(En1997Diff { c_kpa: Some(payload.new_c_kpa.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1997Diff { c_kpa: Some(payload.new_c_kpa), ..Default::default() })
 }
 //#endregion 🔖️Diff

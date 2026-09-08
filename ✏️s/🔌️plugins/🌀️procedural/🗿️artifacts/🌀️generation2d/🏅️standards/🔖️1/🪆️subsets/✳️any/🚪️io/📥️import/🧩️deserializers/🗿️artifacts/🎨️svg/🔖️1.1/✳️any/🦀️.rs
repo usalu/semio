@@ -1,6 +1,6 @@
 //! generation2d <- svg
 use crate::artifacts::generation2d::Generation2dSnapshot;
-use semio_s_plugin_stdio::artifacts::svg::{SvgSnapshot, STDIO_SVG_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_svg::{SvgSnapshot, STDIO_SVG_DOCUMENT_SCHEMA};
 
 pub fn register() {}
 

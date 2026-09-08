@@ -5,7 +5,7 @@
   "displayName": "Change Water System Peak Flow",
   "emoji": "🚾️",
   "aggregateVariant": "ChangeWaterSystemPeakFlow",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-water-system-peak-flow",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

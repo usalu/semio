@@ -1,7 +1,7 @@
 //! 📥️ Deserialize `stdio.md` from stdio.txt.
 
-use crate::artifacts::md::{MdSnapshot, STDIO_MD_DOCUMENT_SCHEMA};
-use crate::artifacts::txt::TxtSnapshot;
+use crate::{MdSnapshot, STDIO_MD_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_txt::TxtSnapshot;
 
 //#region 🔖️Codec
 /// 🗂️ Register deserializer hooks.
@@ -11,7 +11,7 @@ pub fn register() {}
 /// 📥 Parse md text into a MdSnapshot.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn deserialize(from: &TxtSnapshot) -> Result<MdSnapshot, store::TextError> {
-    let blocks = crate::artifacts::md::standards::v_commonmark::subsets::any::io::import::deserializers::parse_markdown_blocks(&from.to_body());
+    let blocks = crate::standards::v_commonmark::subsets::any::io::import::deserializers::parse_markdown_blocks(&from.to_body());
     Ok(MdSnapshot { schema: STDIO_MD_DOCUMENT_SCHEMA.into(), blocks })
 }
 

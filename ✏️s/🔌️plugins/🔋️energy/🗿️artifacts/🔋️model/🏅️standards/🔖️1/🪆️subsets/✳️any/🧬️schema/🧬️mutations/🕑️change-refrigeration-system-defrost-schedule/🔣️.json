@@ -5,7 +5,7 @@
   "displayName": "Change Refrigeration System Defrost Schedule",
   "emoji": "🕑️",
   "aggregateVariant": "ChangeRefrigerationSystemDefrostSchedule",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-refrigeration-system-defrost-schedule",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

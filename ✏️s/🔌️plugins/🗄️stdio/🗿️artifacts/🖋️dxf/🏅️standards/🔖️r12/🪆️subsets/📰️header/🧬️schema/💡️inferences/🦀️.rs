@@ -6,8 +6,8 @@
 //! `entities` and `blocks[].entities` alone — DXF R12 is a real vector CAD format with decoded
 //! point-bearing entities, unlike DWG's undecoded byte payload).
 
-use crate::artifacts::dxf::DxfSnapshot;
-use schema::ArtifactSchema;
+use crate::DxfSnapshot;
+use framework_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 
 use super::bounds::{compute_dxf_bounds, DxfBounds};
@@ -56,7 +56,7 @@ impl protocol::InferenceSpec<DxfSnapshot> for DxfInference {
 /// total entity count with no honest per-entity incremental decomposition (a merkle dep-chain
 /// over this flat entity list costs more than the fold it would cache) — the default
 /// `infer_cached` passthrough is exact.
-impl ArtifactInferrer for crate::artifacts::dxf::standards::v_r12::subsets::any::schema::DxfBuilder {
+impl ArtifactInferrer for crate::standards::v_r12::subsets::any::schema::DxfBuilder {
     type Snapshot = DxfSnapshot;
     type Inference = DxfInference;
 }
@@ -66,10 +66,10 @@ impl ArtifactInferrer for crate::artifacts::dxf::standards::v_r12::subsets::any:
 /// 💡️ Registers `s.stdio.dxf.inference`'s facet leaves into the OS-wide inference catalog —
 /// call once at plugin init, alongside `dxf_artifact_schema_descriptor`'s registration.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn dxf_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
-    schema::ArtifactInferenceDescriptor {
+pub fn dxf_artifact_inference_descriptor() -> framework_schema::ArtifactInferenceDescriptor {
+    framework_schema::ArtifactInferenceDescriptor {
         id: "s.stdio.dxf.inference",
-        inference: schema::FacetLeaves {
+        inference: framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),

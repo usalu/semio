@@ -5,7 +5,7 @@
   "displayName": "Change Surface Wind Exposed",
   "emoji": "🍃️",
   "aggregateVariant": "ChangeSurfaceWindExposed",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-surface-wind-exposed",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

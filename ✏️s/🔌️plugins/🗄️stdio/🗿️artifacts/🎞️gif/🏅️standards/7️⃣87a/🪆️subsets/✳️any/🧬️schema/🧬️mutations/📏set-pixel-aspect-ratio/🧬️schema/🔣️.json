@@ -1,0 +1,21 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/gif/87a/any/mutation/set-pixel-aspect-ratio.json",
+  "title": "SetPixelAspectRatio",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "ratio"
+  ],
+  "properties": {
+    "ratio": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 255
+    },
+    "mutation": {
+      "const": "setPixelAspectRatio",
+      "description": "Aggregate discriminator spliced in by GifMutation; absent when the payload stands alone."
+    }
+  }
+}

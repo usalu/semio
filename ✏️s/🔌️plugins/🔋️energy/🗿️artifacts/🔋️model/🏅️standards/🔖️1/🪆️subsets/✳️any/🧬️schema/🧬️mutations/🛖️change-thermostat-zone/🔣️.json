@@ -5,7 +5,7 @@
   "displayName": "Change Thermostat Zone",
   "emoji": "🛖️",
   "aggregateVariant": "ChangeThermostatZone",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-thermostat-zone",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

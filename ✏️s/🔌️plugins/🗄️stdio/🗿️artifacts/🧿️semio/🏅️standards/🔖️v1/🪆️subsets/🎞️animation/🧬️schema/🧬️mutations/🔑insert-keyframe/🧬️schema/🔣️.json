@@ -1,0 +1,166 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/animation/mutation/insert-keyframe.json",
+  "title": "InsertKeyframe",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "timelineIndex",
+    "channelIndex",
+    "index",
+    "keyframe"
+  ],
+  "properties": {
+    "timelineIndex": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "channelIndex": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "index": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "keyframe": {
+      "$ref": "#/$defs/AnimKeyframe"
+    },
+    "mutation": {
+      "const": "insertKeyframe",
+      "description": "Aggregate discriminator spliced in by SemioAnimationMutation; absent when the payload stands alone."
+    }
+  },
+  "$defs": {
+    "AnimKeyframe": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "t"
+      ],
+      "properties": {
+        "t": {
+          "type": "number"
+        },
+        "value": {
+          "$ref": "#/$defs/AnimValue"
+        }
+      }
+    },
+    "AnimValue": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ],
+          "properties": {
+            "kind": {
+              "const": "scalar"
+            },
+            "value": {
+              "type": "number"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ],
+          "properties": {
+            "kind": {
+              "const": "vec3"
+            },
+            "value": {
+              "$ref": "#/$defs/SemioPoint3"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ],
+          "properties": {
+            "kind": {
+              "const": "quat"
+            },
+            "value": {
+              "$ref": "#/$defs/SemioQuaternion"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "values"
+          ],
+          "properties": {
+            "kind": {
+              "const": "weights"
+            },
+            "values": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "SemioPoint3": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y",
+        "z"
+      ],
+      "properties": {
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "z": {
+          "type": "number"
+        }
+      }
+    },
+    "SemioQuaternion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y",
+        "z",
+        "w"
+      ],
+      "properties": {
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "z": {
+          "type": "number"
+        },
+        "w": {
+          "type": "number"
+        }
+      }
+    }
+  }
+}

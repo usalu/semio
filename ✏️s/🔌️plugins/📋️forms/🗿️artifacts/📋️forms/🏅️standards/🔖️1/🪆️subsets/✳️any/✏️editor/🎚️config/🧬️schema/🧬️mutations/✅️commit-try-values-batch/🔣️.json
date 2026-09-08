@@ -5,7 +5,7 @@
   "displayName": "Commit Try Values Batch",
   "emoji": "✅️",
   "aggregateVariant": "CommitTryValuesBatch",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "commit-try-values-batch",
   "binaryTag": 8,
   "invertibility": "explicit-mutation",

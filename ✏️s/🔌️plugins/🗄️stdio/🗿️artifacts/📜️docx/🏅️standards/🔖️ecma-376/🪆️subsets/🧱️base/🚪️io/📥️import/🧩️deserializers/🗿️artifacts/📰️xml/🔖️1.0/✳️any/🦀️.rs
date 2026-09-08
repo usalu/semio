@@ -1,6 +1,6 @@
 //! xml bridge stub for stdio.docx
-use crate::artifacts::docx::{DocxSnapshot, STDIO_DOCX_DOCUMENT_SCHEMA};
-use crate::artifacts::xml::XmlSnapshot;
+use crate::{DocxSnapshot, STDIO_DOCX_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_xml::XmlSnapshot;
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn register() {}
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

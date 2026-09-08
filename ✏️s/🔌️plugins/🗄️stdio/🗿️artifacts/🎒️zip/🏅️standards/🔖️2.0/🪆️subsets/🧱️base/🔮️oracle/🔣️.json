@@ -148,7 +148,7 @@
         {
           "id": "add-entry",
           "capability": "zip-2-0-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -168,7 +168,7 @@
         {
           "id": "remove-entry",
           "capability": "zip-2-0-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -188,7 +188,7 @@
         {
           "id": "rename-entry",
           "capability": "zip-2-0-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -208,7 +208,7 @@
         {
           "id": "set-archive-comment",
           "capability": "zip-2-0-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -228,7 +228,7 @@
         {
           "id": "set-entry-data",
           "capability": "zip-2-0-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -248,7 +248,7 @@
         {
           "id": "set-snapshot",
           "capability": "zip-2-0-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],

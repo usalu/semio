@@ -5,7 +5,7 @@
   "displayName": "Replace Layer Stroke",
   "emoji": "🖊️",
   "aggregateVariant": "ReplaceLayerStroke",
-  "payloadSchema": "🦠️mutation/🦀️.rs#ReplaceLayerStroke",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "replace-layer-stroke",
   "binaryTag": 7,
   "invertibility": "explicit-mutation",
@@ -19,6 +19,7 @@
   "requiredLanguageSurfaces": [
     "rust",
     "text",
-    "binary"
+    "binary",
+    "json-schema"
   ]
 }

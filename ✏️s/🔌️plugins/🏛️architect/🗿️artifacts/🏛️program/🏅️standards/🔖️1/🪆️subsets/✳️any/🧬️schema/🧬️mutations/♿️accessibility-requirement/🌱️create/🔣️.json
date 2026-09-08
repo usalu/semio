@@ -5,7 +5,7 @@
   "displayName": "Create Accessibility Requirement",
   "emoji": "🌱️",
   "aggregateVariant": "CreateAccessibilityRequirement",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

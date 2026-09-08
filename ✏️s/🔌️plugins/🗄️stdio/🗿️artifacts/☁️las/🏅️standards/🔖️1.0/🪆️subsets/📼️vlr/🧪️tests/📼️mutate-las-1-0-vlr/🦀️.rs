@@ -86,11 +86,11 @@ fn round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::mutable_input;
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_plugin_stdio::artifacts::las::standards::v1_0::subsets::any::io::{decode_las, encode_las};
-    use semio_s_plugin_stdio::artifacts::las::standards::v1_0::subsets::any::schema::mutations::{
+    use crate::standards::v1_0::subsets::any::io::{decode_las, encode_las};
+    use crate::standards::v1_0::subsets::any::schema::mutations::{
         apply_las_mutation, insert_point, insert_vlr, remove_point, remove_vlr, set_bounds, set_creation_date, set_point, set_points_by_return, set_scale_and_offset, set_snapshot, set_software_info, set_system_identifier, set_version, set_vlr_data, LasMutation,
     };
-    use semio_s_plugin_stdio::artifacts::las::standards::v1_0::subsets::any::schema::snapshot::{LasHeader, LasPoint, LasSnapshot, LasVlr};
+    use crate::standards::v1_0::subsets::any::schema::snapshot::{LasHeader, LasPoint, LasSnapshot, LasVlr};
     use semio_s_plugin_stdio_test_oracle::artifacts::las::standards::v1_0::subsets::any::project_las;
 
     //#region 🔖️SpecReaders

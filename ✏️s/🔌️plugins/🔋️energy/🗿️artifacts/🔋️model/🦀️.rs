@@ -53,8 +53,8 @@ pub const MODEL_DIALECT: Dialect = Dialect { artifact_kind: ENERGY_MODEL_ARTIFAC
 /// any plugin yet) — a kernel-dissolution-scale change (DKM's own ticket), not a schema migration.
 /// `vertices_m` stays inside `structure`'s lossless `Model` tree, same as every other field.
 //#region 🔖️ChildTypes
-pub type EnergyStructureChild = store::ArtifactChild<semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValueSnapshot>;
-pub type EnergyZonesChild = store::ArtifactChild<semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot>;
+pub type EnergyStructureChild = store::ArtifactChild<semio_s_artifact_stdio_semio::standards::v1::subsets::value::schema::snapshot::SemioValueSnapshot>;
+pub type EnergyZonesChild = store::ArtifactChild<semio_s_artifact_stdio_semio::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot>;
 //#endregion 🔖️ChildTypes
 
 //#region 🔖️Converters
@@ -75,8 +75,8 @@ pub type EnergyZonesChild = store::ArtifactChild<semio_s_plugin_stdio::artifacts
 /// doesn't see `5.0` where the model held an `i32` `5`) no longer applies at the `DslValue` layer
 /// itself; this bridge stays on `serde_json` regardless, out of scope for the ticket that gave
 /// `DslValue::Number` that fidelity (`26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS`).
-fn semio_value_from_json(value: &serde_json::Value) -> semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValue {
-    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::value::schema::snapshot::{SemioValue, SemioValueEntry};
+fn semio_value_from_json(value: &serde_json::Value) -> semio_s_artifact_stdio_semio::standards::v1::subsets::value::schema::snapshot::SemioValue {
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::value::schema::snapshot::{SemioValue, SemioValueEntry};
     match value {
         serde_json::Value::Null => SemioValue::Null,
         serde_json::Value::Bool(value) => SemioValue::Bool { value: *value },
@@ -95,8 +95,8 @@ fn semio_value_from_json(value: &serde_json::Value) -> semio_s_plugin_stdio::art
 
 /// 🌉 Inverse of [`semio_value_from_json`] — real reconstruction, not a stub. `Bytes`/`Ref` degrade
 /// honestly (documented above) since `Model` never produces either.
-fn json_from_semio_value(value: &semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValue) -> serde_json::Value {
-    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValue;
+fn json_from_semio_value(value: &semio_s_artifact_stdio_semio::standards::v1::subsets::value::schema::snapshot::SemioValue) -> serde_json::Value {
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::value::schema::snapshot::SemioValue;
     match value {
         SemioValue::Null => serde_json::Value::Null,
         SemioValue::Bool { value } => serde_json::Value::Bool(*value),
@@ -112,8 +112,8 @@ fn json_from_semio_value(value: &semio_s_plugin_stdio::artifacts::semio::standar
 
 /// 🌉 REAL bidirectional converter: the whole `Model` <-> one `s.stdio.semio.value` tree — the SOLE
 /// lossless source of truth for this artifact's persisted content.
-pub fn energy_structure_from_model(model: &crate::model::Model) -> semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValueSnapshot {
-    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::value::schema::snapshot::{SemioValueSnapshot, STDIO_SEMIOVALUE_DOCUMENT_SCHEMA};
+pub fn energy_structure_from_model(model: &crate::model::Model) -> semio_s_artifact_stdio_semio::standards::v1::subsets::value::schema::snapshot::SemioValueSnapshot {
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::value::schema::snapshot::{SemioValueSnapshot, STDIO_SEMIOVALUE_DOCUMENT_SCHEMA};
     let value = serde_json::to_value(model).unwrap_or(serde_json::Value::Null);
     SemioValueSnapshot { schema: STDIO_SEMIOVALUE_DOCUMENT_SCHEMA.into(), root: semio_value_from_json(&value), nodes: Vec::new() }
 }
@@ -121,7 +121,7 @@ pub fn energy_structure_from_model(model: &crate::model::Model) -> semio_s_plugi
 /// 🌉 Inverse of [`energy_structure_from_model`]. Falls back to `Model::default()` if `structure`'s
 /// root doesn't decode into a full `Model` (e.g. a foreign composer wrote a partial/foreign tree) —
 /// documented, honest degradation, never a panic, matching the recipe's converter-honesty rule.
-pub fn energy_model_from_structure(structure: &semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValueSnapshot) -> crate::model::Model {
+pub fn energy_model_from_structure(structure: &semio_s_artifact_stdio_semio::standards::v1::subsets::value::schema::snapshot::SemioValueSnapshot) -> crate::model::Model {
     serde_json::from_value(json_from_semio_value(&structure.root)).unwrap_or_default()
 }
 
@@ -130,9 +130,9 @@ pub fn energy_model_from_structure(structure: &semio_s_plugin_stdio::artifacts::
 /// always regenerated alongside `structure` from the SAME model (never an independent source, so
 /// the two never diverge). `energy_model_from_structure` alone is authoritative on read; this table
 /// is never consulted for reconstruction, mirroring `forms`'s own `results` table exactly.
-pub fn energy_zones_table_from_model(model: &crate::model::Model) -> semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot {
-    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::table::schema::snapshot::{SemioTableCellKind, SemioTableColumn, SemioTableRow, SemioTableSnapshot, STDIO_SEMIOTABLE_DOCUMENT_SCHEMA};
-    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValue;
+pub fn energy_zones_table_from_model(model: &crate::model::Model) -> semio_s_artifact_stdio_semio::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot {
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::table::schema::snapshot::{SemioTableCellKind, SemioTableColumn, SemioTableRow, SemioTableSnapshot, STDIO_SEMIOTABLE_DOCUMENT_SCHEMA};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::value::schema::snapshot::SemioValue;
     SemioTableSnapshot {
         schema: STDIO_SEMIOTABLE_DOCUMENT_SCHEMA.into(),
         columns: vec![
@@ -165,12 +165,12 @@ pub fn energy_zones_table_from_model(model: &crate::model::Model) -> semio_s_plu
 /// from `structure`'s handle). No render/export call site consumes this yet (energy is a headless
 /// engine with no document app — see `🦀️.rs`'s own "Shape note"), matching `layout`'s honest
 /// framing for its own inert `referenced_model` slot: real, tested, not yet wired to a consumer.
-pub fn energy_structure_content(snapshot: &EnergyModelSnapshot) -> semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValueSnapshot {
+pub fn energy_structure_content(snapshot: &EnergyModelSnapshot) -> semio_s_artifact_stdio_semio::standards::v1::subsets::value::schema::snapshot::SemioValueSnapshot {
     energy_structure_from_model(&snapshot.model)
 }
 
 /// 🔎️ Twin of [`energy_structure_content`] for the `zones` child.
-pub fn energy_zones_content(snapshot: &EnergyModelSnapshot) -> semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot {
+pub fn energy_zones_content(snapshot: &EnergyModelSnapshot) -> semio_s_artifact_stdio_semio::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot {
     energy_zones_table_from_model(&snapshot.model)
 }
 //#endregion 🔖️Converters

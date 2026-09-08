@@ -16,10 +16,10 @@
 //!   `encode_csv` layer; only the "quoted even though not structurally required" bit the
 //!   deserializer never captured in the first place is what's absent here.
 
-use crate::artifacts::csv::schema::snapshot::{CsvField, CsvRecord};
-use crate::artifacts::csv::CsvSnapshot;
-use crate::artifacts::csv::STDIO_CSV_DOCUMENT_SCHEMA;
-use crate::artifacts::semio::standards::v1::subsets::value::schema::snapshot::{SemioValue, SemioValueSnapshot, ValueId};
+use semio_s_artifact_stdio_csv::schema::snapshot::{CsvField, CsvRecord};
+use semio_s_artifact_stdio_csv::CsvSnapshot;
+use semio_s_artifact_stdio_csv::STDIO_CSV_DOCUMENT_SCHEMA;
+use crate::standards::v1::subsets::value::schema::snapshot::{SemioValue, SemioValueSnapshot, ValueId};
 use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
 use std::collections::{HashMap, HashSet};
 
@@ -129,8 +129,8 @@ pub fn csv_from_semio(root: &SemioValue, nodes: &HashMap<&ValueId, &SemioValue>,
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::csv::schema::snapshot::CsvField as CsvFieldT;
-    use crate::artifacts::semio::standards::v1::subsets::value::io::import::deserializers::artifacts::csv::v_rfc4180::any::semio_value_from_csv;
+    use semio_s_artifact_stdio_csv::schema::snapshot::CsvField as CsvFieldT;
+    use crate::standards::v1::subsets::value::io::import::deserializers::artifacts::csv::v_rfc4180::any::semio_value_from_csv;
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn field(s: &str) -> CsvFieldT {
@@ -174,8 +174,8 @@ mod tests {
     async fn mismatched_row_shape_is_a_hard_error() {
         let value = SemioValue::List {
             items: vec![
-                SemioValue::Map { entries: vec![crate::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValueEntry { key: "a".into(), value: SemioValue::Str { value: "1".into() } }] },
-                SemioValue::Map { entries: vec![crate::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValueEntry { key: "b".into(), value: SemioValue::Str { value: "2".into() } }] },
+                SemioValue::Map { entries: vec![crate::standards::v1::subsets::value::schema::snapshot::SemioValueEntry { key: "a".into(), value: SemioValue::Str { value: "1".into() } }] },
+                SemioValue::Map { entries: vec![crate::standards::v1::subsets::value::schema::snapshot::SemioValueEntry { key: "b".into(), value: SemioValue::Str { value: "2".into() } }] },
             ],
         };
         let nodes = HashMap::new();

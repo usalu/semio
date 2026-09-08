@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeHeatRecoveryEtaMin, base: &Din16798Snapshot) -> prot
     if base.heat_recovery_eta_min == payload.new_heat_recovery_eta_min {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Minimum heat recovery efficiency is already {}.", payload.new_heat_recovery_eta_min));
     }
-    protocol::MutationOutcome::new(Din16798Diff { heat_recovery_eta_min: Some(payload.new_heat_recovery_eta_min.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(Din16798Diff { heat_recovery_eta_min: Some(payload.new_heat_recovery_eta_min), ..Default::default() })
 }
 //#endregion 🔖️Diff

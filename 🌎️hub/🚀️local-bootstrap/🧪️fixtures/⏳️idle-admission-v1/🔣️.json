@@ -3,5 +3,10 @@
   "exchangeDeadlineMs": 15000,
   "idleBeforeAdmissionMs": 15001,
   "frameHex": "000000027b7d",
-  "payloadHex": "7b7d"
+  "payloadHex": "7b7d",
+  "hostile": [
+    { "id": "unknown-member", "mutation": { "locator": "private" }, "stage": "contract", "result": "rejected", "code": "unknown-member" },
+    { "id": "idle-not-past-deadline", "mutation": { "idleBeforeAdmissionMs": 15000 }, "stage": "contract", "result": "rejected", "code": "idle-not-past-exchange-deadline" },
+    { "id": "frame-below-length-prefix", "mutation": { "frameHex": "7b7d" }, "stage": "contract", "result": "rejected", "code": "frame-shorter-than-length-prefix" }
+  ]
 }

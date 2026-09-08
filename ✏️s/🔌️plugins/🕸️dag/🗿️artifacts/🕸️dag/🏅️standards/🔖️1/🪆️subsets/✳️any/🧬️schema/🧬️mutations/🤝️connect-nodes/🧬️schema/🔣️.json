@@ -1,0 +1,36 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/dag/dag/1/any/mutation/connect-nodes.json",
+  "title": "ConnectNodes",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "source",
+    "target",
+    "routeStyle",
+    "properties"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "source": {
+      "type": "string"
+    },
+    "target": {
+      "type": "string"
+    },
+    "routeStyle": {
+      "type": "string",
+      "enum": [
+        "bezier",
+        "sharpSz"
+      ]
+    },
+    "properties": {
+      "type": "object",
+      "additionalProperties": true
+    }
+  }
+}

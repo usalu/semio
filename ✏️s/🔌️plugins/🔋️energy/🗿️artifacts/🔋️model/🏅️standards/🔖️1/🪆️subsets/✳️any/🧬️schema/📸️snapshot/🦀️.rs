@@ -66,7 +66,7 @@ impl ToValue for EnergyModelSnapshot {
 impl FromValue for EnergyModelSnapshot {
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
         let entries = DslValue::into_object(value)?;
-        let field = |key: &str| entries.iter().find(|(k, _)| k == key).map(|(_, v)| v.clone()).unwrap_or(DslValue::Null);
+        let field = |key: &str| entries.iter().find(|(k, _)| k == key).map_or(DslValue::Null, |(_, v)| v.clone());
         Ok(Self {
             schema: String::from_value(field("schema"))?,
             model: crate::model::Model::from_value(field("model"))?,
@@ -380,8 +380,8 @@ pub fn energy_model_identity_report_json(dsl_text: &str) -> Result<String, Strin
         ("parsed".to_string(), pack::json::from_dsl_value(&parsed.to_value())),
         ("reparsed".to_string(), pack::json::from_dsl_value(&reparsed.to_value())),
         ("packDecoded".to_string(), pack::json::from_dsl_value(&unpacked.to_value())),
-        ("canonicalText".to_string(), pack::json::Value::String(canonical.clone())),
-        ("canonicalTextAgain".to_string(), pack::json::Value::String(canonical_again.clone())),
+        ("canonicalText".to_string(), pack::json::Value::String(canonical)),
+        ("canonicalTextAgain".to_string(), pack::json::Value::String(canonical_again)),
     ]);
     Ok(pack::json::to_string(&report))
 }

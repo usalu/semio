@@ -5,7 +5,7 @@
   "displayName": "Change Primitive Extra Data",
   "emoji": "📝️",
   "aggregateVariant": "ChangePrimitiveExtraData",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

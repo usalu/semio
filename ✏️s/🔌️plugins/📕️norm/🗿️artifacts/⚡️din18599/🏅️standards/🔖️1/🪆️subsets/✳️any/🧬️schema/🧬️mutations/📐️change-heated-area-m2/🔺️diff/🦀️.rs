@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeHeatedAreaM2, base: &Din18599Snapshot) -> protocol::
     if base.heated_area_m2 == payload.new_heated_area_m2 {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "Heated area m2 already has this value.");
     }
-    protocol::MutationOutcome::new(Din18599Diff { heated_area_m2: Some(payload.new_heated_area_m2.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(Din18599Diff { heated_area_m2: Some(payload.new_heated_area_m2), ..Default::default() })
 }
 //#endregion 🔖️Diff

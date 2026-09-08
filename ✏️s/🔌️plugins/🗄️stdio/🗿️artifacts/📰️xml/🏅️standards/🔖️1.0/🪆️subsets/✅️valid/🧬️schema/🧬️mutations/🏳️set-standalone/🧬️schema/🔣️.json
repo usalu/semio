@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/xml/1.0/valid/mutation/set-standalone.json",
+  "title": "SetStandalone",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "standalone": {
+      "anyOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "mutation": {
+      "const": "setStandalone",
+      "description": "Aggregate discriminator spliced in by XmlValidMutation; absent when the payload stands alone."
+    }
+  }
+}

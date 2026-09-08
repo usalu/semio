@@ -1,7 +1,7 @@
 //! 🧬️ Authoritative insert-ifd mutation.
-use crate::artifacts::tiff::schema::diff::*;
-use crate::artifacts::tiff::schema::mutations::TiffMutation;
-use crate::artifacts::tiff::schema::snapshot::*;
+use crate::schema::diff::*;
+use crate::schema::mutations::TiffMutation;
+use crate::schema::snapshot::*;
 
 //#region Payload
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
@@ -33,7 +33,7 @@ impl protocol::MutationKind<TiffSnapshot, TiffMutation> for InsertIfdMutation {
         if <TiffDiff as protocol::DiffAlgebra<TiffSnapshot>>::is_empty(outcome.diff()) {
             return Vec::new();
         }
-        vec![TiffMutation::RemoveIfd(crate::artifacts::tiff::schema::mutations::RemoveIfdMutation { index: (*index).min(base.ifds.len()) })]
+        vec![TiffMutation::RemoveIfd(crate::schema::mutations::RemoveIfdMutation { index: (*index).min(base.ifds.len()) })]
     }
     fn label(&self) -> String {
         "insert ifd".into()

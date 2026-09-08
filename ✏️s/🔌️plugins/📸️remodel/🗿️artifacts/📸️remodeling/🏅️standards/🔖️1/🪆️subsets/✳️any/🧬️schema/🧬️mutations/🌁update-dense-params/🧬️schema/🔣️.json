@@ -1,0 +1,54 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/remodel/remodeling/1/any/mutation/update-dense-params.json",
+  "title": "UpdateDenseParams",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "params"
+  ],
+  "properties": {
+    "params": {
+      "type": "object",
+      "title": "DenseParams",
+      "additionalProperties": false,
+      "required": [
+        "resolution",
+        "windowRadiusPx",
+        "minViewConsistency",
+        "confidenceThreshold",
+        "maxPoints"
+      ],
+      "properties": {
+        "resolution": {
+          "type": "string",
+          "title": "DenseResolution",
+          "enum": [
+            "low",
+            "medium",
+            "high"
+          ]
+        },
+        "windowRadiusPx": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "minViewConsistency": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "confidenceThreshold": {
+          "type": "number",
+          "format": "float"
+        },
+        "maxPoints": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        }
+      }
+    }
+  }
+}

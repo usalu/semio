@@ -1,8 +1,8 @@
 //! 🧬️ TxtArtifact schema — full artifact state.
 
-use crate::artifacts::txt::schema::snapshot::LineEnding;
-use crate::artifacts::txt::TxtSnapshot;
-use schema::ArtifactSchema;
+use crate::schema::snapshot::LineEnding;
+use crate::TxtSnapshot;
+use framework_schema::ArtifactSchema;
 
 //#region 🔖️Artifact
 /// 🧬️ Full `stdio.txt` artifact state.
@@ -58,31 +58,31 @@ impl TxtArtifact {
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.stdio.txt`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn txt_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
-    schema::ArtifactSchemaDescriptor {
+pub fn txt_artifact_schema_descriptor() -> framework_schema::ArtifactSchemaDescriptor {
+    framework_schema::ArtifactSchemaDescriptor {
         id: "s.stdio.txt",
-        artifact: schema::FacetLeaves {
+        artifact: framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),
             json_schema: include_str!("🔣️.json"),
             proto: include_str!("🛰️.proto"),
         },
-        snapshot: schema::FacetLeaves {
+        snapshot: framework_schema::FacetLeaves {
             rust: include_str!("📸️snapshot/🦀️.rs"),
             typescript: include_str!("📸️snapshot/🟦️.ts"),
             graphql: include_str!("📸️snapshot/🔗️.graphql"),
             json_schema: include_str!("📸️snapshot/🔣️.json"),
             proto: include_str!("📸️snapshot/🛰️.proto"),
         },
-        diff: schema::FacetLeaves {
+        diff: framework_schema::FacetLeaves {
             rust: include_str!("🔺️diff/🦀️.rs"),
             typescript: include_str!("🔺️diff/🟦️.ts"),
             graphql: include_str!("🔺️diff/🔗️.graphql"),
             json_schema: include_str!("🔺️diff/🔣️.json"),
             proto: include_str!("🔺️diff/🛰️.proto"),
         },
-        mutations: schema::FacetLeaves {
+        mutations: framework_schema::FacetLeaves {
             rust: include_str!("🧬️mutations/🦀️.rs"),
             typescript: include_str!("🧬️mutations/🟦️.ts"),
             graphql: include_str!("🧬️mutations/🔗️.graphql"),
@@ -94,7 +94,7 @@ pub fn txt_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
 //#endregion 🔖️Descriptor
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use crate::artifacts::txt::{TxtDiff, TxtMutation, TxtSnapshot};
+    use crate::{TxtDiff, TxtMutation, TxtSnapshot};
     use semio_framework_plugin::ArtifactBuilder;
 
     //#region 🔖️Builder
@@ -122,7 +122,7 @@ pub mod derived_construction {
             Ok(Self::from_snapshot(<TxtSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
         fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
-            let diff = crate::artifacts::txt::schema::mutations::apply_txt_mutation(&mut self.snapshot, &mutation);
+            let diff = crate::schema::mutations::apply_txt_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
         fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
@@ -144,7 +144,7 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use crate::artifacts::txt::TxtSnapshot;
+    use crate::TxtSnapshot;
     use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     //#region 🔖️Parts
@@ -252,7 +252,7 @@ pub fn empty_txt_snapshot() -> TxtSnapshot {
 /// same pattern as `note::semio_example_snapshot`/`csv::demo_csv_snapshot`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn demo_txt_snapshot() -> TxtSnapshot {
-    <TxtSnapshot as store::ArtifactDsl>::parse_dsl(crate::artifacts::txt::examples::demo::PRIMARY_TEXT).unwrap_or_else(|_| empty_txt_snapshot())
+    <TxtSnapshot as store::ArtifactDsl>::parse_dsl(crate::examples::demo::PRIMARY_TEXT).unwrap_or_else(|_| empty_txt_snapshot())
 }
 //#endregion 🔖️DocumentHelpers
 
@@ -273,8 +273,8 @@ semio_framework_plugin::derive_artifact_facets!(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::txt::schema::mutations::InsertLineMutation;
-    use crate::artifacts::txt::{TxtDiff, TxtMutation, STDIO_TXT_DOCUMENT_SCHEMA};
+    use crate::schema::mutations::InsertLineMutation;
+    use crate::{TxtDiff, TxtMutation, STDIO_TXT_DOCUMENT_SCHEMA};
 
     #[semio_framework_async_macros::async_test]
     async fn empty_snapshot_matches_schema() {
@@ -399,7 +399,7 @@ mod tests {
     /// Recognizer (mirrored here so this law does not depend on the framework's own harness).
     #[semio_framework_async_macros::async_test]
     async fn grammar_conformance_law() {
-        let grammar_text = crate::artifacts::txt::schema::snapshot::text::COMPONENT_GRAMMAR_SEMIO;
+        let grammar_text = crate::schema::snapshot::text::COMPONENT_GRAMMAR_SEMIO;
         let grammar = dsl::parse_grammar(grammar_text).expect("parse snapshot grammar");
         assert_eq!(grammar.dialect, dsl::SemioDialect::Grammar);
         let recognizer = dsl::Recognizer::compile(&grammar);
@@ -407,7 +407,7 @@ mod tests {
         // `parse_dsl`/`print_dsl` no longer wrap one). The grammar's own synthetic conformance
         // input shape (`"<envelope-id>\n<body>"`) is a framework-level testing convention
         // unrelated to the real codec, so it is built directly here.
-        let body = crate::artifacts::txt::examples::demo::PRIMARY_TEXT;
+        let body = crate::examples::demo::PRIMARY_TEXT;
         let normalized = format!("{}\n{body}", <TxtSnapshot as store::ArtifactDsl>::envelope_id());
         let ok = recognizer.recognize(&normalized).expect("recognize should not error");
         assert!(ok, "snapshot grammar must recognize the real demo fixture body");
@@ -424,22 +424,22 @@ mod tests {
         let snap = demo_txt_snapshot();
         let pack_bytes = <TxtSnapshot as store::ArtifactPack>::encode_pack(&snap);
         let (_, payload) = store::semio_format::unwrap_binary(&pack_bytes).expect("unwrap_binary");
-        let pack_protocol = dsl::parse_protocol(crate::artifacts::txt::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse snapshot protocol");
+        let pack_protocol = dsl::parse_protocol(crate::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse snapshot protocol");
         let trace = dsl::walk_protocol(&pack_protocol, &payload).expect("walk snapshot protocol");
         assert_eq!(trace.consumed, payload.len(), "snapshot protocol must consume the whole post-envelope payload");
 
         // Spr (mutations binary facet) — a real, non-trivial mutation.
         let mutation = TxtMutation::InsertLine(InsertLineMutation { index: 1, text: "x".into() });
         let op_bytes = <TxtMutation as protocol::OpBinary>::encode_op(&mutation).expect("encode_op");
-        let spr_protocol = dsl::parse_protocol(crate::artifacts::txt::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse mutations protocol");
+        let spr_protocol = dsl::parse_protocol(crate::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse mutations protocol");
         let trace = dsl::walk_protocol(&spr_protocol, &op_bytes).expect("walk mutations protocol");
         assert_eq!(trace.consumed, op_bytes.len(), "mutations protocol must consume the whole op frame");
 
         // Diff binary facet.
         let mut before = snap.clone();
-        let diff = crate::artifacts::txt::schema::mutations::apply_txt_mutation(&mut before, &mutation);
+        let diff = crate::schema::mutations::apply_txt_mutation(&mut before, &mutation);
         let diff_bytes = <TxtDiff as protocol::DiffCodec>::encode_diff(diff.diff()).expect("encode_diff");
-        let diff_protocol = dsl::parse_protocol(crate::artifacts::txt::schema::diff::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse diff protocol");
+        let diff_protocol = dsl::parse_protocol(crate::schema::diff::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse diff protocol");
         let trace = dsl::walk_protocol(&diff_protocol, &diff_bytes).expect("walk diff protocol");
         assert_eq!(trace.consumed, diff_bytes.len(), "diff protocol must consume the whole diff frame (32-byte header + opaque .spk tail)");
     }
@@ -450,11 +450,11 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn fixture_honesty_law() {
         let demo = demo_txt_snapshot();
-        assert_eq!(<TxtSnapshot as store::ArtifactDsl>::parse_dsl(crate::artifacts::txt::examples::demo::PRIMARY_TEXT).unwrap(), demo);
-        assert_eq!(<TxtSnapshot as store::ArtifactDsl>::print_dsl(&demo), crate::artifacts::txt::examples::demo::PRIMARY_TEXT);
+        assert_eq!(<TxtSnapshot as store::ArtifactDsl>::parse_dsl(crate::examples::demo::PRIMARY_TEXT).unwrap(), demo);
+        assert_eq!(<TxtSnapshot as store::ArtifactDsl>::print_dsl(&demo), crate::examples::demo::PRIMARY_TEXT);
 
-        assert_eq!(<TxtSnapshot as store::ArtifactPack>::decode_pack(crate::artifacts::txt::examples::demo::PACK_BYTES).unwrap(), demo);
-        assert_eq!(<TxtSnapshot as store::ArtifactPack>::encode_pack(&demo), crate::artifacts::txt::examples::demo::PACK_BYTES.to_vec());
+        assert_eq!(<TxtSnapshot as store::ArtifactPack>::decode_pack(crate::examples::demo::PACK_BYTES).unwrap(), demo);
+        assert_eq!(<TxtSnapshot as store::ArtifactPack>::encode_pack(&demo), crate::examples::demo::PACK_BYTES.to_vec());
 
         let mutation = TxtMutation::InsertLine(InsertLineMutation { index: 1, text: "x".into() });
         let bytes = <TxtMutation as protocol::OpBinary>::encode_op(&mutation).unwrap();
@@ -467,17 +467,17 @@ mod tests {
     /// of the eventual repo-wide policy gate.
     #[semio_framework_async_macros::async_test]
     async fn committed_grammar_and_protocol_files_parse() {
-        let g1 = dsl::parse_grammar(crate::artifacts::txt::schema::snapshot::text::COMPONENT_GRAMMAR_SEMIO);
+        let g1 = dsl::parse_grammar(crate::schema::snapshot::text::COMPONENT_GRAMMAR_SEMIO);
         assert!(g1.is_ok(), "snapshot grammar must parse: {g1:?}");
-        let g2 = dsl::parse_grammar(crate::artifacts::txt::schema::mutations::text::COMPONENT_GRAMMAR_SEMIO);
+        let g2 = dsl::parse_grammar(crate::schema::mutations::text::COMPONENT_GRAMMAR_SEMIO);
         assert!(g2.is_ok(), "mutations grammar must parse: {g2:?}");
-        let g3 = dsl::parse_grammar(crate::artifacts::txt::schema::diff::text::COMPONENT_GRAMMAR_SEMIO);
+        let g3 = dsl::parse_grammar(crate::schema::diff::text::COMPONENT_GRAMMAR_SEMIO);
         assert!(g3.is_ok(), "diff grammar must parse: {g3:?}");
-        let p1 = dsl::parse_protocol(crate::artifacts::txt::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO);
+        let p1 = dsl::parse_protocol(crate::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO);
         assert!(p1.is_ok(), "snapshot protocol must parse: {p1:?}");
-        let p2 = dsl::parse_protocol(crate::artifacts::txt::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO);
+        let p2 = dsl::parse_protocol(crate::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO);
         assert!(p2.is_ok(), "mutations protocol must parse: {p2:?}");
-        let p3 = dsl::parse_protocol(crate::artifacts::txt::schema::diff::binary::COMPONENT_PROTOCOL_SEMIO);
+        let p3 = dsl::parse_protocol(crate::schema::diff::binary::COMPONENT_PROTOCOL_SEMIO);
         assert!(p3.is_ok(), "diff protocol must parse: {p3:?}");
     }
 
@@ -487,7 +487,7 @@ mod tests {
     #[cfg(not(target_arch = "wasm32"))]
     async fn schema_spec_registration_resolves() {
         use dsl::os_pack::cli::SchemaResolver;
-        crate::artifacts::txt::standards::v_utf_8::subsets::any::io::register_schema_specs();
+        crate::standards::v_utf_8::subsets::any::io::register_schema_specs();
         let resolver = dsl::registry::full_resolver().await;
         assert!(resolver.resolve("stdio.txt").await.is_some(), "stdio.txt must resolve");
         assert!(resolver.resolve("stdio.txt#diff").await.is_some(), "stdio.txt#diff must resolve");

@@ -667,7 +667,7 @@ fn begin_requested_reconstruction(doc: &ArtifactView<'_, RemodelingSnapshot>, re
     };
     let next = checkpoint(generation, &session);
     let mut job = ReconstructionJob {
-        id: job_id.clone(),
+        id: job_id,
         stage: ReconstructionStage::Ingesting,
         progress_0_1: 0.0,
         cancel_requested: false,

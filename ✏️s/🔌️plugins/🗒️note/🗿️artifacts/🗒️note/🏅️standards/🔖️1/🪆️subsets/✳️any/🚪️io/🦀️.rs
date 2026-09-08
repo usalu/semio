@@ -24,11 +24,11 @@
 
 use crate::artifacts::note::{NoteBlockNode, NoteSnapshot, NoteTextParagraph, NoteTextRun};
 use semio_framework_plugin::{io_dispatch, resolve_ready, Dialect, ErasedComposeSource, IoDirection, IoKey, IoPayload, StandardId, SubsetId};
-use semio_s_plugin_stdio::artifacts::dwg::{DwgDrawing, DwgGeometry};
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioPoint3, SemioQuaternion, SemioRgba, SemioTransform};
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::drawing::io as semio_drawing_composer;
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{DrawCanvas, DrawLayer, DrawNode, DrawStyle, PathSegment, SemioDrawingSnapshot, STDIO_SEMIODRAWING_DOCUMENT_SCHEMA};
-use semio_s_plugin_stdio::artifacts::svg::schema::snapshot::write_svg_xml;
+use semio_s_artifact_stdio_dwg::{DwgDrawing, DwgGeometry};
+use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioPoint3, SemioQuaternion, SemioRgba, SemioTransform};
+use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::io as semio_drawing_composer;
+use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::{DrawCanvas, DrawLayer, DrawNode, DrawStyle, PathSegment, SemioDrawingSnapshot, STDIO_SEMIODRAWING_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_svg::schema::snapshot::write_svg_xml;
 use serde_json::Value;
 
 pub fn import_stdio_kinds() -> &'static [&'static str] {
@@ -110,7 +110,7 @@ fn note_asset_data_uri_bytes(data_uri: &str) -> Vec<u8> {
             _ => None,
         }
     }
-    let payload = data_uri.split_once(',').map(|(_, rest)| rest).unwrap_or(data_uri);
+    let payload = data_uri.split_once(',').map_or(data_uri, |(_, rest)| rest);
     let clean: Vec<u8> = payload.bytes().filter(|&b| b != b'=' && !b.is_ascii_whitespace()).collect();
     let mut out = Vec::with_capacity(clean.len() * 3 / 4);
     for chunk in clean.chunks(4) {
@@ -221,7 +221,7 @@ pub fn note_document_to_svg(document: &NoteSnapshot) -> Result<(String, u32, u32
         IoPayload::Binary(bytes) => bytes,
         IoPayload::Text(_) => return Err("note→svg via semio/drawing bridge: expected a Binary (ArtifactPack) svg payload".into()),
     };
-    let svg_snapshot = <semio_s_plugin_stdio::artifacts::svg::schema::snapshot::SvgSnapshot as store::ArtifactPack>::decode_pack(&svg_bytes).map_err(|error| format!("note→svg via semio/drawing bridge: decode svg snapshot: {error:?}"))?;
+    let svg_snapshot = <semio_s_artifact_stdio_svg::schema::snapshot::SvgSnapshot as store::ArtifactPack>::decode_pack(&svg_bytes).map_err(|error| format!("note→svg via semio/drawing bridge: decode svg snapshot: {error:?}"))?;
     Ok((write_svg_xml(&svg_snapshot.doc), width, height))
 }
 
@@ -323,7 +323,7 @@ pub fn note_document_json_from_dwg(drawing: &DwgDrawing) -> Result<Value, String
 mod media_tests {
     use super::*;
     use crate::artifacts::note::{NoteImageAsset, NoteTableCell};
-    use semio_s_plugin_stdio::artifacts::dwg::{DwgColor, DwgEntity, DwgLayer};
+    use semio_s_artifact_stdio_dwg::{DwgColor, DwgEntity, DwgLayer};
 
     /// 🧪️ Relocated from the deleted `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES).
     #[semio_framework_async_macros::async_test]
@@ -577,13 +577,13 @@ mod pdf_page_contract {
     use super::*;
     use semio_framework::io::io_mechanism::{Deserializer, Serializer};
     use semio_framework::io_schema::IoPayload as ForeignPayload;
-    use semio_s_plugin_stdio::artifacts::pdf::standards::v1_4::subsets::base::{io::{decode_pdf, encode_pdf}, schema::snapshot::PdfSnapshot};
+    use semio_s_artifact_stdio_pdf::standards::v1_4::subsets::base::{io::{decode_pdf, encode_pdf}, schema::snapshot::PdfSnapshot};
 
     #[semio_framework_async_macros::async_test]
     async fn note_pdf14_page_contract_matches_the_json_oracle() {
         let fixture: Value = serde_json::from_str(include_str!("🧪️fixtures/📖️pdf14-pages.json")).expect("neutral PDF vectors");
         for row in fixture["cases"].as_array().expect("cases") {
-            let pdf: PdfSnapshot = dsl::os_pack::from_json_str(&serde_json::json!({"schema": semio_s_plugin_stdio::artifacts::pdf::STDIO_PDF_DOCUMENT_SCHEMA, "pages": row["pages"]}).to_string()).expect("owned PDF snapshot");
+            let pdf: PdfSnapshot = dsl::os_pack::from_json_str(&serde_json::json!({"schema": semio_s_artifact_stdio_pdf::STDIO_PDF_DOCUMENT_SCHEMA, "pages": row["pages"]}).to_string()).expect("owned PDF snapshot");
             let bytes = encode_pdf(&pdf).expect("PDF 1.4 writer");
             assert!(bytes.starts_with(b"%PDF-1.4"));
             let note = crate::artifacts::note::io::import::deserializers::artifacts::pdf::v1_4::base::PdfIntoNote::deserialize(&ForeignPayload::Binary(bytes)).await.expect("PDF import").value;

@@ -5,7 +5,7 @@
   "displayName": "Set Contributions",
   "emoji": "🧩️",
   "aggregateVariant": "SetContributions",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "set-contributions",
   "binaryTag": 3,
   "invertibility": "explicit-mutation",

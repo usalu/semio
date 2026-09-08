@@ -5,9 +5,9 @@
 //! already established for this artifact.
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use crate::artifacts::json::standards::v_rfc8259::subsets::base::schema::snapshot::JsonSnapshot;
-    use crate::artifacts::json::standards::v_rfc8259::subsets::base::schema::JsonComposer as JsonAnyComposer;
-    use crate::artifacts::json::standards::v_rfc8259::subsets::i_json::schema::check_i_json_conformance;
+    use crate::standards::v_rfc8259::subsets::base::schema::snapshot::JsonSnapshot;
+    use crate::standards::v_rfc8259::subsets::base::schema::JsonComposer as JsonAnyComposer;
+    use crate::standards::v_rfc8259::subsets::i_json::schema::check_i_json_conformance;
     use dsl::{Diagnostic, FaultCode, Severity, TextSpan};
     use semio_framework_plugin::{register_subset_validator, subset_validator_entry_of, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, IoPayload, StandardId, SubsetId, SubsetValidator, SubsetValidatorEntry};
     use std::sync::OnceLock;
@@ -79,7 +79,7 @@ pub mod derived_composition {
     /// 📌️ Registers this subset's `SubsetValidator` with the generic io registry (D5's
     /// validate-on-build hook). Called from the rfc8259 standard's own `⚙️engine::register()`. The
     /// `ComposerEntry` itself is registered separately by the standard-level composer aggregator
-    /// (`crate::artifacts::json::standards::v_rfc8259::subsets::base::io::io_registry::entries()`).
+    /// (`crate::standards::v_rfc8259::subsets::base::io::io_registry::entries()`).
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn register() {
         register_subset_validator(validator_entry()).expect("static Stdio registration must be available and conflict-free");

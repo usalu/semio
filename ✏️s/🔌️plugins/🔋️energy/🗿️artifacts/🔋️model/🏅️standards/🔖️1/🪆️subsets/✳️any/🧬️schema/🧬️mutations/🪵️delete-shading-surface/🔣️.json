@@ -5,7 +5,7 @@
   "displayName": "Delete Shading Surface",
   "emoji": "🪵️",
   "aggregateVariant": "DeleteShadingSurface",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "delete-shading-surface",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

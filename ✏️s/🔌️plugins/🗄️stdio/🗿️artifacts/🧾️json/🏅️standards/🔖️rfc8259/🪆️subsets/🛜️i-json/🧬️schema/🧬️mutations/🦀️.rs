@@ -26,12 +26,12 @@
 //! @see <https://www.rfc-editor.org/rfc/rfc7493> (I-JSON Message Format)
 //! @see `../🦀️.rs` `derived_analysis::check_i_json_conformance` — the same four clauses as an acceptance gate
 
-use crate::artifacts::json::standards::v_rfc8259::subsets::base::schema::diff::JsonDiff;
-use crate::artifacts::json::standards::v_rfc8259::subsets::base::schema::mutations::{
+use crate::standards::v_rfc8259::subsets::base::schema::diff::JsonDiff;
+use crate::standards::v_rfc8259::subsets::base::schema::mutations::{
     InsertArrayElementMutation, InsertArrayElementPayload, JsonMutation, JsonPath, JsonPathSegment, RemoveArrayElementMutation, RemoveArrayElementPayload, RemoveMemberMutation,
     RemoveMemberPayload, SetMemberMutation, SetMemberPayload, SetScalarMutation, SetScalarPayload,
 };
-use crate::artifacts::json::standards::v_rfc8259::subsets::base::schema::snapshot::{JsonMember, JsonSnapshot, JsonValue};
+use crate::standards::v_rfc8259::subsets::base::schema::snapshot::{JsonMember, JsonSnapshot, JsonValue};
 use protocol::Mutation;
 
 //#region 🔖️Root

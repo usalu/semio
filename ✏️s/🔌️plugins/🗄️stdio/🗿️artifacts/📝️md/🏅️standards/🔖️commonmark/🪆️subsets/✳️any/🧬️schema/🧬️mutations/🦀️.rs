@@ -13,13 +13,13 @@
 //! changed there too, from `MdMutation::Variant { a, b }` to `MdMutation::Variant(variant_mod::
 //! Variant { a, b })`.
 
-use crate::artifacts::md::schema::diff::navigate_container;
-pub use crate::artifacts::md::schema::diff::MdPathStep;
-use crate::artifacts::md::schema::diff::{dec_block, dec_block_list, dec_inline_list, dec_str, enc_block, enc_block_list, enc_inline_list, enc_str, parse_usize, split_top_level, strip_brackets};
-use crate::artifacts::md::schema::diff::{dec_block_bin, dec_block_list_bin, dec_inline_list_bin, enc_block_bin, enc_block_list_bin, enc_inline_list_bin, read_str_bin, write_str_bin};
-use crate::artifacts::md::schema::diff::{diff_at_path, diff_set_snapshot, MdBlockDiff, MdBlocksLeafDiff, MdDiff};
-use crate::artifacts::md::schema::snapshot::{MdBlock, MdInline};
-use crate::artifacts::md::MdSnapshot;
+use crate::schema::diff::navigate_container;
+pub use crate::schema::diff::MdPathStep;
+use crate::schema::diff::{dec_block, dec_block_list, dec_inline_list, dec_str, enc_block, enc_block_list, enc_inline_list, enc_str, parse_usize, split_top_level, strip_brackets};
+use crate::schema::diff::{dec_block_bin, dec_block_list_bin, dec_inline_list_bin, enc_block_bin, enc_block_list_bin, enc_inline_list_bin, read_str_bin, write_str_bin};
+use crate::schema::diff::{diff_at_path, diff_set_snapshot, MdBlockDiff, MdBlocksLeafDiff, MdDiff};
+use crate::schema::snapshot::{MdBlock, MdInline};
+use crate::MdSnapshot;
 use protocol::{Mutation, OpText};
 
 //#region 🔖️Mutations
@@ -384,7 +384,7 @@ impl protocol::OpBinary for MdMutation {
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_mutation_cases() -> Vec<MdMutation> {
-    let base = MdSnapshot { schema: crate::artifacts::md::STDIO_MD_DOCUMENT_SCHEMA.into(), blocks: vec![MdBlock::Paragraph { inlines: vec![MdInline::Text { text: "hi".into() }] }] };
+    let base = MdSnapshot { schema: crate::STDIO_MD_DOCUMENT_SCHEMA.into(), blocks: vec![MdBlock::Paragraph { inlines: vec![MdInline::Text { text: "hi".into() }] }] };
     let list_block = MdBlock::List { ordered: true, start: Some(2), tight: false, items: vec![vec![MdBlock::Paragraph { inlines: vec![MdInline::Text { text: "one".into() }] }], vec![MdBlock::BlockQuote { blocks: vec![MdBlock::ThematicBreak] }]] };
     vec![
         MdMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base }),

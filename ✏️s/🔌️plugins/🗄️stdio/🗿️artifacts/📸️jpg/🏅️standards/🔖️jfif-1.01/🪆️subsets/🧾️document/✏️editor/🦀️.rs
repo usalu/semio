@@ -3,9 +3,9 @@
 //! Emits the frozen `set-pixel-region` action onto the artifact's own whole-raster replace mutation.
 //! MUST NOT be reached by the sibling `viewer` module (`policyViewerPurityBreaches`).
 
-use crate::artifacts::jpg::standards::v_jfif_1_01::subsets::document::schema::mutations::JpgMutation;
-use crate::artifacts::jpg::standards::v_jfif_1_01::subsets::document::schema::snapshot::JpgSnapshot;
-use crate::artifacts::jpg::{JPG_ANY_DIALECT, STDIO_JPG_DOCUMENT_SCHEMA};
+use crate::standards::v_jfif_1_01::subsets::document::schema::mutations::JpgMutation;
+use crate::standards::v_jfif_1_01::subsets::document::schema::snapshot::JpgSnapshot;
+use crate::{JPG_ANY_DIALECT, STDIO_JPG_DOCUMENT_SCHEMA};
 use crate::editor::jpg_any::modes::edit;
 use crate::editor::jpg_any::modes::edit::windows::main;
 use semio_framework_plugin::{ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation};
@@ -61,7 +61,7 @@ impl ArtifactEditor for JpgAnyEditor {
         _engines: &EngineHandles,
     ) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
         match command {
-            JpgAnyEditCommand::SetPixelRegion { pixels } => Ok(Emit::mutations(vec![JpgMutation::ReplacePixels(crate::artifacts::jpg::schema::mutations::ReplacePixelsMutation { pixels: pixels.clone() })])),
+            JpgAnyEditCommand::SetPixelRegion { pixels } => Ok(Emit::mutations(vec![JpgMutation::ReplacePixels(crate::schema::mutations::ReplacePixelsMutation { pixels: pixels.clone() })])),
         }
     }
 

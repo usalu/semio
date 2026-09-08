@@ -17,12 +17,12 @@
 //! `zip/📦️opc` is out of bounds) — flagged again in `glue_followup` for hoisting once a third
 //! consumer (pptx/bcf) needs the identical shape.
 
-use crate::artifacts::xlsx::schema::snapshot::{XlsxCell, XlsxCellValue, XlsxSheet, XlsxWorkbook};
-use crate::artifacts::xlsx::XlsxSnapshot;
-use crate::artifacts::zip::opc::{OpcContentTypes, OpcPackage, OpcPart, OpcRelationship, OpcTargetMode};
+use crate::schema::snapshot::{XlsxCell, XlsxCellValue, XlsxSheet, XlsxWorkbook};
+use crate::XlsxSnapshot;
+use semio_s_artifact_stdio_zip::opc::{OpcContentTypes, OpcPackage, OpcPart, OpcRelationship, OpcTargetMode};
 use protocol::command::DiffAlgebra;
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
-use schema::ArtifactSchema;
+use framework_schema::ArtifactSchema;
 use std::collections::HashMap;
 
 //#region 🔖️GenericCollectionTriples
@@ -1921,7 +1921,7 @@ impl protocol::DiffCodec for XlsxDiff {
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn snapshot_a() -> XlsxSnapshot {
-    crate::artifacts::xlsx::standards::v_ecma_376::subsets::base::io::export::serializers::build_minimal_xlsx(XlsxWorkbook {
+    crate::standards::v_ecma_376::subsets::base::io::export::serializers::build_minimal_xlsx(XlsxWorkbook {
         sheets: vec![
             XlsxSheet { name: "Sheet1".into(), cells: vec![XlsxCell { row: 1, col: 0, value: XlsxCellValue::Number(1.0) }] },
             XlsxSheet { name: "ToDrop".into(), cells: vec![XlsxCell { row: 1, col: 0, value: XlsxCellValue::SharedString(0) }] },
@@ -1933,7 +1933,7 @@ pub(crate) fn snapshot_a() -> XlsxSnapshot {
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn snapshot_b() -> XlsxSnapshot {
-    let mut snap = crate::artifacts::xlsx::standards::v_ecma_376::subsets::base::io::export::serializers::build_minimal_xlsx(XlsxWorkbook {
+    let mut snap = crate::standards::v_ecma_376::subsets::base::io::export::serializers::build_minimal_xlsx(XlsxWorkbook {
         sheets: vec![
             XlsxSheet {
                 name: "Sheet1".into(),

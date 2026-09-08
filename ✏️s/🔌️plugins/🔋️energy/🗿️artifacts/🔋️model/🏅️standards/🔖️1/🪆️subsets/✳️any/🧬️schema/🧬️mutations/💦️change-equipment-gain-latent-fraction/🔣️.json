@@ -5,7 +5,7 @@
   "displayName": "Change Equipment Gain Latent Fraction",
   "emoji": "💦️",
   "aggregateVariant": "ChangeEquipmentGainLatentFraction",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-equipment-gain-latent-fraction",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

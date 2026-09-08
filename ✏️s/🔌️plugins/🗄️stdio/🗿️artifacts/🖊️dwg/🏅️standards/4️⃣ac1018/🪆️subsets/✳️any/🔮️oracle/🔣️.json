@@ -52,7 +52,7 @@
         {
           "id": "set-snapshot",
           "capability": "dwg-ac1018-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -71,7 +71,7 @@
         {
           "id": "set-version-info",
           "capability": "dwg-ac1018-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],

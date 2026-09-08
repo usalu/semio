@@ -4,8 +4,8 @@
 //! `Text` nodes are real `set-node` edit targets (`XmlMutation::SetText`'s own documented scope);
 //! `Element`/`CData`/`Comment`/`ProcessingInstruction` nodes render read-only in this window.
 
-use crate::artifacts::xml::schema::snapshot::XmlNode;
-use crate::artifacts::xml::XmlSnapshot;
+use crate::schema::snapshot::XmlNode;
+use crate::XmlSnapshot;
 use semio_framework_plugin::app::{TreeNodeView, TreeView, TreeWindowKit, WindowKit};
 use semio_framework_plugin::{BuiltNode, LocalizedLabel, WindowKindDefinition};
 
@@ -74,7 +74,7 @@ mod tests {
     async fn render_walks_element_children() {
         let document = XmlSnapshot {
             schema: "stdio.xml".into(),
-            doc: crate::artifacts::xml::schema::snapshot::XmlDocument {
+            doc: crate::schema::snapshot::XmlDocument {
                 root: Some(XmlNode::Element { name: "root".into(), attrs: Vec::new(), children: vec![XmlNode::Text { text: "hi".into() }] }),
                 doctype: None,
                 declaration: None,

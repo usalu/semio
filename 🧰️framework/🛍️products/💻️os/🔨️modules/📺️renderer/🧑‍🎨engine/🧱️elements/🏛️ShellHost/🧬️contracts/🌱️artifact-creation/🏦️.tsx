@@ -42,6 +42,7 @@ export const ARTIFACT_CREATION_PROGRESS_TEXT_V1 = {
     catalog: {
       loading: "Loading the available artifact kinds…",
       ready: "The available artifact kinds are current.",
+      empty: "No artifact kinds are available for this space.",
       unavailable: "Artifact kinds are unavailable. Reopen the space before creating an artifact.",
     },
   },
@@ -60,6 +61,7 @@ export const ARTIFACT_CREATION_PROGRESS_TEXT_V1 = {
     catalog: {
       loading: "Verfügbare Artefaktarten werden geladen…",
       ready: "Die verfügbaren Artefaktarten sind aktuell.",
+      empty: "Für diesen Space sind keine Artefaktarten verfügbar.",
       unavailable: "Artefaktarten sind nicht verfügbar. Öffne den Space erneut, bevor du ein Artefakt erstellst.",
     },
   },
@@ -159,10 +161,10 @@ export function ArtifactCreationProgressNotice({
 }
 
 /** ♿ Distinguishes an unavailable catalog from an authorized empty presentation. */
-export function ArtifactCreationCatalogNotice({ status, locale }: Readonly<{ status: SpaceArtifactCreationCatalogStatusV1; locale: string }>): React.ReactElement | null {
+export function ArtifactCreationCatalogNotice({ status, locale, hasChoices }: Readonly<{ status: Pick<SpaceArtifactCreationCatalogStatusV1, "phase">; locale: string; hasChoices?: boolean }>): React.ReactElement | null {
   const language = artifactCreationProgressLocaleV1(locale);
   if (language === null) return null;
-  const text = ARTIFACT_CREATION_PROGRESS_TEXT_V1[language].catalog[status.phase];
+  const text = ARTIFACT_CREATION_PROGRESS_TEXT_V1[language].catalog[status.phase === "ready" && hasChoices === false ? "empty" : status.phase];
   const unavailable = status.phase === "unavailable";
   return (
     <section

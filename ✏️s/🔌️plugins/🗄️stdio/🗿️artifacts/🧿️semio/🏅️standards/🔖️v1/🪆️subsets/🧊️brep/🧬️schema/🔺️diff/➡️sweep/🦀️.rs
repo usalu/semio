@@ -20,15 +20,15 @@ mod loft;
 #[path = "🐍️frame/🦀️.rs"]
 mod frame;
 
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::primitives::{make_planar_face_from_wire, Wire};
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::transform::transform_face;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::FaceId;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::Curve3;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::error::KernelError;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::surface::Surface;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::history::OpRecorder;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::Body;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::{Pnt3, Vec3};
+use crate::standards::v1::subsets::brep::schema::diff::primitives::{make_planar_face_from_wire, Wire};
+use crate::standards::v1::subsets::brep::schema::diff::transform::transform_face;
+use crate::standards::v1::subsets::brep::schema::snapshot::arena::FaceId;
+use crate::standards::v1::subsets::brep::schema::snapshot::curve::Curve3;
+use crate::standards::v1::subsets::brep::schema::snapshot::error::KernelError;
+use crate::standards::v1::subsets::brep::schema::snapshot::surface::Surface;
+use crate::standards::v1::subsets::brep::schema::snapshot::topology::history::OpRecorder;
+use crate::standards::v1::subsets::brep::schema::snapshot::topology::Body;
+use crate::standards::v1::subsets::brep::schema::snapshot::vector::{Pnt3, Vec3};
 
 pub use loft::loft_profiles;
 pub use revolve::revolve_face;
@@ -42,7 +42,7 @@ pub use revolve::revolve_face;
 /// becomes one cap (flipped in place, recorded modified); a `transform_face` translate becomes the
 /// other (recorded generated), matching the ticket's "profile as modified" history convention.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn extrude_face(body: &mut Body, face: FaceId, direction: Vec3, distance: f64, rec: &mut OpRecorder) -> Result<crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::SolidId, KernelError> {
+pub fn extrude_face(body: &mut Body, face: FaceId, direction: Vec3, distance: f64, rec: &mut OpRecorder) -> Result<crate::standards::v1::subsets::brep::schema::snapshot::arena::SolidId, KernelError> {
     core::require_positive("extrude distance", distance.abs())?;
     let dir = direction.normalized().ok_or_else(|| KernelError::InvalidInput("extrude direction is zero-length".into()))?;
     let offset = dir * distance;
@@ -72,7 +72,7 @@ fn newell_normal(points: &[Pnt3]) -> Option<Vec3> {
 /// then [`extrude_face`]). An open wire's shell-only (no-cap) extrusion is not yet implemented in
 /// this pass (documented gap, see `📓️w2c-sweeps.md`).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn extrude_wire(body: &mut Body, wire: &Wire, direction: Vec3, distance: f64, rec: &mut OpRecorder) -> Result<crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::SolidId, KernelError> {
+pub fn extrude_wire(body: &mut Body, wire: &Wire, direction: Vec3, distance: f64, rec: &mut OpRecorder) -> Result<crate::standards::v1::subsets::brep::schema::snapshot::arena::SolidId, KernelError> {
     if !wire.closed {
         return Err(KernelError::Operation("extrude_wire: open-wire (shell-only) extrusion is not yet supported in this pass".into()));
     }
@@ -95,7 +95,7 @@ pub fn extrude_wire(body: &mut Body, wire: &Wire, direction: Vec3, distance: f64
 /// `🐍️frame::sample_path`), certified only for line/free-form profile edges (circle/ellipse
 /// profile edges are refused there, not mis-parametrized — see `📓️w2c-sweeps.md` §pcurve).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn pipe(body: &mut Body, profile: FaceId, path: &Wire, guide: Option<&Wire>, rec: &mut OpRecorder) -> Result<crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::SolidId, KernelError> {
+pub fn pipe(body: &mut Body, profile: FaceId, path: &Wire, guide: Option<&Wire>, rec: &mut OpRecorder) -> Result<crate::standards::v1::subsets::brep::schema::snapshot::arena::SolidId, KernelError> {
     if path.members.is_empty() {
         return Err(KernelError::InvalidInput("sweep path is empty".into()));
     }
@@ -148,7 +148,7 @@ pub fn pipe(body: &mut Body, profile: FaceId, path: &Wire, guide: Option<&Wire>,
 
 /// ➡️ Sweeps `profile` along `path` with no guide — [`pipe`] with `guide = None`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn sweep_along_path(body: &mut Body, profile: FaceId, path: &Wire, rec: &mut OpRecorder) -> Result<crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::SolidId, KernelError> {
+pub fn sweep_along_path(body: &mut Body, profile: FaceId, path: &Wire, rec: &mut OpRecorder) -> Result<crate::standards::v1::subsets::brep::schema::snapshot::arena::SolidId, KernelError> {
     pipe(body, profile, path, None, rec)
 }
 
@@ -156,7 +156,7 @@ pub fn sweep_along_path(body: &mut Body, profile: FaceId, path: &Wire, rec: &mut
 /// directly (point/tangent closed-form, no `Curve3` needed), sampled at `≥16` stations per turn,
 /// fed through the same rotation-minimizing-frame station chain as [`pipe`]'s general path.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn helical_sweep(body: &mut Body, profile: FaceId, (axis_origin, axis_dir): (Pnt3, Vec3), radius: f64, pitch: f64, turns: f64, rec: &mut OpRecorder) -> Result<crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::SolidId, KernelError> {
+pub fn helical_sweep(body: &mut Body, profile: FaceId, (axis_origin, axis_dir): (Pnt3, Vec3), radius: f64, pitch: f64, turns: f64, rec: &mut OpRecorder) -> Result<crate::standards::v1::subsets::brep::schema::snapshot::arena::SolidId, KernelError> {
     core::require_positive("helical radius", radius)?;
     if !turns.is_finite() || turns.abs() <= 1e-12 {
         return Err(KernelError::InvalidInput("helical turns must be non-zero".into()));
@@ -205,11 +205,11 @@ pub fn helical_sweep(body: &mut Body, profile: FaceId, (axis_origin, axis_dir): 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::primitives::{make_box, make_planar_face_from_points, make_rectangle_wire, make_regular_polygon_wire};
-    use crate::artifacts::semio::standards::v1::subsets::brep::schema::inferences::mass_properties::solid_volume;
-    use crate::artifacts::semio::standards::v1::subsets::brep::schema::inferences::validation_report::validate_body;
-    use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::{ArenaId, SolidId};
-    use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::{Pnt2, Vec2};
+    use crate::standards::v1::subsets::brep::schema::diff::primitives::{make_box, make_planar_face_from_points, make_rectangle_wire, make_regular_polygon_wire};
+    use crate::standards::v1::subsets::brep::schema::inferences::mass_properties::solid_volume;
+    use crate::standards::v1::subsets::brep::schema::inferences::validation_report::validate_body;
+    use crate::standards::v1::subsets::brep::schema::snapshot::arena::{ArenaId, SolidId};
+    use crate::standards::v1::subsets::brep::schema::snapshot::vector::{Pnt2, Vec2};
     use std::f64::consts::TAU;
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -292,15 +292,15 @@ mod tests {
     async fn extrude_circle_pcurves_are_consistent() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
-        let frame = crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Frame3::WORLD;
+        let frame = crate::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Frame3::WORLD;
         let circle = body.curves3.insert(Curve3::Circle { frame, radius: 1.5 });
-        let v = crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::euler::make_vertex(&mut body, frame.to_world(Pnt3::new(1.5, 0.0, 0.0)), crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::tolerance::Tol::DEFAULT, &mut rec);
-        let edge = crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::euler::make_edge(&mut body, circle, (0.0, TAU), v, v, crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::tolerance::Tol::DEFAULT, &mut rec);
+        let v = crate::standards::v1::subsets::brep::schema::diff::euler::make_vertex(&mut body, frame.to_world(Pnt3::new(1.5, 0.0, 0.0)), crate::standards::v1::subsets::brep::schema::snapshot::tolerance::Tol::DEFAULT, &mut rec);
+        let edge = crate::standards::v1::subsets::brep::schema::diff::euler::make_edge(&mut body, circle, (0.0, TAU), v, v, crate::standards::v1::subsets::brep::schema::snapshot::tolerance::Tol::DEFAULT, &mut rec);
         let surface = body.surfaces.insert(Surface::Plane { frame });
-        let loop_id = crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::euler::make_loop(&mut body, ArenaId::from_raw(0, 0), &[(edge, true)]);
-        let face = crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::euler::add_face(&mut body, surface, Some(loop_id), vec![], false, crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::tolerance::Tol::DEFAULT, &mut rec);
+        let loop_id = crate::standards::v1::subsets::brep::schema::diff::euler::make_loop(&mut body, ArenaId::from_raw(0, 0), &[(edge, true)]);
+        let face = crate::standards::v1::subsets::brep::schema::diff::euler::add_face(&mut body, surface, Some(loop_id), vec![], false, crate::standards::v1::subsets::brep::schema::snapshot::tolerance::Tol::DEFAULT, &mut rec);
         body.loops.get_mut(loop_id).unwrap().face = face;
-        let pc = body.curves2.insert(crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::Curve2::Circle { center: Pnt2::new(0.0, 0.0), radius: 1.5 });
+        let pc = body.curves2.insert(crate::standards::v1::subsets::brep::schema::snapshot::curve::Curve2::Circle { center: Pnt2::new(0.0, 0.0), radius: 1.5 });
         body.coedges.get_mut(body.loop_coedges(loop_id)[0]).unwrap().pcurve = Some(pc);
         body.coedges.get_mut(body.loop_coedges(loop_id)[0]).unwrap().prange = (0.0, TAU);
         let solid = extrude_face(&mut body, face, Vec3::Z, 2.0, &mut rec).unwrap();
@@ -340,15 +340,15 @@ mod tests {
     async fn extrude_circle_produces_analytic_cylinder() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
-        let frame = crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Frame3::WORLD;
+        let frame = crate::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Frame3::WORLD;
         let circle = body.curves3.insert(Curve3::Circle { frame, radius: 1.5 });
-        let v = crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::euler::make_vertex(&mut body, frame.to_world(Pnt3::new(1.5, 0.0, 0.0)), crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::tolerance::Tol::DEFAULT, &mut rec);
-        let edge = crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::euler::make_edge(&mut body, circle, (0.0, TAU), v, v, crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::tolerance::Tol::DEFAULT, &mut rec);
+        let v = crate::standards::v1::subsets::brep::schema::diff::euler::make_vertex(&mut body, frame.to_world(Pnt3::new(1.5, 0.0, 0.0)), crate::standards::v1::subsets::brep::schema::snapshot::tolerance::Tol::DEFAULT, &mut rec);
+        let edge = crate::standards::v1::subsets::brep::schema::diff::euler::make_edge(&mut body, circle, (0.0, TAU), v, v, crate::standards::v1::subsets::brep::schema::snapshot::tolerance::Tol::DEFAULT, &mut rec);
         let surface = body.surfaces.insert(Surface::Plane { frame });
-        let loop_id = crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::euler::make_loop(&mut body, ArenaId::from_raw(0, 0), &[(edge, true)]);
-        let face = crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::euler::add_face(&mut body, surface, Some(loop_id), vec![], false, crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::tolerance::Tol::DEFAULT, &mut rec);
+        let loop_id = crate::standards::v1::subsets::brep::schema::diff::euler::make_loop(&mut body, ArenaId::from_raw(0, 0), &[(edge, true)]);
+        let face = crate::standards::v1::subsets::brep::schema::diff::euler::add_face(&mut body, surface, Some(loop_id), vec![], false, crate::standards::v1::subsets::brep::schema::snapshot::tolerance::Tol::DEFAULT, &mut rec);
         body.loops.get_mut(loop_id).unwrap().face = face;
-        let pc = body.curves2.insert(crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::Curve2::Circle { center: Pnt2::new(0.0, 0.0), radius: 1.5 });
+        let pc = body.curves2.insert(crate::standards::v1::subsets::brep::schema::snapshot::curve::Curve2::Circle { center: Pnt2::new(0.0, 0.0), radius: 1.5 });
         body.coedges.get_mut(body.loop_coedges(loop_id)[0]).unwrap().pcurve = Some(pc);
         body.coedges.get_mut(body.loop_coedges(loop_id)[0]).unwrap().prange = (0.0, TAU);
         let solid = extrude_face(&mut body, face, Vec3::Z, 2.0, &mut rec).unwrap();
@@ -365,7 +365,7 @@ mod tests {
         let mut rec = OpRecorder::new();
         let face = make_planar_face_from_points(&mut body, &[Pnt3::new(0.0, 0.0, 0.0), Pnt3::new(4.0, 0.0, 0.0), Pnt3::new(4.0, 4.0, 0.0), Pnt3::new(0.0, 4.0, 0.0)], &mut rec).unwrap();
         let hole_wire = make_rectangle_wire(&mut body, 1.0, 1.0, &mut rec).unwrap();
-        let inner = crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::euler::make_loop(&mut body, face, &hole_wire.members);
+        let inner = crate::standards::v1::subsets::brep::schema::diff::euler::make_loop(&mut body, face, &hole_wire.members);
         body.loops.get_mut(inner).unwrap().face = face;
         let coedges = body.loop_coedges(inner);
         for &cid in &coedges {
@@ -374,7 +374,7 @@ mod tests {
             let curve = body.curves3.get(edge.curve).unwrap().clone();
             if let Curve3::Line { origin, dir } = curve {
                 let p0 = origin;
-                let pc = body.curves2.insert(crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::Curve2::Line { origin: Pnt2::new(p0.x + 1.5, p0.y + 1.5), dir: Vec2::new(dir.x, dir.y) });
+                let pc = body.curves2.insert(crate::standards::v1::subsets::brep::schema::snapshot::curve::Curve2::Line { origin: Pnt2::new(p0.x + 1.5, p0.y + 1.5), dir: Vec2::new(dir.x, dir.y) });
                 let ce = body.coedges.get_mut(cid).unwrap();
                 ce.pcurve = Some(pc);
                 ce.prange = edge.range;
@@ -406,16 +406,16 @@ mod tests {
     async fn revolve_circle_makes_a_torus() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
-        let frame = crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Frame3 { origin: Pnt3::new(3.0, 0.0, 0.0), x: Vec3::X, y: Vec3::Z, z: -Vec3::Y };
+        let frame = crate::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Frame3 { origin: Pnt3::new(3.0, 0.0, 0.0), x: Vec3::X, y: Vec3::Z, z: -Vec3::Y };
         let circle = body.curves3.insert(Curve3::Circle { frame, radius: 1.0 });
-        let v = crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::euler::make_vertex(&mut body, frame.to_world(Pnt3::new(1.0, 0.0, 0.0)), crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::tolerance::Tol::DEFAULT, &mut rec);
-        let edge = crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::euler::make_edge(&mut body, circle, (0.0, TAU), v, v, crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::tolerance::Tol::DEFAULT, &mut rec);
-        let plane_frame = crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Frame3 { origin: frame.origin, x: Vec3::X, y: Vec3::Z, z: -Vec3::Y };
+        let v = crate::standards::v1::subsets::brep::schema::diff::euler::make_vertex(&mut body, frame.to_world(Pnt3::new(1.0, 0.0, 0.0)), crate::standards::v1::subsets::brep::schema::snapshot::tolerance::Tol::DEFAULT, &mut rec);
+        let edge = crate::standards::v1::subsets::brep::schema::diff::euler::make_edge(&mut body, circle, (0.0, TAU), v, v, crate::standards::v1::subsets::brep::schema::snapshot::tolerance::Tol::DEFAULT, &mut rec);
+        let plane_frame = crate::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Frame3 { origin: frame.origin, x: Vec3::X, y: Vec3::Z, z: -Vec3::Y };
         let surface = body.surfaces.insert(Surface::Plane { frame: plane_frame });
-        let loop_id = crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::euler::make_loop(&mut body, ArenaId::from_raw(0, 0), &[(edge, true)]);
-        let face = crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::euler::add_face(&mut body, surface, Some(loop_id), vec![], false, crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::tolerance::Tol::DEFAULT, &mut rec);
+        let loop_id = crate::standards::v1::subsets::brep::schema::diff::euler::make_loop(&mut body, ArenaId::from_raw(0, 0), &[(edge, true)]);
+        let face = crate::standards::v1::subsets::brep::schema::diff::euler::add_face(&mut body, surface, Some(loop_id), vec![], false, crate::standards::v1::subsets::brep::schema::snapshot::tolerance::Tol::DEFAULT, &mut rec);
         body.loops.get_mut(loop_id).unwrap().face = face;
-        let pc = body.curves2.insert(crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::Curve2::Circle { center: Pnt2::new(0.0, 0.0), radius: 1.0 });
+        let pc = body.curves2.insert(crate::standards::v1::subsets::brep::schema::snapshot::curve::Curve2::Circle { center: Pnt2::new(0.0, 0.0), radius: 1.0 });
         body.coedges.get_mut(body.loop_coedges(loop_id)[0]).unwrap().pcurve = Some(pc);
         body.coedges.get_mut(body.loop_coedges(loop_id)[0]).unwrap().prange = (0.0, TAU);
         let solid = revolve_face(&mut body, face, Pnt3::new(0.0, 0.0, 0.0), Vec3::Z, TAU, &mut rec).unwrap();
@@ -455,21 +455,21 @@ mod tests {
     async fn sweep_circle_along_line_is_a_cylinder() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
-        let frame = crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Frame3::WORLD;
+        let frame = crate::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Frame3::WORLD;
         let circle = body.curves3.insert(Curve3::Circle { frame, radius: 1.0 });
-        let v = crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::euler::make_vertex(&mut body, frame.to_world(Pnt3::new(1.0, 0.0, 0.0)), crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::tolerance::Tol::DEFAULT, &mut rec);
-        let edge = crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::euler::make_edge(&mut body, circle, (0.0, TAU), v, v, crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::tolerance::Tol::DEFAULT, &mut rec);
+        let v = crate::standards::v1::subsets::brep::schema::diff::euler::make_vertex(&mut body, frame.to_world(Pnt3::new(1.0, 0.0, 0.0)), crate::standards::v1::subsets::brep::schema::snapshot::tolerance::Tol::DEFAULT, &mut rec);
+        let edge = crate::standards::v1::subsets::brep::schema::diff::euler::make_edge(&mut body, circle, (0.0, TAU), v, v, crate::standards::v1::subsets::brep::schema::snapshot::tolerance::Tol::DEFAULT, &mut rec);
         let surface = body.surfaces.insert(Surface::Plane { frame });
-        let loop_id = crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::euler::make_loop(&mut body, ArenaId::from_raw(0, 0), &[(edge, true)]);
-        let face = crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::euler::add_face(&mut body, surface, Some(loop_id), vec![], false, crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::tolerance::Tol::DEFAULT, &mut rec);
+        let loop_id = crate::standards::v1::subsets::brep::schema::diff::euler::make_loop(&mut body, ArenaId::from_raw(0, 0), &[(edge, true)]);
+        let face = crate::standards::v1::subsets::brep::schema::diff::euler::add_face(&mut body, surface, Some(loop_id), vec![], false, crate::standards::v1::subsets::brep::schema::snapshot::tolerance::Tol::DEFAULT, &mut rec);
         body.loops.get_mut(loop_id).unwrap().face = face;
-        let pc = body.curves2.insert(crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::Curve2::Circle { center: Pnt2::new(0.0, 0.0), radius: 1.0 });
+        let pc = body.curves2.insert(crate::standards::v1::subsets::brep::schema::snapshot::curve::Curve2::Circle { center: Pnt2::new(0.0, 0.0), radius: 1.0 });
         body.coedges.get_mut(body.loop_coedges(loop_id)[0]).unwrap().pcurve = Some(pc);
         body.coedges.get_mut(body.loop_coedges(loop_id)[0]).unwrap().prange = (0.0, TAU);
         let path_line = body.curves3.insert(Curve3::Line { origin: Pnt3::new(0.0, 0.0, 0.0), dir: Vec3::Z });
-        let pv0 = crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::euler::make_vertex(&mut body, Pnt3::new(0.0, 0.0, 0.0), crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::tolerance::Tol::DEFAULT, &mut rec);
-        let pv1 = crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::euler::make_vertex(&mut body, Pnt3::new(0.0, 0.0, 5.0), crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::tolerance::Tol::DEFAULT, &mut rec);
-        let path_edge = crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::euler::make_edge(&mut body, path_line, (0.0, 5.0), pv0, pv1, crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::tolerance::Tol::DEFAULT, &mut rec);
+        let pv0 = crate::standards::v1::subsets::brep::schema::diff::euler::make_vertex(&mut body, Pnt3::new(0.0, 0.0, 0.0), crate::standards::v1::subsets::brep::schema::snapshot::tolerance::Tol::DEFAULT, &mut rec);
+        let pv1 = crate::standards::v1::subsets::brep::schema::diff::euler::make_vertex(&mut body, Pnt3::new(0.0, 0.0, 5.0), crate::standards::v1::subsets::brep::schema::snapshot::tolerance::Tol::DEFAULT, &mut rec);
+        let path_edge = crate::standards::v1::subsets::brep::schema::diff::euler::make_edge(&mut body, path_line, (0.0, 5.0), pv0, pv1, crate::standards::v1::subsets::brep::schema::snapshot::tolerance::Tol::DEFAULT, &mut rec);
         let path = Wire { members: vec![(path_edge, true)], vertices: vec![pv0, pv1], closed: false };
         let solid = sweep_along_path(&mut body, face, &path, &mut rec).unwrap();
         let faces = body.solid_faces(solid);
@@ -493,7 +493,7 @@ mod tests {
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn make_polyline_wire_for_test(body: &mut Body, points: &[Pnt3], rec: &mut OpRecorder) -> Wire {
-        crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::primitives::make_polyline_wire(body, points, false, rec).unwrap()
+        crate::standards::v1::subsets::brep::schema::diff::primitives::make_polyline_wire(body, points, false, rec).unwrap()
     }
 
     #[semio_framework_async_macros::async_test]

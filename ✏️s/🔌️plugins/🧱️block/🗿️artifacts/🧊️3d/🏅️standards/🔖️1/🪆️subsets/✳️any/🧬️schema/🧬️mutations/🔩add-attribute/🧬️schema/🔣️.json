@@ -1,0 +1,32 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/block/3d/1/any/mutation/add-attribute.json",
+  "title": "AddAttribute",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "attribute"
+  ],
+  "properties": {
+    "attribute": {
+      "title": "BlockAttribute",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key",
+        "value"
+      ],
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        },
+        "definition": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

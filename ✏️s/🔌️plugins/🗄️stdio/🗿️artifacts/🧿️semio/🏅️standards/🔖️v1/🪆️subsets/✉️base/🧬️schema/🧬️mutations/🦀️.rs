@@ -25,28 +25,28 @@
 //! (still carries its own `NoMutation`/`Default`), so its representative case uses `::default()`
 //! until its own lane migrates it.
 
-use crate::artifacts::semio::standards::v1::subsets::animation::schema::{mutations::SemioAnimationMutation, snapshot::SemioAnimationSnapshot};
-use crate::artifacts::semio::standards::v1::subsets::base::schema::diff::SemioDiff;
-use crate::artifacts::semio::standards::v1::subsets::base::schema::snapshot::{SemioSnapshot, SemioSubsetSnapshot};
-use crate::artifacts::semio::standards::v1::subsets::audio::schema::{mutations::{SemioAudioMutation}, snapshot::SemioAudioSnapshot};
+use crate::standards::v1::subsets::animation::schema::{mutations::SemioAnimationMutation, snapshot::SemioAnimationSnapshot};
+use crate::standards::v1::subsets::base::schema::diff::SemioDiff;
+use crate::standards::v1::subsets::base::schema::snapshot::{SemioSnapshot, SemioSubsetSnapshot};
+use crate::standards::v1::subsets::audio::schema::{mutations::{SemioAudioMutation}, snapshot::SemioAudioSnapshot};
 #[cfg(test)]
-use crate::artifacts::semio::standards::v1::subsets::audio::schema::mutations::set_sample_rate;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::{mutations::SemioBrepMutation, snapshot::SemioBrepSnapshot};
-use crate::artifacts::semio::standards::v1::subsets::cad::schema::{mutations::SemioCadMutation, snapshot::SemioCadSnapshot};
-use crate::artifacts::semio::standards::v1::subsets::document::schema::{mutations::SemioDocumentMutation, snapshot::SemioDocumentSnapshot};
-use crate::artifacts::semio::standards::v1::subsets::drawing::schema::{mutations::SemioDrawingMutation, snapshot::SemioDrawingSnapshot};
-use crate::artifacts::semio::standards::v1::subsets::flow::schema::{mutations::SemioFlowMutation, snapshot::SemioFlowSnapshot};
-use crate::artifacts::semio::standards::v1::subsets::graph::schema::{mutations::SemioGraphMutation, snapshot::SemioGraphSnapshot};
-use crate::artifacts::semio::standards::v1::subsets::image::schema::{mutations::SemioImageMutation, snapshot::SemioImageSnapshot};
-use crate::artifacts::semio::standards::v1::subsets::kit::schema::{mutations::SemioKitMutation, snapshot::SemioKitSnapshot};
-use crate::artifacts::semio::standards::v1::subsets::mesh::schema::{mutations::SemioMeshMutation, snapshot::SemioMeshSnapshot};
-use crate::artifacts::semio::standards::v1::subsets::model::schema::{mutations::SemioModelMutation, snapshot::SemioModelSnapshot};
-use crate::artifacts::semio::standards::v1::subsets::object::schema::{mutations::SemioObjectMutation, snapshot::SemioObjectSnapshot};
-use crate::artifacts::semio::standards::v1::subsets::presentation::schema::{mutations::SemioPresentationMutation, snapshot::SemioPresentationSnapshot};
-use crate::artifacts::semio::standards::v1::subsets::table::schema::{mutations::SemioTableMutation, snapshot::SemioTableSnapshot};
-use crate::artifacts::semio::standards::v1::subsets::text::schema::{mutations::SemioTextMutation, snapshot::SemioTextSnapshot};
-use crate::artifacts::semio::standards::v1::subsets::value::schema::{mutations::SemioValueMutation, snapshot::SemioValueSnapshot};
-use crate::artifacts::semio::standards::v1::subsets::video::schema::{mutations::SemioVideoMutation, snapshot::SemioVideoSnapshot};
+use crate::standards::v1::subsets::audio::schema::mutations::set_sample_rate;
+use crate::standards::v1::subsets::brep::schema::{mutations::SemioBrepMutation, snapshot::SemioBrepSnapshot};
+use crate::standards::v1::subsets::cad::schema::{mutations::SemioCadMutation, snapshot::SemioCadSnapshot};
+use crate::standards::v1::subsets::document::schema::{mutations::SemioDocumentMutation, snapshot::SemioDocumentSnapshot};
+use crate::standards::v1::subsets::drawing::schema::{mutations::SemioDrawingMutation, snapshot::SemioDrawingSnapshot};
+use crate::standards::v1::subsets::flow::schema::{mutations::SemioFlowMutation, snapshot::SemioFlowSnapshot};
+use crate::standards::v1::subsets::graph::schema::{mutations::SemioGraphMutation, snapshot::SemioGraphSnapshot};
+use crate::standards::v1::subsets::image::schema::{mutations::SemioImageMutation, snapshot::SemioImageSnapshot};
+use crate::standards::v1::subsets::kit::schema::{mutations::SemioKitMutation, snapshot::SemioKitSnapshot};
+use crate::standards::v1::subsets::mesh::schema::{mutations::SemioMeshMutation, snapshot::SemioMeshSnapshot};
+use crate::standards::v1::subsets::model::schema::{mutations::SemioModelMutation, snapshot::SemioModelSnapshot};
+use crate::standards::v1::subsets::object::schema::{mutations::SemioObjectMutation, snapshot::SemioObjectSnapshot};
+use crate::standards::v1::subsets::presentation::schema::{mutations::SemioPresentationMutation, snapshot::SemioPresentationSnapshot};
+use crate::standards::v1::subsets::table::schema::{mutations::SemioTableMutation, snapshot::SemioTableSnapshot};
+use crate::standards::v1::subsets::text::schema::{mutations::SemioTextMutation, snapshot::SemioTextSnapshot};
+use crate::standards::v1::subsets::value::schema::{mutations::SemioValueMutation, snapshot::SemioValueSnapshot};
+use crate::standards::v1::subsets::video::schema::{mutations::SemioVideoMutation, snapshot::SemioVideoSnapshot};
 use protocol::Mutation;
 use protocol::OpBinary;
 use protocol::OpText;
@@ -242,7 +242,7 @@ pub fn semio_mutation_refusal_codes<D>(outcome: &protocol::MutationOutcome<D>) -
 /// envelope without naming any of the eighteen arms' snapshot types.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn semio_subset_tag(snapshot: &SemioSnapshot) -> &'static str {
-    crate::artifacts::semio::standards::v1::subsets::base::schema::snapshot::subset_tag(&snapshot.subset)
+    crate::standards::v1::subsets::base::schema::snapshot::subset_tag(&snapshot.subset)
 }
 //#endregion 🔖️Mutation
 
@@ -530,33 +530,33 @@ impl OpBinary for SemioMutation {
 pub(crate) fn demo_mutation_cases() -> Vec<SemioMutation> {
     vec![
         SemioMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: SemioSnapshot::default() }),
-        SemioMutation::ApplyBrep(apply_brep::ApplyBrep { mutation: SemioBrepMutation::DeleteVertex(crate::artifacts::semio::standards::v1::subsets::brep::schema::mutations::delete_vertex::DeleteVertex { id: "v-absent".into() }) }),
-        SemioMutation::ApplyMesh(apply_mesh::ApplyMesh { mutation: SemioMeshMutation::DeleteMesh(crate::artifacts::semio::standards::v1::subsets::mesh::schema::mutations::delete_mesh::DeleteMesh { id: "mesh-absent".into() }) }),
-        SemioMutation::ApplyModel(apply_model::ApplyModel { mutation: SemioModelMutation::SetSnapshot(crate::artifacts::semio::standards::v1::subsets::model::schema::mutations::set_snapshot::SetSnapshot { snapshot: Default::default() }) }),
-        SemioMutation::ApplyValue(apply_value::ApplyValue { mutation: SemioValueMutation::SetSnapshot(crate::artifacts::semio::standards::v1::subsets::value::schema::mutations::set_snapshot::SetSnapshot { snapshot: Default::default() }) }),
-        SemioMutation::ApplyDocument(apply_document::ApplyDocument { mutation: SemioDocumentMutation::SetSnapshot(crate::artifacts::semio::standards::v1::subsets::document::schema::mutations::set_snapshot::SetSnapshot { snapshot: Default::default() }) }),
-        SemioMutation::ApplyCad(apply_cad::ApplyCad { mutation: SemioCadMutation::SetSnapshot(crate::artifacts::semio::standards::v1::subsets::cad::schema::mutations::set_snapshot::SetSnapshot { snapshot: Default::default() }) }),
+        SemioMutation::ApplyBrep(apply_brep::ApplyBrep { mutation: SemioBrepMutation::DeleteVertex(crate::standards::v1::subsets::brep::schema::mutations::delete_vertex::DeleteVertex { id: "v-absent".into() }) }),
+        SemioMutation::ApplyMesh(apply_mesh::ApplyMesh { mutation: SemioMeshMutation::DeleteMesh(crate::standards::v1::subsets::mesh::schema::mutations::delete_mesh::DeleteMesh { id: "mesh-absent".into() }) }),
+        SemioMutation::ApplyModel(apply_model::ApplyModel { mutation: SemioModelMutation::SetSnapshot(crate::standards::v1::subsets::model::schema::mutations::set_snapshot::SetSnapshot { snapshot: Default::default() }) }),
+        SemioMutation::ApplyValue(apply_value::ApplyValue { mutation: SemioValueMutation::SetSnapshot(crate::standards::v1::subsets::value::schema::mutations::set_snapshot::SetSnapshot { snapshot: Default::default() }) }),
+        SemioMutation::ApplyDocument(apply_document::ApplyDocument { mutation: SemioDocumentMutation::SetSnapshot(crate::standards::v1::subsets::document::schema::mutations::set_snapshot::SetSnapshot { snapshot: Default::default() }) }),
+        SemioMutation::ApplyCad(apply_cad::ApplyCad { mutation: SemioCadMutation::SetSnapshot(crate::standards::v1::subsets::cad::schema::mutations::set_snapshot::SetSnapshot { snapshot: Default::default() }) }),
         SemioMutation::ApplyDrawing(apply_drawing::ApplyDrawing {
-            mutation: SemioDrawingMutation::DragNodes(crate::artifacts::semio::standards::v1::subsets::drawing::schema::mutations::drag_nodes::DragNodes {
+            mutation: SemioDrawingMutation::DragNodes(crate::standards::v1::subsets::drawing::schema::mutations::drag_nodes::DragNodes {
                 ats: Vec::new(),
-                offset: crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioPoint2::default(),
+                offset: crate::standards::v1::subsets::base::schema::geometry::SemioPoint2::default(),
             }),
         }),
-        SemioMutation::ApplyImage(apply_image::ApplyImage { mutation: SemioImageMutation::SetSnapshot(crate::artifacts::semio::standards::v1::subsets::image::schema::mutations::set_snapshot::SetSnapshot { snapshot: Default::default() }) }),
-        SemioMutation::ApplyVideo(apply_video::ApplyVideo { mutation: SemioVideoMutation::SetSnapshot(crate::artifacts::semio::standards::v1::subsets::video::schema::mutations::set_snapshot::SetSnapshot { snapshot: Default::default() }) }),
-        SemioMutation::ApplyAudio(apply_audio::ApplyAudio { mutation: SemioAudioMutation::SetSnapshot(crate::artifacts::semio::standards::v1::subsets::audio::schema::mutations::set_snapshot::SetSnapshot { snapshot: Default::default() }) }),
-        SemioMutation::ApplyAnimation(apply_animation::ApplyAnimation { mutation: SemioAnimationMutation::SetSnapshot(crate::artifacts::semio::standards::v1::subsets::animation::schema::mutations::set_snapshot::SetSnapshot { snapshot: SemioAnimationSnapshot::default() }) }),
-        SemioMutation::ApplyPresentation(apply_presentation::ApplyPresentation { mutation: SemioPresentationMutation::SetSnapshot(crate::artifacts::semio::standards::v1::subsets::presentation::schema::mutations::set_snapshot::SetSnapshot { snapshot: Default::default() }) }),
-        SemioMutation::ApplyFlow(apply_flow::ApplyFlow { mutation: SemioFlowMutation::SetSnapshot(crate::artifacts::semio::standards::v1::subsets::flow::schema::mutations::set_snapshot::SetSnapshot { snapshot: Default::default() }) }),
-        SemioMutation::ApplyText(apply_text::ApplyText { mutation: SemioTextMutation::RemoveRun(crate::artifacts::semio::standards::v1::subsets::text::schema::mutations::remove_run::RemoveRun { index: 99 }) }),
-        SemioMutation::ApplyTable(apply_table::ApplyTable { mutation: SemioTableMutation::RemoveRow(crate::artifacts::semio::standards::v1::subsets::table::schema::mutations::remove_row::RemoveRow { index: 99 }) }),
+        SemioMutation::ApplyImage(apply_image::ApplyImage { mutation: SemioImageMutation::SetSnapshot(crate::standards::v1::subsets::image::schema::mutations::set_snapshot::SetSnapshot { snapshot: Default::default() }) }),
+        SemioMutation::ApplyVideo(apply_video::ApplyVideo { mutation: SemioVideoMutation::SetSnapshot(crate::standards::v1::subsets::video::schema::mutations::set_snapshot::SetSnapshot { snapshot: Default::default() }) }),
+        SemioMutation::ApplyAudio(apply_audio::ApplyAudio { mutation: SemioAudioMutation::SetSnapshot(crate::standards::v1::subsets::audio::schema::mutations::set_snapshot::SetSnapshot { snapshot: Default::default() }) }),
+        SemioMutation::ApplyAnimation(apply_animation::ApplyAnimation { mutation: SemioAnimationMutation::SetSnapshot(crate::standards::v1::subsets::animation::schema::mutations::set_snapshot::SetSnapshot { snapshot: SemioAnimationSnapshot::default() }) }),
+        SemioMutation::ApplyPresentation(apply_presentation::ApplyPresentation { mutation: SemioPresentationMutation::SetSnapshot(crate::standards::v1::subsets::presentation::schema::mutations::set_snapshot::SetSnapshot { snapshot: Default::default() }) }),
+        SemioMutation::ApplyFlow(apply_flow::ApplyFlow { mutation: SemioFlowMutation::SetSnapshot(crate::standards::v1::subsets::flow::schema::mutations::set_snapshot::SetSnapshot { snapshot: Default::default() }) }),
+        SemioMutation::ApplyText(apply_text::ApplyText { mutation: SemioTextMutation::RemoveRun(crate::standards::v1::subsets::text::schema::mutations::remove_run::RemoveRun { index: 99 }) }),
+        SemioMutation::ApplyTable(apply_table::ApplyTable { mutation: SemioTableMutation::RemoveRow(crate::standards::v1::subsets::table::schema::mutations::remove_row::RemoveRow { index: 99 }) }),
         SemioMutation::ApplyGraph(apply_graph::ApplyGraph {
-            mutation: SemioGraphMutation::DeleteNode(crate::artifacts::semio::standards::v1::subsets::graph::schema::mutations::delete_node::DeleteNode {
-                id: crate::artifacts::semio::standards::v1::subsets::graph::schema::snapshot::GraphNodeId::new("absent"),
+            mutation: SemioGraphMutation::DeleteNode(crate::standards::v1::subsets::graph::schema::mutations::delete_node::DeleteNode {
+                id: crate::standards::v1::subsets::graph::schema::snapshot::GraphNodeId::new("absent"),
             }),
         }),
-        SemioMutation::ApplyObject(apply_object::ApplyObject { mutation: SemioObjectMutation::DeleteBrep(crate::artifacts::semio::standards::v1::subsets::object::schema::mutations::delete_brep::DeleteBrep {}) }),
-        SemioMutation::ApplyKit(apply_kit::ApplyKit { mutation: SemioKitMutation::RemoveType(crate::artifacts::semio::standards::v1::subsets::kit::schema::mutations::remove_type::RemoveType { id: "absent".into() }) }),
+        SemioMutation::ApplyObject(apply_object::ApplyObject { mutation: SemioObjectMutation::DeleteBrep(crate::standards::v1::subsets::object::schema::mutations::delete_brep::DeleteBrep {}) }),
+        SemioMutation::ApplyKit(apply_kit::ApplyKit { mutation: SemioKitMutation::RemoveType(crate::standards::v1::subsets::kit::schema::mutations::remove_type::RemoveType { id: "absent".into() }) }),
     ]
 }
 //#endregion 🔖️Demo
@@ -565,9 +565,9 @@ pub(crate) fn demo_mutation_cases() -> Vec<SemioMutation> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioPoint2;
-    use crate::artifacts::semio::standards::v1::subsets::audio::schema::snapshot::{SemioAudioFormat, SemioAudioSnapshot};
-    use crate::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::{FlowNode, SemioFlowSnapshot};
+    use crate::standards::v1::subsets::base::schema::geometry::SemioPoint2;
+    use crate::standards::v1::subsets::audio::schema::snapshot::{SemioAudioFormat, SemioAudioSnapshot};
+    use crate::standards::v1::subsets::flow::schema::snapshot::{FlowNode, SemioFlowSnapshot};
     use protocol::command::DiffAlgebra;
     use protocol::MutationDiff;
 
@@ -617,7 +617,7 @@ mod tests {
         let base = flow_base();
         let node = FlowNode { id: "n1".into(), kind: "task".into(), label: "N1".into(), params: vec![], position: SemioPoint2 { x: 1.0, y: 2.0 } };
         let wrapped =
-            SemioMutation::ApplyFlow(apply_flow::ApplyFlow { mutation: SemioFlowMutation::InsertNode(crate::artifacts::semio::standards::v1::subsets::flow::schema::mutations::insert_node::InsertNode { node: node.clone() }) });
+            SemioMutation::ApplyFlow(apply_flow::ApplyFlow { mutation: SemioFlowMutation::InsertNode(crate::standards::v1::subsets::flow::schema::mutations::insert_node::InsertNode { node: node.clone() }) });
         let mut applied = base.clone();
         let diff = apply_semio_mutation(&mut applied, &wrapped);
         assert!(matches!(diff.diff(), SemioDiff::Flow(_)));
@@ -671,25 +671,25 @@ mod tests {
             match s {
                 SemioSubsetSnapshot::Brep(_) => unreachable!("excluded from bases above"),
                 SemioSubsetSnapshot::Mesh(_) => unreachable!("excluded from bases above"),
-                SemioSubsetSnapshot::Model(_) => SemioMutation::ApplyModel(apply_model::ApplyModel { mutation: SemioModelMutation::SetSnapshot(crate::artifacts::semio::standards::v1::subsets::model::schema::mutations::set_snapshot::SetSnapshot { snapshot: Default::default() }) }),
-                SemioSubsetSnapshot::Value(_) => SemioMutation::ApplyValue(apply_value::ApplyValue { mutation: SemioValueMutation::SetSnapshot(crate::artifacts::semio::standards::v1::subsets::value::schema::mutations::set_snapshot::SetSnapshot { snapshot: Default::default() }) }),
+                SemioSubsetSnapshot::Model(_) => SemioMutation::ApplyModel(apply_model::ApplyModel { mutation: SemioModelMutation::SetSnapshot(crate::standards::v1::subsets::model::schema::mutations::set_snapshot::SetSnapshot { snapshot: Default::default() }) }),
+                SemioSubsetSnapshot::Value(_) => SemioMutation::ApplyValue(apply_value::ApplyValue { mutation: SemioValueMutation::SetSnapshot(crate::standards::v1::subsets::value::schema::mutations::set_snapshot::SetSnapshot { snapshot: Default::default() }) }),
                 SemioSubsetSnapshot::Document(_) => {
-                    SemioMutation::ApplyDocument(apply_document::ApplyDocument { mutation: SemioDocumentMutation::SetSnapshot(crate::artifacts::semio::standards::v1::subsets::document::schema::mutations::set_snapshot::SetSnapshot { snapshot: Default::default() }) })
+                    SemioMutation::ApplyDocument(apply_document::ApplyDocument { mutation: SemioDocumentMutation::SetSnapshot(crate::standards::v1::subsets::document::schema::mutations::set_snapshot::SetSnapshot { snapshot: Default::default() }) })
                 }
-                SemioSubsetSnapshot::Cad(_) => SemioMutation::ApplyCad(apply_cad::ApplyCad { mutation: SemioCadMutation::SetSnapshot(crate::artifacts::semio::standards::v1::subsets::cad::schema::mutations::set_snapshot::SetSnapshot { snapshot: Default::default() }) }),
+                SemioSubsetSnapshot::Cad(_) => SemioMutation::ApplyCad(apply_cad::ApplyCad { mutation: SemioCadMutation::SetSnapshot(crate::standards::v1::subsets::cad::schema::mutations::set_snapshot::SetSnapshot { snapshot: Default::default() }) }),
                 SemioSubsetSnapshot::Drawing(_) => SemioMutation::ApplyDrawing(apply_drawing::ApplyDrawing {
-                    mutation: SemioDrawingMutation::DragNodes(crate::artifacts::semio::standards::v1::subsets::drawing::schema::mutations::drag_nodes::DragNodes { ats: Vec::new(), offset: SemioPoint2::default() }),
+                    mutation: SemioDrawingMutation::DragNodes(crate::standards::v1::subsets::drawing::schema::mutations::drag_nodes::DragNodes { ats: Vec::new(), offset: SemioPoint2::default() }),
                 }),
-                SemioSubsetSnapshot::Image(_) => SemioMutation::ApplyImage(apply_image::ApplyImage { mutation: SemioImageMutation::SetSnapshot(crate::artifacts::semio::standards::v1::subsets::image::schema::mutations::set_snapshot::SetSnapshot { snapshot: Default::default() }) }),
-                SemioSubsetSnapshot::Video(_) => SemioMutation::ApplyVideo(apply_video::ApplyVideo { mutation: SemioVideoMutation::SetSnapshot(crate::artifacts::semio::standards::v1::subsets::video::schema::mutations::set_snapshot::SetSnapshot { snapshot: Default::default() }) }),
-                SemioSubsetSnapshot::Audio(_) => SemioMutation::ApplyAudio(apply_audio::ApplyAudio { mutation: SemioAudioMutation::SetSnapshot(crate::artifacts::semio::standards::v1::subsets::audio::schema::mutations::set_snapshot::SetSnapshot { snapshot: Default::default() }) }),
+                SemioSubsetSnapshot::Image(_) => SemioMutation::ApplyImage(apply_image::ApplyImage { mutation: SemioImageMutation::SetSnapshot(crate::standards::v1::subsets::image::schema::mutations::set_snapshot::SetSnapshot { snapshot: Default::default() }) }),
+                SemioSubsetSnapshot::Video(_) => SemioMutation::ApplyVideo(apply_video::ApplyVideo { mutation: SemioVideoMutation::SetSnapshot(crate::standards::v1::subsets::video::schema::mutations::set_snapshot::SetSnapshot { snapshot: Default::default() }) }),
+                SemioSubsetSnapshot::Audio(_) => SemioMutation::ApplyAudio(apply_audio::ApplyAudio { mutation: SemioAudioMutation::SetSnapshot(crate::standards::v1::subsets::audio::schema::mutations::set_snapshot::SetSnapshot { snapshot: Default::default() }) }),
                 SemioSubsetSnapshot::Animation(_) => {
-                    SemioMutation::ApplyAnimation(apply_animation::ApplyAnimation { mutation: SemioAnimationMutation::SetSnapshot(crate::artifacts::semio::standards::v1::subsets::animation::schema::mutations::set_snapshot::SetSnapshot { snapshot: Default::default() }) })
+                    SemioMutation::ApplyAnimation(apply_animation::ApplyAnimation { mutation: SemioAnimationMutation::SetSnapshot(crate::standards::v1::subsets::animation::schema::mutations::set_snapshot::SetSnapshot { snapshot: Default::default() }) })
                 }
                 SemioSubsetSnapshot::Presentation(_) => {
-                    SemioMutation::ApplyPresentation(apply_presentation::ApplyPresentation { mutation: SemioPresentationMutation::SetSnapshot(crate::artifacts::semio::standards::v1::subsets::presentation::schema::mutations::set_snapshot::SetSnapshot { snapshot: Default::default() }) })
+                    SemioMutation::ApplyPresentation(apply_presentation::ApplyPresentation { mutation: SemioPresentationMutation::SetSnapshot(crate::standards::v1::subsets::presentation::schema::mutations::set_snapshot::SetSnapshot { snapshot: Default::default() }) })
                 }
-                SemioSubsetSnapshot::Flow(_) => SemioMutation::ApplyFlow(apply_flow::ApplyFlow { mutation: SemioFlowMutation::SetSnapshot(crate::artifacts::semio::standards::v1::subsets::flow::schema::mutations::set_snapshot::SetSnapshot { snapshot: Default::default() }) }),
+                SemioSubsetSnapshot::Flow(_) => SemioMutation::ApplyFlow(apply_flow::ApplyFlow { mutation: SemioFlowMutation::SetSnapshot(crate::standards::v1::subsets::flow::schema::mutations::set_snapshot::SetSnapshot { snapshot: Default::default() }) }),
                 SemioSubsetSnapshot::Text(_) => unreachable!("excluded from `bases` above"),
                 SemioSubsetSnapshot::Table(_) => unreachable!("excluded from `bases` above"),
                 SemioSubsetSnapshot::Graph(_) => unreachable!("excluded from `bases` above"),
@@ -711,8 +711,8 @@ mod tests {
     /// dispatch, produces a nested `SemioDiff::Text`, and its inverse restores `base` exactly.
     #[semio_framework_async_macros::async_test]
     async fn wrapped_text_kind_diff_and_inverse_route_correctly() {
-        use crate::artifacts::semio::standards::v1::subsets::text::schema::mutations::insert_run;
-        use crate::artifacts::semio::standards::v1::subsets::text::schema::snapshot::SemioTextRun;
+        use crate::standards::v1::subsets::text::schema::mutations::insert_run;
+        use crate::standards::v1::subsets::text::schema::snapshot::SemioTextRun;
 
         let base = SemioSnapshot { schema: "stdio.semio".into(), subset: SemioSubsetSnapshot::Text(Default::default()) };
         let m = SemioMutation::ApplyText(apply_text::ApplyText { mutation: SemioTextMutation::InsertRun(insert_run::InsertRun { index: 0, run: SemioTextRun { language: "en".into(), content: "hi".into(), marks: vec![] } }) });
@@ -735,10 +735,10 @@ mod tests {
     /// and its inverse restores `base` exactly.
     #[semio_framework_async_macros::async_test]
     async fn wrapped_brep_kind_diff_and_inverse_route_correctly() {
-        use crate::artifacts::semio::standards::v1::subsets::brep::schema::mutations::create_vertex;
+        use crate::standards::v1::subsets::brep::schema::mutations::create_vertex;
 
         let base = SemioSnapshot { schema: "stdio.semio".into(), subset: SemioSubsetSnapshot::Brep(Default::default()) };
-        let m = SemioMutation::ApplyBrep(apply_brep::ApplyBrep { mutation: SemioBrepMutation::CreateVertex(create_vertex::CreateVertex { id: "v1".into(), point: crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioPoint3 { x: 1.0, y: 2.0, z: 3.0 } }) });
+        let m = SemioMutation::ApplyBrep(apply_brep::ApplyBrep { mutation: SemioBrepMutation::CreateVertex(create_vertex::CreateVertex { id: "v1".into(), point: crate::standards::v1::subsets::base::schema::geometry::SemioPoint3 { x: 1.0, y: 2.0, z: 3.0 } }) });
         let diff = <SemioMutation as Mutation<SemioSnapshot>>::diff(&m, &base);
         assert!(matches!(diff.diff(), SemioDiff::Brep(_)));
         assert!(!diff.diff().is_empty());
@@ -758,8 +758,8 @@ mod tests {
     /// its inverse restores `base` exactly.
     #[semio_framework_async_macros::async_test]
     async fn wrapped_mesh_kind_diff_and_inverse_route_correctly() {
-        use crate::artifacts::semio::standards::v1::subsets::mesh::schema::mutations::create_mesh;
-        use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::SemioMesh;
+        use crate::standards::v1::subsets::mesh::schema::mutations::create_mesh;
+        use crate::standards::v1::subsets::mesh::schema::snapshot::SemioMesh;
 
         let base = SemioSnapshot { schema: "stdio.semio".into(), subset: SemioSubsetSnapshot::Mesh(Default::default()) };
         let m = SemioMutation::ApplyMesh(apply_mesh::ApplyMesh { mutation: SemioMeshMutation::CreateMesh(create_mesh::CreateMesh { mesh: SemioMesh { id: "m1".into(), primitives: vec![] } }) });
@@ -782,8 +782,8 @@ mod tests {
     /// its inverse restores `base` exactly.
     #[semio_framework_async_macros::async_test]
     async fn wrapped_table_kind_diff_and_inverse_route_correctly() {
-        use crate::artifacts::semio::standards::v1::subsets::table::schema::mutations::insert_row;
-        use crate::artifacts::semio::standards::v1::subsets::table::schema::snapshot::SemioTableRow;
+        use crate::standards::v1::subsets::table::schema::mutations::insert_row;
+        use crate::standards::v1::subsets::table::schema::snapshot::SemioTableRow;
 
         let base = SemioSnapshot { schema: "stdio.semio".into(), subset: SemioSubsetSnapshot::Table(Default::default()) };
         let m = SemioMutation::ApplyTable(apply_table::ApplyTable { mutation: SemioTableMutation::InsertRow(insert_row::InsertRow { index: 0, row: SemioTableRow { cells: vec![] } }) });
@@ -806,9 +806,9 @@ mod tests {
     /// and its inverse restores `base` exactly.
     #[semio_framework_async_macros::async_test]
     async fn wrapped_graph_kind_diff_and_inverse_route_correctly() {
-        use crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioPoint2;
-        use crate::artifacts::semio::standards::v1::subsets::graph::schema::mutations::create_node;
-        use crate::artifacts::semio::standards::v1::subsets::graph::schema::snapshot::GraphNodeId;
+        use crate::standards::v1::subsets::base::schema::geometry::SemioPoint2;
+        use crate::standards::v1::subsets::graph::schema::mutations::create_node;
+        use crate::standards::v1::subsets::graph::schema::snapshot::GraphNodeId;
 
         let base = SemioSnapshot { schema: "stdio.semio".into(), subset: SemioSubsetSnapshot::Graph(Default::default()) };
         let m = SemioMutation::ApplyGraph(apply_graph::ApplyGraph { mutation: SemioGraphMutation::CreateNode(create_node::CreateNode { id: GraphNodeId::new("n1"), kind: "task".into(), label: "N1".into(), position: SemioPoint2::default(), ports: vec![], properties: vec![] }) });
@@ -832,7 +832,7 @@ mod tests {
     /// here — the mutation touches a CHILD slot (`brep`), not a scalar/collection field.
     #[semio_framework_async_macros::async_test]
     async fn wrapped_object_kind_diff_and_inverse_route_correctly() {
-        use crate::artifacts::semio::standards::v1::subsets::object::schema::mutations::create_brep;
+        use crate::standards::v1::subsets::object::schema::mutations::create_brep;
 
         let base = SemioSnapshot { schema: "stdio.semio".into(), subset: SemioSubsetSnapshot::Object(Default::default()) };
         let target = store::os_io::ArtifactRef { artifact_id: "brep-x".into(), dialect: store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "brep".into() } };
@@ -857,7 +857,7 @@ mod tests {
     /// a LINK slot, though this particular case exercises a plain value-collection mutation.
     #[semio_framework_async_macros::async_test]
     async fn wrapped_kit_kind_diff_and_inverse_route_correctly() {
-        use crate::artifacts::semio::standards::v1::subsets::kit::schema::mutations::add_type;
+        use crate::standards::v1::subsets::kit::schema::mutations::add_type;
 
         let base = SemioSnapshot { schema: "stdio.semio".into(), subset: SemioSubsetSnapshot::Kit(Default::default()) };
         let m = SemioMutation::ApplyKit(apply_kit::ApplyKit { mutation: SemioKitMutation::AddType(add_type::AddType { id: "chair".into(), name: "Chair".into(), category: "furniture".into() }) });
@@ -882,7 +882,7 @@ mod tests {
         let cases = [
             SemioMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() }),
             SemioMutation::ApplyAudio(apply_audio::ApplyAudio { mutation: SemioAudioMutation::SetSampleRate(set_sample_rate::SetSampleRate { sample_rate: 22_050 }) }),
-            SemioMutation::ApplyFlow(apply_flow::ApplyFlow { mutation: SemioFlowMutation::SetSnapshot(crate::artifacts::semio::standards::v1::subsets::flow::schema::mutations::set_snapshot::SetSnapshot { snapshot: Default::default() }) }),
+            SemioMutation::ApplyFlow(apply_flow::ApplyFlow { mutation: SemioFlowMutation::SetSnapshot(crate::standards::v1::subsets::flow::schema::mutations::set_snapshot::SetSnapshot { snapshot: Default::default() }) }),
         ];
         for m in cases {
             let printed = m.print_op();
@@ -924,7 +924,7 @@ mod tests {
     }
 
     fn enveloped(subset: SemioSubsetSnapshot) -> SemioSnapshot {
-        SemioSnapshot { schema: crate::artifacts::semio::standards::v1::subsets::base::schema::snapshot::STDIO_SEMIO_DOCUMENT_SCHEMA.into(), subset }
+        SemioSnapshot { schema: crate::standards::v1::subsets::base::schema::snapshot::STDIO_SEMIO_DOCUMENT_SCHEMA.into(), subset }
     }
 
     /// 🏷️ `KINDS` must name every declared variant, in declaration order and in the exact spelling

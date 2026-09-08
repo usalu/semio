@@ -5,7 +5,7 @@
   "displayName": "Set Active Utility",
   "emoji": "🧰️",
   "aggregateVariant": "SetActiveUtility",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "set-active-utility",
   "binaryTag": 2,
   "invertibility": "explicit-mutation",

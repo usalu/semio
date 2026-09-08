@@ -1,8 +1,8 @@
 //! 🧬️ Direct change-node-name mutation owner.
-use crate::artifacts::gltf::schema::modules::mutation_support::top_level::rejection_outcome;
-use crate::artifacts::gltf::schema::modules::mutation_support::structure_geometry::checked_index;
-use crate::artifacts::gltf::schema::modules::mutation_support::top_level::{reject, GltfTopLevelMutationRejection};
-use crate::artifacts::gltf::GltfSnapshot;
+use crate::schema::modules::mutation_support::top_level::rejection_outcome;
+use crate::schema::modules::mutation_support::structure_geometry::checked_index;
+use crate::schema::modules::mutation_support::top_level::{reject, GltfTopLevelMutationRejection};
+use crate::GltfSnapshot;
 use dsl::DslValue;
 
 //#region 🔖️Payload
@@ -363,13 +363,13 @@ pub enum ChangeNodeNameMutation {
 impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for ChangeNodeNameMutation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "node-name", kind: "change-node-name", record: "ChangedNodeName" };
 
-    fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<crate::artifacts::gltf::schema::diff::GltfDiff> {
+    fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<crate::schema::diff::GltfDiff> {
         let next = match self {
             Self::Apply(payload) => apply(payload, base),
             Self::Restore(restore) => apply_restore(restore, base),
         };
         match next {
-            Ok(next) => protocol::MutationOutcome::new(<crate::artifacts::gltf::schema::diff::GltfDiff as protocol::DiffAlgebra<GltfSnapshot>>::between(base, &next)),
+            Ok(next) => protocol::MutationOutcome::new(<crate::schema::diff::GltfDiff as protocol::DiffAlgebra<GltfSnapshot>>::between(base, &next)),
             Err(error) => rejection_outcome(&error.code, &error.path, error.detail),
         }
     }
@@ -416,7 +416,7 @@ mod direct_leaf_tests {
     fn apply_mutation(base: &GltfSnapshot, mutation: &super::super::GltfMutation) -> GltfSnapshot {
         let outcome = <super::super::GltfMutation as Mutation<GltfSnapshot>>::diff(mutation, base);
         assert!(outcome.messages().is_empty(), "mutation must apply: {:?}", outcome.messages());
-        <crate::artifacts::gltf::schema::diff::GltfDiff as MutationDiff<GltfSnapshot>>::apply(outcome.diff(), base).expect("aggregate diff applies")
+        <crate::schema::diff::GltfDiff as MutationDiff<GltfSnapshot>>::apply(outcome.diff(), base).expect("aggregate diff applies")
     }
 
     #[test]

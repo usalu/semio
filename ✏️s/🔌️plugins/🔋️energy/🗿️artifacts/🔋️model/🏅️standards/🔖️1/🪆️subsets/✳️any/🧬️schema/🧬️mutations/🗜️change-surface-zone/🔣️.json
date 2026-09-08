@@ -5,7 +5,7 @@
   "displayName": "Change Surface Zone",
   "emoji": "🗜️",
   "aggregateVariant": "ChangeSurfaceZone",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-surface-zone",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

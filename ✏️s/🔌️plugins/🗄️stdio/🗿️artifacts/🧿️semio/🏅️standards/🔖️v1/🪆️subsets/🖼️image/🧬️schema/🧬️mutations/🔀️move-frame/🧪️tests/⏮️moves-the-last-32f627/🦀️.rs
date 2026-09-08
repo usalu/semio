@@ -5,11 +5,11 @@
 //! the move as a REMOVED-plus-ADDED pair inside a single `frames` triple, which the shared
 //! `apply_indexed` replays in that order (modified, then removed descending, then added ascending)
 //! — that ordering is exactly why `2 -> 0` lands the frame first.
-use crate::artifacts::semio::standards::v1::subsets::image::schema::diff::SemioImageDiff;
-use crate::artifacts::semio::standards::v1::subsets::image::schema::mutations::{apply_semio_image_mutation, SemioImageMutation};
-use crate::artifacts::semio::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
+use crate::standards::v1::subsets::image::schema::diff::SemioImageDiff;
+use crate::standards::v1::subsets::image::schema::mutations::{apply_semio_image_mutation, SemioImageMutation};
+use crate::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
 use protocol::{Mutation, MutationDiff};
-use crate::artifacts::semio::standards::v1::subsets::image::schema::mutations::move_frame;
+use crate::standards::v1::subsets::image::schema::mutations::move_frame;
 
 /// 🔗️ This leaf's own `🔺️diff` oracle, mounted directly: the enum-level `Mutation::diff` arm
 /// deliberately carries NO guard branches — every `mutation.no-op`/`mutation.clamped`/

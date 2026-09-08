@@ -28,7 +28,7 @@ pub fn handle(payload: &SetActiveExample, _doc: &ArtifactView<'_, crate::artifac
     let next = if payload.example_id.as_str() == WIRES_PLAY_EXAMPLE_METABOLISM_ID {
         metabolism_wires_example_snapshot().map_err(|error| {
             let message = if error.target.is_empty() { error.message.clone() } else { format!("{} at {}", error.message, error.target.join(".")) };
-            Fault::new(FaultOrigin::App, FaultCode::new(error.code.clone()), message)
+            Fault::new(FaultOrigin::App, FaultCode::new(error.code), message)
         })?
     } else {
         empty_wires_snapshot()

@@ -5,7 +5,7 @@
   "displayName": "Delete Plant Loop",
   "emoji": "💣️",
   "aggregateVariant": "DeletePlantLoop",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "delete-plant-loop",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

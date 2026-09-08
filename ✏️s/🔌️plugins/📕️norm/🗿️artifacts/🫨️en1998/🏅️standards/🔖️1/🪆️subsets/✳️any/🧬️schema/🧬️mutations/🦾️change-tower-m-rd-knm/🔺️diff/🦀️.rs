@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeTowerMRdKnm, base: &En1998Snapshot) -> protocol::Mut
     if base.tower_m_rd_knm == payload.new_tower_m_rd_knm {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Tower moment resistance M_Rd [kNm] is already {}.", payload.new_tower_m_rd_knm));
     }
-    protocol::MutationOutcome::new(En1998Diff { tower_m_rd_knm: Some(payload.new_tower_m_rd_knm.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1998Diff { tower_m_rd_knm: Some(payload.new_tower_m_rd_knm), ..Default::default() })
 }
 //#endregion 🔖️Diff

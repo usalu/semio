@@ -5,7 +5,7 @@
   "displayName": "Stage Try Values Entry",
   "emoji": "🗃️",
   "aggregateVariant": "StageTryValuesEntry",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "stage-try-values-entry",
   "binaryTag": 6,
   "invertibility": "explicit-mutation",

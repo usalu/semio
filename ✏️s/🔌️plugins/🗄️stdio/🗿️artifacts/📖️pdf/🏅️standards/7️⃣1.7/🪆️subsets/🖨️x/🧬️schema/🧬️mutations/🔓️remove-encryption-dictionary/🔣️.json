@@ -5,7 +5,7 @@
   "displayName": "Remove Encryption Dictionary",
   "emoji": "🔓️",
   "aggregateVariant": "RemoveEncryptionDictionary",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "remove-encryption-dictionary",
   "binaryTag": 1,
   "invertibility": "explicit-mutation",

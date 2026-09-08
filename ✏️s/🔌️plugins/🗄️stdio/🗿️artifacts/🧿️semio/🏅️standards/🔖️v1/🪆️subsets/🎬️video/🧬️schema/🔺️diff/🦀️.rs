@@ -16,8 +16,8 @@
 //! `Vec<T>`-of-struct field (streams→samples) plus this file's own generic collection-triple
 //! wrapper both individually block the derive macro.
 
-use crate::artifacts::semio::standards::v1::subsets::base::schema::triples::{dec_indexed_triple, enc_indexed_triple, split_top_level, strip_brackets, IndexAdded, IndexModified, IndexedTripleDiff};
-use crate::artifacts::semio::standards::v1::subsets::video::schema::snapshot::{SemioRational, SemioVideoSample, SemioVideoSnapshot, SemioVideoStream, SemioVideoStreamKind};
+use crate::standards::v1::subsets::base::schema::triples::{dec_indexed_triple, enc_indexed_triple, split_top_level, strip_brackets, IndexAdded, IndexModified, IndexedTripleDiff};
+use crate::standards::v1::subsets::video::schema::snapshot::{SemioRational, SemioVideoSample, SemioVideoSnapshot, SemioVideoStream, SemioVideoStreamKind};
 use protocol::command::DiffAlgebra;
 use protocol::MutationDiff;
 
@@ -406,7 +406,7 @@ impl MutationDiff<SemioVideoSnapshot> for SemioVideoDiff {
     fn apply(&self, base: &SemioVideoSnapshot) -> protocol::MutationApplyResult<SemioVideoSnapshot> {
         let mut next = base.clone();
         if let Some(d) = &self.streams {
-            crate::artifacts::semio::standards::v1::subsets::base::schema::triples::validate_indexed_triple(d, next.streams.len(), ["streams"])?;
+            crate::standards::v1::subsets::base::schema::triples::validate_indexed_triple(d, next.streams.len(), ["streams"])?;
             apply_indexed(&mut next.streams, d, apply_stream);
         }
         Ok(next)
@@ -817,7 +817,7 @@ mod handcrafted_diff_codec_tests {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(crate) fn snapshot_a() -> SemioVideoSnapshot {
         SemioVideoSnapshot {
-            schema: crate::artifacts::semio::standards::v1::subsets::video::schema::snapshot::STDIO_SEMIOVIDEO_DOCUMENT_SCHEMA.into(),
+            schema: crate::standards::v1::subsets::video::schema::snapshot::STDIO_SEMIOVIDEO_DOCUMENT_SCHEMA.into(),
             streams: vec![
                 SemioVideoStream {
                     kind: SemioVideoStreamKind::Video,
@@ -836,7 +836,7 @@ mod handcrafted_diff_codec_tests {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(crate) fn snapshot_b() -> SemioVideoSnapshot {
         SemioVideoSnapshot {
-            schema: crate::artifacts::semio::standards::v1::subsets::video::schema::snapshot::STDIO_SEMIOVIDEO_DOCUMENT_SCHEMA.into(),
+            schema: crate::standards::v1::subsets::video::schema::snapshot::STDIO_SEMIOVIDEO_DOCUMENT_SCHEMA.into(),
             streams: vec![
                 SemioVideoStream {
                     kind: SemioVideoStreamKind::Audio,

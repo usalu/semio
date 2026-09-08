@@ -18,11 +18,11 @@
 //!   frames only support flat paragraphs of runs, never nested block structure — an honest
 //!   limitation of pptx's own shape, not this mapping's).
 
-use crate::artifacts::pptx::schema::snapshot::{PptxParagraph, PptxPresentation, PptxRun, PptxShape, PptxSlide, PptxTransform};
-use crate::artifacts::pptx::PptxSnapshot;
-use crate::artifacts::semio::standards::v1::subsets::document::schema::snapshot::{DocBlock, DocRun};
-use crate::artifacts::semio::standards::v1::subsets::presentation::schema::snapshot::{PlaceholderKind, SemioPresentationSnapshot, SlideFrame, SlideShape};
-use crate::artifacts::zip::opc::OpcPackage;
+use semio_s_artifact_stdio_pptx::schema::snapshot::{PptxParagraph, PptxPresentation, PptxRun, PptxShape, PptxSlide, PptxTransform};
+use semio_s_artifact_stdio_pptx::PptxSnapshot;
+use crate::standards::v1::subsets::document::schema::snapshot::{DocBlock, DocRun};
+use crate::standards::v1::subsets::presentation::schema::snapshot::{PlaceholderKind, SemioPresentationSnapshot, SlideFrame, SlideShape};
+use semio_s_artifact_stdio_zip::opc::OpcPackage;
 use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
 
 //#region 🔖️FieldMapping
@@ -99,9 +99,9 @@ impl ArtifactSerializer for SemioPresentationToPptx {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioPoint2;
-    use crate::artifacts::semio::standards::v1::subsets::document::schema::snapshot::RunStyle;
-    use crate::artifacts::semio::standards::v1::subsets::presentation::schema::snapshot::{Slide, SlidePictureImage, STDIO_SEMIOPRESENTATION_DOCUMENT_SCHEMA};
+    use crate::standards::v1::subsets::base::schema::geometry::SemioPoint2;
+    use crate::standards::v1::subsets::document::schema::snapshot::RunStyle;
+    use crate::standards::v1::subsets::presentation::schema::snapshot::{Slide, SlidePictureImage, STDIO_SEMIOPRESENTATION_DOCUMENT_SCHEMA};
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn sample_semio() -> SemioPresentationSnapshot {

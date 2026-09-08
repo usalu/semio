@@ -7,6 +7,6 @@ use crate::artifacts::din16798::Din16798Snapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(_payload: &ChangeYearsSinceInspection, base: &Din16798Snapshot) -> Vec<Din16798Mutation> {
-    vec![Din16798Mutation::ChangeYearsSinceInspection(ChangeYearsSinceInspection { new_years_since_inspection: base.years_since_inspection.clone() })]
+    vec![Din16798Mutation::ChangeYearsSinceInspection(ChangeYearsSinceInspection { new_years_since_inspection: base.years_since_inspection })]
 }
 //#endregion 🔖️Inverse

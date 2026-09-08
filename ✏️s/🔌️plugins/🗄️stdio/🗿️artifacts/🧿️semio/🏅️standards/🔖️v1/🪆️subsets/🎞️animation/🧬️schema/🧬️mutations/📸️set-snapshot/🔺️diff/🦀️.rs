@@ -1,5 +1,5 @@
-use crate::artifacts::semio::standards::v1::subsets::animation::schema::diff::{diff_set_snapshot, SemioAnimationDiff};
-use crate::artifacts::semio::standards::v1::subsets::animation::schema::snapshot::SemioAnimationSnapshot;
+use crate::standards::v1::subsets::animation::schema::diff::{diff_set_snapshot, SemioAnimationDiff};
+use crate::standards::v1::subsets::animation::schema::snapshot::SemioAnimationSnapshot;
 
 /// 🔺️ Diff helper for set-snapshot.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

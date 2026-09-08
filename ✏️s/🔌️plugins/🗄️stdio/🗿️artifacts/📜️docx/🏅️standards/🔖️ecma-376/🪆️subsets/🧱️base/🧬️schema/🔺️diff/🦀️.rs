@@ -15,13 +15,13 @@
 //! outside that boundary) — see `glue_followup` in this wave's report for hoisting it to
 //! `zip::opc` so xlsx/pptx/bcf can reuse it verbatim instead of re-deriving their own copy.
 
-use crate::artifacts::docx::schema::snapshot::{DocxBlock, DocxDocument, DocxParagraph, DocxRun, DocxStyle, DocxTable, DocxTableCell, DocxTableRow};
-use crate::artifacts::docx::DocxSnapshot;
-use crate::artifacts::xml::schema::snapshot::{XmlAttr, XmlNode};
-use crate::artifacts::zip::opc::{OpcContentTypes, OpcPackage, OpcPart, OpcRelationship, OpcTargetMode};
+use crate::schema::snapshot::{DocxBlock, DocxDocument, DocxParagraph, DocxRun, DocxStyle, DocxTable, DocxTableCell, DocxTableRow};
+use crate::DocxSnapshot;
+use semio_s_artifact_stdio_xml::schema::snapshot::{XmlAttr, XmlNode};
+use semio_s_artifact_stdio_zip::opc::{OpcContentTypes, OpcPackage, OpcPart, OpcRelationship, OpcTargetMode};
 use protocol::command::DiffAlgebra;
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
-use schema::ArtifactSchema;
+use framework_schema::ArtifactSchema;
 use std::collections::HashMap;
 
 //#region 🔖️GenericCollectionTriples
@@ -3139,11 +3139,11 @@ pub(crate) fn xml_node(name: &str) -> XmlNode {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn snapshot_a() -> DocxSnapshot {
     let mut opc = OpcPackage::empty();
-    opc.content_types.set_default("rels", crate::artifacts::zip::opc::RELS_CONTENT_TYPE);
+    opc.content_types.set_default("rels", semio_s_artifact_stdio_zip::opc::RELS_CONTENT_TYPE);
     opc.content_types.set_default("xml", "application/xml");
     opc.set_part("word/document.xml", "application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml", b"<w:document/>".to_vec());
     opc.set_part("word/toRemove.xml", "application/xml", b"gone".to_vec());
-    opc.add_relationship("", "rId1", crate::artifacts::zip::opc::REL_TYPE_OFFICE_DOCUMENT, "word/document.xml");
+    opc.add_relationship("", "rId1", semio_s_artifact_stdio_zip::opc::REL_TYPE_OFFICE_DOCUMENT, "word/document.xml");
     opc.relationships.insert("word/toRemove.xml".into(), vec![OpcRelationship { id: "rId8".into(), rel_type: "http://example/gone".into(), target: "media/gone.png".into(), target_mode: OpcTargetMode::Internal }]);
 
     DocxSnapshot::from_parts(
@@ -3162,12 +3162,12 @@ pub(crate) fn snapshot_a() -> DocxSnapshot {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn snapshot_b() -> DocxSnapshot {
     let mut opc = OpcPackage::empty();
-    opc.content_types.set_default("rels", crate::artifacts::zip::opc::RELS_CONTENT_TYPE);
+    opc.content_types.set_default("rels", semio_s_artifact_stdio_zip::opc::RELS_CONTENT_TYPE);
     opc.content_types.set_default("xml", "application/xml");
     opc.content_types.set_default("added", "application/octet-stream");
     opc.set_part("word/document.xml", "application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml", b"<w:document/>changed".to_vec());
     opc.set_part("word/added.xml", "application/xml", b"fresh".to_vec());
-    opc.add_relationship("", "rId1", crate::artifacts::zip::opc::REL_TYPE_OFFICE_DOCUMENT, "word/document.xml");
+    opc.add_relationship("", "rId1", semio_s_artifact_stdio_zip::opc::REL_TYPE_OFFICE_DOCUMENT, "word/document.xml");
     opc.relationships.insert("word/added.xml".into(), vec![OpcRelationship { id: "rId3".into(), rel_type: "http://example/added".into(), target: "media/added.png".into(), target_mode: OpcTargetMode::External }]);
 
     DocxSnapshot::from_parts(

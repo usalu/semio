@@ -1,7 +1,7 @@
 //! 🔀 `set-primitive-topology` — sets a primitive's draw-mode enum — a real address (`mesh_id`+`primitive_id`) plus one field is exactly the narrow case `set` survives for (SMO's `set-panel-visibility` precedent).
 
-use crate::artifacts::semio::standards::v1::subsets::mesh::schema::mutations::SemioMeshMutation;
-use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::{SemioMeshSnapshot, SemioTopology};
+use crate::standards::v1::subsets::mesh::schema::mutations::SemioMeshMutation;
+use crate::standards::v1::subsets::mesh::schema::snapshot::{SemioMeshSnapshot, SemioTopology};
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]

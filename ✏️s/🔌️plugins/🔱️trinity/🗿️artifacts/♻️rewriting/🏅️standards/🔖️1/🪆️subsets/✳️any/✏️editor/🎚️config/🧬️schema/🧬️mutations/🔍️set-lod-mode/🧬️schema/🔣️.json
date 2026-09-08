@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/trinity/rewriting/1/any/editor/config/mutation/set-lod-mode.json",
+  "title": "SetLodMode",
+  "type": "object",
+  "properties": {
+    "window_id": {
+      "type": "string"
+    },
+    "value": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "window_id",
+    "value"
+  ],
+  "additionalProperties": false
+}

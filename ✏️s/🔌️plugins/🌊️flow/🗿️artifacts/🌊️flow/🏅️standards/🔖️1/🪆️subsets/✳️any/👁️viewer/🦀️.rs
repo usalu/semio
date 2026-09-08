@@ -131,7 +131,7 @@ mod tests {
         let id = definition.id.clone();
         let plugin = Plugin::<crate::plugin::FlowApps>::builder("flow-viewer-lifecycle")
             .label("Flow Viewer Lifecycle").version("0.1.0").package_id("semio:flow-viewer-lifecycle")
-            .viewer_with_members::<FlowViewer, semio_s_plugin_stdio::artifacts::semio::SemioMembers>(definition)
+            .viewer_with_members::<FlowViewer, semio_s_artifact_stdio_semio::SemioMembers>(definition)
             .try_build().unwrap();
         let document_rights = plugin.manifest.capabilities.iter().filter(|capability| matches!(capability.artifact, ArtifactKind::Document)).map(|capability| {
             assert!(matches!(capability.scope, Scope::App));

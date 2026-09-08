@@ -422,8 +422,6 @@ impl FrameBuildHandle {
         }
     }
 
-    #[cfg(target_arch = "wasm32")]
-    pub(crate) fn set_completion_waker(&mut self, _waker: Arc<dyn Fn() + Send + Sync>) {}
 
     fn admit_active(&mut self, active: ActiveFrameBuild) {
         let params = batch_params(active.operation, active.generation, active.cancel.clone());

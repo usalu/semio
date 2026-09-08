@@ -1,0 +1,26 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/norm/iso16757/1/any/mutation/update-script-limits.json",
+  "title": "UpdateScriptLimits",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newMaxRecursion",
+    "newMaxSteps",
+    "newTimeoutMs"
+  ],
+  "properties": {
+    "newMaxSteps": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "newMaxRecursion": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "newTimeoutMs": {
+      "type": "integer",
+      "minimum": 0
+    }
+  }
+}

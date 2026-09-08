@@ -94,19 +94,10 @@ func (repository *auditRepository) projectContributorsOnItem(context.Context, st
 // #region 📜️Golden
 
 func TestG3LanguageNeutralGoldenEnvelope(t *testing.T) {
-	var schema struct {
-		Schema   string   `json:"schema"`
-		Encoding string   `json:"encoding"`
-		Fields   []string `json:"fields"`
-		Checksum string   `json:"checksum"`
-	}
-	schemaBytes, err := os.ReadFile(filepath.Join("🧫️fixtures", "🧬️g3-event-schema.json"))
-	if err != nil || json.Unmarshal(schemaBytes, &schema) != nil {
-		t.Fatalf("read language-neutral schema: %v", err)
-	}
+	contract := loadG3EventLogContract(t)
 	fields := []string{"stream", "sequence", "id", "generation", "type", "payload", "checksum"}
-	if schema.Schema != "semio.coordinator.event/1" || schema.Encoding != "canonical-jsonl-lf" || !equalStringsInOrder(schema.Fields, fields) || schema.Checksum == "" {
-		t.Fatalf("unexpected language-neutral schema %+v", schema)
+	if contract.Schema != "semio.coordinator.event/1" || contract.Encoding != "canonical-jsonl-lf" || contract.Scalar != "nonempty-no-nul" || !equalStringsInOrder(contract.Fields, fields) || contract.Checksum == "" {
+		t.Fatalf("unexpected language-neutral contract %+v", contract)
 	}
 	store, path := testStore(t)
 	payload := json.RawMessage(`{"id":"T-1","status":"open"}`)

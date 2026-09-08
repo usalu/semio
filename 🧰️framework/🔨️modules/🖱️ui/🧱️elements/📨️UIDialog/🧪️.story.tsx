@@ -10,53 +10,48 @@
 
 // #region 🔌️Adapters
 import { argControl, type ActionArgDef, type DialogDefinition } from "@semio-tech/framework";
-import { UIDialog } from "@semio-tech/ui-react";
+import { UIDialog, type UIDialogFieldBinding } from "@semio-tech/ui-react";
 import type { Meta, StoryObj } from "../../🧪️story.ts";
 import { useState } from "react";
 // #endregion 🔌️Adapters
 
 // 🗨️#region 🗨️UIDialog
 /** @emoji 🎛️ Minimal `renderField` — `UIDialog` is injected this renderer so `ui-react` never has to import from `framework/os/renderer` (see the prop's docstring on `UIDialogProps`). A real shell renders the full staged-arg control set; this story only needs text/number/toggle. */
-function renderStoryField(def: ActionArgDef, value: unknown, onChange: (value: unknown) => void) {
-  // 🎫️ ticket 26/08/17/LLM-FIRST-OS-VIA-THE-SEMIO-OS-MCP-GATEWAY packet P3-manifest-schema, D6:
-  // `def.control` is gone (derived, not stored) — `argControl(def)` mirrors Rust `ActionArgDef::control()`.
+function renderStoryField(def: ActionArgDef, value: unknown, onChange: (value: unknown) => void, field: UIDialogFieldBinding) {
   const control = argControl(def);
   if (control.kind === "toggle") {
-    return (
-      <label className="flex items-center gap-single text-xs">
-        <input type="checkbox" checked={Boolean(value)} onChange={(event) => onChange(event.target.checked)} />
-        {def.label}
-      </label>
-    );
+    return <input id={field.id} aria-labelledby={field.labelledBy} type="checkbox" checked={Boolean(value)} onChange={(event) => onChange(event.target.checked)} />;
   }
   if (control.kind === "number" || control.kind === "slider") {
-    return <input type="number" className="w-full border p-single text-xs" value={typeof value === "number" ? value : ""} min={control.min} max={control.max} onChange={(event) => onChange(Number(event.target.value))} />;
+    return <input id={field.id} aria-labelledby={field.labelledBy} required={field.required} type="number" className="w-full border p-single text-xs" value={typeof value === "number" ? value : ""} min={control.min} max={control.max} onChange={(event) => onChange(Number(event.target.value))} />;
   }
-  return <input type="text" className="w-full border p-single text-xs" value={typeof value === "string" ? value : ""} onChange={(event) => onChange(event.target.value)} />;
+  return <input id={field.id} aria-labelledby={field.labelledBy} required={field.required} type="text" className="w-full border p-single text-xs" value={typeof value === "string" ? value : ""} onChange={(event) => onChange(event.target.value)} />;
 }
 
 const addCapsuleDialog: DialogDefinition = {
   id: "dialog.story.add-capsule",
-  title: "Add Capsule Instance",
-  body: "Configure the new capsule piece and its placement in the design.",
+  title: { native: { en: "Add Capsule Instance", de: "Kapselinstanz hinzufügen" } },
+  body: { native: { en: "Configure the new capsule piece and its placement in the design.", de: "Das neue Kapselstück und seine Platzierung im Entwurf konfigurieren." } },
   args: [
-    { id: "quantity", label: "Quantity", control: { kind: "number", min: 1, max: 20 }, required: true, default: 1 },
-    { id: "label", label: "Label", control: { kind: "text", placeholder: "Optional label" }, required: false },
-    { id: "mirrored", label: "Mirrored", control: { kind: "toggle" }, required: false },
+    { id: "quantity", label: { native: { en: "Quantity", de: "Anzahl" } }, schema: { kind: "number", min: 1, max: 20, step: 1, integer: true }, required: true, default: 1 },
+    { id: "label", label: { native: { en: "Label", de: "Bezeichnung" } }, schema: { kind: "string", options: [] }, required: false },
+    { id: "mirrored", label: { native: { en: "Mirrored", de: "Gespiegelt" } }, schema: { kind: "boolean" }, required: false },
   ],
   submitAction: "action.add-capsule",
-  submitLabel: "Add to Design",
-  cancelLabel: "Cancel",
+  submitLabel: { native: { en: "Add to Design", de: "Zum Entwurf hinzufügen" } },
+  cancelAction: "action.cancel-add-capsule",
+  cancelLabel: { native: { en: "Cancel", de: "Abbrechen" } },
 };
 
 const confirmDialog: DialogDefinition = {
   id: "dialog.story.confirm-delete",
-  title: "Delete Design?",
-  body: "This cannot be undone.",
+  title: { native: { en: "Delete Design?", de: "Entwurf löschen?" } },
+  body: { native: { en: "This cannot be undone.", de: "Dies kann nicht rückgängig gemacht werden." } },
   args: [],
   submitAction: "action.delete-design",
-  submitLabel: "Delete",
-  cancelLabel: "Cancel",
+  submitLabel: { native: { en: "Delete", de: "Löschen" } },
+  cancelAction: "action.cancel-delete-design",
+  cancelLabel: { native: { en: "Cancel", de: "Abbrechen" } },
 };
 
 const meta = {

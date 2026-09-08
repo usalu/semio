@@ -5,7 +5,7 @@
   "displayName": "Replace Time Series Schedule Values",
   "emoji": "🕘️",
   "aggregateVariant": "ReplaceTimeSeriesScheduleValues",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "replace-time-series-schedule-values",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

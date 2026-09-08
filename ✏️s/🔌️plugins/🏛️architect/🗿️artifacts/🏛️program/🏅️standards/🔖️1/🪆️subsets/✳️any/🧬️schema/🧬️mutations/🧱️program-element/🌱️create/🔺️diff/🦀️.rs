@@ -10,7 +10,7 @@ use crate::artifacts::program::ProgramSnapshot;
 pub fn diff(payload: &CreateProgramElement, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
     let id = payload.program_element.header.id.clone();
     if base.elements.iter().any(|row| row.header.id == id) {
-        return protocol::MutationOutcome::fatal("mutation.duplicate-id", "A program element already exists with this id.", [id.0.clone()]);
+        return protocol::MutationOutcome::fatal("mutation.duplicate-id", "A program element already exists with this id.", [id.0]);
     }
     protocol::MutationOutcome::new(ProgramDiff { elements: Some(ProgramElementsDelta { added: vec![payload.program_element.clone()], ..Default::default() }), ..Default::default() })
 }

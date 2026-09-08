@@ -82,7 +82,7 @@
         {
           "id": "set-frames",
           "capability": "mp3-mpeg1-layer3-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -101,7 +101,7 @@
         {
           "id": "set-id3v1",
           "capability": "mp3-mpeg1-layer3-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -120,7 +120,7 @@
         {
           "id": "set-id3v2",
           "capability": "mp3-mpeg1-layer3-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -139,7 +139,7 @@
         {
           "id": "set-snapshot",
           "capability": "mp3-mpeg1-layer3-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],

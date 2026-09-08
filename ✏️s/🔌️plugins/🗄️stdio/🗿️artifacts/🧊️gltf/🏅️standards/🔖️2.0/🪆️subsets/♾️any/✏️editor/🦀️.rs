@@ -2,8 +2,8 @@
 //! 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §2.1). `GltfAnyEditor`
 //! implements `ArtifactEditor`, wiring the shared `MeshWindowKit` to a single Main window.
 
-use crate::artifacts::gltf::standards::v2_0::subsets::any::schema::snapshot::GltfSnapshot;
-use crate::artifacts::gltf::GltfMutation;
+use crate::standards::v2_0::subsets::any::schema::snapshot::GltfSnapshot;
+use crate::GltfMutation;
 use crate::editor::gltf::modes::edit;
 use crate::editor::gltf::modes::edit::windows::main;
 use semio_framework_plugin::app::InteractionView;

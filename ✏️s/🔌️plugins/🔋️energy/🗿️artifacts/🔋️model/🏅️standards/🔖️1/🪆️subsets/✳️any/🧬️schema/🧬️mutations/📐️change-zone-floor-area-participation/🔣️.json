@@ -5,7 +5,7 @@
   "displayName": "Change Zone Floor Area Participation",
   "emoji": "📐️",
   "aggregateVariant": "ChangeZoneFloorAreaParticipation",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-zone-floor-area-participation",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

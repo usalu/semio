@@ -15,7 +15,7 @@ pub fn diff(payload: &ChangeReferenceLocked, base: &CadSnapshot) -> protocol::Mu
     if existing.locked == payload.new_locked {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Reference \"{}\" already has locked = {}.", payload.reference_id, payload.new_locked));
     }
-    let patch = CadReferencePatch { locked: Some(payload.new_locked.clone()), ..Default::default() };
+    let patch = CadReferencePatch { locked: Some(payload.new_locked), ..Default::default() };
     let next = references
         .into_iter()
         .map(|mut reference| {

@@ -1,0 +1,34 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/note/note/1/block/mutation/duplicate-block.json",
+  "title": "DuplicateBlock",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "sourceId",
+    "block"
+  ],
+  "properties": {
+    "sourceId": {
+      "type": "string"
+    },
+    "block": {
+      "$ref": "#/$defs/NoteBlockNode"
+    }
+  },
+  "$defs": {
+    "NoteBlockNode": {
+      "title": "NoteBlockNode",
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "kind"
+      ],
+      "properties": {
+        "kind": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

@@ -7,9 +7,9 @@
 //! No `snapshot: Option<SemioGraphSnapshot>` full-replace slot anywhere — whole-document replace is
 //! `ArtifactStore::reset`, outside history.
 
-use crate::artifacts::semio::standards::v1::subsets::graph::schema::snapshot::{SemioGraphEdge, SemioGraphNode, SemioGraphSnapshot};
+use crate::standards::v1::subsets::graph::schema::snapshot::{SemioGraphEdge, SemioGraphNode, SemioGraphSnapshot};
 use protocol::MutationDiff;
-use schema::ArtifactSchema;
+use framework_schema::ArtifactSchema;
 
 //#region 🔖️NodeList
 /// 📋 Whole-list wrapper for the `nodes` field diff — every mutation triad rebuilds the full
@@ -116,11 +116,11 @@ fn dec_str(s: &str) -> Result<String, String> {
     String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
 }
 
-use crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioPoint2;
-use crate::artifacts::semio::standards::v1::subsets::base::schema::triples::{split_top_level, strip_brackets};
-use crate::artifacts::semio::standards::v1::subsets::graph::schema::snapshot::{GraphEdgeId, GraphNodeId, SemioGraphPort, SemioGraphPortKind};
-use crate::artifacts::semio::standards::v1::subsets::value::schema::diff::{dec_semio_value_entry, enc_semio_value_entry};
-use crate::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValueEntry;
+use crate::standards::v1::subsets::base::schema::geometry::SemioPoint2;
+use crate::standards::v1::subsets::base::schema::triples::{split_top_level, strip_brackets};
+use crate::standards::v1::subsets::graph::schema::snapshot::{GraphEdgeId, GraphNodeId, SemioGraphPort, SemioGraphPortKind};
+use crate::standards::v1::subsets::value::schema::diff::{dec_semio_value_entry, enc_semio_value_entry};
+use crate::standards::v1::subsets::value::schema::snapshot::SemioValueEntry;
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn enc_node_id(id: &GraphNodeId) -> String {
@@ -150,11 +150,11 @@ fn dec_f64_hex(s: &str) -> Result<f64, String> {
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn enc_port_kind(k: SemioGraphPortKind) -> char {
-    crate::artifacts::semio::standards::v1::subsets::graph::schema::snapshot::enc_port_kind(k)
+    crate::standards::v1::subsets::graph::schema::snapshot::enc_port_kind(k)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_port_kind(s: &str) -> Result<SemioGraphPortKind, String> {
-    crate::artifacts::semio::standards::v1::subsets::graph::schema::snapshot::dec_port_kind(s)
+    crate::standards::v1::subsets::graph::schema::snapshot::dec_port_kind(s)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn enc_port(p: &SemioGraphPort) -> String {
@@ -267,7 +267,7 @@ impl protocol::DiffCodec for SemioGraphDiff {
     /// `read_edge`) rather than a text-blob-in-binary shortcut.
     fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const DIFF_BINARY_FORMAT: u8 = 1;
-        use crate::artifacts::semio::standards::v1::subsets::graph::schema::snapshot::{write_edge, write_node};
+        use crate::standards::v1::subsets::graph::schema::snapshot::{write_edge, write_node};
         let presence: u8 = (if self.nodes.is_some() { 0b0000_0001 } else { 0 }) | (if self.edges.is_some() { 0b0000_0010 } else { 0 });
         let mut out = vec![DIFF_BINARY_FORMAT, presence];
         if let Some(list) = &self.nodes {
@@ -286,7 +286,7 @@ impl protocol::DiffCodec for SemioGraphDiff {
     }
     fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         const DIFF_BINARY_FORMAT: u8 = 1;
-        use crate::artifacts::semio::standards::v1::subsets::graph::schema::snapshot::{read_edge, read_node};
+        use crate::standards::v1::subsets::graph::schema::snapshot::{read_edge, read_node};
         if bytes.len() < 2 {
             return Err(protocol::ProtocolError::Malformed { what: "diff header", offset: 0, detail: "truncated (need format+presence)".to_string() });
         }
@@ -326,7 +326,7 @@ impl protocol::DiffCodec for SemioGraphDiff {
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_diff_cases() -> Vec<SemioGraphDiff> {
-    use crate::artifacts::semio::standards::v1::subsets::graph::schema::snapshot::demo_graph_snapshot;
+    use crate::standards::v1::subsets::graph::schema::snapshot::demo_graph_snapshot;
     let demo = demo_graph_snapshot();
     vec![
         SemioGraphDiff::default(),
@@ -341,7 +341,7 @@ pub(crate) fn demo_diff_cases() -> Vec<SemioGraphDiff> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::semio::standards::v1::subsets::graph::schema::snapshot::{GraphEdgeId, GraphNodeId, STDIO_SEMIOGRAPH_DOCUMENT_SCHEMA};
+    use crate::standards::v1::subsets::graph::schema::snapshot::{GraphEdgeId, GraphNodeId, STDIO_SEMIOGRAPH_DOCUMENT_SCHEMA};
     use protocol::DiffCodec;
 
     #[semio_framework_async_macros::async_test]

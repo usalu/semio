@@ -1,7 +1,7 @@
 //! 🔺️ Diff for `set-snapshot`.
 
-use crate::artifacts::obj::ObjSnapshot;
-use crate::artifacts::obj::schema::diff::{ObjDiff, diff_set_snapshot};
+use crate::ObjSnapshot;
+use crate::schema::diff::{ObjDiff, diff_set_snapshot};
 
 /// 🔺️ Diff helper for set-snapshot — sparse field-by-field `between(base, snapshot)`, per the
 /// recipe's "no full-replace slot, even for SetSnapshot" rule.

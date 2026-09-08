@@ -5,11 +5,11 @@
 //! ever replaces an EXISTING cell — so a row's column count never resizes except via a whole-row
 //! add/remove at the `records` collection level, matching csv's own `CsvRecordDiff` convention).
 
-use crate::artifacts::tsv::standards::iana::subsets::any::schema::snapshot::{LineEnding, TsvSnapshot};
+use crate::standards::iana::subsets::any::schema::snapshot::{LineEnding, TsvSnapshot};
 use protocol::command::DiffAlgebra;
 use protocol::DiffCodec;
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
-use schema::ArtifactSchema;
+use framework_schema::ArtifactSchema;
 use std::collections::{BTreeMap, HashMap};
 
 //#region 🔖️RowDiff

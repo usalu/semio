@@ -17,9 +17,9 @@
 //! EVERY cache entry; the incrementality law below proves that honestly (an edit disjoint from a
 //! node's own component still misses that node's cache slot).
 
-use crate::artifacts::semio::standards::v1::subsets::graph::schema::normal_internals::undirected::UndirectedGraph;
-use crate::artifacts::semio::standards::v1::subsets::graph::schema::snapshot::SemioGraphSnapshot;
-use crate::artifacts::semio::standards::v1::subsets::graph::schema::traversal_internals::dfs_preorder_nodes;
+use crate::standards::v1::subsets::graph::schema::normal_internals::undirected::UndirectedGraph;
+use crate::standards::v1::subsets::graph::schema::snapshot::SemioGraphSnapshot;
+use crate::standards::v1::subsets::graph::schema::traversal_internals::dfs_preorder_nodes;
 use graph_core::{NodeId, PropertyBag};
 use std::collections::BTreeMap;
 
@@ -138,7 +138,7 @@ impl store::InferredField<SemioGraphSnapshot> for NodeConnectivity {
 //#region 🧪️Tests
 mod tests {
     use super::*;
-    use crate::artifacts::semio::standards::v1::subsets::graph::schema::snapshot::{GraphEdgeId, GraphNodeId, SemioGraphEdge, SemioGraphNode, STDIO_SEMIOGRAPH_DOCUMENT_SCHEMA};
+    use crate::standards::v1::subsets::graph::schema::snapshot::{GraphEdgeId, GraphNodeId, SemioGraphEdge, SemioGraphNode, STDIO_SEMIOGRAPH_DOCUMENT_SCHEMA};
     use store::{InferenceCache, InferenceCacheConfig};
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9

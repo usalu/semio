@@ -450,10 +450,10 @@ fn decode_apertures(root: &Object, model: &mut Model, glazing: &[(String, f64, f
             sill_height_m: sill,
             frame_conductance_w_k: 0.0,
             divider_conductance_w_k: 0.0,
-            overhang_depth_m: overhang.map(|(_, shade)| number_or(shade, "depth_as_fraction_of_window_door_height", 0.0) * height).unwrap_or(0.0),
-            overhang_offset_m: overhang.map(|(_, shade)| number_or(shade, "height_above_window_or_door", 0.0)).unwrap_or(0.0),
-            fin_depth_m: fin.map(|(_, shade)| number_or(shade, "left_depth_as_fraction_of_window_door_width", 0.0) * height).unwrap_or(0.0),
-            fin_offset_m: fin.map(|(_, shade)| number_or(shade, "left_extension_from_window_door", 0.0)).unwrap_or(0.0),
+            overhang_depth_m: overhang.map_or(0.0, |(_, shade)| number_or(shade, "depth_as_fraction_of_window_door_height", 0.0) * height),
+            overhang_offset_m: overhang.map_or(0.0, |(_, shade)| number_or(shade, "height_above_window_or_door", 0.0)),
+            fin_depth_m: fin.map_or(0.0, |(_, shade)| number_or(shade, "left_depth_as_fraction_of_window_door_width", 0.0) * height),
+            fin_offset_m: fin.map_or(0.0, |(_, shade)| number_or(shade, "left_extension_from_window_door", 0.0)),
             glazing_construction_id: None,
         });
         let _ = glazing_construction_name(name);

@@ -1,0 +1,694 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/presentation/mutation/set-snapshot.json",
+  "title": "SetSnapshot",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "snapshot"
+  ],
+  "properties": {
+    "snapshot": {
+      "$ref": "#/$defs/SemioPresentationSnapshot"
+    },
+    "mutation": {
+      "const": "setSnapshot",
+      "description": "Aggregate discriminator spliced in by SemioPresentationMutation; absent when the payload stands alone."
+    }
+  },
+  "$defs": {
+    "SemioPresentationSnapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema"
+      ],
+      "properties": {
+        "schema": {
+          "type": "string"
+        },
+        "masters": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SlideMaster"
+          }
+        },
+        "layouts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SlideLayout"
+          }
+        },
+        "slides": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Slide"
+          }
+        }
+      }
+    },
+    "SlideMaster": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "shapes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SlideShape"
+          }
+        }
+      }
+    },
+    "SlideShape": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "shapeKind",
+            "frame"
+          ],
+          "properties": {
+            "shapeKind": {
+              "const": "textBox"
+            },
+            "frame": {
+              "$ref": "#/$defs/SlideFrame"
+            },
+            "blocks": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/DocBlock"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "shapeKind",
+            "frame",
+            "image"
+          ],
+          "properties": {
+            "shapeKind": {
+              "const": "picture"
+            },
+            "frame": {
+              "$ref": "#/$defs/SlideFrame"
+            },
+            "image": {
+              "$ref": "#/$defs/SlidePictureImage"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "shapeKind",
+            "frame"
+          ],
+          "properties": {
+            "shapeKind": {
+              "const": "table"
+            },
+            "frame": {
+              "$ref": "#/$defs/SlideFrame"
+            },
+            "rows": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/SlideTableRow"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "shapeKind",
+            "frame",
+            "kind"
+          ],
+          "properties": {
+            "shapeKind": {
+              "const": "placeholder"
+            },
+            "frame": {
+              "$ref": "#/$defs/SlideFrame"
+            },
+            "kind": {
+              "$ref": "#/$defs/PlaceholderKind"
+            }
+          }
+        }
+      ]
+    },
+    "SlideFrame": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "origin",
+        "width",
+        "height"
+      ],
+      "properties": {
+        "origin": {
+          "$ref": "#/$defs/SemioPoint2"
+        },
+        "width": {
+          "type": "number"
+        },
+        "height": {
+          "type": "number"
+        }
+      }
+    },
+    "SemioPoint2": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y"
+      ],
+      "properties": {
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        }
+      }
+    },
+    "DocBlock": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "paragraph"
+            },
+            "styleId": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "runs": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/DocRun"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "level"
+          ],
+          "properties": {
+            "kind": {
+              "const": "heading"
+            },
+            "level": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 255
+            },
+            "styleId": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "runs": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/DocRun"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "list"
+            },
+            "ordered": {
+              "type": "boolean"
+            },
+            "items": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/DocListItem"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "table"
+            },
+            "rows": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/DocTableRow"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "code"
+            },
+            "language": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "text": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "quote"
+            },
+            "blocks": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/DocBlock"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "imageId"
+          ],
+          "properties": {
+            "kind": {
+              "const": "image"
+            },
+            "imageId": {
+              "type": "string"
+            },
+            "alt": {
+              "type": "string"
+            },
+            "width": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "height": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "pageBreak"
+            }
+          }
+        }
+      ]
+    },
+    "DocRun": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "text"
+      ],
+      "properties": {
+        "text": {
+          "type": "string"
+        },
+        "style": {
+          "$ref": "#/$defs/RunStyle"
+        }
+      }
+    },
+    "RunStyle": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "bold": {
+          "type": "boolean"
+        },
+        "italic": {
+          "type": "boolean"
+        },
+        "underline": {
+          "type": "boolean"
+        },
+        "size": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "font": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "color": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "link": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "DocListItem": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "blocks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/DocBlock"
+          }
+        }
+      }
+    },
+    "DocTableRow": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "cells": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/DocTableCell"
+          }
+        }
+      }
+    },
+    "DocTableCell": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "blocks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/DocBlock"
+          }
+        }
+      }
+    },
+    "SlidePictureImage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "assetId",
+        "mime"
+      ],
+      "properties": {
+        "assetId": {
+          "type": "string"
+        },
+        "mime": {
+          "type": "string"
+        },
+        "bytes": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          }
+        }
+      }
+    },
+    "SlideTableRow": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "cells": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SlideTableCell"
+          }
+        }
+      }
+    },
+    "SlideTableCell": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "blocks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/DocBlock"
+          }
+        }
+      }
+    },
+    "PlaceholderKind": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "title"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "subtitle"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "body"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "footer"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "slideNumber"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "dateTime"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ],
+          "properties": {
+            "kind": {
+              "const": "other"
+            },
+            "value": {
+              "type": "string"
+            }
+          }
+        }
+      ]
+    },
+    "SlideLayout": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "masterId"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "masterId": {
+          "type": "string"
+        },
+        "shapes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SlideShape"
+          }
+        }
+      }
+    },
+    "Slide": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "layoutId": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "shapes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SlideShape"
+          }
+        },
+        "notes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/DocBlock"
+          }
+        }
+      }
+    }
+  }
+}

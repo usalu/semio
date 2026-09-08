@@ -5,7 +5,7 @@
   "displayName": "Set View Box",
   "emoji": "✏️",
   "aggregateVariant": "SetViewBox",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "set-view-box",
   "binaryTag": 8,
   "invertibility": "explicit-mutation",

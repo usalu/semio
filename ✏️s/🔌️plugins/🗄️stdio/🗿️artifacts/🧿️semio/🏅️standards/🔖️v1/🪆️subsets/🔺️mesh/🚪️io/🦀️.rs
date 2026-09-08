@@ -4,24 +4,24 @@
 //! 📤️export/🧵️serializers.
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
-    use crate::artifacts::semio::standards::v1::subsets::mesh::schema::SemioMeshAnalyzer;
+    use crate::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
+    use crate::standards::v1::subsets::mesh::schema::SemioMeshAnalyzer;
     use semio_framework_plugin::{
         deserializer_entry_of, register_composer_entries, register_subset_validator, serializer_entry_of, subset_validator_entry_of, AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, ComposerEntry, Composition, Dialect, IoPayload,
         StandardId, SubsetId, SubsetValidator, SubsetValidatorEntry,
     };
     //#region 🔖️IoBridgeImports
     // 🌉️ W4 (mesh↔{gltf,stl,obj,ply,las}) io leaves — real trait impls registered below.
-    use crate::artifacts::semio::standards::v1::subsets::mesh::io::export::serializers::artifacts::gltf::v2_0::any::SemioMeshToGltf;
-    use crate::artifacts::semio::standards::v1::subsets::mesh::io::export::serializers::artifacts::las::v1_0::any::SemioMeshToLas;
-    use crate::artifacts::semio::standards::v1::subsets::mesh::io::export::serializers::artifacts::obj::v3_0::any::SemioMeshToObj;
-    use crate::artifacts::semio::standards::v1::subsets::mesh::io::export::serializers::artifacts::ply::v1_0::any::SemioMeshToPly;
-    use crate::artifacts::semio::standards::v1::subsets::mesh::io::export::serializers::artifacts::stl::v_ascii::any::SemioMeshToStl;
-    use crate::artifacts::semio::standards::v1::subsets::mesh::io::import::deserializers::artifacts::gltf::v2_0::any::SemioMeshFromGltf;
-    use crate::artifacts::semio::standards::v1::subsets::mesh::io::import::deserializers::artifacts::las::v1_0::any::SemioMeshFromLas;
-    use crate::artifacts::semio::standards::v1::subsets::mesh::io::import::deserializers::artifacts::obj::v3_0::any::SemioMeshFromObj;
-    use crate::artifacts::semio::standards::v1::subsets::mesh::io::import::deserializers::artifacts::ply::v1_0::any::SemioMeshFromPly;
-    use crate::artifacts::semio::standards::v1::subsets::mesh::io::import::deserializers::artifacts::stl::v_ascii::any::SemioMeshFromStl;
+    use crate::standards::v1::subsets::mesh::io::export::serializers::artifacts::gltf::v2_0::any::SemioMeshToGltf;
+    use crate::standards::v1::subsets::mesh::io::export::serializers::artifacts::las::v1_0::any::SemioMeshToLas;
+    use crate::standards::v1::subsets::mesh::io::export::serializers::artifacts::obj::v3_0::any::SemioMeshToObj;
+    use crate::standards::v1::subsets::mesh::io::export::serializers::artifacts::ply::v1_0::any::SemioMeshToPly;
+    use crate::standards::v1::subsets::mesh::io::export::serializers::artifacts::stl::v_ascii::any::SemioMeshToStl;
+    use crate::standards::v1::subsets::mesh::io::import::deserializers::artifacts::gltf::v2_0::any::SemioMeshFromGltf;
+    use crate::standards::v1::subsets::mesh::io::import::deserializers::artifacts::las::v1_0::any::SemioMeshFromLas;
+    use crate::standards::v1::subsets::mesh::io::import::deserializers::artifacts::obj::v3_0::any::SemioMeshFromObj;
+    use crate::standards::v1::subsets::mesh::io::import::deserializers::artifacts::ply::v1_0::any::SemioMeshFromPly;
+    use crate::standards::v1::subsets::mesh::io::import::deserializers::artifacts::stl::v_ascii::any::SemioMeshFromStl;
     //#endregion 🔖️IoBridgeImports
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("mesh") };
@@ -135,9 +135,9 @@ pub mod derived_composition {
     /// this artifact's standard-level `engine::register()`.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn register() {
-        ::schema::register_artifact_schema_descriptor(crate::artifacts::semio::standards::v1::subsets::mesh::schema::semio_mesh_artifact_schema_descriptor());
-        store::register_document_codec(store::ArtifactCodec::of::<SemioMeshSnapshot, crate::artifacts::semio::standards::v1::subsets::mesh::schema::mutations::SemioMeshMutation>(
-            crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::STDIO_SEMIOMESH_DOCUMENT_SCHEMA,
+        ::framework_schema::register_artifact_schema_descriptor(crate::standards::v1::subsets::mesh::schema::semio_mesh_artifact_schema_descriptor());
+        store::register_document_codec(store::ArtifactCodec::of::<SemioMeshSnapshot, crate::standards::v1::subsets::mesh::schema::mutations::SemioMeshMutation>(
+            crate::standards::v1::subsets::mesh::schema::snapshot::STDIO_SEMIOMESH_DOCUMENT_SCHEMA,
         )).expect("static Stdio registration must be available and conflict-free");
         register_subset_validator(validator_entry()).expect("static Stdio registration must be available and conflict-free");
         register_composer_entries(io_bridge_entries()).expect("static Stdio registration must be available and conflict-free");
@@ -149,7 +149,7 @@ pub mod derived_composition {
     /// ticket 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn register_artifact_inferences() {
-        ::schema::register_artifact_inference_descriptor(crate::artifacts::semio::standards::v1::subsets::mesh::schema::inferences::semio_mesh_artifact_inference_descriptor());
+        ::framework_schema::register_artifact_inference_descriptor(crate::standards::v1::subsets::mesh::schema::inferences::semio_mesh_artifact_inference_descriptor());
     }
 
     //#region 🔖️IoBridgeEntries
@@ -186,7 +186,7 @@ pub mod derived_composition {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::{SemioMaterial, SemioMesh, SemioPrimitive};
+        use crate::standards::v1::subsets::mesh::schema::snapshot::{SemioMaterial, SemioMesh, SemioPrimitive};
 
         #[semio_framework_async_macros::async_test]
         async fn clean_snapshot_has_no_diagnostics() {
@@ -233,7 +233,7 @@ pub mod derived_composition {
         /// demo-case helpers differ.
         mod conformance_laws {
 
-            use crate::artifacts::semio::standards::v1::subsets::mesh::schema::{diff, mutations, snapshot};
+            use crate::standards::v1::subsets::mesh::schema::{diff, mutations, snapshot};
             use protocol::{DiffCodec, OpBinary, OpText};
 
             /// ✅️ "committed files parse": all 6 handcrafted `.grammar.semio`/`.protocol.semio` files
@@ -343,7 +343,7 @@ pub mod derived_composition {
 
         impl store::os_store::test_support::SubsetRoundtripSpec for SemioMeshRoundtrip {
             type Snapshot = SemioMeshSnapshot;
-            type Mutation = crate::artifacts::semio::standards::v1::subsets::mesh::schema::mutations::SemioMeshMutation;
+            type Mutation = crate::standards::v1::subsets::mesh::schema::mutations::SemioMeshMutation;
             type Inference = ();
 
             async fn dialect() -> store::os_io::ArtifactDialect {
@@ -360,16 +360,16 @@ pub mod derived_composition {
 
             async fn parse_native(asset: &store::os_store::test_support::ExampleAsset<'_>) -> Result<Self::Snapshot, String> {
                 let text = asset.text.ok_or_else(|| "mesh cube requires dsl text".to_string())?;
-                crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::parse_mesh_dsl(text).map_err(|e| e.to_string())
+                crate::standards::v1::subsets::mesh::schema::snapshot::parse_mesh_dsl(text).map_err(|e| e.to_string())
             }
 
             async fn export_native(snapshot: &Self::Snapshot) -> Result<Vec<u8>, String> {
-                Ok(crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::print_mesh_dsl(snapshot).into_bytes())
+                Ok(crate::standards::v1::subsets::mesh::schema::snapshot::print_mesh_dsl(snapshot).into_bytes())
             }
 
             async fn reimport_native(bytes: &[u8]) -> Result<Self::Snapshot, String> {
                 let text = std::str::from_utf8(bytes).map_err(|e| e.to_string())?;
-                crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::parse_mesh_dsl(text).map_err(|e| e.to_string())
+                crate::standards::v1::subsets::mesh::schema::snapshot::parse_mesh_dsl(text).map_err(|e| e.to_string())
             }
 
             async fn infer(_snapshot: &Self::Snapshot) -> Self::Inference {}
@@ -380,7 +380,7 @@ pub mod derived_composition {
                 // `Vec::new()` from `inverse`, no sentinel variant needed — taxonomy.md), so every
                 // `demo_mutation_cases()` entry is now a genuine mutation; the filter that used to
                 // skip the no-op is no longer expressible (and no longer necessary).
-                use crate::artifacts::semio::standards::v1::subsets::mesh::schema::mutations::demo_mutation_cases;
+                use crate::standards::v1::subsets::mesh::schema::mutations::demo_mutation_cases;
                 demo_mutation_cases().into_iter().take(1).collect()
             }
 

@@ -5,7 +5,7 @@
 //! only the DECLARED shape, never a re-derived cell-level census (that would silently paper over
 //! the lenient real-world tabular format this subset honestly models).
 
-use crate::artifacts::semio::standards::v1::subsets::table::schema::snapshot::{SemioTableCellKind, SemioTableSnapshot};
+use crate::standards::v1::subsets::table::schema::snapshot::{SemioTableCellKind, SemioTableSnapshot};
 
 //#region 🔖️Shape
 /// 📐️ Semio table dimensions + declared column-kind census.
@@ -44,8 +44,8 @@ pub fn compute_semio_table_shape(snapshot: &SemioTableSnapshot) -> SemioTableSha
 //#region 🧪️Tests
 mod tests {
     use super::*;
-    use crate::artifacts::semio::standards::v1::subsets::table::schema::snapshot::{SemioTableColumn, SemioTableRow, STDIO_SEMIOTABLE_DOCUMENT_SCHEMA};
-    use crate::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValue;
+    use crate::standards::v1::subsets::table::schema::snapshot::{SemioTableColumn, SemioTableRow, STDIO_SEMIOTABLE_DOCUMENT_SCHEMA};
+    use crate::standards::v1::subsets::value::schema::snapshot::SemioValue;
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn populated() -> SemioTableSnapshot {

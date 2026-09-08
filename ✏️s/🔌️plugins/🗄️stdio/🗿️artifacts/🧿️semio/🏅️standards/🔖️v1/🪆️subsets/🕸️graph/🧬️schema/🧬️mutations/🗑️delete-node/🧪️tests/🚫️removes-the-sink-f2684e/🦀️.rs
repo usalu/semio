@@ -5,9 +5,9 @@
 //! id is retained-out of `edges`, with an INFO `mutation.cascade` counting the severed edges. The
 //! before-snapshot deliberately has an edge pointing INTO the deleted node, so the cascade is real
 //! and the committed diff must carry BOTH slots.
-use crate::artifacts::semio::standards::v1::subsets::graph::schema::diff::SemioGraphDiff;
-use crate::artifacts::semio::standards::v1::subsets::graph::schema::mutations::SemioGraphMutation;
-use crate::artifacts::semio::standards::v1::subsets::graph::schema::snapshot::SemioGraphSnapshot;
+use crate::standards::v1::subsets::graph::schema::diff::SemioGraphDiff;
+use crate::standards::v1::subsets::graph::schema::mutations::SemioGraphMutation;
+use crate::standards::v1::subsets::graph::schema::snapshot::SemioGraphSnapshot;
 use protocol::{Mutation, MutationDiff};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");

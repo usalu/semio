@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeAMm2, base: &En1999Snapshot) -> protocol::MutationOu
     if base.a_mm2 == payload.new_a_mm2 {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Cross-section area [mm2] is already {}.", payload.new_a_mm2));
     }
-    protocol::MutationOutcome::new(En1999Diff { a_mm2: Some(payload.new_a_mm2.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1999Diff { a_mm2: Some(payload.new_a_mm2), ..Default::default() })
 }
 //#endregion 🔖️Diff

@@ -7,9 +7,9 @@
 //! diff for them rather than approximating one. The half turn `(0, 0, 1, 0)` is exactly
 //! representable, so the canonical-JSON assertion holds without float slack.
 
-use crate::artifacts::semio::standards::v1::subsets::drawing::schema::diff::SemioDrawingDiff;
-use crate::artifacts::semio::standards::v1::subsets::drawing::schema::mutations::SemioDrawingMutation;
-use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{DrawNode, SemioDrawingSnapshot};
+use crate::standards::v1::subsets::drawing::schema::diff::SemioDrawingDiff;
+use crate::standards::v1::subsets::drawing::schema::mutations::SemioDrawingMutation;
+use crate::standards::v1::subsets::drawing::schema::snapshot::{DrawNode, SemioDrawingSnapshot};
 use protocol::{Mutation, MutationDiff};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
@@ -102,10 +102,10 @@ async fn committed_diff_is_canonical_and_narrowly_scoped() {
     let layer_diff = &layers.modified[0].diff;
     assert!(layer_diff.id.is_none() && layer_diff.name.is_none() && layer_diff.visible.is_none(), "a node-level edit must not touch the layer's own scalar fields");
     let root = layer_diff.root.as_ref().expect("the layer diff must carry a root node diff");
-    let crate::artifacts::semio::standards::v1::subsets::drawing::schema::diff::DrawNodeDiff::Group(root_group) = root else { panic!("the layer root is a group, so its diff must be the Group arm") };
+    let crate::standards::v1::subsets::drawing::schema::diff::DrawNodeDiff::Group(root_group) = root else { panic!("the layer root is a group, so its diff must be the Group arm") };
     let children = root_group.children.as_ref().expect("the root group diff must carry a children triple");
     assert!(root_group.transform.is_none(), "editing a child must not rewrite the root group's own transform");
-    let crate::artifacts::semio::standards::v1::subsets::drawing::schema::diff::DrawNodeDiff::Group(node_group) = &children.modified[0].diff else { panic!("rotating a Group must produce the Group arm") };
+    let crate::standards::v1::subsets::drawing::schema::diff::DrawNodeDiff::Group(node_group) = &children.modified[0].diff else { panic!("rotating a Group must produce the Group arm") };
     let transform = node_group.transform.as_ref().expect("the transform must be written");
     assert_eq!(transform.scale.x, 1.0, "the diff carries the WHOLE transform, so the untouched scale is BASE's");
     assert!(node_group.children.is_none(), "the group's children triple must stay unwritten");

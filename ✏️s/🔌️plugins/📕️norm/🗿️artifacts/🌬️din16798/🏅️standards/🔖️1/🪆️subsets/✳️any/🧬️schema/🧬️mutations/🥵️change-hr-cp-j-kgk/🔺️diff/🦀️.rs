@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeHrCpJKgk, base: &Din16798Snapshot) -> protocol::Muta
     if base.hr_cp_j_kgk == payload.new_hr_cp_j_kgk {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Heat recovery specific heat capacity is already {}.", payload.new_hr_cp_j_kgk));
     }
-    protocol::MutationOutcome::new(Din16798Diff { hr_cp_j_kgk: Some(payload.new_hr_cp_j_kgk.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(Din16798Diff { hr_cp_j_kgk: Some(payload.new_hr_cp_j_kgk), ..Default::default() })
 }
 //#endregion 🔖️Diff

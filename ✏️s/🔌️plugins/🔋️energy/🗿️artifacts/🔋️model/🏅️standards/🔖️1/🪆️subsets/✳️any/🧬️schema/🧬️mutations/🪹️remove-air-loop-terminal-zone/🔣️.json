@@ -5,7 +5,7 @@
   "displayName": "Remove Air Loop Terminal Zone",
   "emoji": "🪹️",
   "aggregateVariant": "RemoveAirLoopTerminalZone",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "remove-air-loop-terminal-zone",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

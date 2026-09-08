@@ -19,11 +19,11 @@
 //! svg, not importable from here across the artifact boundary, so this file declares its own copies
 //! for `📰️xml`'s own crate-visibility scope).
 
-use crate::artifacts::xml::schema::snapshot::{XmlAttr, XmlDeclaration, XmlDoctype, XmlDtdDeclaration, XmlExternalId, XmlNode};
-use crate::artifacts::xml::XmlSnapshot;
+use crate::schema::snapshot::{XmlAttr, XmlDeclaration, XmlDoctype, XmlDtdDeclaration, XmlExternalId, XmlNode};
+use crate::XmlSnapshot;
 use protocol::command::DiffAlgebra;
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
-use schema::ArtifactSchema;
+use framework_schema::ArtifactSchema;
 
 //#region 🔖️Diff
 /// 🔺️ Diff for `stdio.xml`.
@@ -145,7 +145,7 @@ pub struct XmlChildAdded {
 
 //#region 🔖️DiffAtPath
 /// 🧭️ Lowers a `leaf` diff targeting the node addressed by `path` (a chain of child indices from
-/// the document root -- mirrors `crate::artifacts::xml::schema::mutations::XmlNodePath`, kept as a
+/// the document root -- mirrors `crate::schema::mutations::XmlNodePath`, kept as a
 /// bare `&[usize]` here so this module never needs to depend on the mutations module) into a full
 /// `XmlDiff` by nesting it through `XmlChildModified` entries from the root down to that depth.
 /// `path == []` addresses the root itself, so `leaf` becomes `XmlDiff.root` directly.
@@ -1509,7 +1509,7 @@ impl protocol::DiffCodec for XmlDiff {
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_diff_cases() -> Vec<XmlDiff> {
-    use crate::artifacts::xml::schema::snapshot::XmlDocument;
+    use crate::schema::snapshot::XmlDocument;
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn elem(name: &str, attrs: Vec<(&str, &str)>, children: Vec<XmlNode>) -> XmlNode {

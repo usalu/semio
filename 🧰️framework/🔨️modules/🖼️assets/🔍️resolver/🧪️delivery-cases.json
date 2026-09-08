@@ -20,10 +20,10 @@
     { "target": "https://example.invalid/🖼️assets/README.md", "path": null }
   ],
   "invalidAuthorities": [
-    { "$schema": "./🧬️delivery.schema.json", "version": 1, "directoryName": "asset" },
-    { "$schema": "./🧬️delivery.schema.json", "version": 1, "directoryName": "🖼️🗂️assets" },
-    { "$schema": "./🧬️delivery.schema.json", "version": 1, "directoryName": "🖼️assets", "alias": "asset" },
-    { "$schema": "./🧬️delivery.schema.json", "version": 2, "directoryName": "🖼️assets" },
+    { "$schema": "./🧬️schema/🔣️.json", "version": 1, "directoryName": "asset" },
+    { "$schema": "./🧬️schema/🔣️.json", "version": 1, "directoryName": "🖼️🗂️assets" },
+    { "$schema": "./🧬️schema/🔣️.json", "version": 1, "directoryName": "🖼️assets", "alias": "asset" },
+    { "$schema": "./🧬️schema/🔣️.json", "version": 2, "directoryName": "🖼️assets" },
     { "version": 1, "directoryName": "🖼️assets" }
   ]
 }

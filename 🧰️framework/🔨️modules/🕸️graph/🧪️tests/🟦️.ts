@@ -5,7 +5,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { parseGraphOutputCatalog, writeGraphArtifacts } from "../📦️packages/🦀️rust/📜️script.ts";
 import fixture from "./🔣️outputs.json";
-import schema from "../🛂️manifest/🧬️outputs.schema.json";
+import schema from "../🛂️manifest/🧬️schema/🔣️.json";
 import current from "../🛂️manifest/📇️outputs.json";
 
 test("explicit output identities preserve independent manifest IDs and reject ambiguous paths", () => {

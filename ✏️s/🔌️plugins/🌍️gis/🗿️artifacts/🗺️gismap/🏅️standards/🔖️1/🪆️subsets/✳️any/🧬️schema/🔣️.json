@@ -157,6 +157,281 @@
           "format": "double"
         }
       }
+    },
+    "GisMapCreateRegionGroupMembership": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "drawingChildId",
+        "valueChildId",
+        "imageChildId"
+      ],
+      "properties": {
+        "drawingChildId": {
+          "const": "gismap-drawing"
+        },
+        "valueChildId": {
+          "const": "gismap-value"
+        },
+        "imageChildId": {
+          "type": "null"
+        }
+      },
+      "title": "GisMapCreateRegionGroupMembership"
+    },
+    "GisMapCreateRegionGroupFeature": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "data"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "data": {
+          "type": "object"
+        }
+      },
+      "title": "GisMapCreateRegionGroupFeature"
+    },
+    "GisMapCreateRegionGroup": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "jobId",
+        "base",
+        "expected",
+        "hostile",
+        "membershipCases"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.gis.map-create-region-group/v1"
+        },
+        "jobId": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{32}$"
+        },
+        "base": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "positions",
+            "routes",
+            "regions",
+            "drawingChildId",
+            "valueChildId"
+          ],
+          "properties": {
+            "positions": {
+              "type": "array",
+              "maxItems": 65536,
+              "items": {
+                "$ref": "#/$defs/GisMapCreateRegionGroupFeature"
+              }
+            },
+            "routes": {
+              "type": "array",
+              "maxItems": 65536,
+              "items": {
+                "$ref": "#/$defs/GisMapCreateRegionGroupFeature"
+              }
+            },
+            "regions": {
+              "type": "array",
+              "maxItems": 65536,
+              "items": {
+                "$ref": "#/$defs/GisMapCreateRegionGroupFeature"
+              }
+            },
+            "drawingChildId": {
+              "const": "gismap-drawing"
+            },
+            "valueChildId": {
+              "const": "gismap-value"
+            }
+          }
+        },
+        "expected": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "region",
+            "parentKind",
+            "parentInverseKind",
+            "drawing",
+            "value",
+            "touchedChildren",
+            "imageTouched",
+            "maximumBytes"
+          ],
+          "properties": {
+            "region": {
+              "$ref": "#/$defs/GisMapCreateRegionGroupFeature"
+            },
+            "parentKind": {
+              "const": "create-region"
+            },
+            "parentInverseKind": {
+              "const": "delete-region"
+            },
+            "drawing": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "slot",
+                "childId",
+                "parentLayer",
+                "parentPath",
+                "index",
+                "inverseKind"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "create-node"
+                },
+                "slot": {
+                  "const": "drawing"
+                },
+                "childId": {
+                  "const": "gismap-drawing"
+                },
+                "parentLayer": {
+                  "const": 0
+                },
+                "parentPath": {
+                  "type": "array",
+                  "maxItems": 0
+                },
+                "index": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 196608
+                },
+                "inverseKind": {
+                  "const": "delete-node"
+                }
+              }
+            },
+            "value": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "slot",
+                "childId",
+                "path",
+                "index",
+                "inverseKind"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "insert-list-item"
+                },
+                "slot": {
+                  "const": "value"
+                },
+                "childId": {
+                  "const": "gismap-value"
+                },
+                "path": {
+                  "const": [
+                    "regions"
+                  ]
+                },
+                "index": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 65536
+                },
+                "inverseKind": {
+                  "const": "remove-list-item"
+                }
+              }
+            },
+            "touchedChildren": {
+              "const": [
+                "drawing",
+                "value"
+              ]
+            },
+            "imageTouched": {
+              "const": false
+            },
+            "maximumBytes": {
+              "const": 65536
+            }
+          }
+        },
+        "membershipCases": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 16,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "drawingChildId",
+              "valueChildId",
+              "imageChildId",
+              "deriveChildren",
+              "accepted"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "drawingChildId": {
+                "type": "string",
+                "minLength": 1
+              },
+              "valueChildId": {
+                "type": "string",
+                "minLength": 1
+              },
+              "imageChildId": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "minLength": 1
+              },
+              "deriveChildren": {
+                "type": "boolean"
+              },
+              "accepted": {
+                "type": "boolean"
+              }
+            }
+          }
+        },
+        "hostile": {
+          "type": "array",
+          "minItems": 6,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "drawing-id",
+              "value-id",
+              "missing-drawing",
+              "missing-value",
+              "image-touch",
+              "wrong-index",
+              "wrong-job",
+              "oversize"
+            ]
+          }
+        }
+      },
+      "title": "GisMapCreateRegionGroup"
     }
   }
 }

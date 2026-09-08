@@ -9,8 +9,8 @@
 //! this format doesn't have; this facet instead reports exactly what an opaque byte blob honestly
 //! supports — its real extent (byte length, emptiness) plus a real content digest.
 
-use crate::artifacts::binary::standards::v_raw::subsets::any::schema::snapshot::BinarySnapshot;
-use schema::ArtifactSchema;
+use crate::standards::v_raw::subsets::any::schema::snapshot::BinarySnapshot;
+use framework_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 
 use super::extent::{compute_binary_extent, BinaryExtent};
@@ -58,7 +58,7 @@ impl protocol::InferenceSpec<BinarySnapshot> for BinaryInference {
 /// already O(n) in byte count with no honest per-entity incremental decomposition (there is no
 /// "entity" to decompose in an opaque byte blob) — the default `infer_cached` passthrough is
 /// exact.
-impl ArtifactInferrer for crate::artifacts::binary::standards::v_raw::subsets::any::schema::BinaryBuilder {
+impl ArtifactInferrer for crate::standards::v_raw::subsets::any::schema::BinaryBuilder {
     type Snapshot = BinarySnapshot;
     type Inference = BinaryInference;
 }
@@ -68,10 +68,10 @@ impl ArtifactInferrer for crate::artifacts::binary::standards::v_raw::subsets::a
 /// 💡️ Registers `s.stdio.binary.inference`'s facet leaves into the OS-wide inference catalog —
 /// call once at plugin init, alongside `binary_artifact_schema_descriptor`'s registration.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn binary_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
-    schema::ArtifactInferenceDescriptor {
+pub fn binary_artifact_inference_descriptor() -> framework_schema::ArtifactInferenceDescriptor {
+    framework_schema::ArtifactInferenceDescriptor {
         id: "s.stdio.binary.inference",
-        inference: schema::FacetLeaves {
+        inference: framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),
@@ -86,8 +86,8 @@ pub fn binary_artifact_inference_descriptor() -> schema::ArtifactInferenceDescri
 //#region 🧪️Tests
 mod tests {
     use super::*;
-    use crate::artifacts::binary::standards::v_raw::subsets::any::schema::{demo_binary_snapshot, empty_binary_snapshot};
-    use crate::artifacts::binary::STDIO_BINARY_DOCUMENT_SCHEMA;
+    use crate::standards::v_raw::subsets::any::schema::{demo_binary_snapshot, empty_binary_snapshot};
+    use crate::STDIO_BINARY_DOCUMENT_SCHEMA;
     use protocol::Inference;
 
     #[semio_framework_async_macros::async_test]
@@ -159,7 +159,7 @@ mod tests {
     /// is empty.
     #[semio_framework_async_macros::async_test]
     async fn field_sweep_covers_every_byte_level_change() {
-        use crate::artifacts::binary::standards::v_raw::subsets::any::schema::diff::BinaryDiff;
+        use crate::standards::v_raw::subsets::any::schema::diff::BinaryDiff;
         use protocol::os_spr::command::DiffAlgebra;
         use protocol::MutationDiff;
         let a = sweep_a();
@@ -175,8 +175,8 @@ mod tests {
         // minimal `between` form) to prove the mechanism itself, not just this one pair.
         let hand_built = BinaryDiff {
             splices: vec![
-                crate::artifacts::binary::standards::v_raw::subsets::any::schema::diff::ByteSplice { offset: 2, remove_len: 2, insert: vec![100] }, // replace+shrink
-                crate::artifacts::binary::standards::v_raw::subsets::any::schema::diff::ByteSplice { offset: 7, remove_len: 1, insert: vec![88] },  // pure replace
+                crate::standards::v_raw::subsets::any::schema::diff::ByteSplice { offset: 2, remove_len: 2, insert: vec![100] }, // replace+shrink
+                crate::standards::v_raw::subsets::any::schema::diff::ByteSplice { offset: 7, remove_len: 1, insert: vec![88] },  // pure replace
             ],
         };
         assert_eq!(hand_built.apply(&a).unwrap(), b);
@@ -203,7 +203,7 @@ mod tests {
     /// `encode_pack`/`encode_op`/`encode_diff` bytes, and the fixture-honesty round-trip.
     mod conformance_laws {
         use super::*;
-        use crate::artifacts::binary::schema::{diff, mutations, snapshot};
+        use crate::schema::{diff, mutations, snapshot};
         use protocol::{DiffCodec, OpBinary, OpText};
 
         /// ✅️ "committed files parse": all 6 handcrafted `.grammar.semio`/`.protocol.semio` files

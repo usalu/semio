@@ -1,0 +1,599 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/framework/ui/schema.json",
+  "title": "Ui Schema Module",
+  "definitions": {
+    "retainedCommandLane": {
+      "enum": [
+        "Artifact",
+        "Config",
+        "HostOnly",
+        "artifact",
+        "config",
+        "host-only",
+        "hostOnly"
+      ]
+    },
+    "retainedCommandByteBudget": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "rawBytes",
+        "checkpointBytes",
+        "configValueBytes",
+        "configBaseBytes",
+        "commandStepBytes",
+        "storeStepBytes",
+        "workItems",
+        "preparationPhases"
+      ],
+      "properties": {
+        "rawBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "checkpointBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "configValueBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "configBaseBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "commandStepBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "storeStepBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "workItems": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "preparationPhases": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "retainedCommandStepBudget": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "maxRawBytes",
+        "maxDecodedItems",
+        "maxWorkUnitsPerStep",
+        "maxOutputBytes",
+        "maxStepMicros"
+      ],
+      "properties": {
+        "maxRawBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "maxDecodedItems": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "maxWorkUnitsPerStep": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "maxOutputBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "maxStepMicros": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "maxCheckpointBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "maxInFlightPages": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "retainedCommandClassBudget": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "bounded"
+      ],
+      "properties": {
+        "bounded": {
+          "$ref": "#/definitions/retainedCommandStepBudget"
+        },
+        "resumable": {
+          "$ref": "#/definitions/retainedCommandStepBudget"
+        }
+      }
+    },
+    "retainedCommandPublicationContract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "toolId",
+        "lanes"
+      ],
+      "properties": {
+        "toolId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "lanes": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/definitions/retainedCommandLane"
+          }
+        }
+      }
+    },
+    "retainedCommandBoundaryCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "bytes",
+        "accepted"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "accepted": {
+          "type": "boolean"
+        }
+      }
+    },
+    "retainedCommandOracle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "library",
+        "scope",
+        "runtimeDependency"
+      ],
+      "properties": {
+        "library": {
+          "type": "string",
+          "minLength": 1
+        },
+        "scope": {
+          "type": "string",
+          "minLength": 1
+        },
+        "runtimeDependency": {
+          "type": "boolean"
+        }
+      }
+    },
+    "retainedCommandRouteDisposition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "disposition",
+        "lanes"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "disposition": {
+          "enum": [
+            "Migrated",
+            "BatchOnlyPendingRewrite",
+            "migrated",
+            "batch-only-pending-rewrite"
+          ]
+        },
+        "lanes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/retainedCommandLane"
+          }
+        },
+        "blocker": {
+          "type": "string"
+        },
+        "reason": {
+          "type": "string"
+        }
+      }
+    },
+    "retainedCommandRouteExecutionLane": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "execution",
+        "lanes",
+        "reason"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "execution": {
+          "enum": [
+            "bounded-first-step",
+            "bounded",
+            "batch",
+            "resumable"
+          ]
+        },
+        "lanes": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/definitions/retainedCommandLane"
+          }
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "retainedCommandRouteExecutionFeature": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "execution",
+        "feature"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "execution": {
+          "enum": [
+            "bounded-first-step",
+            "bounded",
+            "batch",
+            "resumable"
+          ]
+        },
+        "admission": {
+          "enum": [
+            "failClosed",
+            "migrated"
+          ]
+        },
+        "status": {
+          "enum": [
+            "batch-only",
+            "migrated"
+          ]
+        },
+        "feature": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "retainedCommandRoute": {
+      "oneOf": [
+        {
+          "$ref": "#/definitions/retainedCommandRouteDisposition"
+        },
+        {
+          "$ref": "#/definitions/retainedCommandRouteExecutionLane"
+        },
+        {
+          "$ref": "#/definitions/retainedCommandRouteExecutionFeature"
+        }
+      ]
+    },
+    "retainedCommandCorpusLimits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "rejectedAdditionalBytes",
+        "expectedWorkItems"
+      ],
+      "properties": {
+        "schema": {
+          "type": "string",
+          "minLength": 1
+        },
+        "maximumTextBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "maximumSchemaBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "maximumRawBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "maximumWorkItems": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "rejectedAdditionalBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "expectedWorkItems": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "toolIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "retainedCommandDeclaredLimits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "controller",
+        "documentSchema",
+        "factory",
+        "limits"
+      ],
+      "properties": {
+        "version": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "schema": {
+          "type": "string",
+          "minLength": 1
+        },
+        "owner": {
+          "type": "string",
+          "minLength": 1
+        },
+        "controller": {
+          "type": "string",
+          "minLength": 1
+        },
+        "documentSchema": {
+          "type": "string",
+          "minLength": 1
+        },
+        "factory": {
+          "type": "string",
+          "minLength": 1
+        },
+        "limits": {
+          "oneOf": [
+            {
+              "$ref": "#/definitions/retainedCommandByteBudget"
+            },
+            {
+              "$ref": "#/definitions/retainedCommandClassBudget"
+            }
+          ]
+        },
+        "publicationContracts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/retainedCommandPublicationContract"
+          }
+        },
+        "routes": {
+          "$ref": "#/$defs/RetainedCommandRoutes"
+        },
+        "boundaryCases": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/retainedCommandBoundaryCase"
+          }
+        },
+        "oracle": {
+          "$ref": "#/definitions/retainedCommandOracle"
+        }
+      }
+    }
+  },
+  "$defs": {
+    "UIDialogModalFixture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "cases",
+        "expected",
+        "scoped"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.ui.dialog-accessibility-fixture.v1"
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "locale",
+              "title",
+              "description",
+              "field",
+              "kind",
+              "cancel",
+              "submit"
+            ],
+            "properties": {
+              "locale": {
+                "enum": [
+                  "en",
+                  "de"
+                ]
+              },
+              "title": {
+                "type": "string",
+                "minLength": 1
+              },
+              "description": {
+                "type": "string",
+                "minLength": 1
+              },
+              "field": {
+                "type": "string",
+                "minLength": 1
+              },
+              "kind": {
+                "type": "string",
+                "minLength": 1
+              },
+              "cancel": {
+                "type": "string",
+                "minLength": 1
+              },
+              "submit": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        },
+        "expected": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "role",
+            "modal",
+            "isolated",
+            "focusReturns",
+            "escapeCancels",
+            "outsideCancels",
+            "buttonEnterSubmits",
+            "requiredMissingSubmits",
+            "validSubmits"
+          ],
+          "properties": {
+            "role": {
+              "const": "dialog"
+            },
+            "modal": {
+              "const": "true"
+            },
+            "isolated": {
+              "const": "true"
+            },
+            "focusReturns": {
+              "const": true
+            },
+            "escapeCancels": {
+              "const": 1
+            },
+            "outsideCancels": {
+              "const": 1
+            },
+            "buttonEnterSubmits": {
+              "const": 0
+            },
+            "requiredMissingSubmits": {
+              "const": 0
+            },
+            "validSubmits": {
+              "const": 1
+            }
+          }
+        },
+        "scoped": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "modal",
+            "ownAppIsolated",
+            "siblingShellIsolated",
+            "bodySiblingIsolated",
+            "position",
+            "foreignEscapeCancels",
+            "ownEscapeCancels"
+          ],
+          "properties": {
+            "modal": {
+              "const": "false"
+            },
+            "ownAppIsolated": {
+              "const": true
+            },
+            "siblingShellIsolated": {
+              "const": false
+            },
+            "bodySiblingIsolated": {
+              "const": false
+            },
+            "position": {
+              "const": "absolute"
+            },
+            "foreignEscapeCancels": {
+              "const": 0
+            },
+            "ownEscapeCancels": {
+              "const": 1
+            }
+          }
+        }
+      }
+    },
+    "RetainedCommandLimits": {
+      "$comment": "Shared shape for every artifact-subset 🧫️retained-command-limits fixture; owners narrow it with const values.",
+      "oneOf": [
+        {
+          "$ref": "#/definitions/retainedCommandDeclaredLimits"
+        },
+        {
+          "$ref": "#/definitions/retainedCommandCorpusLimits"
+        }
+      ]
+    },
+    "RetainedCommandRoutes": {
+      "$comment": "Shared shape for retained-command route tables, standalone or nested in RetainedCommandLimits.",
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/retainedCommandRoute"
+      }
+    },
+    "RetainedCommandRoutesDocument": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "routes"
+      ],
+      "properties": {
+        "schema": {
+          "type": "string",
+          "minLength": 1
+        },
+        "routes": {
+          "$ref": "#/$defs/RetainedCommandRoutes"
+        }
+      }
+    }
+  }
+}

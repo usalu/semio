@@ -509,7 +509,7 @@ fn widget_dsl_to_widget(widget: WidgetDsl) -> Result<Widget, String> {
         WidgetDsl::OutputPreview { id, preview, expanded } => Widget::OutputPreview { id, preview: option_dsl_map_to_dictionary(preview), expanded: vec_to_ordered_set(expanded) },
         WidgetDsl::OutputAction { id, action } => Widget::OutputAction { id, action },
         WidgetDsl::OutputExport { id, format } => Widget::OutputExport { id, format },
-        WidgetDsl::Cluster { id, name, tree, flow } => Widget::Cluster { id, name, tree: tree_dsl_to_tree(tree)?, flow: crate::os_dsl::from_dsl_value(flow).map_err(|error| error.to_string())? },
+        WidgetDsl::Cluster { id, name, tree, flow } => Widget::Cluster { id, name, tree: tree_dsl_to_tree(tree)?, flow: crate::os_dsl::from_dsl_value(flow).map_err(|error| error)? },
     })
 }
 

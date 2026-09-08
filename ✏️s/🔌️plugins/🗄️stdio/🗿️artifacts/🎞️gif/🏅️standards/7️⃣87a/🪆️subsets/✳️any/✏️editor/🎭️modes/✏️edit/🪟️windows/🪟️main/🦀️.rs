@@ -1,8 +1,8 @@
 //! ✏️ `gif` edit (any) — Main window: real `ImageWindowKit`
 //! render of the current document (editable variant).
 
-use crate::artifacts::gif::standards::v87a::subsets::any::io::encode_gif;
-use crate::artifacts::gif::standards::v87a::subsets::any::schema::snapshot::GifSnapshot;
+use crate::standards::v87a::subsets::any::io::encode_gif;
+use crate::standards::v87a::subsets::any::schema::snapshot::GifSnapshot;
 use semio_framework_plugin::app::{ImageView, ImageWindowKit};
 use semio_framework_plugin::{BuiltNode, WindowKindDefinition, WindowKit};
 

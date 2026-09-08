@@ -6,9 +6,9 @@
 //! it, dangling — and the single-collection diff is what records that choice. The inverse uses the
 //! same strip-tail/re-create/rebuild-tail dance as `delete-mesh`, hence the two-material base.
 
-use crate::artifacts::semio::standards::v1::subsets::mesh::schema::diff::SemioMeshDiff;
-use crate::artifacts::semio::standards::v1::subsets::mesh::schema::mutations::SemioMeshMutation;
-use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
+use crate::standards::v1::subsets::mesh::schema::diff::SemioMeshDiff;
+use crate::standards::v1::subsets::mesh::schema::mutations::SemioMeshMutation;
+use crate::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
 use protocol::{Mutation, MutationDiff};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");

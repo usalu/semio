@@ -149,9 +149,9 @@ fn round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::{inverse_specs, moved_the_document, mutable_input, project};
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_plugin_stdio::artifacts::obj::standards::v3_0::subsets::any::io::{decode_obj, encode_obj};
-    use semio_s_plugin_stdio::artifacts::obj::standards::v3_0::subsets::any::schema::mutations::{apply_obj_mutation, set_mtllib, set_usemtl, ObjMutation};
-    use semio_s_plugin_stdio::artifacts::obj::standards::v3_0::subsets::any::schema::snapshot::ObjUsemtlRange;
+    use crate::standards::v3_0::subsets::any::io::{decode_obj, encode_obj};
+    use crate::standards::v3_0::subsets::any::schema::mutations::{apply_obj_mutation, set_mtllib, set_usemtl, ObjMutation};
+    use crate::standards::v3_0::subsets::any::schema::snapshot::ObjUsemtlRange;
 
     //#region 🔖️SpecReading
     fn json_num(value: &Json, key: &str) -> Option<f64> {

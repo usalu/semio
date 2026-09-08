@@ -7,6 +7,6 @@ use crate::artifacts::en1997::En1997Snapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(_payload: &ChangeQSKpa, base: &En1997Snapshot) -> Vec<En1997Mutation> {
-    vec![En1997Mutation::ChangeQSKpa(ChangeQSKpa { new_q_s_kpa: base.q_s_kpa.clone() })]
+    vec![En1997Mutation::ChangeQSKpa(ChangeQSKpa { new_q_s_kpa: base.q_s_kpa })]
 }
 //#endregion 🔖️Inverse

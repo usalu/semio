@@ -2,8 +2,8 @@
 //! (called once from 🔌️plugin/🔧️setup via ⚙️engine::register), not per-leaf register().
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use crate::artifacts::jpg::standards::v_jfif_1_01::subsets::document::schema::JpgAnalyzer;
-    use crate::artifacts::jpg::JpgSnapshot;
+    use crate::standards::v_jfif_1_01::subsets::document::schema::JpgAnalyzer;
+    use crate::JpgSnapshot;
     use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.jpg", standard: StandardId("jfif-1.01"), subset: SubsetId("*") };
@@ -55,8 +55,8 @@ pub use derived_composition::*;
 // `register_schema_specs` cluster (superseded by `declaration()` in the artifact root, zero real
 // callers) were deleted outright, not relocated. `empty_jpg_snapshot`/`demo_jpg_snapshot` moved to
 // `../🧬️schema` (pure helpers over the document type).
-use crate::artifacts::jpg::schema::snapshot::{JfifDensityUnits, JfifThumbnail, JpgFrameComponent, JpgFrameHeader, JpgHuffmanClass, JpgHuffmanTable, JpgQuantTable, JpgScanComponent, JpgSegment};
-use crate::artifacts::jpg::{JpgSnapshot, STDIO_JPG_DOCUMENT_SCHEMA};
+use crate::schema::snapshot::{JfifDensityUnits, JfifThumbnail, JpgFrameComponent, JpgFrameHeader, JpgHuffmanClass, JpgHuffmanTable, JpgQuantTable, JpgScanComponent, JpgSegment};
+use crate::{JpgSnapshot, STDIO_JPG_DOCUMENT_SCHEMA};
 use std::collections::HashMap;
 
 //#region Errors
@@ -1240,7 +1240,7 @@ fn decode_scan(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::jpg::schema::demo_jpg_snapshot;
+    use crate::schema::demo_jpg_snapshot;
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn gradient_image(w: u32, h: u32) -> Vec<u8> {
@@ -1415,7 +1415,7 @@ mod tests {
     /// near-identical).
     mod conformance_laws {
         use super::*;
-        use crate::artifacts::jpg::schema::{diff, mutations, snapshot};
+        use crate::schema::{diff, mutations, snapshot};
         use protocol::{DiffCodec, OpBinary, OpText};
 
         /// ✅️ "committed files parse": all 6 handcrafted `.grammar.semio`/`.protocol.semio` files
@@ -1546,8 +1546,8 @@ mod tests {
 
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
-    use crate::artifacts::jpg::standards::v_jfif_1_01::subsets::document::schema::JpgComposer as JpgRawAnyComposer;
-    use crate::artifacts::jpg::standards::v_jfif_1_01::subsets::baseline::schema::JpgBaselineComposer;
+    use crate::standards::v_jfif_1_01::subsets::document::schema::JpgComposer as JpgRawAnyComposer;
+    use crate::standards::v_jfif_1_01::subsets::baseline::schema::JpgBaselineComposer;
     use semio_framework_plugin::{composer_entry_of, ComposerEntry};
     use std::sync::OnceLock;
 

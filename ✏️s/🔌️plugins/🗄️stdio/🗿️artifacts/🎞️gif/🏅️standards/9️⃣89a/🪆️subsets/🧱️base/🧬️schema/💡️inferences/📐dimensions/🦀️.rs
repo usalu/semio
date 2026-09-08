@@ -2,7 +2,7 @@
 //! of already-decoded header fields — nothing here is per-entity/incremental, so this holds only
 //! the value type + its pure `compute` fn (no `InferredField`).
 
-use crate::artifacts::gif::standards::v89a::subsets::any::schema::snapshot::GifSnapshot;
+use crate::standards::v89a::subsets::any::schema::snapshot::GifSnapshot;
 
 //#region 🔖️Dimensions
 /// 📐️ GIF89a logical-screen-derived raster geometry. `bit_depth` reads the Global Color Table's
@@ -46,7 +46,7 @@ pub fn compute_gif_dimensions(snapshot: &GifSnapshot) -> GifDimensions {
 //#region 🧪️Tests
 mod tests {
     use super::*;
-    use crate::artifacts::gif::standards::v89a::subsets::any::schema::snapshot::{GifColorTable, GifFrame, GifRgb};
+    use crate::standards::v89a::subsets::any::schema::snapshot::{GifColorTable, GifFrame, GifRgb};
 
     #[semio_framework_async_macros::async_test]
     async fn derives_bit_depth_from_global_color_table_size() {

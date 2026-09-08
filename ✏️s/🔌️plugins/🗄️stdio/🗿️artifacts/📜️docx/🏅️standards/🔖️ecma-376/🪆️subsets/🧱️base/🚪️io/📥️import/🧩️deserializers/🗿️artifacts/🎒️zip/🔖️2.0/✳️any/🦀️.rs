@@ -1,7 +1,7 @@
 //! Deserialize stdio.docx from stdio.binary (parse ZIP bytes).
 
-use crate::artifacts::binary::BinarySnapshot;
-use crate::artifacts::docx::{DocxSnapshot, STDIO_DOCX_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_binary::BinarySnapshot;
+use crate::{DocxSnapshot, STDIO_DOCX_DOCUMENT_SCHEMA};
 
 //#region Codec
 /// Register deserializer hooks.
@@ -11,7 +11,7 @@ pub fn register() {}
 /// 🎒️ Parse ZIP container bytes into a DocxSnapshot.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn deserialize(from: &BinarySnapshot) -> Result<DocxSnapshot, store::PackError> {
-    let mut snap = crate::artifacts::docx::engine::decode_docx(&from.bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
+    let mut snap = crate::engine::decode_docx(&from.bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
     snap.schema = STDIO_DOCX_DOCUMENT_SCHEMA.into();
     Ok(snap)
 }

@@ -1,8 +1,8 @@
 //! 🧪️ Rust executor for the shared change-node-extra-data vector.
 #[cfg(test)]
 mod tests {
-    use crate::artifacts::gltf::schema::mutations::change_node_extra_data::{diff, inverse, mutation};
-    use crate::artifacts::gltf::GltfSnapshot;
+    use crate::schema::mutations::change_node_extra_data::{diff, inverse, mutation};
+    use crate::GltfSnapshot;
 
     #[derive(value_derive::FromValue)]
     struct Vector { base: GltfSnapshot, mutation: mutation::GltfChangeNodeExtraDataPayload, diff: diff::GltfChangeNodeExtraDataDiff, inverse: inverse::GltfChangeNodeExtraDataInverse, after: GltfSnapshot }

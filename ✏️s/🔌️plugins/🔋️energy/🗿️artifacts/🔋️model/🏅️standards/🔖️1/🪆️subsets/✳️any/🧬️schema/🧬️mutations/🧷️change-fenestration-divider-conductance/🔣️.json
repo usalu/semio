@@ -5,7 +5,7 @@
   "displayName": "Change Fenestration Divider Conductance",
   "emoji": "🧷️",
   "aggregateVariant": "ChangeFenestrationDividerConductance",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-fenestration-divider-conductance",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

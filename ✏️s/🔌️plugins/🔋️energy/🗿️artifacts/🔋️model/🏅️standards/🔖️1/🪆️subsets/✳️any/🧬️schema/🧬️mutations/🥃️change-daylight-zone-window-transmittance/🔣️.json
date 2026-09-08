@@ -5,7 +5,7 @@
   "displayName": "Change Daylight Zone Window Transmittance",
   "emoji": "🥃️",
   "aggregateVariant": "ChangeDaylightZoneWindowTransmittance",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-daylight-zone-window-transmittance",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

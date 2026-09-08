@@ -149,9 +149,9 @@ mod subject {
     use super::{inverse_spec, mutable_input};
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_plugin_stdio::ArtifactDsl;
-    use semio_s_plugin_stdio::artifacts::tsv::standards::iana::subsets::any::schema::mutations::{apply_tsv_mutation, insert_row, remove_row, set_cell, set_line_ending, set_snapshot, set_trailing_newline};
-    use semio_s_plugin_stdio::artifacts::tsv::standards::iana::subsets::any::schema::snapshot::{decode_tsv, encode_tsv, LineEnding};
-    use semio_s_plugin_stdio::artifacts::tsv::{TsvMutation, TsvSnapshot, STDIO_TSV_DOCUMENT_SCHEMA};
+    use crate::standards::iana::subsets::any::schema::mutations::{apply_tsv_mutation, insert_row, remove_row, set_cell, set_line_ending, set_snapshot, set_trailing_newline};
+    use crate::standards::iana::subsets::any::schema::snapshot::{decode_tsv, encode_tsv, LineEnding};
+    use crate::{TsvMutation, TsvSnapshot, STDIO_TSV_DOCUMENT_SCHEMA};
     use semio_s_plugin_stdio_test_oracle::artifacts::tsv::standards::v_iana::subsets::any::project_tsv_grid;
 
     fn parse_line_ending(value: &str) -> Result<LineEnding, String> {

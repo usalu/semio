@@ -1,0 +1,56 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/step/ap214/cc2/mutation/set-product-identity.json",
+  "title": "SetProductIdentity",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "identity": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ProductIdentity"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "$defs": {
+    "ProductIdentity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "product",
+        "productName",
+        "formation",
+        "formationId",
+        "definition",
+        "definitionId"
+      ],
+      "properties": {
+        "product": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "productName": {
+          "type": "string"
+        },
+        "formation": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "formationId": {
+          "type": "string"
+        },
+        "definition": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "definitionId": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeHTrWK, base: &Din16798Snapshot) -> protocol::Mutatio
     if base.h_tr_w_k == payload.new_h_tr_w_k {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Transmission heat transfer coefficient is already {}.", payload.new_h_tr_w_k));
     }
-    protocol::MutationOutcome::new(Din16798Diff { h_tr_w_k: Some(payload.new_h_tr_w_k.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(Din16798Diff { h_tr_w_k: Some(payload.new_h_tr_w_k), ..Default::default() })
 }
 //#endregion 🔖️Diff

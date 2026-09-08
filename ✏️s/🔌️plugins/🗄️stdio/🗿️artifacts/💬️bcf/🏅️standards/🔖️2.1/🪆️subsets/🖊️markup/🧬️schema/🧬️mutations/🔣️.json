@@ -1,26 +1,164 @@
 {
-  "$id": "https://semio.tech/schema/s.stdio.bcf/mutation.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/bcf/2.1/markup/mutations.json",
   "title": "BcfMutation",
-  "type": "object",
-  "properties": {
-    "schema": {
-      "type": "string",
-      "x-semio-state": "artifact"
+  "description": "Discriminated union over this module's mutation leaves (externally tagged); every payload is the leaf's own schema, referenced, never restated.",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "InsertComment"
+      ],
+      "properties": {
+        "InsertComment": {
+          "$ref": "./🗨️insert-comment/🧬️schema/🔣️.json"
+        }
+      }
     },
-    "entries": {
-      "type": "array",
-      "x-semio-state": "artifact",
-      "items": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string"
-          },
-          "data": {
-            "type": "string"
-          }
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "InsertTopic"
+      ],
+      "properties": {
+        "InsertTopic": {
+          "$ref": "./📌insert-topic/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "InsertViewpoint"
+      ],
+      "properties": {
+        "InsertViewpoint": {
+          "$ref": "./👁️insert-viewpoint/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "RemoveComment"
+      ],
+      "properties": {
+        "RemoveComment": {
+          "$ref": "./🧹remove-comment/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "RemoveTopic"
+      ],
+      "properties": {
+        "RemoveTopic": {
+          "$ref": "./🗑️remove-topic/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "RemoveViewpoint"
+      ],
+      "properties": {
+        "RemoveViewpoint": {
+          "$ref": "./🙈remove-viewpoint/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "SetComment"
+      ],
+      "properties": {
+        "SetComment": {
+          "$ref": "./✏️set-comment/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "SetSnapshot"
+      ],
+      "properties": {
+        "SetSnapshot": {
+          "$ref": "./🗃️set-snapshot/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "SetTopicMarkup"
+      ],
+      "properties": {
+        "SetTopicMarkup": {
+          "$ref": "./🖊️set-topic-markup/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "SetVersion"
+      ],
+      "properties": {
+        "SetVersion": {
+          "$ref": "./🔢set-version/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "SetViewpointCamera"
+      ],
+      "properties": {
+        "SetViewpointCamera": {
+          "$ref": "./📷set-viewpoint-camera/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "SetViewpointComponents"
+      ],
+      "properties": {
+        "SetViewpointComponents": {
+          "$ref": "./🧱set-viewpoint-components/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "SetViewpointSnapshot"
+      ],
+      "properties": {
+        "SetViewpointSnapshot": {
+          "$ref": "./📸set-viewpoint-snapshot/🧬️schema/🔣️.json"
         }
       }
     }
-  }
+  ]
 }

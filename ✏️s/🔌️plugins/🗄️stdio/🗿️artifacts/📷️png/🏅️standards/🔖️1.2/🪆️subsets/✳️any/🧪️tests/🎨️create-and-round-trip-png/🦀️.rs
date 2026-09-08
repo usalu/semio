@@ -31,7 +31,7 @@ mod subject {
     use super::spec;
     use semio_s_plugin_stdio_test_oracle::raster::{oracle_create_png, project_png};
     use semio_repo_test_host::{Context, Outcome};
-    use semio_s_plugin_stdio::artifacts::png::standards::v1_2::subsets::any::io::{decode_png, encode_png};
+    use crate::standards::v1_2::subsets::any::io::{decode_png, encode_png};
 
     pub fn run(ctx: &Context) -> Result<Outcome, String> {
         let reference = oracle_create_png(&spec(ctx)?)?;

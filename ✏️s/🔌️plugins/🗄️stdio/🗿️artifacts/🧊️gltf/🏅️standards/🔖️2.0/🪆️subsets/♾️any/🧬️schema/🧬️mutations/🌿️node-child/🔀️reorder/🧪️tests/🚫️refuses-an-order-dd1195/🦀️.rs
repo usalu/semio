@@ -10,9 +10,9 @@
 //! leaf's own oracle. The derived `.op.semio`/`.spr.semio`/`.dsl.semio`/`.pack.semio`/
 //! `.patch.semio` encodings come from `fixtures generate`, not from here.
 
-use crate::artifacts::gltf::schema::mutations::reorder_node_children::GltfReorderNodeChildrenPayload;
-use crate::artifacts::gltf::schema::mutations::reorder_node_children;
-use crate::artifacts::gltf::GltfSnapshot;
+use crate::schema::mutations::reorder_node_children::GltfReorderNodeChildrenPayload;
+use crate::schema::mutations::reorder_node_children;
+use crate::GltfSnapshot;
 
 const CASE: &str = "reorder-node-children/refuses-an-order-that-repeats-the-same-child-twice";
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");

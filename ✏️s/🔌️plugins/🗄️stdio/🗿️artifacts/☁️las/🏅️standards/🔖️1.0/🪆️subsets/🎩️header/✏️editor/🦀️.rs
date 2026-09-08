@@ -2,8 +2,8 @@
 //! 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §2.1). `LasAnyEditor`
 //! implements `ArtifactEditor`, wiring the shared `MeshWindowKit` to a single Main window.
 
-use crate::artifacts::las::standards::v1_0::subsets::any::schema::mutations::LasMutation;
-use crate::artifacts::las::standards::v1_0::subsets::any::schema::snapshot::LasSnapshot;
+use crate::standards::v1_0::subsets::any::schema::mutations::LasMutation;
+use crate::standards::v1_0::subsets::any::schema::snapshot::LasSnapshot;
 use crate::editor::las::modes::edit;
 use crate::editor::las::modes::edit::windows::main;
 use semio_framework_plugin::app::InteractionView;

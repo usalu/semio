@@ -38,19 +38,19 @@ fn topological_sort(nodes: Vec<String>, edges: Vec<(String, String)>) -> Equatio
     let node_count = nodes.len() as u32;
     let mut indegree: HashMap<String, u32> = nodes.iter().map(|id| (id.clone(), 0)).collect();
     let mut adjacency: HashMap<String, Vec<String>> = HashMap::new();
-    for (from, to) in &edges {
-        if indegree.contains_key(from) && indegree.contains_key(to) {
-            *indegree.get_mut(to).expect("checked above") += 1;
-            adjacency.entry(from.clone()).or_default().push(to.clone());
+    for (from, to) in edges {
+        if indegree.contains_key(&from) && indegree.contains_key(&to) {
+            *indegree.get_mut(&to).expect("checked above") += 1;
+            adjacency.entry(from).or_default().push(to);
         }
     }
 
     let mut depth: BTreeMap<String, u32> = BTreeMap::new();
     let mut queue: VecDeque<String> = VecDeque::new();
-    for id in &nodes {
-        if indegree.get(id).copied().unwrap_or(0) == 0 {
+    for id in nodes {
+        if indegree.get(&id).copied().unwrap_or(0) == 0 {
             depth.insert(id.clone(), 0);
-            queue.push_back(id.clone());
+            queue.push_back(id);
         }
     }
 

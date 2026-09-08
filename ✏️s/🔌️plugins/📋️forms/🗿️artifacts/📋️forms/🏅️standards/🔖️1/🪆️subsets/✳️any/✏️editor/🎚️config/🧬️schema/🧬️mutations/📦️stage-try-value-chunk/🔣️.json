@@ -5,7 +5,7 @@
   "displayName": "Stage Try Value Chunk",
   "emoji": "📦️",
   "aggregateVariant": "StageTryValueChunk",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "stage-try-value-chunk",
   "binaryTag": 2,
   "invertibility": "explicit-mutation",

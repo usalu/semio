@@ -6,11 +6,11 @@
 //! must produce a diff that does not mention them at all. That is the whole reason this case's
 //! target deliberately changes only some fields — a full-replace implementation would still reach
 //! the same after-snapshot and only the diff would catch it.
-use crate::artifacts::semio::standards::v1::subsets::image::schema::diff::SemioImageDiff;
-use crate::artifacts::semio::standards::v1::subsets::image::schema::mutations::{apply_semio_image_mutation, SemioImageMutation};
-use crate::artifacts::semio::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
+use crate::standards::v1::subsets::image::schema::diff::SemioImageDiff;
+use crate::standards::v1::subsets::image::schema::mutations::{apply_semio_image_mutation, SemioImageMutation};
+use crate::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
 use protocol::{Mutation, MutationDiff};
-use crate::artifacts::semio::standards::v1::subsets::image::schema::mutations::set_snapshot;
+use crate::standards::v1::subsets::image::schema::mutations::set_snapshot;
 
 /// 🔗️ This leaf's own `🔺️diff` oracle, mounted directly: the enum-level `Mutation::diff` arm
 /// deliberately carries NO guard branches — every `mutation.no-op`/`mutation.target-missing`

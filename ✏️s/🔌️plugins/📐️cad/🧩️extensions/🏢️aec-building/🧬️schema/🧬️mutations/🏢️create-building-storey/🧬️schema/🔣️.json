@@ -1,0 +1,25 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/cad/aec-building/mutation/create-building-storey.json",
+  "title": "CreateBuildingStorey",
+  "type": "object",
+  "properties": {
+    "storeyId": {
+      "type": "string"
+    },
+    "levelIndex": {
+      "type": "integer",
+      "minimum": -2147483648,
+      "maximum": 2147483647
+    },
+    "storeyName": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "storeyId",
+    "levelIndex",
+    "storeyName"
+  ],
+  "additionalProperties": false
+}

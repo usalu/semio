@@ -9,8 +9,8 @@
 //! stdio's own `From<pack::JsonValue> for JsonValue` bridge, and stdio's own real
 //! `write_json_pretty` — no `serde_json` anywhere in this leaf.
 use crate::artifacts::shooting::ShootingSnapshot;
-use semio_s_plugin_stdio::artifacts::json::schema::snapshot::{write_json_pretty, JsonSnapshot};
-use semio_s_plugin_stdio::artifacts::json::STDIO_JSON_DOCUMENT_SCHEMA;
+use semio_s_artifact_stdio_json::schema::snapshot::{write_json_pretty, JsonSnapshot};
+use semio_s_artifact_stdio_json::STDIO_JSON_DOCUMENT_SCHEMA;
 
 pub fn register() {}
 

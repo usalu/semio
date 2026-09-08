@@ -5,7 +5,7 @@
   "displayName": "Disconnect Referenced Model",
   "emoji": "✂️",
   "aggregateVariant": "DisconnectReferencedModel",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "disconnect-referenced-model",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

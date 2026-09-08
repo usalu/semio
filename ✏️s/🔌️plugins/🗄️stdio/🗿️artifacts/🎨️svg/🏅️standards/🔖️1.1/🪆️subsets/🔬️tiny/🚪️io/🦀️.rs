@@ -5,9 +5,9 @@
 //! established for this artifact.
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use crate::artifacts::svg::standards::v1_1::subsets::base::schema::snapshot::{set_element_attr, SvgSnapshot};
-    use crate::artifacts::svg::standards::v1_1::subsets::base::schema::SvgComposer as SvgAnyComposer;
-    use crate::artifacts::svg::standards::v1_1::subsets::tiny::schema::check_svg_tiny_conformance;
+    use crate::standards::v1_1::subsets::base::schema::snapshot::{set_element_attr, SvgSnapshot};
+    use crate::standards::v1_1::subsets::base::schema::SvgComposer as SvgAnyComposer;
+    use crate::standards::v1_1::subsets::tiny::schema::check_svg_tiny_conformance;
     use dsl::{Diagnostic, FaultCode, Severity, TextSpan};
     use semio_framework_plugin::{register_subset_validator, subset_validator_entry_of, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, IoPayload, StandardId, SubsetId, SubsetValidator, SubsetValidatorEntry};
     use std::sync::OnceLock;
@@ -85,7 +85,7 @@ pub mod derived_composition {
     /// 📌️ Registers this subset's `SubsetValidator` with the generic io registry (D5's
     /// validate-on-build hook). Called from the 1.1 standard's own `⚙️engine::register()`. The
     /// `ComposerEntry` itself is registered separately by the standard-level composer aggregator
-    /// (`crate::artifacts::svg::standards::v1_1::engine::io_registry::entries()`), matching how `✳️any`'s own
+    /// (`crate::standards::v1_1::engine::io_registry::entries()`), matching how `✳️any`'s own
     /// entry is registered.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn register() {
@@ -96,8 +96,8 @@ pub mod derived_composition {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use crate::artifacts::svg::standards::v1_1::subsets::tiny::schema::SvgTinyBuilder;
-        use crate::artifacts::svg::standards::v1_1::subsets::tiny::schema::{CODE_ATTRIBUTE, CODE_ELEMENT};
+        use crate::standards::v1_1::subsets::tiny::schema::SvgTinyBuilder;
+        use crate::standards::v1_1::subsets::tiny::schema::{CODE_ATTRIBUTE, CODE_ELEMENT};
         use semio_framework_plugin::AnalyzeSource;
         use semio_framework_plugin::ArtifactBuilder as _;
 
@@ -108,7 +108,7 @@ pub mod derived_composition {
             let composed = SvgTinyComposerComposition::compose(&sources).expect("clean document must compose to tiny");
             assert!(composed.diagnostics.iter().all(|d| d.severity != Severity::Error), "no hard diagnostics expected: {:?}", composed.diagnostics);
             match &composed.snapshot.doc.root {
-                Some(crate::artifacts::xml::schema::snapshot::XmlNode::Element { attrs, .. }) => {
+                Some(semio_s_artifact_stdio_xml::schema::snapshot::XmlNode::Element { attrs, .. }) => {
                     assert!(attrs.iter().any(|a| a.name == "baseProfile" && a.value == "tiny"));
                     assert!(attrs.iter().any(|a| a.name == "version" && a.value == "1.1"));
                 }

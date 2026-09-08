@@ -5,7 +5,7 @@
   "displayName": "Change People Gain Schedule",
   "emoji": "⏰️",
   "aggregateVariant": "ChangePeopleGainSchedule",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-people-gain-schedule",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

@@ -5,7 +5,7 @@
   "displayName": "Change Shw System Setpoint",
   "emoji": "🏹️",
   "aggregateVariant": "ChangeShwSystemSetpoint",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-shw-system-setpoint",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

@@ -72,8 +72,8 @@ pub fn default_presentation_snapshot() -> PresentationSnapshot {
 /// scene/keyframe engine under `✏️editor/⚙️engine` constructs its scenes in Rust code at
 /// render/export time, never from persisted document state — see `animation_child_handle`'s own doc
 /// comment for the honest gap this leaves).
-pub type PresentationChild = store::ArtifactChild<semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::presentation::schema::snapshot::SemioPresentationSnapshot>;
-pub type AnimationChild = store::ArtifactChild<semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::animation::schema::snapshot::SemioAnimationSnapshot>;
+pub type PresentationChild = store::ArtifactChild<semio_s_artifact_stdio_semio::standards::v1::subsets::presentation::schema::snapshot::SemioPresentationSnapshot>;
+pub type AnimationChild = store::ArtifactChild<semio_s_artifact_stdio_semio::standards::v1::subsets::animation::schema::snapshot::SemioAnimationSnapshot>;
 
 /// 🪪️ Fixed target-identity roots for the two singleton composed children (this artifact only ever
 /// has exactly one presentation deck and one animation set, never a collection of either).
@@ -94,10 +94,10 @@ const ANIMATION_CHILD_ARTIFACT_ID: &str = "animate-presentation-deck-animation";
 /// through this lossy projection), so this only matters for a genuinely fresh reload with an empty
 /// cache, the same class of documented gap every `UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` exemplar
 /// (lowpoly/cad/writer) has left for its own composed slot.
-pub fn presentation_snapshot_from_source_tiles(source: &FigureTileSource, tiles: &[FigureTileDraft]) -> semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::presentation::schema::snapshot::SemioPresentationSnapshot {
-    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioPoint2;
-    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::document::schema::snapshot::DocBlock;
-    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::presentation::schema::snapshot::{SemioPresentationSnapshot, Slide, SlideFrame, SlideMaster, SlidePictureImage, SlideShape, STDIO_SEMIOPRESENTATION_DOCUMENT_SCHEMA};
+pub fn presentation_snapshot_from_source_tiles(source: &FigureTileSource, tiles: &[FigureTileDraft]) -> semio_s_artifact_stdio_semio::standards::v1::subsets::presentation::schema::snapshot::SemioPresentationSnapshot {
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::SemioPoint2;
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::document::schema::snapshot::DocBlock;
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::presentation::schema::snapshot::{SemioPresentationSnapshot, Slide, SlideFrame, SlideMaster, SlidePictureImage, SlideShape, STDIO_SEMIOPRESENTATION_DOCUMENT_SCHEMA};
 
     const SOURCE_MASTER_ID: &str = "source";
     let frame_of = |frame: &FigureTileFrame| SlideFrame { origin: SemioPoint2 { x: frame.x, y: frame.y }, width: frame.width, height: frame.height };
@@ -114,9 +114,9 @@ pub fn presentation_snapshot_from_source_tiles(source: &FigureTileSource, tiles:
 /// first paragraph text back into a `FigureTileDraft`. A master/slide with no `Picture` shape at all
 /// (never produced by the forward converter, but a composed child can in principle arrive from
 /// elsewhere) falls back to `default_figure_tile_source()`/an empty name rather than panicking.
-pub fn source_tiles_from_presentation_snapshot(snapshot: &semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::presentation::schema::snapshot::SemioPresentationSnapshot) -> (FigureTileSource, Vec<FigureTileDraft>) {
-    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::document::schema::snapshot::DocBlock;
-    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::presentation::schema::snapshot::SlideShape;
+pub fn source_tiles_from_presentation_snapshot(snapshot: &semio_s_artifact_stdio_semio::standards::v1::subsets::presentation::schema::snapshot::SemioPresentationSnapshot) -> (FigureTileSource, Vec<FigureTileDraft>) {
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::document::schema::snapshot::DocBlock;
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::presentation::schema::snapshot::SlideShape;
 
     fn frame_from(shapes: &[SlideShape]) -> Option<(FigureTileFrame, String, String)> {
         shapes.iter().find_map(|shape| match shape {
@@ -169,7 +169,7 @@ pub fn presentation_child_handle(source: &FigureTileSource, tiles: &[FigureTileD
 /// design mapping's `animate→C:presentation,animation` line so the slot exists for a future wave (a
 /// natural extension: per-tile camera-pan/transition timing) without another schema migration.
 pub fn animation_child_handle() -> AnimationChild {
-    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::animation::schema::snapshot::SemioAnimationSnapshot;
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::animation::schema::snapshot::SemioAnimationSnapshot;
     let content_json = dsl::os_pack::json::to_json_string(&SemioAnimationSnapshot::default());
     use std::hash::{Hash, Hasher};
     let mut hasher = std::collections::hash_map::DefaultHasher::new();

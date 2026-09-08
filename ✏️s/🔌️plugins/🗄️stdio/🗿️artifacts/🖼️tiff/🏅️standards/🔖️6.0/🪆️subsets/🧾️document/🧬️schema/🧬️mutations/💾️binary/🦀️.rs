@@ -2,7 +2,7 @@
 /// 📦 Encodes a recognized mutation payload or declines another variant.
 pub type TiffMutationPayloadEncoder = fn(&TiffMutation) -> Option<Result<Vec<u8>, protocol::ProtocolError>>;
 
-use crate::artifacts::tiff::schema::mutations::TiffMutation;
+use crate::schema::mutations::TiffMutation;
 
 //#region Registry
 pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio");
@@ -13,12 +13,12 @@ pub struct Entry {
     pub decode: fn(&[u8]) -> Result<TiffMutation, protocol::ProtocolError>,
 }
 pub const REGISTRY: &[Entry] = &[
-    crate::artifacts::tiff::schema::mutations::change_byte_order::binary::CODEC,
-    crate::artifacts::tiff::schema::mutations::insert_ifd::binary::CODEC,
-    crate::artifacts::tiff::schema::mutations::remove_ifd::binary::CODEC,
-    crate::artifacts::tiff::schema::mutations::replace_tag::binary::CODEC,
-    crate::artifacts::tiff::schema::mutations::remove_tag::binary::CODEC,
-    crate::artifacts::tiff::schema::mutations::replace_pixels::binary::CODEC,
+    crate::schema::mutations::change_byte_order::binary::CODEC,
+    crate::schema::mutations::insert_ifd::binary::CODEC,
+    crate::schema::mutations::remove_ifd::binary::CODEC,
+    crate::schema::mutations::replace_tag::binary::CODEC,
+    crate::schema::mutations::remove_tag::binary::CODEC,
+    crate::schema::mutations::replace_pixels::binary::CODEC,
 ];
 //#endregion Registry
 

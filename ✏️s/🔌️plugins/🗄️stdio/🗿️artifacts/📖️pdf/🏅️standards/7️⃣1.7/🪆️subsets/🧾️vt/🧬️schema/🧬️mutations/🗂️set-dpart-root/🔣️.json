@@ -5,7 +5,7 @@
   "displayName": "Set Dpart Root",
   "emoji": "🗂️",
   "aggregateVariant": "SetDpartRoot",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "set-dpart-root",
   "binaryTag": 14,
   "invertibility": "explicit-mutation",

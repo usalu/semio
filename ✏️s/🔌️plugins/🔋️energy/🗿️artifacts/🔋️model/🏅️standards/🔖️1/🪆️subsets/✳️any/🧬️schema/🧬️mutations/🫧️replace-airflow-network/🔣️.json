@@ -5,7 +5,7 @@
   "displayName": "Replace Airflow Network",
   "emoji": "🫧️",
   "aggregateVariant": "ReplaceAirflowNetwork",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "replace-airflow-network",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

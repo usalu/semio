@@ -3,8 +3,8 @@
 //! min/max fold over every triangle's own `vertices` — no per-triangle incremental decomposition,
 //! a pure whole-snapshot scalar. No `InferredField` needed.
 
-use crate::artifacts::stl::schema::snapshot::StlTriangle;
-use crate::artifacts::stl::StlSnapshot;
+use crate::schema::snapshot::StlTriangle;
+use crate::StlSnapshot;
 
 //#region 🔖️Bounds
 /// 📦️ Stl triangle-soup bounding box and triangle count.
@@ -56,7 +56,7 @@ pub fn compute_stl_bounds(snapshot: &StlSnapshot) -> StlBounds {
 //#region 🧪️Tests
 mod tests {
     use super::*;
-    use crate::artifacts::stl::STDIO_STL_DOCUMENT_SCHEMA;
+    use crate::STDIO_STL_DOCUMENT_SCHEMA;
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn triangle(normal: [f64; 3], vertices: [[f64; 3]; 3]) -> StlTriangle {

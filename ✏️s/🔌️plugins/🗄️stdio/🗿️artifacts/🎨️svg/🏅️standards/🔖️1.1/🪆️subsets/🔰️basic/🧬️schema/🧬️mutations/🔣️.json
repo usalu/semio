@@ -1,0 +1,128 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/svg/1.1/basic/mutations.json",
+  "title": "SvgBasicMutation",
+  "description": "Discriminated union over this module's mutation leaves (externally tagged); every payload is the leaf's own schema, referenced, never restated.",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "InsertBasicElement"
+      ],
+      "properties": {
+        "InsertBasicElement": {
+          "$ref": "./➕insert-basic-element/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "InsertClipPathShape"
+      ],
+      "properties": {
+        "InsertClipPathShape": {
+          "$ref": "./📎insert-clip-path-shape/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "RemoveElement"
+      ],
+      "properties": {
+        "RemoveElement": {
+          "$ref": "./➖remove-element/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "SetBasicAttribute"
+      ],
+      "properties": {
+        "SetBasicAttribute": {
+          "$ref": "./🏷️set-basic-attribute/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "SetClipPathReference"
+      ],
+      "properties": {
+        "SetClipPathReference": {
+          "$ref": "./✂️set-clip-path-reference/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "SetSnapshot"
+      ],
+      "properties": {
+        "SetSnapshot": {
+          "$ref": "./📸️set-snapshot/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "SetText"
+      ],
+      "properties": {
+        "SetText": {
+          "$ref": "./✍️set-text/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "SetTransform"
+      ],
+      "properties": {
+        "SetTransform": {
+          "$ref": "./🔄set-transform/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "SetViewBox"
+      ],
+      "properties": {
+        "SetViewBox": {
+          "$ref": "./🖼️set-view-box/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "StampBaseProfile"
+      ],
+      "properties": {
+        "StampBaseProfile": {
+          "$ref": "./🪧stamp-base-profile/🧬️schema/🔣️.json"
+        }
+      }
+    }
+  ]
+}

@@ -7,6 +7,6 @@ use crate::artifacts::din16798::Din16798Snapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(_payload: &ChangeBedrooms, base: &Din16798Snapshot) -> Vec<Din16798Mutation> {
-    vec![Din16798Mutation::ChangeBedrooms(ChangeBedrooms { new_bedrooms: base.bedrooms.clone() })]
+    vec![Din16798Mutation::ChangeBedrooms(ChangeBedrooms { new_bedrooms: base.bedrooms })]
 }
 //#endregion 🔖️Inverse

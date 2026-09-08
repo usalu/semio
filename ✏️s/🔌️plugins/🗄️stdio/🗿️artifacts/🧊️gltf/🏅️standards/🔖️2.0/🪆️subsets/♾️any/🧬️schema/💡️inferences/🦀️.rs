@@ -1,7 +1,7 @@
 //! 💡️ Public glTF inference assembly.
 
-use crate::artifacts::gltf::schema::snapshot::GltfSnapshot;
-use schema::ArtifactSchema;
+use crate::schema::snapshot::GltfSnapshot;
+use framework_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 
 use super::super::modules::measurement_contracts::*;
@@ -320,17 +320,17 @@ impl protocol::InferenceSpec<GltfSnapshot> for GltfInference {
     }
 }
 
-impl ArtifactInferrer for crate::artifacts::gltf::standards::v2_0::subsets::any::schema::GltfBuilder {
+impl ArtifactInferrer for crate::standards::v2_0::subsets::any::schema::GltfBuilder {
     type Snapshot = GltfSnapshot;
     type Inference = GltfInference;
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn gltf_artifact_inference_descriptors() -> Vec<schema::ArtifactInferenceDescriptor> {
+pub fn gltf_artifact_inference_descriptors() -> Vec<framework_schema::ArtifactInferenceDescriptor> {
     vec![
-        schema::ArtifactInferenceDescriptor {
+        framework_schema::ArtifactInferenceDescriptor {
             id: "s.stdio.gltf.inference.overall-size.v1",
-            inference: schema::FacetLeaves {
+            inference: framework_schema::FacetLeaves {
                 rust: include_str!("📦️size/📏️overall-size/🦀️.rs"),
                 typescript: include_str!("📦️size/📏️overall-size/🟦️.ts"),
                 graphql: include_str!("📦️size/📏️overall-size/🔗️.graphql"),
@@ -338,9 +338,9 @@ pub fn gltf_artifact_inference_descriptors() -> Vec<schema::ArtifactInferenceDes
                 proto: include_str!("📦️size/📏️overall-size/🛰️.proto"),
             },
         },
-        schema::ArtifactInferenceDescriptor {
+        framework_schema::ArtifactInferenceDescriptor {
             id: "s.stdio.gltf.inference.axis-aligned-bounds.v1",
-            inference: schema::FacetLeaves {
+            inference: framework_schema::FacetLeaves {
                 rust: include_str!("📦️size/↔️axis-aligned-bounds/🦀️.rs"),
                 typescript: include_str!("📦️size/↔️axis-aligned-bounds/🟦️.ts"),
                 graphql: include_str!("📦️size/↔️axis-aligned-bounds/🔗️.graphql"),
@@ -348,9 +348,9 @@ pub fn gltf_artifact_inference_descriptors() -> Vec<schema::ArtifactInferenceDes
                 proto: include_str!("📦️size/↔️axis-aligned-bounds/🛰️.proto"),
             },
         },
-        schema::ArtifactInferenceDescriptor {
+        framework_schema::ArtifactInferenceDescriptor {
             id: "s.stdio.gltf.inference.oriented-bounds.v1",
-            inference: schema::FacetLeaves {
+            inference: framework_schema::FacetLeaves {
                 rust: include_str!("📦️size/🧭️oriented-bounds/🦀️.rs"),
                 typescript: include_str!("📦️size/🧭️oriented-bounds/🟦️.ts"),
                 graphql: include_str!("📦️size/🧭️oriented-bounds/🔗️.graphql"),
@@ -358,9 +358,9 @@ pub fn gltf_artifact_inference_descriptors() -> Vec<schema::ArtifactInferenceDes
                 proto: include_str!("📦️size/🧭️oriented-bounds/🛰️.proto"),
             },
         },
-        schema::ArtifactInferenceDescriptor {
+        framework_schema::ArtifactInferenceDescriptor {
             id: "s.stdio.gltf.inference.bounding-box-dimensions.v1",
-            inference: schema::FacetLeaves {
+            inference: framework_schema::FacetLeaves {
                 rust: include_str!("📦️size/📐️bounding-box-dimensions/🦀️.rs"),
                 typescript: include_str!("📦️size/📐️bounding-box-dimensions/🟦️.ts"),
                 graphql: include_str!("📦️size/📐️bounding-box-dimensions/🔗️.graphql"),
@@ -368,9 +368,9 @@ pub fn gltf_artifact_inference_descriptors() -> Vec<schema::ArtifactInferenceDes
                 proto: include_str!("📦️size/📐️bounding-box-dimensions/🛰️.proto"),
             },
         },
-        schema::ArtifactInferenceDescriptor {
+        framework_schema::ArtifactInferenceDescriptor {
             id: "s.stdio.gltf.inference.characteristic-length.v1",
-            inference: schema::FacetLeaves {
+            inference: framework_schema::FacetLeaves {
                 rust: include_str!("📦️size/🔗️characteristic-length/🦀️.rs"),
                 typescript: include_str!("📦️size/🔗️characteristic-length/🟦️.ts"),
                 graphql: include_str!("📦️size/🔗️characteristic-length/🔗️.graphql"),
@@ -378,9 +378,9 @@ pub fn gltf_artifact_inference_descriptors() -> Vec<schema::ArtifactInferenceDes
                 proto: include_str!("📦️size/🔗️characteristic-length/🛰️.proto"),
             },
         },
-        schema::ArtifactInferenceDescriptor {
+        framework_schema::ArtifactInferenceDescriptor {
             id: "s.stdio.gltf.inference.footprint-area.v1",
-            inference: schema::FacetLeaves {
+            inference: framework_schema::FacetLeaves {
                 rust: include_str!("📦️size/🦶️footprint-area/🦀️.rs"),
                 typescript: include_str!("📦️size/🦶️footprint-area/🟦️.ts"),
                 graphql: include_str!("📦️size/🦶️footprint-area/🔗️.graphql"),
@@ -388,9 +388,9 @@ pub fn gltf_artifact_inference_descriptors() -> Vec<schema::ArtifactInferenceDes
                 proto: include_str!("📦️size/🦶️footprint-area/🛰️.proto"),
             },
         },
-        schema::ArtifactInferenceDescriptor {
+        framework_schema::ArtifactInferenceDescriptor {
             id: "s.stdio.gltf.inference.projected-area.v1",
-            inference: schema::FacetLeaves {
+            inference: framework_schema::FacetLeaves {
                 rust: include_str!("📦️size/🎯️projected-area/🦀️.rs"),
                 typescript: include_str!("📦️size/🎯️projected-area/🟦️.ts"),
                 graphql: include_str!("📦️size/🎯️projected-area/🔗️.graphql"),
@@ -398,9 +398,9 @@ pub fn gltf_artifact_inference_descriptors() -> Vec<schema::ArtifactInferenceDes
                 proto: include_str!("📦️size/🎯️projected-area/🛰️.proto"),
             },
         },
-        schema::ArtifactInferenceDescriptor {
+        framework_schema::ArtifactInferenceDescriptor {
             id: "s.stdio.gltf.inference.surface-area.v1",
-            inference: schema::FacetLeaves {
+            inference: framework_schema::FacetLeaves {
                 rust: include_str!("🧱️area-volume/🧥️surface-area/🦀️.rs"),
                 typescript: include_str!("🧱️area-volume/🧥️surface-area/🟦️.ts"),
                 graphql: include_str!("🧱️area-volume/🧥️surface-area/🔗️.graphql"),
@@ -408,9 +408,9 @@ pub fn gltf_artifact_inference_descriptors() -> Vec<schema::ArtifactInferenceDes
                 proto: include_str!("🧱️area-volume/🧥️surface-area/🛰️.proto"),
             },
         },
-        schema::ArtifactInferenceDescriptor {
+        framework_schema::ArtifactInferenceDescriptor {
             id: "s.stdio.gltf.inference.total-area.v1",
-            inference: schema::FacetLeaves {
+            inference: framework_schema::FacetLeaves {
                 rust: include_str!("🧱️area-volume/🧮️total-area/🦀️.rs"),
                 typescript: include_str!("🧱️area-volume/🧮️total-area/🟦️.ts"),
                 graphql: include_str!("🧱️area-volume/🧮️total-area/🔗️.graphql"),
@@ -418,9 +418,9 @@ pub fn gltf_artifact_inference_descriptors() -> Vec<schema::ArtifactInferenceDes
                 proto: include_str!("🧱️area-volume/🧮️total-area/🛰️.proto"),
             },
         },
-        schema::ArtifactInferenceDescriptor {
+        framework_schema::ArtifactInferenceDescriptor {
             id: "s.stdio.gltf.inference.exposed-area.v1",
-            inference: schema::FacetLeaves {
+            inference: framework_schema::FacetLeaves {
                 rust: include_str!("🧱️area-volume/☀️exposed-area/🦀️.rs"),
                 typescript: include_str!("🧱️area-volume/☀️exposed-area/🟦️.ts"),
                 graphql: include_str!("🧱️area-volume/☀️exposed-area/🔗️.graphql"),
@@ -428,9 +428,9 @@ pub fn gltf_artifact_inference_descriptors() -> Vec<schema::ArtifactInferenceDes
                 proto: include_str!("🧱️area-volume/☀️exposed-area/🛰️.proto"),
             },
         },
-        schema::ArtifactInferenceDescriptor {
+        framework_schema::ArtifactInferenceDescriptor {
             id: "s.stdio.gltf.inference.contact-area.v1",
-            inference: schema::FacetLeaves {
+            inference: framework_schema::FacetLeaves {
                 rust: include_str!("🧱️area-volume/🤝️contact-area/🦀️.rs"),
                 typescript: include_str!("🧱️area-volume/🤝️contact-area/🟦️.ts"),
                 graphql: include_str!("🧱️area-volume/🤝️contact-area/🔗️.graphql"),
@@ -438,9 +438,9 @@ pub fn gltf_artifact_inference_descriptors() -> Vec<schema::ArtifactInferenceDes
                 proto: include_str!("🧱️area-volume/🤝️contact-area/🛰️.proto"),
             },
         },
-        schema::ArtifactInferenceDescriptor {
+        framework_schema::ArtifactInferenceDescriptor {
             id: "s.stdio.gltf.inference.volume.v1",
-            inference: schema::FacetLeaves {
+            inference: framework_schema::FacetLeaves {
                 rust: include_str!("🧱️area-volume/📦️volume/🦀️.rs"),
                 typescript: include_str!("🧱️area-volume/📦️volume/🟦️.ts"),
                 graphql: include_str!("🧱️area-volume/📦️volume/🔗️.graphql"),
@@ -448,9 +448,9 @@ pub fn gltf_artifact_inference_descriptors() -> Vec<schema::ArtifactInferenceDes
                 proto: include_str!("🧱️area-volume/📦️volume/🛰️.proto"),
             },
         },
-        schema::ArtifactInferenceDescriptor {
+        framework_schema::ArtifactInferenceDescriptor {
             id: "s.stdio.gltf.inference.enclosed-volume.v1",
-            inference: schema::FacetLeaves {
+            inference: framework_schema::FacetLeaves {
                 rust: include_str!("🧱️area-volume/📥️enclosed-volume/🦀️.rs"),
                 typescript: include_str!("🧱️area-volume/📥️enclosed-volume/🟦️.ts"),
                 graphql: include_str!("🧱️area-volume/📥️enclosed-volume/🔗️.graphql"),
@@ -458,9 +458,9 @@ pub fn gltf_artifact_inference_descriptors() -> Vec<schema::ArtifactInferenceDes
                 proto: include_str!("🧱️area-volume/📥️enclosed-volume/🛰️.proto"),
             },
         },
-        schema::ArtifactInferenceDescriptor {
+        framework_schema::ArtifactInferenceDescriptor {
             id: "s.stdio.gltf.inference.material-volume.v1",
-            inference: schema::FacetLeaves {
+            inference: framework_schema::FacetLeaves {
                 rust: include_str!("🧱️area-volume/🧊️material-volume/🦀️.rs"),
                 typescript: include_str!("🧱️area-volume/🧊️material-volume/🟦️.ts"),
                 graphql: include_str!("🧱️area-volume/🧊️material-volume/🔗️.graphql"),
@@ -468,9 +468,9 @@ pub fn gltf_artifact_inference_descriptors() -> Vec<schema::ArtifactInferenceDes
                 proto: include_str!("🧱️area-volume/🧊️material-volume/🛰️.proto"),
             },
         },
-        schema::ArtifactInferenceDescriptor {
+        framework_schema::ArtifactInferenceDescriptor {
             id: "s.stdio.gltf.inference.void-volume.v1",
-            inference: schema::FacetLeaves {
+            inference: framework_schema::FacetLeaves {
                 rust: include_str!("🧱️area-volume/🕳️void-volume/🦀️.rs"),
                 typescript: include_str!("🧱️area-volume/🕳️void-volume/🟦️.ts"),
                 graphql: include_str!("🧱️area-volume/🕳️void-volume/🔗️.graphql"),
@@ -478,9 +478,9 @@ pub fn gltf_artifact_inference_descriptors() -> Vec<schema::ArtifactInferenceDes
                 proto: include_str!("🧱️area-volume/🕳️void-volume/🛰️.proto"),
             },
         },
-        schema::ArtifactInferenceDescriptor {
+        framework_schema::ArtifactInferenceDescriptor {
             id: "s.stdio.gltf.inference.compactness.v1",
-            inference: schema::FacetLeaves {
+            inference: framework_schema::FacetLeaves {
                 rust: include_str!("🗜️compactness/🗜️compactness/🦀️.rs"),
                 typescript: include_str!("🗜️compactness/🗜️compactness/🟦️.ts"),
                 graphql: include_str!("🗜️compactness/🗜️compactness/🔗️.graphql"),
@@ -488,9 +488,9 @@ pub fn gltf_artifact_inference_descriptors() -> Vec<schema::ArtifactInferenceDes
                 proto: include_str!("🗜️compactness/🗜️compactness/🛰️.proto"),
             },
         },
-        schema::ArtifactInferenceDescriptor {
+        framework_schema::ArtifactInferenceDescriptor {
             id: "s.stdio.gltf.inference.surface-to-volume-ratio.v1",
-            inference: schema::FacetLeaves {
+            inference: framework_schema::FacetLeaves {
                 rust: include_str!("🗜️compactness/➗️surface-to-volume-ratio/🦀️.rs"),
                 typescript: include_str!("🗜️compactness/➗️surface-to-volume-ratio/🟦️.ts"),
                 graphql: include_str!("🗜️compactness/➗️surface-to-volume-ratio/🔗️.graphql"),
@@ -498,9 +498,9 @@ pub fn gltf_artifact_inference_descriptors() -> Vec<schema::ArtifactInferenceDes
                 proto: include_str!("🗜️compactness/➗️surface-to-volume-ratio/🛰️.proto"),
             },
         },
-        schema::ArtifactInferenceDescriptor {
+        framework_schema::ArtifactInferenceDescriptor {
             id: "s.stdio.gltf.inference.sphericity.v1",
-            inference: schema::FacetLeaves {
+            inference: framework_schema::FacetLeaves {
                 rust: include_str!("🗜️compactness/🌐️sphericity/🦀️.rs"),
                 typescript: include_str!("🗜️compactness/🌐️sphericity/🟦️.ts"),
                 graphql: include_str!("🗜️compactness/🌐️sphericity/🔗️.graphql"),
@@ -508,9 +508,9 @@ pub fn gltf_artifact_inference_descriptors() -> Vec<schema::ArtifactInferenceDes
                 proto: include_str!("🗜️compactness/🌐️sphericity/🛰️.proto"),
             },
         },
-        schema::ArtifactInferenceDescriptor {
+        framework_schema::ArtifactInferenceDescriptor {
             id: "s.stdio.gltf.inference.compactness-index.v1",
-            inference: schema::FacetLeaves {
+            inference: framework_schema::FacetLeaves {
                 rust: include_str!("🗜️compactness/🔢️compactness-index/🦀️.rs"),
                 typescript: include_str!("🗜️compactness/🔢️compactness-index/🟦️.ts"),
                 graphql: include_str!("🗜️compactness/🔢️compactness-index/🔗️.graphql"),
@@ -518,9 +518,9 @@ pub fn gltf_artifact_inference_descriptors() -> Vec<schema::ArtifactInferenceDes
                 proto: include_str!("🗜️compactness/🔢️compactness-index/🛰️.proto"),
             },
         },
-        schema::ArtifactInferenceDescriptor {
+        framework_schema::ArtifactInferenceDescriptor {
             id: "s.stdio.gltf.inference.hull-fill-ratio.v1",
-            inference: schema::FacetLeaves {
+            inference: framework_schema::FacetLeaves {
                 rust: include_str!("🗜️compactness/🫙️hull-fill-ratio/🦀️.rs"),
                 typescript: include_str!("🗜️compactness/🫙️hull-fill-ratio/🟦️.ts"),
                 graphql: include_str!("🗜️compactness/🫙️hull-fill-ratio/🔗️.graphql"),
@@ -528,9 +528,9 @@ pub fn gltf_artifact_inference_descriptors() -> Vec<schema::ArtifactInferenceDes
                 proto: include_str!("🗜️compactness/🫙️hull-fill-ratio/🛰️.proto"),
             },
         },
-        schema::ArtifactInferenceDescriptor {
+        framework_schema::ArtifactInferenceDescriptor {
             id: "s.stdio.gltf.inference.aspect-ratios.v1",
-            inference: schema::FacetLeaves {
+            inference: framework_schema::FacetLeaves {
                 rust: include_str!("📏️proportion/🖼️aspect-ratios/🦀️.rs"),
                 typescript: include_str!("📏️proportion/🖼️aspect-ratios/🟦️.ts"),
                 graphql: include_str!("📏️proportion/🖼️aspect-ratios/🔗️.graphql"),
@@ -538,9 +538,9 @@ pub fn gltf_artifact_inference_descriptors() -> Vec<schema::ArtifactInferenceDes
                 proto: include_str!("📏️proportion/🖼️aspect-ratios/🛰️.proto"),
             },
         },
-        schema::ArtifactInferenceDescriptor {
+        framework_schema::ArtifactInferenceDescriptor {
             id: "s.stdio.gltf.inference.slenderness.v1",
-            inference: schema::FacetLeaves {
+            inference: framework_schema::FacetLeaves {
                 rust: include_str!("📏️proportion/📏️slenderness/🦀️.rs"),
                 typescript: include_str!("📏️proportion/📏️slenderness/🟦️.ts"),
                 graphql: include_str!("📏️proportion/📏️slenderness/🔗️.graphql"),
@@ -548,9 +548,9 @@ pub fn gltf_artifact_inference_descriptors() -> Vec<schema::ArtifactInferenceDes
                 proto: include_str!("📏️proportion/📏️slenderness/🛰️.proto"),
             },
         },
-        schema::ArtifactInferenceDescriptor {
+        framework_schema::ArtifactInferenceDescriptor {
             id: "s.stdio.gltf.inference.flatness.v1",
-            inference: schema::FacetLeaves {
+            inference: framework_schema::FacetLeaves {
                 rust: include_str!("📏️proportion/📃️flatness/🦀️.rs"),
                 typescript: include_str!("📏️proportion/📃️flatness/🟦️.ts"),
                 graphql: include_str!("📏️proportion/📃️flatness/🔗️.graphql"),
@@ -558,9 +558,9 @@ pub fn gltf_artifact_inference_descriptors() -> Vec<schema::ArtifactInferenceDes
                 proto: include_str!("📏️proportion/📃️flatness/🛰️.proto"),
             },
         },
-        schema::ArtifactInferenceDescriptor {
+        framework_schema::ArtifactInferenceDescriptor {
             id: "s.stdio.gltf.inference.elongation.v1",
-            inference: schema::FacetLeaves {
+            inference: framework_schema::FacetLeaves {
                 rust: include_str!("📏️proportion/↔️elongation/🦀️.rs"),
                 typescript: include_str!("📏️proportion/↔️elongation/🟦️.ts"),
                 graphql: include_str!("📏️proportion/↔️elongation/🔗️.graphql"),
@@ -568,9 +568,9 @@ pub fn gltf_artifact_inference_descriptors() -> Vec<schema::ArtifactInferenceDes
                 proto: include_str!("📏️proportion/↔️elongation/🛰️.proto"),
             },
         },
-        schema::ArtifactInferenceDescriptor {
+        framework_schema::ArtifactInferenceDescriptor {
             id: "s.stdio.gltf.inference.centroid.v1",
-            inference: schema::FacetLeaves {
+            inference: framework_schema::FacetLeaves {
                 rust: include_str!("⚖️mass-distribution/🎯️centroid/🦀️.rs"),
                 typescript: include_str!("⚖️mass-distribution/🎯️centroid/🟦️.ts"),
                 graphql: include_str!("⚖️mass-distribution/🎯️centroid/🔗️.graphql"),
@@ -578,9 +578,9 @@ pub fn gltf_artifact_inference_descriptors() -> Vec<schema::ArtifactInferenceDes
                 proto: include_str!("⚖️mass-distribution/🎯️centroid/🛰️.proto"),
             },
         },
-        schema::ArtifactInferenceDescriptor {
+        framework_schema::ArtifactInferenceDescriptor {
             id: "s.stdio.gltf.inference.principal-frame.v1",
-            inference: schema::FacetLeaves {
+            inference: framework_schema::FacetLeaves {
                 rust: include_str!("⚖️mass-distribution/🖼️principal-frame/🦀️.rs"),
                 typescript: include_str!("⚖️mass-distribution/🖼️principal-frame/🟦️.ts"),
                 graphql: include_str!("⚖️mass-distribution/🖼️principal-frame/🔗️.graphql"),
@@ -588,9 +588,9 @@ pub fn gltf_artifact_inference_descriptors() -> Vec<schema::ArtifactInferenceDes
                 proto: include_str!("⚖️mass-distribution/🖼️principal-frame/🛰️.proto"),
             },
         },
-        schema::ArtifactInferenceDescriptor {
+        framework_schema::ArtifactInferenceDescriptor {
             id: "s.stdio.gltf.inference.principal-axes.v1",
-            inference: schema::FacetLeaves {
+            inference: framework_schema::FacetLeaves {
                 rust: include_str!("⚖️mass-distribution/🧭️principal-axes/🦀️.rs"),
                 typescript: include_str!("⚖️mass-distribution/🧭️principal-axes/🟦️.ts"),
                 graphql: include_str!("⚖️mass-distribution/🧭️principal-axes/🔗️.graphql"),
@@ -598,9 +598,9 @@ pub fn gltf_artifact_inference_descriptors() -> Vec<schema::ArtifactInferenceDes
                 proto: include_str!("⚖️mass-distribution/🧭️principal-axes/🛰️.proto"),
             },
         },
-        schema::ArtifactInferenceDescriptor {
+        framework_schema::ArtifactInferenceDescriptor {
             id: "s.stdio.gltf.inference.moments-of-inertia.v1",
-            inference: schema::FacetLeaves {
+            inference: framework_schema::FacetLeaves {
                 rust: include_str!("⚖️mass-distribution/🌀️moments-of-inertia/🦀️.rs"),
                 typescript: include_str!("⚖️mass-distribution/🌀️moments-of-inertia/🟦️.ts"),
                 graphql: include_str!("⚖️mass-distribution/🌀️moments-of-inertia/🔗️.graphql"),
@@ -608,9 +608,9 @@ pub fn gltf_artifact_inference_descriptors() -> Vec<schema::ArtifactInferenceDes
                 proto: include_str!("⚖️mass-distribution/🌀️moments-of-inertia/🛰️.proto"),
             },
         },
-        schema::ArtifactInferenceDescriptor {
+        framework_schema::ArtifactInferenceDescriptor {
             id: "s.stdio.gltf.inference.inertia-tensor.v1",
-            inference: schema::FacetLeaves {
+            inference: framework_schema::FacetLeaves {
                 rust: include_str!("⚖️mass-distribution/🧮️inertia-tensor/🦀️.rs"),
                 typescript: include_str!("⚖️mass-distribution/🧮️inertia-tensor/🟦️.ts"),
                 graphql: include_str!("⚖️mass-distribution/🧮️inertia-tensor/🔗️.graphql"),
@@ -618,9 +618,9 @@ pub fn gltf_artifact_inference_descriptors() -> Vec<schema::ArtifactInferenceDes
                 proto: include_str!("⚖️mass-distribution/🧮️inertia-tensor/🛰️.proto"),
             },
         },
-        schema::ArtifactInferenceDescriptor {
+        framework_schema::ArtifactInferenceDescriptor {
             id: "s.stdio.gltf.inference.mean-curvature.v1",
-            inference: schema::FacetLeaves {
+            inference: framework_schema::FacetLeaves {
                 rust: include_str!("🌀️curvature/🌀️mean-curvature/🦀️.rs"),
                 typescript: include_str!("🌀️curvature/🌀️mean-curvature/🟦️.ts"),
                 graphql: include_str!("🌀️curvature/🌀️mean-curvature/🔗️.graphql"),
@@ -628,9 +628,9 @@ pub fn gltf_artifact_inference_descriptors() -> Vec<schema::ArtifactInferenceDes
                 proto: include_str!("🌀️curvature/🌀️mean-curvature/🛰️.proto"),
             },
         },
-        schema::ArtifactInferenceDescriptor {
+        framework_schema::ArtifactInferenceDescriptor {
             id: "s.stdio.gltf.inference.gaussian-curvature.v1",
-            inference: schema::FacetLeaves {
+            inference: framework_schema::FacetLeaves {
                 rust: include_str!("🌀️curvature/🧮️gaussian-curvature/🦀️.rs"),
                 typescript: include_str!("🌀️curvature/🧮️gaussian-curvature/🟦️.ts"),
                 graphql: include_str!("🌀️curvature/🧮️gaussian-curvature/🔗️.graphql"),
@@ -638,9 +638,9 @@ pub fn gltf_artifact_inference_descriptors() -> Vec<schema::ArtifactInferenceDes
                 proto: include_str!("🌀️curvature/🧮️gaussian-curvature/🛰️.proto"),
             },
         },
-        schema::ArtifactInferenceDescriptor {
+        framework_schema::ArtifactInferenceDescriptor {
             id: "s.stdio.gltf.inference.curvature-histogram.v1",
-            inference: schema::FacetLeaves {
+            inference: framework_schema::FacetLeaves {
                 rust: include_str!("🌀️curvature/📊️curvature-histogram/🦀️.rs"),
                 typescript: include_str!("🌀️curvature/📊️curvature-histogram/🟦️.ts"),
                 graphql: include_str!("🌀️curvature/📊️curvature-histogram/🔗️.graphql"),
@@ -648,9 +648,9 @@ pub fn gltf_artifact_inference_descriptors() -> Vec<schema::ArtifactInferenceDes
                 proto: include_str!("🌀️curvature/📊️curvature-histogram/🛰️.proto"),
             },
         },
-        schema::ArtifactInferenceDescriptor {
+        framework_schema::ArtifactInferenceDescriptor {
             id: "s.stdio.gltf.inference.sharp-feature-proportion.v1",
-            inference: schema::FacetLeaves {
+            inference: framework_schema::FacetLeaves {
                 rust: include_str!("🌀️curvature/🗡️sharp-feature-proportion/🦀️.rs"),
                 typescript: include_str!("🌀️curvature/🗡️sharp-feature-proportion/🟦️.ts"),
                 graphql: include_str!("🌀️curvature/🗡️sharp-feature-proportion/🔗️.graphql"),
@@ -658,9 +658,9 @@ pub fn gltf_artifact_inference_descriptors() -> Vec<schema::ArtifactInferenceDes
                 proto: include_str!("🌀️curvature/🗡️sharp-feature-proportion/🛰️.proto"),
             },
         },
-        schema::ArtifactInferenceDescriptor {
+        framework_schema::ArtifactInferenceDescriptor {
             id: "s.stdio.gltf.inference.mean-thickness.v1",
-            inference: schema::FacetLeaves {
+            inference: framework_schema::FacetLeaves {
                 rust: include_str!("↕️thickness/⚖️mean-thickness/🦀️.rs"),
                 typescript: include_str!("↕️thickness/⚖️mean-thickness/🟦️.ts"),
                 graphql: include_str!("↕️thickness/⚖️mean-thickness/🔗️.graphql"),
@@ -668,9 +668,9 @@ pub fn gltf_artifact_inference_descriptors() -> Vec<schema::ArtifactInferenceDes
                 proto: include_str!("↕️thickness/⚖️mean-thickness/🛰️.proto"),
             },
         },
-        schema::ArtifactInferenceDescriptor {
+        framework_schema::ArtifactInferenceDescriptor {
             id: "s.stdio.gltf.inference.minimum-thickness.v1",
-            inference: schema::FacetLeaves {
+            inference: framework_schema::FacetLeaves {
                 rust: include_str!("↕️thickness/📉️minimum-thickness/🦀️.rs"),
                 typescript: include_str!("↕️thickness/📉️minimum-thickness/🟦️.ts"),
                 graphql: include_str!("↕️thickness/📉️minimum-thickness/🔗️.graphql"),
@@ -678,9 +678,9 @@ pub fn gltf_artifact_inference_descriptors() -> Vec<schema::ArtifactInferenceDes
                 proto: include_str!("↕️thickness/📉️minimum-thickness/🛰️.proto"),
             },
         },
-        schema::ArtifactInferenceDescriptor {
+        framework_schema::ArtifactInferenceDescriptor {
             id: "s.stdio.gltf.inference.thickness-variability.v1",
-            inference: schema::FacetLeaves {
+            inference: framework_schema::FacetLeaves {
                 rust: include_str!("↕️thickness/↔️thickness-variability/🦀️.rs"),
                 typescript: include_str!("↕️thickness/↔️thickness-variability/🟦️.ts"),
                 graphql: include_str!("↕️thickness/↔️thickness-variability/🔗️.graphql"),
@@ -688,9 +688,9 @@ pub fn gltf_artifact_inference_descriptors() -> Vec<schema::ArtifactInferenceDes
                 proto: include_str!("↕️thickness/↔️thickness-variability/🛰️.proto"),
             },
         },
-        schema::ArtifactInferenceDescriptor {
+        framework_schema::ArtifactInferenceDescriptor {
             id: "s.stdio.gltf.inference.thickness-distribution.v1",
-            inference: schema::FacetLeaves {
+            inference: framework_schema::FacetLeaves {
                 rust: include_str!("↕️thickness/📊️thickness-distribution/🦀️.rs"),
                 typescript: include_str!("↕️thickness/📊️thickness-distribution/🟦️.ts"),
                 graphql: include_str!("↕️thickness/📊️thickness-distribution/🔗️.graphql"),
@@ -698,9 +698,9 @@ pub fn gltf_artifact_inference_descriptors() -> Vec<schema::ArtifactInferenceDes
                 proto: include_str!("↕️thickness/📊️thickness-distribution/🛰️.proto"),
             },
         },
-        schema::ArtifactInferenceDescriptor {
+        framework_schema::ArtifactInferenceDescriptor {
             id: "s.stdio.gltf.inference.convex-hull-gap.v1",
-            inference: schema::FacetLeaves {
+            inference: framework_schema::FacetLeaves {
                 rust: include_str!("🕳️concavity/📏️convex-hull-gap/🦀️.rs"),
                 typescript: include_str!("🕳️concavity/📏️convex-hull-gap/🟦️.ts"),
                 graphql: include_str!("🕳️concavity/📏️convex-hull-gap/🔗️.graphql"),
@@ -708,9 +708,9 @@ pub fn gltf_artifact_inference_descriptors() -> Vec<schema::ArtifactInferenceDes
                 proto: include_str!("🕳️concavity/📏️convex-hull-gap/🛰️.proto"),
             },
         },
-        schema::ArtifactInferenceDescriptor {
+        framework_schema::ArtifactInferenceDescriptor {
             id: "s.stdio.gltf.inference.reentrant-area.v1",
-            inference: schema::FacetLeaves {
+            inference: framework_schema::FacetLeaves {
                 rust: include_str!("🕳️concavity/🪣️reentrant-area/🦀️.rs"),
                 typescript: include_str!("🕳️concavity/🪣️reentrant-area/🟦️.ts"),
                 graphql: include_str!("🕳️concavity/🪣️reentrant-area/🔗️.graphql"),
@@ -718,9 +718,9 @@ pub fn gltf_artifact_inference_descriptors() -> Vec<schema::ArtifactInferenceDes
                 proto: include_str!("🕳️concavity/🪣️reentrant-area/🛰️.proto"),
             },
         },
-        schema::ArtifactInferenceDescriptor {
+        framework_schema::ArtifactInferenceDescriptor {
             id: "s.stdio.gltf.inference.reentrant-volume.v1",
-            inference: schema::FacetLeaves {
+            inference: framework_schema::FacetLeaves {
                 rust: include_str!("🕳️concavity/📦️reentrant-volume/🦀️.rs"),
                 typescript: include_str!("🕳️concavity/📦️reentrant-volume/🟦️.ts"),
                 graphql: include_str!("🕳️concavity/📦️reentrant-volume/🔗️.graphql"),
@@ -728,9 +728,9 @@ pub fn gltf_artifact_inference_descriptors() -> Vec<schema::ArtifactInferenceDes
                 proto: include_str!("🕳️concavity/📦️reentrant-volume/🛰️.proto"),
             },
         },
-        schema::ArtifactInferenceDescriptor {
+        framework_schema::ArtifactInferenceDescriptor {
             id: "s.stdio.gltf.inference.concavity-index.v1",
-            inference: schema::FacetLeaves {
+            inference: framework_schema::FacetLeaves {
                 rust: include_str!("🕳️concavity/🔢️concavity-index/🦀️.rs"),
                 typescript: include_str!("🕳️concavity/🔢️concavity-index/🟦️.ts"),
                 graphql: include_str!("🕳️concavity/🔢️concavity-index/🔗️.graphql"),
@@ -738,9 +738,9 @@ pub fn gltf_artifact_inference_descriptors() -> Vec<schema::ArtifactInferenceDes
                 proto: include_str!("🕳️concavity/🔢️concavity-index/🛰️.proto"),
             },
         },
-        schema::ArtifactInferenceDescriptor {
+        framework_schema::ArtifactInferenceDescriptor {
             id: "s.stdio.gltf.inference.minimum-distance-to-neighbors.v1",
-            inference: schema::FacetLeaves {
+            inference: framework_schema::FacetLeaves {
                 rust: include_str!("↔️clearance/📏️minimum-distance-to-neighbors/🦀️.rs"),
                 typescript: include_str!("↔️clearance/📏️minimum-distance-to-neighbors/🟦️.ts"),
                 graphql: include_str!("↔️clearance/📏️minimum-distance-to-neighbors/🔗️.graphql"),
@@ -748,9 +748,9 @@ pub fn gltf_artifact_inference_descriptors() -> Vec<schema::ArtifactInferenceDes
                 proto: include_str!("↔️clearance/📏️minimum-distance-to-neighbors/🛰️.proto"),
             },
         },
-        schema::ArtifactInferenceDescriptor {
+        framework_schema::ArtifactInferenceDescriptor {
             id: "s.stdio.gltf.inference.clearance-distribution.v1",
-            inference: schema::FacetLeaves {
+            inference: framework_schema::FacetLeaves {
                 rust: include_str!("↔️clearance/📊️clearance-distribution/🦀️.rs"),
                 typescript: include_str!("↔️clearance/📊️clearance-distribution/🟦️.ts"),
                 graphql: include_str!("↔️clearance/📊️clearance-distribution/🔗️.graphql"),
@@ -758,9 +758,9 @@ pub fn gltf_artifact_inference_descriptors() -> Vec<schema::ArtifactInferenceDes
                 proto: include_str!("↔️clearance/📊️clearance-distribution/🛰️.proto"),
             },
         },
-        schema::ArtifactInferenceDescriptor {
+        framework_schema::ArtifactInferenceDescriptor {
             id: "s.stdio.gltf.inference.interference-volume.v1",
-            inference: schema::FacetLeaves {
+            inference: framework_schema::FacetLeaves {
                 rust: include_str!("↔️clearance/🚧️interference-volume/🦀️.rs"),
                 typescript: include_str!("↔️clearance/🚧️interference-volume/🟦️.ts"),
                 graphql: include_str!("↔️clearance/🚧️interference-volume/🔗️.graphql"),
@@ -768,9 +768,9 @@ pub fn gltf_artifact_inference_descriptors() -> Vec<schema::ArtifactInferenceDes
                 proto: include_str!("↔️clearance/🚧️interference-volume/🛰️.proto"),
             },
         },
-        schema::ArtifactInferenceDescriptor {
+        framework_schema::ArtifactInferenceDescriptor {
             id: "s.stdio.gltf.inference.overlap-volume.v1",
-            inference: schema::FacetLeaves {
+            inference: framework_schema::FacetLeaves {
                 rust: include_str!("↔️clearance/🫂️overlap-volume/🦀️.rs"),
                 typescript: include_str!("↔️clearance/🫂️overlap-volume/🟦️.ts"),
                 graphql: include_str!("↔️clearance/🫂️overlap-volume/🔗️.graphql"),
@@ -778,9 +778,9 @@ pub fn gltf_artifact_inference_descriptors() -> Vec<schema::ArtifactInferenceDes
                 proto: include_str!("↔️clearance/🫂️overlap-volume/🛰️.proto"),
             },
         },
-        schema::ArtifactInferenceDescriptor {
+        framework_schema::ArtifactInferenceDescriptor {
             id: "s.stdio.gltf.inference.number-of-contacts.v1",
-            inference: schema::FacetLeaves {
+            inference: framework_schema::FacetLeaves {
                 rust: include_str!("🤝️adjacency/🔢️number-of-contacts/🦀️.rs"),
                 typescript: include_str!("🤝️adjacency/🔢️number-of-contacts/🟦️.ts"),
                 graphql: include_str!("🤝️adjacency/🔢️number-of-contacts/🔗️.graphql"),
@@ -788,9 +788,9 @@ pub fn gltf_artifact_inference_descriptors() -> Vec<schema::ArtifactInferenceDes
                 proto: include_str!("🤝️adjacency/🔢️number-of-contacts/🛰️.proto"),
             },
         },
-        schema::ArtifactInferenceDescriptor {
+        framework_schema::ArtifactInferenceDescriptor {
             id: "s.stdio.gltf.inference.contact-graph-degree.v1",
-            inference: schema::FacetLeaves {
+            inference: framework_schema::FacetLeaves {
                 rust: include_str!("🤝️adjacency/🌐️contact-graph-degree/🦀️.rs"),
                 typescript: include_str!("🤝️adjacency/🌐️contact-graph-degree/🟦️.ts"),
                 graphql: include_str!("🤝️adjacency/🌐️contact-graph-degree/🔗️.graphql"),
@@ -798,9 +798,9 @@ pub fn gltf_artifact_inference_descriptors() -> Vec<schema::ArtifactInferenceDes
                 proto: include_str!("🤝️adjacency/🌐️contact-graph-degree/🛰️.proto"),
             },
         },
-        schema::ArtifactInferenceDescriptor {
+        framework_schema::ArtifactInferenceDescriptor {
             id: "s.stdio.gltf.inference.connected-components.v1",
-            inference: schema::FacetLeaves {
+            inference: framework_schema::FacetLeaves {
                 rust: include_str!("🤝️adjacency/🧩️connected-components/🦀️.rs"),
                 typescript: include_str!("🤝️adjacency/🧩️connected-components/🟦️.ts"),
                 graphql: include_str!("🤝️adjacency/🧩️connected-components/🔗️.graphql"),
@@ -808,9 +808,9 @@ pub fn gltf_artifact_inference_descriptors() -> Vec<schema::ArtifactInferenceDes
                 proto: include_str!("🤝️adjacency/🧩️connected-components/🛰️.proto"),
             },
         },
-        schema::ArtifactInferenceDescriptor {
+        framework_schema::ArtifactInferenceDescriptor {
             id: "s.stdio.gltf.inference.main-axis-direction.v1",
-            inference: schema::FacetLeaves {
+            inference: framework_schema::FacetLeaves {
                 rust: include_str!("🧭️orientation/➡️main-axis-direction/🦀️.rs"),
                 typescript: include_str!("🧭️orientation/➡️main-axis-direction/🟦️.ts"),
                 graphql: include_str!("🧭️orientation/➡️main-axis-direction/🔗️.graphql"),
@@ -818,9 +818,9 @@ pub fn gltf_artifact_inference_descriptors() -> Vec<schema::ArtifactInferenceDes
                 proto: include_str!("🧭️orientation/➡️main-axis-direction/🛰️.proto"),
             },
         },
-        schema::ArtifactInferenceDescriptor {
+        framework_schema::ArtifactInferenceDescriptor {
             id: "s.stdio.gltf.inference.face-normal-distribution.v1",
-            inference: schema::FacetLeaves {
+            inference: framework_schema::FacetLeaves {
                 rust: include_str!("🧭️orientation/📊️face-normal-distribution/🦀️.rs"),
                 typescript: include_str!("🧭️orientation/📊️face-normal-distribution/🟦️.ts"),
                 graphql: include_str!("🧭️orientation/📊️face-normal-distribution/🔗️.graphql"),
@@ -828,9 +828,9 @@ pub fn gltf_artifact_inference_descriptors() -> Vec<schema::ArtifactInferenceDes
                 proto: include_str!("🧭️orientation/📊️face-normal-distribution/🛰️.proto"),
             },
         },
-        schema::ArtifactInferenceDescriptor {
+        framework_schema::ArtifactInferenceDescriptor {
             id: "s.stdio.gltf.inference.orientation-consistency.v1",
-            inference: schema::FacetLeaves {
+            inference: framework_schema::FacetLeaves {
                 rust: include_str!("🧭️orientation/🧲️orientation-consistency/🦀️.rs"),
                 typescript: include_str!("🧭️orientation/🧲️orientation-consistency/🟦️.ts"),
                 graphql: include_str!("🧭️orientation/🧲️orientation-consistency/🔗️.graphql"),
@@ -838,9 +838,9 @@ pub fn gltf_artifact_inference_descriptors() -> Vec<schema::ArtifactInferenceDes
                 proto: include_str!("🧭️orientation/🧲️orientation-consistency/🛰️.proto"),
             },
         },
-        schema::ArtifactInferenceDescriptor {
+        framework_schema::ArtifactInferenceDescriptor {
             id: "s.stdio.gltf.inference.reflection-symmetry-score.v1",
-            inference: schema::FacetLeaves {
+            inference: framework_schema::FacetLeaves {
                 rust: include_str!("🪞️symmetry/⚖️reflection-symmetry-score/🦀️.rs"),
                 typescript: include_str!("🪞️symmetry/⚖️reflection-symmetry-score/🟦️.ts"),
                 graphql: include_str!("🪞️symmetry/⚖️reflection-symmetry-score/🔗️.graphql"),
@@ -848,9 +848,9 @@ pub fn gltf_artifact_inference_descriptors() -> Vec<schema::ArtifactInferenceDes
                 proto: include_str!("🪞️symmetry/⚖️reflection-symmetry-score/🛰️.proto"),
             },
         },
-        schema::ArtifactInferenceDescriptor {
+        framework_schema::ArtifactInferenceDescriptor {
             id: "s.stdio.gltf.inference.rotational-symmetry-score.v1",
-            inference: schema::FacetLeaves {
+            inference: framework_schema::FacetLeaves {
                 rust: include_str!("🪞️symmetry/🔄️rotational-symmetry-score/🦀️.rs"),
                 typescript: include_str!("🪞️symmetry/🔄️rotational-symmetry-score/🟦️.ts"),
                 graphql: include_str!("🪞️symmetry/🔄️rotational-symmetry-score/🔗️.graphql"),
@@ -858,9 +858,9 @@ pub fn gltf_artifact_inference_descriptors() -> Vec<schema::ArtifactInferenceDes
                 proto: include_str!("🪞️symmetry/🔄️rotational-symmetry-score/🛰️.proto"),
             },
         },
-        schema::ArtifactInferenceDescriptor {
+        framework_schema::ArtifactInferenceDescriptor {
             id: "s.stdio.gltf.inference.reflection-symmetries.v1",
-            inference: schema::FacetLeaves {
+            inference: framework_schema::FacetLeaves {
                 rust: include_str!("🪞️symmetry/🪞️reflection-symmetries/🦀️.rs"),
                 typescript: include_str!("🪞️symmetry/🪞️reflection-symmetries/🟦️.ts"),
                 graphql: include_str!("🪞️symmetry/🪞️reflection-symmetries/🔗️.graphql"),
@@ -868,9 +868,9 @@ pub fn gltf_artifact_inference_descriptors() -> Vec<schema::ArtifactInferenceDes
                 proto: include_str!("🪞️symmetry/🪞️reflection-symmetries/🛰️.proto"),
             },
         },
-        schema::ArtifactInferenceDescriptor {
+        framework_schema::ArtifactInferenceDescriptor {
             id: "s.stdio.gltf.inference.rotational-symmetries.v1",
-            inference: schema::FacetLeaves {
+            inference: framework_schema::FacetLeaves {
                 rust: include_str!("🪞️symmetry/🔁️rotational-symmetries/🦀️.rs"),
                 typescript: include_str!("🪞️symmetry/🔁️rotational-symmetries/🟦️.ts"),
                 graphql: include_str!("🪞️symmetry/🔁️rotational-symmetries/🔗️.graphql"),
@@ -878,9 +878,9 @@ pub fn gltf_artifact_inference_descriptors() -> Vec<schema::ArtifactInferenceDes
                 proto: include_str!("🪞️symmetry/🔁️rotational-symmetries/🛰️.proto"),
             },
         },
-        schema::ArtifactInferenceDescriptor {
+        framework_schema::ArtifactInferenceDescriptor {
             id: "s.stdio.gltf.inference.repetition-ratio.v1",
-            inference: schema::FacetLeaves {
+            inference: framework_schema::FacetLeaves {
                 rust: include_str!("🪞️symmetry/🔂️repetition-ratio/🦀️.rs"),
                 typescript: include_str!("🪞️symmetry/🔂️repetition-ratio/🟦️.ts"),
                 graphql: include_str!("🪞️symmetry/🔂️repetition-ratio/🔗️.graphql"),
@@ -888,9 +888,9 @@ pub fn gltf_artifact_inference_descriptors() -> Vec<schema::ArtifactInferenceDes
                 proto: include_str!("🪞️symmetry/🔂️repetition-ratio/🛰️.proto"),
             },
         },
-        schema::ArtifactInferenceDescriptor {
+        framework_schema::ArtifactInferenceDescriptor {
             id: "s.stdio.gltf.inference.modularity-ratio.v1",
-            inference: schema::FacetLeaves {
+            inference: framework_schema::FacetLeaves {
                 rust: include_str!("🪞️symmetry/🧩️modularity-ratio/🦀️.rs"),
                 typescript: include_str!("🪞️symmetry/🧩️modularity-ratio/🟦️.ts"),
                 graphql: include_str!("🪞️symmetry/🧩️modularity-ratio/🔗️.graphql"),
@@ -898,9 +898,9 @@ pub fn gltf_artifact_inference_descriptors() -> Vec<schema::ArtifactInferenceDes
                 proto: include_str!("🪞️symmetry/🧩️modularity-ratio/🛰️.proto"),
             },
         },
-        schema::ArtifactInferenceDescriptor {
+        framework_schema::ArtifactInferenceDescriptor {
             id: "s.stdio.gltf.inference.deviation-from-ideal.v1",
-            inference: schema::FacetLeaves {
+            inference: framework_schema::FacetLeaves {
                 rust: include_str!("🌊️roughness/🎯️deviation-from-ideal/🦀️.rs"),
                 typescript: include_str!("🌊️roughness/🎯️deviation-from-ideal/🟦️.ts"),
                 graphql: include_str!("🌊️roughness/🎯️deviation-from-ideal/🔗️.graphql"),
@@ -908,9 +908,9 @@ pub fn gltf_artifact_inference_descriptors() -> Vec<schema::ArtifactInferenceDes
                 proto: include_str!("🌊️roughness/🎯️deviation-from-ideal/🛰️.proto"),
             },
         },
-        schema::ArtifactInferenceDescriptor {
+        framework_schema::ArtifactInferenceDescriptor {
             id: "s.stdio.gltf.inference.deviation-from-smoothed-geometry.v1",
-            inference: schema::FacetLeaves {
+            inference: framework_schema::FacetLeaves {
                 rust: include_str!("🌊️roughness/🧽️deviation-from-smoothed-geometry/🦀️.rs"),
                 typescript: include_str!("🌊️roughness/🧽️deviation-from-smoothed-geometry/🟦️.ts"),
                 graphql: include_str!("🌊️roughness/🧽️deviation-from-smoothed-geometry/🔗️.graphql"),
@@ -918,9 +918,9 @@ pub fn gltf_artifact_inference_descriptors() -> Vec<schema::ArtifactInferenceDes
                 proto: include_str!("🌊️roughness/🧽️deviation-from-smoothed-geometry/🛰️.proto"),
             },
         },
-        schema::ArtifactInferenceDescriptor {
+        framework_schema::ArtifactInferenceDescriptor {
             id: "s.stdio.gltf.inference.normal-variation.v1",
-            inference: schema::FacetLeaves {
+            inference: framework_schema::FacetLeaves {
                 rust: include_str!("🌊️roughness/🧭️normal-variation/🦀️.rs"),
                 typescript: include_str!("🌊️roughness/🧭️normal-variation/🟦️.ts"),
                 graphql: include_str!("🌊️roughness/🧭️normal-variation/🔗️.graphql"),
@@ -928,9 +928,9 @@ pub fn gltf_artifact_inference_descriptors() -> Vec<schema::ArtifactInferenceDes
                 proto: include_str!("🌊️roughness/🧭️normal-variation/🛰️.proto"),
             },
         },
-        schema::ArtifactInferenceDescriptor {
+        framework_schema::ArtifactInferenceDescriptor {
             id: "s.stdio.gltf.inference.surface-waviness.v1",
-            inference: schema::FacetLeaves {
+            inference: framework_schema::FacetLeaves {
                 rust: include_str!("🌊️roughness/🌊️surface-waviness/🦀️.rs"),
                 typescript: include_str!("🌊️roughness/🌊️surface-waviness/🟦️.ts"),
                 graphql: include_str!("🌊️roughness/🌊️surface-waviness/🔗️.graphql"),
@@ -938,9 +938,9 @@ pub fn gltf_artifact_inference_descriptors() -> Vec<schema::ArtifactInferenceDes
                 proto: include_str!("🌊️roughness/🌊️surface-waviness/🛰️.proto"),
             },
         },
-        schema::ArtifactInferenceDescriptor {
+        framework_schema::ArtifactInferenceDescriptor {
             id: "s.stdio.gltf.inference.irregularity.v1",
-            inference: schema::FacetLeaves {
+            inference: framework_schema::FacetLeaves {
                 rust: include_str!("🌊️roughness/🪨️irregularity/🦀️.rs"),
                 typescript: include_str!("🌊️roughness/🪨️irregularity/🟦️.ts"),
                 graphql: include_str!("🌊️roughness/🪨️irregularity/🔗️.graphql"),
@@ -948,9 +948,9 @@ pub fn gltf_artifact_inference_descriptors() -> Vec<schema::ArtifactInferenceDes
                 proto: include_str!("🌊️roughness/🪨️irregularity/🛰️.proto"),
             },
         },
-        schema::ArtifactInferenceDescriptor {
+        framework_schema::ArtifactInferenceDescriptor {
             id: "s.stdio.gltf.inference.holes.v1",
-            inference: schema::FacetLeaves {
+            inference: framework_schema::FacetLeaves {
                 rust: include_str!("🕸️topology/🕳️holes/🦀️.rs"),
                 typescript: include_str!("🕸️topology/🕳️holes/🟦️.ts"),
                 graphql: include_str!("🕸️topology/🕳️holes/🔗️.graphql"),
@@ -958,9 +958,9 @@ pub fn gltf_artifact_inference_descriptors() -> Vec<schema::ArtifactInferenceDes
                 proto: include_str!("🕸️topology/🕳️holes/🛰️.proto"),
             },
         },
-        schema::ArtifactInferenceDescriptor {
+        framework_schema::ArtifactInferenceDescriptor {
             id: "s.stdio.gltf.inference.handles.v1",
-            inference: schema::FacetLeaves {
+            inference: framework_schema::FacetLeaves {
                 rust: include_str!("🕸️topology/🥯️handles/🦀️.rs"),
                 typescript: include_str!("🕸️topology/🥯️handles/🟦️.ts"),
                 graphql: include_str!("🕸️topology/🥯️handles/🔗️.graphql"),
@@ -968,9 +968,9 @@ pub fn gltf_artifact_inference_descriptors() -> Vec<schema::ArtifactInferenceDes
                 proto: include_str!("🕸️topology/🥯️handles/🛰️.proto"),
             },
         },
-        schema::ArtifactInferenceDescriptor {
+        framework_schema::ArtifactInferenceDescriptor {
             id: "s.stdio.gltf.inference.boundary-loops.v1",
-            inference: schema::FacetLeaves {
+            inference: framework_schema::FacetLeaves {
                 rust: include_str!("🕸️topology/➰️boundary-loops/🦀️.rs"),
                 typescript: include_str!("🕸️topology/➰️boundary-loops/🟦️.ts"),
                 graphql: include_str!("🕸️topology/➰️boundary-loops/🔗️.graphql"),
@@ -978,9 +978,9 @@ pub fn gltf_artifact_inference_descriptors() -> Vec<schema::ArtifactInferenceDes
                 proto: include_str!("🕸️topology/➰️boundary-loops/🛰️.proto"),
             },
         },
-        schema::ArtifactInferenceDescriptor {
+        framework_schema::ArtifactInferenceDescriptor {
             id: "s.stdio.gltf.inference.euler-characteristic.v1",
-            inference: schema::FacetLeaves {
+            inference: framework_schema::FacetLeaves {
                 rust: include_str!("🕸️topology/🧮️euler-characteristic/🦀️.rs"),
                 typescript: include_str!("🕸️topology/🧮️euler-characteristic/🟦️.ts"),
                 graphql: include_str!("🕸️topology/🧮️euler-characteristic/🔗️.graphql"),
@@ -988,9 +988,9 @@ pub fn gltf_artifact_inference_descriptors() -> Vec<schema::ArtifactInferenceDes
                 proto: include_str!("🕸️topology/🧮️euler-characteristic/🛰️.proto"),
             },
         },
-        schema::ArtifactInferenceDescriptor {
+        framework_schema::ArtifactInferenceDescriptor {
             id: "s.stdio.gltf.inference.genus.v1",
-            inference: schema::FacetLeaves {
+            inference: framework_schema::FacetLeaves {
                 rust: include_str!("🕸️topology/🔢️genus/🦀️.rs"),
                 typescript: include_str!("🕸️topology/🔢️genus/🟦️.ts"),
                 graphql: include_str!("🕸️topology/🔢️genus/🔗️.graphql"),

@@ -1,0 +1,57 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/fem/2d/1/load/mutation/create-combination.json",
+  "title": "CreateCombination",
+  "description": "The `create-combination` mutation payload as it travels the wire: internally tagged with `\"mutation\": \"createCombination\"`, camelCase throughout. Structural only — the plausibility and geometry bounds this kind enforces live in the SNAPSHOT schema, because they are properties of a valid document rather than of a well-formed payload; each is annotated there with the `mutations::guards` function that raises them.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "combination"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "createCombination",
+      "description": "The internally tagged discriminator `#[value(tag = \"mutation\")]` puts on the wire."
+    },
+    "combination": {
+      "title": "FemCombination",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "terms"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "terms": {
+          "type": "array",
+          "items": {
+            "title": "FemCombinationTerm",
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "caseId",
+              "factor"
+            ],
+            "properties": {
+              "caseId": {
+                "type": "string"
+              },
+              "factor": {
+                "type": "number",
+                "format": "double"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,7 +1,7 @@
 //! 🧬️ Authoritative remove-text-chunk mutation.
-use crate::artifacts::png::schema::diff::*;
-use crate::artifacts::png::schema::mutations::PngMutation;
-use crate::artifacts::png::schema::snapshot::*;
+use crate::schema::diff::*;
+use crate::schema::mutations::PngMutation;
+use crate::schema::snapshot::*;
 
 //#region Payload
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
@@ -33,7 +33,7 @@ impl protocol::MutationKind<PngSnapshot, PngMutation> for RemoveTextChunkMutatio
             return Vec::new();
         }
         match base.text_chunks.get(*index) {
-            Some(chunk) => vec![PngMutation::InsertTextChunk(crate::artifacts::png::schema::mutations::InsertTextChunkMutation { index: *index, chunk: chunk.clone() })],
+            Some(chunk) => vec![PngMutation::InsertTextChunk(crate::schema::mutations::InsertTextChunkMutation { index: *index, chunk: chunk.clone() })],
             None => Vec::new(),
         }
     }

@@ -1,0 +1,81 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/print/tectonic-template-compilation/toolchain/schema.json",
+  "title": "PrintToolchainManifest",
+  "description": "Pinned tectonic release downloaded per platform.",
+  "$ref": "#/$defs/PrintToolchainManifest",
+  "$defs": {
+    "PrintToolchainManifest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "release",
+        "platforms"
+      ],
+      "properties": {
+        "version": {
+          "type": "string",
+          "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+        },
+        "release": {
+          "type": "string",
+          "pattern": "^https://github.com/tectonic-typesetting/tectonic/releases/download/"
+        },
+        "platforms": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/PrintToolchainPlatform"
+          }
+        }
+      }
+    },
+    "PrintToolchainPlatform": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "platform",
+        "architecture",
+        "target",
+        "archive",
+        "sha256",
+        "bytes"
+      ],
+      "properties": {
+        "platform": {
+          "enum": [
+            "darwin",
+            "linux",
+            "win32"
+          ]
+        },
+        "architecture": {
+          "enum": [
+            "arm64",
+            "x64",
+            "arm",
+            "ia32"
+          ]
+        },
+        "target": {
+          "type": "string",
+          "minLength": 1
+        },
+        "archive": {
+          "type": "string",
+          "pattern": "^tectonic-[A-Za-z0-9_.-]+$"
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 104857600
+        }
+      }
+    }
+  }
+}

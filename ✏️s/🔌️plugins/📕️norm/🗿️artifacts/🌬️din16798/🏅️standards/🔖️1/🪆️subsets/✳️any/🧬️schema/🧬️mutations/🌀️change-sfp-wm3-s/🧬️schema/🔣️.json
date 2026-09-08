@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/norm/din16798/1/any/mutation/change-sfp-wm3-s.json",
+  "title": "ChangeSfpWM3S",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newSfpWM3S"
+  ],
+  "properties": {
+    "newSfpWM3S": {
+      "type": "number"
+    }
+  }
+}

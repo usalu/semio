@@ -1,0 +1,29 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/energy/model/1/any/mutation/update-ground-temperature.json",
+  "title": "UpdateGroundTemperature",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "buildingSurfaceC",
+    "shallowC",
+    "deepC"
+  ],
+  "properties": {
+    "buildingSurfaceC": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      }
+    },
+    "shallowC": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      }
+    },
+    "deepC": {
+      "type": "number"
+    }
+  }
+}

@@ -91,7 +91,7 @@
         {
           "id": "remove-conformance-attribute",
           "capability": "xlsx-ecma-376-transitional-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -111,7 +111,7 @@
         {
           "id": "set-conformance-attribute",
           "capability": "xlsx-ecma-376-transitional-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -131,7 +131,7 @@
         {
           "id": "set-main-namespace",
           "capability": "xlsx-ecma-376-transitional-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -151,7 +151,7 @@
         {
           "id": "set-relationships-namespace",
           "capability": "xlsx-ecma-376-transitional-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -171,7 +171,7 @@
         {
           "id": "set-snapshot",
           "capability": "xlsx-ecma-376-transitional-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -191,7 +191,7 @@
         {
           "id": "set-worksheet-content-type",
           "capability": "xlsx-ecma-376-transitional-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],

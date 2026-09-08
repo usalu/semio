@@ -33,7 +33,7 @@ pub mod export_shots {
                 .iter()
                 .map(|shot| IconRenderExportItem {
                     filename: format!("{}.{}", shot.id, if shot.format == "png" { "png" } else { "svg" }),
-                    request: dsl::os_pack::json::parse(&shooting_icon_render_request_json(doc.snapshot, shot, asset, &config.camera)).map(|value| dsl::os_pack::json::to_dsl_value(&value)).unwrap_or(DslValue::Null),
+                    request: dsl::os_pack::json::parse(&shooting_icon_render_request_json(doc.snapshot, shot, asset, &config.camera)).map_or(DslValue::Null, |value| dsl::os_pack::json::to_dsl_value(&value)),
                 })
                 .collect();
             if !items.is_empty() {

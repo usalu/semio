@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeVentilationM3H, base: &Din16798Snapshot) -> protocol
     if base.ventilation_m3_h == payload.new_ventilation_m3_h {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Ventilation air flow is already {}.", payload.new_ventilation_m3_h));
     }
-    protocol::MutationOutcome::new(Din16798Diff { ventilation_m3_h: Some(payload.new_ventilation_m3_h.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(Din16798Diff { ventilation_m3_h: Some(payload.new_ventilation_m3_h), ..Default::default() })
 }
 //#endregion 🔖️Diff

@@ -1,11 +1,20 @@
 //! 🎪 `stdio.deflate` artifact — stdio reference format.
 
+#![allow(async_fn_in_trait)]
+#![allow(long_running_const_eval)]
+
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_schema as framework_schema;
+extern crate semio_framework_value_derive as value_derive;
+
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 
-pub use crate::artifacts::deflate::schema::diff::DeflateDiff;
-pub use crate::artifacts::deflate::schema::mutations::DeflateMutation;
-pub use crate::artifacts::deflate::schema::snapshot::DeflateSnapshot;
-pub use crate::artifacts::deflate::schema::DeflateArtifact;
+pub use schema::diff::DeflateDiff;
+pub use schema::mutations::DeflateMutation;
+pub use schema::snapshot::DeflateSnapshot;
+pub use schema::DeflateArtifact;
 
 /// 🏷️ Document schema / DSL envelope id.
 pub const STDIO_DEFLATE_DOCUMENT_SCHEMA: &str = "stdio.deflate";
@@ -13,9 +22,44 @@ pub const STDIO_DEFLATE_DOCUMENT_SCHEMA: &str = "stdio.deflate";
 /// 🧬️ Artifact schema descriptor id.
 pub const DEFLATE_ARTIFACT_SCHEMA_ID: &str = "s.stdio.deflate";
 
+/// 📜 Schema-owned package definition.
+pub const ARTIFACT_DEFINITION_SCHEMA: &str = include_str!("🧬️schema/📜️artifact-definition.json");
+
+pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::PluginAssemblyError> {
+    let factories = native_codecs();
+    let executables = semio_s_artifact_stdio_contract::native_codec_executables(ARTIFACT_DEFINITION_SCHEMA, &factories)?;
+    semio_s_artifact_stdio_contract::definition_from_schema_with_executables(ARTIFACT_DEFINITION_SCHEMA, executables)
+}
+
+pub fn formats() -> Result<Vec<semio_framework_plugin::io::FormatDescriptor>, semio_framework_plugin::ArtifactDefinitionError> {
+    semio_s_artifact_stdio_contract::format_descriptors(ARTIFACT_DEFINITION_SCHEMA)
+}
+
+fn native_codec() -> store::ArtifactCodec {
+    let mut codec = store::ArtifactCodec::of::<DeflateSnapshot, DeflateMutation>(STDIO_DEFLATE_DOCUMENT_SCHEMA);
+    codec.extension = "zz";
+    codec.pack_schema_hash = semio_framework_hash::Sha256::digest(include_bytes!("🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio"));
+    codec
+}
+
+pub fn native_codecs() -> Vec<semio_s_artifact_stdio_contract::NativeCodecFactory> {
+    vec![semio_s_artifact_stdio_contract::NativeCodecFactory { id: "stdio.native.deflate.v1", artifact: "deflate", kind: artifact_kind, codec: native_codec }]
+}
+
+pub fn contribution() -> semio_s_artifact_stdio_contract::ArtifactContribution {
+    semio_s_artifact_stdio_contract::ArtifactContribution {
+        identity: "deflate",
+        schema: ARTIFACT_DEFINITION_SCHEMA,
+        definition,
+        assembly,
+        formats,
+        native_codecs,
+    }
+}
+
 //#region 🔖️Declaration
 /// 🔖️ This artifact's declaration (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE W6, g2) —
-/// replaces the old side-effecting `crate::artifacts::deflate::engine::register()`, which the
+/// replaces the old side-effecting `crate::engine::register()`, which the
 /// plugin root called unconditionally before `Plugin::builder(...)` was even constructed. Mirrors
 /// `🔋️energy`'s `s.model` exemplar exactly: a headless library artifact with zero `ArtifactApp`s,
 /// so `.document_codec_bare::<Snapshot, Mutation>(schema)` stands in for
@@ -36,18 +80,18 @@ pub const DEFLATE_ARTIFACT_SCHEMA_ID: &str = "s.stdio.deflate";
 /// location by the dissolution.
 /// 🧩️ Binds this executable root to its sole schema-owned definition.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn assembly(definition: semio_framework_plugin::ArtifactDefinition) -> Result<crate::registry::ArtifactAssembly, semio_framework_plugin::PluginAssemblyError> {
-    crate::registry::runtime_assembly("deflate", definition, declaration)
+pub fn assembly() -> Result<semio_s_artifact_stdio_contract::ArtifactAssembly, semio_framework_plugin::PluginAssemblyError> {
+    semio_s_artifact_stdio_contract::runtime_assembly("deflate", definition()?, declaration)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
-    let formats = crate::registry::format_descriptors_for("deflate")?;
+    let formats = formats()?;
     semio_framework_plugin::ArtifactDeclaration::builder(definition)
-        .schema(crate::artifacts::deflate::schema::deflate_artifact_schema_descriptor())
+        .schema(crate::schema::deflate_artifact_schema_descriptor())
         .formats(formats)
-        .inferences([crate::artifacts::deflate::schema::inferences::deflate_artifact_inference_descriptor()])
-        .composers(crate::artifacts::deflate::standards::v_rfc1950::subsets::any::io::io_registry::entries())
+        .inferences([crate::schema::inferences::deflate_artifact_inference_descriptor()])
+        .composers(crate::standards::v_rfc1950::subsets::any::io::io_registry::entries())
         .languages(pilot_languages())
         .document_codec_bare::<DeflateSnapshot, DeflateMutation>(STDIO_DEFLATE_DOCUMENT_SCHEMA)
         .try_build()
@@ -56,7 +100,7 @@ pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Re
 /// 📌️ Handcrafted facet grammars (text) and protocols (binary) for in-process execution — built
 /// once and leaked to a `&'static` slice since `dsl::passthrough_hooks` isn't `const fn`, copied
 /// verbatim (five `LanguageSpec` rows, one per role) from the former
-/// `crate::artifacts::deflate::engine::register_pilot_languages`'s own
+/// `crate::engine::register_pilot_languages`'s own
 /// `dsl::register_language(...)` call bodies — same ids, same grammar/protocol paths, same
 /// `passthrough_hooks` calls.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -69,28 +113,28 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                     id: "stdio.deflate",
                     extension: Some("zz"),
                     role: dsl::LanguageRole::Document,
-                    grammar: Some(crate::artifacts::deflate::schema::snapshot::text::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::artifacts::deflate::schema::snapshot::text::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(crate::artifacts::deflate::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::artifacts::deflate::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(crate::schema::snapshot::text::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::schema::snapshot::text::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(crate::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("stdio.deflate"),
                 },
                 dsl::LanguageSpec {
                     id: "stdio.deflate.op",
                     extension: None,
                     role: dsl::LanguageRole::Ops,
-                    grammar: Some(crate::artifacts::deflate::schema::mutations::text::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::artifacts::deflate::schema::mutations::text::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(crate::artifacts::deflate::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::artifacts::deflate::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(crate::schema::mutations::text::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::schema::mutations::text::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(crate::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("stdio.deflate.op"),
                 },
                 dsl::LanguageSpec {
                     id: "stdio.deflate.diff",
                     extension: None,
                     role: dsl::LanguageRole::Diff,
-                    grammar: Some(crate::artifacts::deflate::schema::diff::text::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::artifacts::deflate::schema::diff::text::COMPONENT_GRAMMAR_PATH),
+                    grammar: Some(crate::schema::diff::text::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::schema::diff::text::COMPONENT_GRAMMAR_PATH),
                     protocol: None,
                     protocol_path: None,
                     hooks: dsl::passthrough_hooks("stdio.deflate.diff"),
@@ -101,8 +145,8 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                     role: dsl::LanguageRole::Pack,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(crate::artifacts::deflate::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::artifacts::deflate::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(crate::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("stdio.deflate.pack"),
                 },
                 dsl::LanguageSpec {
@@ -111,8 +155,8 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                     role: dsl::LanguageRole::Spr,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(crate::artifacts::deflate::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::artifacts::deflate::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(crate::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("stdio.deflate.spr"),
                 },
             ]
@@ -143,7 +187,7 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 //#endregion 🔖️ArtifactKind
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
-    use crate::artifacts::deflate::standards::v_rfc1950::subsets::any::io::io_registry as v_rfc1950;
+    use crate::standards::v_rfc1950::subsets::any::io::io_registry as v_rfc1950;
     use semio_framework_plugin::{register_composer_entries, ComposeError, ComposedArtifact, ComposerEntry, Dialect, ErasedComposeSource};
     use std::sync::OnceLock;
 
@@ -166,3 +210,204 @@ pub mod io_registry {
     }
 }
 //#endregion 🚪️DerivedIoRegistry
+
+#[path = "."]
+pub mod standards {
+    #[path = "."]
+    pub mod v_rfc1950 {
+        // 🐜️ `⚙️engine/` dissolved (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES):
+        // pure format algorithms (Adler32/BitIO/Huffman/LZ77) + `zlib_compress`/
+        // `zlib_decompress` + `encode_deflate_snapshot`/`decode_deflate_snapshot` +
+        // `io_registry` + `register_schema_specs` all moved into `subsets::any::io`
+        // (rule 6: deflate's Huffman/LZ77 is the clearest "keep with the codec" case);
+        // `empty_deflate_snapshot`/`demo_deflate_snapshot` moved to `subsets::any::schema`;
+        // `DeflateEngine` (zero construction sites repo-wide) deleted outright; tests moved
+        // into `subsets::any::io` (codec tests) and `subsets::any::schema::inferences`
+        // (conformance laws). `deflate` is NOT one of stdio's 10 protected imperative
+        // plugin-root calls (it already used the declarative `ArtifactDeclaration` builder)
+        // — every call site was repointed directly at the new locations, and no `engine`
+        // shim survives here since nothing references it anymore.
+        #[path = "."]
+        pub mod subsets {
+            #[path = "."]
+            pub mod any {
+                #[path = "."]
+                pub mod schema {
+                    #[path = "🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🧬️schema/🦀️.rs"]
+                    mod component;
+                    pub use component::*;
+                    #[path = "."]
+                    pub mod snapshot {
+                        #[path = "🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                        #[path = "🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/🦀️.rs"]
+                        pub mod binary;
+                        #[path = "🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🦀️.rs"]
+                        pub mod text;
+                    }
+                    #[path = "."]
+                    pub mod inferences {
+                        #[path = "🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                        #[path = "🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🧬️schema/💡️inferences/💾️binary/🦀️.rs"]
+                        pub mod binary;
+                        #[path = "🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🧬️schema/💡️inferences/📝️text/🦀️.rs"]
+                        pub mod text;
+                        #[path = "."]
+                        pub mod window {
+                            #[path = "🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🧬️schema/💡️inferences/🪟window/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                    }
+                    #[path = "."]
+                    pub mod diff {
+                        #[path = "🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                        #[path = "🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🧬️schema/🔺️diff/💾️binary/🦀️.rs"]
+                        pub mod binary;
+                        #[path = "🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🧬️schema/🔺️diff/📝️text/🦀️.rs"]
+                        pub mod text;
+                    }
+                    #[path = "."]
+                    pub mod mutations {
+                        #[path = "🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                        #[path = "🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️.rs"]
+                        pub mod binary;
+                        #[path = "🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️.rs"]
+                        pub mod text;
+                    }
+                }
+                #[path = "."]
+                pub mod io {
+                    #[path = "🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🚪️io/🦀️.rs"]
+                    mod component;
+                    pub use component::*;
+                    #[path = "."]
+                    pub mod import {
+                        #[path = "."]
+                        pub mod deserializers {
+                            #[path = "."]
+                            pub mod artifacts {
+                                #[path = "."]
+                                pub mod binary {
+                                    #[path = "."]
+                                    pub mod v_raw {
+                                        #[path = "."]
+                                        pub mod any {
+                                            #[path = "🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/💾️binary/🔖️raw/✳️any/🦀️.rs"]
+                                            mod component;
+                                            pub use component::*;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    #[path = "."]
+                    pub mod export {
+                        #[path = "."]
+                        pub mod serializers {
+                            #[path = "."]
+                            pub mod artifacts {
+                                #[path = "."]
+                                pub mod binary {
+                                    #[path = "."]
+                                    pub mod v_raw {
+                                        #[path = "."]
+                                        pub mod any {
+                                            #[path = "🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/💾️binary/🔖️raw/✳️any/🦀️.rs"]
+                                            mod component;
+                                            pub use component::*;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+// ---- Shims: keep pre-migration module paths resolving for external callers ----
+pub mod schema {
+    pub use super::standards::v_rfc1950::subsets::any::schema::*;
+}
+pub mod io {
+    pub use super::standards::v_rfc1950::subsets::any::io::*;
+}
+
+#[path = "."]
+pub mod examples {
+    #[path = "."]
+    pub mod demo {
+        #[path = "🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️.rs"]
+        mod component;
+        pub use component::*;
+    }
+}
+
+#[cfg(feature = "component-app-assembly")]
+#[path = "."]
+pub mod editor {
+    #[path = "."]
+    pub mod deflate {
+        #[path = "🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/✏️editor/🦀️.rs"]
+        mod component;
+        pub use component::*;
+        #[path = "."]
+        pub mod modes {
+            #[path = "."]
+            pub mod edit {
+                #[path = "🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🦀️.rs"]
+                mod component;
+                pub use component::*;
+                #[path = "."]
+                pub mod windows {
+                    #[path = "."]
+                    pub mod main {
+                        #[path = "🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+        }
+    }
+}
+
+#[cfg(feature = "component-app-assembly")]
+#[path = "."]
+pub mod viewer {
+    #[path = "."]
+    pub mod deflate {
+        #[path = "🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/👁️viewer/🦀️.rs"]
+        mod component;
+        pub use component::*;
+        #[path = "."]
+        pub mod modes {
+            #[path = "."]
+            pub mod view {
+                #[path = "🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🦀️.rs"]
+                mod component;
+                pub use component::*;
+                #[path = "."]
+                pub mod windows {
+                    #[path = "."]
+                    pub mod main {
+                        #[path = "🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+        }
+    }
+}

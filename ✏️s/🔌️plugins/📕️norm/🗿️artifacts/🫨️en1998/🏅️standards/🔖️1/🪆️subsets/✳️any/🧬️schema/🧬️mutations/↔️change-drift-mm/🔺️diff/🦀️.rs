@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeDriftMm, base: &En1998Snapshot) -> protocol::Mutatio
     if base.drift_mm == payload.new_drift_mm {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Interstorey drift [mm] is already {}.", payload.new_drift_mm));
     }
-    protocol::MutationOutcome::new(En1998Diff { drift_mm: Some(payload.new_drift_mm.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1998Diff { drift_mm: Some(payload.new_drift_mm), ..Default::default() })
 }
 //#endregion 🔖️Diff

@@ -1,27 +1,164 @@
 {
-  "$id": "https://semio.tech/schema/s.stdio.semio.brep/mutations.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/brep/mutations.json",
   "title": "SemioBrepMutation",
-  "description": "Named-variant enum, tag field `mutation`, camelCase. SMO's approved 13-verb brep vocabulary (create/delete-{vertex,edge,face,shell,solid}, replace-{curve,surface}, move-vertex). See the sibling 🦀️.rs for the real source of truth.",
-  "type": "object",
-  "properties": {
-    "mutation": {
-      "type": "string",
-      "enum": [
-        "createVertex",
-        "deleteVertex",
-        "createEdge",
-        "deleteEdge",
-        "createFace",
-        "deleteFace",
-        "createShell",
-        "deleteShell",
-        "createSolid",
-        "deleteSolid",
-        "replaceCurve",
-        "replaceSurface",
-        "moveVertex"
-      ]
+  "description": "Discriminated union over this module's mutation leaves (externally tagged); every payload is the leaf's own schema, referenced, never restated.",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "CreateEdge"
+      ],
+      "properties": {
+        "CreateEdge": {
+          "$ref": "./🖇️create-edge/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "CreateFace"
+      ],
+      "properties": {
+        "CreateFace": {
+          "$ref": "./🔷create-face/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "CreateShell"
+      ],
+      "properties": {
+        "CreateShell": {
+          "$ref": "./🐚create-shell/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "CreateSolid"
+      ],
+      "properties": {
+        "CreateSolid": {
+          "$ref": "./🧊create-solid/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "CreateVertex"
+      ],
+      "properties": {
+        "CreateVertex": {
+          "$ref": "./🏗️create-vertex/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "DeleteEdge"
+      ],
+      "properties": {
+        "DeleteEdge": {
+          "$ref": "./✂️delete-edge/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "DeleteFace"
+      ],
+      "properties": {
+        "DeleteFace": {
+          "$ref": "./🚮delete-face/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "DeleteShell"
+      ],
+      "properties": {
+        "DeleteShell": {
+          "$ref": "./💥delete-shell/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "DeleteSolid"
+      ],
+      "properties": {
+        "DeleteSolid": {
+          "$ref": "./🕳️delete-solid/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "DeleteVertex"
+      ],
+      "properties": {
+        "DeleteVertex": {
+          "$ref": "./🗑️delete-vertex/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "MoveVertex"
+      ],
+      "properties": {
+        "MoveVertex": {
+          "$ref": "./📍move-vertex/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ReplaceCurve"
+      ],
+      "properties": {
+        "ReplaceCurve": {
+          "$ref": "./➰replace-curve/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ReplaceSurface"
+      ],
+      "properties": {
+        "ReplaceSurface": {
+          "$ref": "./🗺️replace-surface/🧬️schema/🔣️.json"
+        }
+      }
     }
-  },
-  "required": ["mutation"]
+  ]
 }

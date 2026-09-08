@@ -1,0 +1,229 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/hub/artifact-authority/trusted-catalog/schema.json",
+  "$ref": "#/$defs/TrustedBundleV1",
+  "$defs": {
+    "identity": { "type": "string", "minLength": 1, "maxLength": 256, "pattern": "^\\S(?:.*\\S)?$" },
+    "digest": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "nonzeroDigest": { "type": "string", "pattern": "^(?!0{64}$)[0-9a-f]{64}$" },
+    "requestId": { "type": "string", "pattern": "^[0-9a-f]{32}$" },
+    "relativePath": { "type": "string", "minLength": 1, "maxLength": 1024, "pattern": "^(?!.*\\\\)(?!/)(?![A-Za-z]:/)(?!.*(?:^|/)\\.\\.(?:/|$)).+$" },
+    "publicationRevision": {
+      "type": "string",
+      "pattern": "^(?:[1-9][0-9]{0,18}|1[0-7][0-9]{18}|18[0-3][0-9]{17}|184[0-3][0-9]{16}|1844[0-5][0-9]{15}|18446[0-6][0-9]{14}|184467[0-3][0-9]{13}|1844674[0-3][0-9]{12}|184467440[0-6][0-9]{10}|1844674407[0-2][0-9]{9}|18446744073[0-6][0-9]{8}|1844674407370[0-8][0-9]{6}|18446744073709[0-4][0-9]{5}|184467440737095[0-4][0-9]{4}|18446744073709550[0-9]{3}|18446744073709551[0-5][0-9]{2}|1844674407370955160[0-9]{1}|1844674407370955161[0-4]|18446744073709551615)$"
+    },
+
+    "TrustedCatalogRelativePathV1": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 1024,
+      "pattern": "^(?![\\s\\S]*[\\\\\\u0000])(?!/)(?![\\s\\S]*(?:^|/)\\.{1,2}(?:/|$))[^/]+(?:/[^/]+){0,63}$"
+    },
+
+    "TrustedBundleIdentityV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["pluginId", "packageId", "version"],
+      "properties": {
+        "pluginId": { "$ref": "#/$defs/identity" },
+        "packageId": { "$ref": "#/$defs/identity" },
+        "version": { "$ref": "#/$defs/identity" }
+      }
+    },
+
+    "TrustedBundleCodecV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["artifactKind", "artifactSchema", "packSchemaHash"],
+      "properties": {
+        "artifactKind": { "$ref": "#/$defs/identity" },
+        "artifactSchema": { "$ref": "#/$defs/identity" },
+        "packSchemaHash": { "$ref": "#/$defs/nonzeroDigest" }
+      }
+    },
+
+    "TrustedBundleParentDialectV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["artifactKind", "standard", "subset"],
+      "properties": {
+        "artifactKind": { "$ref": "#/$defs/identity" },
+        "standard": { "$ref": "#/$defs/identity" },
+        "subset": { "$ref": "#/$defs/identity" }
+      }
+    },
+
+    "TrustedBundleGrantV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["read", "write", "observe"],
+      "properties": { "read": { "type": "boolean" }, "write": { "type": "boolean" }, "observe": { "type": "boolean" } }
+    },
+
+    "TrustedBundleOpenTargetV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["artifactKind", "artifactSchema", "packSchemaHash", "surfaceId", "appId", "windowKindId", "role", "rendererTarget", "parentDialect", "grant"],
+      "properties": {
+        "artifactKind": { "$ref": "#/$defs/identity" },
+        "artifactSchema": { "$ref": "#/$defs/identity" },
+        "packSchemaHash": { "$ref": "#/$defs/nonzeroDigest" },
+        "surfaceId": { "$ref": "#/$defs/identity" },
+        "appId": { "$ref": "#/$defs/identity" },
+        "windowKindId": { "$ref": "#/$defs/identity" },
+        "role": { "enum": ["viewer", "editor"] },
+        "rendererTarget": { "enum": ["react", "wgpu", "wasm"] },
+        "parentDialect": { "$ref": "#/$defs/TrustedBundleParentDialectV1" },
+        "grant": { "$ref": "#/$defs/TrustedBundleGrantV1" }
+      }
+    },
+
+    "TrustedBundleFileV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "byteLength", "sha256"],
+      "properties": {
+        "path": { "$ref": "#/$defs/relativePath" },
+        "byteLength": { "type": "integer", "minimum": 1, "maximum": 4194304 },
+        "sha256": { "$ref": "#/$defs/digest" }
+      }
+    },
+
+    "TrustedBundleComponentV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "byteLength", "sha256", "blake3"],
+      "properties": {
+        "path": { "$ref": "#/$defs/relativePath" },
+        "byteLength": { "type": "integer", "minimum": 1, "maximum": 67108864 },
+        "sha256": { "$ref": "#/$defs/digest" },
+        "blake3": { "$ref": "#/$defs/digest" }
+      }
+    },
+
+    "TrustedBundleExecutionProtocolV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["appChannelVersion"],
+      "properties": { "appChannelVersion": { "type": "integer", "minimum": 1, "maximum": 4294967295 } }
+    },
+
+    "TrustedBundleBrowserActorV1": {
+      "oneOf": [
+        { "type": "object", "additionalProperties": false, "required": ["kind"], "properties": { "kind": { "const": "none" } } },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "schema", "codegenPolicy", "path", "byteLength", "sha256", "sourceComponentSha256", "sourceDescriptorByteSha256", "policySha256", "importInterfaces"],
+          "properties": {
+            "kind": { "const": "closed-browser-actor" },
+            "schema": { "const": "semio.os.closed-browser-actor.v1" },
+            "codegenPolicy": { "const": "semio.os.browser-jco-1.27.0-jspi.v1" },
+            "path": { "$ref": "#/$defs/relativePath" },
+            "byteLength": { "type": "integer", "minimum": 1, "maximum": 67108864 },
+            "sha256": { "$ref": "#/$defs/nonzeroDigest" },
+            "sourceComponentSha256": { "$ref": "#/$defs/nonzeroDigest" },
+            "sourceDescriptorByteSha256": { "$ref": "#/$defs/nonzeroDigest" },
+            "policySha256": { "$ref": "#/$defs/nonzeroDigest" },
+            "importInterfaces": { "type": "array", "maxItems": 16, "uniqueItems": true, "items": { "type": "string", "minLength": 1, "maxLength": 128 } }
+          }
+        }
+      ]
+    },
+
+    "TrustedBundlePackageV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["pluginId", "packageId", "version", "role", "dependencies", "component", "descriptor", "executionProtocol", "browserActor", "nativeCodecs", "openTargets"],
+      "properties": {
+        "pluginId": { "$ref": "#/$defs/identity" },
+        "packageId": { "$ref": "#/$defs/identity" },
+        "version": { "$ref": "#/$defs/identity" },
+        "role": { "enum": ["plugin", "extension"] },
+        "dependencies": { "type": "array", "maxItems": 256, "items": { "$ref": "#/$defs/TrustedBundleIdentityV1" } },
+        "executionProtocol": { "$ref": "#/$defs/TrustedBundleExecutionProtocolV1" },
+        "component": { "$ref": "#/$defs/TrustedBundleComponentV1" },
+        "descriptor": { "$ref": "#/$defs/TrustedBundleFileV1" },
+        "browserActor": { "$ref": "#/$defs/TrustedBundleBrowserActorV1" },
+        "nativeCodecs": { "type": "array", "maxItems": 16384, "items": { "$ref": "#/$defs/TrustedBundleCodecV1" } },
+        "openTargets": { "type": "array", "maxItems": 1024, "items": { "$ref": "#/$defs/TrustedBundleOpenTargetV1" } }
+      }
+    },
+
+    "TrustedBundleProfileOpenTargetV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["package", "target"],
+      "properties": {
+        "package": { "$ref": "#/$defs/TrustedBundleIdentityV1" },
+        "target": { "$ref": "#/$defs/TrustedBundleOpenTargetV1" }
+      }
+    },
+
+    "TrustedBundleProfileV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "selectedClosure", "selectedClosureSha256", "openTarget", "generationId"],
+      "properties": {
+        "id": { "$ref": "#/$defs/identity" },
+        "selectedClosure": { "type": "array", "minItems": 1, "maxItems": 4096, "items": { "$ref": "#/$defs/TrustedBundleIdentityV1" } },
+        "selectedClosureSha256": { "$ref": "#/$defs/nonzeroDigest" },
+        "openTarget": { "$ref": "#/$defs/TrustedBundleProfileOpenTargetV1" },
+        "generationId": { "$ref": "#/$defs/nonzeroDigest" }
+      }
+    },
+
+    "TrustedBundleV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schemaVersion", "profiles", "packages"],
+      "properties": {
+        "schemaVersion": { "const": 2 },
+        "profiles": { "type": "array", "minItems": 1, "maxItems": 256, "items": { "$ref": "#/$defs/TrustedBundleProfileV1" } },
+        "packages": { "type": "array", "minItems": 1, "maxItems": 4096, "items": { "$ref": "#/$defs/TrustedBundlePackageV1" } }
+      }
+    },
+
+    "TrustedCatalogCurrentPointerV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["profileId", "generationId", "bundleSha256", "publicationRevision"],
+      "properties": {
+        "profileId": { "$ref": "#/$defs/identity" },
+        "generationId": { "$ref": "#/$defs/digest" },
+        "bundleSha256": { "$ref": "#/$defs/digest" },
+        "publicationRevision": { "$ref": "#/$defs/publicationRevision" }
+      }
+    },
+
+    "TrustedCatalogPublicationCommandV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "requestId", "profileId", "generationId", "bundleSha256", "expectedCurrentSha256"],
+      "properties": {
+        "schema": { "const": "semio.hub.trusted-catalog-publication/v1" },
+        "requestId": { "$ref": "#/$defs/requestId" },
+        "profileId": { "$ref": "#/$defs/identity" },
+        "generationId": { "$ref": "#/$defs/digest" },
+        "bundleSha256": { "$ref": "#/$defs/digest" },
+        "expectedCurrentSha256": { "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/digest" }] }
+      }
+    },
+
+    "TrustedCatalogPublicationReceiptV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "requestId", "profileId", "generationId", "bundleSha256", "publicationRevision", "currentSha256", "outcome"],
+      "properties": {
+        "schema": { "const": "semio.hub.trusted-catalog-publication-receipt/v1" },
+        "requestId": { "$ref": "#/$defs/requestId" },
+        "profileId": { "$ref": "#/$defs/identity" },
+        "generationId": { "$ref": "#/$defs/digest" },
+        "bundleSha256": { "$ref": "#/$defs/digest" },
+        "publicationRevision": { "$ref": "#/$defs/publicationRevision" },
+        "currentSha256": { "$ref": "#/$defs/digest" },
+        "outcome": { "enum": ["durable", "replaced-unconfirmed"] }
+      }
+    }
+  }
+}

@@ -5,7 +5,7 @@
   "displayName": "Change People Gain Sensible Fraction",
   "emoji": "🌞️",
   "aggregateVariant": "ChangePeopleGainSensibleFraction",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-people-gain-sensible-fraction",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

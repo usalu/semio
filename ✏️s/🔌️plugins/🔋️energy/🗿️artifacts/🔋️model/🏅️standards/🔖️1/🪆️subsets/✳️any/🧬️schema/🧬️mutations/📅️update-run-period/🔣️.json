@@ -5,7 +5,7 @@
   "displayName": "Update Run Period",
   "emoji": "📅️",
   "aggregateVariant": "UpdateRunPeriod",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "update-run-period",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

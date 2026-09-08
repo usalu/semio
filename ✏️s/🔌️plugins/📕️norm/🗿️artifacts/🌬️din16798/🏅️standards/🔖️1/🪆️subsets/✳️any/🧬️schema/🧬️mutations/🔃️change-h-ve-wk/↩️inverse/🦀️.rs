@@ -7,6 +7,6 @@ use crate::artifacts::din16798::Din16798Snapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(_payload: &ChangeHVeWK, base: &Din16798Snapshot) -> Vec<Din16798Mutation> {
-    vec![Din16798Mutation::ChangeHVeWK(ChangeHVeWK { new_h_ve_w_k: base.h_ve_w_k.clone() })]
+    vec![Din16798Mutation::ChangeHVeWK(ChangeHVeWK { new_h_ve_w_k: base.h_ve_w_k })]
 }
 //#endregion 🔖️Inverse

@@ -1,0 +1,61 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/layout/layout/1/any/mutation/create-link.json",
+  "title": "CreateLink",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "link"
+  ],
+  "properties": {
+    "link": {
+      "title": "ImageLink",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "dpi",
+        "hash",
+        "height",
+        "id",
+        "path",
+        "width"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        },
+        "hash": {
+          "type": "string"
+        },
+        "width": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "height": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "dpi": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "colorProfile": {
+          "type": "string"
+        },
+        "state": {
+          "type": "string"
+        },
+        "proxyDataUrl": {
+          "type": "string"
+        }
+      }
+    },
+    "index": {
+      "type": "integer",
+      "minimum": 0
+    }
+  }
+}

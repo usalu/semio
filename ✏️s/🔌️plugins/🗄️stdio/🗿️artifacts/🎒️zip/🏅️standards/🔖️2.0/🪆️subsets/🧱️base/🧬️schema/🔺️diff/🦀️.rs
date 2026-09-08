@@ -2,11 +2,11 @@
 
 use std::collections::{HashMap, HashSet};
 
-use crate::artifacts::zip::schema::snapshot::ZipEntry;
-use crate::artifacts::zip::ZipSnapshot;
+use crate::schema::snapshot::ZipEntry;
+use crate::ZipSnapshot;
 use protocol::command::DiffAlgebra;
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
-use schema::ArtifactSchema;
+use framework_schema::ArtifactSchema;
 
 //#region 🔖️Model
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]

@@ -5,7 +5,7 @@
   "displayName": "Change Sizing Object Sizing Type",
   "emoji": "🧾️",
   "aggregateVariant": "ChangeSizingObjectSizingType",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-sizing-object-sizing-type",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

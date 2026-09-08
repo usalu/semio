@@ -1,0 +1,36 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/dag/dag/1/any/editor/config/mutation/replace-config.json",
+  "title": "ReplaceConfig",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "config"
+  ],
+  "properties": {
+    "config": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "cameraX",
+        "cameraY",
+        "cameraZoom",
+        "locale"
+      ],
+      "properties": {
+        "cameraX": {
+          "type": "number"
+        },
+        "cameraY": {
+          "type": "number"
+        },
+        "cameraZoom": {
+          "type": "number"
+        },
+        "locale": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

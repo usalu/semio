@@ -19,8 +19,8 @@ pub fn source() -> ExampleSource {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::xml::standards::v1_0::subsets::base::schema::snapshot::XmlSnapshot;
-    use crate::artifacts::xml::standards::v1_0::subsets::valid::schema::check_valid_conformance;
+    use crate::standards::v1_0::subsets::base::schema::snapshot::XmlSnapshot;
+    use crate::standards::v1_0::subsets::valid::schema::check_valid_conformance;
     use dsl::Severity;
 
     #[semio_framework_async_macros::async_test]

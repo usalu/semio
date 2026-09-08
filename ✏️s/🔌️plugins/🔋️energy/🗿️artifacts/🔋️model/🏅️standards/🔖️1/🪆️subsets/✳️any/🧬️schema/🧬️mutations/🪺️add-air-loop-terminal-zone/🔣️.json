@@ -5,7 +5,7 @@
   "displayName": "Add Air Loop Terminal Zone",
   "emoji": "🪺️",
   "aggregateVariant": "AddAirLoopTerminalZone",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "add-air-loop-terminal-zone",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

@@ -1,7 +1,7 @@
 //! 🧬️ Authoritative insert-palette-entry mutation.
-use crate::artifacts::bmp::schema::diff::*;
-use crate::artifacts::bmp::schema::mutations::BmpMutation;
-use crate::artifacts::bmp::schema::snapshot::*;
+use crate::schema::diff::*;
+use crate::schema::mutations::BmpMutation;
+use crate::schema::snapshot::*;
 
 //#region Payload
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord, dsl::MutationLeaf)]
@@ -34,7 +34,7 @@ impl protocol::MutationKind<BmpSnapshot, BmpMutation> for InsertPaletteEntryMuta
             return Vec::new();
         }
         {
-            vec![BmpMutation::RemovePaletteEntry(crate::artifacts::bmp::schema::mutations::RemovePaletteEntryMutation { index: *index })]
+            vec![BmpMutation::RemovePaletteEntry(crate::schema::mutations::RemovePaletteEntryMutation { index: *index })]
         }
     }
     fn label(&self) -> String {

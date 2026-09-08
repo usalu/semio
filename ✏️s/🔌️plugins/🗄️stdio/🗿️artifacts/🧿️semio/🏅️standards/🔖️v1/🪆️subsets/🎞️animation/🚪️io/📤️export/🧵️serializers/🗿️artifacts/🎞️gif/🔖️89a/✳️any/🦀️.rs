@@ -12,9 +12,9 @@
 //! frame -- `animation` carries no pixel/palette data at all (see the deserializer's own doc
 //! comment), so this never fabricates image content, only real, honest frame TIMING.
 
-use crate::artifacts::gif::schema::snapshot::GifFrame;
-use crate::artifacts::gif::GifSnapshot;
-use crate::artifacts::semio::standards::v1::subsets::animation::schema::snapshot::SemioAnimationSnapshot;
+use semio_s_artifact_stdio_gif::schema::snapshot::GifFrame;
+use semio_s_artifact_stdio_gif::GifSnapshot;
+use crate::standards::v1::subsets::animation::schema::snapshot::SemioAnimationSnapshot;
 use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
 
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("animation") };
@@ -51,7 +51,7 @@ impl ArtifactSerializer for SemioAnimationToGif {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::semio::standards::v1::subsets::animation::schema::snapshot::{AnimChannel, AnimInterpolation, AnimKeyframe, AnimTarget, AnimTargetProperty, AnimTimeline, AnimValue, STDIO_SEMIOANIMATION_DOCUMENT_SCHEMA};
+    use crate::standards::v1::subsets::animation::schema::snapshot::{AnimChannel, AnimInterpolation, AnimKeyframe, AnimTarget, AnimTargetProperty, AnimTimeline, AnimValue, STDIO_SEMIOANIMATION_DOCUMENT_SCHEMA};
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn real_world_animation() -> SemioAnimationSnapshot {

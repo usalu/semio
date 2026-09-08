@@ -5,7 +5,7 @@
   "displayName": "Delete Zone Equipment",
   "emoji": "🗑️",
   "aggregateVariant": "DeleteZoneEquipment",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "delete-zone-equipment",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

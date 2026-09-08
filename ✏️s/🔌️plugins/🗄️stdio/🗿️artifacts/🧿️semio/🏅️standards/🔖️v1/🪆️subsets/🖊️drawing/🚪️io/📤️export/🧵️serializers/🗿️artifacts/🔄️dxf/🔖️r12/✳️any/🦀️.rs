@@ -9,12 +9,12 @@
 //! equivalent and are dropped (documented — same architectural boundary the import leaf
 //! describes for BLOCKS/INSERT).
 
-use crate::artifacts::dxf::{
+use semio_s_artifact_stdio_dxf::{
     schema::snapshot::{DxfEntity, DxfHeaderVar, DxfLayer, DxfTables, DxfValue},
     DxfSnapshot,
 };
-use crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioPoint2;
-use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{DrawNode, PathSegment, SemioDrawingSnapshot};
+use crate::standards::v1::subsets::base::schema::geometry::SemioPoint2;
+use crate::standards::v1::subsets::drawing::schema::snapshot::{DrawNode, PathSegment, SemioDrawingSnapshot};
 use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
 
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("drawing") };
@@ -145,7 +145,7 @@ fn dxf_entity_from_node(node: &DrawNode, layer: &str) -> Option<DxfEntity> {
             if points.len() < 2 {
                 return None;
             }
-            let vertices = points.iter().map(|p| crate::artifacts::dxf::schema::snapshot::DxfVertex { x: p.x, y: p.y, z: 0.0, bulge: 0.0, unknown_group_codes: vec![] }).collect();
+            let vertices = points.iter().map(|p| semio_s_artifact_stdio_dxf::schema::snapshot::DxfVertex { x: p.x, y: p.y, z: 0.0, bulge: 0.0, unknown_group_codes: vec![] }).collect();
             Some(DxfEntity::Polyline { vertices, closed, layer: layer.into(), unknown_group_codes: vec![] })
         }
         DrawNode::Text { value, at, .. } => Some(DxfEntity::Text { position: [at.x, at.y, 0.0], height: 1.0, value: value.clone(), layer: layer.into(), unknown_group_codes: vec![] }),
@@ -187,7 +187,7 @@ impl ArtifactSerializer for SemioDrawingToDxf {
             collect_entities(&layer.root, &layer.id, &mut entities);
         }
         Ok(DxfSnapshot {
-            schema: crate::artifacts::dxf::STDIO_DXF_DOCUMENT_SCHEMA.into(),
+            schema: semio_s_artifact_stdio_dxf::STDIO_DXF_DOCUMENT_SCHEMA.into(),
             header_vars: vec![DxfHeaderVar { name: "$ACADVER".into(), group_code: 1, value: DxfValue::Str { value: "AC1009".into() }, extra_group_codes: vec![] }],
             tables: DxfTables { layers: layer_defs, ..DxfTables::default() },
             other_tables: vec![],
@@ -202,8 +202,8 @@ impl ArtifactSerializer for SemioDrawingToDxf {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioTransform;
-    use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::DrawLayer;
+    use crate::standards::v1::subsets::base::schema::geometry::SemioTransform;
+    use crate::standards::v1::subsets::drawing::schema::snapshot::DrawLayer;
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn ellipse_path(cx: f64, cy: f64, r: f64) -> Vec<PathSegment> {
@@ -246,8 +246,8 @@ mod tests {
         assert!(matches!(dxf.entities[1], DxfEntity::Polyline { .. }));
         assert!(matches!(dxf.entities[2], DxfEntity::Text { .. }));
 
-        let text = crate::artifacts::dxf::schema::snapshot::print_dxf_document(&dxf);
-        let reparsed = crate::artifacts::dxf::schema::snapshot::parse_dxf_document(&text).expect("reparse real dxf text");
+        let text = semio_s_artifact_stdio_dxf::schema::snapshot::print_dxf_document(&dxf);
+        let reparsed = semio_s_artifact_stdio_dxf::schema::snapshot::parse_dxf_document(&text).expect("reparse real dxf text");
         match &reparsed.entities[0] {
             DxfEntity::Circle { center, radius, .. } => {
                 assert!((center[0] - 2.0).abs() < 1e-6);

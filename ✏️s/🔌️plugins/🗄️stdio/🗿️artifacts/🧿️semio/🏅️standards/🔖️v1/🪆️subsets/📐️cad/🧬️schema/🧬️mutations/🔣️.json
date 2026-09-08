@@ -1,22 +1,278 @@
 {
-  "$id": "https://semio.tech/schema/s.stdio.semio.cad/mutations.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/cad/mutations.json",
   "title": "SemioCadMutation",
-  "description": "Real facet mirror of 🦀️.rs (source of truth) -- named-variant enum, imperative verbs, tag field 'mutation'.",
+  "description": "Discriminated union over this module's mutation leaves (internally tagged); every payload is the leaf's own schema, referenced, never restated.",
   "oneOf": [
-    { "type": "object", "properties": { "mutation": { "const": "setSnapshot" }, "snapshot": { "$ref": "../📸️snapshot/🔣️.json" } }, "required": ["mutation", "snapshot"] },
-    { "type": "object", "properties": { "mutation": { "const": "addLayer" }, "layer": { "$ref": "../📸️snapshot/🔣️.json#/definitions/layer" } }, "required": ["mutation", "layer"] },
-    { "type": "object", "properties": { "mutation": { "const": "removeLayer" }, "name": { "type": "string" } }, "required": ["mutation", "name"] },
-    { "type": "object", "properties": { "mutation": { "const": "setLayer" }, "name": { "type": "string" }, "colorIndex": { "type": "integer" }, "lineType": { "type": "string" }, "visible": { "type": "boolean" } }, "required": ["mutation", "name"] },
-    { "type": "object", "properties": { "mutation": { "const": "addBlock" }, "block": { "$ref": "../📸️snapshot/🔣️.json#/definitions/block" } }, "required": ["mutation", "block"] },
-    { "type": "object", "properties": { "mutation": { "const": "removeBlock" }, "name": { "type": "string" } }, "required": ["mutation", "name"] },
-    { "type": "object", "properties": { "mutation": { "const": "setBlockBasePoint" }, "name": { "type": "string" }, "basePoint": { "$ref": "../📸️snapshot/🔣️.json#/definitions/point2" } }, "required": ["mutation", "name", "basePoint"] },
-    { "type": "object", "properties": { "mutation": { "const": "addEntity" }, "entity": { "$ref": "../📸️snapshot/🔣️.json#/definitions/entityRecord" } }, "required": ["mutation", "entity"] },
-    { "type": "object", "properties": { "mutation": { "const": "removeEntity" }, "handle": { "type": "string" } }, "required": ["mutation", "handle"] },
-    { "type": "object", "properties": { "mutation": { "const": "setEntityLayer" }, "handle": { "type": "string" }, "layer": { "type": "string" } }, "required": ["mutation", "handle", "layer"] },
-    { "type": "object", "properties": { "mutation": { "const": "setEntityGeometry" }, "handle": { "type": "string" }, "entity": { "$ref": "../📸️snapshot/🔣️.json#/definitions/entity" } }, "required": ["mutation", "handle", "entity"] },
-    { "type": "object", "properties": { "mutation": { "const": "addBlockEntity" }, "blockName": { "type": "string" }, "entity": { "$ref": "../📸️snapshot/🔣️.json#/definitions/entityRecord" } }, "required": ["mutation", "blockName", "entity"] },
-    { "type": "object", "properties": { "mutation": { "const": "removeBlockEntity" }, "blockName": { "type": "string" }, "handle": { "type": "string" } }, "required": ["mutation", "blockName", "handle"] },
-    { "type": "object", "properties": { "mutation": { "const": "setBlockEntityLayer" }, "blockName": { "type": "string" }, "handle": { "type": "string" }, "layer": { "type": "string" } }, "required": ["mutation", "blockName", "handle", "layer"] },
-    { "type": "object", "properties": { "mutation": { "const": "setBlockEntityGeometry" }, "blockName": { "type": "string" }, "handle": { "type": "string" }, "entity": { "$ref": "../📸️snapshot/🔣️.json#/definitions/entity" } }, "required": ["mutation", "blockName", "handle", "entity"] }
+    {
+      "allOf": [
+        {
+          "$ref": "./🧱add-block/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "addBlock"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "./🧩add-block-entity/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "addBlockEntity"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "./🔷add-entity/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "addEntity"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "./🗂️add-layer/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "addLayer"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "./🚫remove-block/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "removeBlock"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "./✂️remove-block-entity/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "removeBlockEntity"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "./🗑️remove-entity/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "removeEntity"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "./🧹remove-layer/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "removeLayer"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "./📍set-block-base-point/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setBlockBasePoint"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "./🔺set-block-entity-geometry/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setBlockEntityGeometry"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "./🧷️set-block-entity-layer/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setBlockEntityLayer"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "./📐set-entity-geometry/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setEntityGeometry"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "./🏳️set-entity-layer/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setEntityLayer"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "./🎚️set-layer/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setLayer"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "./📸️set-snapshot/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setSnapshot"
+            }
+          }
+        }
+      ]
+    }
   ]
 }

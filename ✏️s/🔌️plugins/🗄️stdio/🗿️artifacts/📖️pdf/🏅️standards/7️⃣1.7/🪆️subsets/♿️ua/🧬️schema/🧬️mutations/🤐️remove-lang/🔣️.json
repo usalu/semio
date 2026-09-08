@@ -5,7 +5,7 @@
   "displayName": "Remove Lang",
   "emoji": "🤐️",
   "aggregateVariant": "RemoveLang",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "remove-lang",
   "binaryTag": 5,
   "invertibility": "explicit-mutation",

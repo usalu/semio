@@ -1,0 +1,37 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/sequence/sequence/1/step/mutation/delete-step.json",
+  "title": "DeleteStep",
+  "$ref": "#/$defs/Payload",
+  "$defs": {
+    "Payload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        }
+      }
+    },
+    "Wire": {
+      "title": "DeleteStepMutation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "id"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "deleteStep"
+        },
+        "id": {
+          "$ref": "#/$defs/Payload/properties/id"
+        }
+      }
+    }
+  }
+}

@@ -1,5 +1,10 @@
 {
   "schema": "semio.shell.tutorial-run-fixture.v1",
+  "drives": [
+    { "id": "closed-paused-seek", "events": ["claimA", "retire", "releaseA"], "active": [true, false, false] },
+    { "id": "closed-tween", "events": ["claimA", "retire", "claimB", "releaseA", "releaseB"], "active": [true, false, true, true, false] },
+    { "id": "superseded-director", "events": ["claimA", "claimB", "releaseA", "releaseB"], "active": [true, true, true, false] }
+  ],
   "cases": [
     {
       "id": "owned-stop",

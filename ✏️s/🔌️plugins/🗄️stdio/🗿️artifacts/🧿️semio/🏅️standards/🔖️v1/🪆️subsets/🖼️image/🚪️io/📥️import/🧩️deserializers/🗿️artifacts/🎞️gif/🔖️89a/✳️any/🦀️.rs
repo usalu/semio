@@ -12,8 +12,8 @@
 //!   `app_extensions` (NETSCAPE2.0 loop count is separately modeled, others verbatim) and
 //!   `plain_text` blocks have no textual home on `SemioImageMetadataEntry` and are dropped.
 
-use crate::artifacts::gif::standards::v89a::subsets::any::schema::snapshot::GifSnapshot;
-use crate::artifacts::semio::standards::v1::subsets::image::schema::snapshot::{SemioColorspace, SemioImageFrame, SemioImageMetadataEntry, SemioImageSnapshot, STDIO_SEMIOIMAGE_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_gif::standards::v89a::subsets::any::schema::snapshot::GifSnapshot;
+use crate::standards::v1::subsets::image::schema::snapshot::{SemioColorspace, SemioImageFrame, SemioImageMetadataEntry, SemioImageSnapshot, STDIO_SEMIOIMAGE_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId};
 
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.gif", standard: StandardId("89a"), subset: SubsetId::ANY };
@@ -46,7 +46,7 @@ impl ArtifactDeserializer for SemioImageFromGif {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::gif::standards::v89a::subsets::any::schema::snapshot::{GifColorTable, GifFrame, GifRgb};
+    use semio_s_artifact_stdio_gif::standards::v89a::subsets::any::schema::snapshot::{GifColorTable, GifFrame, GifRgb};
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn sample_gif() -> GifSnapshot {

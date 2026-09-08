@@ -1,7 +1,7 @@
 //! 📐️ Plain-`f64` 2D/3D vectors and points — no external linear-algebra crate. Points and vectors
 //! are kept as distinct newtypes (a point minus a point is a vector; a vector has no fixed origin)
 //! so geometric code cannot silently add two points or translate a direction. Every operation here
-//! is exact IEEE-754 arithmetic; tolerance-aware comparison lives in [`crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::tolerance`].
+//! is exact IEEE-754 arithmetic; tolerance-aware comparison lives in [`crate::standards::v1::subsets::brep::schema::snapshot::tolerance`].
 //!
 //! Moved from `🧰️framework/🔨️modules/🧊️3d/📐️brep/➡️vector` in ticket
 //! 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS wave PEEL4, together with

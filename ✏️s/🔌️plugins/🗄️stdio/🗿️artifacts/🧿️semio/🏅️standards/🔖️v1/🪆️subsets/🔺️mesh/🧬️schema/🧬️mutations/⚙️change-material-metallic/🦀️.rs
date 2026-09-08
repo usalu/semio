@@ -1,7 +1,7 @@
 //! ⚙️ `change-material-metallic` — sets a material's PBR metallic factor. Decomposed from the old bundled `SetMaterialPbr{metallic,roughness}`: `metallic`/`roughness` are two independent top-level scalar fields (unlike `base_color`, grouped into one `SemioRgba` value type), and every real PBR editor sets them via two independent sliders — same decompose test SMO's `StrokeStyle` ruling already applies.
 
-use crate::artifacts::semio::standards::v1::subsets::mesh::schema::mutations::SemioMeshMutation;
-use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
+use crate::standards::v1::subsets::mesh::schema::mutations::SemioMeshMutation;
+use crate::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]

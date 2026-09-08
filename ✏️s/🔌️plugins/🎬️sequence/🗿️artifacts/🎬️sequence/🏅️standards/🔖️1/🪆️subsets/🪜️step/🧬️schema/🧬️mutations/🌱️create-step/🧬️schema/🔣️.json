@@ -1,0 +1,85 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/sequence/sequence/1/step/mutation/create-step.json",
+  "title": "CreateStep",
+  "$ref": "#/$defs/Payload",
+  "$defs": {
+    "Payload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "step"
+      ],
+      "properties": {
+        "step": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "kind"
+          ],
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "kind": {
+              "type": "string"
+            },
+            "params": {
+              "type": "object"
+            },
+            "x": {
+              "type": "number"
+            },
+            "y": {
+              "type": "number"
+            },
+            "slot": {
+              "anyOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "owner",
+                    "name"
+                  ],
+                  "properties": {
+                    "owner": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    }
+                  }
+                }
+              ]
+            },
+            "collapsed": {
+              "type": "boolean"
+            }
+          }
+        }
+      }
+    },
+    "Wire": {
+      "title": "CreateStepMutation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "step"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "createStep"
+        },
+        "step": {
+          "$ref": "#/$defs/Payload/properties/step"
+        }
+      }
+    }
+  }
+}

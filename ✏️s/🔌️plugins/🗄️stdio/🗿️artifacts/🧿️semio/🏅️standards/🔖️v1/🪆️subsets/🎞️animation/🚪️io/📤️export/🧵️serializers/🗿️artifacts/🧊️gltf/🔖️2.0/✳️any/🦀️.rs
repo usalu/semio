@@ -18,12 +18,12 @@
 //!   correct, not byte-packing-optimal; gltf's own encoder is free to re-pack on a later true
 //!   binary write, this bridge only produces the typed `Snapshot`.
 
-use crate::artifacts::gltf::engine::{GltfAccessorType, GltfComponentType};
-use crate::artifacts::gltf::schema::snapshot::{
+use semio_s_artifact_stdio_gltf::engine::{GltfAccessorType, GltfComponentType};
+use semio_s_artifact_stdio_gltf::schema::snapshot::{
     GltfAccessor, GltfAnimation, GltfAnimationChannel, GltfAnimationChannelTarget, GltfAnimationPath, GltfAnimationSampler, GltfAsset, GltfBuffer, GltfBufferView, GltfDocument, GltfInterpolation, GltfNode, GltfSourceForm,
 };
-use crate::artifacts::gltf::GltfSnapshot;
-use crate::artifacts::semio::standards::v1::subsets::animation::schema::snapshot::{AnimInterpolation, AnimTargetProperty, AnimValue, SemioAnimationSnapshot};
+use semio_s_artifact_stdio_gltf::GltfSnapshot;
+use crate::standards::v1::subsets::animation::schema::snapshot::{AnimInterpolation, AnimTargetProperty, AnimValue, SemioAnimationSnapshot};
 use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
 
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("animation") };
@@ -156,10 +156,10 @@ fn push_accessor(buffers: &mut Vec<Vec<u8>>, buffer_views: &mut Vec<GltfBufferVi
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::gltf::engine::decode_accessor;
-    use crate::artifacts::semio::standards::v1::subsets::animation::io::gltf_deserializer::SemioAnimationFromGltf;
-    use crate::artifacts::semio::standards::v1::subsets::animation::schema::snapshot::{AnimChannel, AnimKeyframe, AnimTarget, AnimTimeline, STDIO_SEMIOANIMATION_DOCUMENT_SCHEMA};
-    use crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::{SemioPoint3, SemioQuaternion};
+    use semio_s_artifact_stdio_gltf::engine::decode_accessor;
+    use crate::standards::v1::subsets::animation::io::gltf_deserializer::SemioAnimationFromGltf;
+    use crate::standards::v1::subsets::animation::schema::snapshot::{AnimChannel, AnimKeyframe, AnimTarget, AnimTimeline, STDIO_SEMIOANIMATION_DOCUMENT_SCHEMA};
+    use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint3, SemioQuaternion};
     use semio_framework_plugin::ArtifactDeserializer;
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9

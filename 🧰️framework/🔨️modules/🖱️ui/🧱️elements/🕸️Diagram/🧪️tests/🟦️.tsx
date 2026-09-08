@@ -994,6 +994,7 @@ describe("owned Diagram force", () => {
   });
 
   it("schedules once, emits an initial notification after every restart, throttles, and cancels stale frames exactly", () => {
+    installBudgetClock(0.001);
     const frames = installFrames();
     const listener = vi.fn();
     const nodes = [

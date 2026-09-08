@@ -93,7 +93,7 @@
         {
           "id": "declare-doctype",
           "capability": "xml-1-0-valid-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -113,7 +113,7 @@
         {
           "id": "declare-entity",
           "capability": "xml-1-0-valid-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -133,7 +133,7 @@
         {
           "id": "rename-document-element",
           "capability": "xml-1-0-valid-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -153,7 +153,7 @@
         {
           "id": "set-external-subset",
           "capability": "xml-1-0-valid-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -173,7 +173,7 @@
         {
           "id": "set-internal-subset",
           "capability": "xml-1-0-valid-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -193,7 +193,7 @@
         {
           "id": "set-snapshot",
           "capability": "xml-1-0-valid-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -213,7 +213,7 @@
         {
           "id": "set-standalone",
           "capability": "xml-1-0-valid-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -233,7 +233,7 @@
         {
           "id": "set-text",
           "capability": "xml-1-0-valid-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],

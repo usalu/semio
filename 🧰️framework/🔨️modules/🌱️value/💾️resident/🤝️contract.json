@@ -1,7 +1,7 @@
 {
   "version": 1,
   "domain": "composition-shared-resident-admission",
-  "capacitySchema": "semio.value.resident.capacity.v1",
+  "capacitySchema": "https://semio.tech/schema/framework/value/resident/schema.json#/$defs/Resident",
   "capacity": {
     "default": null,
     "axes": ["bytes", "slots", "owners"],

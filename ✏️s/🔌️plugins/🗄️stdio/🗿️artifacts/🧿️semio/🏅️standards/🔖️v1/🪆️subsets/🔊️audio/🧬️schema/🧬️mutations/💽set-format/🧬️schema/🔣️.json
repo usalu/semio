@@ -1,0 +1,32 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/audio/mutation/set-format.json",
+  "title": "SetFormat",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "format"
+  ],
+  "properties": {
+    "format": {
+      "$ref": "#/$defs/SemioAudioFormat"
+    },
+    "mutation": {
+      "const": "setFormat",
+      "description": "Aggregate discriminator spliced in by SemioAudioMutation; absent when the payload stands alone."
+    }
+  },
+  "$defs": {
+    "SemioAudioFormat": {
+      "type": "string",
+      "enum": [
+        "pcm8",
+        "pcm16",
+        "pcm24",
+        "pcm32",
+        "float32",
+        "float64"
+      ]
+    }
+  }
+}

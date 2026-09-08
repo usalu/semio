@@ -5,7 +5,7 @@
   "displayName": "Create Human Factor Requirement",
   "emoji": "🌱️",
   "aggregateVariant": "CreateHumanFactorRequirement",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

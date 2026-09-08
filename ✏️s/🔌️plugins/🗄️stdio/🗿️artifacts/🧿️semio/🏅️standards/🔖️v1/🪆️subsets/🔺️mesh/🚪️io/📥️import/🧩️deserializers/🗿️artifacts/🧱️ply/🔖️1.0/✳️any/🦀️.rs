@@ -20,10 +20,10 @@
 //! - No color/PBR/texture-byte concept beyond flat per-vertex RGBA -> `materials`/`textures` stay
 //!   empty, `material_id` stays `None`.
 
-use crate::artifacts::ply::schema::snapshot::{PlyProperty, PlyScalarType, PlyValue};
-use crate::artifacts::ply::PlySnapshot;
-use crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::{SemioPoint3, SemioRgba, SemioUv};
-use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::{SemioMesh, SemioMeshSnapshot, SemioPrimitive, SemioTopology, STDIO_SEMIOMESH_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_ply::schema::snapshot::{PlyProperty, PlyScalarType, PlyValue};
+use semio_s_artifact_stdio_ply::PlySnapshot;
+use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint3, SemioRgba, SemioUv};
+use crate::standards::v1::subsets::mesh::schema::snapshot::{SemioMesh, SemioMeshSnapshot, SemioPrimitive, SemioTopology, STDIO_SEMIOMESH_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId};
 
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.ply", standard: StandardId("1.0"), subset: SubsetId::ANY };
@@ -153,7 +153,7 @@ impl ArtifactDeserializer for SemioMeshFromPly {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::ply::schema::snapshot::{PlyElement, PlyFormat, PlyRow};
+    use semio_s_artifact_stdio_ply::schema::snapshot::{PlyElement, PlyFormat, PlyRow};
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn sample_ply() -> PlySnapshot {

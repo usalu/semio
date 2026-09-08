@@ -1,7 +1,7 @@
 //! 🧬️ BinarySnapshot schema — persistent fields + real codecs.
 
-use crate::artifacts::binary::STDIO_BINARY_DOCUMENT_SCHEMA;
-use schema::ArtifactSchema;
+use crate::STDIO_BINARY_DOCUMENT_SCHEMA;
+use framework_schema::ArtifactSchema;
 
 //#region 🔖️Snapshot
 /// 📸️ Persisted `stdio.binary` snapshot.

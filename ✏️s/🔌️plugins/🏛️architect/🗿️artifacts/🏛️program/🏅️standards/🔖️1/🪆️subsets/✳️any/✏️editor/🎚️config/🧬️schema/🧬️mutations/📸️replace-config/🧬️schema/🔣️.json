@@ -1,0 +1,65 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/architect/program/1/any/editor/config/mutation/replace-config.json",
+  "title": "ReplaceConfig",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "config"
+  ],
+  "properties": {
+    "config": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "activeRegister": {
+          "type": "string"
+        },
+        "searchQuery": {
+          "type": "string"
+        },
+        "searchHistoryJson": {
+          "type": "string"
+        },
+        "activeReportJson": {
+          "type": "string"
+        },
+        "lastResultJson": {
+          "type": "string"
+        },
+        "lastAnalysisJson": {
+          "type": "string"
+        },
+        "adjacencyKindFilter": {
+          "type": "string",
+          "enum": [
+            "required",
+            "preferred",
+            "optional",
+            "prohibited"
+          ]
+        },
+        "graphCameraX": {
+          "type": "number"
+        },
+        "graphCameraY": {
+          "type": "number"
+        },
+        "graphCameraZoom": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "activeRegister",
+        "searchQuery",
+        "searchHistoryJson",
+        "activeReportJson",
+        "lastResultJson",
+        "lastAnalysisJson",
+        "graphCameraX",
+        "graphCameraY",
+        "graphCameraZoom"
+      ]
+    }
+  }
+}

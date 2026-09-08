@@ -5,7 +5,7 @@
   "displayName": "Set Result",
   "emoji": "📊️",
   "aggregateVariant": "SetResult",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "set-result",
   "binaryTag": 4,
   "invertibility": "explicit-mutation",

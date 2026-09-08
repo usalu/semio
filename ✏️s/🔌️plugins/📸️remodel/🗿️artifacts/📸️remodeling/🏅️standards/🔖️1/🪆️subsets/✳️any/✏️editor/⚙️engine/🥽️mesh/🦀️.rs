@@ -3709,7 +3709,7 @@ impl BoundedTaubinPreparation {
                         } else {
                             let sum = neighbors.iter().fold([0.0; 3], |sum, &neighbor| add3(sum, mesh.positions[neighbor as usize]));
                             let average = scale3(sum, 1.0 / neighbors.len() as f64);
-                            let factor = if self.pass % 2 == 0 { self.lambda } else { self.mu };
+                            let factor = if self.pass.is_multiple_of(2) { self.lambda } else { self.mu };
                             self.next.push(add3(position, scale3(sub3(average, position), factor)));
                         }
                         self.cursor += 1;

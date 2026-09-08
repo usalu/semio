@@ -1,7 +1,7 @@
 //! ↩️ Inverse for `set-snapshot`.
 
-use crate::artifacts::zip::ZipSnapshot;
-use crate::artifacts::zip::schema::mutations::{ZipMutation, apply_zip_mutation};
+use crate::ZipSnapshot;
+use crate::schema::mutations::{ZipMutation, apply_zip_mutation};
 use protocol::Mutation;
 
 /// ↩️ Inverse of set-snapshot.

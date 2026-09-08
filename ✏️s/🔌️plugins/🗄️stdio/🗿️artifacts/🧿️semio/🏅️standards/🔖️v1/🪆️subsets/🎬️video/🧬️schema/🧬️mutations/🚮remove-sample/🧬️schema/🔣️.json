@@ -1,0 +1,25 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/video/mutation/remove-sample.json",
+  "title": "RemoveSample",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "streamIndex",
+    "index"
+  ],
+  "properties": {
+    "streamIndex": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "index": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "mutation": {
+      "const": "removeSample",
+      "description": "Aggregate discriminator spliced in by SemioVideoMutation; absent when the payload stands alone."
+    }
+  }
+}

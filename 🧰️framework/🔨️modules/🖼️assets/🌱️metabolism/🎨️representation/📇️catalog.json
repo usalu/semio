@@ -1,5 +1,5 @@
 {
-  "$schema": "./🧬️catalog.schema.json",
+  "$schema": "./🧬️schema/🔣️.json",
   "version": 1,
   "entries": [
     { "url": "/mesh/🧊️base.glb", "path": "🧱️bases/⬛️base/🧊️base.glb" },

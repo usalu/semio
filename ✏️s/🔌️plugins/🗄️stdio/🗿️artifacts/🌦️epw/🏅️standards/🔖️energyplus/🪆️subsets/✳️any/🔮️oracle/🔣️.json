@@ -84,7 +84,7 @@
         {
           "id": "insert-record",
           "capability": "epw-energyplus-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -103,7 +103,7 @@
         {
           "id": "remove-record",
           "capability": "epw-energyplus-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -122,7 +122,7 @@
         {
           "id": "set-comments1",
           "capability": "epw-energyplus-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -141,7 +141,7 @@
         {
           "id": "set-comments2",
           "capability": "epw-energyplus-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -160,7 +160,7 @@
         {
           "id": "set-data-periods",
           "capability": "epw-energyplus-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -179,7 +179,7 @@
         {
           "id": "set-design-conditions",
           "capability": "epw-energyplus-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -198,7 +198,7 @@
         {
           "id": "set-ground-temperatures",
           "capability": "epw-energyplus-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -217,7 +217,7 @@
         {
           "id": "set-holidays-dst",
           "capability": "epw-energyplus-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -236,7 +236,7 @@
         {
           "id": "set-location",
           "capability": "epw-energyplus-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -255,7 +255,7 @@
         {
           "id": "set-record-field",
           "capability": "epw-energyplus-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -274,7 +274,7 @@
         {
           "id": "set-snapshot",
           "capability": "epw-energyplus-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -293,7 +293,7 @@
         {
           "id": "set-typical-extreme-periods",
           "capability": "epw-energyplus-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],

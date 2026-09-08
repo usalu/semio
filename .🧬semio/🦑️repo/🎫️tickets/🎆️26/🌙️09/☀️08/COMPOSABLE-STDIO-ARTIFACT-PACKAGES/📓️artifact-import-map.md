@@ -1,0 +1,62 @@
+# Artifact Import Cutover Map
+
+Directory-derived canonical package names and currently mounted plugin artifact module names. `?` means the root facade does not mount a same-named root component; inspect the subtree instead of guessing. This map is preparation for direct external consumer migration and does not claim all packages exist.
+
+| Plugin | Directory Slug | Current Rust Module | Package |
+| --- | --- | --- | --- |
+| writer | writer | writer | semio-s-artifact-writer-writer |
+| mathematical | equation | equation | semio-s-artifact-mathematical-equation |
+| procedural | generation2d | generation2d | semio-s-artifact-procedural-generation2d |
+| procedural | generation3d | generation3d | semio-s-artifact-procedural-generation3d |
+| procedural | assembly | assembly | semio-s-artifact-procedural-assembly |
+| flow | flow | flow | semio-s-artifact-flow-flow |
+| gis | gisterrain | gisterrain | semio-s-artifact-gis-gisterrain |
+| gis | gismap | gismap | semio-s-artifact-gis-gismap |
+| vcs | vcs | vcs | semio-s-artifact-vcs-vcs |
+| animate | presentation | presentation | semio-s-artifact-animate-presentation |
+| shooting | shooting | shooting | semio-s-artifact-shooting-shooting |
+| demonstrator | playground | playground | semio-s-artifact-demonstrator-playground |
+| sequence | sequence | sequence | semio-s-artifact-sequence-sequence |
+| fem | 2d | fem2d | semio-s-artifact-fem-2d |
+| fem | 3d | fem3d | semio-s-artifact-fem-3d |
+| architect | program | program | semio-s-artifact-architect-program |
+| process | process3d | process3d | semio-s-artifact-process-process3d |
+| lowpoly | lowpoly | lowpoly | semio-s-artifact-lowpoly-lowpoly |
+| reasoning | wires | wires | semio-s-artifact-reasoning-wires |
+| forms | forms | forms | semio-s-artifact-forms-forms |
+| layout | layout | layout | semio-s-artifact-layout-layout |
+| cad | cad | cad | semio-s-artifact-cad-cad |
+| norm | en1990 | en1990 | semio-s-artifact-norm-en1990 |
+| norm | din18599 | din18599 | semio-s-artifact-norm-din18599 |
+| norm | en1997 | en1997 | semio-s-artifact-norm-en1997 |
+| norm | din16798 | din16798 | semio-s-artifact-norm-din16798 |
+| norm | en1991 | en1991 | semio-s-artifact-norm-en1991 |
+| norm | en1992 | en1992 | semio-s-artifact-norm-en1992 |
+| norm | vdi3805 | vdi3805 | semio-s-artifact-norm-vdi3805 |
+| norm | iso16757 | iso16757 | semio-s-artifact-norm-iso16757 |
+| norm | en1993 | en1993 | semio-s-artifact-norm-en1993 |
+| norm | en1994 | en1994 | semio-s-artifact-norm-en1994 |
+| norm | din4108 | din4108 | semio-s-artifact-norm-din4108 |
+| norm | en1996 | en1996 | semio-s-artifact-norm-en1996 |
+| norm | en1995 | en1995 | semio-s-artifact-norm-en1995 |
+| norm | en1999 | en1999 | semio-s-artifact-norm-en1999 |
+| norm | en1998 | en1998 | semio-s-artifact-norm-en1998 |
+| playbook | playbook | playbook | semio-s-artifact-playbook-playbook |
+| imperative | procedure | procedure | semio-s-artifact-imperative-procedure |
+| remodel | remodeling | remodeling | semio-s-artifact-remodel-remodeling |
+| energy | model | model | semio-s-artifact-energy-model |
+| trinity | rewriting | rewriting | semio-s-artifact-trinity-rewriting |
+| trinity | jack | jack | semio-s-artifact-trinity-jack |
+| dag | dag | dag | semio-s-artifact-dag-dag |
+| draw | drawing | drawing | semio-s-artifact-draw-drawing |
+| raster | raster | raster | semio-s-artifact-raster-raster |
+| note | note | note | semio-s-artifact-note-note |
+| puzzle | 2d | puzzle2d | semio-s-artifact-puzzle-2d |
+| puzzle | 5d | puzzle5d | semio-s-artifact-puzzle-5d |
+| puzzle | 3d | puzzle3d | semio-s-artifact-puzzle-3d |
+| block | 2d | block2d | semio-s-artifact-block-2d |
+| block | 5d | block5d | semio-s-artifact-block-5d |
+| block | 3d | block3d | semio-s-artifact-block-3d |
+| space | home | home | semio-s-artifact-space-home |
+| space | space | space | semio-s-artifact-space-space |
+| sourcing | curation | curation | semio-s-artifact-sourcing-curation |

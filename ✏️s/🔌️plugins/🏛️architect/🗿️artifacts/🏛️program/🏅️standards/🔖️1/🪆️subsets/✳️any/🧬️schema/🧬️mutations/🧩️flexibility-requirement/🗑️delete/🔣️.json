@@ -5,7 +5,7 @@
   "displayName": "Delete Flexibility Requirement",
   "emoji": "🗑️",
   "aggregateVariant": "DeleteFlexibilityRequirement",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

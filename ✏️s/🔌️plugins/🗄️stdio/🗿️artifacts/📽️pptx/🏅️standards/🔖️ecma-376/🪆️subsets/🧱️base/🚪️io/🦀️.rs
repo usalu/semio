@@ -12,8 +12,8 @@
 /// never fabricated into a partial/empty presentation.
 #[derive(Clone, Debug, PartialEq)]
 pub enum PptxError {
-    Opc(crate::artifacts::zip::opc::OpcError),
-    Zip(crate::artifacts::zip::standards::v2_0::subsets::base::io::ZipError),
+    Opc(semio_s_artifact_stdio_zip::opc::OpcError),
+    Zip(semio_s_artifact_stdio_zip::standards::v2_0::subsets::base::io::ZipError),
     MissingPresentationRelationship,
     MissingPart(String),
     Xml { part: String, detail: String },
@@ -35,13 +35,13 @@ impl std::fmt::Display for PptxError {
 
 impl std::error::Error for PptxError {}
 
-impl From<crate::artifacts::zip::opc::OpcError> for PptxError {
-    fn from(e: crate::artifacts::zip::opc::OpcError) -> Self {
+impl From<semio_s_artifact_stdio_zip::opc::OpcError> for PptxError {
+    fn from(e: semio_s_artifact_stdio_zip::opc::OpcError) -> Self {
         Self::Opc(e)
     }
 }
-impl From<crate::artifacts::zip::standards::v2_0::subsets::base::io::ZipError> for PptxError {
-    fn from(e: crate::artifacts::zip::standards::v2_0::subsets::base::io::ZipError) -> Self {
+impl From<semio_s_artifact_stdio_zip::standards::v2_0::subsets::base::io::ZipError> for PptxError {
+    fn from(e: semio_s_artifact_stdio_zip::standards::v2_0::subsets::base::io::ZipError) -> Self {
         Self::Zip(e)
     }
 }
@@ -80,29 +80,29 @@ pub const REL_TYPE_OFFICE_DOCUMENT_STRICT: &str = "http://purl.oclc.org/ooxml/of
 /// authored under the Transitional or the Strict relationship-type namespace -- see
 /// `REL_TYPE_OFFICE_DOCUMENT_STRICT`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn resolve_office_document_relationship(opc: &crate::artifacts::zip::opc::OpcPackage) -> Option<String> {
-    opc.resolve_relationship("", crate::artifacts::zip::opc::REL_TYPE_OFFICE_DOCUMENT).or_else(|| opc.resolve_relationship("", REL_TYPE_OFFICE_DOCUMENT_STRICT))
+pub fn resolve_office_document_relationship(opc: &semio_s_artifact_stdio_zip::opc::OpcPackage) -> Option<String> {
+    opc.resolve_relationship("", semio_s_artifact_stdio_zip::opc::REL_TYPE_OFFICE_DOCUMENT).or_else(|| opc.resolve_relationship("", REL_TYPE_OFFICE_DOCUMENT_STRICT))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn attr(name: &str, value: &str) -> crate::artifacts::xml::schema::snapshot::XmlAttr {
-    crate::artifacts::xml::schema::snapshot::XmlAttr { name: name.into(), value: value.into() }
+pub fn attr(name: &str, value: &str) -> semio_s_artifact_stdio_xml::schema::snapshot::XmlAttr {
+    semio_s_artifact_stdio_xml::schema::snapshot::XmlAttr { name: name.into(), value: value.into() }
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn attr_val<'a>(attrs: &'a [crate::artifacts::xml::schema::snapshot::XmlAttr], name: &str) -> Option<&'a str> {
+pub fn attr_val<'a>(attrs: &'a [semio_s_artifact_stdio_xml::schema::snapshot::XmlAttr], name: &str) -> Option<&'a str> {
     attrs.iter().find(|a| a.name == name).map(|a| a.value.as_str())
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn find_child<'a>(children: &'a [crate::artifacts::xml::schema::snapshot::XmlNode], name: &str) -> Option<&'a crate::artifacts::xml::schema::snapshot::XmlNode> {
-    children.iter().find(|c| matches!(c, crate::artifacts::xml::schema::snapshot::XmlNode::Element { name: n, .. } if n == name))
+pub fn find_child<'a>(children: &'a [semio_s_artifact_stdio_xml::schema::snapshot::XmlNode], name: &str) -> Option<&'a semio_s_artifact_stdio_xml::schema::snapshot::XmlNode> {
+    children.iter().find(|c| matches!(c, semio_s_artifact_stdio_xml::schema::snapshot::XmlNode::Element { name: n, .. } if n == name))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn element_children(node: &crate::artifacts::xml::schema::snapshot::XmlNode) -> &[crate::artifacts::xml::schema::snapshot::XmlNode] {
+pub fn element_children(node: &semio_s_artifact_stdio_xml::schema::snapshot::XmlNode) -> &[semio_s_artifact_stdio_xml::schema::snapshot::XmlNode] {
     match node {
-        crate::artifacts::xml::schema::snapshot::XmlNode::Element { children, .. } => children,
+        semio_s_artifact_stdio_xml::schema::snapshot::XmlNode::Element { children, .. } => children,
         _ => &[],
     }
 }
@@ -161,8 +161,8 @@ pub const MINIMAL_THEME_XML: &str = concat!(
 
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use crate::artifacts::pptx::standards::v_ecma_376::subsets::base::schema::PptxAnalyzer;
-    use crate::artifacts::pptx::PptxSnapshot;
+    use crate::standards::v_ecma_376::subsets::base::schema::PptxAnalyzer;
+    use crate::PptxSnapshot;
     use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.pptx", standard: StandardId("ecma-376"), subset: SubsetId("*") };
@@ -206,9 +206,9 @@ pub use derived_composition::*;
 
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
-    use crate::artifacts::pptx::standards::v_ecma_376::subsets::base::schema::PptxComposer as PptxRawAnyComposer;
-    use crate::artifacts::pptx::standards::v_ecma_376::subsets::strict::schema::PptxStrictComposer;
-    use crate::artifacts::pptx::standards::v_ecma_376::subsets::transitional::schema::PptxTransitionalComposer;
+    use crate::standards::v_ecma_376::subsets::base::schema::PptxComposer as PptxRawAnyComposer;
+    use crate::standards::v_ecma_376::subsets::strict::schema::PptxStrictComposer;
+    use crate::standards::v_ecma_376::subsets::transitional::schema::PptxTransitionalComposer;
     use semio_framework_plugin::{composer_entry_of, ComposerEntry};
     use std::sync::OnceLock;
 

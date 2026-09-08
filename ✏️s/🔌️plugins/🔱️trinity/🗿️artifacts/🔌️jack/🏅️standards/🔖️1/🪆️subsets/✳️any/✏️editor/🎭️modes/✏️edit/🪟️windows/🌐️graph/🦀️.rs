@@ -21,12 +21,12 @@ pub(crate) fn trinity_lod_measure(window_id: &str, current_mode: &str, jack_acti
     WindowMeasure::Select { id: format!("{window_id}-lod"), label: Some("LOD".into()), value: current_mode.into(), items, on_change: jack_action("setLodMode", Some(pack::json!({ "windowId": window_id }))) }
 }
 
-pub(crate) fn trinity_lod_json_for_window(cfg: &JackConfig, window_id: &str) -> Option<String> {
+pub(crate) fn trinity_lod_json_for_window(cfg: &JackConfig, window_id: &str) -> String {
     let mode = cfg.lod_mode_by_window.get(window_id).map_or(TRINITY_LOD_MODE_AUTOMATIC, String::as_str);
     if mode == TRINITY_LOD_MODE_AUTOMATIC {
-        Some(pack::json!({ "automatic": true }).to_string())
+        pack::json!({ "automatic": true }).to_string()
     } else {
-        Some(pack::json!({ "automatic": false, "forcedLabel": mode }).to_string())
+        pack::json!({ "automatic": false, "forcedLabel": mode }).to_string()
     }
 }
 
@@ -39,5 +39,5 @@ pub(crate) fn trinity_lod_json_for_window(cfg: &JackConfig, window_id: &str) -> 
 pub(crate) fn render(surface_id: &str, _controller_id: &str, window_id: &str, fixture: &JackSnapshot, cfg: &JackConfig) -> UiAssemblyResult<BuiltNode> {
     let (nodes, edges, _) = crate::editor::jack::fixture_to_workflow(fixture);
     let viewport = NodeGraphViewport { x: cfg.camera.x, y: cfg.camera.y, zoom: cfg.camera.zoom };
-    scene_surface(surface_id, SurfaceKind::NodeGraph, &NodeGraphScene { lod_json: trinity_lod_json_for_window(cfg, window_id), ..NodeGraphScene::base(nodes, edges, viewport) })
+    scene_surface(surface_id, SurfaceKind::NodeGraph, &NodeGraphScene { lod_json: Some(trinity_lod_json_for_window(cfg, window_id)), ..NodeGraphScene::base(nodes, edges, viewport) })
 }

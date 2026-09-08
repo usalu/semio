@@ -17,11 +17,11 @@
 //! vocabulary (never redefined locally) — see `engine::geometry::SemioPoint2` and
 //! `subsets::value::schema::snapshot::SemioValueEntry`.
 
-use crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioPoint2;
-use crate::artifacts::semio::standards::v1::subsets::base::schema::triples::{split_top_level, strip_brackets};
-use crate::artifacts::semio::standards::v1::subsets::value::schema::diff::{dec_semio_value_bin, dec_semio_value_entry, enc_semio_value_bin, enc_semio_value_entry};
-use crate::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValueEntry;
-use schema::ArtifactSchema;
+use crate::standards::v1::subsets::base::schema::geometry::SemioPoint2;
+use crate::standards::v1::subsets::base::schema::triples::{split_top_level, strip_brackets};
+use crate::standards::v1::subsets::value::schema::diff::{dec_semio_value_bin, dec_semio_value_entry, enc_semio_value_bin, enc_semio_value_entry};
+use crate::standards::v1::subsets::value::schema::snapshot::SemioValueEntry;
+use framework_schema::ArtifactSchema;
 
 //#region 🔖️Ids
 /// 🏷️ Document schema / DSL envelope id AND `ArtifactSchema` descriptor id — same literal for
@@ -603,7 +603,7 @@ pub(crate) fn demo_graph_snapshot() -> SemioGraphSnapshot {
                 label: "Source".into(),
                 position: SemioPoint2 { x: 0.0, y: 0.0 },
                 ports: vec![SemioGraphPort { name: "out".into(), kind: SemioGraphPortKind::Out }],
-                properties: vec![SemioValueEntry { key: "weight".into(), value: crate::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValue::Int { lexeme: "1".into() } }],
+                properties: vec![SemioValueEntry { key: "weight".into(), value: crate::standards::v1::subsets::value::schema::snapshot::SemioValue::Int { lexeme: "1".into() } }],
             },
             SemioGraphNode {
                 id: GraphNodeId::new("n2"),
@@ -611,7 +611,7 @@ pub(crate) fn demo_graph_snapshot() -> SemioGraphSnapshot {
                 label: "Sink".into(),
                 position: SemioPoint2 { x: 120.5, y: -30.25 },
                 ports: vec![SemioGraphPort { name: "in".into(), kind: SemioGraphPortKind::In }],
-                properties: vec![SemioValueEntry { key: "label".into(), value: crate::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValue::Str { value: "sink node".into() } }],
+                properties: vec![SemioValueEntry { key: "label".into(), value: crate::standards::v1::subsets::value::schema::snapshot::SemioValue::Str { value: "sink node".into() } }],
             },
         ],
         edges: vec![SemioGraphEdge { id: GraphEdgeId::new("e1"), source: GraphNodeId::new("n1"), target: GraphNodeId::new("n2"), kind: "flow".into(), label: "Main".into() }],

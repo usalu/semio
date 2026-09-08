@@ -1,0 +1,1551 @@
+[
+ {
+  "path": "🌎️hub/💡️inference/🧬️schema/🦀️.rs",
+  "blob": "290a5bdf041d4c285face6d0c2a8ece97deacd42",
+  "role": "authoritative Rust schema module (InferenceRequestV1, InferenceBindingIdentityV1, etc.)",
+  "classification": "a",
+  "owner": "semio-hub (🌎️hub/📦️packages/🦀️rust/Cargo.toml) — the single registered scope covering all of 🌎️hub",
+  "intendedOwner": "semio-hub (🌎️hub/📦️packages/🦀️rust/Cargo.toml) — the single registered scope covering all of 🌎️hub",
+  "exports": [
+   "InferenceRequestV1",
+   "InferenceParentDialectV1",
+   "InferenceBindingIdentityV1",
+   "REQUEST_MAX_BYTES",
+   "..."
+  ],
+  "consumers": [
+   {
+    "path": "🌎️hub/💡️inference/🏃️runtime/🦀️.rs",
+    "kind": "application"
+   },
+   {
+    "path": "🌎️hub/📦️packages/🦀️rust/🚀️bin.rs",
+    "kind": "application"
+   }
+  ],
+  "decision": "keep as authoritative Rust source of truth for the inference wire contracts",
+  "evidence": "grep confirms InferenceRequestV1/InferenceBindingIdentityV1 consumed by runtime and bin.rs",
+  "open": []
+ },
+ {
+  "path": "🌎️hub/💡️inference/🧬️schema/✅️approval/🦀️.rs",
+  "blob": "16a3b982e42e63aedd105cefe62bbbfb3419b605",
+  "role": "authoritative Rust schema submodule: InferenceApprovalRequestV1::decode",
+  "classification": "a",
+  "owner": "semio-hub (🌎️hub/📦️packages/🦀️rust/Cargo.toml) — the single registered scope covering all of 🌎️hub",
+  "intendedOwner": "semio-hub (🌎️hub/📦️packages/🦀️rust/Cargo.toml) — the single registered scope covering all of 🌎️hub",
+  "exports": [
+   "InferenceApprovalRequestV1"
+  ],
+  "consumers": [
+   {
+    "path": "🌎️hub/💡️inference/🏃️runtime/🦀️.rs:3429",
+    "kind": "application"
+   },
+   {
+    "path": "🌎️hub/📦️packages/🦀️rust/🚀️bin.rs",
+    "kind": "application"
+   }
+  ],
+  "decision": "keep — this IS the seed case's real authoritative contract implementation; it is the file the fixture's schema.json silently duplicates",
+  "evidence": "🏃️runtime/🦀️.rs:3429 calls super::schema::InferenceApprovalRequestV1::decode(body); struct has #[serde(deny_unknown_fields)]",
+  "open": []
+ },
+ {
+  "path": "🌎️hub/💡️inference/🧬️schema/🔣️.json",
+  "blob": "4331440c5931f64632972d03a040bb84df0cf66e",
+  "role": "authoritative JSON Schema (draft 2020-12, NOT draft-07) for InferenceRequestV1/identity/binding — no 'approval' definition present",
+  "classification": "a",
+  "owner": "semio-hub (🌎️hub/📦️packages/🦀️rust/Cargo.toml) — the single registered scope covering all of 🌎️hub",
+  "intendedOwner": "semio-hub (🌎️hub/📦️packages/🦀️rust/Cargo.toml) — the single registered scope covering all of 🌎️hub",
+  "exports": [
+   "urn:semio:hub:inference-job:v1"
+  ],
+  "consumers": [
+   {
+    "path": "🌎️hub/📦️packages/🦀️rust/📜️script.ts (ajv.addSchema at line 7097, proveGisMapProposalApprovalFixture)",
+    "kind": "test"
+   }
+  ],
+  "decision": "keep as authoritative JSON form, BUT: (1) add the missing approval/receipt definitions so it stops being incomplete relative to the Rust module, (2) migrate dialect to draft-07 per taxonomy mutationPayloadSchemaAuthority.jsonSchemaDialect",
+  "evidence": "python json.load shows $defs has request/identity/binding but no 'approval'; grep -c approval on this file = 0",
+  "open": [
+   "dialect is 2020-12 not draft-07 — repo-wide pattern, see cross-cutting finding"
+  ]
+ },
+ {
+  "path": "🌎️hub/💡️inference/🧬️schema/🟦️.ts",
+  "blob": "508b13ddb456f5cdd9c57d2debda108f6090584e",
+  "role": "authoritative TS schema module: InferenceRequestV1 type + parseInferenceRequestV1 — no approval export",
+  "classification": "a",
+  "owner": "semio-hub (🌎️hub/📦️packages/🦀️rust/Cargo.toml) — the single registered scope covering all of 🌎️hub",
+  "intendedOwner": "semio-hub (🌎️hub/📦️packages/🦀️rust/Cargo.toml) — the single registered scope covering all of 🌎️hub",
+  "exports": [
+   "InferenceRequestV1",
+   "parseInferenceRequestV1"
+  ],
+  "consumers": [
+   {
+    "path": "consumers not individually traced beyond grep hit list",
+    "kind": "unknown"
+   }
+  ],
+  "decision": "keep; add approval/receipt exports to close the gap vs the Rust module and the framework/os duplicate (see seed case)",
+  "evidence": "grep 'export' on file shows only 2 exports, no Approval type",
+  "open": []
+ },
+ {
+  "path": "🌎️hub/🔐️auth/🧬️schema/🔣️.json",
+  "blob": "2ec5d897d75b6450487a4767313aeb462f5a0408",
+  "role": "authoritative JSON Schema for hub auth capability tokens",
+  "classification": "a",
+  "owner": "semio-hub (🌎️hub/📦️packages/🦀️rust/Cargo.toml) — the single registered scope covering all of 🌎️hub",
+  "intendedOwner": "semio-hub (🌎️hub/📦️packages/🦀️rust/Cargo.toml) — the single registered scope covering all of 🌎️hub",
+  "exports": [
+   "https://semio.tech/schema/hub/auth/capability-v1.json"
+  ],
+  "consumers": [
+   {
+    "path": "unresolved — not grepped individually",
+    "kind": "unknown"
+   }
+  ],
+  "decision": "keep",
+  "evidence": "json.load: $id=https://semio.tech/schema/hub/auth/capability-v1.json, $schema=2020-12 (not draft-07)",
+  "open": [
+   "dialect mismatch vs taxonomy draft-07 mandate"
+  ]
+ },
+ {
+  "path": "🌎️hub/🔐️auth/🧬️schema/🟦️.ts",
+  "blob": "7d0b934b011abb4e95dc2f5f920da90c37f97d02",
+  "role": "authoritative TS schema module: parseInviteCapabilityV1/parseSessionCapabilityV1/parseShareCapabilityV1/parseSocketGrantCapabilityV1",
+  "classification": "a",
+  "owner": "semio-hub (🌎️hub/📦️packages/🦀️rust/Cargo.toml) — the single registered scope covering all of 🌎️hub",
+  "intendedOwner": "semio-hub (🌎️hub/📦️packages/🦀️rust/Cargo.toml) — the single registered scope covering all of 🌎️hub",
+  "exports": [
+   "parseInviteCapabilityV1",
+   "parseSessionCapabilityV1",
+   "parseShareCapabilityV1",
+   "parseSocketGrantCapabilityV1"
+  ],
+  "consumers": [
+   {
+    "path": "🌎️hub/📦️packages/🟦️typescript/🤝️index.test.ts:29 (import)",
+    "kind": "test"
+   }
+  ],
+  "decision": "keep — this is a correctly-scoped module: real consumers resolve NAMED EXPORTS from here, not a fixture-local schema",
+  "evidence": "🌎️hub/📦️packages/🟦️typescript/🤝️index.test.ts line 29 imports these 4 named parse functions directly from 🔐️auth/🧬️schema/🟦️.ts — this is the target pattern the rest of hub should follow",
+  "open": []
+ },
+ {
+  "path": "🌎️hub/🚀️local-bootstrap/🧬️schema/📨️credential-envelope-v1/🔣️.json",
+  "blob": "a96e5ef2d947511bb6a457f11914bed7f9a7a660",
+  "role": "authoritative JSON Schema for local-bootstrap 📨️credential-envelope-v1",
+  "classification": "a",
+  "owner": "semio-hub (🌎️hub/📦️packages/🦀️rust/Cargo.toml) — the single registered scope covering all of 🌎️hub",
+  "intendedOwner": "semio-hub (🌎️hub/📦️packages/🦀️rust/Cargo.toml) — the single registered scope covering all of 🌎️hub",
+  "exports": [
+   "https://semio.tech/schemas/hub/local-credential-envelope-v1.json"
+  ],
+  "consumers": [
+   {
+    "path": "not individually traced — local-bootstrap module consumer",
+    "kind": "unknown"
+   }
+  ],
+  "decision": "keep",
+  "evidence": "json.load $id=https://semio.tech/schemas/hub/local-credential-envelope-v1.json, dialect 2020-12",
+  "open": [
+   "consumer not individually confirmed — see coverage section"
+  ]
+ },
+ {
+  "path": "🌎️hub/🚀️local-bootstrap/🧬️schema/🚇️pipe-v1/🔣️.json",
+  "blob": "9b6985fefbe451c789b0ac8a5a4c064e2fa76e1a",
+  "role": "authoritative JSON Schema for local-bootstrap 🚇️pipe-v1",
+  "classification": "a",
+  "owner": "semio-hub (🌎️hub/📦️packages/🦀️rust/Cargo.toml) — the single registered scope covering all of 🌎️hub",
+  "intendedOwner": "semio-hub (🌎️hub/📦️packages/🦀️rust/Cargo.toml) — the single registered scope covering all of 🌎️hub",
+  "exports": [
+   "https://semio.tech/schemas/hub/local-bootstrap-pipe-v1.json"
+  ],
+  "consumers": [
+   {
+    "path": "not individually traced — local-bootstrap module consumer",
+    "kind": "unknown"
+   }
+  ],
+  "decision": "keep",
+  "evidence": "json.load $id=https://semio.tech/schemas/hub/local-bootstrap-pipe-v1.json, dialect 2020-12",
+  "open": [
+   "consumer not individually confirmed — see coverage section"
+  ]
+ },
+ {
+  "path": "🌎️hub/🚀️local-bootstrap/🧬️schema/🩺️readiness-v1/🔣️.json",
+  "blob": "ae6ca62f6204fe18d4d4712589c01f90fd341787",
+  "role": "authoritative JSON Schema for local-bootstrap 🩺️readiness-v1",
+  "classification": "a",
+  "owner": "semio-hub (🌎️hub/📦️packages/🦀️rust/Cargo.toml) — the single registered scope covering all of 🌎️hub",
+  "intendedOwner": "semio-hub (🌎️hub/📦️packages/🦀️rust/Cargo.toml) — the single registered scope covering all of 🌎️hub",
+  "exports": [
+   "https://semio.tech/schemas/hub/readiness-v1.json"
+  ],
+  "consumers": [
+   {
+    "path": "not individually traced — local-bootstrap module consumer",
+    "kind": "unknown"
+   }
+  ],
+  "decision": "keep",
+  "evidence": "json.load $id=https://semio.tech/schemas/hub/readiness-v1.json, dialect 2020-12",
+  "open": [
+   "consumer not individually confirmed — see coverage section"
+  ]
+ },
+ {
+  "path": "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🧬️schema/🔣️bundle.schema.json",
+  "blob": "d15396950081a3cced6395d0a384aafeb6e2871b",
+  "role": "authoritative-location bundle schema (trusted-catalog-bundle-v2) but NO consumer found anywhere in repo",
+  "classification": "a",
+  "owner": "semio-hub (🌎️hub/📦️packages/🦀️rust/Cargo.toml) — the single registered scope covering all of 🌎️hub",
+  "intendedOwner": "semio-hub (🌎️hub/📦️packages/🦀️rust/Cargo.toml) — the single registered scope covering all of 🌎️hub",
+  "exports": [
+   "https://semio.tech/schemas/hub/trusted-catalog-bundle-v2.json"
+  ],
+  "consumers": [],
+  "decision": "keep location, but investigate: appears orphaned (0 hits repo-wide for its $id or filename outside itself)",
+  "evidence": "grep -rl 'trusted-catalog-bundle-v2' repo-wide returns only this file itself",
+  "open": [
+   "ORPHANED: no confirmed consumer — dev must confirm whether this is dead or referenced dynamically/by convention"
+  ]
+ },
+ {
+  "path": "🌎️hub/🧪️fixtures/✅️inference-approval-v1/🧬️.schema.json",
+  "blob": "44b1a3eb1dedc739f70f041aa277b0e59ac28b4a",
+  "role": "fixture-adjacent JSON Schema used as an AJV test-oracle in the TS harness, cross-checking a Rust/TS production implementation elsewhere in the same scope",
+  "classification": "b",
+  "owner": "🧪️fixtures (test-owned, not scope-owned)",
+  "intendedOwner": "semio-hub (🌎️hub/📦️packages/🦀️rust/Cargo.toml) — the single registered scope covering all of 🌎️hub",
+  "exports": [
+   "semio.hub.inference-approval-fixture/v1"
+  ],
+  "consumers": [
+   {
+    "path": "🌎️hub/📦️packages/🦀️rust/📜️script.ts (proveInferenceApprovalRequestFixture, line 7634)",
+    "kind": "test"
+   }
+  ],
+  "decision": "relocate/derive from the scope's 🧬️schema/ module instead of hand-duplicating the contract next to the fixture; keep the fixture 🔣️.json as example-only data",
+  "evidence": "$schema=2020-12; SEED CASE — real owner is 🌎️hub/💡️inference/🧬️schema/✅️approval/🦀️.rs::InferenceApprovalRequestV1; also independently reimplemented in 🧰️framework/.../📇️directory/🧬️schema/🦀️.rs+🟦️.ts and 🧰️framework/.../🌉️mcp/💡️inference/🦀️.rs+📦️packages/🟦️typescript/💡️inference-bridge.ts",
+  "open": []
+ },
+ {
+  "path": "🌎️hub/🧪️fixtures/↩️gis-map-approval-undo-v1/🧬️.schema.json",
+  "blob": "4a3b68517f86ac483b502de3221a24e53db55ca1",
+  "role": "fixture-adjacent JSON Schema used as an AJV test-oracle in the TS harness, cross-checking a Rust/TS production implementation elsewhere in the same scope",
+  "classification": "b",
+  "owner": "🧪️fixtures (test-owned, not scope-owned)",
+  "intendedOwner": "semio-hub (🌎️hub/📦️packages/🦀️rust/Cargo.toml) — the single registered scope covering all of 🌎️hub",
+  "exports": [
+   "semio.hub.gis-map-approval-undo-fixture/v1"
+  ],
+  "consumers": [
+   {
+    "path": "🌎️hub/📦️packages/🦀️rust/📜️script.ts (proveGisMapApprovalUndoFixture, line 6899)",
+    "kind": "test"
+   }
+  ],
+  "decision": "relocate/derive from the scope's 🧬️schema/ module instead of hand-duplicating the contract next to the fixture; keep the fixture 🔣️.json as example-only data",
+  "evidence": "$schema=2020-12; real owner: 🌎️hub/💡️inference/🏃️runtime/🦀️.rs::undo_gis_map_approval + 🧰️framework/.../📇️directory schema GisMapApprovalUndoReceiptV1",
+  "open": []
+ },
+ {
+  "path": "🌎️hub/🧪️fixtures/⏸️gis-inference-checkpoint-control-v1/🧬️.schema.json",
+  "blob": "cb7b6fe8033f6b90fba3e2a4ced1b6bded446a75",
+  "role": "fixture-adjacent JSON Schema used as an AJV test-oracle in the TS harness, cross-checking a Rust/TS production implementation elsewhere in the same scope",
+  "classification": "b",
+  "owner": "🧪️fixtures (test-owned, not scope-owned)",
+  "intendedOwner": "semio-hub (🌎️hub/📦️packages/🦀️rust/Cargo.toml) — the single registered scope covering all of 🌎️hub",
+  "exports": [
+   "urn:semio:hub:gis-inference-checkpoint-control-fixture:v1"
+  ],
+  "consumers": [
+   {
+    "path": "🌎️hub/📦️packages/🦀️rust/📜️script.ts (proveGisInferenceCheckpointControlFixture, line 7039)",
+    "kind": "test"
+   }
+  ],
+  "decision": "relocate/derive from the scope's 🧬️schema/ module instead of hand-duplicating the contract next to the fixture; keep the fixture 🔣️.json as example-only data",
+  "evidence": "$schema=2020-12; real owner: 🌎️hub/💡️inference/🏃️runtime/🦀️.rs checkpoint control routes + 📦️packages/🦀️rust/🚀️bin.rs",
+  "open": []
+ },
+ {
+  "path": "🌎️hub/🧪️fixtures/⛓️inference-wal-chain-v1/🧬️.schema.json",
+  "blob": "9bc49aaa813d8b1b8c946bfceec7fedaae1a11e2",
+  "role": "fixture-adjacent JSON Schema used as an AJV test-oracle in the TS harness, cross-checking a Rust/TS production implementation elsewhere in the same scope",
+  "classification": "b",
+  "owner": "🧪️fixtures (test-owned, not scope-owned)",
+  "intendedOwner": "semio-hub (🌎️hub/📦️packages/🦀️rust/Cargo.toml) — the single registered scope covering all of 🌎️hub",
+  "exports": [
+   "urn:semio:hub:inference-wal-chain-fixture:v1"
+  ],
+  "consumers": [
+   {
+    "path": "🌎️hub/📦️packages/🦀️rust/📜️script.ts (proveInferenceWalChainFixture, line 6668)",
+    "kind": "test"
+   }
+  ],
+  "decision": "relocate/derive from the scope's 🧬️schema/ module instead of hand-duplicating the contract next to the fixture; keep the fixture 🔣️.json as example-only data",
+  "evidence": "$schema=2020-12; real owner: 🌎️hub/💡️inference/🧾️wal/🦀️.rs (chain hashing); depends on 🧾️inference-wal-proof-v1 fixture too",
+  "open": []
+ },
+ {
+  "path": "🌎️hub/🧪️fixtures/✉️inference-command-v1/🧬️.schema.json",
+  "blob": "163f36806f511d440b520c2216b8c3d5c034fb9c",
+  "role": "fixture-adjacent JSON Schema used as an AJV test-oracle in the TS harness, cross-checking a Rust/TS production implementation elsewhere in the same scope",
+  "classification": "b",
+  "owner": "🧪️fixtures (test-owned, not scope-owned)",
+  "intendedOwner": "semio-hub (🌎️hub/📦️packages/🦀️rust/Cargo.toml) — the single registered scope covering all of 🌎️hub",
+  "exports": [
+   "semio.hub.inference-command-fixture/v1"
+  ],
+  "consumers": [
+   {
+    "path": "🌎️hub/📦️packages/🦀️rust/📜️script.ts (proveInferenceCommandFixture, line 10160)",
+    "kind": "test"
+   }
+  ],
+  "decision": "relocate/derive from the scope's 🧬️schema/ module instead of hand-duplicating the contract next to the fixture; keep the fixture 🔣️.json as example-only data",
+  "evidence": "$schema=2020-12; real owner: hub inference command decode path (💡️inference/✉️command/)",
+  "open": []
+ },
+ {
+  "path": "🌎️hub/🧪️fixtures/🎯️inference-catalog-selection-v1/🧬️.schema.json",
+  "blob": "fc545499c876e1344beb73f0c0dc59091c1ad63b",
+  "role": "fixture-adjacent JSON Schema used as an AJV test-oracle in the TS harness, cross-checking a Rust/TS production implementation elsewhere in the same scope",
+  "classification": "b",
+  "owner": "🧪️fixtures (test-owned, not scope-owned)",
+  "intendedOwner": "semio-hub (🌎️hub/📦️packages/🦀️rust/Cargo.toml) — the single registered scope covering all of 🌎️hub",
+  "exports": [
+   "urn:semio:hub:inference-catalog-selection-fixture:v1"
+  ],
+  "consumers": [
+   {
+    "path": "🌎️hub/📦️packages/🦀️rust/📜️script.ts (proveInferenceCatalogSelectionFixture, line 6855)",
+    "kind": "test"
+   }
+  ],
+  "decision": "relocate/derive from the scope's 🧬️schema/ module instead of hand-duplicating the contract next to the fixture; keep the fixture 🔣️.json as example-only data",
+  "evidence": "$schema=2020-12; real owner: 🌎️hub/💡️inference/📇️catalog/🦀️.rs + 🗿️artifact-authority/🔏️trusted-catalog/🦀️.rs",
+  "open": []
+ },
+ {
+  "path": "🌎️hub/🧪️fixtures/🖥️inference-server-identity-v1/🧬️.schema.json",
+  "blob": "d4958eb39d6115096713199507cf1d53469d71b4",
+  "role": "fixture-adjacent JSON Schema used as an AJV test-oracle in the TS harness, cross-checking a Rust/TS production implementation elsewhere in the same scope",
+  "classification": "b",
+  "owner": "🧪️fixtures (test-owned, not scope-owned)",
+  "intendedOwner": "semio-hub (🌎️hub/📦️packages/🦀️rust/Cargo.toml) — the single registered scope covering all of 🌎️hub",
+  "exports": [
+   "semio.hub.inference-server-identity-fixture/v1"
+  ],
+  "consumers": [
+   {
+    "path": "🌎️hub/📦️packages/🦀️rust/📜️script.ts ((via proveInferenceCatalogSelectionFixture cluster))",
+    "kind": "test"
+   }
+  ],
+  "decision": "relocate/derive from the scope's 🧬️schema/ module instead of hand-duplicating the contract next to the fixture; keep the fixture 🔣️.json as example-only data",
+  "evidence": "$schema=2020-12; real owner: hub inference identity/server-id validation in 💡️inference/🧬️schema/🦀️.rs (SERVER_ID_MAX_BYTES)",
+  "open": []
+ },
+ {
+  "path": "🌎️hub/🧪️fixtures/🗳️gis-map-proposal-approval-v1/🧬️.schema.json",
+  "blob": "36133742e874e1cf1cbfa50b3c15b1026cd56988",
+  "role": "fixture-adjacent JSON Schema used as an AJV test-oracle in the TS harness, cross-checking a Rust/TS production implementation elsewhere in the same scope",
+  "classification": "b",
+  "owner": "🧪️fixtures (test-owned, not scope-owned)",
+  "intendedOwner": "semio-hub (🌎️hub/📦️packages/🦀️rust/Cargo.toml) — the single registered scope covering all of 🌎️hub",
+  "exports": [
+   "urn:semio:hub:gis-map-proposal-approval-fixture:v1"
+  ],
+  "consumers": [
+   {
+    "path": "🌎️hub/📦️packages/🦀️rust/📜️script.ts (proveGisMapProposalApprovalFixture, line 7089 (also loads 💡️inference/🧬️schema/🔣️.json via ajv.addSchema))",
+    "kind": "test"
+   }
+  ],
+  "decision": "relocate/derive from the scope's 🧬️schema/ module instead of hand-duplicating the contract next to the fixture; keep the fixture 🔣️.json as example-only data",
+  "evidence": "$schema=2020-12; real owner: 🌎️hub/💡️inference/🏃️runtime/🦀️.rs proposal/approval routes + 🌎️hub/💡️inference/🧾️wal",
+  "open": []
+ },
+ {
+  "path": "🌎️hub/🧪️fixtures/🗺️gis-inference-job-v1/🧬️.schema.json",
+  "blob": "5a366bb151ee25857f091a994b60d242d9bc9835",
+  "role": "fixture-adjacent JSON Schema used as an AJV test-oracle in the TS harness, cross-checking a Rust/TS production implementation elsewhere in the same scope",
+  "classification": "b",
+  "owner": "🧪️fixtures (test-owned, not scope-owned)",
+  "intendedOwner": "semio-hub (🌎️hub/📦️packages/🦀️rust/Cargo.toml) — the single registered scope covering all of 🌎️hub",
+  "exports": [
+   "urn:semio:hub:gis-inference-ledger-fixture:v1"
+  ],
+  "consumers": [
+   {
+    "path": "🌎️hub/📦️packages/🦀️rust/📜️script.ts (top-level ledger oracle (script.ts run() body, ~line 7523))",
+    "kind": "test"
+   }
+  ],
+  "decision": "relocate/derive from the scope's 🧬️schema/ module instead of hand-duplicating the contract next to the fixture; keep the fixture 🔣️.json as example-only data",
+  "evidence": "$schema=2020-12; real owner: 🌎️hub/💡️inference/🏃️runtime + 🪶️sqlite job ledger",
+  "open": []
+ },
+ {
+  "path": "🌎️hub/🧪️fixtures/🗺️gis-inference-retained-runtime-v1/🧬️.schema.json",
+  "blob": "79263db1c786451a29b5f1967738bbbb78360794",
+  "role": "fixture-adjacent JSON Schema used as an AJV test-oracle in the TS harness, cross-checking a Rust/TS production implementation elsewhere in the same scope",
+  "classification": "b",
+  "owner": "🧪️fixtures (test-owned, not scope-owned)",
+  "intendedOwner": "semio-hub (🌎️hub/📦️packages/🦀️rust/Cargo.toml) — the single registered scope covering all of 🌎️hub",
+  "exports": [
+   "(no id)"
+  ],
+  "consumers": [
+   {
+    "path": "🌎️hub/📦️packages/🦀️rust/📜️script.ts (proveGisInferenceRetainedRuntimeFixture, line 6959)",
+    "kind": "test"
+   }
+  ],
+  "decision": "relocate/derive from the scope's 🧬️schema/ module instead of hand-duplicating the contract next to the fixture; keep the fixture 🔣️.json as example-only data",
+  "evidence": "$schema=2020-12 (except execution-target-relay-v1 = draft-07); real owner: 🌎️hub/💡️inference/🏃️runtime/🦀️.rs + 🪶️sqlite/🦀️.rs",
+  "open": []
+ },
+ {
+  "path": "🌎️hub/🧪️fixtures/🛂️inference-author-v1/🧬️.schema.json",
+  "blob": "de9fc6e8c286abf2cf0f68bce3427c3ce9a3c50d",
+  "role": "fixture-adjacent JSON Schema used as an AJV test-oracle in the TS harness, cross-checking a Rust/TS production implementation elsewhere in the same scope",
+  "classification": "b",
+  "owner": "🧪️fixtures (test-owned, not scope-owned)",
+  "intendedOwner": "semio-hub (🌎️hub/📦️packages/🦀️rust/Cargo.toml) — the single registered scope covering all of 🌎️hub",
+  "exports": [
+   "semio.hub.inference-author-fixture/v1"
+  ],
+  "consumers": [
+   {
+    "path": "🌎️hub/📦️packages/🦀️rust/📜️script.ts (proveInferenceAuthorFixture, line 7663)",
+    "kind": "test"
+   }
+  ],
+  "decision": "relocate/derive from the scope's 🧬️schema/ module instead of hand-duplicating the contract next to the fixture; keep the fixture 🔣️.json as example-only data",
+  "evidence": "$schema=2020-12 (except execution-target-relay-v1 = draft-07); real owner: inference author/actor identity checks",
+  "open": []
+ },
+ {
+  "path": "🌎️hub/🧪️fixtures/🧊️gis-map-frozen-binding-v1/🧬️.schema.json",
+  "blob": "7d55672b7622f30914ec7ebc7984caf7dc3fd654",
+  "role": "fixture-adjacent JSON Schema used as an AJV test-oracle in the TS harness, cross-checking a Rust/TS production implementation elsewhere in the same scope",
+  "classification": "b",
+  "owner": "🧪️fixtures (test-owned, not scope-owned)",
+  "intendedOwner": "semio-hub (🌎️hub/📦️packages/🦀️rust/Cargo.toml) — the single registered scope covering all of 🌎️hub",
+  "exports": [
+   "urn:semio:hub:gis-map-frozen-binding-fixture:v1"
+  ],
+  "consumers": [
+   {
+    "path": "🌎️hub/📦️packages/🦀️rust/📜️script.ts (proveGisMapFrozenBindingFixture, line 7453)",
+    "kind": "test"
+   }
+  ],
+  "decision": "relocate/derive from the scope's 🧬️schema/ module instead of hand-duplicating the contract next to the fixture; keep the fixture 🔣️.json as example-only data",
+  "evidence": "$schema=2020-12 (except execution-target-relay-v1 = draft-07); real owner: 🌎️hub/💡️inference/📇️catalog + 🗿️artifact-authority/🔏️trusted-catalog",
+  "open": []
+ },
+ {
+  "path": "🌎️hub/🧪️fixtures/🧭️native-artifact-provider-frontier-v1/🧬️.schema.json",
+  "blob": "f390047429f0c9047bf8fc67689134a850d3b309",
+  "role": "fixture-adjacent JSON Schema used as an AJV test-oracle in the TS harness, cross-checking a Rust/TS production implementation elsewhere in the same scope",
+  "classification": "b",
+  "owner": "🧪️fixtures (test-owned, not scope-owned)",
+  "intendedOwner": "semio-hub (🌎️hub/📦️packages/🦀️rust/Cargo.toml) — the single registered scope covering all of 🌎️hub",
+  "exports": [
+   "https://semio.tech/schemas/hub-native-artifact-provider-frontier-v1.json"
+  ],
+  "consumers": [
+   {
+    "path": "🌎️hub/📦️packages/🦀️rust/📜️script.ts ((script.ts ~line 3821))",
+    "kind": "test"
+   }
+  ],
+  "decision": "relocate/derive from the scope's 🧬️schema/ module instead of hand-duplicating the contract next to the fixture; keep the fixture 🔣️.json as example-only data",
+  "evidence": "$schema=2020-12 (except execution-target-relay-v1 = draft-07); real owner: 🗿️artifact-authority/🦀️.rs + 📇️native-openable-provider/🦀️.rs + bin.rs startup wiring",
+  "open": []
+ },
+ {
+  "path": "🌎️hub/🧪️fixtures/🧾️inference-wal-proof-v1/🧬️.schema.json",
+  "blob": "eb03028399717bcdc8e52e13771e869f1e9e5103",
+  "role": "fixture-adjacent JSON Schema used as an AJV test-oracle in the TS harness, cross-checking a Rust/TS production implementation elsewhere in the same scope",
+  "classification": "b",
+  "owner": "🧪️fixtures (test-owned, not scope-owned)",
+  "intendedOwner": "semio-hub (🌎️hub/📦️packages/🦀️rust/Cargo.toml) — the single registered scope covering all of 🌎️hub",
+  "exports": [
+   "urn:semio:hub:inference-wal-proof-fixture:v1"
+  ],
+  "consumers": [
+   {
+    "path": "🌎️hub/📦️packages/🦀️rust/📜️script.ts (proveInferenceWalProofFixture, line 6565)",
+    "kind": "test"
+   }
+  ],
+  "decision": "relocate/derive from the scope's 🧬️schema/ module instead of hand-duplicating the contract next to the fixture; keep the fixture 🔣️.json as example-only data",
+  "evidence": "$schema=2020-12 (except execution-target-relay-v1 = draft-07); real owner: 🌎️hub/💡️inference/🧾️wal/🦀️.rs",
+  "open": []
+ },
+ {
+  "path": "🌎️hub/🧪️fixtures/🪪️execution-target-relay-v1/🧬️.schema.json",
+  "blob": "3451765f714c33153d0df4e8179c6b2a5d3f36f0",
+  "role": "fixture-adjacent JSON Schema used as an AJV test-oracle in the TS harness, cross-checking a Rust/TS production implementation elsewhere in the same scope",
+  "classification": "b",
+  "owner": "🧪️fixtures (test-owned, not scope-owned)",
+  "intendedOwner": "semio-hub (🌎️hub/📦️packages/🦀️rust/Cargo.toml) — the single registered scope covering all of 🌎️hub",
+  "exports": [
+   "https://semio.tech/hub/execution-target-relay-v1.schema.json"
+  ],
+  "consumers": [
+   {
+    "path": "🌎️hub/📦️packages/🦀️rust/📜️script.ts ((script.ts ~line 3866))",
+    "kind": "test"
+   }
+  ],
+  "decision": "relocate/derive from the scope's 🧬️schema/ module instead of hand-duplicating the contract next to the fixture; keep the fixture 🔣️.json as example-only data",
+  "evidence": "$schema=2020-12 (except execution-target-relay-v1 = draft-07); real owner: bin.rs execution-target relay route; NOTE: this one already uses draft-07",
+  "open": []
+ },
+ {
+  "path": "🌎️hub/🧪️fixtures/📇️directory/🏘️space-administration-page-v1/🧬️.schema.json",
+  "blob": "7ea911c9c240a55304d870b1eb17b2e95c71007e",
+  "role": "fixture-adjacent JSON Schema used as an AJV test-oracle in the TS harness, cross-checking a Rust/TS production implementation elsewhere in the same scope",
+  "classification": "b",
+  "owner": "🧪️fixtures (test-owned, not scope-owned)",
+  "intendedOwner": "semio-hub (🌎️hub/📦️packages/🦀️rust/Cargo.toml) — the single registered scope covering all of 🌎️hub",
+  "exports": [
+   "(no id)"
+  ],
+  "consumers": [
+   {
+    "path": "🌎️hub/📦️packages/🦀️rust/📜️script.ts ((script.ts ~line 14323))",
+    "kind": "test"
+   }
+  ],
+  "decision": "relocate/derive from the scope's 🧬️schema/ module instead of hand-duplicating the contract next to the fixture; keep the fixture 🔣️.json as example-only data",
+  "evidence": "$schema=2020-12; real owner: 📇️directory admin space page assembly",
+  "open": []
+ },
+ {
+  "path": "🌎️hub/🧪️fixtures/📇️directory/📅️event-page-route-v1/🧬️.schema.json",
+  "blob": "01d344b07436dda83664faffb25952633d0f54b0",
+  "role": "fixture-adjacent JSON Schema used as an AJV test-oracle in the TS harness, cross-checking a Rust/TS production implementation elsewhere in the same scope",
+  "classification": "b",
+  "owner": "🧪️fixtures (test-owned, not scope-owned)",
+  "intendedOwner": "semio-hub (🌎️hub/📦️packages/🦀️rust/Cargo.toml) — the single registered scope covering all of 🌎️hub",
+  "exports": [
+   "(no id)"
+  ],
+  "consumers": [
+   {
+    "path": "🌎️hub/📦️packages/🦀️rust/📜️script.ts ((script.ts ~line 12305))",
+    "kind": "test"
+   }
+  ],
+  "decision": "relocate/derive from the scope's 🧬️schema/ module instead of hand-duplicating the contract next to the fixture; keep the fixture 🔣️.json as example-only data",
+  "evidence": "$schema=2020-12; real owner: 📇️directory event routing",
+  "open": []
+ },
+ {
+  "path": "🌎️hub/🧪️fixtures/📇️directory/🔏️document-execution-target-lease-v1/🧬️.schema.json",
+  "blob": "5ffeab4995875f7b3f5e99b49dc36acbbf0e8d51",
+  "role": "fixture-adjacent JSON Schema used as an AJV test-oracle in the TS harness, cross-checking a Rust/TS production implementation elsewhere in the same scope",
+  "classification": "b",
+  "owner": "🧪️fixtures (test-owned, not scope-owned)",
+  "intendedOwner": "semio-hub (🌎️hub/📦️packages/🦀️rust/Cargo.toml) — the single registered scope covering all of 🌎️hub",
+  "exports": [
+   "https://semio.tech/schema/hub/directory/document-execution-target-lease-v1.json"
+  ],
+  "consumers": [
+   {
+    "path": "🌎️hub/📦️packages/🦀️rust/📜️script.ts ((script.ts ~line 5558))",
+    "kind": "test"
+   }
+  ],
+  "decision": "relocate/derive from the scope's 🧬️schema/ module instead of hand-duplicating the contract next to the fixture; keep the fixture 🔣️.json as example-only data",
+  "evidence": "$schema=2020-12; real owner: 📇️directory document lease logic",
+  "open": []
+ },
+ {
+  "path": "🌎️hub/🧪️fixtures/📇️directory/🚻️space-journey-v1/🧬️.schema.json",
+  "blob": "8952c70804042b2b2352247ba2bb0dad6efa5161",
+  "role": "fixture-adjacent JSON Schema used as an AJV test-oracle in the TS harness, cross-checking a Rust/TS production implementation elsewhere in the same scope",
+  "classification": "b",
+  "owner": "🧪️fixtures (test-owned, not scope-owned)",
+  "intendedOwner": "semio-hub (🌎️hub/📦️packages/🦀️rust/Cargo.toml) — the single registered scope covering all of 🌎️hub",
+  "exports": [
+   "(no id)"
+  ],
+  "consumers": [
+   {
+    "path": "🌎️hub/📦️packages/🦀️rust/📜️script.ts (proveDirectorySpaceJourneyV1, line 15542)",
+    "kind": "test"
+   }
+  ],
+  "decision": "relocate/derive from the scope's 🧬️schema/ module instead of hand-duplicating the contract next to the fixture; keep the fixture 🔣️.json as example-only data",
+  "evidence": "$schema=2020-12; real owner: 📇️directory space journey / admin flows",
+  "open": []
+ },
+ {
+  "path": "🌎️hub/🧪️fixtures/📇️directory/🧾️command-receipt-v1/🧬️.schema.json",
+  "blob": "955cc28b6a9a3b3272d9129992761a7d15eebe24",
+  "role": "fixture-adjacent JSON Schema used as an AJV test-oracle in the TS harness, cross-checking a Rust/TS production implementation elsewhere in the same scope",
+  "classification": "b",
+  "owner": "🧪️fixtures (test-owned, not scope-owned)",
+  "intendedOwner": "semio-hub (🌎️hub/📦️packages/🦀️rust/Cargo.toml) — the single registered scope covering all of 🌎️hub",
+  "exports": [
+   "https://semio.tech/schema/hub/directory-command-receipt-v1.json"
+  ],
+  "consumers": [
+   {
+    "path": "🌎️hub/📦️packages/🦀️rust/📜️script.ts ((script.ts ~line 13656))",
+    "kind": "test"
+   }
+  ],
+  "decision": "relocate/derive from the scope's 🧬️schema/ module instead of hand-duplicating the contract next to the fixture; keep the fixture 🔣️.json as example-only data",
+  "evidence": "$schema=2020-12; real owner: 📇️directory command receipt encoding",
+  "open": []
+ },
+ {
+  "path": "🌎️hub/📇️directory/🧫️fixtures/🌐️directory-home-browser-process-v1/🧬️.schema.json",
+  "blob": "f0028b4b47f1f67eb8be176700eff2c0acad99f2",
+  "role": "fixture-adjacent JSON Schema used as an AJV test-oracle in the TS harness, cross-checking a Rust/TS production implementation elsewhere in the same scope",
+  "classification": "b",
+  "owner": "🧪️fixtures (test-owned, not scope-owned)",
+  "intendedOwner": "semio-hub (🌎️hub/📦️packages/🦀️rust/Cargo.toml) — the single registered scope covering all of 🌎️hub",
+  "exports": [
+   "semio.hub.directory-home-browser-process-fixture/v1"
+  ],
+  "consumers": [
+   {
+    "path": "🌎️hub/📦️packages/🦀️rust/📜️script.ts (proveDirectoryHomeBrowserProcessSource, line 12789)",
+    "kind": "test"
+   }
+  ],
+  "decision": "relocate/derive from the scope's 🧬️schema/ module instead of hand-duplicating the contract next to the fixture; keep the fixture 🔣️.json as example-only data",
+  "evidence": "$schema=2020-12; real owner: 📇️directory/🦀️.rs + backend-specific 🪶️sqlite/🐘️postgres/🌐️neo4j Rust modules",
+  "open": []
+ },
+ {
+  "path": "🌎️hub/📇️directory/🧫️fixtures/🎟️invite-redemption-transaction-v1/🧬️.schema.json",
+  "blob": "ee853ba65f741f8d9c262308ef6d8239b8fef7c9",
+  "role": "fixture-adjacent JSON Schema used as an AJV test-oracle in the TS harness, cross-checking a Rust/TS production implementation elsewhere in the same scope",
+  "classification": "b",
+  "owner": "🧪️fixtures (test-owned, not scope-owned)",
+  "intendedOwner": "semio-hub (🌎️hub/📦️packages/🦀️rust/Cargo.toml) — the single registered scope covering all of 🌎️hub",
+  "exports": [
+   "semio.hub.invite-redemption-transaction/v1"
+  ],
+  "consumers": [
+   {
+    "path": "🌎️hub/📦️packages/🦀️rust/📜️script.ts ((script.ts ~line 14988))",
+    "kind": "test"
+   }
+  ],
+  "decision": "relocate/derive from the scope's 🧬️schema/ module instead of hand-duplicating the contract next to the fixture; keep the fixture 🔣️.json as example-only data",
+  "evidence": "$schema=2020-12; real owner: 📇️directory/🦀️.rs + backend-specific 🪶️sqlite/🐘️postgres/🌐️neo4j Rust modules",
+  "open": []
+ },
+ {
+  "path": "🌎️hub/📇️directory/🧫️fixtures/🎯️admin-intent-v1/🧬️.schema.json",
+  "blob": "9c5e7e711ad03e754c3399b04a5bafd8008f36b1",
+  "role": "fixture-adjacent JSON Schema used as an AJV test-oracle in the TS harness, cross-checking a Rust/TS production implementation elsewhere in the same scope",
+  "classification": "b",
+  "owner": "🧪️fixtures (test-owned, not scope-owned)",
+  "intendedOwner": "semio-hub (🌎️hub/📦️packages/🦀️rust/Cargo.toml) — the single registered scope covering all of 🌎️hub",
+  "exports": [
+   "semio.hub.admin-intent-v1.fixture/v1"
+  ],
+  "consumers": [
+   {
+    "path": "🌎️hub/📦️packages/🦀️rust/📜️script.ts ((has its own 🧪️oracle/🟦️.ts too — see note))",
+    "kind": "test"
+   }
+  ],
+  "decision": "relocate/derive from the scope's 🧬️schema/ module instead of hand-duplicating the contract next to the fixture; keep the fixture 🔣️.json as example-only data",
+  "evidence": "$schema=2020-12; real owner: 📇️directory/🦀️.rs + backend-specific 🪶️sqlite/🐘️postgres/🌐️neo4j Rust modules",
+  "open": []
+ },
+ {
+  "path": "🌎️hub/📇️directory/🧫️fixtures/🏛️public-space-detail-v1/🧬️.schema.json",
+  "blob": "c0ffe151c54511bed10b72acc63530b5237f13e1",
+  "role": "fixture-adjacent JSON Schema used as an AJV test-oracle in the TS harness, cross-checking a Rust/TS production implementation elsewhere in the same scope",
+  "classification": "b",
+  "owner": "🧪️fixtures (test-owned, not scope-owned)",
+  "intendedOwner": "semio-hub (🌎️hub/📦️packages/🦀️rust/Cargo.toml) — the single registered scope covering all of 🌎️hub",
+  "exports": [
+   "semio.hub.public-space-detail-v1.fixture/v1"
+  ],
+  "consumers": [
+   {
+    "path": "🌎️hub/📦️packages/🦀️rust/📜️script.ts (proveSpacePublicBoundaryFixture, line 6511/6512)",
+    "kind": "test"
+   }
+  ],
+  "decision": "relocate/derive from the scope's 🧬️schema/ module instead of hand-duplicating the contract next to the fixture; keep the fixture 🔣️.json as example-only data",
+  "evidence": "$schema=2020-12; real owner: 📇️directory/🦀️.rs + backend-specific 🪶️sqlite/🐘️postgres/🌐️neo4j Rust modules",
+  "open": []
+ },
+ {
+  "path": "🌎️hub/📇️directory/🧫️fixtures/🚶️admin-live-journey-v1/🧬️.schema.json",
+  "blob": "c291000fbb24d4a374c48171bc43e15ad984e601",
+  "role": "fixture-adjacent JSON Schema used as an AJV test-oracle in the TS harness, cross-checking a Rust/TS production implementation elsewhere in the same scope",
+  "classification": "b",
+  "owner": "🧪️fixtures (test-owned, not scope-owned)",
+  "intendedOwner": "semio-hub (🌎️hub/📦️packages/🦀️rust/Cargo.toml) — the single registered scope covering all of 🌎️hub",
+  "exports": [
+   "semio.hub.admin-live-journey/v1"
+  ],
+  "consumers": [
+   {
+    "path": "🌎️hub/📦️packages/🦀️rust/📜️script.ts (proveAdminLiveJourney, line 2842/2867)",
+    "kind": "test"
+   }
+  ],
+  "decision": "relocate/derive from the scope's 🧬️schema/ module instead of hand-duplicating the contract next to the fixture; keep the fixture 🔣️.json as example-only data",
+  "evidence": "$schema=2020-12; real owner: 📇️directory/🦀️.rs + backend-specific 🪶️sqlite/🐘️postgres/🌐️neo4j Rust modules",
+  "open": []
+ },
+ {
+  "path": "🌎️hub/📇️directory/🧫️fixtures/🛡️command-authority-v1/🧬️.schema.json",
+  "blob": "f6eff4e8fc0e2f88d9d8865adf473559ab14cc93",
+  "role": "fixture-adjacent JSON Schema used as an AJV test-oracle in the TS harness, cross-checking a Rust/TS production implementation elsewhere in the same scope",
+  "classification": "b",
+  "owner": "🧪️fixtures (test-owned, not scope-owned)",
+  "intendedOwner": "semio-hub (🌎️hub/📦️packages/🦀️rust/Cargo.toml) — the single registered scope covering all of 🌎️hub",
+  "exports": [
+   "(no id)"
+  ],
+  "consumers": [
+   {
+    "path": "🌎️hub/📦️packages/🦀️rust/📜️script.ts ((script.ts ~line 13761))",
+    "kind": "test"
+   }
+  ],
+  "decision": "relocate/derive from the scope's 🧬️schema/ module instead of hand-duplicating the contract next to the fixture; keep the fixture 🔣️.json as example-only data",
+  "evidence": "$schema=2020-12; real owner: 📇️directory/🦀️.rs + backend-specific 🪶️sqlite/🐘️postgres/🌐️neo4j Rust modules",
+  "open": []
+ },
+ {
+  "path": "🌎️hub/📇️directory/🧫️fixtures/🧪️fixtures/📣️ordered-append-broadcast-v1/🧬️.schema.json",
+  "blob": "f74625918438a0d1be45f73f9f02e32d619351b2",
+  "role": "fixture-adjacent JSON Schema used as an AJV test-oracle in the TS harness, cross-checking a Rust/TS production implementation elsewhere in the same scope",
+  "classification": "b",
+  "owner": "🧪️fixtures (test-owned, not scope-owned)",
+  "intendedOwner": "semio-hub (🌎️hub/📦️packages/🦀️rust/Cargo.toml) — the single registered scope covering all of 🌎️hub",
+  "exports": [
+   "(no $id)"
+  ],
+  "consumers": [
+   {
+    "path": "🌎️hub/📦️packages/🦀️rust/📜️script.ts ((script.ts ~line 131))",
+    "kind": "test"
+   }
+  ],
+  "decision": "relocate/derive from the scope's 🧬️schema/ module instead of hand-duplicating the contract next to the fixture; keep the fixture 🔣️.json as example-only data",
+  "evidence": "$schema=(none — file lacks $schema); real owner: 📇️directory broadcast ordering logic; NOTE nested 🧫️fixtures/🧪️fixtures/ double-fixture directory naming is itself a taxonomy irregularity",
+  "open": []
+ },
+ {
+  "path": "🌎️hub/📇️directory/🧫️fixtures/🧪️fixtures/🔌️scoped-socket-revocation-v1/🧬️.schema.json",
+  "blob": "58cd20d4cf1537b03895a4543dac824062fb7a0f",
+  "role": "fixture-adjacent JSON Schema used as an AJV test-oracle in the TS harness, cross-checking a Rust/TS production implementation elsewhere in the same scope",
+  "classification": "b",
+  "owner": "🧪️fixtures (test-owned, not scope-owned)",
+  "intendedOwner": "semio-hub (🌎️hub/📦️packages/🦀️rust/Cargo.toml) — the single registered scope covering all of 🌎️hub",
+  "exports": [
+   "semio.hub.directory-scoped-socket-revocation/v1"
+  ],
+  "consumers": [
+   {
+    "path": "🌎️hub/📦️packages/🦀️rust/📜️script.ts (proveScopedDirectorySocketRevocationFixture, line 3039/3040)",
+    "kind": "test"
+   }
+  ],
+  "decision": "relocate/derive from the scope's 🧬️schema/ module instead of hand-duplicating the contract next to the fixture; keep the fixture 🔣️.json as example-only data",
+  "evidence": "$schema=2020-12; real owner: 📇️directory socket revocation",
+  "open": []
+ },
+ {
+  "path": "🌎️hub/📇️directory/🧪️tests/🏛️retained-short-admin/🧬️.schema.json",
+  "blob": "4d66cdb4ebd9caab2262f3a9d107734c146956e9",
+  "role": "fixture-adjacent JSON Schema in a 🧪️tests leaf (same AJV-oracle pattern as 🧫️fixtures)",
+  "classification": "b",
+  "owner": "🧪️tests (test-owned)",
+  "intendedOwner": "semio-hub (🌎️hub/📦️packages/🦀️rust/Cargo.toml) — the single registered scope covering all of 🌎️hub",
+  "exports": [
+   "https://semio.tech/schemas/hub/retained-short-admin-v1.json"
+  ],
+  "consumers": [
+   {
+    "path": "🌎️hub/📦️packages/🦀️rust/📜️script.ts (proveAdminLiveJourney cluster, line 3341)",
+    "kind": "test"
+   }
+  ],
+  "decision": "relocate/derive from 📇️directory's owning schema location instead of duplicating inline",
+  "evidence": "same AJV+Rust dual-oracle pattern confirmed via script_roots grep",
+  "open": []
+ },
+ {
+  "path": "🌎️hub/📇️directory/🧪️tests/🔐️share-issuance-atomicity/🧬️.schema.json",
+  "blob": "de6b5da7c4c08f2b17008d7cfd77eea6383c6ff3",
+  "role": "fixture-adjacent JSON Schema in a 🧪️tests leaf (same AJV-oracle pattern as 🧫️fixtures)",
+  "classification": "b",
+  "owner": "🧪️tests (test-owned)",
+  "intendedOwner": "semio-hub (🌎️hub/📦️packages/🦀️rust/Cargo.toml) — the single registered scope covering all of 🌎️hub",
+  "exports": [
+   "https://semio.tech/schemas/hub/share-issuance-atomicity-v1.json"
+  ],
+  "consumers": [
+   {
+    "path": "🌎️hub/📦️packages/🦀️rust/📜️script.ts ((script.ts ~line 3192))",
+    "kind": "test"
+   }
+  ],
+  "decision": "relocate/derive from 📇️directory's owning schema location instead of duplicating inline",
+  "evidence": "same AJV+Rust dual-oracle pattern confirmed via script_roots grep",
+  "open": []
+ },
+ {
+  "path": "🌎️hub/📦️packages/🦀️rust/🧪️fixtures/🌐️directory-message-authority-v1/🧬️.schema.json",
+  "blob": "5108739838d0bb0c3706e7353708114c416327ca",
+  "role": "fixture-adjacent JSON Schema used as an AJV test-oracle in the TS harness, cross-checking a Rust/TS production implementation elsewhere in the same scope",
+  "classification": "b",
+  "owner": "🧪️fixtures (test-owned, not scope-owned)",
+  "intendedOwner": "semio-hub (🌎️hub/📦️packages/🦀️rust/Cargo.toml) — the single registered scope covering all of 🌎️hub",
+  "exports": [
+   "(no id)"
+  ],
+  "consumers": [
+   {
+    "path": "🌎️hub/📦️packages/🦀️rust/📜️script.ts ((consumer not individually line-traced — inside script.ts prove* cluster))",
+    "kind": "test"
+   }
+  ],
+  "decision": "relocate/derive from the scope's 🧬️schema/ module instead of hand-duplicating the contract next to the fixture; keep the fixture 🔣️.json as example-only data",
+  "evidence": "$schema=2020-12 except admin-presence-target-recovery-v1=draft-07; real owner: 📇️directory / presence Rust modules",
+  "open": []
+ },
+ {
+  "path": "🌎️hub/📦️packages/🦀️rust/🧪️fixtures/🏛️admin-directory-authority-v1/🧬️.schema.json",
+  "blob": "c14405bef7cef362df3d91a56822df85c886912a",
+  "role": "fixture-adjacent JSON Schema used as an AJV test-oracle in the TS harness, cross-checking a Rust/TS production implementation elsewhere in the same scope",
+  "classification": "b",
+  "owner": "🧪️fixtures (test-owned, not scope-owned)",
+  "intendedOwner": "semio-hub (🌎️hub/📦️packages/🦀️rust/Cargo.toml) — the single registered scope covering all of 🌎️hub",
+  "exports": [
+   "(no id)"
+  ],
+  "consumers": [
+   {
+    "path": "🌎️hub/📦️packages/🦀️rust/📜️script.ts ((consumer not individually line-traced — inside script.ts prove* cluster))",
+    "kind": "test"
+   }
+  ],
+  "decision": "relocate/derive from the scope's 🧬️schema/ module instead of hand-duplicating the contract next to the fixture; keep the fixture 🔣️.json as example-only data",
+  "evidence": "$schema=2020-12 except admin-presence-target-recovery-v1=draft-07; real owner: 📇️directory / presence Rust modules",
+  "open": []
+ },
+ {
+  "path": "🌎️hub/📦️packages/🦀️rust/🧪️fixtures/🛂️admin-presence-target-recovery-v1/🧬️.schema.json",
+  "blob": "f8c9e88146b5db0a8a5d3f601f8033a3a5c59829",
+  "role": "fixture-adjacent JSON Schema used as an AJV test-oracle in the TS harness, cross-checking a Rust/TS production implementation elsewhere in the same scope",
+  "classification": "b",
+  "owner": "🧪️fixtures (test-owned, not scope-owned)",
+  "intendedOwner": "semio-hub (🌎️hub/📦️packages/🦀️rust/Cargo.toml) — the single registered scope covering all of 🌎️hub",
+  "exports": [
+   "(no id) — NOTE: draft-07 dialect, the outlier"
+  ],
+  "consumers": [
+   {
+    "path": "🌎️hub/📦️packages/🦀️rust/📜️script.ts ((consumer not individually line-traced — inside script.ts prove* cluster))",
+    "kind": "test"
+   }
+  ],
+  "decision": "relocate/derive from the scope's 🧬️schema/ module instead of hand-duplicating the contract next to the fixture; keep the fixture 🔣️.json as example-only data",
+  "evidence": "$schema=2020-12 except admin-presence-target-recovery-v1=draft-07; real owner: 📇️directory / presence Rust modules",
+  "open": []
+ },
+ {
+  "path": "🌎️hub/🚀️local-bootstrap/🧪️fixtures/⏳️idle-admission-v1/🧬️.schema.json",
+  "blob": "1a79598837bd4cdd7fb06a4eacd0b1f0458369f8",
+  "role": "fixture-adjacent JSON Schema used as an AJV test-oracle in the TS harness, cross-checking a Rust/TS production implementation elsewhere in the same scope",
+  "classification": "b",
+  "owner": "🧪️fixtures (test-owned, not scope-owned)",
+  "intendedOwner": "semio-hub (🌎️hub/📦️packages/🦀️rust/Cargo.toml) — the single registered scope covering all of 🌎️hub",
+  "exports": [
+   "semio.hub.local-bootstrap-idle-admission/v1"
+  ],
+  "consumers": [
+   {
+    "path": "🌎️hub/📦️packages/🦀️rust/📜️script.ts ((script.ts ~line 2848, proveAdminLiveJourney/idle-admission cluster))",
+    "kind": "test"
+   }
+  ],
+  "decision": "relocate/derive from the scope's 🧬️schema/ module instead of hand-duplicating the contract next to the fixture; keep the fixture 🔣️.json as example-only data",
+  "evidence": "$schema=2020-12; real owner: 🌎️hub/🚀️local-bootstrap/🦀️.rs",
+  "open": []
+ },
+ {
+  "path": "🌎️hub/🗿️artifact-authority/🌱️creation/🧫️fixtures/🌐️http-owner-v1/🧬️.schema.json",
+  "blob": "a8780872b0cfc7c6692219981c14ad0a9ffbd5bb",
+  "role": "fixture-adjacent JSON Schema used as an AJV test-oracle in the TS harness, cross-checking a Rust/TS production implementation elsewhere in the same scope",
+  "classification": "b",
+  "owner": "🧪️fixtures (test-owned, not scope-owned)",
+  "intendedOwner": "semio-hub (🌎️hub/📦️packages/🦀️rust/Cargo.toml) — the single registered scope covering all of 🌎️hub",
+  "exports": [
+   "semio://hub/artifact-creation-http-owner-fixture/v1"
+  ],
+  "consumers": [
+   {
+    "path": "🌎️hub/📦️packages/🦀️rust/📜️script.ts ((script.ts ~line 14028, proveSpaceArtifactCreationContractV1 cluster))",
+    "kind": "test"
+   }
+  ],
+  "decision": "relocate/derive from the scope's 🧬️schema/ module instead of hand-duplicating the contract next to the fixture; keep the fixture 🔣️.json as example-only data",
+  "evidence": "$schema=2020-12; real owner: 🗿️artifact-authority/🌱️creation/🦀️.rs",
+  "open": []
+ },
+ {
+  "path": "🌎️hub/🗿️artifact-authority/📇️native-openable-provider/🧪️fixtures/🌍️gis-v1/🧬️.schema.json",
+  "blob": "f1bfa64e6b9f0829c44942da824ae05a15a8b794",
+  "role": "fixture-adjacent JSON Schema used as an AJV test-oracle in the TS harness, cross-checking a Rust/TS production implementation elsewhere in the same scope",
+  "classification": "b",
+  "owner": "🧪️fixtures (test-owned, not scope-owned)",
+  "intendedOwner": "semio-hub (🌎️hub/📦️packages/🦀️rust/Cargo.toml) — the single registered scope covering all of 🌎️hub",
+  "exports": [
+   "semio.hub.gis-native-provider-selection/v1"
+  ],
+  "consumers": [
+   {
+    "path": "🌎️hub/📦️packages/🦀️rust/📜️script.ts (proveGisNativeProviderSelectionFixture, line 7756/7757)",
+    "kind": "test"
+   }
+  ],
+  "decision": "relocate/derive from the scope's 🧬️schema/ module instead of hand-duplicating the contract next to the fixture; keep the fixture 🔣️.json as example-only data",
+  "evidence": "$schema=2020-12; real owner: 🗿️artifact-authority/📇️native-openable-provider/🦀️.rs",
+  "open": []
+ },
+ {
+  "path": "🌎️hub/🗿️artifact-authority/📇️native-openable-provider/🧪️fixtures/🌿️vcs-v1/🧬️.schema.json",
+  "blob": "2796a0caa0f3824deb6517632af5e61c1b993452",
+  "role": "fixture-adjacent JSON Schema used as an AJV test-oracle in the TS harness, cross-checking a Rust/TS production implementation elsewhere in the same scope",
+  "classification": "b",
+  "owner": "🧪️fixtures (test-owned, not scope-owned)",
+  "intendedOwner": "semio-hub (🌎️hub/📦️packages/🦀️rust/Cargo.toml) — the single registered scope covering all of 🌎️hub",
+  "exports": [
+   "semio.hub.vcs-native-provider-selection/v1"
+  ],
+  "consumers": [
+   {
+    "path": "🌎️hub/📦️packages/🦀️rust/📜️script.ts (proveVcsNativeProviderSelectionFixture, line 4821/4822)",
+    "kind": "test"
+   }
+  ],
+  "decision": "relocate/derive from the scope's 🧬️schema/ module instead of hand-duplicating the contract next to the fixture; keep the fixture 🔣️.json as example-only data",
+  "evidence": "$schema=2020-12; real owner: 🗿️artifact-authority/📇️native-openable-provider/🦀️.rs",
+  "open": []
+ },
+ {
+  "path": "🌎️hub/🗿️artifact-authority/📇️native-openable-provider/🧪️fixtures/🪪️v1/🧬️.schema.json",
+  "blob": "0804a28e5d8401989272e8a2707f8772c46136e5",
+  "role": "fixture-adjacent JSON Schema used as an AJV test-oracle in the TS harness, cross-checking a Rust/TS production implementation elsewhere in the same scope",
+  "classification": "b",
+  "owner": "🧪️fixtures (test-owned, not scope-owned)",
+  "intendedOwner": "semio-hub (🌎️hub/📦️packages/🦀️rust/Cargo.toml) — the single registered scope covering all of 🌎️hub",
+  "exports": [
+   "semio.hub.native-openable-catalog-provider-fixture/v1"
+  ],
+  "consumers": [
+   {
+    "path": "🌎️hub/📦️packages/🦀️rust/📜️script.ts (proveNativeOpenableCatalogProviderFixture, line 4603/4604)",
+    "kind": "test"
+   }
+  ],
+  "decision": "relocate/derive from the scope's 🧬️schema/ module instead of hand-duplicating the contract next to the fixture; keep the fixture 🔣️.json as example-only data",
+  "evidence": "$schema=2020-12; real owner: 🗿️artifact-authority/📇️native-openable-provider/🦀️.rs",
+  "open": []
+ },
+ {
+  "path": "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🧪️fixtures/🌐️browser-actor/🧬️.schema.json",
+  "blob": "95a19eed90b001a7b62642ec503d66d57cc972d7",
+  "role": "fixture-adjacent JSON Schema used as an AJV test-oracle in the TS harness, cross-checking a Rust/TS production implementation elsewhere in the same scope",
+  "classification": "b",
+  "owner": "🧪️fixtures (test-owned, not scope-owned)",
+  "intendedOwner": "semio-hub (🌎️hub/📦️packages/🦀️rust/Cargo.toml) — the single registered scope covering all of 🌎️hub",
+  "exports": [
+   "(no id)"
+  ],
+  "consumers": [
+   {
+    "path": "🌎️hub/📦️packages/🦀️rust/📜️script.ts (proveTrustedBrowserActorCatalogFixture / proveDocumentBrowserActorIdentityFixture cluster, line 8004-8193)",
+    "kind": "test"
+   }
+  ],
+  "decision": "relocate/derive from the scope's 🧬️schema/ module instead of hand-duplicating the contract next to the fixture; keep the fixture 🔣️.json as example-only data",
+  "evidence": "$schema=2020-12; real owner: 🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🦀️.rs",
+  "open": []
+ },
+ {
+  "path": "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🧪️fixtures/🔗️compiled-dependencies/🧬️.schema.json",
+  "blob": "178c7b84e395e1a2160decb4ff6cdcdbde535bff",
+  "role": "fixture-adjacent JSON Schema used as an AJV test-oracle in the TS harness, cross-checking a Rust/TS production implementation elsewhere in the same scope",
+  "classification": "b",
+  "owner": "🧪️fixtures (test-owned, not scope-owned)",
+  "intendedOwner": "semio-hub (🌎️hub/📦️packages/🦀️rust/Cargo.toml) — the single registered scope covering all of 🌎️hub",
+  "exports": [
+   "https://semio.tech/schemas/hub/compiled-stdio-dependencies-v1.json"
+  ],
+  "consumers": [
+   {
+    "path": "🌎️hub/📦️packages/🦀️rust/📜️script.ts (proveTrustedCompiledDependenciesFixture, line 8549/8553)",
+    "kind": "test"
+   }
+  ],
+  "decision": "relocate/derive from the scope's 🧬️schema/ module instead of hand-duplicating the contract next to the fixture; keep the fixture 🔣️.json as example-only data",
+  "evidence": "$schema=2020-12; real owner: 🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🦀️.rs",
+  "open": []
+ },
+ {
+  "path": "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🧪️fixtures/🛡️opened-root/🧬️.schema.json",
+  "blob": "9187df35694ce0b348de286e41a0c6905a0d793b",
+  "role": "fixture-adjacent JSON Schema used as an AJV test-oracle in the TS harness, cross-checking a Rust/TS production implementation elsewhere in the same scope",
+  "classification": "b",
+  "owner": "🧪️fixtures (test-owned, not scope-owned)",
+  "intendedOwner": "semio-hub (🌎️hub/📦️packages/🦀️rust/Cargo.toml) — the single registered scope covering all of 🌎️hub",
+  "exports": [
+   "https://semio.tech/schema/hub/trusted-catalog-opened-root.fixture.json"
+  ],
+  "consumers": [
+   {
+    "path": "🌎️hub/📦️packages/🦀️rust/📜️script.ts (proveTrustedCatalogOpenedRootFixture, line 8193/8196)",
+    "kind": "test"
+   }
+  ],
+  "decision": "relocate/derive from the scope's 🧬️schema/ module instead of hand-duplicating the contract next to the fixture; keep the fixture 🔣️.json as example-only data",
+  "evidence": "$schema=2020-12; real owner: 🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🦀️.rs",
+  "open": []
+ },
+ {
+  "path": "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🧪️fixtures/🤝️gis-map-collaboration/🧬️.schema.json",
+  "blob": "7f5ec79cb356f17c693a28d7efe072b7c4e0898a",
+  "role": "fixture-adjacent JSON Schema used as an AJV test-oracle in the TS harness, cross-checking a Rust/TS production implementation elsewhere in the same scope",
+  "classification": "b",
+  "owner": "🧪️fixtures (test-owned, not scope-owned)",
+  "intendedOwner": "semio-hub (🌎️hub/📦️packages/🦀️rust/Cargo.toml) — the single registered scope covering all of 🌎️hub",
+  "exports": [
+   "https://semio.tech/schemas/hub/gis-map-collaboration/v1"
+  ],
+  "consumers": [
+   {
+    "path": "🌎️hub/📦️packages/🦀️rust/📜️script.ts (proveTrustedGisMapCollaborationContractFixture, line 8311/8315)",
+    "kind": "test"
+   }
+  ],
+  "decision": "relocate/derive from the scope's 🧬️schema/ module instead of hand-duplicating the contract next to the fixture; keep the fixture 🔣️.json as example-only data",
+  "evidence": "$schema=2020-12; real owner: 🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🦀️.rs",
+  "open": []
+ },
+ {
+  "path": "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🧪️fixtures/🧊️codec-source/🧬️.schema.json",
+  "blob": "2861fadabb8eb3e0d6e53c72afa457fa4a1a1129",
+  "role": "fixture-adjacent JSON Schema used as an AJV test-oracle in the TS harness, cross-checking a Rust/TS production implementation elsewhere in the same scope",
+  "classification": "b",
+  "owner": "🧪️fixtures (test-owned, not scope-owned)",
+  "intendedOwner": "semio-hub (🌎️hub/📦️packages/🦀️rust/Cargo.toml) — the single registered scope covering all of 🌎️hub",
+  "exports": [
+   "(no id)"
+  ],
+  "consumers": [
+   {
+    "path": "🌎️hub/📦️packages/🦀️rust/📜️script.ts (proveTrustedBootstrapCodecCaptureFixture, line 8751/8755)",
+    "kind": "test"
+   }
+  ],
+  "decision": "relocate/derive from the scope's 🧬️schema/ module instead of hand-duplicating the contract next to the fixture; keep the fixture 🔣️.json as example-only data",
+  "evidence": "$schema=2020-12; real owner: 🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🦀️.rs",
+  "open": []
+ },
+ {
+  "path": "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🧪️fixtures/🧬️retained-gis-browser/🧬️.schema.json",
+  "blob": "801eae0069ead0f055cb1730899912068776fd48",
+  "role": "fixture-adjacent JSON Schema used as an AJV test-oracle in the TS harness, cross-checking a Rust/TS production implementation elsewhere in the same scope",
+  "classification": "b",
+  "owner": "🧪️fixtures (test-owned, not scope-owned)",
+  "intendedOwner": "semio-hub (🌎️hub/📦️packages/🦀️rust/Cargo.toml) — the single registered scope covering all of 🌎️hub",
+  "exports": [
+   "(no id)"
+  ],
+  "consumers": [
+   {
+    "path": "🌎️hub/📦️packages/🦀️rust/📜️script.ts (proveTrustedGisRetainedBrowserFixture, line 8253/8254)",
+    "kind": "test"
+   }
+  ],
+  "decision": "relocate/derive from the scope's 🧬️schema/ module instead of hand-duplicating the contract next to the fixture; keep the fixture 🔣️.json as example-only data",
+  "evidence": "$schema=2020-12; real owner: 🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🦀️.rs",
+  "open": []
+ },
+ {
+  "path": "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🧪️fixtures/🧬️stdio-gis-bootstrap/🧬️.schema.json",
+  "blob": "2f8b6decf16bf8fdea77905bf133c2b35c0ca809",
+  "role": "fixture-adjacent JSON Schema used as an AJV test-oracle in the TS harness, cross-checking a Rust/TS production implementation elsewhere in the same scope",
+  "classification": "b",
+  "owner": "🧪️fixtures (test-owned, not scope-owned)",
+  "intendedOwner": "semio-hub (🌎️hub/📦️packages/🦀️rust/Cargo.toml) — the single registered scope covering all of 🌎️hub",
+  "exports": [
+   "https://semio.tech/schemas/hub/trusted-stdio-gis-bootstrap-v1.json"
+  ],
+  "consumers": [
+   {
+    "path": "🌎️hub/📦️packages/🦀️rust/📜️script.ts (proveTrustedStdioGisBootstrapFixture, line 8405/8414)",
+    "kind": "test"
+   }
+  ],
+  "decision": "relocate/derive from the scope's 🧬️schema/ module instead of hand-duplicating the contract next to the fixture; keep the fixture 🔣️.json as example-only data",
+  "evidence": "$schema=2020-12; real owner: 🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🦀️.rs",
+  "open": []
+ },
+ {
+  "path": "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🧪️fixtures/🧱️generation-stage/🧬️.schema.json",
+  "blob": "8bde7de6705b3bf5177ba348f1f4c4531b87f178",
+  "role": "fixture-adjacent JSON Schema used as an AJV test-oracle in the TS harness, cross-checking a Rust/TS production implementation elsewhere in the same scope",
+  "classification": "b",
+  "owner": "🧪️fixtures (test-owned, not scope-owned)",
+  "intendedOwner": "semio-hub (🌎️hub/📦️packages/🦀️rust/Cargo.toml) — the single registered scope covering all of 🌎️hub",
+  "exports": [
+   "(no id)"
+  ],
+  "consumers": [
+   {
+    "path": "🌎️hub/📦️packages/🦀️rust/📜️script.ts (proveTrustedGenerationStageFixture, line 8937/8941)",
+    "kind": "test"
+   }
+  ],
+  "decision": "relocate/derive from the scope's 🧬️schema/ module instead of hand-duplicating the contract next to the fixture; keep the fixture 🔣️.json as example-only data",
+  "evidence": "$schema=2020-12; real owner: 🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🦀️.rs",
+  "open": []
+ },
+ {
+  "path": "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🧪️fixtures/🪪️identity-roles/🧬️.schema.json",
+  "blob": "3764d419b5ac1286c468d2c08758f9c0bc2692fa",
+  "role": "fixture-adjacent JSON Schema used as an AJV test-oracle in the TS harness, cross-checking a Rust/TS production implementation elsewhere in the same scope",
+  "classification": "b",
+  "owner": "🧪️fixtures (test-owned, not scope-owned)",
+  "intendedOwner": "semio-hub (🌎️hub/📦️packages/🦀️rust/Cargo.toml) — the single registered scope covering all of 🌎️hub",
+  "exports": [
+   "semio.hub.trusted-catalog-identity-roles/v1"
+  ],
+  "consumers": [
+   {
+    "path": "🌎️hub/📦️packages/🦀️rust/📜️script.ts (proveTrustedCatalogIdentityRolesFixture, line 7775/7776)",
+    "kind": "test"
+   }
+  ],
+  "decision": "relocate/derive from the scope's 🧬️schema/ module instead of hand-duplicating the contract next to the fixture; keep the fixture 🔣️.json as example-only data",
+  "evidence": "$schema=2020-12; real owner: 🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🦀️.rs",
+  "open": []
+ },
+ {
+  "path": "🌎️hub/🛰️lag-rebootstrap/🧪️fixtures/🪢️canonical-pair/🧬️.schema.json",
+  "blob": "341d38a454ede5eb97dae0ab6bceba72b4f85ada",
+  "role": "fixture-adjacent JSON Schema used as an AJV test-oracle in the TS harness, cross-checking a Rust/TS production implementation elsewhere in the same scope",
+  "classification": "b",
+  "owner": "🧪️fixtures (test-owned, not scope-owned)",
+  "intendedOwner": "semio-hub (🌎️hub/📦️packages/🦀️rust/Cargo.toml) — the single registered scope covering all of 🌎️hub",
+  "exports": [
+   "semio.hub.canonical-checkpoint-pair.fixture/v1"
+  ],
+  "consumers": [
+   {
+    "path": "🌎️hub/📦️packages/🟦️typescript/🤝️index.test.ts (🌎️hub/📦️packages/🟦️typescript/🤝️index.test.ts:38-40 (Vitest, AND 🌎️hub/🛰️lag-rebootstrap/🦀️.rs:770/799 via include_str! on the sibling 🔣️.json))",
+    "kind": "test"
+   }
+  ],
+  "decision": "relocate/derive from the scope's 🧬️schema/ module instead of hand-duplicating the contract next to the fixture; keep the fixture 🔣️.json as example-only data",
+  "evidence": "$schema=2020-12; real owner: 🌎️hub/🛰️lag-rebootstrap/🦀️.rs",
+  "open": []
+ },
+ {
+  "path": "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🧪️fixtures/📤️publication/🧬️.schema.json",
+  "blob": "82b87e4c6868274771149baeb2409b76f05b4d79",
+  "role": "root schema of a MULTI-schema fixture directory (7 schema.json siblings) validating command/transport/cas/owner/receipt/current shapes",
+  "classification": "c",
+  "owner": "🧪️fixtures per-contract directory (test-owned)",
+  "intendedOwner": "semio-hub (🌎️hub/📦️packages/🦀️rust/Cargo.toml) — the single registered scope covering all of 🌎️hub",
+  "exports": [
+   "(no id) — root envelope: schema/generationId/profileId/cases"
+  ],
+  "consumers": [
+   {
+    "path": "🌎️hub/📦️packages/🦀️rust/📜️script.ts:9041 proveTrustedPublicationFixture",
+    "kind": "test"
+   }
+  ],
+  "decision": "consolidate into 🗿️artifact-authority/🔏️trusted-catalog/🧬️schema/ as one owned module; the real production struct TrustedCatalogPublicationReceipt/TrustedCatalogPublicationCommand already exists at 🦀️.rs:211/222 but is PRIVATE (not pub) and outside 🧬️schema/",
+  "evidence": "read 🦀️.rs:211-290: private structs TrustedCatalogPublicationCommand/TrustedCatalogPublicationReceipt exist; the RECEIPT DECODE LOGIC ITSELF (trustedBootstrapPublicationReceipt) is duplicated a THIRD time, hand-written directly inside 📜️script.ts:9882 — i.e. this contract has 3 independent implementations: Rust (private), TS test-harness function, and 6 AJV micro-schemas",
+  "open": [
+   "decide single canonical scope-owned implementation; today there are 3 competing definitions of the same receipt/command shape"
+  ]
+ },
+ {
+  "path": "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🧪️fixtures/📤️publication/📌️current.schema.json",
+  "blob": "0b01492d241a812453f110104454afcaf613d133",
+  "role": "per-field micro-schema inside the 📤️publication per-contract fixture directory",
+  "classification": "c",
+  "owner": "🧪️fixtures per-contract directory (test-owned)",
+  "intendedOwner": "semio-hub (🌎️hub/📦️packages/🦀️rust/Cargo.toml) — the single registered scope covering all of 🌎️hub",
+  "exports": [
+   "(no id)"
+  ],
+  "consumers": [
+   {
+    "path": "🌎️hub/📦️packages/🦀️rust/📜️script.ts:9041 proveTrustedPublicationFixture",
+    "kind": "test"
+   }
+  ],
+  "decision": "fold into a single owned 🧬️schema/ module for trusted-catalog publication; stop hand-splitting one wire contract into 6 sibling schema files",
+  "evidence": "confirmed read of script.ts:9041-9120 shows each schema.json paired 1:1 with a same-named .json data file, all consumed by one function",
+  "open": []
+ },
+ {
+  "path": "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🧪️fixtures/📤️publication/📡️transport.schema.json",
+  "blob": "036fafab484b128523bf1ad81c02cfc9b9add655",
+  "role": "per-field micro-schema inside the 📤️publication per-contract fixture directory",
+  "classification": "c",
+  "owner": "🧪️fixtures per-contract directory (test-owned)",
+  "intendedOwner": "semio-hub (🌎️hub/📦️packages/🦀️rust/Cargo.toml) — the single registered scope covering all of 🌎️hub",
+  "exports": [
+   "(no id)"
+  ],
+  "consumers": [
+   {
+    "path": "🌎️hub/📦️packages/🦀️rust/📜️script.ts:9041 proveTrustedPublicationFixture",
+    "kind": "test"
+   }
+  ],
+  "decision": "fold into a single owned 🧬️schema/ module for trusted-catalog publication; stop hand-splitting one wire contract into 6 sibling schema files",
+  "evidence": "confirmed read of script.ts:9041-9120 shows each schema.json paired 1:1 with a same-named .json data file, all consumed by one function",
+  "open": []
+ },
+ {
+  "path": "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🧪️fixtures/📤️publication/📬️command.schema.json",
+  "blob": "30c6959a41945f30b655af0c9a7740863b487dae",
+  "role": "per-field micro-schema inside the 📤️publication per-contract fixture directory",
+  "classification": "c",
+  "owner": "🧪️fixtures per-contract directory (test-owned)",
+  "intendedOwner": "semio-hub (🌎️hub/📦️packages/🦀️rust/Cargo.toml) — the single registered scope covering all of 🌎️hub",
+  "exports": [
+   "semio.hub.trusted-catalog-publication/v1"
+  ],
+  "consumers": [
+   {
+    "path": "🌎️hub/📦️packages/🦀️rust/📜️script.ts:9041 proveTrustedPublicationFixture",
+    "kind": "test"
+   }
+  ],
+  "decision": "fold into a single owned 🧬️schema/ module for trusted-catalog publication; stop hand-splitting one wire contract into 6 sibling schema files",
+  "evidence": "confirmed read of script.ts:9041-9120 shows each schema.json paired 1:1 with a same-named .json data file, all consumed by one function",
+  "open": []
+ },
+ {
+  "path": "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🧪️fixtures/📤️publication/🔄️cas.schema.json",
+  "blob": "f29e90ccf3ded65b93e47a78825afcdc3d9ae5ee",
+  "role": "per-field micro-schema inside the 📤️publication per-contract fixture directory",
+  "classification": "c",
+  "owner": "🧪️fixtures per-contract directory (test-owned)",
+  "intendedOwner": "semio-hub (🌎️hub/📦️packages/🦀️rust/Cargo.toml) — the single registered scope covering all of 🌎️hub",
+  "exports": [
+   "(no id)"
+  ],
+  "consumers": [
+   {
+    "path": "🌎️hub/📦️packages/🦀️rust/📜️script.ts:9041 proveTrustedPublicationFixture",
+    "kind": "test"
+   }
+  ],
+  "decision": "fold into a single owned 🧬️schema/ module for trusted-catalog publication; stop hand-splitting one wire contract into 6 sibling schema files",
+  "evidence": "confirmed read of script.ts:9041-9120 shows each schema.json paired 1:1 with a same-named .json data file, all consumed by one function",
+  "open": []
+ },
+ {
+  "path": "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🧪️fixtures/📤️publication/🔒️owner.schema.json",
+  "blob": "5d65145bd7656b8f7d5a2e05812c87bed2dec243",
+  "role": "per-field micro-schema inside the 📤️publication per-contract fixture directory",
+  "classification": "c",
+  "owner": "🧪️fixtures per-contract directory (test-owned)",
+  "intendedOwner": "semio-hub (🌎️hub/📦️packages/🦀️rust/Cargo.toml) — the single registered scope covering all of 🌎️hub",
+  "exports": [
+   "(no id)"
+  ],
+  "consumers": [
+   {
+    "path": "🌎️hub/📦️packages/🦀️rust/📜️script.ts:9041 proveTrustedPublicationFixture",
+    "kind": "test"
+   }
+  ],
+  "decision": "fold into a single owned 🧬️schema/ module for trusted-catalog publication; stop hand-splitting one wire contract into 6 sibling schema files",
+  "evidence": "confirmed read of script.ts:9041-9120 shows each schema.json paired 1:1 with a same-named .json data file, all consumed by one function",
+  "open": []
+ },
+ {
+  "path": "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🧪️fixtures/📤️publication/🧾️receipt.schema.json",
+  "blob": "834669d2b1d7b830008e1129c7cef0c89a87555e",
+  "role": "per-field micro-schema inside the 📤️publication per-contract fixture directory",
+  "classification": "c",
+  "owner": "🧪️fixtures per-contract directory (test-owned)",
+  "intendedOwner": "semio-hub (🌎️hub/📦️packages/🦀️rust/Cargo.toml) — the single registered scope covering all of 🌎️hub",
+  "exports": [
+   "(no id)"
+  ],
+  "consumers": [
+   {
+    "path": "🌎️hub/📦️packages/🦀️rust/📜️script.ts:9041 proveTrustedPublicationFixture",
+    "kind": "test"
+   }
+  ],
+  "decision": "fold into a single owned 🧬️schema/ module for trusted-catalog publication; stop hand-splitting one wire contract into 6 sibling schema files",
+  "evidence": "confirmed read of script.ts:9041-9120 shows each schema.json paired 1:1 with a same-named .json data file, all consumed by one function",
+  "open": []
+ },
+ {
+  "path": "🌎️hub/🗿️artifact-authority/🌱️creation/📚️operation-v1/🧬️.schema.json",
+  "blob": "7aa439e4e3235884605d6f87a84d8ff3ef49e1e0",
+  "role": "schema for creation-operation transitions, CO-LOCATED with real production Rust (📚️operation-v1/🦀️.rs) in the same leaf dir — less severe than pure-fixture cases but still not under a 🧬️schema/ subdir",
+  "classification": "c",
+  "owner": "module-adjacent per-contract directory",
+  "intendedOwner": "semio-hub (🌎️hub/📦️packages/🦀️rust/Cargo.toml) — the single registered scope covering all of 🌎️hub",
+  "exports": [
+   "semio://hub/artifact-creation-operation/v1"
+  ],
+  "consumers": [
+   {
+    "path": "🌎️hub/📦️packages/🦀️rust/📜️script.ts:14116-14135 proveSpaceArtifactCreationContractV1",
+    "kind": "test"
+   }
+  ],
+  "decision": "move the JSON Schema + fixture under a 🧬️schema/ (and 🧪️fixtures/) split so 📚️operation-v1/🦀️.rs remains the sole production module without sibling schema/fixture/cancel-schema clutter",
+  "evidence": "directory listing shows 🔣️.json + 🛑️cancel.json + 🛑️cancel.schema.json + 🦀️.rs + 🧬️.schema.json all flat in one leaf dir",
+  "open": []
+ },
+ {
+  "path": "🌎️hub/🗿️artifact-authority/🌱️creation/📚️operation-v1/🛑️cancel.schema.json",
+  "blob": "b7aee9a76969b27aafdbf8a806e6bad78f453aef",
+  "role": "second schema in the same operation-v1 leaf dir, for the cancel sub-case",
+  "classification": "c",
+  "owner": "module-adjacent per-contract directory",
+  "intendedOwner": "semio-hub (🌎️hub/📦️packages/🦀️rust/Cargo.toml) — the single registered scope covering all of 🌎️hub",
+  "exports": [
+   "(no id)"
+  ],
+  "consumers": [
+   {
+    "path": "🌎️hub/📦️packages/🦀️rust/📜️script.ts:14127-14130",
+    "kind": "test"
+   }
+  ],
+  "decision": "same as sibling 🧬️.schema.json — consolidate",
+  "evidence": "script.ts:14127 validateCancellation reads this file",
+  "open": []
+ },
+ {
+  "path": "🌎️hub/🗿️artifact-authority/🌱️creation/🧪️transaction-v1/🧬️.schema.json",
+  "blob": "77bd7aab77c4a774db230b7b96311880d644656f",
+  "role": "schema for creation transaction cases, leaf dir named 🧪️transaction-v1 (fixture-shaped name) but sits as a sibling of 📚️operation-v1, not under 🧪️fixtures/",
+  "classification": "c",
+  "owner": "module-adjacent per-contract directory",
+  "intendedOwner": "semio-hub (🌎️hub/📦️packages/🦀️rust/Cargo.toml) — the single registered scope covering all of 🌎️hub",
+  "exports": [
+   "(no id)"
+  ],
+  "consumers": [
+   {
+    "path": "🌎️hub/📦️packages/🦀️rust/📜️script.ts:14116-14120",
+    "kind": "test"
+   }
+  ],
+  "decision": "consolidate with operation-v1 under one owned 🧬️schema/ module",
+  "evidence": "script.ts:14118 validateTransaction reads this file",
+  "open": []
+ },
+ {
+  "path": "🌎️hub/🗿️artifact-authority/🌱️creation/🧪️transaction-v1/🧯️accepted-recovery.schema.json",
+  "blob": "0cbf3409cd562d3923dd1fe83fba1fa7b44d0836",
+  "role": "second schema in the transaction-v1 leaf dir",
+  "classification": "c",
+  "owner": "module-adjacent per-contract directory",
+  "intendedOwner": "semio-hub (🌎️hub/📦️packages/🦀️rust/Cargo.toml) — the single registered scope covering all of 🌎️hub",
+  "exports": [
+   "(no id)"
+  ],
+  "consumers": [
+   {
+    "path": "🌎️hub/📦️packages/🦀️rust/📜️script.ts:14123-14126",
+    "kind": "test"
+   }
+  ],
+  "decision": "same as sibling — consolidate",
+  "evidence": "script.ts:14124 validateRecovery reads this file",
+  "open": []
+ },
+ {
+  "path": "🌎️hub/📦️packages/🦀️rust/🧪️fixtures/👥️presence-lease-v1/🧬️schema/🔣️.json",
+  "blob": "bbaa67f309c71f1247987aeebae123a62ca92c8e",
+  "role": "a '🧬️schema' DIRECTORY nested inside a 🧪️fixtures leaf — mimics the authoritative-module convention while remaining test-scoped",
+  "classification": "c",
+  "owner": "🧪️fixtures per-contract directory (test-owned, misleadingly named)",
+  "intendedOwner": "semio-hub (🌎️hub/📦️packages/🦀️rust/Cargo.toml) — the single registered scope covering all of 🌎️hub",
+  "exports": [
+   "(no id)"
+  ],
+  "consumers": [
+   {
+    "path": "🌎️hub/📦️packages/🦀️rust/📜️script.ts:14636 provePresenceLeaseFixture",
+    "kind": "test"
+   }
+  ],
+  "decision": "rename this subdirectory away from 🧬️schema (it is not a scope-authoritative module) OR relocate the real presence-lease contract into a genuine 🌎️hub/📇️directory/🧬️schema/ (or wherever presence is truly owned) and keep only example data here",
+  "evidence": "directory has 🧪️fixture/🔣️.json (data) AND 🧬️schema/🔣️.json (schema) as siblings — the 🧬️schema name collides with the taxonomy's mutationPayloadSchemaLocation.directoryName",
+  "open": []
+ },
+ {
+  "path": "🌎️hub/📦️packages/🦀️rust/🧪️fixtures/🪪️presence-normalization-v1/🧬️schema/🔣️.json",
+  "blob": "1b94e23066979a84e495ca472a2da1165bc9d014",
+  "role": "same anomaly as presence-lease-v1",
+  "classification": "c",
+  "owner": "🧪️fixtures per-contract directory (test-owned, misleadingly named)",
+  "intendedOwner": "semio-hub (🌎️hub/📦️packages/🦀️rust/Cargo.toml) — the single registered scope covering all of 🌎️hub",
+  "exports": [
+   "(no id)"
+  ],
+  "consumers": [
+   {
+    "path": "🌎️hub/📦️packages/🦀️rust/📜️script.ts:14771 provePresenceNormalizationFixture",
+    "kind": "test"
+   }
+  ],
+  "decision": "same remediation as presence-lease-v1",
+  "evidence": "same structural pattern confirmed by directory listing",
+  "open": []
+ },
+ {
+  "path": "🌎️hub/🗿️artifact-authority/🧪️fixtures/🧱️artifact-chunk-cas/🧬️schema/🔣️.json",
+  "blob": "a3650e7f3a1ec3687d478c0ff0d98c132c70d074",
+  "role": "same anomaly, consumed from the TS package's own e2e test rather than script.ts",
+  "classification": "c",
+  "owner": "🧪️fixtures per-contract directory (test-owned, misleadingly named)",
+  "intendedOwner": "semio-hub (🌎️hub/📦️packages/🦀️rust/Cargo.toml) — the single registered scope covering all of 🌎️hub",
+  "exports": [
+   "https://semio.tech/schema/hub/artifact-chunk-cas-v1.fixture.json"
+  ],
+  "consumers": [
+   {
+    "path": "🌎️hub/📦️packages/🟦️typescript/🤝️index.test.ts:437 (readFileSync ...'🧬️schema','🔣️.json')",
+    "kind": "test"
+   }
+  ],
+  "decision": "same remediation as presence-lease-v1; real owner is 📇️directory chunk-CAS logic (grep hit in 📇️directory/🦀️.rs and 🧱️chunk-cas/🦀️.rs)",
+  "evidence": "read of index.test.ts:433-437 confirms exact pattern",
+  "open": []
+ },
+ {
+  "path": "🌎️hub/💡️inference/🧬️schema/🤝️two-author-shell-v1/🔣️.json",
+  "blob": "f19554275a4b8527db59542899ba0a98b16e3a73",
+  "role": "fixture EXAMPLE DATA sitting inside the authoritative 🧬️schema/ module directory itself",
+  "classification": "b",
+  "owner": "embedded inside 🧬️schema/ (location anomaly)",
+  "intendedOwner": "semio-hub (🌎️hub/📦️packages/🦀️rust/Cargo.toml) — the single registered scope covering all of 🌎️hub",
+  "exports": [
+   "(fixture data, no $schema)"
+  ],
+  "consumers": [
+   {
+    "path": "🌎️hub/📦️packages/🦀️rust/📜️script.ts:11911 (fixture root), 11910 proveGisMapTwoAuthorCompositionFixture",
+    "kind": "test"
+   }
+  ],
+  "decision": "move both files out of 🧬️schema/ into a 🧪️fixtures/ leaf — a schema module directory should hold only implementation + one authoritative schema, not a versioned fixture pair",
+  "evidence": "grep for TwoAuthorShell/two-author-shell across *.rs/*.ts finds ONLY script.ts — there is no production Rust/TS type for this contract at all",
+  "open": [
+   "no application implementation found anywhere — this fixture pair may be defining a contract that has no real producer/consumer yet, or the feature (two-author GIS Map composition) is not yet implemented in application code"
+  ]
+ },
+ {
+  "path": "🌎️hub/💡️inference/🧬️schema/🤝️two-author-shell-v1/🧬️.schema.json",
+  "blob": "11a19d23e21ebd6c55f9f8f3f4fa459797e4d719",
+  "role": "schema for the two-author-shell fixture, id is explicitly '...-fixture:v1' (self-declares as fixture, not a contract) yet lives inside 🧬️schema/",
+  "classification": "b",
+  "owner": "embedded inside 🧬️schema/ (location anomaly)",
+  "intendedOwner": "semio-hub (🌎️hub/📦️packages/🦀️rust/Cargo.toml) — the single registered scope covering all of 🌎️hub",
+  "exports": [
+   "urn:semio:hub:gis-map-two-author-composition-fixture:v1"
+  ],
+  "consumers": [
+   {
+    "path": "🌎️hub/📦️packages/🦀️rust/📜️script.ts:11911",
+    "kind": "test"
+   }
+  ],
+  "decision": "relocate to 🧪️fixtures/; if the underlying contract (two-author GIS Map composition) is real, its authoritative Rust/TS definitions must be written and referenced from here instead",
+  "evidence": "same as above",
+  "open": [
+   "no application implementation found — flag to dev: is two-author-shell a live feature or planned/speculative?"
+  ]
+ },
+ {
+  "path": "🌎️hub/🔨️modules/🛡️admin/📦️packages/🟦️typescript/🧪️tests/📐️entry-graph.schema.json",
+  "blob": "36e398cdfd9e5b921b65b46b9dad119613a0cb76",
+  "role": "structural shape check for the admin dependency-graph analysis TOOL's own output (not a hub domain/wire contract) — draft-07, matches taxonomy dialect",
+  "classification": "d",
+  "owner": "🧪️tests inert parser test input",
+  "intendedOwner": "🌎️hub/🔨️modules/🛡️admin/📦️packages/🟦️typescript (separate registered TS package)",
+  "exports": [
+   "(no id) — required: version:const, laws:minItems/maxItems"
+  ],
+  "consumers": [
+   {
+    "path": "🌎️hub/🔨️modules/🛡️admin/📦️packages/🟦️typescript/📜️script.ts:13",
+    "kind": "test"
+   }
+  ],
+  "decision": "no action needed — this is legitimately test-local (validates a dev-tool's own graph output shape, not a hub application contract)",
+  "evidence": "read of admin script.ts:13 shows it type-asserts required/properties shape only, used to validate the graph tool's own output; different domain from hub wire fixtures",
+  "open": []
+ },
+ {
+  "path": "🌎️hub/🔨️modules/🛡️admin/📦️packages/🟦️typescript/🧪️tests/🧵️stylesheet-graph.schema.json",
+  "blob": "30e4cc8ff7fa9dbe0c870fdb7af5a57078c48e71",
+  "role": "same as entry-graph.schema.json, for the stylesheet dependency graph",
+  "classification": "d",
+  "owner": "🧪️tests inert parser test input",
+  "intendedOwner": "🌎️hub/🔨️modules/🛡️admin/📦️packages/🟦️typescript (separate registered TS package)",
+  "exports": [
+   "(no id)"
+  ],
+  "consumers": [
+   {
+    "path": "🌎️hub/🔨️modules/🛡️admin/📦️packages/🟦️typescript/📜️script.ts:45",
+    "kind": "test"
+   }
+  ],
+  "decision": "no action needed",
+  "evidence": "read of admin script.ts:45, same pattern as entry-graph",
+  "open": []
+ }
+]

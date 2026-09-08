@@ -1,120 +1,302 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "semio.kernel.return-input.release.contract.v1",
-  "type": "object",
-  "additionalProperties": false,
-  "required": [
-    "version",
-    "methods",
-    "uiMethods",
-    "phases",
-    "fieldFields",
-    "fragmentFields",
-    "releaseFields",
-    "metadata",
-    "work",
-    "rules"
-  ],
-  "properties": {
-    "version": {
-      "const": 1
-    },
-    "methods": {
-      "const": {
-        "detach": "field.detachInputRelease(release,proof,grant)",
-        "observe": "OwnedKernelReturnInputRelease.matchesSourceDetached(release,field,proof)",
-        "settle": "field.settleInputRelease(release,proof,grant)",
-        "settled": "OwnedKernelReturnInputRelease.matchesSettled(release,proof)"
+  "$id": "https://semio.tech/schema/framework/kernel/return/content/input/release/schema.json",
+  "title": "Kernel Return Content Input Release Schema Module",
+  "$defs": {
+    "Release": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "methods",
+        "uiMethods",
+        "phases",
+        "fieldFields",
+        "fragmentFields",
+        "releaseFields",
+        "metadata",
+        "work",
+        "rules"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "methods": {
+          "const": {
+            "detach": "field.detachInputRelease(release,proof,grant)",
+            "observe": "OwnedKernelReturnInputRelease.matchesSourceDetached(release,field,proof)",
+            "settle": "field.settleInputRelease(release,proof,grant)",
+            "settled": "OwnedKernelReturnInputRelease.matchesSettled(release,proof)"
+          }
+        },
+        "uiMethods": {
+          "const": [
+            "Copied.matchesRelease(token,release)",
+            "Cancelled.matchesRelease(token,release)",
+            "Copied.matchesSourceDetached(token,release)",
+            "Cancelled.matchesSourceDetached(token,release)"
+          ]
+        },
+        "phases": {
+          "const": [
+            "issued",
+            "sourceDetached",
+            "settled"
+          ]
+        },
+        "fieldFields": {
+          "const": [
+            "state",
+            "value",
+            "builder",
+            "fragment",
+            "release",
+            "consumed",
+            "advanced",
+            "start",
+            "complete",
+            "closing",
+            "payload",
+            "payloadDetachment"
+          ]
+        },
+        "fragmentFields": {
+          "const": [
+            "field",
+            "page",
+            "start",
+            "offset",
+            "length",
+            "release"
+          ]
+        },
+        "releaseFields": {
+          "const": [
+            "fragment",
+            "proof",
+            "kind",
+            "phase"
+          ]
+        },
+        "metadata": {
+          "const": {
+            "recordBytes": 16,
+            "fieldBytes": 8,
+            "priorReleaseFields": 3,
+            "priorReleaseBytes": 40,
+            "releaseBytes": 48,
+            "fragmentBytes": 64,
+            "fieldBytesTotal": 112,
+            "additionalBytes": 8,
+            "sourceAdmitted": false,
+            "uiEvidenceIncluded": false
+          }
+        },
+        "work": {
+          "const": {
+            "maxItems": 1,
+            "phaseBytes": 64,
+            "refusedBytes": 0
+          }
+        },
+        "rules": {
+          "const": {
+            "sameOriginalRelease": true,
+            "installBeforeFinalizer": true,
+            "retainFirstRawFault": true,
+            "uiBindsIssuedObservation": true,
+            "copiedRangeConsumedOrClosed": true,
+            "cancellationPermanentlyStopsReads": true,
+            "retainSourceSlotsUntilSettlement": true,
+            "nextRangeRequiresSettlement": true,
+            "originalUiObservationForSettledCheck": true,
+            "uiObservationDetachedBeforeEvidenceRefund": true,
+            "mutatingReplay": false,
+            "operationLivenessRequiredForClose": false,
+            "newProofAllocated": false,
+            "rawPageAcknowledged": false,
+            "wholeSourceRetired": false,
+            "arbitraryFaultRetired": false
+          }
+        }
       }
     },
-    "uiMethods": {
-      "const": [
-        "Copied.matchesRelease(token,release)",
-        "Cancelled.matchesRelease(token,release)",
-        "Copied.matchesSourceDetached(token,release)",
-        "Cancelled.matchesSourceDetached(token,release)"
-      ]
-    },
-    "phases": {
-      "const": [
-        "issued",
-        "sourceDetached",
-        "settled"
-      ]
-    },
-    "fieldFields": {
-      "const": [
-        "state",
-        "value",
-        "builder",
-        "fragment",
-        "release",
-        "consumed",
-        "advanced",
-        "start",
-        "complete",
-        "closing",
-        "payload",
-        "payloadDetachment"
-      ]
-    },
-    "fragmentFields": {
-      "const": [
-        "field",
-        "page",
-        "start",
-        "offset",
-        "length",
-        "release"
-      ]
-    },
-    "releaseFields": {
-      "const": [
-        "fragment",
-        "proof",
-        "kind",
-        "phase"
-      ]
-    },
-    "metadata": {
-      "const": {
-        "recordBytes": 16,
-        "fieldBytes": 8,
-        "priorReleaseFields": 3,
-        "priorReleaseBytes": 40,
-        "releaseBytes": 48,
-        "fragmentBytes": 64,
-        "fieldBytesTotal": 112,
-        "additionalBytes": 8,
-        "sourceAdmitted": false,
-        "uiEvidenceIncluded": false
-      }
-    },
-    "work": {
-      "const": {
-        "maxItems": 1,
-        "phaseBytes": 64,
-        "refusedBytes": 0
-      }
-    },
-    "rules": {
-      "const": {
-        "sameOriginalRelease": true,
-        "installBeforeFinalizer": true,
-        "retainFirstRawFault": true,
-        "uiBindsIssuedObservation": true,
-        "copiedRangeConsumedOrClosed": true,
-        "cancellationPermanentlyStopsReads": true,
-        "retainSourceSlotsUntilSettlement": true,
-        "nextRangeRequiresSettlement": true,
-        "originalUiObservationForSettledCheck": true,
-        "uiObservationDetachedBeforeEvidenceRefund": true,
-        "mutatingReplay": false,
-        "operationLivenessRequiredForClose": false,
-        "newProofAllocated": false,
-        "rawPageAcknowledged": false,
-        "wholeSourceRetired": false,
-        "arbitraryFaultRetired": false
+    "ReleaseFixture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "traces",
+        "negativeIdentities",
+        "faults",
+        "readiness"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "traces": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "mode",
+              "trace"
+            ],
+            "properties": {
+              "mode": {
+                "enum": [
+                  "copied",
+                  "cancelled",
+                  "copied-close"
+                ]
+              },
+              "trace": {
+                "type": "array",
+                "minItems": 16,
+                "maxItems": 19,
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "action",
+                    "expected"
+                  ],
+                  "properties": {
+                    "action": {
+                      "enum": [
+                        "release",
+                        "detach-before-ui-bind",
+                        "ui-bind",
+                        "detach-before-consumed",
+                        "consume",
+                        "detach-short",
+                        "detach-foreign",
+                        "detach",
+                        "observe-after-wrapper-fault",
+                        "settle-before-ui-detach",
+                        "ui-detach",
+                        "settle-short",
+                        "settle-foreign",
+                        "settle",
+                        "observe-settled-after-wrapper-fault",
+                        "settle-replay",
+                        "detach-replay",
+                        "ui-forget",
+                        "close"
+                      ]
+                    },
+                    "expected": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "kind",
+                        "bytes",
+                        "phase",
+                        "sourceToken",
+                        "sourceFragment",
+                        "fragmentField",
+                        "fieldSlots",
+                        "uiBody",
+                        "uiObservation",
+                        "nextRange"
+                      ],
+                      "properties": {
+                        "kind": {
+                          "enum": [
+                            "ready",
+                            "pending",
+                            "complete",
+                            "blocked",
+                            "rejected"
+                          ]
+                        },
+                        "bytes": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 64
+                        },
+                        "phase": {
+                          "enum": [
+                            "empty",
+                            "issued",
+                            "sourceDetached",
+                            "settled"
+                          ]
+                        },
+                        "sourceToken": {
+                          "type": "boolean"
+                        },
+                        "sourceFragment": {
+                          "type": "boolean"
+                        },
+                        "fragmentField": {
+                          "type": "boolean"
+                        },
+                        "fieldSlots": {
+                          "type": "boolean"
+                        },
+                        "uiBody": {
+                          "type": "boolean"
+                        },
+                        "uiObservation": {
+                          "type": "boolean"
+                        },
+                        "nextRange": {
+                          "type": "boolean"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "negativeIdentities": {
+          "const": [
+            "foreign-field",
+            "foreign-fragment",
+            "foreign-proof",
+            "foreign-observation",
+            "forged-prototype",
+            "proxy"
+          ]
+        },
+        "faults": {
+          "const": {
+            "positions": [
+              "before-finalize",
+              "after-finalize",
+              "after-release",
+              "after-detach",
+              "after-settle"
+            ],
+            "values": [
+              "null",
+              "undefined",
+              "false",
+              "zero",
+              "object"
+            ],
+            "unknownBytes": 8193,
+            "originalRetained": true,
+            "replacementMinted": false
+          }
+        },
+        "readiness": {
+          "const": {
+            "formatOnly": true,
+            "positiveRuntime": false,
+            "sourceMetadataAdmitted": false,
+            "evidenceRefundBeforeUiForget": false,
+            "nativeInputAck": false
+          }
+        }
       }
     }
   }

@@ -2,10 +2,10 @@
 //! 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §2.1). `SemioBrepEditor`
 //! implements `ArtifactEditor`, wiring the shared `MeshWindowKit` to a single Main window.
 
-use crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioPoint3;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::mutations::move_vertex::MoveVertex;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::mutations::SemioBrepMutation;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
+use crate::standards::v1::subsets::base::schema::geometry::SemioPoint3;
+use crate::standards::v1::subsets::brep::schema::mutations::move_vertex::MoveVertex;
+use crate::standards::v1::subsets::brep::schema::mutations::SemioBrepMutation;
+use crate::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
 use crate::editor::semio_brep::modes::edit;
 use crate::editor::semio_brep::modes::edit::windows::main;
 use semio_framework::DslValue;
@@ -178,7 +178,7 @@ mod tests {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn one_vertex_snapshot() -> SemioBrepSnapshot {
         let mut s = SemioBrepSnapshot::default();
-        s.vertices = vec![crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::BrepVertex { id: "v1".into(), point: SemioPoint3 { x: 0.0, y: 0.0, z: 0.0 }, tol: 0.0 }];
+        s.vertices = vec![crate::standards::v1::subsets::brep::schema::snapshot::BrepVertex { id: "v1".into(), point: SemioPoint3 { x: 0.0, y: 0.0, z: 0.0 }, tol: 0.0 }];
         s
     }
 

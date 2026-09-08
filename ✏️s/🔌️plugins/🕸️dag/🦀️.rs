@@ -19,7 +19,7 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 /// 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM design.md §1/§2) is the ONLY registration
 /// channel for `s.dag.dag` — it walks artifact→standard→subset and registers schema, io,
 /// viewer/editor surfaces and examples in one pass, replacing the old `.artifact(declaration())`
-/// + `.editor::<E>(AppDefinition)` + `.viewer::<V>(AppDefinition)` triple atomically (no dual
+/// together with `.editor::<E>(AppDefinition)` + `.viewer::<V>(AppDefinition)` triple atomically (no dual
 /// registration — that is a forbidden compatibility layer, already rejected once on this ticket).
 /// `.editor_mutation_roster()`/`.viewer_mutation_roster()` are KEPT — an orthogonal opt-in
 /// (`contributor.list-artifact-mutations`) `SurfaceDeclaration.mutation_roster` does not yet wire

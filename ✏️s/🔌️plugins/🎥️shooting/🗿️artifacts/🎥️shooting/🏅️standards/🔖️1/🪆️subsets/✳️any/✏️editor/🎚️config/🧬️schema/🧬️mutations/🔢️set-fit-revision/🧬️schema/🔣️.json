@@ -1,0 +1,17 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/shooting/shooting/1/any/editor/config/mutation/set-fit-revision.json",
+  "title": "SetFitRevision",
+  "type": "object",
+  "properties": {
+    "value": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 4294967295
+    }
+  },
+  "required": [
+    "value"
+  ],
+  "additionalProperties": false
+}

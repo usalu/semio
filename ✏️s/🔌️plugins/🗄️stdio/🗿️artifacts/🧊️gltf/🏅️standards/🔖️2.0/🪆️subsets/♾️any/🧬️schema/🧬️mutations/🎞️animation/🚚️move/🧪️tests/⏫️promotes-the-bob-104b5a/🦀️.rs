@@ -9,10 +9,10 @@
 //! leaf's own oracle. The derived `.op.semio`/`.spr.semio`/`.dsl.semio`/`.pack.semio`/
 //! `.patch.semio` encodings come from `fixtures generate`, not from here.
 
-use crate::artifacts::gltf::schema::mutations::move_animation::diff::GltfMoveAnimationDiff;
-use crate::artifacts::gltf::schema::mutations::move_animation::GltfMoveAnimationPayload;
-use crate::artifacts::gltf::schema::mutations::move_animation::{diff, inverse, mutation};
-use crate::artifacts::gltf::GltfSnapshot;
+use crate::schema::mutations::move_animation::diff::GltfMoveAnimationDiff;
+use crate::schema::mutations::move_animation::GltfMoveAnimationPayload;
+use crate::schema::mutations::move_animation::{diff, inverse, mutation};
+use crate::GltfSnapshot;
 
 const CASE: &str = "move-animation/promotes-the-bob-clip-ahead-of-the-spin-clip";
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");

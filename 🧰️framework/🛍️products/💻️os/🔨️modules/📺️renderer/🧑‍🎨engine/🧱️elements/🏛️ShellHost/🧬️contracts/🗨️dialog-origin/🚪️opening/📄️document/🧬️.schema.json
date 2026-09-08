@@ -1,0 +1,68 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "cases"
+  ],
+  "properties": {
+    "cases": {
+      "type": "array",
+      "minItems": 6,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "fail",
+          "replace",
+          "outcome",
+          "sequence",
+          "timers"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "fail": {
+            "enum": [
+              "none",
+              "socket",
+              "attach",
+              "deadline"
+            ]
+          },
+          "replace": {
+            "enum": [
+              "none",
+              "socket",
+              "attach"
+            ]
+          },
+          "outcome": {
+            "enum": [
+              "failed",
+              "retired",
+              "ready"
+            ]
+          },
+          "sequence": {
+            "type": "array",
+            "items": {
+              "enum": [
+                "socket",
+                "attach",
+                "close",
+                "commit",
+                "retire"
+              ]
+            }
+          },
+          "timers": {
+            "const": 0
+          }
+        }
+      }
+    }
+  }
+}

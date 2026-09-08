@@ -4,12 +4,12 @@
 //! `mutation.target-missing`; otherwise the diff is a bare `metadata.removed[key]` — name-keyed,
 //! so no index is transported and the surviving entries keep their order. The two-entry
 //! before-snapshot is what makes "keeps the author entry" a real claim rather than a tautology.
-use crate::artifacts::semio::standards::v1::subsets::image::schema::diff::SemioImageDiff;
-use crate::artifacts::semio::standards::v1::subsets::image::schema::mutations::{apply_semio_image_mutation, SemioImageMutation};
-use crate::artifacts::semio::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
+use crate::standards::v1::subsets::image::schema::diff::SemioImageDiff;
+use crate::standards::v1::subsets::image::schema::mutations::{apply_semio_image_mutation, SemioImageMutation};
+use crate::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
 use protocol::{Mutation, MutationDiff};
-use crate::artifacts::semio::standards::v1::subsets::image::schema::mutations::set_metadata_entry;
-use crate::artifacts::semio::standards::v1::subsets::image::schema::mutations::remove_metadata_entry;
+use crate::standards::v1::subsets::image::schema::mutations::set_metadata_entry;
+use crate::standards::v1::subsets::image::schema::mutations::remove_metadata_entry;
 
 /// 🔗️ This leaf's own `🔺️diff` oracle, mounted directly: the enum-level `Mutation::diff` arm
 /// deliberately carries NO guard branches — every `mutation.no-op`/`mutation.target-missing`

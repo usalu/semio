@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeRetrofitEDKn, base: &En1998Snapshot) -> protocol::Mu
     if base.retrofit_e_d_kn == payload.new_retrofit_e_d_kn {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Retrofit demand E_d [kN] is already {}.", payload.new_retrofit_e_d_kn));
     }
-    protocol::MutationOutcome::new(En1998Diff { retrofit_e_d_kn: Some(payload.new_retrofit_e_d_kn.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1998Diff { retrofit_e_d_kn: Some(payload.new_retrofit_e_d_kn), ..Default::default() })
 }
 //#endregion 🔖️Diff

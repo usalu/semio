@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/zip/2.0/base/mutation/set-archive-comment.json",
+  "title": "SetArchiveComment",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "comment"
+  ],
+  "properties": {
+    "comment": {
+      "type": "string"
+    },
+    "mutation": {
+      "const": "setArchiveComment",
+      "description": "Aggregate discriminator spliced in by ZipMutation; absent when the payload stands alone."
+    }
+  }
+}

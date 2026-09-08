@@ -1,15 +1,15 @@
 //! Deserialize stdio.gif from stdio.binary.
 
-use crate::artifacts::binary::BinarySnapshot;
-use crate::artifacts::gif::standards::v87a::subsets::any::schema::snapshot::GifSnapshot;
-use crate::artifacts::gif::STDIO_GIF_DOCUMENT_SCHEMA;
+use semio_s_artifact_stdio_binary::BinarySnapshot;
+use crate::standards::v87a::subsets::any::schema::snapshot::GifSnapshot;
+use crate::STDIO_GIF_DOCUMENT_SCHEMA;
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn register() {}
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn deserialize(from: &BinarySnapshot) -> Result<GifSnapshot, store::PackError> {
-    let mut snap = crate::artifacts::gif::standards::v87a::engine::decode_gif(&from.bytes).map_err(store::PackError::Schema)?;
+    let mut snap = crate::standards::v87a::engine::decode_gif(&from.bytes).map_err(store::PackError::Schema)?;
     snap.schema = STDIO_GIF_DOCUMENT_SCHEMA.into();
     Ok(snap)
 }

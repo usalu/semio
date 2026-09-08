@@ -176,11 +176,13 @@ describe("Dialog", () => {
       </Dialog>,
     );
     expect(document.querySelectorAll('[role="dialog"]')).toHaveLength(2);
+    expect(document.body.style.paddingRight).toBe(`${Math.max(0, window.innerWidth - document.documentElement.clientWidth)}px`);
     fireEvent.keyDown(document, { key: "Escape" });
     expect(innerChange).toHaveBeenCalledWith(false);
     expect(outerChange).not.toHaveBeenCalled();
     expect(document.querySelectorAll('[role="dialog"]')).toHaveLength(1);
     expect(document.body.style.overflow).toBe("hidden");
+    expect(document.body.style.paddingRight).toBe(`${Math.max(0, window.innerWidth - document.documentElement.clientWidth)}px`);
     fireEvent.keyDown(document, { key: "Escape" });
     expect(outerChange).toHaveBeenCalledWith(false);
     await waitFor(() => expect(document.querySelectorAll('[role="dialog"]')).toHaveLength(0));
@@ -289,6 +291,45 @@ describe("Dialog", () => {
     expect(sibling.hasAttribute("inert")).toBe(false);
     expect(document.body.style.overflow).toBe("");
     host.remove();
+  });
+
+  it("inherits one scoped isolation root across nested dialogs and dismisses only its topmost owner", () => {
+    const root = document.createElement("section"), app = document.createElement("div"), layer = document.createElement("div");
+    root.style.position = "relative";
+    layer.style.position = "absolute";
+    root.append(app, layer);
+    document.body.appendChild(root);
+    const outerChange = vi.fn(), innerChange = vi.fn();
+    const view = render(
+      <Dialog defaultOpen isolationRoot={root} onOpenChange={outerChange}>
+        <DialogPortal container={layer}>
+          <DialogOverlay />
+          <DialogContent showCloseButton={false}>
+            <DialogTitle>Scoped outer</DialogTitle>
+            <Dialog defaultOpen onOpenChange={innerChange}>
+              <DialogContent showCloseButton={false}>
+                <DialogTitle>Scoped inner</DialogTitle>
+                <button type="button">Inner action</button>
+              </DialogContent>
+            </Dialog>
+          </DialogContent>
+        </DialogPortal>
+      </Dialog>,
+      { container: app, baseElement: root },
+    );
+    try {
+      const inner = view.getByRole("button", { name: "Inner action" });
+      expect(root.querySelectorAll('[data-dialog-isolation="scoped"]')).toHaveLength(2);
+      fireEvent.keyDown(inner, { key: "Escape" });
+      expect(innerChange).toHaveBeenCalledWith(false);
+      expect(outerChange).not.toHaveBeenCalled();
+      const outer = view.getByRole("dialog", { name: "Scoped outer" });
+      fireEvent.keyDown(outer, { key: "Escape" });
+      expect(outerChange).toHaveBeenCalledWith(false);
+    } finally {
+      view.unmount();
+      root.remove();
+    }
   });
 
   it("unmounts closed portal descendants and runs their cleanup exactly once", () => {

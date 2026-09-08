@@ -2,7 +2,7 @@
 /// 📦 Encodes a recognized mutation payload or declines another variant.
 pub type PngMutationPayloadEncoder = fn(&PngMutation) -> Option<Result<Vec<u8>, protocol::ProtocolError>>;
 
-use crate::artifacts::png::schema::mutations::PngMutation;
+use crate::schema::mutations::PngMutation;
 
 //#region Registry
 pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio");
@@ -13,21 +13,21 @@ pub struct Entry {
     pub decode: fn(&[u8]) -> Result<PngMutation, protocol::ProtocolError>,
 }
 pub const REGISTRY: &[Entry] = &[
-    crate::artifacts::png::schema::mutations::change_header::binary::CODEC,
-    crate::artifacts::png::schema::mutations::replace_palette::binary::CODEC,
-    crate::artifacts::png::schema::mutations::change_transparency::binary::CODEC,
-    crate::artifacts::png::schema::mutations::change_gamma::binary::CODEC,
-    crate::artifacts::png::schema::mutations::change_chromaticities::binary::CODEC,
-    crate::artifacts::png::schema::mutations::change_srgb_intent::binary::CODEC,
-    crate::artifacts::png::schema::mutations::change_physical_dims::binary::CODEC,
-    crate::artifacts::png::schema::mutations::change_timestamp::binary::CODEC,
-    crate::artifacts::png::schema::mutations::change_background::binary::CODEC,
-    crate::artifacts::png::schema::mutations::insert_text_chunk::binary::CODEC,
-    crate::artifacts::png::schema::mutations::remove_text_chunk::binary::CODEC,
-    crate::artifacts::png::schema::mutations::replace_text_chunk::binary::CODEC,
-    crate::artifacts::png::schema::mutations::replace_pixels::binary::CODEC,
-    crate::artifacts::png::schema::mutations::insert_unknown_chunk::binary::CODEC,
-    crate::artifacts::png::schema::mutations::remove_unknown_chunk::binary::CODEC,
+    crate::schema::mutations::change_header::binary::CODEC,
+    crate::schema::mutations::replace_palette::binary::CODEC,
+    crate::schema::mutations::change_transparency::binary::CODEC,
+    crate::schema::mutations::change_gamma::binary::CODEC,
+    crate::schema::mutations::change_chromaticities::binary::CODEC,
+    crate::schema::mutations::change_srgb_intent::binary::CODEC,
+    crate::schema::mutations::change_physical_dims::binary::CODEC,
+    crate::schema::mutations::change_timestamp::binary::CODEC,
+    crate::schema::mutations::change_background::binary::CODEC,
+    crate::schema::mutations::insert_text_chunk::binary::CODEC,
+    crate::schema::mutations::remove_text_chunk::binary::CODEC,
+    crate::schema::mutations::replace_text_chunk::binary::CODEC,
+    crate::schema::mutations::replace_pixels::binary::CODEC,
+    crate::schema::mutations::insert_unknown_chunk::binary::CODEC,
+    crate::schema::mutations::remove_unknown_chunk::binary::CODEC,
 ];
 //#endregion Registry
 

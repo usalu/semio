@@ -13,9 +13,9 @@
 //! exactly through `serde_json` and the canonicality assertion is about serde shape, not float
 //! formatting luck.
 
-use crate::artifacts::semio::standards::v1::subsets::audio::schema::diff::SemioAudioDiff;
-use crate::artifacts::semio::standards::v1::subsets::audio::schema::mutations::{apply_semio_audio_mutation, SemioAudioMutation};
-use crate::artifacts::semio::standards::v1::subsets::audio::schema::snapshot::{SemioAudioFormat, SemioAudioSnapshot};
+use crate::standards::v1::subsets::audio::schema::diff::SemioAudioDiff;
+use crate::standards::v1::subsets::audio::schema::mutations::{apply_semio_audio_mutation, SemioAudioMutation};
+use crate::standards::v1::subsets::audio::schema::snapshot::{SemioAudioFormat, SemioAudioSnapshot};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");

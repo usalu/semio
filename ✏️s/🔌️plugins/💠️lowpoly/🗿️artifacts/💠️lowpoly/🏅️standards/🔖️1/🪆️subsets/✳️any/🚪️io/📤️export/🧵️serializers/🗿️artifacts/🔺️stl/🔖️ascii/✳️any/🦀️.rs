@@ -16,7 +16,7 @@
 //! silent pack-envelope lie) pending that architecture work -- see this ticket's
 //! `📝️io-implementation-result.md` handoff section.
 use crate::artifacts::lowpoly::schema::snapshot::LowpolySnapshot;
-use semio_s_plugin_stdio::artifacts::stl::StlSnapshot;
+use semio_s_artifact_stdio_stl::StlSnapshot;
 
 pub fn register() {}
 

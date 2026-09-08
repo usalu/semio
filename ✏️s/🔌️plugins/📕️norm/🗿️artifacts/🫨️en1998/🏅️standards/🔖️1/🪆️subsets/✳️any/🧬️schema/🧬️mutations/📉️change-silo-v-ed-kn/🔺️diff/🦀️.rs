@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeSiloVEdKn, base: &En1998Snapshot) -> protocol::Mutat
     if base.silo_v_ed_kn == payload.new_silo_v_ed_kn {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Silo design shear V_Ed [kN] is already {}.", payload.new_silo_v_ed_kn));
     }
-    protocol::MutationOutcome::new(En1998Diff { silo_v_ed_kn: Some(payload.new_silo_v_ed_kn.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1998Diff { silo_v_ed_kn: Some(payload.new_silo_v_ed_kn), ..Default::default() })
 }
 //#endregion 🔖️Diff

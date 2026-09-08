@@ -2,7 +2,7 @@
 //! (text/image/table/math/ink/group blocks).
 
 use semio_framework_plugin::{ArtifactKindSpec, Dialect, MediaClass, MediaForm, MediaType, OsMediaCapability, StandardId, SubsetId};
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::text::schema::snapshot::{SemioTextMark, SemioTextMarkKind, SemioTextRun, SemioTextSnapshot, STDIO_SEMIOTEXT_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_semio::standards::v1::subsets::text::schema::snapshot::{SemioTextMark, SemioTextMarkKind, SemioTextRun, SemioTextSnapshot, STDIO_SEMIOTEXT_DOCUMENT_SCHEMA};
 use serde::{Deserialize, Serialize};
 use semio_framework_value_derive::{FromValue, ToValue};
 #[cfg(test)]
@@ -21,7 +21,7 @@ use std::collections::BTreeMap;
 /// only because nothing on this pass's boundary reads or removes `definition()`'s callers.
 pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
     use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
-    let rows: &[(&str, &str, &str, &[(&str, &str)], Option<(&str, &str)>)] = &[
+    let rows: &[semio_framework_plugin::ArtifactCapabilityRow<'_>] = &[
         ("s.note.note.standard.v1", "standard", "1", &[], None),
         ("s.note.note.standard.v1.profile.any", "profile", "any", &[], None),
         ("s.note.note.schema.artifact", "schema", "s.note.note", &[("schema", "s.note.note")], None),

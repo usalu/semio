@@ -11,6 +11,6 @@ pub fn diff(payload: &ChangeTIntC, base: &Din4108Snapshot) -> protocol::Mutation
     if base.t_int_c == payload.new_t_int_c {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "T int c already has this value.");
     }
-    protocol::MutationOutcome::new(Din4108Diff { t_int_c: Some(payload.new_t_int_c.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(Din4108Diff { t_int_c: Some(payload.new_t_int_c), ..Default::default() })
 }
 //#endregion 🔖️Diff

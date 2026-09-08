@@ -1,0 +1,37 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/primitive/change-topology.json",
+  "title": "GltfChangePrimitiveTopologyModeMutation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mesh",
+    "primitive",
+    "mode"
+  ],
+  "properties": {
+    "mesh": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "primitive": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "mode": {
+      "type": "integer",
+      "minimum": 0
+    }
+  },
+  "x-semio": {
+    "id": "s.stdio.gltf.mutation.change-primitive-topology-mode.v1",
+    "version": 1,
+    "phase": "mutation",
+    "kind": "change",
+    "touchedPaths": [
+      "document/meshes/*/primitives/*/mode"
+    ],
+    "referencePolicy": "accepts only the glTF primitive topology domain 0 through 6"
+  },
+  "x-semio-mutation": "change-primitive-topology-mode"
+}

@@ -2,8 +2,8 @@
 //! index (`layers` is real id-keyed per `DrawLayer.id`, positioned per `taxonomy.md`'s "create:
 //! full initial payload (+ optional index)").
 
-use crate::artifacts::semio::standards::v1::subsets::drawing::schema::mutations::SemioDrawingMutation;
-use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{DrawLayer, SemioDrawingSnapshot};
+use crate::standards::v1::subsets::drawing::schema::mutations::SemioDrawingMutation;
+use crate::standards::v1::subsets::drawing::schema::snapshot::{DrawLayer, SemioDrawingSnapshot};
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]

@@ -1,5 +1,5 @@
 //! 📝️ Framing and direct codec registry for JpgMutation.
-use crate::artifacts::jpg::schema::mutations::JpgMutation;
+use crate::schema::mutations::JpgMutation;
 
 //#region Registry
 pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
@@ -10,16 +10,16 @@ pub struct Entry {
     pub parse: fn(&str) -> Result<JpgMutation, String>,
 }
 pub const REGISTRY: &[Entry] = &[
-    crate::artifacts::jpg::schema::mutations::change_jfif_header::text::CODEC,
-    crate::artifacts::jpg::schema::mutations::replace_quant_table::text::CODEC,
-    crate::artifacts::jpg::schema::mutations::remove_quant_table::text::CODEC,
-    crate::artifacts::jpg::schema::mutations::replace_huffman_table::text::CODEC,
-    crate::artifacts::jpg::schema::mutations::remove_huffman_table::text::CODEC,
-    crate::artifacts::jpg::schema::mutations::change_restart_interval::text::CODEC,
-    crate::artifacts::jpg::schema::mutations::insert_other_segment::text::CODEC,
-    crate::artifacts::jpg::schema::mutations::remove_other_segment::text::CODEC,
-    crate::artifacts::jpg::schema::mutations::replace_pixels::text::CODEC,
-    crate::artifacts::jpg::schema::mutations::change_re_encode_quality::text::CODEC,
+    crate::schema::mutations::change_jfif_header::text::CODEC,
+    crate::schema::mutations::replace_quant_table::text::CODEC,
+    crate::schema::mutations::remove_quant_table::text::CODEC,
+    crate::schema::mutations::replace_huffman_table::text::CODEC,
+    crate::schema::mutations::remove_huffman_table::text::CODEC,
+    crate::schema::mutations::change_restart_interval::text::CODEC,
+    crate::schema::mutations::insert_other_segment::text::CODEC,
+    crate::schema::mutations::remove_other_segment::text::CODEC,
+    crate::schema::mutations::replace_pixels::text::CODEC,
+    crate::schema::mutations::change_re_encode_quality::text::CODEC,
 ];
 //#endregion Registry
 

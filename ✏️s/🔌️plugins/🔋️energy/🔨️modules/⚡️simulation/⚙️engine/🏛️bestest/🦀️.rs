@@ -342,13 +342,9 @@ fn case_650() -> Model {
     let mut built = case_600();
     built.name = "BESTEST 650".into();
     let mut cooling = [100.0_f64; 24];
-    for hour in 7..18 {
-        cooling[hour] = 27.0;
-    }
+    cooling[7..18].fill(27.0);
     let mut ventilation = [1.0_f64; 24];
-    for hour in 7..18 {
-        ventilation[hour] = 0.0;
-    }
+    ventilation[7..18].fill(0.0);
     built.schedules.constants.retain(|schedule| schedule.id != HEATING_SETPOINT && schedule.id != COOLING_SETPOINT);
     built.schedules.constants.push(constant(HEATING_DISABLED, -100.0));
     built.schedules.daily.push(daily(COOLING_DAYTIME_ONLY, cooling));
@@ -562,15 +558,14 @@ pub fn case_parameters_json(case: &str) -> Option<String> {
     let resistance = |construction_id: EntityId| -> f64 {
         let construction = built.constructions.iter().find(|construction| construction.id == construction_id);
         let layers: f64 = construction
-            .map(|construction| {
+            .map_or(0.0, |construction| {
                 construction
                     .layer_material_ids
                     .iter()
                     .filter_map(|id| built.materials.iter().find(|material| material.id == *id))
                     .map(|material| material.thickness_m / material.conductivity_w_m_k)
                     .sum()
-            })
-            .unwrap_or(0.0);
+            });
         layers + crate::material::R_FILM_INTERIOR_M2K_W + crate::material::R_FILM_EXTERIOR_M2K_W
     };
     let surfaces = pack::json::array(built.surfaces.iter().map(|surface| {

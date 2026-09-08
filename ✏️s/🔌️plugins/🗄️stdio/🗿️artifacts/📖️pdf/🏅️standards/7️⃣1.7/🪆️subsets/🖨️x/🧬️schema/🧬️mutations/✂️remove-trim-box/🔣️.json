@@ -5,7 +5,7 @@
   "displayName": "Remove Trim Box",
   "emoji": "🧽️",
   "aggregateVariant": "RemoveTrimBox",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "remove-trim-box",
   "binaryTag": 5,
   "invertibility": "explicit-mutation",

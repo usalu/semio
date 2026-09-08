@@ -58,6 +58,7 @@ import type { DirectoryCommand, DirectoryCommandErrorCodeV1, DirectoryCommandOut
 import { SPACE_ARTIFACT_CREATION_CATALOG_MAX_BYTES, SPACE_ARTIFACT_CREATION_MAX_BYTES, sealSpaceArtifactCreateV1, parseSpaceArtifactCreateJsonV1, parseSpaceArtifactCreationCatalogJsonV1, parseSpaceArtifactCreationStatusJsonV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🌱️space-artifact-creation-v1/🟦️.ts";
 import { foldAll as foldDirectoryIndexEvents } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🟦️.ts";
 import { artifactFrontierIsGenesisForV1, artifactFrontierIsEditedForV1, descriptorDigestEncodingV1, validDocumentIndexEntryV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🟦️.ts";
+import type { TestBrowserHostRootsV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🌐️browser-host/🟦️.ts";
 import {
   produceFreshComponentV1,
   testFreshComponentStagingV1,
@@ -96,6 +97,62 @@ function exactCargoStageEnvironments() {
   };
 }
 
+//#region 🧬️Scope-owned schema resolution
+
+/** 🧬️ Every scope-owned JSON Schema module `🌎️hub` fixtures may bind to, keyed by scope id. */
+export const HUB_SCHEMA_SCOPES: Readonly<Record<string, string>> = {
+  "hub.admin": "🌎️hub/🔨️modules/🛡️admin/🧬️schema/🔣️.json",
+  "hub.artifact-authority": "🌎️hub/🗿️artifact-authority/🧬️schema/🔣️.json",
+  "hub.artifact-authority.creation": "🌎️hub/🗿️artifact-authority/🌱️creation/🧬️schema/🔣️.json",
+  "hub.artifact-authority.native-openable-provider": "🌎️hub/🗿️artifact-authority/📇️native-openable-provider/🧬️schema/🔣️.json",
+  "hub.artifact-authority.trusted-catalog": "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🧬️schema/🔣️.json",
+  "hub.auth": "🌎️hub/🔐️auth/🧬️schema/🔣️.json",
+  "hub.directory": "🌎️hub/📇️directory/🧬️schema/🔣️.json",
+  "hub.inference": "🌎️hub/💡️inference/🧬️schema/🔣️.json",
+  "hub.lag-rebootstrap": "🌎️hub/🛰️lag-rebootstrap/🧬️schema/🔣️.json",
+  "hub.local-bootstrap": "🌎️hub/🚀️local-bootstrap/🧬️schema/🔣️.json",
+};
+
+const hubSchemaModules = new Map<string, { readonly ajv: Ajv; readonly id: string }>();
+
+/** 📇️ Loads one scope's draft-07 module once and keeps its compiled exports for reuse. */
+function hubSchemaModule(repoRoot: string, scope: string): { readonly ajv: Ajv; readonly id: string } {
+  const cached = hubSchemaModules.get(scope);
+  if (cached) return cached;
+  const path = HUB_SCHEMA_SCOPES[scope];
+  if (path === undefined) throw new Error(`unknown hub schema scope ${scope}`);
+  const document = JSON.parse(readFileSync(join(repoRoot, path), "utf8")) as { $schema?: string; $id?: string };
+  if (document.$schema !== "http://json-schema.org/draft-07/schema#") throw new Error(`${scope} module must declare the draft-07 dialect`);
+  if (typeof document.$id !== "string" || !document.$id.startsWith("https://semio.tech/schema/hub/")) throw new Error(`${scope} module must declare a semio.tech $id`);
+  const ajv = new Ajv({ strict: true, allErrors: true });
+  ajv.addSchema(document);
+  const loaded = { ajv, id: document.$id };
+  hubSchemaModules.set(scope, loaded);
+  return loaded;
+}
+
+/** 🔗️ Resolves `schema://<scope id>/<ExportId>` to the owning module's compiled export validator. */
+export function hubSchemaExport(repoRoot: string, uri: string): (value: unknown) => boolean {
+  const match = /^schema:\/\/([a-z0-9.-]+)\/([A-Z][A-Za-z0-9]*)$/.exec(uri);
+  if (!match) throw new Error(`malformed schema export uri ${uri}`);
+  const [, scope, exportId] = match;
+  const module = hubSchemaModule(repoRoot, scope);
+  const validate = module.ajv.getSchema(`${module.id}#/$defs/${exportId}`);
+  if (!validate) throw new Error(`${scope} exports no ${exportId}`);
+  return (value: unknown): boolean => validate(value) as boolean;
+}
+
+/** 🧾️ One fixture-declared negative expectation: the stage that rejects it and the reason code. */
+export type HubFixtureExpectationV1 = { readonly stage: "contract" | "domain" | "bounds"; readonly result: "accepted" | "rejected"; readonly code: string };
+
+/** ✅️ Enforces one fixture-declared expectation against the observed contract-stage outcome. */
+export function assertHubFixtureExpectation(name: string, expectation: HubFixtureExpectationV1, admitted: boolean): void {
+  if (expectation.result === "rejected" && expectation.stage === "contract" && admitted) throw new Error(`${name}: contract stage admitted ${expectation.code}`);
+  if (expectation.result === "accepted" && !admitted) throw new Error(`${name}: contract stage rejected ${expectation.code}`);
+}
+
+//#endregion 🧬️Scope-owned schema resolution
+
 const LOCAL_BOOTSTRAP_SCHEMA = "semio.hub.local-bootstrap/v1";
 const LOCAL_BOOTSTRAP_DOMAIN = "semio/hub/local-bootstrap/v1\0";
 const LOCAL_BOOTSTRAP_FRAME_MAX = 16 * 1024;
@@ -130,10 +187,14 @@ type OrderedAppendBroadcastFixture = {
 export function orderedDirectoryPublicationOracle(repoRoot: string): number {
   const base = join(repoRoot, "🌎️hub/📇️directory/🧫️fixtures/🧪️fixtures/📣️ordered-append-broadcast-v1");
   const fixture = JSON.parse(readFileSync(join(base, "🔣️.json"), "utf8")) as OrderedAppendBroadcastFixture;
-  const schema = JSON.parse(readFileSync(join(base, "🧬️.schema.json"), "utf8"));
-  const validate = new Ajv({ strict: true, allErrors: true }).compile(schema);
-  if (!validate(fixture)) throw new Error(`ordered directory publication fixture: ${JSON.stringify(validate.errors)}`);
+  const caseIds = ["concurrent-single-events", "paired-user-member-events", "append-failure", "empty-idempotent-decision"] as const;
+  if (fixture.schema !== "semio.hub.directory.ordered-append-broadcast/v1" || fixture.maximumEventsPerDecision !== 2) throw new Error("ordered directory publication fixture envelope drift");
+  if (fixture.cases.length !== caseIds.length || caseIds.some((id, index) => fixture.cases[index]?.id !== id)) throw new Error("ordered directory publication fixture case inventory drift");
   if (new Set(fixture.cases.map((row) => row.id)).size !== fixture.cases.length) throw new Error("ordered directory publication fixture has duplicate cases");
+  for (const row of fixture.cases) {
+    const sequences = [...row.persistedSequences, ...row.expectedBroadcastSequences];
+    if (typeof row.appendSucceeds !== "boolean" || sequences.some((value) => !Number.isSafeInteger(value) || value < 1)) throw new Error(`ordered directory publication fixture row is not a bounded decision: ${row.id}`);
+  }
   for (const row of fixture.cases) {
     const expected = row.appendSucceeds ? row.persistedSequences : [];
     if (JSON.stringify(expected) !== JSON.stringify(row.expectedBroadcastSequences)) throw new Error(`ordered directory publication oracle differs for ${row.id}`);
@@ -2840,16 +2901,22 @@ async function proveAdminRelayBoundary(repoRoot: string): Promise<void> {
 /** 🧬 Validates the literal cross-language journey before it may drive a real process/browser. */
 async function adminLiveJourneyFixture(repoRoot: string): Promise<AdminLiveJourneyFixture> {
   const fixtureRoot = join(repoRoot, "🌎️hub/📇️directory/🧫️fixtures/🚶️admin-live-journey-v1");
-  const schema = JSON.parse(readFileSync(join(fixtureRoot, "🧬️.schema.json"), "utf8"));
   const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8")) as AdminLiveJourneyFixture;
   const Ajv2020 = (await import("ajv/dist/2020.js")).default;
-  const validate = new Ajv2020({ allErrors: true, strict: true }).compile(schema);
-  if (!validate(fixture)) throw new Error(`admin live journey fixture invalid: ${JSON.stringify(validate.errors)}`);
+  if (!hubSchemaExport(repoRoot, "schema://hub.directory/DirectoryProfileV1")(fixture.profile)) throw new Error("admin live journey profile is not the owned directory profile contract");
+  if (!hubSchemaExport(repoRoot, "schema://hub.directory/AdminCreateSpaceIntentV1")(fixture.mutation)) throw new Error("admin live journey mutation is not the owned create-space intent contract");
+  if (!hubSchemaExport(repoRoot, "schema://hub.directory/AdminOperationIntentV1")(fixture.operation)) throw new Error("admin live journey operation is not the owned admin operation intent contract");
+  if (fixture.schema !== "semio.hub.admin-live-journey/v1" || fixture.limits.responseBytes !== 65536) throw new Error("admin live journey envelope drift");
+  if (fixture.limits.journeyMs < 1000 || fixture.limits.journeyMs > 60000 || fixture.limits.pollMs < 10 || fixture.limits.pollMs > 5000) throw new Error("admin live journey bounds drift");
+  if (fixture.languages.length !== 2) throw new Error("admin live journey requires exactly two languages with no default");
   const admissionRoot = join(repoRoot, "🌎️hub/🚀️local-bootstrap/🧪️fixtures/⏳️idle-admission-v1");
-  const admissionSchema = JSON.parse(readFileSync(join(admissionRoot, "🧬️.schema.json"), "utf8"));
-  const admission = JSON.parse(readFileSync(join(admissionRoot, "🔣️.json"), "utf8")) as { exchangeDeadlineMs: number; idleBeforeAdmissionMs: number; frameHex: string; payloadHex: string };
-  const validateAdmission = new Ajv2020({ allErrors: true, strict: true }).compile(admissionSchema);
-  if (!validateAdmission(admission)) throw new Error(`local bootstrap idle-admission fixture invalid: ${JSON.stringify(validateAdmission.errors)}`);
+  const admissionDocument = JSON.parse(readFileSync(join(admissionRoot, "🔣️.json"), "utf8")) as Record<string, unknown> & { hostile: readonly (HubFixtureExpectationV1 & { id: string; mutation: Record<string, unknown> })[] };
+  const { hostile: admissionHostile, ...admissionContract } = admissionDocument;
+  const admission = admissionContract as unknown as { exchangeDeadlineMs: number; idleBeforeAdmissionMs: number; frameHex: string; payloadHex: string };
+  const validateAdmission = hubSchemaExport(repoRoot, "schema://hub.local-bootstrap/LocalBootstrapIdleAdmissionV1");
+  if (!validateAdmission(admission)) throw new Error("local bootstrap idle-admission fixture violates schema://hub.local-bootstrap/LocalBootstrapIdleAdmissionV1");
+  if (admissionHostile.length !== 3 || new Set(admissionHostile.map((entry) => entry.id)).size !== admissionHostile.length) throw new Error("local bootstrap idle-admission hostile table drift");
+  for (const entry of admissionHostile) assertHubFixtureExpectation(`local-bootstrap idle-admission/${entry.id}`, entry, validateAdmission({ ...admission, ...entry.mutation }));
   const frame = Buffer.from(admission.frameHex, "hex");
   const payload = Buffer.from(admission.payloadHex, "hex");
   if (admission.idleBeforeAdmissionMs <= admission.exchangeDeadlineMs || frame.readUInt32BE(0) !== payload.byteLength || !frame.subarray(4).equals(payload)) throw new Error("local bootstrap idle/admitted-frame oracle mismatch");
@@ -2859,7 +2926,7 @@ async function adminLiveJourneyFixture(repoRoot: string): Promise<AdminLiveJourn
     .join(",");
   if (locales !== "de,en" || fixture.languages[0]?.overview === fixture.languages[1]?.overview) throw new Error("admin live journey bilingual inventory drift");
   if (Buffer.byteLength(JSON.stringify(fixture.mutation), "utf8") > 8 * 1024 || Buffer.byteLength(JSON.stringify(fixture.operation), "utf8") > 8 * 1024) throw new Error("admin live journey intent exceeded relay bound");
-  console.log("admin-live-journey fixture: AJV 2/2; idle/admitted frame 2/2; bilingual inventory 2/2; bounded intents 2/2");
+  console.log("admin-live-journey fixture: hub.directory exports 3/3; hub.local-bootstrap idle-admission 1/1 with hostile 3/3; idle/admitted frame 2/2; bilingual inventory 2/2; bounded intents 2/2");
   return fixture;
 }
 
@@ -3039,9 +3106,20 @@ class ArtifactCasCheckScript extends BundleScript {
 async function proveScopedDirectorySocketRevocationFixture(repoRoot: string): Promise<void> {
   const root = join(repoRoot, "🌎️hub", "📇️directory", "🧫️fixtures", "🧪️fixtures", "🔌️scoped-socket-revocation-v1");
   const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
-  const Ajv2020 = (await import("ajv/dist/2020.js")).default;
-  const validate = new Ajv2020({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(root, "🧬️.schema.json"), "utf8")));
-  if (!validate(fixture)) throw new Error(`invalid scoped directory socket fixture: ${JSON.stringify(validate.errors)}`);
+  const scopeContract = hubSchemaExport(repoRoot, "schema://hub.directory/DirectorySocketScopeV1");
+  const messageContract = hubSchemaExport(repoRoot, "schema://hub.directory/DirectorySocketMessageRoutingV1");
+  if (fixture.schema !== "semio.hub.directory-scoped-socket-revocation/v1") throw new Error("scoped directory socket fixture schema drift");
+  if (Object.keys(fixture).sort().join(",") !== "clientCloses,limits,schema,scope,vectors") throw new Error("scoped directory socket fixture envelope drift");
+  if (fixture.limits.identifierBytes !== 4096 || fixture.limits.grantRequestBytes !== 256 || fixture.limits.authorizationDeadlineMs !== 2000) throw new Error("scoped directory socket bound drift");
+  if (fixture.vectors.length < 12 || fixture.vectors.length > 32 || new Set(fixture.vectors.map((vector: any) => vector.name)).size !== fixture.vectors.length) throw new Error("scoped directory socket vector inventory drift");
+  if (fixture.clientCloses.length !== 3 || new Set(fixture.clientCloses.map((close: any) => close.code)).size !== 3) throw new Error("scoped directory socket client-close inventory drift");
+  if (!scopeContract(fixture.scope)) throw new Error("scoped directory socket fixture scope is not the owned socket scope contract");
+  for (const vector of fixture.vectors) {
+    if (!scopeContract(vector.grantScope) || !scopeContract(vector.urlScope)) throw new Error(`scoped directory socket vector scope is not the owned contract: ${vector.name}`);
+    if (!messageContract(vector.message)) throw new Error(`scoped directory socket vector message is not the owned routing contract: ${vector.name}`);
+    if (!["active", "unauthorized", "unavailable"].includes(vector.binding) || !["send", "removal", "neither"].includes(vector.gateWinner)) throw new Error(`scoped directory socket vector taxonomy drift: ${vector.name}`);
+    if (!["deliver", "skip-unrelated", "close-unauthorized", "close-unavailable", "deny-before-upgrade"].includes(vector.expected)) throw new Error(`scoped directory socket expectation taxonomy drift: ${vector.name}`);
+  }
   const sameScope = (left: any, right: any): boolean => left.spaceId === right.spaceId && left.documentId === right.documentId;
   const scopedClasses = new Set(["document-announced", "checkpoint", "retention", "rebootstrap", "presence", "connection"]);
   const decide = (vector: any): { outcome: string; closeCode: number | null; cursorAdvance: boolean; textFrames: number } => {
@@ -3057,11 +3135,12 @@ async function proveScopedDirectorySocketRevocationFixture(repoRoot: string): Pr
     if (JSON.stringify(actual) !== JSON.stringify(expected)) throw new Error(`scoped directory decision differs for ${vector.name}: ${JSON.stringify(actual)}`);
   }
   const hostile = [
-    { ...fixture, extra: true },
-    { ...fixture, scope: { ...fixture.scope, spaceId: "x".repeat(129) } },
-    { ...fixture, clientCloses: [...fixture.clientCloses, fixture.clientCloses[0]] },
+    { ...fixture.scope, spaceId: "x".repeat(129) },
+    { ...fixture.scope, documentId: "" },
+    { ...fixture.scope, extra: true },
   ];
-  if (hostile.some((candidate) => validate(candidate))) throw new Error("scoped directory schema admitted a hostile boundary mutation");
+  if (hostile.some((candidate) => scopeContract(candidate))) throw new Error("scoped directory socket scope contract admitted a hostile boundary mutation");
+  if (messageContract({ ...fixture.vectors[0].message, extra: true }) || messageContract({ ...fixture.vectors[0].message, class: "forged" })) throw new Error("scoped directory socket routing contract admitted a hostile message");
   for (const close of fixture.clientCloses) {
     const terminal = close.code === 4401;
     if (terminal !== close.terminal || close.reconnect === terminal) throw new Error(`scoped directory client close mismatch for ${close.code}`);
@@ -3070,7 +3149,7 @@ async function proveScopedDirectorySocketRevocationFixture(repoRoot: string): Pr
   if (localRelayUpstreamPath("POST", new URL(`http://relay.invalid/_semio/hub${relayPath}`)) !== relayPath) throw new Error("scoped directory relay denied the exact bounded grant path");
   if (localRelayUpstreamPath("POST", new URL(`http://relay.invalid/_semio/hub${relayPath}?extra=1`)) !== undefined) throw new Error("scoped directory relay admitted an arbitrary query");
   if (localRelayUpstreamPath("GET", new URL(`http://relay.invalid/_semio/hub${relayPath}`)) !== undefined) throw new Error("scoped directory relay admitted the wrong method");
-  console.log(`scoped-directory-socket-oracle: AJV=1 decisions=${fixture.vectors.length} hostiles=${hostile.length} client-closes=${fixture.clientCloses.length} relay=3`);
+  console.log(`scoped-directory-socket-oracle: hub.directory-exports=2 decisions=${fixture.vectors.length} hostiles=${hostile.length} client-closes=${fixture.clientCloses.length} relay=3`);
 }
 
 class SocketGrantCheckScript extends BundleScript {
@@ -3111,9 +3190,23 @@ class AdminDirectoryAuthorityCheckScript extends BundleScript {
     if (segments.length > 1 || !["source", "native"].includes(phase)) throw new Error("admin-directory-authority-check accepts source or native");
     const root = join(this.root, "🧪️fixtures/🏛️admin-directory-authority-v1");
     const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
-    const Ajv2020 = (await import("ajv/dist/2020.js")).default;
-    const validate = new Ajv2020({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(root, "🧬️.schema.json"), "utf8")));
-    if (!validate(fixture)) throw new Error("invalid admin directory authority fixture: " + JSON.stringify(validate.errors));
+    if (fixture.schema !== "semio.hub.admin-directory-authority/v1") throw new Error("admin directory authority fixture schema drift");
+    if (Object.keys(fixture).sort().join(",") !== "bindings,schema,shortActions,vectors") throw new Error("admin directory authority fixture envelope drift");
+    if (fixture.vectors.length !== 5 || fixture.shortActions.length !== 8 || fixture.bindings.length !== 15) throw new Error("admin directory authority table sizes drifted");
+    const bindingNames = ["create", "rename", "visibility", "archive", "delete", "upsert", "remove", "create-invite", "revoke-invite", "issue-share", "revoke-share", "revoke-user", "self-revoke", "kick", "rebuild"];
+    if (fixture.bindings.map((row: { name: string }) => row.name).join(",") !== bindingNames.join(",")) throw new Error("admin directory authority binding inventory drifted");
+    for (const table of ["vectors", "shortActions", "bindings"] as const) {
+      if (new Set(fixture[table].map((row: { name: string }) => row.name)).size !== fixture[table].length) throw new Error(`admin directory authority ${table} names are not unique`);
+    }
+    for (const row of fixture.vectors) {
+      if (!["create", "rename"].includes(row.command) || !["session", "demotion"].includes(row.transition) || !["transition", "command"].includes(row.first) || !["succeeded", "cancelled"].includes(row.state)) throw new Error("admin directory authority vector taxonomy drift: " + row.name);
+    }
+    for (const row of fixture.shortActions) {
+      if (!["issue-share", "revoke-share", "revoke-user", "kick"].includes(row.action) || !["transition", "action"].includes(row.first) || ![2, 3, 4].includes(row.keys)) throw new Error("admin directory authority short-action taxonomy drift: " + row.name);
+    }
+    for (const row of fixture.bindings) {
+      if (row.keys !== null && (!Array.isArray(row.keys) || row.keys.length < 2 || row.keys.length > 4 || row.keys.some((key: string) => !/^(user|session|space|membership|share):.+$/u.test(key)))) throw new Error("admin directory authority principal union drift: " + row.name);
+    }
     const { Database } = await import("bun:sqlite");
     const oracle = new Database(":memory:");
     try {
@@ -3191,9 +3284,15 @@ class AdminDirectoryAuthorityCheckScript extends BundleScript {
 async function proveShareIssuanceAtomicity(repoRoot: string): Promise<number> {
   const root = join(repoRoot, "🌎️hub/📇️directory/🧪️tests/🔐️share-issuance-atomicity");
   const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
-  const Ajv2020 = (await import("ajv/dist/2020.js")).default;
-  const validate = new Ajv2020({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(root, "🧬️.schema.json"), "utf8")));
-  if (!validate(fixture)) throw new Error(`invalid share issuance atomicity fixture: ${JSON.stringify(validate.errors)}`);
+  if (fixture.schema !== "semio.hub.share-issuance-atomicity/v1") throw new Error("share issuance atomicity fixture schema drift");
+  if (Object.keys(fixture).sort().join(",") !== "cases,schema,sourceHostiles") throw new Error("share issuance atomicity fixture envelope drift");
+  if (fixture.cases.length !== 7 || new Set(fixture.cases.map((row: { name: string }) => row.name)).size !== 7) throw new Error("share issuance atomicity case inventory drift");
+  const shareIssuanceHostiles = ["sqlite-select-removed", "sqlite-owner-foreign-key-removed", "postgres-select-lock-removed", "postgres-owner-foreign-key-removed", "neo4j-space-owner-removed", "neo4j-descriptor-owner-removed", "neo4j-count-consumption-removed"];
+  if (fixture.sourceHostiles.join(",") !== shareIssuanceHostiles.join(",")) throw new Error("share issuance atomicity source-hostile inventory drift");
+  for (const row of fixture.cases) {
+    if (!["studio", "archive"].includes(row.spaceKind) || !["author", "spectator"].includes(row.role) || !["none", "other-document", "descriptor", "space"].includes(row.deleteBeforeInsert)) throw new Error(`share issuance atomicity case taxonomy drift: ${row.name}`);
+    if (typeof row.spaceExists !== "boolean" || typeof row.descriptorExists !== "boolean" || typeof row.accepted !== "boolean") throw new Error(`share issuance atomicity case is not a boolean decision: ${row.name}`);
+  }
   const { Database } = await import("bun:sqlite");
   const oracle = new Database(":memory:");
   try {
@@ -3340,9 +3439,21 @@ class ShareIssuanceAtomicityCheckScript extends BundleScript {
 async function proveRetainedShortAdmin(repoRoot: string): Promise<number> {
   const root = join(repoRoot, "🌎️hub/📇️directory/🧪️tests/🏛️retained-short-admin");
   const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
-  const Ajv2020 = (await import("ajv/dist/2020.js")).default;
-  const validate = new Ajv2020({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(root, "🧬️.schema.json"), "utf8")));
-  if (!validate(fixture)) throw new Error(`invalid retained short administrator fixture: ${JSON.stringify(validate.errors)}`);
+  if (fixture.schema !== "semio.hub.retained-short-admin/v1" || fixture.adminEffectCommitOutcomes.schema !== "semio.hub.admin-effect-commit-outcome/v1") throw new Error("retained short administrator fixture schema drift");
+  if (Object.keys(fixture).sort().join(",") !== "adminEffectCommitOutcomes,capacity,cases,crossCuttingOutcomes,schema,sourceHostiles") throw new Error("retained short administrator fixture envelope drift");
+  if (!Number.isSafeInteger(fixture.capacity) || fixture.capacity < 1 || fixture.capacity > 64) throw new Error("retained short administrator capacity bound drift");
+  if (fixture.cases.length !== 15 || fixture.adminEffectCommitOutcomes.cases.length !== 21 || fixture.crossCuttingOutcomes.length !== 6 || fixture.sourceHostiles.length !== 25) throw new Error("retained short administrator table sizes drifted");
+  if (new Set(fixture.sourceHostiles).size !== 25 || new Set(fixture.cases.map((row: { name: string }) => row.name)).size !== 15) throw new Error("retained short administrator inventories are not unique");
+  const retainedStates = ["accepted", "indeterminate", "succeeded", "failed", "cancelled", "conflict"];
+  for (const row of fixture.cases) {
+    if (!retainedStates.includes(row.state) || ![0, 1].includes(row.effectCount) || ![0, 1].includes(row.secretDeliveries)) throw new Error(`retained short administrator case taxonomy drift: ${row.name}`);
+  }
+  for (const row of [...fixture.adminEffectCommitOutcomes.cases, ...fixture.crossCuttingOutcomes]) {
+    if (!["create-space", "directory-event", "issue-share", "revoke-share", "revoke-sessions", "issue-invite", "revoke-invite"].includes(row.method)) throw new Error(`retained short administrator commit method drift: ${row.name}`);
+    if (!["applied", "rejected-before-commit", "indeterminate-no-receipt", "indeterminate-after-commit"].includes(row.driverOutcome) || ![200, 503].includes(row.initialHttp)) throw new Error(`retained short administrator driver taxonomy drift: ${row.name}`);
+    if (!retainedStates.includes(row.retryState) || !["cancelled", "failed", "conflict"].includes(row.cancelState)) throw new Error(`retained short administrator commit state drift: ${row.name}`);
+    if ([row.writerEntries, row.effectCount, row.receiptCount, row.terminalCount, row.secretDeliveries].some((value) => ![0, 1].includes(value))) throw new Error(`retained short administrator commit counters drift: ${row.name}`);
+  }
   const { Database } = await import("bun:sqlite");
   const oracle = new Database(":memory:");
   try {
@@ -3634,9 +3745,17 @@ class DirectoryMessageAuthorityCheckScript extends BundleScript {
     if (segments.length > 1 || !["source", "native"].includes(phase)) throw new Error("directory-message-authority-check accepts source or native");
     const root = join(this.root, "🧪️fixtures/🌐️directory-message-authority-v1");
     const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
-    const Ajv2020 = (await import("ajv/dist/2020.js")).default;
-    const validate = new Ajv2020({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(root, "🧬️.schema.json"), "utf8")));
-    if (!validate(fixture)) throw new Error("invalid directory message authority fixture: " + JSON.stringify(validate.errors));
+    if (fixture.schema !== "semio.hub.directory-message-authority/v1") throw new Error("directory message authority fixture schema drift");
+    if (Object.keys(fixture).sort().join(",") !== "messages,schema,vectors") throw new Error("directory message authority fixture envelope drift");
+    if (fixture.vectors.length !== 4 || fixture.messages.length !== 6) throw new Error("directory message authority table sizes drifted");
+    if (new Set(fixture.vectors.map((row: { name: string }) => row.name)).size !== 4 || new Set(fixture.messages.map((row: { name: string }) => row.name)).size !== 6) throw new Error("directory message authority names are not unique");
+    for (const row of fixture.vectors) {
+      if (!["membership", "session"].includes(row.revocation) || !["send", "revoke"].includes(row.first) || ![0, 4401].includes(row.close) || typeof row.a !== "boolean" || typeof row.b !== "boolean") throw new Error("directory message authority vector taxonomy drift: " + row.name);
+    }
+    for (const row of fixture.messages) {
+      if (![2, 4].includes(row.keys) || typeof row.messageJson !== "string" || row.messageJson.length < 2 || row.messageJson.length > 8192) throw new Error("directory message authority message bound drift: " + row.name);
+      if (row.spaceId !== null && (typeof row.spaceId !== "string" || row.spaceId.length < 1 || row.spaceId.length > 80)) throw new Error("directory message authority message scope drift: " + row.name);
+    }
     const { Database } = await import("bun:sqlite");
     const oracle = new Database(":memory:");
     try {
@@ -3789,6 +3908,7 @@ class ScopedDirectorySocketCheckScript extends BundleScript {
 }
 
 type ExecutionTargetRelayFixture = {
+  readonly schema: "semio.hub.execution-target-relay/v1";
   readonly intent: Record<string, unknown>;
   readonly limits: {
     readonly requestBytes: number;
@@ -3819,11 +3939,14 @@ type NativeArtifactProviderFrontierFixture = {
 
 async function proveNativeArtifactProviderFrontier(repoRoot: string): Promise<number> {
   const fixtureRoot = join(repoRoot, "🌎️hub/🧪️fixtures/🧭️native-artifact-provider-frontier-v1");
-  const schema = JSON.parse(readFileSync(join(fixtureRoot, "🧬️.schema.json"), "utf8"));
   const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8")) as NativeArtifactProviderFrontierFixture;
-  const { default: Ajv2020 } = await import("ajv/dist/2020.js");
-  const validate = new Ajv2020({ allErrors: true, strict: true }).compile(schema);
-  if (!validate(fixture)) throw new Error("native artifact provider frontier fixture: " + JSON.stringify(validate.errors));
+  const headlessProfile = hubSchemaExport(repoRoot, "schema://hub.artifact-authority.native-openable-provider/NativeArtifactProviderHeadlessProfileV1");
+  const providerIdentity = hubSchemaExport(repoRoot, "schema://hub.artifact-authority.native-openable-provider/NativeCodecProviderSetIdentityV1");
+  if (!headlessProfile(fixture.headless) || !providerIdentity(fixture.production)) throw new Error("native artifact provider frontier fixture violates its owning scope contract");
+  if (String(fixture.schema) !== "semio.hub.native-artifact-provider-frontier/v1" || String(fixture.configuredWithoutProvider) !== "reject") throw new Error("native artifact provider frontier envelope differs");
+  if (Boolean(fixture.headless.defaultFeatures) || JSON.stringify(fixture.headless.features) !== JSON.stringify(["sqlite"]) || fixture.headless.directPluginDependencies.length !== 0) throw new Error("headless hub profile is no longer provider-free");
+  if (String(fixture.production.feature) !== "native-artifact-execution" || String(fixture.production.providerId) !== "stdio+gis+vcs/native-codecs/v1" || Number(fixture.production.receiptCount) !== 29
+    || JSON.stringify(fixture.production.pluginDependencies) !== JSON.stringify(["stdio/full-artifact-catalog", "gis", "vcs"])) throw new Error("production native artifact provider frontier differs");
   const manifest = readFileSync(join(repoRoot, "🌎️hub/📦️packages/🦀️rust/Cargo.toml"), "utf8");
   const feature = fixture.production.feature.replace(/[.*+?^$()|[\]\\]/gu, "\\$&");
   if (!new RegExp('^default\\s*=\\s*\\["sqlite",\\s*"' + feature + '"\\]$', "mu").test(manifest)) throw new Error("production Hub default does not retain native artifact execution");
@@ -3850,7 +3973,7 @@ async function proveNativeArtifactProviderFrontier(repoRoot: string): Promise<nu
   )
     throw new Error("headless configured-catalog startup no longer fails closed");
   console.log(
-    "hub-native-artifact-provider-frontier-oracle: AJV=1 headless=" +
+    "hub-native-artifact-provider-frontier-oracle: scope-exports=2 headless=" +
       fixture.headless.features.join("+") +
       " plugin-deps=" +
       fixture.headless.directPluginDependencies.length +
@@ -3864,11 +3987,19 @@ async function proveNativeArtifactProviderFrontier(repoRoot: string): Promise<nu
 
 async function proveExecutionTargetRelay(repoRoot: string): Promise<number> {
   const root = join(repoRoot, "🌎️hub/🧪️fixtures/🪪️execution-target-relay-v1");
-  const schema = JSON.parse(readFileSync(join(root, "🧬️.schema.json"), "utf8"));
   const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8")) as ExecutionTargetRelayFixture;
-  const ajv = new Ajv({ allErrors: true, strict: true });
-  const validate = ajv.compile(schema);
-  if (!validate(fixture)) throw new Error(`execution-target relay fixture: ${JSON.stringify(validate.errors)}`);
+  if (fixture.schema !== "semio.hub.execution-target-relay/v1") throw new Error("execution-target relay fixture schema drift");
+  if (Object.keys(fixture).sort().join(",") !== "fences,intent,limits,responses,routes,schema") throw new Error("execution-target relay fixture envelope drift");
+  if (!hubSchemaExport(repoRoot, "schema://hub.directory/DocumentOpenIntentV1")(fixture.intent)) throw new Error("execution-target relay intent is not the owned document-open-intent contract");
+  if (fixture.routes.length < 12 || new Set(fixture.routes.map((row) => row.id)).size !== fixture.routes.length) throw new Error("execution-target relay route inventory drift");
+  if (fixture.responses.length < 5 || new Set(fixture.responses.map((row) => row.id)).size !== fixture.responses.length) throw new Error("execution-target relay response inventory drift");
+  const relayFenceOracle: Readonly<Record<string, string>> = { unchanged: "selected", "directory-advanced": "stale", "session-revoked": "denied", cancelled: "cancelled" };
+  if (fixture.fences.length < 4 || fixture.fences.some((row) => relayFenceOracle[row.mutation] !== row.expected)) throw new Error("execution-target relay fence oracle drift");
+  if (new Set(fixture.fences.map((row) => row.mutation)).size !== Object.keys(relayFenceOracle).length) throw new Error("execution-target relay fence inventory is not exhaustive");
+  for (const row of fixture.responses) {
+    if (!["manifest", "component", "descriptor", "browser-actor"].includes(row.asset) || ![200, 503].includes(row.status)) throw new Error(`execution-target relay response taxonomy drift: ${row.id}`);
+    if (!Number.isSafeInteger(row.bytes) || row.bytes < 1 || row.bytes > 67108865 || !Number.isSafeInteger(row.delayMs) || row.delayMs < 0 || row.delayMs > 2500) throw new Error(`execution-target relay response bound drift: ${row.id}`);
+  }
   const limits = fixture.limits;
   if (
     limits.requestBytes !== EXECUTION_TARGET_RELAY_REQUEST_MAX_BYTES ||
@@ -3891,7 +4022,7 @@ async function proveExecutionTargetRelay(repoRoot: string): Promise<number> {
     !hub.includes('fixture["fences"]')
   )
     throw new Error("execution-target final authorization/revision fence or native corpus missing");
-  const admittedRoute = ajv.getSchema(`${schema.$id}#/definitions/admittedRoute`)!;
+  const admittedRoute = hubSchemaExport(repoRoot, "schema://hub.directory/ExecutionTargetAssetRouteV1");
   for (const row of fixture.routes) {
     if (admittedRoute(row) !== row.admitted) throw new Error(`execution-target independent schema route mismatch: ${row.id}`);
     if ((localRelayUpstreamPath(row.method, new URL(row.path, "http://127.0.0.1")) !== undefined) !== row.admitted) throw new Error(`execution-target production route mismatch: ${row.id}`);
@@ -4603,7 +4734,13 @@ type NativeOpenableOwnerReceipt = Omit<NativeOpenableProjectionReceipt, "protoco
 async function proveNativeOpenableCatalogProviderFixture(repoRoot: string): Promise<void> {
   const fixtureRoot = join(repoRoot, "🌎️hub/🗿️artifact-authority/📇️native-openable-provider/🧪️fixtures/🪪️v1");
   const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8")) as any;
-  const fixtureSchema = JSON.parse(readFileSync(join(fixtureRoot, "🧬️.schema.json"), "utf8"));
+  const admitsOpenTarget = hubSchemaExport(repoRoot, "schema://hub.artifact-authority.native-openable-provider/NativeOpenableOpenTargetV1");
+  const admitsAttestation = hubSchemaExport(repoRoot, "schema://hub.artifact-authority.native-openable-provider/NativeOpenableAttestationV1");
+  const admitsHostileExpectation = hubSchemaExport(repoRoot, "schema://hub.artifact-authority.native-openable-provider/NativeOpenableHostileExpectationV1");
+  if (fixture.schema !== "semio.hub.native-openable-catalog-provider-fixture/v1" || fixture.receiptCount !== 26 || fixture.hostileCases.length !== 13
+    || new Set(fixture.hostileCases.map((row: any) => row.mutation)).size !== 13 || typeof fixture.providerProjection !== "string" || typeof fixture.artifactDefinitionsRoot !== "string") throw new Error("native-openable catalog provider envelope differs");
+  if (!admitsOpenTarget(fixture.openTarget) || !admitsAttestation(fixture.attestation)) throw new Error("native-openable open target or attestation violates its owning scope contract");
+  for (const row of fixture.hostileCases) if (!admitsHostileExpectation(row)) throw new Error(`native-openable hostile expectation is malformed: ${row.name}`);
   const projectionPath = join(repoRoot, fixture.providerProjection);
   const projection = JSON.parse(readFileSync(projectionPath, "utf8")) as { schema: string; provider_id: string; plugin_id: string; package_id: string; receipts: NativeOpenableProjectionReceipt[] };
   const projectionSchema = JSON.parse(readFileSync(join(projectionPath, "../🧬️native-codec-factories.schema.json"), "utf8"));
@@ -4661,13 +4798,8 @@ async function proveNativeOpenableCatalogProviderFixture(repoRoot: string): Prom
     if (code !== row.code) throw new Error(`native-openable claim oracle differs for ${row.id}`);
   }
   console.log(`native-openable-claim-oracle cases=${claimFixture.cases.length}`);
-  for (const [name, schema, value] of [
-    ["fixture", fixtureSchema, fixture],
-    ["projection", projectionSchema, projection],
-  ] as const) {
-    const validate = ajv.compile(schema);
-    if (!validate(value)) throw new Error(`native-openable ${name} schema invalid: ${JSON.stringify(validate.errors)}`);
-  }
+  const validateProjection = ajv.compile(projectionSchema);
+  if (!validateProjection(projection)) throw new Error(`native-openable projection schema invalid: ${JSON.stringify(validateProjection.errors)}`);
   const definitionRoot = join(repoRoot, fixture.artifactDefinitionsRoot);
   const definitionFiles: string[] = [];
   const pending = [definitionRoot];
@@ -4767,7 +4899,7 @@ async function proveNativeOpenableCatalogProviderFixture(repoRoot: string): Prom
     descriptorSha256: fixture.attestation.descriptorProjectionSha256,
   });
   if (!valid(baseline())) throw new Error("native-openable positive owner/projection/target bijection was denied");
-  for (const hostile of fixture.hostileCases as { name: string; mutation: string; outcome: "denied"; publishedTargets: 0 }[]) {
+  for (const hostile of fixture.hostileCases as { name: string; mutation: string; stage: HubFixtureExpectationV1["stage"]; result: HubFixtureExpectationV1["result"]; code: string; publishedTargets: 0 }[]) {
     const candidate = baseline();
     switch (hostile.mutation) {
       case "missing-owner":
@@ -4812,27 +4944,32 @@ async function proveNativeOpenableCatalogProviderFixture(repoRoot: string): Prom
       default:
         throw new Error(`native-openable unknown hostile mutation ${hostile.mutation}`);
     }
-    if (valid(candidate) || hostile.outcome !== "denied" || hostile.publishedTargets !== 0) throw new Error(`native-openable hostile case admitted or partially published: ${hostile.name}`);
+    const contractAdmitted = hostile.mutation === "wrong-surface" ? admitsOpenTarget(candidate.targets[0]) : valid(candidate);
+    assertHubFixtureExpectation(`native-openable/${hostile.name}`, { stage: hostile.stage, result: hostile.result, code: hostile.code }, contractAdmitted);
+    if (valid(candidate) || hostile.result !== "rejected" || hostile.publishedTargets !== 0) throw new Error(`native-openable hostile case admitted or partially published: ${hostile.name}`);
   }
-  console.log(`native-openable-neutral-oracle: AJV=2 owner-receipts=${owners.length} protocol-webcrypto=${protocolDigests.size} targets=1 hostile-denied=${fixture.hostileCases.length} no-partial=${fixture.hostileCases.length}`);
+  console.log(`native-openable-neutral-oracle: AJV=1 scope-exports=3 owner-receipts=${owners.length} protocol-webcrypto=${protocolDigests.size} targets=1 hostile-denied=${fixture.hostileCases.length} no-partial=${fixture.hostileCases.length}`);
 }
 
 /** 🌿 Independently evaluates the exact VCS selection, admission fences and unconsumed-binding profiles. */
 async function proveVcsNativeProviderSelectionFixture(repoRoot: string): Promise<void> {
   const root = join(repoRoot, "🌎️hub/🗿️artifact-authority/📇️native-openable-provider/🧪️fixtures/🌿️vcs-v1");
   const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
-  const Ajv2020 = (await import("ajv/dist/2020.js")).default;
-  const validate = new Ajv2020({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(root, "🧬️.schema.json"), "utf8")));
-  if (!validate(fixture)) throw new Error(`invalid VCS provider selection corpus: ${JSON.stringify(validate.errors)}`);
+  const admitsSelection = hubSchemaExport(repoRoot, "schema://hub.artifact-authority.native-openable-provider/NativeCodecProviderSelectionCaseV1");
+  const admitsProfile = hubSchemaExport(repoRoot, "schema://hub.artifact-authority.native-openable-provider/NativeCodecUnconsumedProfileV1");
+  if (fixture.schema !== "semio.hub.vcs-native-provider-selection/v1" || fixture.cases.length !== 8 || fixture.unconsumedProfiles.length !== 2 || new Set(fixture.cases.map((row: any) => row.name)).size !== fixture.cases.length) throw new Error("VCS provider selection envelope differs");
   const receipts = JSON.parse(readFileSync(join(repoRoot, "✏️s/🔌️plugins/🌿️vcs/📇️native-codecs/🔣️.json"), "utf8"));
   if (fixture.packageVersion !== receipts.packageVersion || fixture.codecCount !== receipts.receipts.length) throw new Error("VCS selection differs from the package-owned closure");
   let accepted = 0;
   for (const row of fixture.cases) {
+    if (!admitsSelection(row)) throw new Error(`VCS provider selection case violates its owning scope contract: ${row.name}`);
+    assertHubFixtureExpectation(`vcs-native-provider-selection/${row.name}`, { stage: row.stage, result: row.accepted ? "accepted" : "rejected", code: row.code }, admitsSelection({ ...row, accepted: true }));
     const result = row.pluginId === receipts.pluginId && row.packageId === receipts.packageId && row.version === receipts.packageVersion && !row.cancelled && row.nowMs < row.deadlineMs;
     if (result !== row.accepted) throw new Error(`VCS native selection mismatch: ${row.name}`);
     if (result) accepted++;
   }
   if (accepted !== 1) throw new Error("VCS provider corpus must admit exactly one selection");
+  for (const profile of fixture.unconsumedProfiles) if (!admitsProfile(profile)) throw new Error(`VCS unconsumed profile violates its owning scope contract: ${profile.name}`);
   const linked = new Map<string, number>([
     ["semio:stdio", 26],
     ["semio:gis", 2],
@@ -4847,7 +4984,7 @@ async function proveVcsNativeProviderSelectionFixture(repoRoot: string): Promise
   if (!provider.includes('NativeCodecProviderEntryV1 { plugin_id: "vcs", package_id: "semio:vcs", preview: preview_vcs_bindings }') || !provider.includes('identity.factory_id != "vcs.vcs.v1"') || !provider.includes('identity.schema != "vcs.vcs"'))
     throw new Error("linked VCS provider entry or its exact identity fences are absent");
   if ([...linked.values()].reduce((sum, count) => sum + count, 0) !== 29 || !provider.includes("pub const NATIVE_OPENABLE_PROVIDER_SET_V1_RECEIPTS: usize = 29;")) throw new Error("linked provider closure is not the exact stdio+GIS+VCS sum");
-  console.log(`vcs-native-provider-selection-oracle: cases=${fixture.cases.length} accepted=${accepted} unconsumed-profiles=${fixture.unconsumedProfiles.length} linked-receipts=29; no native or catalog activation claim`);
+  console.log(`vcs-native-provider-selection-oracle: cases=${fixture.cases.length} accepted=${accepted} unconsumed-profiles=${fixture.unconsumedProfiles.length} linked-receipts=29 scope-exports=2; no native or catalog activation claim`);
 }
 
 const HEADLESS_STDIO_METADATA_MAX_BYTES = 2 * 1024 * 1024 * 1024;
@@ -5556,17 +5693,39 @@ function executionTargetLeaseInstall(
 
 async function proveExecutionTargetLeaseCorpus(repoRoot: string): Promise<void> {
   const root = join(repoRoot, "🌎️hub/🧪️fixtures/📇️directory/🔏️document-execution-target-lease-v1");
-  const schema = JSON.parse(readFileSync(join(root, "🧬️.schema.json"), "utf8"));
   const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8")) as ExecutionTargetLeaseFixture;
   const Ajv2020 = (await import("ajv/dist/2020.js")).default;
   const ajv = new Ajv2020({ allErrors: true, strict: true });
   ajv.addSchema(JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🌐️browser-actor/🔣️.schema.json"), "utf8")));
-  ajv.addSchema(schema);
-  const validate = ajv.getSchema(schema.$id)!;
-  if (!validate(fixture)) throw new Error(`execution target lease corpus invalid: ${JSON.stringify(validate.errors)}`);
-  const validateFields = ajv.getSchema(`${schema.$id}#/$defs/leaseFields`)!;
   const canonical = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🔣️.json"), "utf8"));
   ajv.addSchema(canonical);
+  const validateFields = ajv.getSchema(`${canonical.$id}#/$defs/DocumentExecutionTargetLeaseFieldsV1`)!;
+  if (fixture.schema !== "semio.os.document-execution-target-lease-corpus/v1" || fixture.version !== 1) throw new Error("execution target lease corpus schema drift");
+  if (Object.keys(fixture).sort().join(",") !== "componentHex,descriptorHex,expected,hostile,hubOrigin,intent,manifest,nowMs,plan,schema,socketGrant,version") throw new Error("execution target lease corpus envelope drift");
+  if (!Number.isSafeInteger(fixture.nowMs) || fixture.nowMs < 1 || !/^https?:\/\/[^/]+$/u.test(fixture.hubOrigin)) throw new Error("execution target lease corpus clock/origin drift");
+  if (!/^(?:[0-9a-f]{2})+$/u.test(fixture.componentHex) || !/^(?:[0-9a-f]{2})+$/u.test(fixture.descriptorHex)) throw new Error("execution target lease corpus asset bytes are not canonical hex");
+  if (!hubSchemaExport(repoRoot, "schema://hub.directory/DocumentOpenIntentV1")(fixture.intent)) throw new Error("execution target lease corpus intent is not the owned document-open-intent contract");
+  if (!hubSchemaExport(repoRoot, "schema://hub.directory/SocketGrantReceiptV1")(fixture.socketGrant)) throw new Error("execution target lease corpus socket grant is not the owned socket-grant contract");
+  const leaseStatusKeys = ["verifying", "integrity-failed", "stale", "cancelled", "renderer-unavailable"];
+  const localizedText = hubSchemaExport(repoRoot, "schema://hub.directory/LocalizedTextV1");
+  const expected = fixture.expected as Record<string, any>;
+  if (Object.keys(expected).sort().join(",") !== "assetBody,assetMethod,assetPaths,componentMaxBytes,descriptorMaxBytes,forbiddenStatusFragments,manifestMaxBytes,openPlanPath,progressStages,progressUnitBytes,rendererClaims,rendererState,rotation,socketGrantPath,status,statusRoles,viewerWriteRejectedLocally")
+    throw new Error("execution target lease corpus expectation envelope drift");
+  if (expected.assetMethod !== "POST" || expected.assetBody !== "semio.hub.document-open-intent/v1" || expected.componentMaxBytes !== 67108864 || expected.descriptorMaxBytes !== 4194304 || expected.manifestMaxBytes !== 8192 || expected.progressUnitBytes !== 65536)
+    throw new Error("execution target lease corpus bound drift");
+  if (expected.progressStages.join(",") !== "manifest,component,descriptor,verify" || expected.rendererState !== "renderer-unavailable" || expected.viewerWriteRejectedLocally !== true) throw new Error("execution target lease corpus staging drift");
+  if (Object.values(expected.rendererClaims as Record<string, unknown>).some((claim) => claim !== false) || Object.keys(expected.rendererClaims).sort().join(",") !== "activationRegistry,attachBackbone,loadPluginModule,wgpuScanner") throw new Error("execution target lease corpus renderer claims drift");
+  if (expected.assetPaths.length !== 3 || expected.assetPaths.some((path: string, index: number) => path !== `${expected.openPlanPath.slice(0, expected.openPlanPath.lastIndexOf("/"))}/execution-target/${["manifest", "component", "descriptor"][index]}`)) throw new Error("execution target lease corpus asset path drift");
+  if (Object.keys(expected.status).sort().join(",") !== leaseStatusKeys.slice().sort().join(",") || Object.keys(expected.statusRoles).sort().join(",") !== leaseStatusKeys.slice().sort().join(",")) throw new Error("execution target lease corpus status inventory drift");
+  for (const key of leaseStatusKeys) {
+    if (!localizedText(expected.status[key])) throw new Error(`execution target lease corpus status ${key} is not the owned bilingual text contract`);
+    if (!["status", "alert"].includes(expected.statusRoles[key])) throw new Error(`execution target lease corpus status role drift: ${key}`);
+  }
+  if (!/^(?!0{64}$)[0-9a-f]{64}$/u.test(expected.rotation.generationA) || !/^(?!0{64}$)[0-9a-f]{64}$/u.test(expected.rotation.generationB) || expected.rotation.generationA === expected.rotation.generationB) throw new Error("execution target lease corpus rotation drift");
+  if (fixture.hostile.length < 40 || new Set(fixture.hostile.map((row) => row.name)).size !== fixture.hostile.length) throw new Error("execution target lease corpus hostile inventory drift");
+  for (const row of fixture.hostile) {
+    if (!["manifest", "component", "descriptor", "verify", "exchange", "publication", "asset-request"].includes(row.stage)) throw new Error(`execution target lease corpus hostile stage drift: ${row.name}`);
+  }
   for (const [name, row] of [
     ["DocumentOpenPlanV1", fixture.plan],
     ["DocumentExecutionTargetLeaseFieldsV1", fixture.manifest],
@@ -6496,7 +6655,7 @@ class BrowserDocumentOpenCheckScript extends BundleScript {
 type SpacePublicBoundaryFixture = {
   readonly positives: Readonly<Record<"anonymous" | "publicNonmember" | "member" | "author", Record<string, unknown>>>;
   readonly forbiddenPublicKeys: readonly string[];
-  readonly hostileMutations: readonly { readonly name: string; readonly path: readonly (string | number)[]; readonly value: unknown }[];
+  readonly hostileMutations: readonly ({ readonly name: string; readonly path: readonly (string | number)[]; readonly value: unknown } & HubFixtureExpectationV1)[];
   readonly rawPublicEvent: Record<string, unknown>;
 };
 
@@ -6510,28 +6669,26 @@ function mutateSpacePublicProjection(source: Record<string, unknown>, path: read
 
 async function proveSpacePublicBoundaryFixture(repoRoot: string): Promise<void> {
   const root = join(repoRoot, "🌎️hub/📇️directory/🧫️fixtures/🏛️public-space-detail-v1");
-  const schema = JSON.parse(readFileSync(join(root, "🧬️.schema.json"), "utf8"));
   const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8")) as SpacePublicBoundaryFixture;
-  const Ajv2020 = (await import("ajv/dist/2020.js")).default;
-  const ajv = new Ajv2020({ allErrors: true, strict: true });
-  ajv.addSchema(schema);
-  const validateFixture = ajv.getSchema(schema.$id);
-  const validatePublic = ajv.getSchema(`${schema.$id}#/$defs/publicDetail`);
-  const validateMember = ajv.getSchema(`${schema.$id}#/$defs/memberDetail`);
-  const validateAuthor = ajv.getSchema(`${schema.$id}#/$defs/authorDetail`);
-  if (!validateFixture?.(fixture)) throw new Error(`space public boundary fixture invalid: ${JSON.stringify(validateFixture?.errors)}`);
-  if (!validatePublic?.(fixture.positives.anonymous) || !validatePublic(fixture.positives.publicNonmember) || !validateMember?.(fixture.positives.member) || !validateAuthor?.(fixture.positives.author))
+  const validatePublic = hubSchemaExport(repoRoot, "schema://hub.directory/PublicSpaceDetailV1");
+  const validateMember = hubSchemaExport(repoRoot, "schema://hub.directory/MemberSpaceDetailV1");
+  const validateAuthor = hubSchemaExport(repoRoot, "schema://hub.directory/AuthorSpaceDetailV1");
+  if (Object.keys(fixture).sort().join(",") !== "forbiddenPublicKeys,hostileMutations,positives,rawPublicEvent,schema") throw new Error("space public boundary fixture envelope drift");
+  if (Object.keys(fixture.positives).sort().join(",") !== "anonymous,author,member,publicNonmember") throw new Error("space public boundary access inventory drift");
+  if (fixture.forbiddenPublicKeys.length !== 21 || new Set(fixture.forbiddenPublicKeys).size !== 21 || fixture.hostileMutations.length !== 21 || new Set(fixture.hostileMutations.map(({ name }) => name)).size !== 21)
+    throw new Error("space public boundary hostile/forbidden inventory drift");
+  if (!validatePublic(fixture.positives.anonymous) || !validatePublic(fixture.positives.publicNonmember) || !validateMember(fixture.positives.member) || !validateAuthor(fixture.positives.author))
     throw new Error("space public boundary positive projection drift");
   const publicBytes = JSON.stringify([fixture.positives.anonymous, fixture.positives.publicNonmember]);
   for (const key of fixture.forbiddenPublicKeys) if (publicBytes.includes(`\"${key}\"`)) throw new Error(`space public boundary positive leaked ${key}`);
   for (const vector of fixture.hostileMutations) {
     const candidate = mutateSpacePublicProjection(fixture.positives.anonymous, vector.path, vector.value);
-    if (validatePublic?.(candidate)) throw new Error(`space public boundary admitted hostile ${vector.name}`);
+    assertHubFixtureExpectation(`space public boundary hostile ${vector.name}`, vector, validatePublic(candidate));
   }
-  if (validatePublic?.(fixture.rawPublicEvent)) throw new Error("space public boundary admitted a raw DirectoryEvent as public projection");
+  if (validatePublic(fixture.rawPublicEvent)) throw new Error("space public boundary admitted a raw DirectoryEvent as public projection");
   const raw = JSON.stringify(fixture.rawPublicEvent);
   if (!raw.includes('"actor"') || !raw.includes('"hlc"') || !raw.includes('"userId"')) throw new Error("space public boundary raw event hostile vector lost identity fields");
-  console.log(`space-public-boundary-oracle: ajv=1 positives=4 hostile=${fixture.hostileMutations.length} forbidden=${fixture.forbiddenPublicKeys.length} raw-event=denied passed`);
+  console.log(`space-public-boundary-oracle: hub.directory-exports=3 positives=4 hostile=${fixture.hostileMutations.length} forbidden=${fixture.forbiddenPublicKeys.length} raw-event=denied passed`);
 }
 
 class SpacePublicBoundaryCheckScript extends BundleScript {
@@ -7756,29 +7913,37 @@ async function proveInferenceAuthorFixture(repoRoot: string): Promise<void> {
 async function proveGisNativeProviderSelectionFixture(repoRoot: string): Promise<void> {
   const root = join(repoRoot, "🌎️hub/🗿️artifact-authority/📇️native-openable-provider/🧪️fixtures/🌍️gis-v1");
   const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
-  const Ajv2020 = (await import("ajv/dist/2020.js")).default;
-  const validate = new Ajv2020({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(root, "🧬️.schema.json"), "utf8")));
-  if (!validate(fixture)) throw new Error(`invalid GIS provider selection corpus: ${JSON.stringify(validate.errors)}`);
+  const admitsSelection = hubSchemaExport(repoRoot, "schema://hub.artifact-authority.native-openable-provider/NativeCodecProviderSelectionCaseV1");
+  if (fixture.schema !== "semio.hub.gis-native-provider-selection/v1" || fixture.cases.length !== 8 || new Set(fixture.cases.map((row: any) => row.name)).size !== fixture.cases.length) throw new Error("GIS provider selection envelope differs");
   const receipts = JSON.parse(readFileSync(join(repoRoot, "✏️s/🔌️plugins/🌍️gis/📇️native-codecs/🔣️.json"), "utf8"));
   if (fixture.packageVersion !== receipts.packageVersion || fixture.codecCount !== receipts.receipts.length) throw new Error("GIS selection differs from the package-owned closure");
   let accepted = 0;
   for (const row of fixture.cases) {
+    if (!admitsSelection(row)) throw new Error(`GIS provider selection case violates its owning scope contract: ${row.name}`);
+    assertHubFixtureExpectation(`gis-native-provider-selection/${row.name}`, { stage: row.stage, result: row.accepted ? "accepted" : "rejected", code: row.code }, admitsSelection({ ...row, accepted: true }));
     const result = row.pluginId === receipts.pluginId && row.packageId === receipts.packageId && row.version === receipts.packageVersion && !row.cancelled && row.nowMs < row.deadlineMs;
     if (result !== row.accepted) throw new Error(`GIS native selection mismatch: ${row.name}`);
     if (result) accepted++;
   }
   if (accepted !== 1) throw new Error("GIS provider corpus must admit exactly one selection");
-  console.log(`gis-native-provider-selection-oracle: cases=${fixture.cases.length} accepted=${accepted}; no native or catalog activation claim`);
+  console.log(`gis-native-provider-selection-oracle: cases=${fixture.cases.length} accepted=${accepted} scope-exports=1; no native or catalog activation claim`);
 }
 
 /** 🪪️ Keeps descriptor SHA-256 authority distinct from component PackageRef BLAKE3. */
 async function proveTrustedCatalogIdentityRolesFixture(repoRoot: string): Promise<void> {
   const root = join(repoRoot, "🌎️hub", "🗿️artifact-authority", "🔏️trusted-catalog", "🧪️fixtures", "🪪️identity-roles");
   const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
-  const Ajv2020 = (await import("ajv/dist/2020.js")).default;
-  const validate = new Ajv2020({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(root, "🧬️.schema.json"), "utf8")));
-  if (!validate(fixture)) throw new Error(`invalid catalog identity fixture: ${JSON.stringify(validate.errors)}`);
+  const assert = (await import("node:assert/strict")).default;
+  const validateBundle = hubSchemaExport(repoRoot, "schema://hub.artifact-authority.trusted-catalog/TrustedBundleV1");
+  assert.deepEqual(Object.keys(fixture), ["schema", "source", "packageReferenceHash", "descriptorOwnerHash", "cases"]);
+  assert.equal(fixture.schema, "semio.hub.trusted-catalog-identity-roles/v1");
+  assert.equal(fixture.source, "../👥️two-package/🔣️.json");
+  assert.equal(fixture.packageReferenceHash, "componentBlake3");
+  assert.equal(fixture.descriptorOwnerHash, "componentSha256");
+  assert.deepEqual(fixture.cases.map((row: any) => row.change), ["none", "blake3-owner", "descriptor-owner", "zero-owner", "bare-kind", "bare-surface"]);
+  for (const row of fixture.cases) assert.deepEqual(Object.keys(row), ["change", "codec", "open"]);
   const source = JSON.parse(readFileSync(join(root, fixture.source), "utf8"));
+  assert(validateBundle(source.bundle), "identity-role source bundle must satisfy the scope-owned contract");
   const bytes = Buffer.from(source.componentHex, "hex");
   const sha256 = createHash("sha256").update(bytes).digest("hex");
   if (sha256 !== source.componentSha256 || source.componentSha256 === source.componentBlake3) throw new Error("catalog hash roles lost their independent byte identities");
@@ -8125,27 +8290,32 @@ async function proveDocumentBrowserActorIdentityFixture(repoRoot: string): Promi
   await proveTrustedBrowserActorCatalogFixture(repoRoot);
 }
 
-/** 🧪️ Exercises the private catalog actor against the shared public identity schema. */
+/** 🧪️ Exercises the private catalog actor against the scope-owned closed actor contract. */
 async function proveTrustedBrowserActorCatalogFixture(repoRoot: string): Promise<void> {
   const { default: assert } = await import("node:assert/strict");
-  const { default: Ajv2020 } = await import("ajv/dist/2020.js");
   const root = join(repoRoot, "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog");
   const fixture = JSON.parse(readFileSync(join(root, "🧪️fixtures/🌐️browser-actor/🔣️.json"), "utf8"));
-  const schema = JSON.parse(readFileSync(join(root, "🧬️schema/🔣️bundle.schema.json"), "utf8"));
-  const ajv = new Ajv2020({ strict: true, allErrors: true });
-  ajv.addSchema(JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🌐️browser-actor/🔣️.schema.json"), "utf8")));
-  ajv.addSchema(schema);
-  const validate = ajv.compile({ $ref: schema.$id + "#/$defs/browserActor" });
-  const corpus = ajv.compile(JSON.parse(readFileSync(join(root, "🧪️fixtures/🌐️browser-actor/🧬️.schema.json"), "utf8")));
-  assert(corpus(fixture), JSON.stringify(corpus.errors));
+  const validate = hubSchemaExport(repoRoot, "schema://hub.artifact-authority.trusted-catalog/TrustedBundleBrowserActorV1");
+  assert.deepEqual(Object.keys(fixture), ["schema", "bodyHex", "encodingSha256", "noneEncodingSha256", "closed", "rawLengths", "loadCases", "cases"]);
+  assert.equal(fixture.schema, "semio.hub.trusted-browser-actor-fixture.v1");
+  assert.match(fixture.bodyHex, /^(?:[0-9a-f]{2})+$/u);
+  for (const key of ["encodingSha256", "noneEncodingSha256"] as const) assert.match(fixture[key], /^[0-9a-f]{64}$/u);
+  assert(validate(fixture.closed), "closed catalog actor must satisfy its own scope-owned contract");
+  assert.equal(fixture.cases.length, 26);
+  assert.equal(fixture.loadCases.length, 8);
+  assert.equal(fixture.rawLengths.length, 8);
   assert.equal(new Set(fixture.cases.map((row: any) => row.id)).size, fixture.cases.length);
+  assert.equal(new Set(fixture.loadCases.map((row: any) => row.id)).size, fixture.loadCases.length);
+  assert.equal(new Set(fixture.rawLengths.map((row: any) => row.token)).size, fixture.rawLengths.length);
+  assert.deepEqual([...new Set(fixture.cases.map((row: any) => row.kind))].sort(), ["closed-browser-actor", "none"]);
+  assert.deepEqual([...new Set(fixture.cases.map((row: any) => row.renderer))].sort(), ["react", "wasm", "wgpu"]);
   const source = { componentSha256: fixture.closed.sourceComponentSha256, descriptorByteSha256: fixture.closed.sourceDescriptorByteSha256 };
   for (const law of fixture.cases) {
     const actor = law.kind === "none" ? { kind: "none" } : structuredClone(fixture.closed);
     Object.assign(actor, law.set);
     if (law.remove) delete actor[law.remove];
     const shape = Boolean(validate(actor));
-    assert.equal(shape, law.shape, `${law.id} shape`);
+    assertHubFixtureExpectation(law.id, law.expectation as HubFixtureExpectationV1, shape);
     const oracle =
       shape &&
       (actor.kind === "none"
@@ -8179,7 +8349,7 @@ async function proveTrustedBrowserActorCatalogFixture(repoRoot: string): Promise
   }
   for (const law of fixture.rawLengths) {
     const actor = { ...fixture.closed, byteLength: JSON.parse(law.token) };
-    assert.equal(Boolean(validate(actor)), law.accepted, `raw actor length ${law.token} AJV`);
+    assertHubFixtureExpectation(`raw actor length ${law.token}`, law.expectation as HubFixtureExpectationV1, Boolean(validate(actor)));
     let accepted = false;
     try {
       trustedBootstrapBrowserActorV1(actor, source, "wasm");
@@ -8187,17 +8357,26 @@ async function proveTrustedBrowserActorCatalogFixture(repoRoot: string): Promise
     } catch {}
     assert.equal(accepted, law.accepted, `raw actor length ${law.token} production`);
   }
-  console.log(`trusted-browser-actor-catalog: AJV=3 cases=${fixture.cases.length} bodies=${fixture.loadCases.length} raw-lengths=${fixture.rawLengths.length} WebCrypto=1; metadata/framing oracle only, no native loader/activation claim`);
+  console.log(`trusted-browser-actor-catalog: scope-export=TrustedBundleBrowserActorV1 cases=${fixture.cases.length} bodies=${fixture.loadCases.length} raw-lengths=${fixture.rawLengths.length} WebCrypto=1; metadata/framing oracle only, no native loader/activation claim`);
 }
 
 async function proveTrustedCatalogOpenedRootFixture(repoRoot: string): Promise<void> {
   const { default: assert } = await import("node:assert/strict");
-  const { default: Ajv2020 } = await import("ajv/dist/2020.js");
   const root = join(repoRoot, "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog");
   const fixtureRoot = join(root, "🧪️fixtures/🛡️opened-root");
   const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8"));
-  const validate = new Ajv2020({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(fixtureRoot, "🧬️.schema.json"), "utf8")));
-  assert(validate(fixture), JSON.stringify(validate.errors));
+  const validatePointer = hubSchemaExport(repoRoot, "schema://hub.artifact-authority.trusted-catalog/TrustedCatalogCurrentPointerV1");
+  const validateRelativePath = hubSchemaExport(repoRoot, "schema://hub.artifact-authority.trusted-catalog/TrustedCatalogRelativePathV1");
+  assert.deepEqual(Object.keys(fixture), ["schema", "limits", "current", "relativePaths", "denials", "openedHandle"]);
+  assert.equal(fixture.schema, "semio.hub.trusted-catalog-opened-root/v1");
+  assert.deepEqual(fixture.limits, { pathBytes: 1024, pathSegments: 64, chunkBytes: 65536, pointerBytes: 65536 });
+  assert(validatePointer(fixture.current), "opened-root current pointer must satisfy its scope-owned contract");
+  assert.deepEqual(Object.keys(fixture.openedHandle), ["initialHex", "replacementHex", "maximum", "expectedHex", "providerCalls", "codecPublished"]);
+  for (const key of ["initialHex", "replacementHex", "expectedHex"] as const) assert.match(fixture.openedHandle[key], /^(?:[0-9a-f]{2})+$/u);
+  assert(Number.isInteger(fixture.openedHandle.maximum) && fixture.openedHandle.maximum >= 1 && fixture.openedHandle.maximum <= 67_108_864);
+  assert.equal(fixture.openedHandle.providerCalls, 0);
+  assert.equal(fixture.openedHandle.codecPublished, false);
+  for (const row of fixture.relativePaths) assert.equal(validateRelativePath(row.value), row.accepted, `${row.id} contract`);
   const acceptedPath = (value: string): boolean => {
     const bytes = new TextEncoder().encode(value).byteLength;
     const segments = value.split("/");
@@ -8212,6 +8391,7 @@ async function proveTrustedCatalogOpenedRootFixture(repoRoot: string): Promise<v
     );
   };
   assert.equal(new Set(fixture.relativePaths.map((row: any) => row.id)).size, fixture.relativePaths.length);
+  assert(fixture.relativePaths.length >= 12 && fixture.relativePaths.length <= 32);
   for (const row of fixture.relativePaths) assert.equal(acceptedPath(row.value), row.accepted, row.id);
   const pointer = Buffer.from(`${JSON.stringify(fixture.current)}\n`, "utf8");
   assert(pointer.byteLength > 0 && pointer.byteLength <= fixture.limits.pointerBytes);
@@ -8246,17 +8426,30 @@ async function proveTrustedCatalogOpenedRootFixture(repoRoot: string): Promise<v
     "trusted catalog lacks the opened-root/no-link owner or exact laws",
   );
   assert(startup.includes("configured_artifact_authority(&data_dir") && !startup.includes("OS_HUB_TRUSTED_CATALOG_BUNDLE") && !startup.includes("OS_HUB_TRUSTED_CATALOG_PROFILE"), "Hub startup still accepts ambient trusted bundle/profile paths");
-  console.log(`trusted-catalog-opened-root: AJV=1 paths=${fixture.relativePaths.length} denials=${fixture.denials.length} same-handle=1 source=${required.length} startup=no-ambient-path; source contract only, native platform laws require --native`);
+  console.log(`trusted-catalog-opened-root: scope-exports=2 paths=${fixture.relativePaths.length} denials=${fixture.denials.length} same-handle=1 source=${required.length} startup=no-ambient-path; source contract only, native platform laws require --native`);
 }
 
 /** 🌐️ Binds a browser proof to one retained trusted generation rather than a second build. */
 async function proveTrustedGisRetainedBrowserFixture(repoRoot: string): Promise<void> {
   const root = join(repoRoot, "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🧪️fixtures/🧬️retained-gis-browser");
   const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
-  const Ajv2020 = (await import("ajv/dist/2020.js")).default;
   const assert = (await import("node:assert/strict")).default;
-  const validate = new Ajv2020({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(root, "🧬️.schema.json"), "utf8")));
-  assert(validate(fixture), JSON.stringify(validate.errors));
+  assert.deepEqual(Object.keys(fixture), ["schema", "bootstrapFixture", "contract", "cases", "nonclaims"]);
+  assert.equal(fixture.schema, "semio.hub.retained-gis-browser/v1");
+  assert.equal(fixture.bootstrapFixture, "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🧪️fixtures/🧬️stdio-gis-bootstrap/🔣️.json");
+  assert.deepEqual(fixture.contract, {
+    generation: "published-current-exact",
+    actorPath: "packages/gis/browser/closed-actor.mjs",
+    descriptorPath: "packages/gis/descriptor.semio",
+    componentPath: "packages/gis/component.wasm",
+    actor: "retained-not-rebuilt",
+    browser: "chromium-dedicated-child",
+    result: "normalized-describe-equals-retained-descriptor",
+    terminalActors: 0,
+    terminalBytes: 0,
+  });
+  assert.deepEqual(fixture.nonclaims, ["authenticated-worker", "cold-pair-applied", "shell-renderer", "map-mutation", "two-peer-collaboration"]);
+  assert.equal(new Set(fixture.nonclaims).size, fixture.nonclaims.length);
   const bootstrap = JSON.parse(readFileSync(join(repoRoot, fixture.bootstrapFixture), "utf8"));
   const gis = bootstrap.profile.packages.find((row: any) => row.pluginId === "gis");
   const expected = { generation: bootstrap.profile.generationId, component: gis.componentSha256, descriptor: gis.descriptorSha256, actor: gis.browserActor.sha256, parent: gis.browserActor.sourceComponentSha256 };
@@ -8304,18 +8497,83 @@ async function proveTrustedGisRetainedBrowserFixture(repoRoot: string): Promise<
   const mode = gate.lastIndexOf('if (segments[0] === "--browser" || segments[0] === "--two-author-shell")');
   assert(mode >= 0 && gate.indexOf("const initialPlan = await validateAndPublishTrustedStdioGisCandidate") < mode);
   assert(gate.slice(mode).includes("await proveTrustedGisClosedActorV1(this.repoRoot, dataRoot, receipt, artifactPath)"));
-  console.log("[DEBUG] trusted-retained-gis-browser: AJV=1 deep-equal=" + fixture.cases.length + " SHA256=node+webcrypto source-hostiles=" + hostiles.length + "; neutral bytes only, no browser execution claim");
+  console.log("[DEBUG] trusted-retained-gis-browser: pinned-tables=3 deep-equal=" + fixture.cases.length + " SHA256=node+webcrypto source-hostiles=" + hostiles.length + "; neutral bytes only, no browser execution claim");
 }
 
 /** 🤝️ Pins the genuine two-peer acceptance specification without claiming any observed runtime trace. */
 async function proveTrustedGisMapCollaborationContractFixture(repoRoot: string): Promise<void> {
   const assert = (await import("node:assert/strict")).default;
   const equal = (await import("fast-deep-equal")).default;
-  const Ajv2020 = (await import("ajv/dist/2020.js")).default;
   const root = join(repoRoot, "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🧪️fixtures/🤝️gis-map-collaboration");
   const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
-  const validate = new Ajv2020({ strict: true }).compile(JSON.parse(readFileSync(join(root, "🧬️.schema.json"), "utf8")));
-  assert(validate(fixture), JSON.stringify(validate.errors));
+  const pinned = {
+    schema: "semio.hub.gis-map-collaboration/v1",
+    prerequisites: {
+      bootstrapFixture: "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🧪️fixtures/🧬️stdio-gis-bootstrap/🔣️.json",
+      browserFixture: "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🧪️fixtures/🧬️retained-gis-browser/🔣️.json",
+      approvalFixture: "🌎️hub/🧪️fixtures/🗳️gis-map-proposal-approval-v1/🔣️.json",
+    },
+    selection: {
+      profileId: "local-stdio-gis-open-v1",
+      packageId: "semio:gis",
+      artifactKind: "s.gis.gismap",
+      documentSchema: "gis.map",
+      parentDialect: "s.gis.gismap@1/*",
+      surfaceId: "s.gis.gismap@1/*#editor",
+      grantedMode: "read-write-observe",
+      serviceId: "s.gis.gismap.inference",
+      generation: "same-published-current-through-teardown",
+      actor: "retained-not-rebuilt",
+    },
+    peers: [
+      { name: "author-a", role: "author", language: "en" },
+      { name: "author-b", role: "author", language: "de" },
+    ],
+    authority: {
+      sessions: "distinct-authenticated-react-relay-profiles",
+      capabilities: "host-only-never-page-worker-or-report",
+      createDocument: "production-directory-command",
+      initialCheckpoint: "normal-checkpoint-publication",
+      open: "production-plan-asset-grant-session",
+      pair: "actual-terminal-pack-spr-receipt",
+      load: "genuine-plugin-load-document-pack",
+      scene: "mounted-shell-tiled-map-host",
+      sceneAck: "scope-client-surface-session-bound-ui-owner",
+      concurrency: "both-sockets-live-before-mutation",
+    },
+    lifecycle: [
+      "publish-qualified-generation", "create-shared-document", "publish-initial-checkpoint", "open-two-authenticated-shells",
+      "observe-two-initial-gis-scenes", "cancel-separate-owner-job", "deny-peer-access-to-owner-private-job",
+      "observe-server-stamped-create-region-proposal", "approve-owner-proposal", "observe-committed-wal-event",
+      "observe-actor-frontier", "observe-public-checkpoint", "observe-ledger-applied", "observe-two-live-rebootstrap-frames",
+      "observe-two-fresh-plan-grant-sessions", "observe-two-later-cold-pairs", "observe-two-equal-region-scenes",
+      "undo-via-ordinary-document-command", "observe-two-equal-undone-scenes", "close-all-owners", "verify-unchanged-catalog-generation",
+    ],
+    equalBindings: [
+      "profileId", "catalogGenerationId", "packageId", "componentSha256", "descriptorByteSha256", "browserActorSha256",
+      "browserActorByteLength", "documentId", "surfaceId", "parentDialect", "coldPairManifestHash", "frontier", "visibleMapScene",
+    ],
+    refreshedBindings: ["sessionId", "socketGrant", "coldPairReceiptGeneration"],
+    approval: {
+      command: "CreateRegion",
+      regionId: "inference-<owner-job-id>",
+      kind: "inference-bounds",
+      inverse: "DeleteRegion",
+      effectCount: 1,
+      peerMaySubmitOwnJob: true,
+      peerMayReadOwnerJob: false,
+      peerMayCancelOwnerJob: false,
+      peerMayApproveOwnerJob: false,
+    },
+    teardown: { pages: 0, workers: 0, relays: 0, childActors: 0, childBytes: 0, retainedDocumentOwners: 0, hubProcesses: 0 },
+    forbiddenSubstitutes: [
+      "sequential-peers", "controlled-actor", "independently-rebuilt-actor", "direct-artifact-store-write",
+      "direct-ui-document-store-patch", "injected-rebootstrap-frame", "patch-positions-as-ai-approval", "raw-capability-in-page",
+    ],
+    nonclaims: ["all-plugin-assets-qualified", "external-model-provider-qualified", "postgres-live-qualified", "neo4j-live-qualified"],
+  };
+  const validate = (candidate: unknown): boolean => equal(candidate, pinned) && JSON.stringify(Object.keys(candidate as object)) === JSON.stringify(Object.keys(pinned));
+  assert(validate(fixture), "collaboration contract drifted from its pinned specification");
   const approval = JSON.parse(readFileSync(join(repoRoot, fixture.prerequisites.approvalFixture), "utf8"));
   const browser = JSON.parse(readFileSync(join(repoRoot, fixture.prerequisites.browserFixture), "utf8"));
   for (const key of ["packageId", "artifactKind", "documentSchema", "surfaceId", "grantedMode", "serviceId"]) {
@@ -8335,7 +8593,7 @@ async function proveTrustedGisMapCollaborationContractFixture(repoRoot: string):
     { ...fixture, teardown: { ...fixture.teardown, childBytes: 1 } },
   ];
   for (const hostile of hostiles) assert(!validate(hostile), "collaboration contract hostile must fail");
-  console.log("[DEBUG] trusted-gis-collaboration-contract: AJV=1 hostile=" + hostiles.length + " cross-fixture-equality=8; specification only, no observed collaboration trace");
+  console.log("[DEBUG] trusted-gis-collaboration-contract: pinned-specification=1 hostile=" + hostiles.length + " cross-fixture-equality=8; specification only, no observed collaboration trace");
 }
 
 /** 🛂️ Checks one mandatory exact-generation proof before every new current publication. */
@@ -8413,12 +8671,35 @@ async function proveTrustedStdioGisBootstrapFixture(repoRoot: string): Promise<v
   await proveTrustedBootstrapCodecCaptureFixture(repoRoot);
   const root = join(repoRoot, "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🧪️fixtures/🧬️stdio-gis-bootstrap");
   const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
-  const Ajv2020 = (await import("ajv/dist/2020.js")).default;
-  const ajv = new Ajv2020({ strict: true, allErrors: true });
-  ajv.addSchema(JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🌐️browser-actor/🔣️.schema.json"), "utf8")));
-  ajv.addSchema(JSON.parse(readFileSync(join(root, "../../🧬️schema/🔣️bundle.schema.json"), "utf8")));
-  const validate = ajv.compile(JSON.parse(readFileSync(join(root, "🧬️.schema.json"), "utf8")));
-  if (!validate(fixture)) throw new Error(`invalid trusted stdio+GIS bootstrap corpus: ${JSON.stringify(validate.errors)}`);
+  const { default: bootstrapAssert } = await import("node:assert/strict");
+  const validateIdentity = hubSchemaExport(repoRoot, "schema://hub.artifact-authority.trusted-catalog/TrustedBundleIdentityV1");
+  const validateActor = hubSchemaExport(repoRoot, "schema://hub.artifact-authority.trusted-catalog/TrustedBundleBrowserActorV1");
+  const validateProtocol = hubSchemaExport(repoRoot, "schema://hub.artifact-authority.trusted-catalog/TrustedBundleExecutionProtocolV1");
+  const validateDialect = hubSchemaExport(repoRoot, "schema://hub.artifact-authority.trusted-catalog/TrustedBundleParentDialectV1");
+  const validateGrant = hubSchemaExport(repoRoot, "schema://hub.artifact-authority.trusted-catalog/TrustedBundleGrantV1");
+  bootstrapAssert.deepEqual(Object.keys(fixture), ["schema", "profile", "sources", "limits", "framing", "cancellationStages", "hostile", "publication", "rotation"]);
+  bootstrapAssert.equal(fixture.schema, "semio.hub.trusted-stdio-gis-bootstrap/v1");
+  bootstrapAssert.equal(fixture.profile.id, "local-stdio-gis-open-v1");
+  bootstrapAssert.deepEqual(fixture.limits, { descriptorBytes: 4_194_304, descriptorBytesPlusOne: 4_194_305, componentBytes: 67_108_864, ioChunkBytes: 65_536, packageCount: 2, codecCount: 28, openTargetCount: 1 });
+  bootstrapAssert.deepEqual(fixture.framing, { closureDomain: "semio/hub/trusted-profile-selected-closure/v1\u0000", generationDomain: "semio/hub/trusted-profile-generation/v1\u0000", integerEndian: "big", lengthBytes: 8 });
+  bootstrapAssert.deepEqual(fixture.cancellationStages, ["build", "extract-core", "inspect-wit", "emit-descriptor", "stage-component", "stage-descriptor", "hash", "pre-publication"]);
+  bootstrapAssert.deepEqual(fixture.hostile, [
+    "stale-stdio-component", "stale-stdio-descriptor", "stale-stdio-codec", "wrong-stdio-version", "wrong-gis-version", "missing-map", "missing-terrain",
+    "duplicate-terrain", "terrain-target", "non-wasm", "readonly-editor", "mixed-package", "closure-order", "path-escape", "path-collision",
+    "descriptor-max-plus-one", "cancel-before-publication", "candidate-crash", "stale-plan-generation",
+  ]);
+  bootstrapAssert.deepEqual(Object.keys(fixture.sources), ["stdioReceipts", "gisReceipts"]);
+  bootstrapAssert.deepEqual(fixture.rotation.sourceCases.map((row: any) => row.change), ["none", "replaced-bundle", "wrong-generation", "wrong-profile", "leaf-replaced-during-read", "cancel-before-read"]);
+  bootstrapAssert.equal(fixture.rotation.writeCases.length, 7);
+  bootstrapAssert.equal(new Set(fixture.rotation.writeCases.map((row: any) => row.id)).size, 7);
+  for (const row of fixture.rotation.writeCases) bootstrapAssert(["new", "old", "absent"].includes(row.retained) && Number.isInteger(row.byteLength) && row.byteLength >= 1 && row.byteLength <= 67_108_864, row.id);
+  for (const identity of fixture.profile.selectedClosure) bootstrapAssert(validateIdentity(identity), "bootstrap closure identity must satisfy the scope-owned contract");
+  for (const record of fixture.profile.packages) {
+    bootstrapAssert(validateActor(record.browserActor), `${record.pluginId} browser actor must satisfy the scope-owned contract`);
+    bootstrapAssert(validateProtocol(record.executionProtocol), `${record.pluginId} execution protocol must satisfy the scope-owned contract`);
+    for (const dependency of record.dependencies) bootstrapAssert(validateIdentity(dependency), `${record.pluginId} dependency must satisfy the scope-owned contract`);
+  }
+  bootstrapAssert(validateDialect(fixture.profile.openTarget.parentDialect) && validateGrant(fixture.profile.openTarget.grant), "bootstrap open target dialect/grant must satisfy the scope-owned contract");
   await proveTrustedGisPublicationFixture(repoRoot, fixture.publication);
   await proveTrustedGisRetainedBrowserFixture(repoRoot);
   await proveTrustedGisMapCollaborationContractFixture(repoRoot);
@@ -8541,7 +8822,7 @@ async function proveTrustedStdioGisBootstrapFixture(repoRoot: string): Promise<v
   }
   await proveTrustedRotationSourceFixture(fixture);
   console.log(
-    `trusted-stdio-gis-bootstrap-oracle: packages=2 codecs=${codecs.stdio.length + codecs.gis.length} targets=1 hostile=${fixture.hostile.length} cancellation=${fixture.cancellationStages.length} descriptor-pairs=4 stale-plan=1 ajv+node+webcrypto+first-party-pack+blake3=1; no materialization or hub activation claim`,
+    `trusted-stdio-gis-bootstrap-oracle: packages=2 codecs=${codecs.stdio.length + codecs.gis.length} targets=1 hostile=${fixture.hostile.length} cancellation=${fixture.cancellationStages.length} descriptor-pairs=4 stale-plan=1 scope-exports=5+node+webcrypto+first-party-pack+blake3=1; no materialization or hub activation claim`,
   );
 }
 
@@ -8552,8 +8833,40 @@ async function proveTrustedCompiledDependenciesFixture(repoRoot: string): Promis
   const { default: Ajv2020 } = await import("ajv/dist/2020.js");
   const root = join(repoRoot, "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🧪️fixtures/🔗️compiled-dependencies");
   const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
-  const validate = new Ajv2020({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(root, "🧬️.schema.json"), "utf8")));
-  assert(validate(fixture), JSON.stringify(validate.errors));
+  const validateIdentity = hubSchemaExport(repoRoot, "schema://hub.artifact-authority.trusted-catalog/TrustedBundleIdentityV1");
+  assert.deepEqual(Object.keys(fixture), ["schema", "publicationFiles", "descriptorPreviewCases", "selectedClosure", "cases", "consumerCatalogCases", "atomicCases", "nativeCases", "rawCases", "encodingCases", "ordering"]);
+  assert.equal(fixture.schema, "semio.hub.compiled-stdio-dependencies/v1");
+  assert.deepEqual(fixture.publicationFiles, ["component.wasm", "descriptor.semio", "closed-actor.mjs", "stdio-component.wasm", "stdio-descriptor.semio", "trusted-catalog.json"]);
+  assert.deepEqual(fixture.descriptorPreviewCases, [
+    { id: "first-selected-descriptor-invalid", packageIndex: 1, previews: [] },
+    { id: "second-selected-descriptor-invalid", packageIndex: 0, previews: ["semio:fixture-base"] },
+  ]);
+  assert.deepEqual(fixture.consumerCatalogCases, [
+    { change: "exact", accepted: true }, { change: "missing", accepted: false }, { change: "duplicate", accepted: false },
+    { change: "wrong-version", accepted: false }, { change: "foreign-topic-version", accepted: false },
+  ]);
+  assert.deepEqual(fixture.atomicCases, [
+    { change: "stdio-catalog", accepted: false, previews: [] }, { change: "gis-catalog", accepted: false, previews: ["stdio"] },
+    { change: "gis-dependency", accepted: false, previews: ["stdio"] }, { change: "gis-provider", accepted: false, previews: ["stdio"] },
+    { change: "gis-trailing-byte", accepted: false, previews: ["stdio"] }, { change: "gis-duplicate-field", accepted: false, previews: ["stdio"] },
+    { change: "exact", accepted: true, previews: ["stdio", "gis"] },
+  ]);
+  assert.equal(fixture.selectedClosure.length, 2);
+  for (const identity of [...fixture.selectedClosure, ...fixture.ordering.input, ...fixture.encodingCases.flatMap((row: any) => row.identities)]) assert(validateIdentity(identity), "compiled-dependency identity must satisfy the scope-owned contract");
+  assert.equal(fixture.cases.length, 25);
+  assert.deepEqual([...new Set(fixture.cases.map((row: any) => row.change))], [
+    "exact", "selected-order", "missing", "duplicate", "self", "unknown", "any", "caret", "wrong-version", "noncanonical-version", "overflow-version",
+    "foreign-package", "duplicate-selected", "missing-selected", "extra-field", "missing-manifest", "oversized-claim", "stdio-dependent", "owner-plugin",
+    "owner-package", "owner-version", "selected-version", "missing-protocol", "unsupported-protocol",
+  ]);
+  assert.equal(new Set(fixture.cases.map((row: any) => `${row.change}/${row.owner}`)).size, fixture.cases.length);
+  for (const row of fixture.cases) assert.deepEqual(Object.keys(row).sort(), ["accepted", "change", "owner"]);
+  for (const row of fixture.cases) assert(["gis", "stdio"].includes(row.owner) && typeof row.accepted === "boolean", row.change);
+  assert.deepEqual(fixture.encodingCases.map((row: any) => row.name), ["gis-direct-dependency-stdio", "stdio-direct-dependencies-empty"]);
+  assert.equal(fixture.rawCases.length, 4);
+  for (const row of [...fixture.rawCases, ...fixture.encodingCases]) assert.match(row.hex, /^(?:[0-9a-f]{2}){4,1024}$/u);
+  assert.equal(fixture.ordering.input.length, 3);
+  assert.equal(fixture.ordering.expected.length, 3);
   const kindRoot = join(repoRoot, "🧰️framework/🔨️modules/🛂️manifest/🧪️fixtures");
   const kind = JSON.parse(readFileSync(join(kindRoot, "🗄️artifact-kind-formats.json"), "utf8"));
   const validateKind = new Ajv2020({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(kindRoot, "🗄️artifact-kind-formats.schema.json"), "utf8")));
@@ -8755,7 +9068,15 @@ async function proveTrustedBootstrapCodecCaptureFixture(repoRoot: string): Promi
   const root = join(repoRoot, "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🧪️fixtures/🧊️codec-source");
   const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
   const ajv = new Ajv2020({ strict: true, allErrors: true });
-  assert(ajv.compile(JSON.parse(readFileSync(join(root, "🧬️.schema.json"), "utf8")))(fixture));
+  assert.deepEqual(Object.keys(fixture), ["schema", "maximumSourceBytes", "maximumTotalBytes", "cases"]);
+  assert.equal(fixture.schema, "semio.hub.codec-source.v1");
+  assert.equal(fixture.maximumSourceBytes, 65_536);
+  assert.equal(fixture.maximumTotalBytes, 131_072);
+  assert.deepEqual(fixture.cases.map((row: any) => row.change), [
+    "none", "permuted", "replaced-source", "invalid-hash", "zero-hash", "duplicate-stdio", "duplicate-gis", "unknown-root", "unknown-row",
+    "foreign-package", "crossed-gis-schema", "foreign-version", "invalid-utf8", "oversize", "cancelled",
+  ]);
+  for (const row of fixture.cases) assert.deepEqual(Object.keys(row), ["change", "accepted", "schemaAccepted"]);
   assert.equal(new Set(fixture.cases.map((row: any) => row.change)).size, fixture.cases.length);
   const sourcePaths = {
     stdio: "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️schema/📜️native-codec-factories.json",
@@ -8937,11 +9258,25 @@ function trustedBootstrapStageFixturePackages(fixture: any, actor: any, componen
 async function proveTrustedGenerationStageFixture(repoRoot: string): Promise<void> {
   const { default: assert } = await import("node:assert/strict");
   const { symlinkSync, truncateSync, writeFileSync } = await import("node:fs");
-  const { default: Ajv2020 } = await import("ajv/dist/2020.js");
   const root = join(repoRoot, "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🧪️fixtures/🧱️generation-stage");
   const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
-  const validate = new Ajv2020({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(root, "🧬️.schema.json"), "utf8")));
-  assert(validate(fixture), JSON.stringify(validate.errors));
+  const validateProtocol = hubSchemaExport(repoRoot, "schema://hub.artifact-authority.trusted-catalog/TrustedBundleExecutionProtocolV1");
+  assert.deepEqual(Object.keys(fixture), ["schema", "componentHex", "descriptors", "executionProtocol", "cases"]);
+  assert.equal(fixture.schema, "semio.hub.generation-stage.v1");
+  assert.equal(fixture.componentHex, "616263");
+  assert.deepEqual(fixture.descriptors, {
+    gis: { packageId: "semio:gis", manifest: { pluginId: "gis", version: "0.1.0", dependencies: [{ pluginId: "stdio", version: "=0.1.0" }] }, executionProtocol: { appChannelVersion: 14 } },
+    stdio: { packageId: "semio:stdio", manifest: { pluginId: "stdio", version: "0.1.0", dependencies: [] }, executionProtocol: { appChannelVersion: 14 } },
+  });
+  assert.deepEqual(fixture.executionProtocol, { appChannelVersion: 14 });
+  for (const protocol of [fixture.executionProtocol, fixture.descriptors.gis.executionProtocol, fixture.descriptors.stdio.executionProtocol]) assert(validateProtocol(protocol), "generation-stage execution protocol must satisfy the scope-owned contract");
+  assert.deepEqual(fixture.cases.map((row: any) => row.change), [
+    "none", "component", "descriptor", "bundle", "extra-file", "missing-file", "symlink-file", "symlink-directory", "post-read-component",
+    "oversize-component", "cancelled", "receipt-path", "actor", "actor-source", "actor-path", "missing-actor", "oversize-actor", "post-read-actor",
+    "actor-symlink", "missing-protocol", "unsupported-protocol", "receipt-protocol", "missing-dependency", "receipt-dependency", "bundle-dependency",
+    "wrong-package", "nonexact-dependency", "duplicate-dependency",
+  ]);
+  assert.deepEqual(fixture.cases.filter((row: any) => row.accepted).map((row: any) => row.change), ["none", "receipt-path"]);
   const artifactRoot = process.env.SEMIO_TEST_ARTIFACT_DIR;
   assert(artifactRoot?.includes("🗑️generated"));
   mkdirSync(artifactRoot, { recursive: true });
@@ -9034,39 +9369,73 @@ async function proveTrustedGenerationStageFixture(repoRoot: string): Promise<voi
       assert.equal(identityChecks, 1);
     } else assert.throws(() => trustedBootstrapVerifyGeneration(stage, bundle, caseReceipts, check), /generation|build input/);
   }
-  console.log(`trusted-generation-stage: AJV=1 WebCrypto=1 cases=${fixture.cases.length} evidence=${evidence}`);
+  console.log(`trusted-generation-stage: scope-export=TrustedBundleExecutionProtocolV1 WebCrypto=1 cases=${fixture.cases.length} evidence=${evidence}`);
 }
 
 /** 📤️ Proves the publisher rechecks each receipt-bound leaf after candidate validation. */
 async function proveTrustedPublicationFixture(repoRoot: string): Promise<void> {
   const { default: assert } = await import("node:assert/strict");
   const { writeFileSync } = await import("node:fs");
-  const { default: Ajv2020 } = await import("ajv/dist/2020.js");
   const root = join(repoRoot, "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🧪️fixtures/📤️publication");
   const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
-  assert(new Ajv2020({ strict: true }).compile(JSON.parse(readFileSync(join(root, "🧬️.schema.json"), "utf8")))(fixture));
+  assert.deepEqual(Object.keys(fixture), ["schema", "generationId", "profileId", "cases", "commandCases", "receiptCases"]);
+  assert.equal(fixture.schema, "semio.hub.trusted-publication/v1");
+  assert.equal(fixture.generationId, "aa".repeat(32));
+  assert.equal(fixture.profileId, "publication-fixture");
+  assert.deepEqual(fixture.cases, [
+    { change: "none", accepted: true }, { change: "component", accepted: false }, { change: "descriptor", accepted: false },
+    { change: "actor", accepted: false }, { change: "bundle", accepted: false },
+  ]);
   const command = JSON.parse(readFileSync(join(root, "📬️command.json"), "utf8"));
-  const validateCommand = new Ajv2020({ strict: true }).compile(JSON.parse(readFileSync(join(root, "📬️command.schema.json"), "utf8")));
-  assert(validateCommand(command));
-  assert(validateCommand({ ...command, expectedCurrentSha256: "cc".repeat(32) }));
-  for (const value of [{ ...command, bundlePath: "/untrusted" }, { ...command, publicationRevision: "2" }, { ...command, expectedCurrentSha256: undefined }, { ...command, expectedCurrentSha256: "CC".repeat(32) }, { ...command, requestId: "" }]) assert(!validateCommand(value));
+  const validateCommand = hubSchemaExport(repoRoot, "schema://hub.artifact-authority.trusted-catalog/TrustedCatalogPublicationCommandV1");
+  const validateReceipt = hubSchemaExport(repoRoot, "schema://hub.artifact-authority.trusted-catalog/TrustedCatalogPublicationReceiptV1");
+  const pointerShape = hubSchemaExport(repoRoot, "schema://hub.artifact-authority.trusted-catalog/TrustedCatalogCurrentPointerV1");
+  assert(validateCommand(command), "publication command fixture must satisfy the scope-owned contract");
+  for (const law of fixture.commandCases) {
+    const candidate: Record<string, unknown> = { ...command, ...law.set };
+    for (const key of law.remove) delete candidate[key];
+    assertHubFixtureExpectation(`command ${law.id}`, law.expectation as HubFixtureExpectationV1, Boolean(validateCommand(candidate)));
+  }
   assert.deepEqual(JSON.parse(canonicalJson(command)), command);
   const transport = JSON.parse(readFileSync(join(root, "📡️transport.json"), "utf8"));
-  assert(new Ajv2020({ strict: true }).compile(JSON.parse(readFileSync(join(root, "📡️transport.schema.json"), "utf8")))(transport));
-  const validateReceipt = new Ajv2020({ strict: true }).compile(JSON.parse(readFileSync(join(root, "🧾️receipt.schema.json"), "utf8")));
+  assert.deepEqual(transport, {
+    schema: "semio.hub.trusted-publication-transport/v1",
+    command: ["trusted-catalog", "publish"],
+    commandBytes: 4096,
+    receiptBytes: 4096,
+    inputDeadlineMs: 5000,
+    publicationDeadlineMs: 30_000,
+    outcomes: [
+      { outcome: "durable", exit: "success", activate: true },
+      { outcome: "replaced-unconfirmed", exit: "failure", activate: false },
+      { outcome: "missing-or-invalid", exit: "failure", activate: false },
+    ],
+    rejectedArguments: [["trusted-catalog"], ["publish"], ["trusted-catalog", "publish", "--force"], ["trusted-catalog", "activate"]],
+    processCases: [
+      { mode: "durable", result: "durable" }, { mode: "unconfirmed", result: "unconfirmed" }, { mode: "unconfirmed-zero", result: "indeterminate" },
+      { mode: "unconfirmed-two", result: "indeterminate" }, { mode: "overflow", result: "indeterminate" }, { mode: "signal", result: "indeterminate" },
+      { mode: "empty", result: "indeterminate" }, { mode: "identity", result: "indeterminate" }, { mode: "durable-one", result: "indeterminate" },
+      { mode: "timeout", result: "indeterminate" }, { mode: "cancel", result: "indeterminate" }, { mode: "durable-after-cancel", result: "durable" },
+    ],
+  });
   const pointerBytes = new TextEncoder().encode(JSON.stringify({ profileId: command.profileId, generationId: command.generationId, bundleSha256: command.bundleSha256, publicationRevision: "1" }) + "\n");
   const currentSha256 = Buffer.from(await webcrypto.subtle.digest("SHA-256", pointerBytes)).toString("hex");
   const receiptFixture = { schema: "semio.hub.trusted-catalog-publication-receipt/v1", requestId: command.requestId, profileId: command.profileId, generationId: command.generationId, bundleSha256: command.bundleSha256, publicationRevision: "1", currentSha256, outcome: "durable" };
   for (const row of transport.outcomes) {
     if (row.outcome === "missing-or-invalid") { assert.throws(() => trustedBootstrapPublicationReceipt(new Uint8Array(), command, "1")); continue; }
     const receipt = { ...receiptFixture, outcome: row.outcome };
-    assert(validateReceipt(receipt));
+    assert(validateReceipt(receipt), `${row.outcome} receipt must satisfy the scope-owned contract`);
     const result = trustedBootstrapPublicationReceipt(Buffer.from(JSON.stringify(receipt) + "\n"), command, "1");
     assert.equal(result.outcome === "durable", row.activate);
     assert.equal(result.currentSha256, currentSha256);
   }
-  for (const hostile of [{ ...receiptFixture, requestId: "ff".repeat(16) }, { ...receiptFixture, currentSha256: "ff".repeat(32) }, { ...receiptFixture, publicationRevision: "2" }, { ...receiptFixture, extra: true }])
-    assert.throws(() => trustedBootstrapPublicationReceipt(Buffer.from(JSON.stringify(hostile) + "\n"), command, "1"));
+  for (const law of fixture.receiptCases) {
+    const candidate = { ...receiptFixture, ...law.set };
+    assertHubFixtureExpectation(`receipt ${law.id}`, law.expectation as HubFixtureExpectationV1, Boolean(validateReceipt(candidate)));
+    const decode = (): unknown => trustedBootstrapPublicationReceipt(Buffer.from(JSON.stringify(candidate) + "\n"), command, "1");
+    if (law.expectation.result === "accepted") decode();
+    else assert.throws(decode, `receipt ${law.id} must be refused by the production decoder`);
+  }
   const artifactRoot = process.env.SEMIO_TEST_ARTIFACT_DIR;
   assert(artifactRoot?.includes("🗑️generated"));
   const evidence = mkdtempSync(join(artifactRoot, "publication-fence-"));
@@ -9109,7 +9478,16 @@ async function proveTrustedPublicationFixture(repoRoot: string): Promise<void> {
     result.bytes.fill(0); input.fill(0);
   }
   const ownerFixture = JSON.parse(readFileSync(join(root, "🔒️owner.json"), "utf8"));
-  assert(new Ajv2020({ strict: true }).compile(JSON.parse(readFileSync(join(root, "🔒️owner.schema.json"), "utf8")))(ownerFixture));
+  assert.deepEqual(ownerFixture, {
+    schema: "semio.hub.trusted-publication-owner/v1",
+    before: "previous-selection\n",
+    after: "next-selection\n",
+    nonce: "0123456789abcdef0123456789abcdef",
+    lock: { first: "acquired", competing: "contended", afterDrop: "acquired" },
+    replacement: { selected: "next-selection\n", foreignRoot: "foreign-selection\n" },
+    process: { holder: "acquired", competing: "contended", afterCrash: "acquired", current: "unchanged" },
+    cases: ["same-directory-replace", "cancel-before-replace", "duplicate-nonce-refused", "root-replacement-isolated", "lock-link-refused", "lock-directory-refused", "process-crash-releases-lock"],
+  });
   const ownerOracle = join(evidence, "owner-oracle");
   mkdirSync(ownerOracle);
   writeFileSync(join(ownerOracle, "current.json"), ownerFixture.before);
@@ -9117,8 +9495,20 @@ async function proveTrustedPublicationFixture(repoRoot: string): Promise<void> {
   renameSync(join(ownerOracle, "next.json"), join(ownerOracle, "current.json"));
   assert.equal(readFileSync(join(ownerOracle, "current.json"), "utf8"), ownerFixture.replacement.selected);
   const cas = JSON.parse(readFileSync(join(root, "🔄️cas.json"), "utf8"));
-  assert(new Ajv2020({ strict: true }).compile(JSON.parse(readFileSync(join(root, "🔄️cas.schema.json"), "utf8")))(cas));
-  const pointerShape = new Ajv2020({ strict: true }).compile(JSON.parse(readFileSync(join(root, "📌️current.schema.json"), "utf8")));
+  assert.deepEqual(cas, {
+    schema: "semio.hub.trusted-publication-cas/v1",
+    cases: [
+      { id: "initial", currentRevision: null, nextRevision: "1", accepted: true },
+      { id: "next", currentRevision: "1", nextRevision: "2", accepted: true },
+      { id: "stale", currentRevision: "2", expectedRevision: "1", accepted: false },
+      { id: "aba", currentRevision: "3", expectedRevision: "1", sameGeneration: true, accepted: false },
+      { id: "maximum", currentRevision: "18446744073709551615", accepted: false },
+      { id: "zero", currentRevision: "0", accepted: false },
+      { id: "leading-zero", currentRevision: "01", accepted: false },
+      { id: "overflow", currentRevision: "18446744073709551616", accepted: false },
+    ],
+    publicationOutcomes: ["durable", "replaced-unconfirmed"],
+  });
   const pointerFor = (publicationRevision: string) => ({ profileId: fixture.profileId, generationId: fixture.generationId, bundleSha256: "42".repeat(32), publicationRevision });
   for (const row of cas.cases) {
     const casRoot = join(evidence, `cas-${row.id}`);
@@ -9172,7 +9562,7 @@ async function proveTrustedPublicationFixture(repoRoot: string): Promise<void> {
     }
     assert.deepEqual(readFileSync(pointerPath), previous);
   }
-  console.log(`[DEBUG] trusted publication final-byte fence: AJV=8 WebCrypto=1 Node-replace-oracle=1 cases=${fixture.cases.length} revision-cases=${cas.cases.length} transport-outcomes=3 hostile-receipts=4 real-child-cases=${transport.processCases.length}; native-owner/CAS remain unqualified; evidence=${evidence}`);
+  console.log(`[DEBUG] trusted publication final-byte fence: scope-exports=3 WebCrypto=1 Node-replace-oracle=1 cases=${fixture.cases.length} command-cases=${fixture.commandCases.length} receipt-cases=${fixture.receiptCases.length} revision-cases=${cas.cases.length} transport-outcomes=3 real-child-cases=${transport.processCases.length}; native-owner/CAS remain unqualified; evidence=${evidence}`);
 }
 
 /** ⏳️ Owns interrupt and progress observation for a bounded catalog build. */
@@ -9878,12 +10268,18 @@ function stageTrustedBootstrapProbePointer(dataRoot: string, receipt: TrustedBoo
   trustedBootstrapFsyncDirectory(trustedRoot);
 }
 
+/** 🧬️ Resolves the sole scope-owned publication receipt contract for the production decoder. */
+function trustedCatalogPublicationReceiptContract(): (value: unknown) => boolean {
+  return hubSchemaExport(resolve(import.meta.dir, "../../.."), "schema://hub.artifact-authority.trusted-catalog/TrustedCatalogPublicationReceiptV1");
+}
+
 /** 🧾️ Preserves both native outcomes while matching the exact request and next canonical revision. */
 function trustedBootstrapPublicationReceipt(bytes: Uint8Array, command: Readonly<Record<string, unknown>>, expectedRevision: string): Readonly<{ currentSha256: string; publicationRevision: string; outcome: "durable" | "replaced-unconfirmed" }> {
   if (bytes.byteLength === 0 || bytes.byteLength > 4096) throw new Error("trusted publication receipt exceeds its bound; reconcile current");
   const text = new TextDecoder("utf-8", { fatal: true }).decode(bytes);
   const row = documentOpenNeutralObject(JSON.parse(text), ["schema", "requestId", "profileId", "generationId", "bundleSha256", "publicationRevision", "currentSha256", "outcome"]);
-  if (row.schema !== "semio.hub.trusted-catalog-publication-receipt/v1" || (row.outcome !== "durable" && row.outcome !== "replaced-unconfirmed") || ["requestId", "profileId", "generationId", "bundleSha256"].some((key) => row[key] !== command[key]) || row.publicationRevision !== expectedRevision || text !== JSON.stringify(row) + "\n")
+  if (!trustedCatalogPublicationReceiptContract()(row)) throw new Error("trusted publication receipt does not satisfy its scope-owned contract; reconcile current");
+  if (["requestId", "profileId", "generationId", "bundleSha256"].some((key) => row[key] !== command[key]) || row.publicationRevision !== expectedRevision || text !== JSON.stringify(row) + "\n")
     throw new Error("trusted publication receipt is not exact; reconcile current");
   const publicationRevision = trustedBootstrapPublicationRevision(row.publicationRevision);
   const pointer = { profileId: row.profileId, generationId: row.generationId, bundleSha256: row.bundleSha256, publicationRevision };
@@ -10948,6 +11344,7 @@ async function startGisMapShellPeerV1(options: {
   readonly creation?: Readonly<{ kindId: string; name: string }>;
   readonly locale: "en" | "de";
   readonly artifactRoot: string;
+  readonly browserHost: TestBrowserHostRootsV1;
   readonly browser: import("playwright").Browser;
   readonly credentialEnvelope: Record<string, any>;
 }): Promise<GisMapShellPeerV1> {
@@ -10955,6 +11352,8 @@ async function startGisMapShellPeerV1(options: {
   const creates = options.creation !== undefined;
   if (
     !isAbsolute(options.artifactRoot) ||
+    options.browserHost.artifactRoot !== realpathSync(options.artifactRoot) ||
+    options.browserHost.receipt.schema !== "semio.os.test-browser-host-staging/v1" ||
     (creates === (existingDocumentId !== undefined)) ||
     (options.creation !== undefined && (!/^[A-Za-z0-9][A-Za-z0-9._:/-]{0,255}$/u.test(options.creation.kindId) || options.creation.name.trim() !== options.creation.name || options.creation.name.length === 0 || [...options.creation.name].length > 128 || /[\u0000-\u001f\u007f]/u.test(options.creation.name))) ||
     options.credentialEnvelope.schema !== "semio.hub.local-credential-envelope/v1" ||
@@ -10975,6 +11374,10 @@ async function startGisMapShellPeerV1(options: {
     env: {
       ...process.env,
       SKIP_PLUGIN_BUILD: "1",
+      SEMIO_TEST_ARTIFACT_DIR: options.browserHost.artifactRoot,
+      SEMIO_TEST_BROWSER_MODULE_ROOT: options.browserHost.moduleRoot,
+      SEMIO_TEST_BROWSER_ACTIVATION_ROOT: options.browserHost.activationRoot,
+      SEMIO_TEST_BROWSER_HOST_RECEIPT: options.browserHost.receiptPath,
       SEMIO_PLUGIN: "s",
       SEMIO_RENDERER: "react",
       S_OS_PORT: String(uiPort),
@@ -11148,6 +11551,24 @@ async function proveGisMapTwoAuthorShellProcess(repoRoot: string, hubRoot: strin
   assert.equal(selected?.executionProtocol?.appChannelVersion, DOCUMENT_EXECUTION_PROTOCOL_APP_CHANNEL_VERSION_V1);
   assert.equal(target?.surfaceId, "s.gis.gismap@1/*#editor");
   assert.equal(target?.artifactKind, "s.gis.gismap");
+  assert.equal(selected?.component?.path, "packages/gis/component.wasm");
+  assert.equal(selected?.descriptor?.path, "packages/gis/descriptor.semio");
+  const devScript = await import(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts"));
+  if (typeof devScript.stageTestBrowserHostV1 !== "function") throw new Error("ticket browser-host staging facade is absent");
+  const generationRoot = dirname(prepared.current.bundlePath);
+  const browserHost = await devScript.stageTestBrowserHostV1({
+    artifactRoot: prepared.artifactRoot,
+    selectedGis: {
+      generationId: prepared.current.generationId,
+      currentSha256: prepared.current.currentSha256,
+      componentPath: join(generationRoot, selected.component.path),
+      componentSha256: selected.component.sha256,
+      descriptorPath: join(generationRoot, selected.descriptor.path),
+      descriptorSha256: selected.descriptor.sha256,
+    },
+  });
+  assert.equal(browserHost.receipt.selectedGis.generationId, prepared.current.generationId);
+  assert.equal(browserHost.receipt.selectedGis.currentSha256, prepared.current.currentSha256);
   const profiles: readonly LocalProfile[] = [
     { profileId: "gis-map-shell-a", subject: "gis-map-shell-author-a", displayName: "GIS Map Author A", allowedClientClasses: ["native", "mcp", "react-relay"] },
     { profileId: "gis-map-shell-b", subject: "gis-map-shell-author-b", displayName: "GIS Map Author B", allowedClientClasses: ["native", "mcp", "react-relay"] },
@@ -11193,6 +11614,7 @@ async function proveGisMapTwoAuthorShellProcess(repoRoot: string, hubRoot: strin
       creation: { kindId: target.artifactKind, name: "Verified GIS Map" },
       locale: locales[0],
       artifactRoot: prepared.artifactRoot,
+      browserHost,
       browser,
       credentialEnvelope: creationCredential,
     }));
@@ -11216,7 +11638,7 @@ async function proveGisMapTwoAuthorShellProcess(repoRoot: string, hubRoot: strin
       }
       for (let index = reopenBothShells ? 0 : 1; index < profiles.length; index++) {
         const credentialEnvelope = await issueLocalCredential(run!, profiles[index]!.profileId, "react-relay", nonce++);
-        shells.push(await startGisMapShellPeerV1({ repoRoot, run: run!, profileId: profiles[index]!.profileId, scope, locale: locales[index]!, artifactRoot: prepared.artifactRoot, browser: browser!, credentialEnvelope }));
+        shells.push(await startGisMapShellPeerV1({ repoRoot, run: run!, profileId: profiles[index]!.profileId, scope, locale: locales[index]!, artifactRoot: prepared.artifactRoot, browserHost, browser: browser!, credentialEnvelope }));
       }
     };
     const readPair = async (): Promise<GisMapCheckpointProjectionV1> => {
@@ -11296,7 +11718,7 @@ async function proveGisMapTwoAuthorShellProcess(repoRoot: string, hubRoot: strin
     assert.deepEqual(await readPair(), undone);
     const restartedMaps = await waitMaps(initialRegions);
     assertGisMapCompositionCurrent(prepared);
-    completedReceipt = { schema: "semio.hub.gis-map-two-author-shell-receipt/v1", current: prepared.current, scope, locales, cancelledJobId, regionId, initial, applied, undone, initialMaps, appliedMaps, undoneMaps, restartedMaps, ownerPrivateJobDenials: 3, rebootstrapControls: 4, actualMapObservations: 8, restartedProcess: true, nonclaims: ["external-model-provider", "browser-qualified-current-publication", "durable-collaborative-redo", "wgpu-rendering"] };
+    completedReceipt = { schema: "semio.hub.gis-map-two-author-shell-receipt/v1", current: prepared.current, browserHost: browserHost.receipt, scope, locales, cancelledJobId, regionId, initial, applied, undone, initialMaps, appliedMaps, undoneMaps, restartedMaps, ownerPrivateJobDenials: 3, rebootstrapControls: 4, actualMapObservations: 8, restartedProcess: true, nonclaims: ["external-model-provider", "browser-qualified-current-publication", "durable-collaborative-redo", "wgpu-rendering"] };
   } finally {
     const errors: unknown[] = [];
     await closePeers().catch((error) => errors.push(error));
@@ -11924,6 +12346,7 @@ async function proveGisMapTwoAuthorCompositionFixture(repoRoot: string): Promise
     (row: any) => { row.observations.undo[1] = "forwarded-mcp-handle"; },
     (row: any) => { row.observations.undo[0] = "direct-http-undo"; },
     (row: any) => { row.steps.pop(); },
+    (row: any) => { row.selection.browserHostReceipt.pop(); },
   ];
   assert.equal(hostiles.length, fixture.hostiles.length);
   for (const mutate of hostiles) { const value = structuredClone(fixture); mutate(value); assert.equal(validate(value), false); }
@@ -11932,14 +12355,25 @@ async function proveGisMapTwoAuthorCompositionFixture(repoRoot: string): Promise
   const start = source.indexOf("\nasync function proveGisMapTwoAuthorShellProcess(");
   const end = source.indexOf("\n/** 🤝️ Drives the bounded two-Author Hub/MCP proposal", start);
   const processOwner = source.slice(start, end);
+  const peerStart = source.indexOf("\nasync function startGisMapShellPeerV1(");
+  const peerEnd = source.indexOf("\ntype GisMapTwoAuthorPreparedV1", peerStart);
+  const peerOwner = source.slice(peerStart, peerEnd);
   assert.ok(start >= 0 && end > start, "same-data-root Shell composition owner is missing");
+  assert.ok(peerStart >= 0 && peerEnd > peerStart, "ticket-owned browser peer owner is missing");
   assert.ok(!processOwner.includes("materializeTrustedStdioGisBundle(") && !processOwner.includes("validateAndPublishTrustedStdioGisCandidate("), "Shell composition cannot create another current or data root");
   assert.ok(processOwner.includes("assertGisMapCompositionCurrent(prepared)") && processOwner.includes("dataDir: prepared.dataRoot"), "Shell starts and restarts must retain the prepared current owner");
+  assert.ok(processOwner.includes("stageTestBrowserHostV1({") && processOwner.includes("browserHost: browserHost.receipt"), "Shell composition must close one selected ticket browser host before launch");
+  for (const name of ["SEMIO_TEST_ARTIFACT_DIR", "SEMIO_TEST_BROWSER_MODULE_ROOT", "SEMIO_TEST_BROWSER_ACTIVATION_ROOT", "SEMIO_TEST_BROWSER_HOST_RECEIPT"]) assert.ok(peerOwner.includes(name), `Shell peer omits ${name}`);
+  assert.ok(!peerOwner.includes("developmentRuntimeRoot") && !peerOwner.includes("pluginOutRoot"), "Shell peer must not resolve a repository-global browser host");
   console.log(`[DEBUG] GIS Map two-author composition fixture AJV=1 hostile=${hostiles.length} current-coordinates=${fixture.selection.receiptIdentity.length}; real mounted journey remains separately required`);
 }
 
 class TrustedStdioGisBundleCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
+    if (segments.length === 1 && segments[0] === "--two-author-source") {
+      await proveGisMapTwoAuthorCompositionFixture(this.repoRoot);
+      return;
+    }
     if (segments.length === 1 && segments[0] === "--publication-cli") {
       await proveTrustedPublicationFixture(this.repoRoot);
       await proveTrustedPublicationCli(this.repoRoot, this.root);
@@ -11957,7 +12391,7 @@ class TrustedStdioGisBundleCheckScript extends BundleScript {
       console.log("trusted-publication-source: final file/protocol fences only; no native loader, OS lock, CAS, or current Hub activation claim");
       return;
     }
-    if (segments.length > 1 || (segments[0] !== undefined && !["--source", "--native", "--process", "--browser", "--two-author-shell"].includes(segments[0]))) throw new Error("usage: trusted-stdio-gis-bundle-check [--source|--publication-source|--publication-native|--publication-cli|--native|--process|--browser|--two-author-shell]");
+    if (segments.length > 1 || (segments[0] !== undefined && !["--source", "--native", "--process", "--browser", "--two-author-shell"].includes(segments[0]))) throw new Error("usage: trusted-stdio-gis-bundle-check [--source|--two-author-source|--publication-source|--publication-native|--publication-cli|--native|--process|--browser|--two-author-shell]");
     await proveTrustedStdioGisBootstrapFixture(this.repoRoot);
     await proveGisComponentColdMapPatch(this.repoRoot);
     await proveGisMapTwoAuthorCompositionFixture(this.repoRoot);
@@ -12304,10 +12738,19 @@ type DirectoryEventPageRouteFixture = {
 async function proveDirectoryEventPageRouteV1(repoRoot: string): Promise<number> {
   const root = join(repoRoot, "🌎️hub/🧪️fixtures/📇️directory/📅️event-page-route-v1");
   const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8")) as DirectoryEventPageRouteFixture;
-  const schema = JSON.parse(readFileSync(join(root, "🧬️.schema.json"), "utf8"));
-  const Ajv2020 = (await import("ajv/dist/2020.js")).default;
-  const validate = new Ajv2020({ strict: true, allErrors: true }).compile(schema);
-  if (!validate(fixture)) throw new Error(`directory event page route fixture: ${JSON.stringify(validate.errors)}`);
+  if (fixture.schema !== "semio.hub.directory-event-page-route/v1") throw new Error("directory event page route fixture schema drift");
+  if (Object.keys(fixture).sort().join(",") !== "hostiles,limits,queryCases,schema,session,vectors") throw new Error("directory event page route fixture envelope drift");
+  if (!hubSchemaExport(repoRoot, "schema://hub.directory/DirectorySessionBindingV1")(fixture.session)) throw new Error("directory event page route session is not the owned session-binding contract");
+  if (fixture.limits.rawRows !== 128 || fixture.limits.eventBytes !== 49152 || fixture.limits.pageBytes !== 65536 || fixture.limits.safeInteger !== 9007199254740991) throw new Error("directory event page route bound drift");
+  const eventPageVectorNames = ["raw-holes", "128-hidden", "page-byte-prefix", "empty", "event-byte-boundary"];
+  if (fixture.vectors.map((vector) => vector.name).join(",") !== eventPageVectorNames.join(",")) throw new Error("directory event page route vector inventory drift");
+  const eventPageHostiles = ["receipt-substitution", "hidden-identity-leak", "event-plus-one", "unknown-field", "binding-concatenation"];
+  if (fixture.hostiles.join(",") !== eventPageHostiles.join(",")) throw new Error("directory event page route hostile inventory drift");
+  if (fixture.queryCases.length !== 12) throw new Error("directory event page route query inventory drift");
+  for (const query of fixture.queryCases) {
+    if (!["valid", "missing", "revoked", "rotated", "backend-failure"].includes(query.bearer) || ![200, 400, 401, 500].includes(query.status) || ![0, 1].includes(query.reads)) throw new Error(`directory event page route query taxonomy drift: ${query.query}`);
+    if (!Number.isSafeInteger(query.bodyBytes) || query.bodyBytes < 0 || query.bodyBytes > fixture.limits.pageBytes) throw new Error(`directory event page route query body bound drift: ${query.query}`);
+  }
   const u32be = (value: number): Buffer => {
     const bytes = Buffer.alloc(4);
     bytes.writeUInt32BE(value);
@@ -12788,11 +13231,22 @@ function directoryHomeBrowserProcessModel(fixture: DirectoryHomeBrowserProcessFi
 
 async function proveDirectoryHomeBrowserProcessSource(repoRoot: string): Promise<DirectoryHomeBrowserProcessFixture> {
   const fixtureRoot = join(repoRoot, "🌎️hub/📇️directory/🧫️fixtures/🌐️directory-home-browser-process-v1");
-  const schema = JSON.parse(readFileSync(join(fixtureRoot, "🧬️.schema.json"), "utf8"));
   const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8")) as DirectoryHomeBrowserProcessFixture;
-  const Ajv2020 = (await import("ajv/dist/2020.js")).default;
-  const validate = new Ajv2020({ allErrors: true, strict: true }).compile(schema);
-  if (!validate(fixture)) throw new Error(`directory Home browser process fixture invalid: ${JSON.stringify(validate.errors)}`);
+  if (fixture.schema !== "semio.hub.directory-home-browser-process-fixture/v1") throw new Error("directory Home browser process fixture schema drift");
+  if (Object.keys(fixture).sort().join(",") !== "home,hostile,limits,pages,profiles,schema,spaceGuest,traces") throw new Error("directory Home browser process fixture envelope drift");
+  if (fixture.limits.responseBytes !== 65536 || fixture.limits.appliedEvents < 8 || fixture.limits.appliedEvents > 512) throw new Error("directory Home browser process bound drift");
+  if (fixture.spaceGuest.target !== "wasm32-wasip2" || fixture.spaceGuest.package !== "semio-s-plugin-space" || fixture.spaceGuest.nativeFeature !== "os-host-full" || fixture.spaceGuest.forbiddenPackages.join(",") !== "ring,cc,tokio")
+    throw new Error("directory Home browser process guest boundary drift");
+  if (fixture.home.pluginId !== "space" || fixture.home.appId !== "s.space.home@1/*#editor" || fixture.home.actionId !== "applyDirectoryEventPage" || fixture.home.moduleDirectory !== "🪐️space") throw new Error("directory Home browser process app binding drift");
+  const homeProfile = hubSchemaExport(repoRoot, "schema://hub.directory/DirectoryProfileV1");
+  if (!homeProfile(fixture.profiles.a) || !homeProfile(fixture.profiles.b) || fixture.profiles.a.profileId === fixture.profiles.b.profileId) throw new Error("directory Home browser process profiles are not two distinct owned directory profiles");
+  const homePage = hubSchemaExport(repoRoot, "schema://hub.directory/DirectoryEventPageCursorV1");
+  if (Object.keys(fixture.pages).length < 4) throw new Error("directory Home browser process page inventory drift");
+  for (const [name, page] of Object.entries(fixture.pages)) if (!homePage(page)) throw new Error(`directory Home browser process page is not the owned event-page cursor contract: ${name}`);
+  if (fixture.traces.length < 8 || fixture.traces.length > 16 || new Set(fixture.traces.map((trace) => trace.name)).size !== fixture.traces.length) throw new Error("directory Home browser process trace inventory drift");
+  const homeMutations = ["epoch", "binding", "generation", "through", "receipt", "duplicate-event", "socket-before-ack", "late-after-close"];
+  if (fixture.hostile.length < 8 || fixture.hostile.length > 24 || fixture.hostile.some((row) => !homeMutations.includes(row.mutation))) throw new Error("directory Home browser process hostile inventory drift");
+  if (new Set(fixture.hostile.map((row) => row.mutation)).size !== homeMutations.length) throw new Error("directory Home browser process hostile mutations are not exhaustive");
   const modelChecks = directoryHomeBrowserProcessModel(fixture);
   const guestTree = runProbe("cargo", ["tree", "-e", "features", "-p", fixture.spaceGuest.package, "--target", fixture.spaceGuest.target], { cwd: repoRoot, budgetMs: fixture.limits.stepMs });
   if (guestTree.status !== 0) throw new Error(`directory Home Space guest graph oracle failed: ${guestTree.stderr}`);
@@ -13658,9 +14112,16 @@ async function proveDirectoryCommandReceiptV1(repoRoot: string): Promise<number>
   const mirror = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🧫️fixtures/📇️directory/🧾️command-receipt-v1.json"), "utf8");
   if (source !== mirror) throw new Error("directory command receipt fixture drifted between the hub and os trees");
   const fixture = JSON.parse(source) as DirectoryCommandReceiptFixture;
-  const Ajv2020 = (await import("ajv/dist/2020.js")).default;
-  const validate = new Ajv2020({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(root, "🧬️.schema.json"), "utf8")));
-  if (!validate(fixture)) throw new Error(`directory command receipt fixture: ${JSON.stringify(validate.errors)}`);
+  if (fixture.schema !== "semio.hub.directory-command-receipt/v1") throw new Error("directory command receipt fixture schema drift");
+  if (Object.keys(fixture).sort().join(",") !== "limits,receipts,rejectedReceipts,rejectedRequests,requests,schema,transport") throw new Error("directory command receipt fixture envelope drift");
+  if (fixture.limits.requestBytes !== 8192 || fixture.limits.receiptBytes !== 65536 || fixture.limits.maxEvents !== 4 || fixture.limits.inviteTokenBytes !== 256 || fixture.limits.requestIdLen !== 32) throw new Error("directory command receipt bound drift");
+  if (fixture.requests.length < 4 || fixture.receipts.length < 5 || fixture.rejectedRequests.length < 8 || fixture.rejectedReceipts.length < 12 || fixture.transport.traces.length < 6) throw new Error("directory command receipt table sizes drifted");
+  if (fixture.transport.capacity !== 64 || fixture.transport.statusCodes.length < 8 || fixture.transport.transientCodes.length < 2 || fixture.transport.terminalCodes.length < 9) throw new Error("directory command receipt transport inventory drift");
+  const receiptContract = hubSchemaExport(repoRoot, "schema://hub.directory/DirectoryCommandReceiptV1");
+  for (const row of fixture.receipts) {
+    if (!receiptContract(row.receipt)) throw new Error(`directory command receipt is not the owned receipt contract: ${row.name}`);
+    if (receiptContract({ ...row.receipt, extra: true })) throw new Error(`directory command receipt contract admitted an unknown field: ${row.name}`);
+  }
   const digest = (text: string): string => createHash("sha256").update(Buffer.from(text, "utf8")).digest("hex");
   const bytes = (text: string): number => Buffer.byteLength(text, "utf8");
   let checks = 1;
@@ -13760,9 +14221,22 @@ async function proveDirectoryCommandReceiptV1(repoRoot: string): Promise<number>
 async function proveDirectoryCommandAuthorityV1(repoRoot: string): Promise<number> {
   const root = join(repoRoot, "🌎️hub/📇️directory/🧫️fixtures/🛡️command-authority-v1");
   const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
-  const Ajv2020 = (await import("ajv/dist/2020.js")).default;
-  const validate = new Ajv2020({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(root, "🧬️.schema.json"), "utf8")));
-  if (!validate(fixture)) throw new Error(JSON.stringify(validate.errors));
+  if (fixture.version !== 1) throw new Error("directory command authority fixture version drift");
+  if (Object.keys(fixture).sort().join(",") !== "bindings,capacity,cases,inviteScopes,version") throw new Error("directory command authority fixture envelope drift");
+  if (fixture.capacity.subjects !== 65 || fixture.capacity.subjectLimit !== 64 || fixture.capacity.ledgerLimit !== 4096 || fixture.capacity.accepted !== 65) throw new Error("directory command authority capacity drift");
+  if (fixture.cases.length < 4 || fixture.bindings.length < 5 || fixture.inviteScopes.length !== 4) throw new Error("directory command authority table sizes drifted");
+  if (new Set(fixture.cases.map((row: { id: string }) => row.id)).size !== fixture.cases.length || new Set(fixture.bindings.map((row: { id: string }) => row.id)).size !== fixture.bindings.length) throw new Error("directory command authority ids are not unique");
+  if (fixture.inviteScopes.map((row: { id: string }) => row.id).join(",") !== "foreign-invite,foreign-accepted-invite,owned-invite,owned-accepted-invite") throw new Error("directory command authority invite-scope inventory drift");
+  for (const row of fixture.cases) {
+    if (!["demote", "remove", "session"].includes(row.revocation) || ![202, 401, 403].includes(row.status) || ![0, 1].includes(row.appended)) throw new Error("directory command authority case taxonomy drift: " + row.id);
+    if (row.events.length !== 3 || new Set(row.events).size !== 3 || row.events.some((event: string) => !["authorize", "revoke", "fence"].includes(event))) throw new Error("directory command authority case events drift: " + row.id);
+  }
+  for (const row of fixture.bindings) {
+    if (!["document", "scoped", "global"].includes(row.audience) || !["author", "owner"].includes(row.user) || !["changed", "other"].includes(row.space) || typeof row.invalidated !== "boolean") throw new Error("directory command authority binding taxonomy drift: " + row.id);
+  }
+  for (const row of fixture.inviteScopes) {
+    if (!["owned", "foreign"].includes(row.commandSpace) || row.inviteSpace !== "foreign" || ![404, 202, 409].includes(row.status) || typeof row.revoked !== "boolean" || typeof row.accepted !== "boolean") throw new Error("directory command authority invite-scope taxonomy drift: " + row.id);
+  }
   const findIndex = (await import("lodash-es/findIndex.js")).default;
   for (const row of fixture.cases) {
     let revoked = false,
@@ -14027,8 +14501,17 @@ function proveSpaceArtifactCreationContractV1(repoRoot: string): number {
   }
   const httpBase = join(repoRoot, "🌎️hub/🗿️artifact-authority/🌱️creation/🧫️fixtures/🌐️http-owner-v1");
   const httpFixture = JSON.parse(readFileSync(join(httpBase, "🔣️.json"), "utf8"));
-  const validateHttp = new Ajv2020({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(httpBase, "🧬️.schema.json"), "utf8")));
-  if (!validateHttp(httpFixture)) throw new Error(`creation HTTP owner fixture rejected: ${JSON.stringify(validateHttp.errors)}`);
+  const admitsHttpLimits = hubSchemaExport(repoRoot, "schema://hub.artifact-authority.creation/ArtifactCreationHttpLimitsV1");
+  const admitsHttpRoute = hubSchemaExport(repoRoot, "schema://hub.artifact-authority.creation/ArtifactCreationHttpRouteV1");
+  const admitsHttpAuthority = hubSchemaExport(repoRoot, "schema://hub.artifact-authority.creation/ArtifactCreationHttpAuthorityV1");
+  const admitsHttpResponse = hubSchemaExport(repoRoot, "schema://hub.artifact-authority.creation/ArtifactCreationHttpResponseV1");
+  if (httpFixture.schema !== "semio.test.artifact-creation-http-owner/v1" || httpFixture.routes.length !== 10 || httpFixture.authorities.length !== 6 || httpFixture.responses.length !== 6
+    || new Set(httpFixture.routes.map((row: any) => row.id)).size !== 10 || new Set(httpFixture.authorities.map((row: any) => row.id)).size !== 6
+    || new Set(httpFixture.responses.map((row: any) => row.phase)).size !== 6) throw new Error("creation HTTP owner envelope differs");
+  if (!admitsHttpLimits(httpFixture.limits) || httpFixture.limits.bodyBytes !== 4096 || httpFixture.limits.liveOperations !== 8 || httpFixture.limits.lifetimeMs !== 30000) throw new Error("creation HTTP owner limits differ from their owning scope contract");
+  for (const row of httpFixture.routes) if (!admitsHttpRoute(row)) throw new Error(`creation HTTP route violates its owning scope contract: ${row.id}`);
+  for (const row of httpFixture.authorities) if (!admitsHttpAuthority(row)) throw new Error(`creation HTTP authority violates its owning scope contract: ${row.id}`);
+  for (const row of httpFixture.responses) if (!admitsHttpResponse(row)) throw new Error(`creation HTTP response violates its owning scope contract: ${row.phase}`);
   for (const row of httpFixture.routes) {
     const actual = localRelayUpstreamPath(row.method, new URL(row.path, "http://relay.invalid"));
     if ((actual !== undefined) !== row.accepted) throw new Error(`creation relay boundary differs: ${row.id}`);
@@ -14048,7 +14531,7 @@ function proveSpaceArtifactCreationContractV1(repoRoot: string): number {
     || !spaceEditor.includes("create_artifact_dialog_submission_preserves_the_exact_catalog_choice_in_the_host_relay")
     || !createArtifact.includes('action_id: "os.create-space-artifact".into()')
     || !createArtifact.includes('"kindChoice": payload.kind_choice')) throw new Error("ordinary Space creation dialog relay is not exact kindChoice-only");
-  console.log(`[DEBUG] space artifact creation contract: cases=${checks} raw-json=${fixture.rawJson.length} relay=${httpFixture.routes.length} authority=${httpFixture.authorities.length} responses=${httpFixture.responses.length} AJV=2 TypeScript=1 Pack=1 ready-only-coordinate=1 ordinary-bridge=3; runtime genesis remains a separate gate`);
+  console.log(`[DEBUG] space artifact creation contract: cases=${checks} raw-json=${fixture.rawJson.length} relay=${httpFixture.routes.length} authority=${httpFixture.authorities.length} responses=${httpFixture.responses.length} AJV=1 scope-exports=4 TypeScript=1 Pack=1 ready-only-coordinate=1 ordinary-bridge=3; runtime genesis remains a separate gate`);
   const indexed = JSON.parse(readFileSync(join(base, "../📇️document-index-v1/🔣️.json"), "utf8"));
   const directorySchema = JSON.parse(readFileSync(join(base, "../🔣️.json"), "utf8"));
   const indexedBodySchema = directorySchema.$defs.DirectoryEventBody.oneOf.find((row: any) => row.properties.kind.const === "document.indexed");
@@ -14113,28 +14596,33 @@ function proveSpaceArtifactCreationContractV1(repoRoot: string): number {
     if (accepted !== row.accepted || Boolean(validateCurrent(row.command)) !== row.accepted) throw new Error(`genesis publication current differs: ${row.id}`);
   }
   console.log(`[DEBUG] genesis publication current: TypeScript=${current.cases.length} AJV=1; no Directory lineage or backend transaction executed`);
-  const operationRoot = join(repoRoot, "🌎️hub/🗿️artifact-authority/🌱️creation/📚️operation-v1");
+  const operationRoot = join(repoRoot, "🌎️hub/🗿️artifact-authority/🌱️creation/🧫️fixtures/📚️operation-v1");
   const transactionRoot = join(operationRoot, "../🧪️transaction-v1");
   const transactions = JSON.parse(readFileSync(join(transactionRoot, "🔣️.json"), "utf8"));
-  const validateTransaction = new Ajv2020({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(transactionRoot, "🧬️.schema.json"), "utf8")));
+  const validateTransaction = hubSchemaExport(repoRoot, "schema://hub.artifact-authority.creation/ArtifactCreationTransactionOutcomeV1");
+  if (transactions.cases.length !== 32 || new Set(transactions.cases.map((row: any) => row.kind)).size !== 32) throw new Error("creation transaction outcome corpus is not the exact kind closure");
   for (const row of transactions.cases) {
     if (!validateTransaction(row) || validateTransaction({ ...row, committed: !row.committed })) throw new Error(`creation transaction oracle differs: ${row.kind}`);
   }
-  console.log(`[DEBUG] creation transaction oracle: AJV=${transactions.cases.length}; backend transactions not executed`);
+  console.log(`[DEBUG] creation transaction oracle: scope-export=${transactions.cases.length}; backend transactions not executed`);
   const recovery = JSON.parse(readFileSync(join(transactionRoot, "🧯️accepted-recovery.json"), "utf8"));
-  const validateRecovery = new Ajv2020({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(transactionRoot, "🧯️accepted-recovery.schema.json"), "utf8")));
+  const validateRecovery = hubSchemaExport(repoRoot, "schema://hub.artifact-authority.creation/ArtifactCreationAcceptedRecoveryV1");
+  if (recovery.cases.length !== 3 || new Set(recovery.cases.map((row: any) => row.kind)).size !== 3) throw new Error("creation accepted recovery corpus is not the exact kind closure");
   for (const row of recovery.cases) {
     if (!validateRecovery(row) || validateRecovery({ ...row, facts: row.facts + 1 })) throw new Error(`creation accepted recovery oracle differs: ${row.kind}`);
   }
-  console.log(`[DEBUG] creation accepted recovery oracle: AJV=${recovery.cases.length}; real deadline/backend not executed`);
+  console.log(`[DEBUG] creation accepted recovery oracle: scope-export=${recovery.cases.length}; real deadline/backend not executed`);
   const operation = JSON.parse(readFileSync(join(operationRoot, "🔣️.json"), "utf8"));
   const cancellations = JSON.parse(readFileSync(join(operationRoot, "🛑️cancel.json"), "utf8"));
-  const validateCancellation = new Ajv2020({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(operationRoot, "🛑️cancel.schema.json"), "utf8")));
+  const validateCancellation = hubSchemaExport(repoRoot, "schema://hub.artifact-authority.creation/ArtifactCreationCancellationDecisionV1");
+  if (cancellations.cases.length !== 9) throw new Error("creation cancellation race corpus differs");
   for (const row of cancellations.cases) {
     if (!validateCancellation(row) || validateCancellation({ ...row, accepted: !row.accepted })) throw new Error(`creation cancellation oracle differs: ${row.state}/${row.expectedRevision}`);
   }
-  console.log(`[DEBUG] creation cancellation oracle: AJV=${cancellations.cases.length}; backend concurrency not executed`);
-  const validateTransition = new Ajv2020({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(operationRoot, "🧬️.schema.json"), "utf8")));
+  console.log(`[DEBUG] creation cancellation oracle: scope-export=${cancellations.cases.length}; backend concurrency not executed`);
+  const validateTransition = hubSchemaExport(repoRoot, "schema://hub.artifact-authority.creation/ArtifactCreationTransitionV1");
+  if (operation.schema !== "semio.test.artifact-creation-operation/v1" || operation.transitions.length !== 30
+    || new Set(operation.transitions.map((row: any) => `${row.state}/${row.fact}`)).size !== 30) throw new Error("creation operation transition corpus is not the exact 6x5 closure");
   for (const row of operation.transitions) {
     if (!validateTransition(row) || validateTransition({ ...row, next: row.next === null ? row.fact : null })) throw new Error(`creation operation transition oracle differs: ${row.state}/${row.fact}`);
   }
@@ -14143,7 +14631,7 @@ function proveSpaceArtifactCreationContractV1(repoRoot: string): number {
     const bytes = Buffer.from(value); const length = Buffer.alloc(8); length.writeBigUInt64BE(BigInt(bytes.length)); intentDigest.update(length).update(bytes);
   }
   if (intentDigest.digest("hex") !== operation.intent.commandSha256) throw new Error("creation operation independent intent commitment differs");
-  console.log(`[DEBUG] creation operation: AJV transitions=${operation.transitions.length} independent-node-SHA256=1; native reducer/backend not executed`);
+  console.log(`[DEBUG] creation operation: scope-export transitions=${operation.transitions.length} independent-node-SHA256=1; native reducer/backend not executed`);
   const expected = genesis.expected;
   if (JSON.stringify(hash(Buffer.from(expected.checkpointEncodingHex, "hex"))) !== JSON.stringify(expected.checkpoint.checkpointId)
     || JSON.stringify(hash(descriptorDigestEncodingV1(expected.descriptor))) !== JSON.stringify(expected.checkpoint.descriptorDigestV1)
@@ -14322,10 +14810,22 @@ type DirectorySpaceAdministrationFixture = {
 async function proveDirectorySpaceAdministrationPageV1(repoRoot: string): Promise<number> {
   const root = join(repoRoot, "🌎️hub/🧪️fixtures/📇️directory/🏘️space-administration-page-v1");
   const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8")) as DirectorySpaceAdministrationFixture;
-  const schema = JSON.parse(readFileSync(join(root, "🧬️.schema.json"), "utf8"));
-  const Ajv2020 = (await import("ajv/dist/2020.js")).default;
-  const validate = new Ajv2020({ strict: true, allErrors: true }).compile(schema);
-  if (!validate(fixture)) throw new Error(`space administration fixture: ${JSON.stringify(validate.errors)}`);
+  if (fixture.schema !== "semio.hub.directory-space-administration-page/v1") throw new Error("space administration fixture schema drift");
+  if (Object.keys(fixture).sort().join(",") !== "cursorCases,hostiles,invites,limits,members,schema,session,space,vectors") throw new Error("space administration fixture envelope drift");
+  if (fixture.limits.windowRows !== 64 || fixture.limits.pageBytes !== 49152 || fixture.limits.cursorBytes !== 1024 || fixture.limits.safeInteger !== 9007199254740991) throw new Error("space administration bound drift");
+  if (!hubSchemaExport(repoRoot, "schema://hub.directory/DirectorySpaceSessionBindingV1")(fixture.session)) throw new Error("space administration session is not the owned space session-binding contract");
+  if (!hubSchemaExport(repoRoot, "schema://hub.directory/SpaceAdministrationSpaceV1")(fixture.space)) throw new Error("space administration space is not the owned administration space contract");
+  if (fixture.session.spaceId !== (fixture.space.id as string)) throw new Error("space administration session is not bound to its own space");
+  const administrationMember = hubSchemaExport(repoRoot, "schema://hub.directory/SpaceAdministrationMemberRowV1");
+  const administrationInvite = hubSchemaExport(repoRoot, "schema://hub.directory/SpaceAdministrationInviteRowV1");
+  if (fixture.members.length < 2 || fixture.members.length > fixture.limits.windowRows || fixture.invites.length < 2 || fixture.invites.length > fixture.limits.windowRows) throw new Error("space administration window inventory drift");
+  for (const member of fixture.members) if (!administrationMember(member)) throw new Error(`space administration member is not the owned member-row contract: ${member.userId}`);
+  for (const invite of fixture.invites) if (!administrationInvite(invite)) throw new Error(`space administration invite is not the owned invite-row contract: ${invite.inviteId}`);
+  if (administrationInvite({ ...fixture.invites[0]!, inviteSecret: "leak" })) throw new Error("space administration invite-row contract admitted a secret field");
+  if (fixture.vectors.map((vector) => vector.name).join(",") !== "author,member,public,author-window-boundary") throw new Error("space administration vector inventory drift");
+  const administrationHostiles = ["receipt-substituted", "trailing-whitespace", "unknown-field", "space-mismatch", "member-order-reversed", "invite-order-reversed", "window-row-max-plus-one", "page-byte-max-plus-one", "invite-secret-field"];
+  if (fixture.hostiles.join(",") !== administrationHostiles.join(",")) throw new Error("space administration hostile inventory drift");
+  if (fixture.cursorCases.length !== 8 || fixture.cursorCases.some((row) => ![200, 400].includes(row.status) || ![0, 1].includes(row.reads))) throw new Error("space administration cursor inventory drift");
   const u32be = (value: number): Buffer => {
     const bytes = Buffer.alloc(4);
     bytes.writeUInt32BE(value);
@@ -14635,10 +15135,19 @@ class SpaceAdministrationCheckScript extends BundleScript {
 async function provePresenceLeaseFixture(repoRoot: string): Promise<number> {
   const root = join(repoRoot, "🌎️hub/📦️packages/🦀️rust/🧪️fixtures/👥️presence-lease-v1");
   const fixture = JSON.parse(readFileSync(join(root, "🧪️fixture/🔣️.json"), "utf8")) as PresenceLeaseFixture;
-  const Ajv2020 = (await import("ajv/dist/2020.js")).default;
-  const validate = new Ajv2020({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(root, "🧬️schema/🔣️.json"), "utf8")));
-  if (!validate(fixture)) throw new Error(`presence lease fixture: ${JSON.stringify(validate.errors)}`);
+  const presenceOperation = hubSchemaExport(repoRoot, "schema://hub.directory/PresenceLeaseOperationV1");
+  const presenceSummary = hubSchemaExport(repoRoot, "schema://hub.directory/PresenceScopeSummaryV1");
+  if (fixture.schema !== "semio.hub.presence-lease/v1") throw new Error("presence lease fixture schema drift");
+  if (Object.keys(fixture).sort().join(",") !== "limits,schema,vectors") throw new Error("presence lease fixture envelope drift");
+  if (fixture.limits.ttlMs !== 15000 || fixture.limits.maximumItems !== 64 || fixture.limits.maximumEntryBytes !== 4096 || fixture.limits.maximumBytes !== 262144) throw new Error("presence lease bound drift");
+  if (fixture.vectors.length < 8 || fixture.vectors.length > 16) throw new Error("presence lease vector inventory drift");
   if (new Set(fixture.vectors.map(({ name }) => name)).size !== fixture.vectors.length) throw new Error("presence lease fixture names are not unique");
+  for (const vector of fixture.vectors) {
+    for (const operation of vector.operations) if (!presenceOperation(operation)) throw new Error(`presence lease operation is not the owned lease-operation contract: ${vector.name}`);
+    for (const summary of vector.expected.final) if (!presenceSummary(summary)) throw new Error(`presence lease roster is not the owned scope-summary contract: ${vector.name}`);
+    if (vector.expected.durableWrites !== 0 || vector.expected.directoryRecipients.some((recipient) => recipient !== "member")) throw new Error(`presence lease projection escaped its ephemeral member fanout: ${vector.name}`);
+    if (vector.expected.outcomes.some((outcome) => !["published", "no-change", "rejected", "restarted"].includes(outcome))) throw new Error(`presence lease outcome taxonomy drift: ${vector.name}`);
+  }
   type Slot = { liveId: string; deadline: number; peerTag: string | null; peerBytes: number };
   for (const vector of fixture.vectors) {
     const slots = new Map<string, Slot>();
@@ -14714,12 +15223,17 @@ async function provePresenceLeaseFixture(repoRoot: string): Promise<number> {
     if (JSON.stringify(actual) !== JSON.stringify(expected)) throw new Error(`presence lease model differs for ${vector.name}: ${JSON.stringify(actual)}`);
   }
   const schemaHostiles: unknown[] = [
-    { ...fixture, unknown: true },
-    { ...fixture, limits: { ...fixture.limits, ttlMs: 14999 } },
-    { ...fixture, vectors: fixture.vectors.map((vector, index) => (index === 0 ? { ...vector, operations: [{ ...vector.operations[0], clientDeadlineMs: 1 }] } : vector)) },
-    { ...fixture, vectors: fixture.vectors.map((vector, index) => (index === 0 ? { ...vector, expected: { ...vector.expected, directoryRecipients: ["outsider"] } } : vector)) },
+    { ...fixture.vectors[0]!.operations[0], clientDeadlineMs: 1 },
+    { ...fixture.vectors[0]!.operations[0], kind: "forge" },
+    { ...fixture.vectors[0]!.operations[0], nowMs: 1000001 },
   ];
-  if (schemaHostiles.some((candidate) => validate(candidate))) throw new Error("presence lease schema admitted client authority or an unbounded projection");
+  if (schemaHostiles.some((candidate) => presenceOperation(candidate))) throw new Error("presence lease operation contract admitted client authority or an unbounded deadline");
+  const summaryHostiles: unknown[] = [
+    { ...fixture.vectors[0]!.expected.final[0]!, actors: Array.from({ length: 65 }, (_, index) => `actor-${index}`) },
+    { ...fixture.vectors[0]!.expected.final[0]!, bytes: 262145 },
+    { ...fixture.vectors[0]!.expected.final[0]!, unknown: true },
+  ];
+  if (summaryHostiles.some((candidate) => presenceSummary(candidate))) throw new Error("presence lease scope-summary contract admitted an unbounded projection");
   const hub = readFileSync(join(repoRoot, "🌎️hub/📦️packages/🦀️rust/🚀️bin.rs"), "utf8");
   const sourceClosed = (source: string): boolean => {
     const publish = source.indexOf("self.fanout_for(key).send(ServerFrame::Presence");
@@ -14761,8 +15275,8 @@ async function provePresenceLeaseFixture(repoRoot: string): Promise<number> {
   const helpers = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛠️ShellHelpers/🟦️.tsx"), "utf8");
   if (!helpers.includes("PRESENCE_HEARTBEAT_INTERVAL_MS = 5000") || !shell.includes("window.setInterval(beat, PRESENCE_HEARTBEAT_INTERVAL_MS)") || !shell.includes("window.clearInterval(timer)"))
     throw new Error("browser presence schedule is not a bounded five-second lifecycle");
-  const checks = fixture.vectors.length + schemaHostiles.length + sourceHostiles.length + 1;
-  console.log(`presence-lease-oracle: AJV=1 vectors=${fixture.vectors.length} schema-hostiles=${schemaHostiles.length} source-hostiles=${sourceHostiles.length} browser-schedule=1`);
+  const checks = fixture.vectors.length + schemaHostiles.length + summaryHostiles.length + sourceHostiles.length + 1;
+  console.log(`presence-lease-oracle: hub.directory-exports=2 vectors=${fixture.vectors.length} contract-hostiles=${schemaHostiles.length + summaryHostiles.length} source-hostiles=${sourceHostiles.length} browser-schedule=1`);
   return checks;
 }
 
@@ -14770,9 +15284,18 @@ async function provePresenceLeaseFixture(repoRoot: string): Promise<number> {
 async function provePresenceNormalizationFixture(repoRoot: string): Promise<number> {
   const root = join(repoRoot, "🌎️hub/📦️packages/🦀️rust/🧪️fixtures/🪪️presence-normalization-v1");
   const fixture = JSON.parse(readFileSync(join(root, "🧪️fixture/🔣️.json"), "utf8"));
-  const Ajv2020 = (await import("ajv/dist/2020.js")).default;
-  const validate = new Ajv2020({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(root, "🧬️schema/🔣️.json"), "utf8")));
-  if (!validate(fixture)) throw new Error(`presence normalization schema: ${JSON.stringify(validate.errors)}`);
+  const presenceAdmission = hubSchemaExport(repoRoot, "schema://hub.directory/PresenceAdmissionV1");
+  if (fixture.schema !== "semio.hub.presence-normalization/v1" || fixture.maximumEntryBytes !== 4096) throw new Error("presence normalization fixture schema/bound drift");
+  if (Object.keys(fixture).sort().join(",") !== "maximumEntryBytes,schema,vectors") throw new Error("presence normalization fixture envelope drift");
+  if (fixture.vectors.length < 12 || fixture.vectors.length > 32 || new Set(fixture.vectors.map((vector: { name: string }) => vector.name)).size !== fixture.vectors.length) throw new Error("presence normalization vector inventory drift");
+  for (const vector of fixture.vectors) {
+    if (!presenceAdmission(vector.admission)) throw new Error(`presence normalization admission is not the owned admission contract: ${vector.name}`);
+    if (!/^(?:[0-9a-f]{2})*$/u.test(vector.rawPeerHex) || vector.rawPeerHex.length > 16384) throw new Error(`presence normalization raw peer bytes drift: ${vector.name}`);
+    if (typeof vector.expected.accepted !== "boolean" || vector.expected.durableWrites !== 0) throw new Error(`presence normalization expectation drift: ${vector.name}`);
+    if (vector.expected.normalizedPeerHex !== null && (!/^(?:[0-9a-f]{2})*$/u.test(vector.expected.normalizedPeerHex) || vector.expected.normalizedPeerHex.length > 16384)) throw new Error(`presence normalization normalized bytes drift: ${vector.name}`);
+  }
+  if (presenceAdmission({ ...fixture.vectors[0].admission, extra: true }) || presenceAdmission({ ...fixture.vectors[0].admission, role: "owner" }) || presenceAdmission({ ...fixture.vectors[0].admission, color: 256 }))
+    throw new Error("presence normalization admission contract admitted a forged claim");
   const { default: leb } = await import("@webassemblyjs/leb128/lib/leb.js");
   const integer = (value: number): number[] => {
     if (!Number.isSafeInteger(value) || value < 0) throw new Error("neutral oracle integer outside the exact safe range");
@@ -14922,8 +15445,14 @@ class AdminPresenceTargetRecoveryCheckScript extends BundleScript {
     const root = join(this.repoRoot, "🌎️hub/📦️packages/🦀️rust");
     const fixtureRoot = join(root, "🧪️fixtures/🛂️admin-presence-target-recovery-v1");
     const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8"));
-    const validate = new Ajv({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(fixtureRoot, "🧬️.schema.json"), "utf8")));
-    if (!validate(fixture)) throw new Error(JSON.stringify(validate.errors));
+    if (fixture.schema !== "semio.hub.admin-presence-target-recovery/v1" || fixture.surfaceId !== "surface.test.editor") throw new Error("admin presence target recovery fixture schema drift");
+    if (Object.keys(fixture).sort().join(",") !== "expected,members,remove,schema,scope,surfaceId") throw new Error("admin presence target recovery fixture envelope drift");
+    if (!hubSchemaExport(this.repoRoot, "schema://hub.directory/DirectorySocketScopeV1")(fixture.scope)) throw new Error("admin presence target recovery scope is not the owned socket scope contract");
+    if (fixture.members.length !== 2 || fixture.members.some((member: { id: string; role: string }) => member.role !== "author") || fixture.remove !== "removed") throw new Error("admin presence target recovery membership drift");
+    const recoveryExpected = fixture.expected;
+    if (Object.keys(recoveryExpected).sort().join(",") !== "members,observerStatus,removedCloseCode,removedCode,removedStatus,sqliteReopen,visibleAfterRemoval") throw new Error("admin presence target recovery expectation envelope drift");
+    if (recoveryExpected.removedCloseCode !== 4401 || recoveryExpected.removedStatus !== 401 || recoveryExpected.removedCode !== "denied" || recoveryExpected.observerStatus !== 200 || recoveryExpected.visibleAfterRemoval !== 0 || recoveryExpected.sqliteReopen !== true)
+      throw new Error("admin presence target recovery expectation drift");
     const members = fixture.members.map((member: { id: string }) => member.id).filter((id: string) => id !== fixture.remove);
     if (JSON.stringify(members) !== JSON.stringify(fixture.expected.members) || new Set(fixture.members.map((member: { id: string }) => member.id)).size !== 2) throw new Error("membership recovery oracle differs");
     console.log("admin-presence-target-recovery-independent-oracle: AJV=1 scoped-removal=1");
@@ -14988,11 +15517,21 @@ async function proveInviteRedemptionTransaction(repoRoot: string): Promise<numbe
   const root = join(repoRoot, "🌎️hub/📇️directory/🧫️fixtures/🎟️invite-redemption-transaction-v1");
   const client = await import(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🟦️.ts"));
   const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8")) as InviteRedemptionFixture;
-  const schema = JSON.parse(readFileSync(join(root, "🧬️.schema.json"), "utf8"));
-  const Ajv2020 = (await import("ajv/dist/2020.js")).default;
-  const validate = new Ajv2020({ strict: true, allErrors: true }).compile(schema);
-  if (!validate(fixture)) throw new Error(`invite redemption transaction fixture: ${JSON.stringify(validate.errors)}`);
+  const acceptanceMarker = hubSchemaExport(repoRoot, "schema://hub.directory/InviteAcceptanceMarkerV1");
+  if (fixture.schema !== "semio.hub.invite-redemption-transaction/v1") throw new Error("invite redemption transaction fixture schema drift");
+  if (Object.keys(fixture).sort().join(",") !== "authorityRaces,backendOrders,hostiles,limits,receiptRelease,schema,spaceStates,vectors") throw new Error("invite redemption transaction fixture envelope drift");
+  if (fixture.limits.credentialBytes !== 4096 || fixture.limits.identifierBytes !== 4096 || fixture.limits.maximumContenders !== 3) throw new Error("invite redemption transaction bound drift");
+  if (fixture.vectors.length < 16 || fixture.vectors.length > 32 || fixture.spaceStates.length !== 7 || fixture.authorityRaces.length !== 4 || fixture.backendOrders.length !== 2 || fixture.receiptRelease.length !== 4) throw new Error("invite redemption transaction table sizes drifted");
+  const inviteHostiles = ["raw-capability", "client-space", "client-role", "client-event-id", "unknown-field", "oversized-identifier", "client-space-state"];
+  if (fixture.hostiles.length < 4 || fixture.hostiles.length > 12 || new Set(fixture.hostiles.map(({ mutation }) => mutation)).size !== inviteHostiles.length || fixture.hostiles.some(({ mutation }) => !inviteHostiles.includes(mutation)))
+    throw new Error("invite redemption transaction hostile inventory drift");
   if (new Set(fixture.vectors.map(({ name }) => name)).size !== fixture.vectors.length) throw new Error("invite redemption fixture names are not unique");
+  for (const vector of fixture.vectors) {
+    if (!acceptanceMarker(vector.expected.marker)) throw new Error(`invite redemption acceptance marker is not the owned marker contract: ${vector.name}`);
+    if (vector.calls.length < 1 || vector.calls.length > fixture.limits.maximumContenders || vector.expected.outcomes.length !== vector.calls.length || vector.expected.returnedEventIds.length !== vector.calls.length)
+      throw new Error(`invite redemption call/outcome arity differs: ${vector.name}`);
+  }
+  if (acceptanceMarker({ ...fixture.vectors[0]!.expected.marker, acceptedBy: "forged" }) || acceptanceMarker({ acceptedAt: -1, acceptedEventId: null })) throw new Error("invite redemption marker contract admitted a forged marker");
 
   const { Database } = await import("bun:sqlite");
   const oracle = new Database(":memory:");
@@ -15543,9 +16082,25 @@ async function proveDirectorySpaceJourneyV1(repoRoot: string): Promise<Readonly<
   const root = join(repoRoot, "🌎️hub/🧪️fixtures/📇️directory/🚻️space-journey-v1");
   const source = readFileSync(join(root, "🔣️.json"), "utf8");
   const fixture = JSON.parse(source) as DirectorySpaceJourneyFixture;
-  const Ajv2020 = (await import("ajv/dist/2020.js")).default;
-  const validate = new Ajv2020({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(root, "🧬️.schema.json"), "utf8")));
-  if (!validate(fixture)) throw new Error(`space journey fixture: ${JSON.stringify(validate.errors)}`);
+  if (fixture.schema !== "semio.hub.directory-space-journey/v1") throw new Error("space journey fixture schema drift");
+  if (Object.keys(fixture).sort().join(",") !== "bindings,document,limits,privacy,profiles,routes,schema,skips,space,steps") throw new Error("space journey fixture envelope drift");
+  if (fixture.limits.responseBytes !== 65536 || fixture.limits.commandRequestBytes !== 8192 || fixture.limits.administrationPageBytes !== 49152) throw new Error("space journey bound drift");
+  if (fixture.limits.journeyMs < 30000 || fixture.limits.journeyMs > 600000 || fixture.limits.stepMs < 1000 || fixture.limits.stepMs > 60000 || fixture.limits.socketWaitMs < 1000 || fixture.limits.socketWaitMs > 30000) throw new Error("space journey deadline drift");
+  const journeyProfile = hubSchemaExport(repoRoot, "schema://hub.directory/DirectoryProfileV1");
+  if (!journeyProfile(fixture.profiles.a) || !journeyProfile(fixture.profiles.b) || fixture.profiles.a.profileId === fixture.profiles.b.profileId) throw new Error("space journey profiles are not two distinct owned directory profiles");
+  if (!hubSchemaExport(repoRoot, "schema://hub.directory/DirectoryDocumentDescriptorV1")(fixture.document)) throw new Error("space journey document is not the owned directory descriptor contract");
+  const journeyLabels = hubSchemaExport(repoRoot, "schema://hub.directory/LocalizedTextV1");
+  for (const row of [...fixture.steps, ...fixture.skips]) {
+    if (!journeyLabels(row.labels)) throw new Error(`space journey labels are not the owned bilingual text contract: ${row.id}`);
+    if (row.labels.en.length < 8 || row.labels.de.length < 8 || row.labels.en === row.labels.de) throw new Error(`space journey labels are not two distinct meaningful languages: ${row.id}`);
+    if (!/^[a-z0-9]+(-[a-z0-9]+)*$/u.test(row.id)) throw new Error(`space journey identifier drift: ${row.id}`);
+  }
+  if (fixture.steps.length < 12 || fixture.steps.length > 32 || fixture.skips.length < 3 || fixture.skips.length > 16 || fixture.routes.length < 8) throw new Error("space journey inventory drift");
+  if (new Set([...fixture.steps, ...fixture.skips].map((row) => row.id)).size !== fixture.steps.length + fixture.skips.length) throw new Error("space journey step identifiers are not unique");
+  if (new Set(fixture.routes).size !== fixture.routes.length || fixture.routes.some((route) => !route.startsWith("/"))) throw new Error("space journey route inventory drift");
+  if (fixture.steps.some((step) => !step.route.startsWith("/") || !["GET", "POST", "DELETE"].includes(step.method) || !["a", "b", "both"].includes(step.actor))) throw new Error("space journey step taxonomy drift");
+  if (fixture.privacy.forbiddenTraceSubstrings.length < 4 || fixture.privacy.forbiddenPageSubstrings.length < 4) throw new Error("space journey privacy inventory drift");
+  if (!["atelier", "studio", "archive"].includes(fixture.space.spaceKind) || !["private", "public"].includes(fixture.space.visibility)) throw new Error("space journey space taxonomy drift");
   let checks = 1;
 
   const runner = readFileSync(join(repoRoot, "🌎️hub/📦️packages/🦀️rust/📜️script.ts"), "utf8");

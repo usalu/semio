@@ -9,10 +9,10 @@
 //! leaf's own oracle. The derived `.op.semio`/`.spr.semio`/`.dsl.semio`/`.pack.semio`/
 //! `.patch.semio` encodings come from `fixtures generate`, not from here.
 
-use crate::artifacts::gltf::schema::mutations::delete_sampler::diff::GltfDeleteSamplerDiff;
-use crate::artifacts::gltf::schema::mutations::delete_sampler::GltfDeleteSamplerPayload;
-use crate::artifacts::gltf::schema::mutations::delete_sampler::{diff, inverse, mutation};
-use crate::artifacts::gltf::GltfSnapshot;
+use crate::schema::mutations::delete_sampler::diff::GltfDeleteSamplerDiff;
+use crate::schema::mutations::delete_sampler::GltfDeleteSamplerPayload;
+use crate::schema::mutations::delete_sampler::{diff, inverse, mutation};
+use crate::GltfSnapshot;
 
 const CASE: &str = "delete-sampler/removes-the-linear-sampler-and-renumbers-the-texture";
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");

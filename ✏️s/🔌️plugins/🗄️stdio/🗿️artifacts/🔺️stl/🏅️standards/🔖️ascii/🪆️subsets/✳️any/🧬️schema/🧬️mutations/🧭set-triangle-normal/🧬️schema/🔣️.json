@@ -1,0 +1,29 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/stl/ascii/any/mutation/set-triangle-normal.json",
+  "title": "SetTriangleNormal",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "index",
+    "normal"
+  ],
+  "properties": {
+    "index": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "normal": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      },
+      "minItems": 3,
+      "maxItems": 3
+    },
+    "mutation": {
+      "const": "setTriangleNormal",
+      "description": "Aggregate discriminator spliced in by StlMutation; absent when the payload stands alone."
+    }
+  }
+}

@@ -5,7 +5,7 @@
   "displayName": "Change Refrigeration System Case Count",
   "emoji": "🗄️",
   "aggregateVariant": "ChangeRefrigerationSystemCaseCount",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-refrigeration-system-case-count",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

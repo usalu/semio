@@ -5,7 +5,7 @@
   "displayName": "Change Time Series Schedule Timestep",
   "emoji": "🕙️",
   "aggregateVariant": "ChangeTimeSeriesScheduleTimestep",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-time-series-schedule-timestep",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

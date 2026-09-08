@@ -8,8 +8,8 @@
 //! would have serialized the internally-tagged `JsonValue` shape verbatim, not real JSON text — a
 //! latent bug this fix also corrects).
 use crate::artifacts::playbook::PlaybookSnapshot;
-use semio_s_plugin_stdio::artifacts::json::schema::snapshot::{write_json_pretty, JsonSnapshot};
-use semio_s_plugin_stdio::artifacts::json::STDIO_JSON_DOCUMENT_SCHEMA;
+use semio_s_artifact_stdio_json::schema::snapshot::{write_json_pretty, JsonSnapshot};
+use semio_s_artifact_stdio_json::STDIO_JSON_DOCUMENT_SCHEMA;
 pub fn register() {}
 
 pub fn serialize(snapshot: &PlaybookSnapshot) -> Result<JsonSnapshot, store::TextError> {

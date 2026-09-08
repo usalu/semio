@@ -5,7 +5,7 @@
   "displayName": "Change Room Air Model",
   "emoji": "🪭️",
   "aggregateVariant": "ChangeRoomAirModel",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-room-air-model",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

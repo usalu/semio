@@ -6,8 +6,8 @@
 //! viewpoint + snapshot image; `parts` retains every unmodeled/unknown file (e.g. `project.bcfp`,
 //! non-topic root files, topic folders without a `markup.bcf`) verbatim.
 
-use crate::artifacts::bcf::STDIO_BCF_DOCUMENT_SCHEMA;
-use schema::ArtifactSchema;
+use crate::STDIO_BCF_DOCUMENT_SCHEMA;
+use framework_schema::ArtifactSchema;
 
 //#region 🔖️Geometry
 /// 📐 A 3D point/vector (BCF-XML `visinfo.xsd` `Point`/`Direction` — both are `{X,Y,Z}` triples).
@@ -197,10 +197,10 @@ impl store::ArtifactDsl for BcfSnapshot {
         for i in (0..hex.len()).step_by(2) {
             bytes.push(u8::from_str_radix(&hex[i..i + 2], 16).map_err(|e| store::TextError::new(format!("invalid hex: {e}"), dsl::TextSpan::at(1, 1)))?);
         }
-        crate::artifacts::bcf::io::decode_bcf(&bytes).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        crate::io::decode_bcf(&bytes).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
     fn print_dsl(&self) -> String {
-        let bytes = crate::artifacts::bcf::io::encode_bcf(self).unwrap_or_default();
+        let bytes = crate::io::encode_bcf(self).unwrap_or_default();
         let body: String = bytes.iter().map(|b| format!("{b:02x}")).collect();
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
@@ -210,7 +210,7 @@ impl store::ArtifactDsl for BcfSnapshot {
 impl store::ArtifactPack for BcfSnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
-        let raw = crate::artifacts::bcf::io::encode_bcf(self).map_err(store::PackError::Schema)?;
+        let raw = crate::io::encode_bcf(self).map_err(store::PackError::Schema)?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
@@ -220,7 +220,7 @@ impl store::ArtifactPack for BcfSnapshot {
             return Err(store::PackError::Schema("pack envelope mismatch".into()));
         }
         let _ = options;
-        crate::artifacts::bcf::io::decode_bcf(&inner).map_err(store::PackError::Schema)
+        crate::io::decode_bcf(&inner).map_err(store::PackError::Schema)
     }
 }
 //#endregion 🔖️Snapshot

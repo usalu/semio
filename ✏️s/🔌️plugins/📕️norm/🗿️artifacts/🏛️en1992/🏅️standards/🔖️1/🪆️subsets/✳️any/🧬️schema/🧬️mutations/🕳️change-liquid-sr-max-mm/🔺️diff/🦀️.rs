@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeLiquidSRMaxMm, base: &En1992Snapshot) -> protocol::M
     if base.liquid_s_r_max_mm == payload.new_liquid_s_r_max_mm {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "Liquid sr max mm already has this value.");
     }
-    protocol::MutationOutcome::new(En1992Diff { liquid_s_r_max_mm: Some(payload.new_liquid_s_r_max_mm.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1992Diff { liquid_s_r_max_mm: Some(payload.new_liquid_s_r_max_mm), ..Default::default() })
 }
 //#endregion 🔖️Diff

@@ -1,0 +1,29 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/ply/1.0/any/mutation/set-format.json",
+  "title": "SetFormat",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "format"
+  ],
+  "properties": {
+    "format": {
+      "$ref": "#/$defs/PlyFormat"
+    },
+    "mutation": {
+      "const": "setFormat",
+      "description": "Aggregate discriminator spliced in by PlyMutation; absent when the payload stands alone."
+    }
+  },
+  "$defs": {
+    "PlyFormat": {
+      "type": "string",
+      "enum": [
+        "ascii",
+        "binaryLittleEndian",
+        "binaryBigEndian"
+      ]
+    }
+  }
+}

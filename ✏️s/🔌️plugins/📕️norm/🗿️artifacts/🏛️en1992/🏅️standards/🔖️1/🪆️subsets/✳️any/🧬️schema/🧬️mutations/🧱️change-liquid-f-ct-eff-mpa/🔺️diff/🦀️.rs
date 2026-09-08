@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeLiquidFCtEffMpa, base: &En1992Snapshot) -> protocol:
     if base.liquid_f_ct_eff_mpa == payload.new_liquid_f_ct_eff_mpa {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "Liquid f ct eff mpa already has this value.");
     }
-    protocol::MutationOutcome::new(En1992Diff { liquid_f_ct_eff_mpa: Some(payload.new_liquid_f_ct_eff_mpa.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1992Diff { liquid_f_ct_eff_mpa: Some(payload.new_liquid_f_ct_eff_mpa), ..Default::default() })
 }
 //#endregion 🔖️Diff

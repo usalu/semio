@@ -211,5 +211,16 @@
     "@local",
     "node:fs",
     "virtual:entry"
-  ]
+  ],
+  "nativeInputs": {
+    "externalDependencies": [
+      "@iarna/toml"
+    ],
+    "excluded": [
+      "{workspaceRoot}/bun.lock"
+    ],
+    "manifestFields": [
+      "name"
+    ]
+  }
 }

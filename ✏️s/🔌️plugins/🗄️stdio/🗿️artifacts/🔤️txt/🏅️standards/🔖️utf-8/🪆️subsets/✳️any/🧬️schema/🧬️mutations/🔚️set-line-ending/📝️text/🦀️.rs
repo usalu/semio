@@ -1,7 +1,7 @@
 //! 📝️ Canonical text payload codec for set-line-ending.
 //#region 📝️PayloadCodec
 use super::SetLineEndingPayload;
-use crate::artifacts::txt::schema::mutations::TxtMutation;
+use crate::schema::mutations::TxtMutation;
 pub const TEXT_OPCODE: &str = "set-line-ending";
 pub fn encode_payload(value: &SetLineEndingPayload) -> Result<String, String> {
     Ok(pack::to_json_string(value))

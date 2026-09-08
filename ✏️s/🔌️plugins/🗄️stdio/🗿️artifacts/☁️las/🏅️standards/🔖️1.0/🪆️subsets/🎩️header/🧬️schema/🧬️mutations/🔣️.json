@@ -1,32 +1,260 @@
 {
-  "$id": "https://semio.tech/schema/s.stdio.las/mutation.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/las/1.0/header/mutations.json",
   "title": "LasMutation",
-  "type": "object",
-  "properties": {
-    "mutation": {
-      "type": "string",
-      "enum": [
-        "setSnapshot", "setVersion", "setSystemIdentifier", "setSoftwareInfo",
-        "setCreationDate", "setScaleAndOffset", "setBounds", "setPointsByReturn",
-        "insertVlr", "removeVlr", "setVlrData", "insertPoint", "removePoint", "setPoint"
+  "description": "Discriminated union over this module's mutation leaves (internally tagged); every payload is the leaf's own schema, referenced, never restated.",
+  "oneOf": [
+    {
+      "allOf": [
+        {
+          "$ref": "./➕insert-point/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "insertPoint"
+            }
+          }
+        }
       ]
     },
-    "snapshot": { "type": "object" },
-    "major": { "type": "integer" },
-    "minor": { "type": "integer" },
-    "systemIdentifier": { "type": "string" },
-    "generatingSoftware": { "type": "string" },
-    "dayOfYear": { "type": "integer" },
-    "year": { "type": "integer" },
-    "scale": { "type": "array", "items": { "type": "number" }, "minItems": 3, "maxItems": 3 },
-    "offset": { "type": "array", "items": { "type": "number" }, "minItems": 3, "maxItems": 3 },
-    "max": { "type": "array", "items": { "type": "number" }, "minItems": 3, "maxItems": 3 },
-    "min": { "type": "array", "items": { "type": "number" }, "minItems": 3, "maxItems": 3 },
-    "counts": { "type": "array", "items": { "type": "integer" }, "minItems": 5, "maxItems": 5 },
-    "index": { "type": "integer" },
-    "vlr": { "type": "object" },
-    "data": { "type": "array", "items": { "type": "integer" } },
-    "point": { "type": "object" }
-  },
-  "required": ["mutation"]
+    {
+      "allOf": [
+        {
+          "$ref": "./📥insert-vlr/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "insertVlr"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "./➖remove-point/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "removePoint"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "./📤remove-vlr/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "removeVlr"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "./📦set-bounds/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setBounds"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "./🕰️set-creation-date/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setCreationDate"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "./✏️set-point/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setPoint"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "./🔁set-points-by-return/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setPointsByReturn"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "./📏set-scale-and-offset/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setScaleAndOffset"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "./📸️set-snapshot/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setSnapshot"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "./🛠️set-software-info/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setSoftwareInfo"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "./🏢set-system-identifier/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setSystemIdentifier"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "./🔢set-version/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setVersion"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "./🗃️set-vlr-data/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setVlrData"
+            }
+          }
+        }
+      ]
+    }
+  ]
 }

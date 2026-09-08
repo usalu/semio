@@ -12,9 +12,9 @@
 //! assertions that would otherwise gloss over this are written to state the collapse explicitly and
 //! to exercise the apply law against the in-memory `Some(None)` diff instead.
 
-use crate::artifacts::semio::standards::v1::subsets::object::schema::diff::SemioObjectDiff;
-use crate::artifacts::semio::standards::v1::subsets::object::schema::mutations::SemioObjectMutation;
-use crate::artifacts::semio::standards::v1::subsets::object::schema::snapshot::SemioObjectSnapshot;
+use crate::standards::v1::subsets::object::schema::diff::SemioObjectDiff;
+use crate::standards::v1::subsets::object::schema::mutations::SemioObjectMutation;
+use crate::standards::v1::subsets::object::schema::snapshot::SemioObjectSnapshot;
 use protocol::{Mutation, MutationDiff};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");

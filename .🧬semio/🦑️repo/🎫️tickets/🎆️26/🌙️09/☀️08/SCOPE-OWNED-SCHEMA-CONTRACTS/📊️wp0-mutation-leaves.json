@@ -1,0 +1,226 @@
+{
+  "ticket": "2026/09/08/SCOPE-OWNED-SCHEMA-CONTRACTS",
+  "workPackage": "WP0 audit — mutation-leaf schema partition",
+  "partition": "✏️s/🔌️plugins/*/🗿️artifacts/*/🏅️standards/*/🪆️subsets/*/🧬️schema/🧬️mutations/** (plus ✏️editor/🎚️config, 👥️presence, 🫧️transient, plugin 🎚️config variants), compared against the aggregate 🧬️mutations/{🔣️.json,🛰️.proto,🔗️.graphql,🦀️.rs,🟦️.ts} in the same module",
+  "method": "git ls-files -z over the working tree; leaves identified as directories owning a direct 🦀️.rs not inside a behavior facet (🔺️diff/↩️inverse/📝️text/💾️binary/🦠️mutation, attributed one level up) and not inside any 🧪️tests/ subtree",
+  "taxonomyDeclaration": {
+    "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+    "testMutationVocabularyDirName": "🧬️mutations",
+    "mutationPayloadSchemaLocation": { "directoryKindId": "schema", "directoryName": "🧬️schema", "fileKindId": "json" },
+    "mutationPayloadSchemaAuthority": {
+      "contractKind": "descriptor-linked-mutation-payload-schema",
+      "ownerAuthority": "mutationOwnerIdentity",
+      "descriptorFileKindId": "json",
+      "descriptorField": "payloadSchema",
+      "descriptorSchemaVersion": 1,
+      "descriptorCardinality": "one-canonical-no-competing-descriptor",
+      "descriptorOwnerField": "owner",
+      "descriptorIdentityField": "semanticKind",
+      "jsonSchemaDialect": "http://json-schema.org/draft-07/schema#",
+      "targetAuthority": "owner-relative-regular-json-schema"
+    },
+    "schemaChildDirs": ["📸️snapshot", "🔺️diff", "🧬️mutations", "💡️inferences"],
+    "mutationComponentFileKindId": "rust-source",
+    "mutationDescriptorFileKindId": "json",
+    "mutationBehaviorFacetDirs": ["🦠️mutation", "🔺️diff", "↩️inverse"],
+    "mutationDirectLeafForbiddenRegionMarkers": { "↩️inverse": "🔖️Inverse", "🔺️diff": "🔖️Diff" },
+    "mutationOrganizationalFacetDirs": ["🧩️plan", "📝️text", "💾️binary", "🧬️schema"],
+    "reading": "targetAuthority=owner-relative-regular-json-schema + descriptorOwnerField=owner means the mutation LEAF directory is the declared authority for its own payload JSON Schema; the descriptor's payloadSchema is resolved relative to the leaf, not the module or artifact. mutationOrganizationalFacetDirs lists 🧬️schema as optional (never a completeness requirement) — only leaves whose descriptor requires 'json-schema' in requiredLanguageSurfaces must have a file. mutationPayloadSchemaRelativePath() (🧬️schema/🔣️.json) is documented as the scaffold DEFAULT for newly-authored mutations, not the sole valid location; it is a minority pattern among existing leaves.",
+    "conclusion": "The mutation-leaf schema layout is the declared taxonomy authority, not an ad hoc per-contract-directory violation. Each leaf is its own scope/owner with one canonical payload schema referenced by one descriptor field (descriptorCardinality=one-canonical-no-competing-descriptor)."
+  },
+  "census": [
+    {"plugin": "✒️writer", "mutationsRoots": 3, "leaves": 14, "directRust": 14, "descriptor": 14, "flatDnaSchema": 14, "nestedDnaSchema": 0, "flatSymbolSchema": 0, "vcsWirePair": 0, "seqWifiWire": 0, "diffFacet": 4, "inverseFacet": 4, "testsDir": 4},
+    {"plugin": "➗️mathematical", "mutationsRoots": 4, "leaves": 17, "directRust": 17, "descriptor": 17, "flatDnaSchema": 17, "nestedDnaSchema": 0, "flatSymbolSchema": 0, "vcsWirePair": 0, "seqWifiWire": 0, "diffFacet": 15, "inverseFacet": 15, "testsDir": 15},
+    {"plugin": "🌀️procedural", "mutationsRoots": 3, "leaves": 37, "directRust": 37, "descriptor": 37, "flatDnaSchema": 35, "nestedDnaSchema": 0, "flatSymbolSchema": 0, "vcsWirePair": 0, "seqWifiWire": 0, "diffFacet": 37, "inverseFacet": 37, "testsDir": 37},
+    {"plugin": "🌊️flow", "mutationsRoots": 1, "leaves": 11, "directRust": 11, "descriptor": 10, "flatDnaSchema": 10, "nestedDnaSchema": 0, "flatSymbolSchema": 0, "vcsWirePair": 0, "seqWifiWire": 0, "diffFacet": 9, "inverseFacet": 9, "testsDir": 10},
+    {"plugin": "🌍️gis", "mutationsRoots": 5, "leaves": 24, "directRust": 24, "descriptor": 24, "flatDnaSchema": 14, "nestedDnaSchema": 10, "flatSymbolSchema": 0, "vcsWirePair": 0, "seqWifiWire": 0, "diffFacet": 14, "inverseFacet": 14, "testsDir": 14},
+    {"plugin": "🌿️vcs", "mutationsRoots": 1, "leaves": 6, "directRust": 6, "descriptor": 6, "flatDnaSchema": 0, "nestedDnaSchema": 0, "flatSymbolSchema": 0, "vcsWirePair": 6, "seqWifiWire": 0, "diffFacet": 6, "inverseFacet": 6, "testsDir": 6},
+    {"plugin": "🎞️animate", "mutationsRoots": 3, "leaves": 12, "directRust": 12, "descriptor": 12, "flatDnaSchema": 12, "nestedDnaSchema": 0, "flatSymbolSchema": 0, "vcsWirePair": 0, "seqWifiWire": 0, "diffFacet": 9, "inverseFacet": 9, "testsDir": 9},
+    {"plugin": "🎥️shooting", "mutationsRoots": 3, "leaves": 41, "directRust": 41, "descriptor": 41, "flatDnaSchema": 41, "nestedDnaSchema": 0, "flatSymbolSchema": 0, "vcsWirePair": 0, "seqWifiWire": 0, "diffFacet": 31, "inverseFacet": 31, "testsDir": 31},
+    {"plugin": "🎪️demonstrator", "mutationsRoots": 1, "leaves": 1, "directRust": 1, "descriptor": 1, "flatDnaSchema": 1, "nestedDnaSchema": 0, "flatSymbolSchema": 0, "vcsWirePair": 0, "seqWifiWire": 0, "diffFacet": 1, "inverseFacet": 1, "testsDir": 1},
+    {"plugin": "🎬️sequence", "mutationsRoots": 4, "leaves": 13, "directRust": 13, "descriptor": 13, "flatDnaSchema": 13, "nestedDnaSchema": 0, "flatSymbolSchema": 0, "vcsWirePair": 0, "seqWifiWire": 8, "diffFacet": 8, "inverseFacet": 8, "testsDir": 8},
+    {"plugin": "🏗️fem", "mutationsRoots": 10, "leaves": 50, "directRust": 50, "descriptor": 50, "flatDnaSchema": 50, "nestedDnaSchema": 0, "flatSymbolSchema": 0, "vcsWirePair": 0, "seqWifiWire": 0, "diffFacet": 50, "inverseFacet": 50, "testsDir": 50},
+    {"plugin": "🏛️architect", "mutationsRoots": 3, "leaves": 268, "directRust": 268, "descriptor": 268, "flatDnaSchema": 268, "nestedDnaSchema": 0, "flatSymbolSchema": 0, "vcsWirePair": 0, "seqWifiWire": 0, "diffFacet": 266, "inverseFacet": 266, "testsDir": 266},
+    {"plugin": "🏭️process", "mutationsRoots": 1, "leaves": 16, "directRust": 16, "descriptor": 16, "flatDnaSchema": 16, "nestedDnaSchema": 0, "flatSymbolSchema": 0, "vcsWirePair": 0, "seqWifiWire": 0, "diffFacet": 16, "inverseFacet": 16, "testsDir": 16},
+    {"plugin": "💠️lowpoly", "mutationsRoots": 1, "leaves": 17, "directRust": 17, "descriptor": 17, "flatDnaSchema": 17, "nestedDnaSchema": 0, "flatSymbolSchema": 0, "vcsWirePair": 0, "seqWifiWire": 0, "diffFacet": 17, "inverseFacet": 17, "testsDir": 17},
+    {"plugin": "💡️reasoning", "mutationsRoots": 3, "leaves": 13, "directRust": 13, "descriptor": 13, "flatDnaSchema": 13, "nestedDnaSchema": 0, "flatSymbolSchema": 0, "vcsWirePair": 0, "seqWifiWire": 0, "diffFacet": 10, "inverseFacet": 10, "testsDir": 10},
+    {"plugin": "📋️forms", "mutationsRoots": 2, "leaves": 22, "directRust": 12, "descriptor": 22, "flatDnaSchema": 22, "nestedDnaSchema": 0, "flatSymbolSchema": 0, "vcsWirePair": 0, "seqWifiWire": 0, "diffFacet": 10, "inverseFacet": 10, "testsDir": 10},
+    {"plugin": "📏️layout", "mutationsRoots": 3, "leaves": 32, "directRust": 32, "descriptor": 32, "flatDnaSchema": 32, "nestedDnaSchema": 0, "flatSymbolSchema": 0, "vcsWirePair": 0, "seqWifiWire": 0, "diffFacet": 0, "inverseFacet": 0, "testsDir": 25},
+    {"plugin": "📐️cad", "mutationsRoots": 2, "leaves": 21, "directRust": 21, "descriptor": 21, "flatDnaSchema": 21, "nestedDnaSchema": 0, "flatSymbolSchema": 0, "vcsWirePair": 0, "seqWifiWire": 0, "diffFacet": 20, "inverseFacet": 20, "testsDir": 20},
+    {"plugin": "📕️norm", "mutationsRoots": 16, "leaves": 393, "directRust": 372, "descriptor": 393, "flatDnaSchema": 393, "nestedDnaSchema": 0, "flatSymbolSchema": 0, "vcsWirePair": 0, "seqWifiWire": 0, "diffFacet": 392, "inverseFacet": 392, "testsDir": 392},
+    {"plugin": "📖️playbook", "mutationsRoots": 3, "leaves": 13, "directRust": 13, "descriptor": 13, "flatDnaSchema": 13, "nestedDnaSchema": 0, "flatSymbolSchema": 0, "vcsWirePair": 0, "seqWifiWire": 0, "diffFacet": 9, "inverseFacet": 9, "testsDir": 9},
+    {"plugin": "📜️imperative", "mutationsRoots": 2, "leaves": 8, "directRust": 8, "descriptor": 8, "flatDnaSchema": 8, "nestedDnaSchema": 0, "flatSymbolSchema": 0, "vcsWirePair": 0, "seqWifiWire": 0, "diffFacet": 4, "inverseFacet": 4, "testsDir": 4},
+    {"plugin": "📸️remodel", "mutationsRoots": 3, "leaves": 43, "directRust": 43, "descriptor": 43, "flatDnaSchema": 43, "nestedDnaSchema": 0, "flatSymbolSchema": 0, "vcsWirePair": 0, "seqWifiWire": 0, "diffFacet": 35, "inverseFacet": 35, "testsDir": 35},
+    {"plugin": "🔋️energy", "mutationsRoots": 1, "leaves": 276, "directRust": 276, "descriptor": 276, "flatDnaSchema": 276, "nestedDnaSchema": 0, "flatSymbolSchema": 0, "vcsWirePair": 0, "seqWifiWire": 0, "diffFacet": 276, "inverseFacet": 276, "testsDir": 276},
+    {"plugin": "🔱️trinity", "mutationsRoots": 6, "leaves": 35, "directRust": 35, "descriptor": 35, "flatDnaSchema": 35, "nestedDnaSchema": 0, "flatSymbolSchema": 0, "vcsWirePair": 0, "seqWifiWire": 0, "diffFacet": 15, "inverseFacet": 15, "testsDir": 15},
+    {"plugin": "🕸️dag", "mutationsRoots": 3, "leaves": 18, "directRust": 4, "descriptor": 18, "flatDnaSchema": 18, "nestedDnaSchema": 0, "flatSymbolSchema": 0, "vcsWirePair": 0, "seqWifiWire": 0, "diffFacet": 14, "inverseFacet": 14, "testsDir": 14},
+    {"plugin": "🖍️draw", "mutationsRoots": 4, "leaves": 14, "directRust": 0, "descriptor": 14, "flatDnaSchema": 0, "nestedDnaSchema": 0, "flatSymbolSchema": 13, "vcsWirePair": 0, "seqWifiWire": 0, "diffFacet": 14, "inverseFacet": 14, "testsDir": 14},
+    {"plugin": "🖨️raster", "mutationsRoots": 1, "leaves": 12, "directRust": 12, "descriptor": 12, "flatDnaSchema": 12, "nestedDnaSchema": 0, "flatSymbolSchema": 0, "vcsWirePair": 0, "seqWifiWire": 0, "diffFacet": 12, "inverseFacet": 12, "testsDir": 12},
+    {"plugin": "🗄️stdio", "mutationsRoots": 88, "leaves": 924, "directRust": 923, "descriptor": 924, "flatDnaSchema": 410, "nestedDnaSchema": 6, "flatSymbolSchema": 0, "vcsWirePair": 0, "seqWifiWire": 0, "diffFacet": 138, "inverseFacet": 138, "testsDir": 312},
+    {"plugin": "🗒️note", "mutationsRoots": 10, "leaves": 38, "directRust": 38, "descriptor": 38, "flatDnaSchema": 38, "nestedDnaSchema": 0, "flatSymbolSchema": 0, "vcsWirePair": 0, "seqWifiWire": 0, "diffFacet": 33, "inverseFacet": 33, "testsDir": 33},
+    {"plugin": "🧩️puzzle", "mutationsRoots": 3, "leaves": 89, "directRust": 89, "descriptor": 89, "flatDnaSchema": 86, "nestedDnaSchema": 0, "flatSymbolSchema": 0, "vcsWirePair": 0, "seqWifiWire": 0, "diffFacet": 89, "inverseFacet": 89, "testsDir": 89},
+    {"plugin": "🧰️framework", "mutationsRoots": 29, "leaves": 101, "directRust": 101, "descriptor": 101, "flatDnaSchema": 5, "nestedDnaSchema": 96, "flatSymbolSchema": 0, "vcsWirePair": 0, "seqWifiWire": 0, "diffFacet": 0, "inverseFacet": 0, "testsDir": 6},
+    {"plugin": "🧱️block", "mutationsRoots": 3, "leaves": 104, "directRust": 104, "descriptor": 104, "flatDnaSchema": 104, "nestedDnaSchema": 0, "flatSymbolSchema": 0, "vcsWirePair": 0, "seqWifiWire": 0, "diffFacet": 104, "inverseFacet": 104, "testsDir": 104},
+    {"plugin": "🪐️space", "mutationsRoots": 2, "leaves": 5, "directRust": 5, "descriptor": 5, "flatDnaSchema": 5, "nestedDnaSchema": 0, "flatSymbolSchema": 0, "vcsWirePair": 0, "seqWifiWire": 0, "diffFacet": 5, "inverseFacet": 5, "testsDir": 5},
+    {"plugin": "🪵️sourcing", "mutationsRoots": 1, "leaves": 3, "directRust": 3, "descriptor": 3, "flatDnaSchema": 3, "nestedDnaSchema": 0, "flatSymbolSchema": 0, "vcsWirePair": 0, "seqWifiWire": 0, "diffFacet": 3, "inverseFacet": 3, "testsDir": 3}
+  ],
+  "censusTotals": {
+    "mutationsRoots": 256, "leaves": 2691, "directRust": 2631, "descriptor": 2690,
+    "flatDnaSchema": 2045, "nestedDnaSchema": 112, "flatSymbolSchema": 13,
+    "vcsWirePair": 6, "seqWifiWire": 8, "diffFacet": 1666, "inverseFacet": 1666, "testsDir": 1872
+  },
+  "anomalousFilenames": [
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🌳️node/🏷️rename/🏷️.schema.json",
+      "issue": "named with the mutation's own leading emoji (🏷️) instead of a schema-kind emoji; descriptor's payloadSchema field points to 🧬️schema/🔣️.json (nested convention) which does not exist — this file is orphaned and the declared path resolves to nothing"
+    }
+  ],
+  "samples": [
+    {
+      "plugin": "🏛️architect", "leaf": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/ℹ️information-requirement/🌱️create",
+      "descriptorPayloadSchema": "🧬️.schema.json", "filePresent": true,
+      "aggregateRelationship": "drift: aggregate $defs.CreateInformationRequirement is a shallow stub {informationRequirement:{type:'object'}}; leaf 🧬️.schema.json has the full ~20-property schema with enums, required lists, nested objects. Rust aggregate is clean (thin enum wrapper re-exporting the leaf's own struct)."
+    },
+    {
+      "plugin": "🗄️stdio", "leaf": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/🎩️header/🧬️schema/🧬️mutations/✏️set-point",
+      "descriptorPayloadSchema": "🔣️.schema.json", "filePresent": false,
+      "aggregateRelationship": "missing declared schema file; descriptor requires json-schema surface; leaf dir contains only 🔣️.json + 🦀️.rs"
+    },
+    {
+      "plugin": "📕️norm", "leaf": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚖️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚓️change-permanent-action",
+      "descriptorPayloadSchema": "🧬️.schema.json", "filePresent": true,
+      "aggregateRelationship": "present, consistent flat naming; aggregate not independently diffed (large module, 393 mutations)"
+    },
+    {
+      "plugin": "🔋️energy", "leaf": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↗️change-air-loop-supply-node",
+      "descriptorPayloadSchema": "🧬️.schema.json", "filePresent": true,
+      "aggregateRelationship": "present; also declares text+binary surfaces (out of this partition's schema focus)"
+    },
+    {
+      "plugin": "🌿️vcs", "leaf": "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️add-tag",
+      "descriptorPayloadSchema": "📋️.schema.json", "filePresent": true,
+      "aggregateRelationship": "clean $ref pattern: sibling 🧬️wire/🔣️.schema.json references the payload schema's tag property by $id URL (…/payload.json#/properties/tag) instead of duplicating it"
+    },
+    {
+      "plugin": "🎬️sequence", "leaf": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🧬️mutations/🏃️set-last-run",
+      "descriptorPayloadSchema": "🧬️.schema.json", "filePresent": true,
+      "aggregateRelationship": "present; editor-config subtree, same descriptor shape as artifact-standard subsets"
+    },
+    {
+      "plugin": "🖍️draw", "leaf": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🎨️style/🧬️schema/🧬️mutations/🌓️set-layer-blend-mode",
+      "descriptorPayloadSchema": "🔣️.schema.json", "filePresent": true,
+      "aggregateRelationship": "present, but mutation struct lives in 🦠️mutation/🦀️.rs facet, not leaf root (mutation/direct-owner concern, out of schema-authority scope)"
+    },
+    {
+      "plugin": "🌍️gis", "leaf": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🧬️mutations/🎥️set-camera",
+      "descriptorPayloadSchema": "🧬️schema/🔣️.json", "filePresent": true,
+      "aggregateRelationship": "clean $ref pattern: aggregate uses allOf+$ref by $id URL (…/set-camera#/$defs/payload) plus local operation const, no duplicated properties"
+    },
+    {
+      "plugin": "🪐️space", "leaf": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢️change-catalog-generation",
+      "descriptorPayloadSchema": "🧬️.schema.json", "filePresent": true,
+      "aggregateRelationship": "cleanest pattern found: aggregate is {oneOf:[{$ref:'./<leaf>/🧬️.schema.json'}], x-semio-mutationKinds:[...]} — relative-path $ref straight into the leaf, zero duplication"
+    },
+    {
+      "plugin": "✒️writer", "leaf": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🧬️mutations/⚙️set-editor-settings",
+      "descriptorPayloadSchema": "🧬️.schema.json", "filePresent": true,
+      "aggregateRelationship": "present; this module has no aggregate 🔣️.json at the 🧬️mutations root at all — a fourth aggregation shape, not a violation but noted as an open question"
+    }
+  ],
+  "consumers": [
+    {
+      "kind": "rust-proc-macro-compile-time",
+      "location": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🦀️.rs:629-700 (region 🔣️MutationLeafJson, #[derive(dsl::Mutations)] expansion)",
+      "what": "parses each leaf's 🔣️.json descriptor at macro-expansion time; requires exactly the 14 declared keys (MUTATION_LEAF_DESCRIPTOR_KEYS); asserts descriptor.owner equals the leaf path and semanticKind matches the registered domain owner; captures payload_schema as an opaque string without opening the referenced file"
+    },
+    {
+      "kind": "structural-policy-gate",
+      "location": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts:1358-1425 (mutationPayloadSchemaRelativePath, mutationPayloadSchemaDocumentProblems, mutationPayloadSchemaProblems), invoked from 📜️script.ts:28259 (policyMutationPayloadSchemaProblems) inside 📜️script.ts:28977-29090 (policyMutationStructuralBreachesView, mutation/schema-parity policy family, surface spec at 29019)",
+      "what": "for every leaf requiring json-schema, resolves owner/payloadSchema as a strictly local traversal-free path, requires every ancestor to be an admitted regular directory and the target an admitted regular file, parses it as JSON and validates Draft-07 keyword shapes, rejects duplicate JSON keys; separately checks only that the aggregate root file contains the mutation's semanticKind/variantName as text (identity check, not structural-equality check) — this is why Family G-A's drift is invisible to current tooling",
+      "cliEntrypoint": "bun 📜️script.ts clean taxonomy inventory --kind mutation (runMutationTaxonomyCli, 📜️script.ts:21286-21402; inventoryMutationTaxonomy, 📜️script.ts:21153)",
+      "liveRunResult": "FAILED before reaching mutation checks: 'Invalid taxonomy schema: generatorContracts[\"print-latex-tokens\"].previewTarget must route exactly to its declared script invocation...' and same for report-actor-network — a pre-existing unrelated loadTaxonomy() failure elsewhere in the taxonomy, blocking the whole clean taxonomy CLI repo-wide. Not fixed (out of scope, unrelated concurrent-session churn). Findings confirmed instead by direct filesystem/descriptor inspection."
+    },
+    {
+      "kind": "scaffolder-write-path",
+      "location": "📜️script.ts:22402-22422 (newMutationDescriptor), :22575 (jsonSchema stub emission)",
+      "what": "generates a new leaf's descriptor and an empty {$schema,title,type:'object'} schema stub when --json-schema is passed; never touches the aggregate; not a schema content consumer"
+    },
+    {
+      "kind": "test-module-schema-generator",
+      "location": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/🟦️.ts:4210 (derivePayloadSchemas), wired at 🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📜️script.ts:1281 (payloadSchemaCommand, CLI 'manifest payload-schema')",
+      "what": "derives a JSON Schema from each leaf's Rust payload struct via rustTypeToJsonSchema; writes to <leaf>/🔣️.schema.json only if absent and --write passed — a third generator with its own filename opinion (matches Family C's draw convention, not the majority flat 🧬️.schema.json convention nor the taxonomy scaffold's nested default)"
+    },
+    {
+      "kind": "reference-resolution-test",
+      "location": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔎️json-reference-owner-lookup/🟦️.ts",
+      "what": "exercises $ref/$id resolution generally; not mutation-specific but the same mechanism the G-B/vcs/gis/space clean-reference samples rely on"
+    },
+    {
+      "kind": "ruled-out-unrelated-consumer",
+      "location": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🧬️schema/🦀️.rs:218-327 (shape_json_schema, record_spec_json_schema)",
+      "what": "derives JSON Schema at runtime from a Shape/RecordSpec DSL value for tool-calling gateways; architecturally unrelated to the static mutation-leaf schema files; no overlap found"
+    },
+    {
+      "kind": "not-found",
+      "what": "no TypeScript or Rust runtime reader was found that loads a mutation-leaf payload schema FILE's content to validate a live payload at runtime (ajv or equivalent); all confirmed consumers are compile-time (Rust macro), build/CI-gate (script.ts policy), or generator (scaffold/derive) tooling"
+    }
+  ],
+  "drift": [
+    {
+      "family": "G-A",
+      "example": "🏛️architect ℹ️information-requirement/🌱️create",
+      "description": "aggregate 🔣️.json $defs entry inline-duplicates the leaf's payload shape as a shallow stub instead of $ref-ing the leaf; confirmed diverged from the leaf's real (detailed) schema",
+      "detectedBy": "current mutation/schema-parity gate does NOT catch this because it only checks the aggregate contains the mutation's identity string, not structural equality with the leaf"
+    },
+    {
+      "family": "missing-schema",
+      "count": 505,
+      "concentratedIn": "🗄️stdio (500 of 505; 500/914 = 54.7% of stdio's json-schema-required leaves)",
+      "description": "leaf descriptor requires json-schema surface but no file exists at the declared owner-relative path"
+    },
+    {
+      "family": "broken-reference",
+      "example": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🌳️node/🏷️rename",
+      "description": "descriptor payloadSchema points to 🧬️schema/🔣️.json (nested) which does not exist; an orphaned, wrongly-named 🏷️.schema.json sits beside it instead"
+    },
+    {
+      "family": "convention-fragmentation",
+      "description": "five different filename conventions for functionally the same leaf-owned payload schema exist across plugins (flat 🧬️.schema.json majority=2045, nested 🧬️schema/🔣️.json=112, flat 🔣️.schema.json draw-only=13, plus the vcs/sequence wire-pair variants); none are individually broken (each leaf's own descriptor correctly names its own file) but the taxonomy's own scaffold default (nested) is a minority pattern, and the test module's independent generator defaults to a third name (flat 🔣️.schema.json) — three different tools/defaults disagree on the canonical filename"
+    }
+  ],
+  "recommendation": {
+    "summary": "The mutation-leaf 🧬️.schema.json-family layout is the taxonomy-DECLARED authority (descriptor-linked, owner-relative, one-canonical-no-competing-descriptor) and should be KEPT as the single owner of each mutation's payload JSON Schema. It is not the per-contract-directory violation this ticket's goal warns about. The real violation is Family G-A: aggregate module-level 🔣️.json union files that hand-duplicate a leaf's payload shape as an independently-maintained (and already drifted) stub, instead of $ref-composing it the way space/gis/vcs already correctly do. The aggregate must become a pure union/discriminator that never carries payload content of its own.",
+    "decision": "keep leaf-owned payload schemas as the single authority; eliminate G-A-style duplicated $defs in aggregate 🔣️.json files in favor of the proven G-B $ref pattern; treat the 505 missing-schema leaves (Family F, mostly 🗄️stdio) and the 60 missing-direct-🦀️.rs leaves (Family H, mostly 🖍️draw) as separate, out-of-scope completeness/structural gaps for other WPs to pick up.",
+    "toolingChanges": [
+      "🔍️discovery/🟦️.ts mutationPayloadSchemaProblems (~line 1401) and/or the mutation/schema-parity surface check in 📜️script.ts (~line 29063-29070): strengthen the aggregate-side check from an identity-string match to actual structural comparison (or, simpler, forbid $defs bodies in aggregate JSON Schema files entirely and require oneOf/anyOf entries to be $ref-only) so G-A-style drift becomes a build-time failure instead of being invisible",
+      "architect's aggregate 🔣️.json (and any other G-A-style module discovered by the not-yet-run repo-wide $defs-vs-$ref scan, §6 open question) needs its $defs entries rewritten to $ref into each leaf's own schema file, following the space/gis/vcs pattern exactly",
+      "decide and document ONE canonical leaf schema filename (flat 🧬️.schema.json is the 18x-majority incumbent; the taxonomy's own mutationPayloadSchemaRelativePath() scaffold default currently disagrees by defaulting to nested 🧬️schema/🔣️.json, and the test module's payloadSchemaCommand generator disagrees again by defaulting to flat 🔣️.schema.json) — then normalize the scaffold and generator defaults onto whichever is chosen; this is a taxonomy-author decision, not something this audit should decide unilaterally",
+      "fix the single broken reference at the gltf node/rename leaf (Family I) by correcting either the descriptor's payloadSchema field or the orphaned file's name/location to match",
+      "re-run bun 📜️script.ts clean taxonomy inventory --kind mutation once the unrelated generatorContracts[\"print-latex-tokens\"/\"report-actor-network\"].previewTarget taxonomy validation failure is resolved by whoever owns that area, to get an authoritative, tool-confirmed breach list superseding this filesystem-derived one"
+    ],
+    "outOfScopeForThisTicket": [
+      "Family F (505 missing schema files, mostly stdio) — completeness gap, not an authority/placement question",
+      "Family H (60 leaves without direct-root 🦀️.rs, mostly draw) — mutation/direct-owner structural policy, not schema authority",
+      "normalizing the 5 filename conventions onto one — needs a taxonomy-author decision before any rewrite"
+    ]
+  },
+  "coverage": {
+    "filesRead": [
+      "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+      "📜️script.ts (~28200-29110 mutation policy region, ~21150-21410 CLI/inventory region, ~22380-22600 scaffold region)",
+      "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts (~1320-1425)",
+      "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📜️script.ts (~1264-1340)",
+      "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/🟦️.ts (~4150-4220)",
+      "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🦀️.rs (region 🔣️MutationLeafJson, ~609-700)",
+      "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🧬️schema/🦀️.rs (~200-330, ruled out as unrelated)"
+    ],
+    "censusCoverage": "exhaustive over git ls-files -z for all 2,691 leaves found under the stated partition across all 34 plugins with a 🧬️mutations tree",
+    "samplesCoverage": "10/10 required plugins sampled in full (architect, stdio, norm, energy, vcs, sequence, draw, gis, space, writer)",
+    "notDone": [
+      "G-A vs G-B ratio across all 256 aggregate roots (only 4 modules' aggregates were opened; architect=G-A, space/gis/vcs=G-B) — flagged as the concrete next step",
+      "live confirmation via the CLI inventory command — blocked by an unrelated pre-existing taxonomy validation failure outside this partition, not fixed (out of scope)",
+      "independent gate-coverage strength for 🧬️wire/🛜️wire wire schemas (Families D/E) versus payload schemas — narrow, low blob count, left as open question",
+      "git-history attribution of when Family F's 505 missing schemas diverged"
+    ]
+  }
+}

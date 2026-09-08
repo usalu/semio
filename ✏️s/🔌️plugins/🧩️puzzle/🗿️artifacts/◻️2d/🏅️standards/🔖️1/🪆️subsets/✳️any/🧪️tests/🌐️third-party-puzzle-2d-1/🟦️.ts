@@ -40,7 +40,7 @@ import { defineTestAdapter, type AdapterContext, type AdapterOutcome } from "../
 /** 🧫️ The declared fixture. Its DIRECTORY is the mutation vocabulary; every vector is found beneath it. */
 const VECTOR_ROOT_URI = "asset://🧬️schema/🧬️mutations/🔣️.json";
 const SCENARIOS_DIR = "🧪️tests";
-const LEAF_SCHEMA = "🧬️.schema.json";
+const LEAF_SCHEMA = "🧬️schema/🔣️.json";
 const MEMBERS = ["schema", "camera", "nodes", "edges", "meta"] as const;
 /** 🕸️ The seven kinds whose correctness is topological — the only ones a graph library can speak to. */
 const GRAPH_KINDS = ["create-node", "delete-node", "add-node-handle", "remove-node-handle", "replace-node-handle", "connect-handles", "disconnect-handles"];

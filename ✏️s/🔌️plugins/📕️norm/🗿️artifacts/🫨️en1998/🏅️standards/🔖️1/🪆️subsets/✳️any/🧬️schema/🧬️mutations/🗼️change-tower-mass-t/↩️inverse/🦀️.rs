@@ -7,6 +7,6 @@ use crate::artifacts::en1998::En1998Snapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(_payload: &ChangeTowerMassT, base: &En1998Snapshot) -> Vec<En1998Mutation> {
-    vec![En1998Mutation::ChangeTowerMassT(ChangeTowerMassT { new_tower_mass_t: base.tower_mass_t.clone() })]
+    vec![En1998Mutation::ChangeTowerMassT(ChangeTowerMassT { new_tower_mass_t: base.tower_mass_t })]
 }
 //#endregion 🔖️Inverse

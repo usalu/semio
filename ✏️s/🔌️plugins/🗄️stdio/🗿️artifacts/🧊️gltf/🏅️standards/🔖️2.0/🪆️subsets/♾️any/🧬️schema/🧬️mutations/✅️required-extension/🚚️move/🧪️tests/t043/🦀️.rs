@@ -9,9 +9,9 @@
 //! leaf's own oracle. The derived `.op.semio`/`.spr.semio`/`.dsl.semio`/`.pack.semio`/
 //! `.patch.semio` encodings come from `fixtures generate`, not from here.
 
-use crate::artifacts::gltf::schema::mutations::move_required_extension::GltfMoveRequiredExtensionPayload;
-use crate::artifacts::gltf::schema::mutations::move_required_extension::{diff, inverse, mutation};
-use crate::artifacts::gltf::GltfSnapshot;
+use crate::schema::mutations::move_required_extension::GltfMoveRequiredExtensionPayload;
+use crate::schema::mutations::move_required_extension::{diff, inverse, mutation};
+use crate::GltfSnapshot;
 
 const CASE: &str = "move-required-extension/demotes-the-unlit-requirement-behind-the-transform-requirement";
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
@@ -45,7 +45,7 @@ async fn inverse_restores_before() {
     let base = before();
     let inverse = inverse::derive(&payload(), &base).expect("move-required-extension inverse derives from the exact base");
     let after = mutation::apply(&payload(), &base).expect("forward applies");
-    let restored = <crate::artifacts::gltf::schema::diff::GltfDiff as protocol::MutationDiff<GltfSnapshot>>::apply(&inverse, &after).expect("inverse applies to the forward result");
+    let restored = <crate::schema::diff::GltfDiff as protocol::MutationDiff<GltfSnapshot>>::apply(&inverse, &after).expect("inverse applies to the forward result");
     assert_eq!(restored, base, "{CASE}: inverse did not restore the before-snapshot");
     assert_eq!(restored.document.extensions_required.first().map(String::as_str), Some("KHR_materials_unlit"), "{CASE}: the inverse must restore the original requirement order");
 }
@@ -98,7 +98,7 @@ async fn produces_committed_diff() {
 /// 🔣️ The committed diff is itself canonical and decodes to this leaf's own diff type.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical() {
-    let decoded: crate::artifacts::gltf::schema::diff::GltfDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
+    let decoded: crate::schema::diff::GltfDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
     let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "{CASE}: committed diff JSON is not canonical");
@@ -109,7 +109,7 @@ async fn committed_diff_is_canonical() {
 /// a complete description of the change, not a summary of it.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: crate::artifacts::gltf::schema::diff::GltfDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
-    let produced = <crate::artifacts::gltf::schema::diff::GltfDiff as protocol::MutationDiff<GltfSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
+    let decoded: crate::schema::diff::GltfDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
+    let produced = <crate::schema::diff::GltfDiff as protocol::MutationDiff<GltfSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "{CASE}: committed diff did not carry before to after");
 }

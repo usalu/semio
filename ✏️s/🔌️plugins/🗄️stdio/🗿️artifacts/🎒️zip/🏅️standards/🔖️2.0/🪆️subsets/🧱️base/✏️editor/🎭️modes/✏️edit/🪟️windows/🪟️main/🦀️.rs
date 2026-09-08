@@ -6,7 +6,7 @@
 //! out of this first pass (documented honestly, matching energy's own `SetStructureField` scope
 //! note, rather than faking full data-editing through a tree).
 
-use crate::artifacts::zip::ZipSnapshot;
+use crate::ZipSnapshot;
 use semio_framework_plugin::app::{TreeNodeView, TreeView, TreeWindowKit, WindowKit};
 use semio_framework_plugin::{BuiltNode, LocalizedLabel, WindowKindDefinition};
 
@@ -45,7 +45,7 @@ pub fn render(document: &ZipSnapshot) -> semio_framework_plugin::UiAssemblyResul
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::zip::schema::snapshot::ZipEntry;
+    use crate::schema::snapshot::ZipEntry;
 
     #[semio_framework_async_macros::async_test]
     async fn definition_declares_a_tree_window() {

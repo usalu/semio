@@ -1,6 +1,6 @@
 //! jack <- png
 use crate::artifacts::jack::JackSnapshot;
-use semio_s_plugin_stdio::artifacts::png::{PngSnapshot, STDIO_PNG_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_png::{PngSnapshot, STDIO_PNG_DOCUMENT_SCHEMA};
 
 pub fn register() {}
 

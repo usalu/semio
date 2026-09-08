@@ -5,7 +5,7 @@
   "displayName": "Delete Outdoor Air System",
   "emoji": "🍂️",
   "aggregateVariant": "DeleteOutdoorAirSystem",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "delete-outdoor-air-system",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

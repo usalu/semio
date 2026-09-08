@@ -10,7 +10,7 @@ use crate::artifacts::program::ProgramSnapshot;
 pub fn diff(payload: &CreateCommunicationRequirement, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
     let id = payload.communication_requirement.header.id.clone();
     if base.communication.iter().any(|row| row.header.id == id) {
-        return protocol::MutationOutcome::fatal("mutation.duplicate-id", "A communication requirement already exists with this id.", [id.0.clone()]);
+        return protocol::MutationOutcome::fatal("mutation.duplicate-id", "A communication requirement already exists with this id.", [id.0]);
     }
     protocol::MutationOutcome::new(ProgramDiff { communication: Some(ProgramCommunicationDelta { added: vec![payload.communication_requirement.clone()], ..Default::default() }), ..Default::default() })
 }

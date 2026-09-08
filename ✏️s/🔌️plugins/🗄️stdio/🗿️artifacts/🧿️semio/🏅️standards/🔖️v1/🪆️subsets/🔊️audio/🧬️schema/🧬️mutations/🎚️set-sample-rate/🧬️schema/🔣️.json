@@ -1,0 +1,21 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/audio/mutation/set-sample-rate.json",
+  "title": "SetSampleRate",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "sampleRate"
+  ],
+  "properties": {
+    "sampleRate": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 4294967295
+    },
+    "mutation": {
+      "const": "setSampleRate",
+      "description": "Aggregate discriminator spliced in by SemioAudioMutation; absent when the payload stands alone."
+    }
+  }
+}

@@ -9,6 +9,6 @@ pub fn diff(payload: &ChangeUseClass, base: &Din18599Snapshot) -> protocol::Muta
     if base.use_class == payload.new_use_class {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "Use class already has this value.");
     }
-    protocol::MutationOutcome::new(Din18599Diff { use_class: Some(payload.new_use_class.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(Din18599Diff { use_class: Some(payload.new_use_class), ..Default::default() })
 }
 //#endregion 🔖️Diff

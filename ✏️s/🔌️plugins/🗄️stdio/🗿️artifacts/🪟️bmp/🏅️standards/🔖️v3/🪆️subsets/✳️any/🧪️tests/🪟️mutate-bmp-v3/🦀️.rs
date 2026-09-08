@@ -103,10 +103,10 @@ mod subject {
     use semio_s_plugin_stdio_test_oracle::law;
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_plugin_stdio_test_oracle::artifacts::bmp::standards::v_v3::subsets::any::project_bmp_mutation;
-    use semio_s_plugin_stdio::artifacts::bmp::standards::v_v3::subsets::any::io::{decode_bmp, encode_bmp};
-    use semio_s_plugin_stdio::artifacts::bmp::standards::v_v3::subsets::any::schema::mutations::{apply_bmp_mutation, inverse_bmp_mutation, BmpMutation};
-    use semio_s_plugin_stdio::artifacts::bmp::standards::v_v3::subsets::any::schema::snapshot::{BmpPaletteEntry, BmpRowOrder};
-    use semio_s_plugin_stdio::artifacts::bmp::BmpSnapshot;
+    use crate::standards::v_v3::subsets::any::io::{decode_bmp, encode_bmp};
+    use crate::standards::v_v3::subsets::any::schema::mutations::{apply_bmp_mutation, inverse_bmp_mutation, BmpMutation};
+    use crate::standards::v_v3::subsets::any::schema::snapshot::{BmpPaletteEntry, BmpRowOrder};
+    use crate::BmpSnapshot;
     use semio_s_plugin_stdio::ArtifactDsl;
 
     //#region 🔖️Json
@@ -156,7 +156,7 @@ mod subject {
     /// mutation pipeline; `apply_bmp_mutation` does the rest.
     fn mutation_from_spec(kind: &str, params: &Json, base: &BmpSnapshot) -> Result<BmpMutation, String> {
         match kind {
-            "change-header-fields" => Ok(BmpMutation::ChangeHeaderFields(semio_s_plugin_stdio::artifacts::bmp::schema::mutations::ChangeHeaderFieldsMutation {
+            "change-header-fields" => Ok(BmpMutation::ChangeHeaderFields(crate::schema::mutations::ChangeHeaderFieldsMutation {
                 header_size: None,
                 width: None,
                 height: None,
@@ -170,10 +170,10 @@ mod subject {
                 colors_used: None,
                 colors_important: None,
             })),
-            "insert-palette-entry" => Ok(BmpMutation::InsertPaletteEntry(semio_s_plugin_stdio::artifacts::bmp::schema::mutations::InsertPaletteEntryMutation { index: num(params, "index").unwrap_or(0.0) as usize, entry: entry_from(params.get("entry").unwrap_or(&Json::Null)) })),
-            "remove-palette-entry" => Ok(BmpMutation::RemovePaletteEntry(semio_s_plugin_stdio::artifacts::bmp::schema::mutations::RemovePaletteEntryMutation { index: num(params, "index").unwrap_or(0.0) as usize })),
-            "replace-palette-entry" => Ok(BmpMutation::ReplacePaletteEntry(semio_s_plugin_stdio::artifacts::bmp::schema::mutations::ReplacePaletteEntryMutation { index: num(params, "index").unwrap_or(0.0) as usize, entry: entry_from(params.get("entry").unwrap_or(&Json::Null)) })),
-            "replace-pixel-data" => Ok(BmpMutation::ReplacePixelData(semio_s_plugin_stdio::artifacts::bmp::schema::mutations::ReplacePixelDataMutation { pixels: solid_pixels(base.width, base.height, &fill_quad(params)) })),
+            "insert-palette-entry" => Ok(BmpMutation::InsertPaletteEntry(crate::schema::mutations::InsertPaletteEntryMutation { index: num(params, "index").unwrap_or(0.0) as usize, entry: entry_from(params.get("entry").unwrap_or(&Json::Null)) })),
+            "remove-palette-entry" => Ok(BmpMutation::RemovePaletteEntry(crate::schema::mutations::RemovePaletteEntryMutation { index: num(params, "index").unwrap_or(0.0) as usize })),
+            "replace-palette-entry" => Ok(BmpMutation::ReplacePaletteEntry(crate::schema::mutations::ReplacePaletteEntryMutation { index: num(params, "index").unwrap_or(0.0) as usize, entry: entry_from(params.get("entry").unwrap_or(&Json::Null)) })),
+            "replace-pixel-data" => Ok(BmpMutation::ReplacePixelData(crate::schema::mutations::ReplacePixelDataMutation { pixels: solid_pixels(base.width, base.height, &fill_quad(params)) })),
             other => Err(format!("mutation kind {other:?} has no subject implementation")),
         }
     }

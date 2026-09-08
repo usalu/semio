@@ -2,8 +2,8 @@
 //! (called once from 🔌️plugin/🔧️setup via ⚙️engine::register), not per-leaf register().
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use crate::artifacts::gif::standards::v89a::subsets::any::schema::snapshot::GifSnapshot;
-    use crate::artifacts::gif::standards::v89a::subsets::any::schema::GifAnalyzer;
+    use crate::standards::v89a::subsets::any::schema::snapshot::GifSnapshot;
+    use crate::standards::v89a::subsets::any::schema::GifAnalyzer;
     use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.gif", standard: StandardId("89a"), subset: SubsetId("*") };
@@ -54,12 +54,12 @@ pub use derived_composition::*;
 // deflate). `GifEngine` (zero construction sites) deleted outright. `register`/
 // `register_artifact_inferences`/`register_pilot_languages`/`register_schema_specs` kept
 // together here (not dead: `register()` is reached by stdio's protected imperative
-// `crate::artifacts::gif::engine::register()` plugin-root call, via that artifact-level shim's
+// `crate::engine::register()` plugin-root call, via that artifact-level shim's
 // own explicit override that calls both 87a's AND 89a's `register()`).
 // `empty_gif_snapshot`/`demo_gif_snapshot` moved to `../🧬️schema`.
-use crate::artifacts::gif::standards::v87a::engine as codec;
-use crate::artifacts::gif::standards::v89a::subsets::any::schema::mutations::GifMutation;
-use crate::artifacts::gif::standards::v89a::subsets::any::schema::snapshot::{GifAppExtension, GifColorTable, GifDisposal, GifFrame, GifPlainText, GifRgb, GifSnapshot, STDIO_GIF89A_DOCUMENT_SCHEMA};
+use crate::standards::v87a::engine as codec;
+use crate::standards::v89a::subsets::any::schema::mutations::GifMutation;
+use crate::standards::v89a::subsets::any::schema::snapshot::{GifAppExtension, GifColorTable, GifDisposal, GifFrame, GifPlainText, GifRgb, GifSnapshot, STDIO_GIF89A_DOCUMENT_SCHEMA};
 
 //#region ColorTableConv
 /// 🔀️ 89a's OWN `GifColorTable`/`GifRgb` <-> the byte-level `Vec<Rgb>` ([u8;3]) shape 87a's
@@ -398,18 +398,18 @@ pub fn decode_gif(data: &[u8]) -> Result<GifSnapshot, String> {
 
 //#region Register
 /// 🗂️ Registers under `s.stdio.gif.89a`/`stdio.gif.89a` — deliberately DISTINCT ids from 87a's
-/// `s.stdio.gif`/`stdio.gif`. `store::register_document_codec`/`::schema::register_artifact_schema_descriptor`
+/// `s.stdio.gif`/`stdio.gif`. `store::register_document_codec`/`::framework_schema::register_artifact_schema_descriptor`
 /// are both flat last-write-wins string-keyed registries pre-D4 (the plan's dialect-aware
 /// two-level registry is future work); reusing 87a's ids here would silently overwrite its
 /// registration instead of coexisting. Not currently wired into plugin bootstrap (out of this
 /// ticket's scope) — 89a is reachable today via its own standard-scoped types directly and via
-/// the artifact-level composer's dialect-keyed aggregation (`crate::artifacts::gif::io_registry`,
+/// the artifact-level composer's dialect-keyed aggregation (`crate::io_registry`,
 /// which already chains `standards::v89a::composer::entries()` regardless of whether this
 /// function itself ever runs — composer entries are NOT registered here to avoid a redundant
 /// second registration attempt).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn register() {
-    ::schema::register_artifact_schema_descriptor(crate::artifacts::gif::standards::v89a::subsets::any::schema::gif_artifact_schema_descriptor());
+    ::framework_schema::register_artifact_schema_descriptor(crate::standards::v89a::subsets::any::schema::gif_artifact_schema_descriptor());
     register_artifact_inferences();
     register_pilot_languages();
     register_schema_specs();
@@ -421,7 +421,7 @@ pub fn register() {
 /// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn register_artifact_inferences() {
-    ::schema::register_artifact_inference_descriptor(crate::artifacts::gif::standards::v89a::subsets::any::schema::inferences::gif89a_artifact_inference_descriptor());
+    ::framework_schema::register_artifact_inference_descriptor(crate::standards::v89a::subsets::any::schema::inferences::gif89a_artifact_inference_descriptor());
 }
 
 /// 📌️ P2-FG2: 5-role `LanguageSpec` registration (Document/Ops/Diff/Pack/Spr) — same shape as
@@ -435,28 +435,28 @@ pub fn register_pilot_languages() {
         id: "stdio.gif.89a",
         extension: Some("gif"),
         role: dsl::LanguageRole::Document,
-        grammar: Some(crate::artifacts::gif::standards::v89a::subsets::any::schema::snapshot::text::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::gif::standards::v89a::subsets::any::schema::snapshot::text::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::artifacts::gif::standards::v89a::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::gif::standards::v89a::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
+        grammar: Some(crate::standards::v89a::subsets::any::schema::snapshot::text::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::standards::v89a::subsets::any::schema::snapshot::text::COMPONENT_GRAMMAR_PATH),
+        protocol: Some(crate::standards::v89a::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::standards::v89a::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("stdio.gif.89a"),
     });
     dsl::register_language(dsl::LanguageSpec {
         id: "stdio.gif.89a.op",
         extension: None,
         role: dsl::LanguageRole::Ops,
-        grammar: Some(crate::artifacts::gif::standards::v89a::subsets::any::schema::mutations::text::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::gif::standards::v89a::subsets::any::schema::mutations::text::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::artifacts::gif::standards::v89a::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::gif::standards::v89a::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
+        grammar: Some(crate::standards::v89a::subsets::any::schema::mutations::text::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::standards::v89a::subsets::any::schema::mutations::text::COMPONENT_GRAMMAR_PATH),
+        protocol: Some(crate::standards::v89a::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::standards::v89a::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("stdio.gif.89a.op"),
     });
     dsl::register_language(dsl::LanguageSpec {
         id: "stdio.gif.89a.diff",
         extension: None,
         role: dsl::LanguageRole::Diff,
-        grammar: Some(crate::artifacts::gif::standards::v89a::subsets::any::schema::diff::text::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::gif::standards::v89a::subsets::any::schema::diff::text::COMPONENT_GRAMMAR_PATH),
+        grammar: Some(crate::standards::v89a::subsets::any::schema::diff::text::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::standards::v89a::subsets::any::schema::diff::text::COMPONENT_GRAMMAR_PATH),
         protocol: None,
         protocol_path: None,
         hooks: dsl::passthrough_hooks("stdio.gif.89a.diff"),
@@ -467,8 +467,8 @@ pub fn register_pilot_languages() {
         role: dsl::LanguageRole::Pack,
         grammar: None,
         grammar_path: None,
-        protocol: Some(crate::artifacts::gif::standards::v89a::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::gif::standards::v89a::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
+        protocol: Some(crate::standards::v89a::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::standards::v89a::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("stdio.gif.89a.pack"),
     });
     dsl::register_language(dsl::LanguageSpec {
@@ -477,8 +477,8 @@ pub fn register_pilot_languages() {
         role: dsl::LanguageRole::Spr,
         grammar: None,
         grammar_path: None,
-        protocol: Some(crate::artifacts::gif::standards::v89a::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::gif::standards::v89a::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
+        protocol: Some(crate::standards::v89a::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::standards::v89a::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("stdio.gif.89a.spr"),
     });
 }
@@ -505,7 +505,7 @@ pub fn register_schema_specs() {}
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::gif::standards::v89a::subsets::any::schema::demo_gif_snapshot;
+    use crate::standards::v89a::subsets::any::schema::demo_gif_snapshot;
 
     /// 📐️ Pads a quantized palette to the on-disk power-of-two size `write_color_table` would pad
     /// it to anyway — so freshly-constructed test fixtures are already disk-canonical and an exact
@@ -699,7 +699,7 @@ mod tests {
     /// (54 frames, 800×800) for byte-real conformance, not a synthetic stand-in.
     mod conformance_laws {
         use super::*;
-        use crate::artifacts::gif::standards::v89a::subsets::any::schema::{diff, mutations, snapshot};
+        use crate::standards::v89a::subsets::any::schema::{diff, mutations, snapshot};
         use protocol::{DiffCodec, OpBinary, OpText};
 
         /// ✅️ "committed files parse": all 6 handcrafted `.grammar.semio`/`.protocol.semio`
@@ -804,7 +804,7 @@ mod tests {
 
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
-    use crate::artifacts::gif::standards::v89a::subsets::any::schema::GifComposer as GifRawAnyComposer;
+    use crate::standards::v89a::subsets::any::schema::GifComposer as GifRawAnyComposer;
     use semio_framework_plugin::{composer_entry_of, ComposerEntry};
     use std::sync::OnceLock;
 

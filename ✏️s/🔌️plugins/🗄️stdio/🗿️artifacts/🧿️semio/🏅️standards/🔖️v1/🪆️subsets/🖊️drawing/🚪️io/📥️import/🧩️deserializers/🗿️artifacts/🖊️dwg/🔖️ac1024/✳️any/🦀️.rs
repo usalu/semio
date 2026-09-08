@@ -11,9 +11,9 @@
 //!   dropped — mesh-shaped content is the `🔺️mesh` bridge's job, not this one's.
 //! - Malformed logical geometry is a hard `Err`, not a fabricated empty drawing.
 
-use crate::artifacts::dwg::{dwg_geometry_to_path_segments, DwgDrawing, DwgGeometry, DwgSnapshot};
-use crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioTransform};
-use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{DrawCanvas, DrawLayer, DrawNode, PathSegment, SemioDrawingSnapshot, STDIO_SEMIODRAWING_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_dwg::{dwg_geometry_to_path_segments, DwgDrawing, DwgGeometry, DwgSnapshot};
+use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioTransform};
+use crate::standards::v1::subsets::drawing::schema::snapshot::{DrawCanvas, DrawLayer, DrawNode, PathSegment, SemioDrawingSnapshot, STDIO_SEMIODRAWING_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId};
 
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.dwg", standard: StandardId("ac1024"), subset: SubsetId::ANY };
@@ -21,8 +21,8 @@ const INTO_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard
 
 //#region 🔖️SegmentMap
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dwg_segment_to_path(segment: &crate::artifacts::dwg::DwgPathSegment) -> PathSegment {
-    use crate::artifacts::dwg::DwgPathSegment;
+fn dwg_segment_to_path(segment: &semio_s_artifact_stdio_dwg::DwgPathSegment) -> PathSegment {
+    use semio_s_artifact_stdio_dwg::DwgPathSegment;
     match *segment {
         DwgPathSegment::Move { to } => PathSegment::MoveTo { to: SemioPoint2 { x: to[0], y: to[1] } },
         DwgPathSegment::Line { to } => PathSegment::LineTo { to: SemioPoint2 { x: to[0], y: to[1] } },
@@ -76,8 +76,8 @@ impl ArtifactDeserializer for SemioDrawingFromDwg {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::dwg::schema::snapshot::DwgLogicalDrawing;
-    use crate::artifacts::dwg::{DwgColor, DwgEntity};
+    use semio_s_artifact_stdio_dwg::schema::snapshot::DwgLogicalDrawing;
+    use semio_s_artifact_stdio_dwg::{DwgColor, DwgEntity};
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn sample_dwg() -> DwgSnapshot {

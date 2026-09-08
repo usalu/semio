@@ -135,7 +135,7 @@ impl std::error::Error for ImageError {}
 /// same-process stdio call is the simpler of the two extraction shapes the ticket allows.
 /// <https://www.w3.org/TR/png-3/>
 pub fn decode_png(bytes: &[u8]) -> Result<ImageRgba8, ImageError> {
-    let snapshot = semio_s_plugin_stdio::artifacts::png::io::decode_png(bytes).map_err(ImageError::Decode)?;
+    let snapshot = semio_s_artifact_stdio_png::io::decode_png(bytes).map_err(ImageError::Decode)?;
     Ok(ImageRgba8 { width: snapshot.width, height: snapshot.height, data: snapshot.pixels })
 }
 
@@ -146,8 +146,8 @@ pub fn encode_png(img: &ImageRgba8) -> Result<Vec<u8>, ImageError> {
     if img.width == 0 || img.height == 0 || img.data.len() != expected_len {
         return Err(ImageError::Dimensions);
     }
-    let snapshot = semio_s_plugin_stdio::artifacts::png::PngSnapshot { width: img.width, height: img.height, pixels: img.data.clone(), ..Default::default() };
-    semio_s_plugin_stdio::artifacts::png::io::encode_png(&snapshot).map_err(ImageError::Encode)
+    let snapshot = semio_s_artifact_stdio_png::PngSnapshot { width: img.width, height: img.height, pixels: img.data.clone(), ..Default::default() };
+    semio_s_artifact_stdio_png::io::encode_png(&snapshot).map_err(ImageError::Encode)
 }
 
 /// 📤️ Encodes row-major 16-bit grayscale samples as a 16-bit grayscale PNG byte stream
@@ -172,9 +172,9 @@ pub fn encode_png_gray16(data: &[u16], width: u32, height: u32) -> Result<Vec<u8
 /// Baseline sequential only — progressive/arithmetic/lossless SOFn variants surface as
 /// `ImageError::UnsupportedJpeg`, matching this function's pre-extraction contract.
 pub fn decode_jpeg(bytes: &[u8]) -> Result<ImageRgba8, ImageError> {
-    let snapshot = semio_s_plugin_stdio::artifacts::jpg::engine::decode_jpg(bytes).map_err(|error| match error {
-        semio_s_plugin_stdio::artifacts::jpg::engine::JpgError::Unsupported(msg) => ImageError::UnsupportedJpeg(msg),
-        semio_s_plugin_stdio::artifacts::jpg::engine::JpgError::Malformed(msg) => ImageError::Decode(msg),
+    let snapshot = semio_s_artifact_stdio_jpg::engine::decode_jpg(bytes).map_err(|error| match error {
+        semio_s_artifact_stdio_jpg::engine::JpgError::Unsupported(msg) => ImageError::UnsupportedJpeg(msg),
+        semio_s_artifact_stdio_jpg::engine::JpgError::Malformed(msg) => ImageError::Decode(msg),
     })?;
     Ok(ImageRgba8 { width: snapshot.width, height: snapshot.height, data: snapshot.pixels })
 }
@@ -241,6 +241,10 @@ impl CompressedChunkRope {
         self.len
     }
 
+    pub fn is_empty(&self) -> bool {
+        self.len == 0
+    }
+
     fn byte(&self, index: usize) -> Option<u8> {
         self.reads.random_byte_reads.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
         if index >= self.len {
@@ -274,7 +278,7 @@ impl CompressedChunkRope {
     }
 }
 
-impl semio_s_plugin_stdio::artifacts::jpg::engine::JpgByteSource for CompressedChunkRope {
+impl semio_s_artifact_stdio_jpg::engine::JpgByteSource for CompressedChunkRope {
     fn len(&self) -> usize {
         self.len
     }
@@ -439,10 +443,10 @@ impl BoundedStillDecoder {
                     BoundedDecodeProgress::Working
                 }
             }
-            BoundedDecodeState::Jpeg { rope } => match semio_s_plugin_stdio::artifacts::jpg::engine::decode_jpg_source(&rope) {
+            BoundedDecodeState::Jpeg { rope } => match semio_s_artifact_stdio_jpg::engine::decode_jpg_source(&rope) {
                 Ok(snapshot) => BoundedDecodeProgress::Complete(ImageRgba8 { width: snapshot.width, height: snapshot.height, data: snapshot.pixels }),
-                Err(semio_s_plugin_stdio::artifacts::jpg::engine::JpgError::Unsupported(message)) => BoundedDecodeProgress::Failed(ImageError::UnsupportedJpeg(message)),
-                Err(semio_s_plugin_stdio::artifacts::jpg::engine::JpgError::Malformed(message)) => BoundedDecodeProgress::Failed(ImageError::Decode(message)),
+                Err(semio_s_artifact_stdio_jpg::engine::JpgError::Unsupported(message)) => BoundedDecodeProgress::Failed(ImageError::UnsupportedJpeg(message)),
+                Err(semio_s_artifact_stdio_jpg::engine::JpgError::Malformed(message)) => BoundedDecodeProgress::Failed(ImageError::Decode(message)),
             },
             BoundedDecodeState::Finished => BoundedDecodeProgress::Failed(ImageError::Decode("decoder polled after completion".into())),
         }
@@ -456,8 +460,8 @@ impl BoundedStillDecoder {
 /// `ImageRgba8` (its own invariants already guarantee `data.len() == width * height * 4`),
 /// matching this function's pre-extraction (non-`Result`) signature.
 pub fn encode_jpeg(image: &ImageRgba8, quality: u8) -> Vec<u8> {
-    let snapshot = semio_s_plugin_stdio::artifacts::jpg::JpgSnapshot { width: image.width, height: image.height, pixels: image.data.clone(), re_encode_quality: Some(quality), ..Default::default() };
-    semio_s_plugin_stdio::artifacts::jpg::engine::encode_jpg(&snapshot).expect("a valid ImageRgba8 always encodes")
+    let snapshot = semio_s_artifact_stdio_jpg::JpgSnapshot { width: image.width, height: image.height, pixels: image.data.clone(), re_encode_quality: Some(quality), ..Default::default() };
+    semio_s_artifact_stdio_jpg::engine::encode_jpg(&snapshot).expect("a valid ImageRgba8 always encodes")
 }
 // #endregion 🔖️JpegViaStdio
 // #endregion 🔖️Codec
@@ -1433,8 +1437,8 @@ mod tests {
             let value = (((index % width as usize) / 16 + (index / width as usize) / 16) % 2 * 223) as u8;
             pixels[index * 4..index * 4 + 4].copy_from_slice(&[value, 255 - value, value.rotate_left(2), 255]);
         }
-        let snapshot = semio_s_plugin_stdio::artifacts::jpg::JpgSnapshot { width, height, pixels, re_encode_quality: Some(85), ..Default::default() };
-        let encoded = semio_s_plugin_stdio::artifacts::jpg::engine::encode_jpg(&snapshot).expect("JPEG fixture");
+        let snapshot = semio_s_artifact_stdio_jpg::JpgSnapshot { width, height, pixels, re_encode_quality: Some(85), ..Default::default() };
+        let encoded = semio_s_artifact_stdio_jpg::engine::encode_jpg(&snapshot).expect("JPEG fixture");
         assert!(encoded.len() <= MAX_JPEG_COMPRESSED_BYTES);
         let chunks = compressed_rope(&encoded, MAX_JPEG_COMPRESSED_BYTES);
         std::thread::spawn(move || {

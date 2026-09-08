@@ -1,0 +1,298 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/pptx/ecma-376/base/mutation/insert-shape.json",
+  "title": "InsertShape",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "slide_index",
+    "shape_index",
+    "shape"
+  ],
+  "properties": {
+    "slide_index": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "shape_index": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "shape": {
+      "$ref": "#/$defs/PptxShape"
+    },
+    "mutation": {
+      "const": "insertShape",
+      "description": "Aggregate discriminator spliced in by PptxMutation; absent when the payload stands alone."
+    }
+  },
+  "$defs": {
+    "PptxShape": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "shapeKind"
+          ],
+          "properties": {
+            "shapeKind": {
+              "const": "textBox"
+            },
+            "textFrame": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/PptxParagraph"
+              }
+            },
+            "position": {
+              "$ref": "#/$defs/PptxTransform"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "shapeKind",
+            "blipRelId"
+          ],
+          "properties": {
+            "shapeKind": {
+              "const": "picture"
+            },
+            "blipRelId": {
+              "type": "string"
+            },
+            "position": {
+              "$ref": "#/$defs/PptxTransform"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "shapeKind",
+            "kind"
+          ],
+          "properties": {
+            "shapeKind": {
+              "const": "placeholder"
+            },
+            "kind": {
+              "type": "string"
+            },
+            "textFrame": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/PptxParagraph"
+              }
+            },
+            "position": {
+              "$ref": "#/$defs/PptxTransform"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "shapeKind",
+            "node"
+          ],
+          "properties": {
+            "shapeKind": {
+              "const": "other"
+            },
+            "node": {
+              "$ref": "#/$defs/XmlNode"
+            }
+          }
+        }
+      ]
+    },
+    "PptxParagraph": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "runs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PptxRun"
+          }
+        }
+      }
+    },
+    "PptxRun": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "text"
+      ],
+      "properties": {
+        "text": {
+          "type": "string"
+        },
+        "bold": {
+          "type": "boolean"
+        },
+        "italic": {
+          "type": "boolean"
+        },
+        "fontSize": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4294967295
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "PptxTransform": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y",
+        "cx",
+        "cy"
+      ],
+      "properties": {
+        "x": {
+          "type": "integer"
+        },
+        "y": {
+          "type": "integer"
+        },
+        "cx": {
+          "type": "integer"
+        },
+        "cy": {
+          "type": "integer"
+        }
+      }
+    },
+    "XmlNode": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "name"
+          ],
+          "properties": {
+            "kind": {
+              "const": "element"
+            },
+            "name": {
+              "type": "string"
+            },
+            "attrs": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/XmlAttr"
+              }
+            },
+            "children": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/XmlNode"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "text"
+          ],
+          "properties": {
+            "kind": {
+              "const": "text"
+            },
+            "text": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "text"
+          ],
+          "properties": {
+            "kind": {
+              "const": "cData"
+            },
+            "text": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "text"
+          ],
+          "properties": {
+            "kind": {
+              "const": "comment"
+            },
+            "text": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "target",
+            "data"
+          ],
+          "properties": {
+            "kind": {
+              "const": "processingInstruction"
+            },
+            "target": {
+              "type": "string"
+            },
+            "data": {
+              "type": "string"
+            }
+          }
+        }
+      ]
+    },
+    "XmlAttr": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "value"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

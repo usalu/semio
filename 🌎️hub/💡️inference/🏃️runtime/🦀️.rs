@@ -271,10 +271,10 @@ impl GisMapApprovalCommitterV1 for UnavailableGisMapApprovalCommitterV1 {
 
 type GisMapParentSnapshotV1 = semio_s_plugin_gis::artifacts::gismap::GisMapSnapshot;
 type GisMapParentMutationV1 = semio_s_plugin_gis::artifacts::gismap::mutations::GisMapMutation;
-type GisMapDrawingSnapshotV1 = semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot;
-type GisMapDrawingMutationV1 = semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::drawing::schema::mutations::SemioDrawingMutation;
-type GisMapValueSnapshotV1 = semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValueSnapshot;
-type GisMapValueMutationV1 = semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::value::schema::mutations::SemioValueMutation;
+type GisMapDrawingSnapshotV1 = semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot;
+type GisMapDrawingMutationV1 = semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::mutations::SemioDrawingMutation;
+type GisMapValueSnapshotV1 = semio_s_artifact_stdio_semio::standards::v1::subsets::value::schema::snapshot::SemioValueSnapshot;
+type GisMapValueMutationV1 = semio_s_artifact_stdio_semio::standards::v1::subsets::value::schema::mutations::SemioValueMutation;
 type GisMapParentStoreV1 = directory::os_store::ArtifactStore<GisMapParentSnapshotV1, GisMapParentMutationV1>;
 type GisMapDrawingStoreV1 = directory::os_store::ArtifactStore<GisMapDrawingSnapshotV1, GisMapDrawingMutationV1>;
 type GisMapValueStoreV1 = directory::os_store::ArtifactStore<GisMapValueSnapshotV1, GisMapValueMutationV1>;
@@ -749,7 +749,7 @@ impl RetainedGisMapApprovalCommitterV1 {
 
     fn drawing_store(id: &str, parent: directory::os_io::ArtifactRef, snapshot: GisMapDrawingSnapshotV1) -> GisMapDrawingStoreV1 {
         use directory::{os_store::MemberStoreOwner, ArtifactPack};
-        let schema = semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::STDIO_SEMIODRAWING_DOCUMENT_SCHEMA;
+        let schema = semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::STDIO_SEMIODRAWING_DOCUMENT_SCHEMA;
         let mut envelope = directory::os_store::create_document_envelope::<GisMapDrawingSnapshotV1, GisMapDrawingMutationV1>(schema, id, snapshot.clone(), None);
         envelope.dialect = Some(directory::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "drawing".into() });
         envelope.owner = Some(directory::os_store::OwnerRef { parent, slot: "drawing".into(), child_id: id.into() });
@@ -760,7 +760,7 @@ impl RetainedGisMapApprovalCommitterV1 {
 
     fn value_store(id: &str, parent: directory::os_io::ArtifactRef, snapshot: GisMapValueSnapshotV1) -> GisMapValueStoreV1 {
         use directory::{os_store::MemberStoreOwner, ArtifactPack};
-        let schema = semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::value::schema::snapshot::STDIO_SEMIOVALUE_DOCUMENT_SCHEMA;
+        let schema = semio_s_artifact_stdio_semio::standards::v1::subsets::value::schema::snapshot::STDIO_SEMIOVALUE_DOCUMENT_SCHEMA;
         let mut envelope = directory::os_store::create_document_envelope::<GisMapValueSnapshotV1, GisMapValueMutationV1>(schema, id, snapshot.clone(), None);
         envelope.dialect = Some(directory::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "value".into() });
         envelope.owner = Some(directory::os_store::OwnerRef { parent, slot: "value".into(), child_id: id.into() });

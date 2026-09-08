@@ -22,7 +22,7 @@ use crate::artifacts::process3d::{Capability, MeasureKind, MeasureRecipe, Pose, 
 use protocol::Inference;
 use schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::{Brep, BrepKernel, GeometryHandle};
+use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::engine::{Brep, BrepKernel, GeometryHandle};
 use semio_framework_os_kernel::{FromValue, ToValue};
 use std::collections::hash_map::DefaultHasher;
 use std::collections::HashMap;
@@ -124,6 +124,12 @@ pub struct ProcessKernelReplay {
 
 struct ProcessKernelMemo {
     memo: HashMap<u64, GeometryHandle>,
+}
+
+impl Default for ProcessKernelReplay {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl ProcessKernelReplay {

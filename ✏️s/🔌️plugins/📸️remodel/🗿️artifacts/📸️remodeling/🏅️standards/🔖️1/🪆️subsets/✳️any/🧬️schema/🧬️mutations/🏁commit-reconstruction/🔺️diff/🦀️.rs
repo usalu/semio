@@ -26,7 +26,7 @@ pub fn diff(payload: &super::CommitReconstruction, base: &RemodelingSnapshot) ->
     if let Some(candidate) = payload.mesh.as_ref() {
         let mut mesh = (**candidate).clone();
         let Some(staging_id) = mesh.mesh.target.artifact_id.strip_prefix("mesh-stage:") else {
-            return protocol::MutationOutcome::error("mutation.invalid-reconstruction-mesh", "The terminal mesh is not a staged replayable handle.", [mesh.mesh.child_id.clone()]);
+            return protocol::MutationOutcome::error("mutation.invalid-reconstruction-mesh", "The terminal mesh is not a staged replayable handle.", [mesh.mesh.child_id]);
         };
         let chunk_count = crate::artifacts::remodeling::staged_remodeling_mesh_chunk_count(staging_id);
         staged_mesh = Some((staging_id.to_string(), mesh.mesh.child_id.clone(), chunk_count));

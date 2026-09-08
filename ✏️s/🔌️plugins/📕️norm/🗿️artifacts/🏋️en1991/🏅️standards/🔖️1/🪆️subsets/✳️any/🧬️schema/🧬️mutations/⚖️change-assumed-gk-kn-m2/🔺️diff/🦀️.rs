@@ -11,6 +11,6 @@ pub fn diff(payload: &ChangeAssumedGKKnM2, base: &En1991Snapshot) -> protocol::M
     if base.assumed_g_k_kn_m2 == payload.new_assumed_g_k_kn_m2 {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "Assumed gk kn m2 already has this value.");
     }
-    protocol::MutationOutcome::new(En1991Diff { assumed_g_k_kn_m2: Some(payload.new_assumed_g_k_kn_m2.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1991Diff { assumed_g_k_kn_m2: Some(payload.new_assumed_g_k_kn_m2), ..Default::default() })
 }
 //#endregion 🔖️Diff

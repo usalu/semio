@@ -5,7 +5,7 @@
   "displayName": "Change People Gain Zone",
   "emoji": "🚶️",
   "aggregateVariant": "ChangePeopleGainZone",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-people-gain-zone",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

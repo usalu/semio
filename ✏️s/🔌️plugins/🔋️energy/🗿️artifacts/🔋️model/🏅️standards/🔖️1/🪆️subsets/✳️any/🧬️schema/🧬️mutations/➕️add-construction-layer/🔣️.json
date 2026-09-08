@@ -5,7 +5,7 @@
   "displayName": "Add Construction Layer",
   "emoji": "➕️",
   "aggregateVariant": "AddConstructionLayer",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "add-construction-layer",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

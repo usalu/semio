@@ -1,0 +1,25 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/svg/1.1/base/mutation/set-transform.json",
+  "title": "SetTransformPayload",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "path"
+  ],
+  "properties": {
+    "path": {
+      "type": "array",
+      "items": {
+        "type": [
+          "object",
+          "integer"
+        ]
+      }
+    },
+    "transform": {
+      "type": "array",
+      "items": {}
+    }
+  }
+}

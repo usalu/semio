@@ -1,7 +1,7 @@
 //! 🧩 set_snapshot diff leaf.
 
-use crate::artifacts::docx::schema::diff::{diff_set_snapshot, DocxDiff};
-use crate::artifacts::docx::DocxSnapshot;
+use crate::schema::diff::{diff_set_snapshot, DocxDiff};
+use crate::DocxSnapshot;
 
 /// 🔺️ Diff helper for set-snapshot: the sparse field-by-field delta from `base` to `snapshot`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

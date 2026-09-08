@@ -1,0 +1,162 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/framework/ui/contract/retained/resident/metadata/schema.json",
+  "title": "Ui Contract Retained Resident Metadata Schema Module",
+  "$defs": {
+    "MetadataFixture": {
+      "title": "UI Fixed Metadata Neutral Oracle",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "logicalRecordBytes",
+        "logicalFieldBytes",
+        "neutralRegistration",
+        "neutralAdmission",
+        "poolConstructionFaults",
+        "compositionCapacity",
+        "catalogue",
+        "expected"
+      ],
+      "properties": {
+        "logicalRecordBytes": {
+          "const": 16
+        },
+        "logicalFieldBytes": {
+          "const": 8
+        },
+        "neutralRegistration": {
+          "const": {
+            "bytes": 264,
+            "slots": 3,
+            "owners": 3
+          }
+        },
+        "neutralAdmission": {
+          "const": {
+            "bytes": 296,
+            "slots": 6,
+            "owners": 6
+          }
+        },
+        "poolConstructionFaults": {
+          "type": "array",
+          "minItems": 3,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "bindings-constructor",
+              "witness-finalizer",
+              "pool-finalizer"
+            ]
+          }
+        },
+        "compositionCapacity": {
+          "$ref": "https://semio.tech/schema/framework/value/resident/schema.json#/$defs/Resident"
+        },
+        "catalogue": {
+          "type": "array",
+          "minItems": 7,
+          "maxItems": 7,
+          "items": {
+            "$ref": "https://semio.tech/schema/framework/ui/contract/retained/resident/metadata/schema.json#/$defs/Metadata"
+          }
+        },
+        "expected": {
+          "type": "array",
+          "minItems": 7,
+          "maxItems": 7,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "kind",
+              "bytes",
+              "slots",
+              "owners"
+            ],
+            "properties": {
+              "kind": {
+                "enum": [
+                  "pool",
+                  "instance",
+                  "payload",
+                  "builder",
+                  "reader",
+                  "page",
+                  "evidence"
+                ]
+              },
+              "bytes": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 9007199254740991
+              },
+              "slots": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 9007199254740991
+              },
+              "owners": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 9007199254740991
+              }
+            }
+          }
+        }
+      }
+    },
+    "Metadata": {
+      "title": "Owned UI Fixed Metadata Admission",
+      "description": "Declared logical metadata records charged in the same composition ledger as raw input and destination backing. These are not physical heap sizes or work grants.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "records"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "pool",
+            "instance",
+            "payload",
+            "builder",
+            "reader",
+            "page",
+            "evidence"
+          ]
+        },
+        "records": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 8,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "fields"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "fields": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 64,
+                "uniqueItems": true,
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

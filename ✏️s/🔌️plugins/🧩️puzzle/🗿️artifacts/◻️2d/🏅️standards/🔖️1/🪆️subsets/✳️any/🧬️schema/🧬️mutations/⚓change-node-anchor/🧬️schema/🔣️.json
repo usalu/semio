@@ -1,0 +1,34 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/puzzle/2d/1/any/mutation/change-node-anchor.json",
+  "title": "ChangeNodeAnchor",
+  "description": "The `change-node-anchor` mutation record — internally tagged `\"mutation\": \"changeNodeAnchor\"`, the one branch the aggregate `../🔣️.json` union carries for this kind.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "newAnchor"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeNodeAnchor"
+    },
+    "id": {
+      "type": "string"
+    },
+    "newAnchor": {
+      "$ref": "#/$defs/Puzzle2dNodeAnchor"
+    }
+  },
+  "$defs": {
+    "Puzzle2dNodeAnchor": {
+      "title": "Puzzle2dNodeAnchor",
+      "type": "string",
+      "enum": [
+        "fixed",
+        "derived"
+      ]
+    }
+  }
+}

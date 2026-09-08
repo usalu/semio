@@ -13,8 +13,8 @@
 //! (`DslValue` -> stdio's own `JsonValue`) instead, same shape the sibling `block3d` leaf already
 //! uses.
 use crate::artifacts::puzzle3d::Puzzle3dSnapshot;
-use semio_s_plugin_stdio::artifacts::json::schema::snapshot::write_json_pretty;
-use semio_s_plugin_stdio::artifacts::json::{JsonSnapshot, STDIO_JSON_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_json::schema::snapshot::write_json_pretty;
+use semio_s_artifact_stdio_json::{JsonSnapshot, STDIO_JSON_DOCUMENT_SCHEMA};
 
 pub fn register() {}
 

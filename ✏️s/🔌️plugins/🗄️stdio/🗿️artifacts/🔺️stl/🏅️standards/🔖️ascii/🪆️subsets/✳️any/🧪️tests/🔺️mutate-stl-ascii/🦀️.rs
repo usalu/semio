@@ -112,9 +112,9 @@ fn round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::{moved_the_document, mutable_input, project};
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_plugin_stdio::artifacts::stl::standards::v_ascii::subsets::any::io::{decode_stl_ascii, encode_stl_ascii};
-    use semio_s_plugin_stdio::artifacts::stl::standards::v_ascii::subsets::any::schema::mutations::{apply_stl_mutation, insert_triangle, remove_triangle, set_snapshot, set_solid_name, set_triangle_normal, set_triangle_vertices, StlMutation};
-    use semio_s_plugin_stdio::artifacts::stl::standards::v_ascii::subsets::any::schema::snapshot::{StlSnapshot, StlTriangle};
+    use crate::standards::v_ascii::subsets::any::io::{decode_stl_ascii, encode_stl_ascii};
+    use crate::standards::v_ascii::subsets::any::schema::mutations::{apply_stl_mutation, insert_triangle, remove_triangle, set_snapshot, set_solid_name, set_triangle_normal, set_triangle_vertices, StlMutation};
+    use crate::standards::v_ascii::subsets::any::schema::snapshot::{StlSnapshot, StlTriangle};
 
     //#region 🔖️SpecReaders
     fn params_of(spec: &Json) -> Json {

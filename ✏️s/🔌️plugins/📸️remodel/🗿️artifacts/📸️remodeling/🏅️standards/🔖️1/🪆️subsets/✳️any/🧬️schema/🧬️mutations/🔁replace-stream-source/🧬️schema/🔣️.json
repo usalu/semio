@@ -1,0 +1,76 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/remodel/remodeling/1/any/mutation/replace-stream-source.json",
+  "title": "ReplaceStreamSource",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "source"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "source": {
+      "anyOf": [
+        {
+          "type": "object",
+          "title": "VideoSource",
+          "additionalProperties": false,
+          "required": [
+            "name",
+            "container",
+            "codec",
+            "durationMs",
+            "frameCount",
+            "width",
+            "height"
+          ],
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "container": {
+              "type": "string"
+            },
+            "codec": {
+              "type": "string",
+              "title": "VideoCodec",
+              "enum": [
+                "avc",
+                "hevc",
+                "vp9",
+                "av1",
+                "mjpeg",
+                "unknown"
+              ]
+            },
+            "durationMs": {
+              "type": "number",
+              "format": "double"
+            },
+            "frameCount": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0
+            },
+            "width": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0
+            },
+            "height": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0
+            }
+          }
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  }
+}

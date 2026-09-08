@@ -5,7 +5,7 @@
   "displayName": "Delete Daylight Zone",
   "emoji": "🌗️",
   "aggregateVariant": "DeleteDaylightZone",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "delete-daylight-zone",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

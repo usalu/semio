@@ -1,0 +1,41 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/animate/presentation/1/any/mutation/resize-tile-crop.json",
+  "title": "ResizeTileCrop",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newCrop"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "newCrop": {
+      "title": "FigureTileFrame",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "height",
+        "width",
+        "x",
+        "y"
+      ],
+      "properties": {
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "width": {
+          "type": "number"
+        },
+        "height": {
+          "type": "number"
+        }
+      }
+    }
+  }
+}

@@ -5,7 +5,7 @@
   "displayName": "Change Restart Interval",
   "emoji": "🔁️",
   "aggregateVariant": "ChangeRestartInterval",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-restart-interval",
   "binaryTag": 7,
   "invertibility": "explicit-mutation",

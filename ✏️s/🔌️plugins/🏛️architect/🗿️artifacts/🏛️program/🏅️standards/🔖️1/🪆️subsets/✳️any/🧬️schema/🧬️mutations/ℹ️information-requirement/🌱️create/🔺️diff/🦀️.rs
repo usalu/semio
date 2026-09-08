@@ -10,7 +10,7 @@ use crate::artifacts::program::ProgramSnapshot;
 pub fn diff(payload: &CreateInformationRequirement, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
     let id = payload.information_requirement.header.id.clone();
     if base.information.iter().any(|row| row.header.id == id) {
-        return protocol::MutationOutcome::fatal("mutation.duplicate-id", "An information requirement already exists with this id.", [id.0.clone()]);
+        return protocol::MutationOutcome::fatal("mutation.duplicate-id", "An information requirement already exists with this id.", [id.0]);
     }
     protocol::MutationOutcome::new(ProgramDiff { information: Some(ProgramInformationDelta { added: vec![payload.information_requirement.clone()], ..Default::default() }), ..Default::default() })
 }

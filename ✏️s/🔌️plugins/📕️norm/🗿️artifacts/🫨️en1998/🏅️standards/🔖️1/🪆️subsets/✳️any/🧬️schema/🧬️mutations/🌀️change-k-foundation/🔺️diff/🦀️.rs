@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeKFoundation, base: &En1998Snapshot) -> protocol::Mut
     if base.k_foundation == payload.new_k_foundation {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Foundation stiffness k [kN/m] is already {}.", payload.new_k_foundation));
     }
-    protocol::MutationOutcome::new(En1998Diff { k_foundation: Some(payload.new_k_foundation.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1998Diff { k_foundation: Some(payload.new_k_foundation), ..Default::default() })
 }
 //#endregion 🔖️Diff

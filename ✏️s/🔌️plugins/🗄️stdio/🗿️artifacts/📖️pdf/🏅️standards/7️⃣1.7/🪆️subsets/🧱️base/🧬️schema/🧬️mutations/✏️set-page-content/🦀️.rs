@@ -1,7 +1,7 @@
 //! ✏️ Authoritative PDF mutation payload, diff, inverse, and tests for `set-page-content`.
 
 use super::PdfMutation;
-use crate::artifacts::pdf::standards::v1_7::subsets::base::schema::{diff::{self, PdfDiff}, snapshot::{PdfSnapshot}};
+use crate::standards::v1_7::subsets::base::schema::{diff::{self, PdfDiff}, snapshot::{PdfSnapshot}};
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
 
 //#region 🔖️Mutation

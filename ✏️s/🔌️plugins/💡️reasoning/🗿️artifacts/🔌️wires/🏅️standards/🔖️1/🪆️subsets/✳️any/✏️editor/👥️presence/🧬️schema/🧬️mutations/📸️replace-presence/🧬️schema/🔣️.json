@@ -1,0 +1,35 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/reasoning/wires/1/any/editor/presence/mutation/replace-presence.json",
+  "title": "ReplacePresence",
+  "type": "object",
+  "properties": {
+    "presence": {
+      "type": "object",
+      "properties": {
+        "dragNodeId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "dragLastX": {
+          "type": "number"
+        },
+        "dragLastY": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "dragNodeId",
+        "dragLastX",
+        "dragLastY"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "presence"
+  ],
+  "additionalProperties": false
+}

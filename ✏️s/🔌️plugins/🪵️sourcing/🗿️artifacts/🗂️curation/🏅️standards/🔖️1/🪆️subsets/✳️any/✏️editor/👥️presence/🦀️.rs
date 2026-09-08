@@ -198,6 +198,12 @@ pub struct SourcingPresenceStoreDisposer {
     active: Option<store::PresenceStoreRetirement<SourcingCurationPresence>>,
 }
 
+impl Default for SourcingPresenceStoreDisposer {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl SourcingPresenceStoreDisposer {
     pub fn new() -> Self { Self { terminal: Some(std::sync::Arc::new(SourcingCurationPresence::default())), active: None } }
 }

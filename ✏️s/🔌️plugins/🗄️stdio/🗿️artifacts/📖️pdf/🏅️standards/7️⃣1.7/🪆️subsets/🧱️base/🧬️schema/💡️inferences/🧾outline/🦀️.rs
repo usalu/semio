@@ -3,7 +3,7 @@
 //! over every resolved page's `text`; `title` mirrors the document's own `/Info` dictionary
 //! `title` field (real, honestly optional — a source PDF may carry no `/Title`).
 
-use crate::artifacts::pdf::standards::v1_7::subsets::base::schema::snapshot::PdfSnapshot;
+use crate::standards::v1_7::subsets::base::schema::snapshot::PdfSnapshot;
 
 //#region 🔖️Outline
 /// 🧾️ `Pdf` (1.7) document outline.
@@ -30,7 +30,7 @@ impl Pdf17Outline {
 //#region 🧪️Tests
 mod tests {
     use super::*;
-    use crate::artifacts::pdf::standards::v1_7::subsets::base::schema::snapshot::{PdfInfo, PdfPage};
+    use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfInfo, PdfPage};
 
     #[semio_framework_async_macros::async_test]
     async fn counts_pages_and_words_and_carries_title() {

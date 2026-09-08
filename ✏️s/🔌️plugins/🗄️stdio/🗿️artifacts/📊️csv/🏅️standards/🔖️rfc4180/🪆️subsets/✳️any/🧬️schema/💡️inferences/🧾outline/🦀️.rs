@@ -3,7 +3,7 @@
 //! (a real table is often ragged on the wire — this reports the true maximum, never assumes
 //! rectangularity); `hasHeader` mirrors the snapshot's own `has_header` flag.
 
-use crate::artifacts::csv::CsvSnapshot;
+use crate::CsvSnapshot;
 
 //#region 🔖️Outline
 /// 🧾️ `Csv` document outline.
@@ -35,7 +35,7 @@ impl CsvOutline {
 //#region 🧪️Tests
 mod tests {
     use super::*;
-    use crate::artifacts::csv::schema::snapshot::{CsvField, CsvRecord};
+    use crate::schema::snapshot::{CsvField, CsvRecord};
 
     #[semio_framework_async_macros::async_test]
     async fn reports_widest_record_as_column_count() {

@@ -100,10 +100,11 @@ class NativeOpenableIdentityCheckScript extends BundleScript {
     const owner = join(this.root, "..", "..");
     const fixtureRoot = join(owner, "🧪️fixtures/🪪️native-openable-identity/🧬️v1");
     const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8"));
-    const schema = JSON.parse(readFileSync(join(fixtureRoot, "🧬️.schema.json"), "utf8"));
+    const module = JSON.parse(readFileSync(join(owner, "🧬️schema/🔣️.json"), "utf8"));
     const { default: Ajv } = await import("ajv");
     const ajv = new Ajv({ allErrors: true, strict: true });
-    const validate = ajv.compile(schema);
+    ajv.addSchema(module);
+    const validate = ajv.compile({ $ref: `${module.$id}#/$defs/VcsNativeOpenableIdentity` });
     if (!validate(fixture)) throw new Error(`VCS identity fixture is invalid: ${ajv.errorsText(validate.errors)}`);
     const identities = new Set<string>();
     for (const hostile of fixture.hostileCases) {

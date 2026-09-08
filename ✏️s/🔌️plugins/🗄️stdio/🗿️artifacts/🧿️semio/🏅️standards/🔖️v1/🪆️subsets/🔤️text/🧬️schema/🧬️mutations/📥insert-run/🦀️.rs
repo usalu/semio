@@ -1,8 +1,8 @@
 //! ➕️ `insert-run` — places a new text run at a FINAL-state index in the run sequence (an
 //! intrinsically ordered, anonymous collection — no stable id on `SemioTextRun`).
 
-use crate::artifacts::semio::standards::v1::subsets::text::schema::mutations::SemioTextMutation;
-use crate::artifacts::semio::standards::v1::subsets::text::schema::snapshot::{SemioTextRun, SemioTextSnapshot};
+use crate::standards::v1::subsets::text::schema::mutations::SemioTextMutation;
+use crate::standards::v1::subsets::text::schema::snapshot::{SemioTextRun, SemioTextSnapshot};
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]

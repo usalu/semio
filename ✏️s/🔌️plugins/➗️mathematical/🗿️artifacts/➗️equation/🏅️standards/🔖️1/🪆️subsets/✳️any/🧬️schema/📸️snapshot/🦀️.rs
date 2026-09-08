@@ -65,7 +65,7 @@ impl ToValue for EquationSnapshot {
 impl FromValue for EquationSnapshot {
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
         let entries = DslValue::into_object(value)?;
-        let field = |key: &str| entries.iter().find(|(k, _)| k == key).map(|(_, v)| v.clone()).unwrap_or(DslValue::Null);
+        let field = |key: &str| entries.iter().find(|(k, _)| k == key).map_or(DslValue::Null, |(_, v)| v.clone());
         Ok(Self {
             notation: from_dsl_value(field("notation")).map_err(ValueError::new)?,
             results: from_dsl_value(field("results")).map_err(ValueError::new)?,
@@ -288,8 +288,8 @@ pub fn equation_identity_report_json(dsl_text: &str) -> Result<String, String> {
         ("parsed".to_string(), pack::json::from_dsl_value(&parsed.to_value())),
         ("reparsed".to_string(), pack::json::from_dsl_value(&reparsed.to_value())),
         ("packDecoded".to_string(), pack::json::from_dsl_value(&unpacked.to_value())),
-        ("canonicalText".to_string(), pack::json::Value::String(canonical.clone())),
-        ("canonicalTextAgain".to_string(), pack::json::Value::String(canonical_again.clone())),
+        ("canonicalText".to_string(), pack::json::Value::String(canonical)),
+        ("canonicalTextAgain".to_string(), pack::json::Value::String(canonical_again)),
     ]);
     Ok(pack::json::to_string(&report))
 }

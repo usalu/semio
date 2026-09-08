@@ -10,11 +10,11 @@
 //! as `glue_followup`, which this wave inherits). `parts` (unknown/unmodeled files) uses the same
 //! engine, keyed by name.
 
-use crate::artifacts::bcf::schema::snapshot::{BcfCamera, BcfColoring, BcfComment, BcfComponents, BcfPoint3, BcfRawPart, BcfTopic, BcfViewpoint, BcfVisibility};
-use crate::artifacts::bcf::BcfSnapshot;
+use crate::schema::snapshot::{BcfCamera, BcfColoring, BcfComment, BcfComponents, BcfPoint3, BcfRawPart, BcfTopic, BcfViewpoint, BcfVisibility};
+use crate::BcfSnapshot;
 use protocol::command::DiffAlgebra;
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
-use schema::ArtifactSchema;
+use framework_schema::ArtifactSchema;
 
 //#region 🔖️GenericNamedEngine
 /// 🏷️ Name/key-keyed collection triple, generic over key `K`, item `T`, and per-field diff `D`.
@@ -1563,7 +1563,7 @@ impl protocol::DiffCodec for BcfDiff {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_snapshot_a() -> BcfSnapshot {
     BcfSnapshot {
-        schema: crate::artifacts::bcf::STDIO_BCF_DOCUMENT_SCHEMA.into(),
+        schema: crate::STDIO_BCF_DOCUMENT_SCHEMA.into(),
         version: "2.1".into(),
         topics: vec![
             BcfTopic {
@@ -1614,7 +1614,7 @@ pub(crate) fn demo_snapshot_a() -> BcfSnapshot {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_snapshot_b() -> BcfSnapshot {
     BcfSnapshot {
-        schema: crate::artifacts::bcf::STDIO_BCF_DOCUMENT_SCHEMA.into(),
+        schema: crate::STDIO_BCF_DOCUMENT_SCHEMA.into(),
         version: "2.2".into(),
         topics: vec![
             BcfTopic {

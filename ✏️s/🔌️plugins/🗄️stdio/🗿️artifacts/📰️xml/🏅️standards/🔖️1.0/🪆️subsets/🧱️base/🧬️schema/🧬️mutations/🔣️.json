@@ -1,6 +1,8 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/xml/1.0/base/mutations.json",
   "title": "XmlMutation",
+  "description": "Discriminated union over this module's mutation leaves (adjacently tagged); every payload is the leaf's own schema, referenced, never restated.",
   "oneOf": [
     {
       "type": "object",
@@ -11,10 +13,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "set-declaration"
+          "const": "insertElement"
         },
         "payload": {
-          "$ref": "📣️set-declaration/🧬️.schema.json"
+          "$ref": "./📥️insert-element/🧬️schema/🔣️.json"
         }
       }
     },
@@ -27,10 +29,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "set-doctype"
+          "const": "removeElement"
         },
         "payload": {
-          "$ref": "📜️set-doctype/🧬️.schema.json"
+          "$ref": "./🗑️remove-element/🧬️schema/🔣️.json"
         }
       }
     },
@@ -43,10 +45,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "insert-element"
+          "const": "setAttribute"
         },
         "payload": {
-          "$ref": "📥️insert-element/🧬️.schema.json"
+          "$ref": "./🏷️set-attribute/🧬️schema/🔣️.json"
         }
       }
     },
@@ -59,10 +61,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "remove-element"
+          "const": "setDeclaration"
         },
         "payload": {
-          "$ref": "🗑️remove-element/🧬️.schema.json"
+          "$ref": "./📣️set-declaration/🧬️schema/🔣️.json"
         }
       }
     },
@@ -75,10 +77,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "set-attribute"
+          "const": "setDoctype"
         },
         "payload": {
-          "$ref": "🏷️set-attribute/🧬️.schema.json"
+          "$ref": "./📜️set-doctype/🧬️schema/🔣️.json"
         }
       }
     },
@@ -91,10 +93,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "set-text"
+          "const": "setText"
         },
         "payload": {
-          "$ref": "✍️set-text/🧬️.schema.json"
+          "$ref": "./✍️set-text/🧬️schema/🔣️.json"
         }
       }
     }

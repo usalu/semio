@@ -1,9 +1,9 @@
 //! 🧬️ Direct change-node-extension-data mutation owner: payload, validation, typed diff, inverse, and outcomes.
-use crate::artifacts::gltf::schema::modules::mutation_support::top_level::rejection_outcome;
-use crate::artifacts::gltf::GltfSnapshot;
-use crate::artifacts::gltf::schema::snapshot::*;
-use crate::artifacts::gltf::schema::modules::mutation_support::top_level::GltfTopLevelMutationRejection;
-use crate::artifacts::gltf::schema::modules::mutation_support::structure_geometry::checked_index;
+use crate::schema::modules::mutation_support::top_level::rejection_outcome;
+use crate::GltfSnapshot;
+use crate::schema::snapshot::*;
+use crate::schema::modules::mutation_support::top_level::GltfTopLevelMutationRejection;
+use crate::schema::modules::mutation_support::structure_geometry::checked_index;
 pub const ID: &str = "s.stdio.gltf.mutation.change-node-extension-data.v1";
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(tag = "state", rename_all = "camelCase")]
@@ -23,15 +23,15 @@ pub fn apply(payload: &GltfChangeNodeExtensionDataPayload, base: &GltfSnapshot) 
 #[value(tag = "phase", content = "value", rename_all = "camelCase")]
 pub enum ChangeNodeExtensionDataMutation {
     Apply(GltfChangeNodeExtensionDataPayload),
-    Restore(Box<crate::artifacts::gltf::schema::diff::GltfDiff>),
+    Restore(Box<crate::schema::diff::GltfDiff>),
 }
 
 impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for ChangeNodeExtensionDataMutation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "node-extension-data", kind: "change-node-extension-data", record: "ChangedNodeExtensionData" };
 
-    fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<crate::artifacts::gltf::schema::diff::GltfDiff> {
+    fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<crate::schema::diff::GltfDiff> {
         match self {
-            Self::Apply(payload) => { match apply(payload, base) { Ok(next) => protocol::MutationOutcome::new(<crate::artifacts::gltf::schema::diff::GltfDiff as protocol::DiffAlgebra<GltfSnapshot>>::between(base, &next)), Err(error) => rejection_outcome(&error.code, &error.path, error.detail) } }
+            Self::Apply(payload) => { match apply(payload, base) { Ok(next) => protocol::MutationOutcome::new(<crate::schema::diff::GltfDiff as protocol::DiffAlgebra<GltfSnapshot>>::between(base, &next)), Err(error) => rejection_outcome(&error.code, &error.path, error.detail) } }
             Self::Restore(diff) => match protocol::MutationDiff::apply(diff.as_ref(), base) {
                 Ok(_) => protocol::MutationOutcome::new(diff.as_ref().clone()),
                 Err(error) => protocol::MutationOutcome::fatal("mutation.invariant", error.to_string(), error.target),
@@ -44,7 +44,7 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for ChangeNodeExt
         if !outcome.messages().is_empty() || outcome.diff().is_empty_diff() {
             return Vec::new();
         }
-        let inverse = <crate::artifacts::gltf::schema::diff::GltfDiff as protocol::DiffAlgebra<GltfSnapshot>>::inverse(outcome.diff(), base);
+        let inverse = <crate::schema::diff::GltfDiff as protocol::DiffAlgebra<GltfSnapshot>>::inverse(outcome.diff(), base);
         vec![super::GltfMutation::ChangeNodeExtensionData(Self::Restore(Box::new(inverse)))]
     }
 

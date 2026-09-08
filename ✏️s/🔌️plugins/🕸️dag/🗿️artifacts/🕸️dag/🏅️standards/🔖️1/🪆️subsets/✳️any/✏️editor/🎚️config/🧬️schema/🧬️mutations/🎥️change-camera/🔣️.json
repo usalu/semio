@@ -5,7 +5,7 @@
   "displayName": "Change Camera",
   "emoji": "🎥️",
   "aggregateVariant": "ChangeCamera",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-camera",
   "binaryTag": 1,
   "invertibility": "explicit-mutation",

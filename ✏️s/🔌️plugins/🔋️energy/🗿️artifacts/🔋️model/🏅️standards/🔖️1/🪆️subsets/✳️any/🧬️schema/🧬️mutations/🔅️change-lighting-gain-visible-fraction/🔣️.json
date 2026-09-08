@@ -5,7 +5,7 @@
   "displayName": "Change Lighting Gain Visible Fraction",
   "emoji": "🔅️",
   "aggregateVariant": "ChangeLightingGainVisibleFraction",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-lighting-gain-visible-fraction",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

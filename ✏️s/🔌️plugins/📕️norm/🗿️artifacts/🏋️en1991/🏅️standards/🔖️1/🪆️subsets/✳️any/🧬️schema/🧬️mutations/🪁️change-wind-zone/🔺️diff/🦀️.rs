@@ -8,6 +8,6 @@ pub fn diff(payload: &ChangeWindZone, base: &En1991Snapshot) -> protocol::Mutati
     if base.wind_zone == payload.new_wind_zone {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "Wind zone already has this value.");
     }
-    protocol::MutationOutcome::new(En1991Diff { wind_zone: Some(payload.new_wind_zone.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1991Diff { wind_zone: Some(payload.new_wind_zone), ..Default::default() })
 }
 //#endregion 🔖️Diff

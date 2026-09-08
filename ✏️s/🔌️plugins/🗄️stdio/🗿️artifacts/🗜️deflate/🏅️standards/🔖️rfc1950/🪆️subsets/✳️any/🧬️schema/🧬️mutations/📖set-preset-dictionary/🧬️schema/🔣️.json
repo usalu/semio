@@ -1,0 +1,25 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/deflate/rfc1950/any/mutation/set-preset-dictionary.json",
+  "title": "SetPresetDictionary",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "dict_id": {
+      "anyOf": [
+        {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "mutation": {
+      "const": "setPresetDictionary",
+      "description": "Aggregate discriminator spliced in by DeflateMutation; absent when the payload stands alone."
+    }
+  }
+}

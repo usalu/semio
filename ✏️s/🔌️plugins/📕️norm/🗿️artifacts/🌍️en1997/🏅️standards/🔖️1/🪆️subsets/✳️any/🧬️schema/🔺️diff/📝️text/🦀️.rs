@@ -20,70 +20,70 @@ impl En1997Diff {
             }
             let mut next = artifact.clone();
             if let Some(value) = &self.v_ed_kn {
-                next.v_ed_kn = value.clone();
+                next.v_ed_kn = *value;
             }
             if let Some(value) = &self.h_ed_kn {
-                next.h_ed_kn = value.clone();
+                next.h_ed_kn = *value;
             }
             if let Some(value) = &self.footing_area_m2 {
-                next.footing_area_m2 = value.clone();
+                next.footing_area_m2 = *value;
             }
             if let Some(value) = &self.phi_deg {
-                next.phi_deg = value.clone();
+                next.phi_deg = *value;
             }
             if let Some(value) = &self.c_kpa {
-                next.c_kpa = value.clone();
+                next.c_kpa = *value;
             }
             if let Some(value) = &self.gamma_kn_m3 {
-                next.gamma_kn_m3 = value.clone();
+                next.gamma_kn_m3 = *value;
             }
             if let Some(value) = &self.b_m {
-                next.b_m = value.clone();
+                next.b_m = *value;
             }
             if let Some(value) = &self.d_f_m {
-                next.d_f_m = value.clone();
+                next.d_f_m = *value;
             }
             if let Some(value) = &self.e_s_mpa {
-                next.e_s_mpa = value.clone();
+                next.e_s_mpa = *value;
             }
             if let Some(value) = &self.nu {
-                next.nu = value.clone();
+                next.nu = *value;
             }
             if let Some(value) = &self.design_approach {
                 next.design_approach = value.clone();
             }
             if let Some(value) = &self.annex {
-                next.annex = value.clone();
+                next.annex = *value;
             }
             if let Some(value) = &self.settlement_limit_mm {
-                next.settlement_limit_mm = value.clone();
+                next.settlement_limit_mm = *value;
             }
             if let Some(value) = &self.n_pile_ed_kn {
-                next.n_pile_ed_kn = value.clone();
+                next.n_pile_ed_kn = *value;
             }
             if let Some(value) = &self.alpha_s {
-                next.alpha_s = value.clone();
+                next.alpha_s = *value;
             }
             if let Some(value) = &self.pile_d_m {
-                next.pile_d_m = value.clone();
+                next.pile_d_m = *value;
             }
             if let Some(value) = &self.q_s_kpa {
-                next.q_s_kpa = value.clone();
+                next.q_s_kpa = *value;
             }
             if let Some(value) = &self.pile_l_m {
-                next.pile_l_m = value.clone();
+                next.pile_l_m = *value;
             }
             if let Some(value) = &self.q_b_kpa {
-                next.q_b_kpa = value.clone();
+                next.q_b_kpa = *value;
             }
             if let Some(value) = &self.pile_base_area_m2 {
-                next.pile_base_area_m2 = value.clone();
+                next.pile_base_area_m2 = *value;
             }
             if let Some(value) = &self.pile_n_profiles {
-                next.pile_n_profiles = value.clone();
+                next.pile_n_profiles = *value;
             }
             if let Some(value) = &self.z_investigated_m {
-                next.z_investigated_m = value.clone();
+                next.z_investigated_m = *value;
             }
             if let Some(value) = &self.selected_check_index {
                 next.selected_check_index = *value;
@@ -101,70 +101,70 @@ impl MutationDiff<En1997Snapshot> for En1997Diff {
             }
             let mut next = snapshot.clone();
             if let Some(value) = &self.v_ed_kn {
-                next.v_ed_kn = value.clone();
+                next.v_ed_kn = *value;
             }
             if let Some(value) = &self.h_ed_kn {
-                next.h_ed_kn = value.clone();
+                next.h_ed_kn = *value;
             }
             if let Some(value) = &self.footing_area_m2 {
-                next.footing_area_m2 = value.clone();
+                next.footing_area_m2 = *value;
             }
             if let Some(value) = &self.phi_deg {
-                next.phi_deg = value.clone();
+                next.phi_deg = *value;
             }
             if let Some(value) = &self.c_kpa {
-                next.c_kpa = value.clone();
+                next.c_kpa = *value;
             }
             if let Some(value) = &self.gamma_kn_m3 {
-                next.gamma_kn_m3 = value.clone();
+                next.gamma_kn_m3 = *value;
             }
             if let Some(value) = &self.b_m {
-                next.b_m = value.clone();
+                next.b_m = *value;
             }
             if let Some(value) = &self.d_f_m {
-                next.d_f_m = value.clone();
+                next.d_f_m = *value;
             }
             if let Some(value) = &self.e_s_mpa {
-                next.e_s_mpa = value.clone();
+                next.e_s_mpa = *value;
             }
             if let Some(value) = &self.nu {
-                next.nu = value.clone();
+                next.nu = *value;
             }
             if let Some(value) = &self.design_approach {
                 next.design_approach = value.clone();
             }
             if let Some(value) = &self.annex {
-                next.annex = value.clone();
+                next.annex = *value;
             }
             if let Some(value) = &self.settlement_limit_mm {
-                next.settlement_limit_mm = value.clone();
+                next.settlement_limit_mm = *value;
             }
             if let Some(value) = &self.n_pile_ed_kn {
-                next.n_pile_ed_kn = value.clone();
+                next.n_pile_ed_kn = *value;
             }
             if let Some(value) = &self.alpha_s {
-                next.alpha_s = value.clone();
+                next.alpha_s = *value;
             }
             if let Some(value) = &self.pile_d_m {
-                next.pile_d_m = value.clone();
+                next.pile_d_m = *value;
             }
             if let Some(value) = &self.q_s_kpa {
-                next.q_s_kpa = value.clone();
+                next.q_s_kpa = *value;
             }
             if let Some(value) = &self.pile_l_m {
-                next.pile_l_m = value.clone();
+                next.pile_l_m = *value;
             }
             if let Some(value) = &self.q_b_kpa {
-                next.q_b_kpa = value.clone();
+                next.q_b_kpa = *value;
             }
             if let Some(value) = &self.pile_base_area_m2 {
-                next.pile_base_area_m2 = value.clone();
+                next.pile_base_area_m2 = *value;
             }
             if let Some(value) = &self.pile_n_profiles {
-                next.pile_n_profiles = value.clone();
+                next.pile_n_profiles = *value;
             }
             if let Some(value) = &self.z_investigated_m {
-                next.z_investigated_m = value.clone();
+                next.z_investigated_m = *value;
             }
             next
         })

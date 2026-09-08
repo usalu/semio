@@ -205,7 +205,7 @@
         {
           "id": "add-node-port",
           "capability": "semio-v1-graph-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "rejected",
             "applied"
@@ -225,7 +225,7 @@
         {
           "id": "add-node-property",
           "capability": "semio-v1-graph-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "rejected",
             "applied"
@@ -245,7 +245,7 @@
         {
           "id": "change-node-kind",
           "capability": "semio-v1-graph-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "rejected",
             "applied"
@@ -265,7 +265,7 @@
         {
           "id": "change-node-label",
           "capability": "semio-v1-graph-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "rejected",
             "applied"
@@ -285,7 +285,7 @@
         {
           "id": "create-edge",
           "capability": "semio-v1-graph-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -304,7 +304,7 @@
         {
           "id": "create-node",
           "capability": "semio-v1-graph-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -323,7 +323,7 @@
         {
           "id": "delete-edge",
           "capability": "semio-v1-graph-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "rejected",
             "applied"
@@ -343,7 +343,7 @@
         {
           "id": "delete-node",
           "capability": "semio-v1-graph-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "rejected",
             "applied"
@@ -363,7 +363,7 @@
         {
           "id": "move-node",
           "capability": "semio-v1-graph-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "rejected",
             "applied"
@@ -383,7 +383,7 @@
         {
           "id": "remove-node-port",
           "capability": "semio-v1-graph-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "rejected",
             "applied"
@@ -403,7 +403,7 @@
         {
           "id": "remove-node-property",
           "capability": "semio-v1-graph-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "rejected",
             "applied"

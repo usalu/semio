@@ -6,7 +6,7 @@
 //! `InferredField`/incremental caching needed for one recursive pass (same ruling `flow`'s/
 //! `graph`'s own whole-graph topology facets reach for their own graphs).
 
-use crate::artifacts::semio::standards::v1::subsets::value::schema::snapshot::{SemioValue, SemioValueSnapshot};
+use crate::standards::v1::subsets::value::schema::snapshot::{SemioValue, SemioValueSnapshot};
 
 //#region 🔖️Census
 /// 🌳️ Semio value graph variant census.
@@ -101,7 +101,7 @@ pub fn compute_semio_value_census(snapshot: &SemioValueSnapshot) -> SemioValueCe
 //#region 🧪️Tests
 mod tests {
     use super::*;
-    use crate::artifacts::semio::standards::v1::subsets::value::schema::snapshot::{SemioValueEntry, SemioValueNode, ValueId, STDIO_SEMIOVALUE_DOCUMENT_SCHEMA};
+    use crate::standards::v1::subsets::value::schema::snapshot::{SemioValueEntry, SemioValueNode, ValueId, STDIO_SEMIOVALUE_DOCUMENT_SCHEMA};
 
     /// 🌱 A hand-built, non-empty graph: a 3-deep map/list root (Map -> List -> Str, depth 3) plus
     /// one backing node holding a 2-deep value (Map -> Bool, depth 2) — exercises every variant and

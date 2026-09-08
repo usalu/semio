@@ -11,23 +11,23 @@
 
 use std::collections::{HashMap, HashSet};
 
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::blend::fillet_edges;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::euler::{add_shell, add_solid, make_loop, make_vertex};
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::intersect::{intersect_surface_surface, IntCurve};
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::primitives::{attach_face, finish_solid, line_edge};
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::{CoedgeId, EdgeId, FaceId, LoopId, SolidId, VertexId};
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::bspline::KnotVector;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::curve_ops::closest_parameter;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::Curve3;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::Curve2;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::{Pnt2, Vec2};
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::error::KernelError;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::surface::{IsoDirection, Surface};
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::tolerance::Tol;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::history::OpRecorder;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::Body;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::matrix::{Affine3, Frame3};
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::{Pnt3, Vec3};
+use crate::standards::v1::subsets::brep::schema::diff::blend::fillet_edges;
+use crate::standards::v1::subsets::brep::schema::diff::euler::{add_shell, add_solid, make_loop, make_vertex};
+use crate::standards::v1::subsets::brep::schema::diff::intersect::{intersect_surface_surface, IntCurve};
+use crate::standards::v1::subsets::brep::schema::diff::primitives::{attach_face, finish_solid, line_edge};
+use crate::standards::v1::subsets::brep::schema::snapshot::arena::{CoedgeId, EdgeId, FaceId, LoopId, SolidId, VertexId};
+use crate::standards::v1::subsets::brep::schema::snapshot::curve::bspline::KnotVector;
+use crate::standards::v1::subsets::brep::schema::snapshot::curve::curve_ops::closest_parameter;
+use crate::standards::v1::subsets::brep::schema::snapshot::curve::Curve3;
+use crate::standards::v1::subsets::brep::schema::snapshot::curve::Curve2;
+use crate::standards::v1::subsets::brep::schema::snapshot::vector::{Pnt2, Vec2};
+use crate::standards::v1::subsets::brep::schema::snapshot::error::KernelError;
+use crate::standards::v1::subsets::brep::schema::snapshot::surface::{IsoDirection, Surface};
+use crate::standards::v1::subsets::brep::schema::snapshot::tolerance::Tol;
+use crate::standards::v1::subsets::brep::schema::snapshot::topology::history::OpRecorder;
+use crate::standards::v1::subsets::brep::schema::snapshot::topology::Body;
+use crate::standards::v1::subsets::brep::schema::snapshot::vector::matrix::{Affine3, Frame3};
+use crate::standards::v1::subsets::brep::schema::snapshot::vector::{Pnt3, Vec3};
 
 /// ↔️ Default working tolerance for offset topology surgery (edge/vertex recomputation and NURBS
 /// offset refinement).
@@ -181,10 +181,10 @@ fn max_offset_deviation(original: &Surface, candidate: &Surface, distance: f64, 
 
 /// ↔️ Inserts one `u`-knot across every `v`-row of a control/weight grid via Boehm's algorithm
 /// applied to the homogeneous (weighted) coordinates — the standard "insert per channel, divide
-/// by the refined weight" technique ([`crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::bspline::insert_knot`]'s own docstring).
+/// by the refined weight" technique ([`crate::standards::v1::subsets::brep::schema::snapshot::curve::bspline::insert_knot`]'s own docstring).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn insert_u_knot_surface(u_knots: &KnotVector, controls: &[Vec<Pnt3>], weights: &[Vec<f64>], t: f64) -> (KnotVector, Vec<Vec<Pnt3>>, Vec<Vec<f64>>) {
-    use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::bspline::insert_knot;
+    use crate::standards::v1::subsets::brep::schema::snapshot::curve::bspline::insert_knot;
     let rows = controls.len();
     let cols = if rows > 0 { controls[0].len() } else { 0 };
     let mut new_knots = u_knots.clone();
@@ -232,7 +232,7 @@ fn insert_v_knot_surface(v_knots: &KnotVector, controls: &[Vec<Pnt3>], weights: 
 // #region 🔖️Face
 
 /// ↔️ Offsets `face`'s surface by `distance` along its outward normal (accounting for
-/// [`crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::Face::flipped`]) and rebuilds the SAME loop/p-curve topology on the new
+/// [`crate::standards::v1::subsets::brep::schema::snapshot::topology::Face::flipped`]) and rebuilds the SAME loop/p-curve topology on the new
 /// surface — exact for every analytic kind since the offset surface shares the original's frame
 /// and `(u, v)` domain; for `Nurbs` the trim curves are kept in the same parameter domain
 /// (documented approximation — the boundary no longer lies exactly on the offset surface beyond
@@ -464,7 +464,7 @@ fn coedge_on_face(body: &Body, edge: EdgeId, face: FaceId) -> Option<CoedgeId> {
 /// ↔️ Original surface normal at `face`, evaluated at whichever end of `coedge`'s pcurve names
 /// `vertex` (`prange.0` if `vertex == edge.v0`, else `prange.1` — the p-curve convention never
 /// reverses for `forward`), or at the pcurve's midpoint when `vertex` is `None` (edge-midpoint
-/// anchor use). Accounts for [`crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::Face::flipped`].
+/// anchor use). Accounts for [`crate::standards::v1::subsets::brep::schema::snapshot::topology::Face::flipped`].
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn face_normal_at(body: &Body, face: FaceId, coedge: CoedgeId, vertex: Option<VertexId>) -> Result<Vec3, KernelError> {
     let c = body.coedges.get(coedge).ok_or_else(|| KernelError::MissingEntity("coedge".into()))?;
@@ -492,7 +492,7 @@ fn face_normal_at(body: &Body, face: FaceId, coedge: CoedgeId, vertex: Option<Ve
         };
         let curve = body.curves3.get(e.curve).ok_or_else(|| KernelError::MissingEntity("curve".into()))?;
         let point = curve.eval(t_param);
-        let cu = crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::surface::surface_ops::closest_uv(surf, surf.domain(), point, OFFSET_TOL);
+        let cu = crate::standards::v1::subsets::brep::schema::snapshot::surface::surface_ops::closest_uv(surf, surf.domain(), point, OFFSET_TOL);
         normal_with_pole_fallback(surf, cu.u, cu.v)?
     };
     if face_data.flipped {
@@ -639,7 +639,7 @@ fn face_surface(body: &Body, f: FaceId, new_surface_map: &HashMap<FaceId, Surfac
 /// real dihedral edge as the exact intersection of the two (possibly one unchanged) adjacent
 /// surfaces via [`intersect_surface_surface`], with the branch and trim range selected by
 /// proximity to `vertex_target`/`edge_target`. Only faces in `materialize` are actually rebuilt
-/// into new [`crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::Face`]s (used by [`shell_solid_with_open_faces`] to
+/// into new [`crate::standards::v1::subsets::brep::schema::snapshot::topology::Face`]s (used by [`shell_solid_with_open_faces`] to
 /// skip the removed open faces while still using their offset surface to trim the kept faces).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn rebuild_topology<FV, FE, FF>(body: &mut Body, solid: SolidId, new_surface_map: &HashMap<FaceId, Surface>, materialize: &HashSet<FaceId>, (flip_new, vertex_target, edge_target): (FF, FV, FE), tol: f64, rec: &mut OpRecorder) -> Result<RebuiltTopology, KernelError>
@@ -850,8 +850,8 @@ where
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn make_edge_entry(body: &mut Body, curve: crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::Curve3Id, range: (f64, f64), v0: VertexId, v1: VertexId, tol: Tol, rec: &mut OpRecorder) -> EdgeId {
-    crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::euler::make_edge(body, curve, range, v0, v1, tol, rec)
+fn make_edge_entry(body: &mut Body, curve: crate::standards::v1::subsets::brep::schema::snapshot::arena::Curve3Id, range: (f64, f64), v0: VertexId, v1: VertexId, tol: Tol, rec: &mut OpRecorder) -> EdgeId {
+    crate::standards::v1::subsets::brep::schema::diff::euler::make_edge(body, curve, range, v0, v1, tol, rec)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -931,7 +931,7 @@ pub fn offset_solid(body: &mut Body, solid: SolidId, distance: f64, rec: &mut Op
 
 // #region 🔖️Thicken
 
-/// ↔️ [`ruled_surface_from_curves`], `pub(crate)` so [`crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::blend`]'s chamfer can reuse the same
+/// ↔️ [`ruled_surface_from_curves`], `pub(crate)` so [`crate::standards::v1::subsets::brep::schema::diff::blend`]'s chamfer can reuse the same
 /// straight-ruling construction between its two tangent-line boundaries.
 /// ↔️ Builds a ruled surface between two boundary curves sharing the same analytic curve kind and
 /// parameter range (the case every caller in this file produces, since an offset/rim edge is
@@ -1022,7 +1022,7 @@ pub fn thicken_face(body: &mut Body, face: FaceId, distance: f64, rec: &mut OpRe
 
 /// ↔️ Hollow shell of `solid` with wall thickness `thickness` (fully closed — no open faces): the
 /// outer shell reuses the original faces, the inner shell is `offset_solid`'s `-thickness` result
-/// with every face's orientation flipped, and the two nest as `outer`/`inners` on one [`crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::Solid`]
+/// with every face's orientation flipped, and the two nest as `outer`/`inners` on one [`crate::standards::v1::subsets::brep::schema::snapshot::topology::Solid`]
 /// — exact, no boolean cut.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn shell_solid(body: &mut Body, solid: SolidId, thickness: f64, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
@@ -1268,8 +1268,8 @@ pub fn draft_angle(body: &mut Body, solid: SolidId, faces: &[FaceId], pull_dir: 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::primitives::{make_box, make_cylinder, make_planar_face_from_points, make_sphere};
-    use crate::artifacts::semio::standards::v1::subsets::brep::schema::inferences::mass_properties::solid_volume;
+    use crate::standards::v1::subsets::brep::schema::diff::primitives::{make_box, make_cylinder, make_planar_face_from_points, make_sphere};
+    use crate::standards::v1::subsets::brep::schema::inferences::mass_properties::solid_volume;
     use std::f64::consts::PI;
 
     #[semio_framework_async_macros::async_test]
@@ -1332,7 +1332,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn offset_nurbs_surface_within_bound() {
-        use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::bspline::KnotVector;
+        use crate::standards::v1::subsets::brep::schema::snapshot::curve::bspline::KnotVector;
         let u_knots = KnotVector::clamped_uniform(3, 2);
         let v_knots = KnotVector::clamped_uniform(3, 2);
         let controls = vec![
@@ -1449,7 +1449,7 @@ mod tests {
         let (r, h, d) = (1.0, 2.0, 0.25);
         let solid = make_cylinder(&mut body, r, h, &mut rec).unwrap();
         let grown = offset_solid_with_corner(&mut body, solid, d, OffsetCorner::Sharp, &mut rec).unwrap();
-        use crate::artifacts::semio::standards::v1::subsets::brep::schema::inferences::mass_properties::face_area;
+        use crate::standards::v1::subsets::brep::schema::inferences::mass_properties::face_area;
         for f in body.solid_faces(grown) {
             let fd = body.faces.get(f).unwrap();
             println!("[DEBUG] face {f:?} flipped={} area={:?} surface={:?}", fd.flipped, face_area(&body, f, 1e-4), body.surfaces.get(fd.surface));

@@ -352,13 +352,13 @@ if (import.meta.vitest) {
 
   it("ActorReturnDrive matches the shared canonical vectors and independent LEB128 bytes", async () => {
     const { default: fixture } = await import("./🧫️fixture/🔣️.json");
-    const { default: schema } = await import("./🧬️schema.json");
-    const { default: fixtureSchema } = await import("./📐️schema/🔣️.json");
-    const { default: lifetimeSchema } = await import("../🚪️lifetime/🧬️schema.json");
-    const { default: pageSchema } = await import("../📃️page/🧬️schema.json");
+    const { default: schema } = await import("./🧬️schema/🔣️.json");
+    const fixtureSchema = schema;
+    const { default: lifetimeSchema } = await import("../🚪️lifetime/🧬️schema/🔣️.json");
+    const { default: pageSchema } = await import("../📃️page/🧬️schema/🔣️.json");
     const { default: Ajv } = await import("ajv");
     const ajv = new Ajv({ strict: true }).addSchema(lifetimeSchema).addSchema(pageSchema).addSchema(schema);
-    expect(ajv.compile(fixtureSchema)(fixture)).toBe(true);
+    expect(ajv.getSchema(`${schema.$id}#/$defs/ReturnFixture`)!(fixture)).toBe(true);
     expect(ACTOR_RETURN_ORIGIN_MAXIMUM_BYTES).toBe(fixture.maximumOriginBytes);
     expect(ACTOR_RETURN_IDENTITY_MAXIMUM_BYTES).toBe(fixture.maximumIdentityBytes);
     expect(ACTOR_RETURN_PAGE_RECEIPT_MAXIMUM_BYTES).toBe(fixture.maximumPageReceiptBytes);
@@ -468,11 +468,11 @@ if (import.meta.vitest) {
 
   it("ActorReturnResult rejects shared contradictions and every enum boundary in both directions", async () => {
     const { default: fixture } = await import("./🧫️fixture/🔣️.json");
-    const { default: schema } = await import("./🧬️schema.json");
-    const { default: lifetimeSchema } = await import("../🚪️lifetime/🧬️schema.json");
-    const { default: pageSchema } = await import("../📃️page/🧬️schema.json");
+    const { default: schema } = await import("./🧬️schema/🔣️.json");
+    const { default: lifetimeSchema } = await import("../🚪️lifetime/🧬️schema/🔣️.json");
+    const { default: pageSchema } = await import("../📃️page/🧬️schema/🔣️.json");
     const { default: Ajv } = await import("ajv");
-    const validate = new Ajv({ strict: true }).addSchema(lifetimeSchema).addSchema(pageSchema).addSchema(schema).getSchema("semio.actor.retained-return.v1#/definitions/result")!;
+    const validate = new Ajv({ strict: true }).addSchema(lifetimeSchema).addSchema(pageSchema).addSchema(schema).getSchema("https://semio.tech/schema/framework/actor/return/schema.json#/definitions/result")!;
     const oracle = await resultOracle();
     for (const row of fixture.resultContradictions) {
       expect(validate(row)).toBe(false);
@@ -529,13 +529,13 @@ if (import.meta.vitest) {
     const api = await import("./🟦️.ts");
     const { default: fixture } = await import("./🧫️fixture/🔣️.json");
     const { default: law } = await import("./🌿️framing/🧪️fixture/🔣️.json");
-    const { default: schema } = await import("./🌿️framing/🧬️schema.json");
-    const { default: returned } = await import("./🧬️schema.json");
-    const { default: lifetime } = await import("../🚪️lifetime/🧬️schema.json");
-    const { default: page } = await import("../📃️page/🧬️schema.json");
+    const { default: schema } = await import("./🌿️framing/🧬️schema/🔣️.json");
+    const returned = schema;
+    const lifetime = lifetimeSchema;
+    const page = pageSchema;
     const { default: Ajv } = await import("ajv");
-    const ajv = new Ajv({ strict: true }).addSchema(lifetime).addSchema(page).addSchema(returned).addSchema(schema);
-    expect(ajv.validate(schema, law)).toBe(true); const oracle = await resultOracle();
+    const ajv = new Ajv({ strict: true }).addSchema(lifetimeSchema).addSchema(pageSchema).addSchema(schema).addSchema(schema);
+    expect(ajv.getSchema(`${schema.$id}#/$defs/Return`)!(law)).toBe(true); const oracle = await resultOracle();
     for (const row of fixture.resultVectors) {
       const value = hydrateResult(row.value); const bytes = oracle(value);
       expect(bytes.toString("hex")).toBe(row.hex);

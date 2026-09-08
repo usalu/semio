@@ -25,9 +25,9 @@
 //! (`🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/🦀️.rs`) a derived `SEMANTICS.verb`
 //! could hold anyway.
 
-use crate::artifacts::stl::schema::diff::{self, StlDiff};
-use crate::artifacts::stl::schema::snapshot::StlTriangle;
-use crate::artifacts::stl::StlSnapshot;
+use crate::schema::diff::{self, StlDiff};
+use crate::schema::snapshot::StlTriangle;
+use crate::StlSnapshot;
 use protocol::Mutation;
 use protocol::{OpBinary, OpText};
 
@@ -312,7 +312,7 @@ impl OpBinary for StlMutation {
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_mutation_cases() -> Vec<StlMutation> {
-    let base = StlSnapshot { schema: crate::artifacts::stl::STDIO_STL_DOCUMENT_SCHEMA.into(), solid_name: "mesh".into(), triangles: vec![StlTriangle { normal: [0.0, 0.0, 1.0], vertices: [[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0]] }] };
+    let base = StlSnapshot { schema: crate::STDIO_STL_DOCUMENT_SCHEMA.into(), solid_name: "mesh".into(), triangles: vec![StlTriangle { normal: [0.0, 0.0, 1.0], vertices: [[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0]] }] };
     vec![
         StlMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: StlSnapshot { solid_name: "renamed".into(), ..base } }),
         StlMutation::SetSolidName(set_solid_name::SetSolidName { name: "renamed".into() }),
@@ -328,7 +328,7 @@ pub(crate) fn demo_mutation_cases() -> Vec<StlMutation> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::stl::schema::diff::{StlTriangleAdded, StlTriangleDiff, StlTriangleModified, StlTrianglesDiff};
+    use crate::schema::diff::{StlTriangleAdded, StlTriangleDiff, StlTriangleModified, StlTrianglesDiff};
     use protocol::command::DiffAlgebra;
     use protocol::{DiffCodec, MutationDiff};
 
@@ -483,12 +483,12 @@ mod tests {
         // The checked-in fixture at this path is a shared cross-artifact demo placeholder
         // (not real STL text) — fall back to a synthetic document so this law still exercises
         // a genuine decode -> encode -> decode identity.
-        let decoded = match bytes.ok().and_then(|b| String::from_utf8(b).ok()).and_then(|text| crate::artifacts::stl::engine::decode_stl_ascii(&text).ok()) {
+        let decoded = match bytes.ok().and_then(|b| String::from_utf8(b).ok()).and_then(|text| crate::engine::decode_stl_ascii(&text).ok()) {
             Some(decoded) => decoded,
             None => base_snapshot().await,
         };
-        let reencoded = crate::artifacts::stl::engine::encode_stl_ascii(&decoded);
-        let redecoded = crate::artifacts::stl::engine::decode_stl_ascii(&reencoded).expect("re-decode");
+        let reencoded = crate::engine::encode_stl_ascii(&decoded);
+        let redecoded = crate::engine::decode_stl_ascii(&reencoded).expect("re-decode");
         assert_eq!(redecoded.solid_name, decoded.solid_name);
         assert_eq!(redecoded.triangles, decoded.triangles);
     }

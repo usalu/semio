@@ -1,67 +1,49 @@
 {
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://semio.tech/schema/s/norm/en1990/mutation.json",
   "title": "En1990Mutation",
-  "type": "object",
-  "additionalProperties": false,
-  "required": [
-    "gK",
-    "qK",
-    "resistanceKn",
-    "consequenceClass",
-    "annex",
-    "seismicAEdKn"
+  "oneOf": [
+    {
+      "$ref": "./🌍️change-annex/🧬️schema/🔣️.json"
+    },
+    {
+      "$ref": "./⚠️change-consequence-class/🧬️schema/🔣️.json"
+    },
+    {
+      "$ref": "./⚓️change-permanent-action/🧬️schema/🔣️.json"
+    },
+    {
+      "$ref": "./🛡️change-resistance/🧬️schema/🔣️.json"
+    },
+    {
+      "$ref": "./🌋️change-seismic-action/🧬️schema/🔣️.json"
+    },
+    {
+      "$ref": "./🏷️change-variable-action-category/🧬️schema/🔣️.json"
+    },
+    {
+      "$ref": "./🏋️change-variable-action-value/🧬️schema/🔣️.json"
+    },
+    {
+      "$ref": "./➕️insert-variable-action/🧬️schema/🔣️.json"
+    },
+    {
+      "$ref": "./🗑️remove-variable-action/🧬️schema/🔣️.json"
+    },
+    {
+      "$ref": "./🔀️reorder-variable-actions/🧬️schema/🔣️.json"
+    }
   ],
-  "properties": {
-    "gK": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "qK": {
-      "type": "array",
-      "items": {
-        "$ref": "#/$defs/En1990QkEntry"
-      },
-      "x-semio-state": "artifact"
-    },
-    "resistanceKn": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "consequenceClass": {
-      "type": "integer",
-      "format": "uint32",
-      "x-semio-state": "artifact"
-    },
-    "annex": {
-      "type": "string",
-      "x-semio-state": "artifact"
-    },
-    "seismicAEdKn": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    }
-  },
-  "$defs": {
-    "En1990QkEntry": {
-      "title": "En1990QkEntry",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "category",
-        "value"
-      ],
-      "properties": {
-        "category": {
-          "type": "string"
-        },
-        "value": {
-          "type": "number",
-          "format": "double"
-        }
-      }
-    }
-  }
+  "x-semio-mutationKinds": [
+    "change-annex",
+    "change-consequence-class",
+    "change-permanent-action",
+    "change-resistance",
+    "change-seismic-action",
+    "change-variable-action-category",
+    "change-variable-action-value",
+    "insert-variable-action",
+    "remove-variable-action",
+    "reorder-variable-actions"
+  ]
 }

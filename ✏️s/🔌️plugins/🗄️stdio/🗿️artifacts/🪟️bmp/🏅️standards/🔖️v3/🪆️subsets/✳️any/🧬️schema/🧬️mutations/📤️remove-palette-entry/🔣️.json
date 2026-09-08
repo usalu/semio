@@ -5,7 +5,7 @@
   "displayName": "Remove Palette Entry",
   "emoji": "📤️",
   "aggregateVariant": "RemovePaletteEntry",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "remove-palette-entry",
   "binaryTag": 4,
   "invertibility": "explicit-mutation",

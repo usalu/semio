@@ -593,7 +593,7 @@ impl Process3dRetirementStack {
                 }
                 0 => {
                     let backing = std::mem::take(&mut value.tool_solids);
-                    released_bytes = backing.capacity().saturating_mul(size_of_val(&process3d_empty_child::<semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot>()));
+                    released_bytes = backing.capacity().saturating_mul(size_of_val(&process3d_empty_child::<semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot>()));
                     drop(backing);
                     released_items = 1;
                     parent = Some(Process3dRetirementOwner::Snapshot { value, phase: 1 });
@@ -1154,6 +1154,7 @@ fn process3d_retained_string_step(bytes: &[u8], offset: &mut usize, cursor: &mut
     process3d_retained_advance(bytes, offset, |reader| cursor.step(reader))
 }
 
+#[derive(Default)]
 struct Process3dRetainedCapabilityCursor {
     phase: u8,
     string: crate::artifacts::process3d::schema::snapshot::Process3dRetainedStringCursor,
@@ -1174,29 +1175,6 @@ struct Process3dRetainedCapabilityCursor {
     rules: Vec<CapabilityRule>,
 }
 
-impl Default for Process3dRetainedCapabilityCursor {
-    fn default() -> Self {
-        Self {
-            phase: 0,
-            string: Default::default(),
-            id: None,
-            label: None,
-            icon_id: None,
-            recipe_tag: 0,
-            recipe_fields: [None, None, None],
-            recipe: None,
-            expected: 0,
-            index: 0,
-            parameter_id: None,
-            parameter_label: None,
-            parameters: Vec::new(),
-            rule_tag: 0,
-            rule_quantity: None,
-            rule_parameter: None,
-            rules: Vec::new(),
-        }
-    }
-}
 
 impl Process3dRetainedCapabilityCursor {
     fn take_recipe(&mut self) -> Result<MeasureRecipe, String> {
@@ -1362,6 +1340,7 @@ impl Process3dRetainedCapabilityCursor {
     }
 }
 
+#[derive(Default)]
 struct Process3dRetainedMachineCursor {
     phase: u8,
     string: crate::artifacts::process3d::schema::snapshot::Process3dRetainedStringCursor,
@@ -1375,11 +1354,6 @@ struct Process3dRetainedMachineCursor {
     capability: Option<Process3dRetainedCapabilityCursor>,
 }
 
-impl Default for Process3dRetainedMachineCursor {
-    fn default() -> Self {
-        Self { phase: 0, string: Default::default(), id: None, label: None, icon_id: None, catalog_id: None, expected: 0, index: 0, capabilities: Vec::new(), capability: None }
-    }
-}
 
 impl Process3dRetainedMachineCursor {
     fn finish(&mut self) -> WorkshopMachine {
@@ -1786,13 +1760,13 @@ impl Process3dRetainedMutationReader {
         let value = match self.tag {
             0 => Some(Process3dMutation::CreateStep(create_step::CreateStep {
                 index: self.index,
-                step: self.step.take().map(|mut cursor| cursor.take_partial()).unwrap_or(ProcessStep {
+                step: self.step.take().map_or(ProcessStep {
                     id: String::new(),
                     label: String::new(),
                     enabled: false,
                     origin: None,
                     measure: ProcessMeasure::Drill { radius: 0.0, depth: 0.0, pose: Default::default() },
-                }),
+                }, |mut cursor| cursor.take_partial()),
             })),
             1 => Some(Process3dMutation::DeleteStep(delete_step::DeleteStep { id: self.strings[0].take().unwrap_or_default() })),
             2 => Some(Process3dMutation::RenameStep(rename_step::RenameStep { id: self.strings[0].take().unwrap_or_default(), new_label: self.strings[1].take().unwrap_or_default() })),
@@ -1803,12 +1777,12 @@ impl Process3dRetainedMutationReader {
             })),
             5 => Some(Process3dMutation::ReplaceStepMeasure(replace_step_measure::ReplaceStepMeasure {
                 id: self.strings[0].take().unwrap_or_default(),
-                new_measure: self.measure.take().map(|mut cursor| cursor.take_partial()).unwrap_or(ProcessMeasure::Drill { radius: 0.0, depth: 0.0, pose: Default::default() }),
+                new_measure: self.measure.take().map_or(ProcessMeasure::Drill { radius: 0.0, depth: 0.0, pose: Default::default() }, |mut cursor| cursor.take_partial()),
             })),
             6 => Some(Process3dMutation::ReorderSteps(reorder_steps::ReorderSteps { id: self.strings[0].take().unwrap_or_default(), to_index: self.index })),
             7 => Some(Process3dMutation::CreateMachine(create_machine::CreateMachine {
                 index: self.index,
-                machine: self.machine.take().map(|mut cursor| cursor.take_partial()).unwrap_or(WorkshopMachine { id: String::new(), label: String::new(), icon_id: String::new(), catalog_id: None, capabilities: Vec::new() }),
+                machine: self.machine.take().map_or(WorkshopMachine { id: String::new(), label: String::new(), icon_id: String::new(), catalog_id: None, capabilities: Vec::new() }, |mut cursor| cursor.take_partial()),
             })),
             8 => Some(Process3dMutation::DeleteMachine(delete_machine::DeleteMachine { id: self.strings[0].take().unwrap_or_default() })),
             9 => Some(Process3dMutation::RenameMachine(rename_machine::RenameMachine { id: self.strings[0].take().unwrap_or_default(), new_label: self.strings[1].take().unwrap_or_default() })),
@@ -1822,9 +1796,9 @@ impl Process3dRetainedMutationReader {
             12 => Some(Process3dMutation::MoveStock(move_stock::MoveStock { new_pose: self.pose.take().map(|mut cursor| cursor.take_partial()).unwrap_or_default() })),
             13 => Some(Process3dMutation::ChangeStockLabel(change_stock_label::ChangeStockLabel { new_label: self.strings[0].take().unwrap_or_default() })),
             14 => Some(Process3dMutation::ReplaceStockSolid(replace_stock_solid::ReplaceStockSolid {
-                new_solid: self.child.take().map(|mut cursor| cursor.take_partial()).unwrap_or_else(|| {
+                new_solid: self.child.take().map_or_else(|| {
                     store::ArtifactChild::new(String::new(), store::os_io::ArtifactRef { artifact_id: String::new(), dialect: store::os_io::ArtifactDialect { artifact_kind: String::new(), standard: String::new(), subset: String::new() } })
-                }),
+                }, |mut cursor| cursor.take_partial()),
             })),
             15 => Some(Process3dMutation::ChangeCursor(change_cursor::ChangeCursor { new_resolved_up_to: None })),
             _ => None,
@@ -2271,7 +2245,7 @@ impl Process3dOwnerCensusCursor {
                     .checked_add(source.workshop.machines.capacity().saturating_mul(size_of::<WorkshopMachine>()))
                     .and_then(|value| value.checked_add(source.step_payloads.capacity().saturating_mul(size_of::<ProcessStep>())))
                     .and_then(|value| {
-                        value.checked_add(source.tool_solids.capacity().saturating_mul(size_of_val(&process3d_empty_child::<semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot>())))
+                        value.checked_add(source.tool_solids.capacity().saturating_mul(size_of_val(&process3d_empty_child::<semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot>())))
                     })
                     .ok_or("process3d-owner.bytes-overflow")?;
                 self.totals.admit(10, bytes, 4)?;
@@ -2767,7 +2741,7 @@ impl Process3dStoreInitializationAuthority {
             let disposer = self.candidate_disposer.as_mut().expect("Process3d candidate disposer retained");
             return match disposer.close_step(candidate, 1, maximum_bytes).map_err(|_| "Process3d candidate disposer fault".to_owned())? {
                 semio_framework_plugin::PluginCloseStep::Complete if disposer.terminal_is_empty(candidate) => {
-                    drop(self.candidate_disposer.take());
+                    self.candidate_disposer = None;
                     drop(self.candidate.take());
                     Ok(false)
                 }
@@ -2795,7 +2769,7 @@ impl Process3dStoreInitializationAuthority {
                 _ => Ok(false),
             };
         }
-        drop(self.census.take());
+        self.census = None;
         if self.envelope_retirement.is_none() {
             if let Some(envelope) = self.envelope.take() {
                 *self.envelope_retirement = Some(process3d_envelope_decode_owner_bundle().retire_envelope(envelope));
@@ -2933,7 +2907,7 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<Process3dSnaps
                 if complete {
                     let initial = self.clone_cursor.as_mut().expect("Process3d clone retained").take().expect("Process3d clone handoff");
                     drop(self.clone_cursor.take());
-                    drop(self.census.take());
+                    self.census = None;
                     let initial_digest = self.initial_digest.take().expect("Process3d digest retained").finish();
                     let envelope = self.envelope.as_ref().expect("Process3d envelope retained");
                     *self.runtime = Some(store::ArtifactStoreInitializationRuntime::new(&envelope.id, &envelope.schema, initial, initial_digest));
@@ -2963,9 +2937,7 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<Process3dSnaps
                         let id = entry
                             .mutation_meta
                             .get(index)
-                            .and_then(|meta| meta.mutation_id.as_ref())
-                            .map(|id| protocol::MutationId(process3d_copy_string(&id.0).unwrap_or_default()))
-                            .unwrap_or_else(|| protocol::MutationId(format!("{}#{index}", entry.id)));
+                            .and_then(|meta| meta.mutation_id.as_ref()).map_or_else(|| protocol::MutationId(format!("{}#{index}", entry.id)), |id| protocol::MutationId(process3d_copy_string(&id.0).unwrap_or_default()));
                         match runtime.seed_mutation(id) {
                             Ok(()) => self.phase = Process3dStoreInitializationPhase::SeedHistory { edit, lane, index: index + 1 },
                             Err(error) => {
@@ -3120,8 +3092,8 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<Process3dSnaps
             Process3dStoreInitializationPhase::RetireCancelled | Process3dStoreInitializationPhase::RetireFault => match self.pump_terminal_retirement(PROCESS3D_OWNER_BYTES) {
                 Ok(false) => return semio_framework_job::StepOutcome::Yield,
                 Ok(true) => {
-                    drop(self.initial_digest.take());
-                    drop(self.edit_digest.take());
+                    self.initial_digest = None;
+                    self.edit_digest = None;
                     self.terminal_handoff = true;
                     if self.phase == Process3dStoreInitializationPhase::RetireCancelled {
                         self.phase = Process3dStoreInitializationPhase::Cancelled;
@@ -3160,8 +3132,8 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<Process3dSnaps
             return None;
         }
         let candidate = self.candidate.take()?;
-        drop(self.initial_digest.take());
-        drop(self.edit_digest.take());
+        self.initial_digest = None;
+        self.edit_digest = None;
         self.terminal_handoff = true;
         Some(candidate)
     }
@@ -3181,8 +3153,8 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<Process3dSnaps
         match self.pump_terminal_retirement(maximum_bytes.min(PROCESS3D_OWNER_BYTES)) {
             Ok(false) => Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 1, released_bytes: 0 }),
             Ok(true) => {
-                drop(self.initial_digest.take());
-                drop(self.edit_digest.take());
+                self.initial_digest = None;
+                self.edit_digest = None;
                 self.terminal_handoff = true;
                 Ok(semio_framework_plugin::PluginCloseStep::Complete)
             }

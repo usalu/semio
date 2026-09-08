@@ -1,0 +1,464 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/base/mutation/apply-table.json",
+  "title": "ApplyTable",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation"
+  ],
+  "properties": {
+    "mutation": {
+      "$ref": "#/$defs/SemioTableMutation"
+    }
+  },
+  "$defs": {
+    "SemioTableMutation": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "CreateColumn"
+          ],
+          "properties": {
+            "CreateColumn": {
+              "$ref": "#/$defs/CreateColumn"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "DeleteColumn"
+          ],
+          "properties": {
+            "DeleteColumn": {
+              "$ref": "#/$defs/DeleteColumn"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "RenameColumn"
+          ],
+          "properties": {
+            "RenameColumn": {
+              "$ref": "#/$defs/RenameColumn"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "ReorderColumns"
+          ],
+          "properties": {
+            "ReorderColumns": {
+              "$ref": "#/$defs/ReorderColumns"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "InsertRow"
+          ],
+          "properties": {
+            "InsertRow": {
+              "$ref": "#/$defs/InsertRow"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "RemoveRow"
+          ],
+          "properties": {
+            "RemoveRow": {
+              "$ref": "#/$defs/RemoveRow"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "ReorderRows"
+          ],
+          "properties": {
+            "ReorderRows": {
+              "$ref": "#/$defs/ReorderRows"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "EditCell"
+          ],
+          "properties": {
+            "EditCell": {
+              "$ref": "#/$defs/EditCell"
+            }
+          }
+        }
+      ]
+    },
+    "CreateColumn": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "kind"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "kind": {
+          "$ref": "#/$defs/SemioTableCellKind"
+        },
+        "index": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "SemioTableCellKind": {
+      "type": "string",
+      "enum": [
+        "null",
+        "bool",
+        "int",
+        "float",
+        "str",
+        "bytes"
+      ]
+    },
+    "DeleteColumn": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        }
+      }
+    },
+    "RenameColumn": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "new_name"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "new_name": {
+          "type": "string"
+        }
+      }
+    },
+    "ReorderColumns": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "to_index"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "to_index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "InsertRow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "row": {
+          "$ref": "#/$defs/SemioTableRow"
+        }
+      }
+    },
+    "SemioTableRow": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "cells": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SemioValue"
+          }
+        }
+      }
+    },
+    "SemioValue": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "null"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ],
+          "properties": {
+            "kind": {
+              "const": "bool"
+            },
+            "value": {
+              "type": "boolean"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "lexeme"
+          ],
+          "properties": {
+            "kind": {
+              "const": "int"
+            },
+            "lexeme": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "lexeme"
+          ],
+          "properties": {
+            "kind": {
+              "const": "float"
+            },
+            "lexeme": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ],
+          "properties": {
+            "kind": {
+              "const": "str"
+            },
+            "value": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ],
+          "properties": {
+            "kind": {
+              "const": "bytes"
+            },
+            "value": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 255
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "items"
+          ],
+          "properties": {
+            "kind": {
+              "const": "list"
+            },
+            "items": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/SemioValue"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "entries"
+          ],
+          "properties": {
+            "kind": {
+              "const": "map"
+            },
+            "entries": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/SemioValueEntry"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "id"
+          ],
+          "properties": {
+            "kind": {
+              "const": "ref"
+            },
+            "id": {
+              "$ref": "#/$defs/ValueId"
+            }
+          }
+        }
+      ]
+    },
+    "SemioValueEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key",
+        "value"
+      ],
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "value": {
+          "$ref": "#/$defs/SemioValue"
+        }
+      }
+    },
+    "ValueId": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "value"
+      ],
+      "properties": {
+        "value": {
+          "type": "string"
+        }
+      }
+    },
+    "RemoveRow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "ReorderRows": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "from",
+        "to"
+      ],
+      "properties": {
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "EditCell": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "row_index",
+        "column_name",
+        "new_value"
+      ],
+      "properties": {
+        "row_index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "column_name": {
+          "type": "string"
+        },
+        "new_value": {
+          "$ref": "#/$defs/SemioValue"
+        }
+      }
+    }
+  }
+}

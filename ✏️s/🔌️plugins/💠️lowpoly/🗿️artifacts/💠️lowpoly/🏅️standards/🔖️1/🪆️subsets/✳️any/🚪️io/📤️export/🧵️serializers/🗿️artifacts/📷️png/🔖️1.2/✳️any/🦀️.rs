@@ -15,9 +15,9 @@
 use crate::artifacts::lowpoly::schema::snapshot::text::print_dsl;
 use crate::artifacts::lowpoly::schema::snapshot::{enc_str, LowpolySnapshot};
 use crate::artifacts::lowpoly::LOWPOLY_PAINT_TEXTURE_SIZE;
-use semio_s_plugin_stdio::artifacts::png::engine::encode_png;
-use semio_s_plugin_stdio::artifacts::png::schema::snapshot::{PngChunkMarker, PngTextChunk, PngTextKind};
-use semio_s_plugin_stdio::artifacts::png::PngSnapshot;
+use semio_s_artifact_stdio_png::engine::encode_png;
+use semio_s_artifact_stdio_png::schema::snapshot::{PngChunkMarker, PngTextChunk, PngTextKind};
+use semio_s_artifact_stdio_png::PngSnapshot;
 
 pub(crate) const LOWPOLY_DSL_TEXT_KEYWORD: &str = "semio-lowpoly-dsl";
 

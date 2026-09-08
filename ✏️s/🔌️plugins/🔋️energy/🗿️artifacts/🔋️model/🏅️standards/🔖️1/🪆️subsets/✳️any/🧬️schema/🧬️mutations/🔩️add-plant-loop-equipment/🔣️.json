@@ -5,7 +5,7 @@
   "displayName": "Add Plant Loop Equipment",
   "emoji": "🔩️",
   "aggregateVariant": "AddPlantLoopEquipment",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "add-plant-loop-equipment",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

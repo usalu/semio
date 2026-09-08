@@ -5,7 +5,7 @@
   "displayName": "Resize Page",
   "emoji": "📐️",
   "aggregateVariant": "ResizePage",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "resize-page",
   "binaryTag": 3,
   "invertibility": "explicit-mutation",

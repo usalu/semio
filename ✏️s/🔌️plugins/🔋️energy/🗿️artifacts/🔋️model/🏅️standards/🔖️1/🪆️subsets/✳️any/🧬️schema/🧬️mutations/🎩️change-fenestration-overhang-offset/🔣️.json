@@ -5,7 +5,7 @@
   "displayName": "Change Fenestration Overhang Offset",
   "emoji": "🎩️",
   "aggregateVariant": "ChangeFenestrationOverhangOffset",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-fenestration-overhang-offset",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

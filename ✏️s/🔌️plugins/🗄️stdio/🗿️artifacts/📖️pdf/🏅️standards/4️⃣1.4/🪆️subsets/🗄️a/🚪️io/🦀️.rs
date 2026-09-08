@@ -5,9 +5,9 @@
 //! `🧱️base/🚪️io` already established for this artifact.
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use crate::artifacts::pdf::standards::v1_4::subsets::a::schema::check_pdf_a_conformance;
-    use crate::artifacts::pdf::standards::v1_4::subsets::base::schema::snapshot::PdfSnapshot;
-    use crate::artifacts::pdf::standards::v1_4::subsets::base::schema::PdfComposer as PdfAnyComposer;
+    use crate::standards::v1_4::subsets::a::schema::check_pdf_a_conformance;
+    use crate::standards::v1_4::subsets::base::schema::snapshot::PdfSnapshot;
+    use crate::standards::v1_4::subsets::base::schema::PdfComposer as PdfAnyComposer;
     use dsl::{Diagnostic, FaultCode, Severity, TextSpan};
     use semio_framework_plugin::{register_subset_validator, subset_validator_entry_of, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, IoPayload, StandardId, SubsetId, SubsetValidator, SubsetValidatorEntry};
     use std::sync::OnceLock;
@@ -81,7 +81,7 @@ pub mod derived_composition {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use crate::artifacts::pdf::standards::v1_4::subsets::a::schema::CODE_SCHEMA_GAP;
+        use crate::standards::v1_4::subsets::a::schema::CODE_SCHEMA_GAP;
         use semio_framework_plugin::AnalyzeSource;
 
         #[semio_framework_async_macros::async_test]

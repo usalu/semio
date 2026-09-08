@@ -5,8 +5,8 @@
 //! inference gets its own `<emoji><slug>/` child (currently: `📦bounds/`, honestly derivable from
 //! `vertices`/`faces`/`groups` alone).
 
-use crate::artifacts::obj::schema::snapshot::ObjSnapshot;
-use schema::ArtifactSchema;
+use crate::schema::snapshot::ObjSnapshot;
+use framework_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 
 use super::bounds::{compute_obj_bounds, ObjBounds};
@@ -54,7 +54,7 @@ impl protocol::InferenceSpec<ObjSnapshot> for ObjInference {
 /// `faces`/`groups` tallies, already O(n) in total vertex count with no honest per-entity
 /// incremental decomposition (a merkle dep-chain over this flat vertex list costs more than the
 /// fold it would cache) — the default `infer_cached` passthrough is exact.
-impl ArtifactInferrer for crate::artifacts::obj::standards::v3_0::subsets::any::schema::ObjBuilder {
+impl ArtifactInferrer for crate::standards::v3_0::subsets::any::schema::ObjBuilder {
     type Snapshot = ObjSnapshot;
     type Inference = ObjInference;
 }
@@ -64,10 +64,10 @@ impl ArtifactInferrer for crate::artifacts::obj::standards::v3_0::subsets::any::
 /// 💡️ Registers `s.stdio.obj.inference`'s facet leaves into the OS-wide inference catalog — call
 /// once at plugin init, alongside `obj_artifact_schema_descriptor`'s registration.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn obj_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
-    schema::ArtifactInferenceDescriptor {
+pub fn obj_artifact_inference_descriptor() -> framework_schema::ArtifactInferenceDescriptor {
+    framework_schema::ArtifactInferenceDescriptor {
         id: "s.stdio.obj.inference",
-        inference: schema::FacetLeaves {
+        inference: framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),

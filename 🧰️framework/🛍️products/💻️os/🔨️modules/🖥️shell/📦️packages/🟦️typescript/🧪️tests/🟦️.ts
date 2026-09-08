@@ -17,8 +17,8 @@ export default defineConfig({
     mode: "test",
     environment: "node",
     include: [],
-    coverage: { include: ["../../🟦️.ts"] },
-    includeSource: ["../../🟦️.ts"],
+    coverage: { include: ["../../🟦️.ts", "../../🧬️schema/🟦️.ts"] },
+    includeSource: ["../../🟦️.ts", "../../🧬️schema/🟦️.ts"],
     passWithNoTests: false,
   },
 });

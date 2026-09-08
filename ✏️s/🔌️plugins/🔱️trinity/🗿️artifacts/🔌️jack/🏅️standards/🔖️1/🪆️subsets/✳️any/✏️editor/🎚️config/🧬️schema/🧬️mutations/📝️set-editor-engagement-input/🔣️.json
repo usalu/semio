@@ -5,7 +5,7 @@
   "displayName": "Set Editor Engagement Input",
   "emoji": "📝️",
   "aggregateVariant": "SetEditorEngagementInput",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "set-editor-engagement-input",
   "binaryTag": 5,
   "invertibility": "explicit-mutation",

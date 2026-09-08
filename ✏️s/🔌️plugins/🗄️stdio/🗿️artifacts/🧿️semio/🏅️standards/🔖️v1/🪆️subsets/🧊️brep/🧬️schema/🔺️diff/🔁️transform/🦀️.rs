@@ -1,6 +1,6 @@
 //! 🔁 Exact affine transformation of B-Rep topology: `transform_solid`/`transform_face`/
 //! `transform_wire` deep-copy the reachable topology graph into fresh entities (new
-//! [`crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::history::PersistentLabel`]s, recorded generated), transforming every
+//! [`crate::standards::v1::subsets::brep::schema::snapshot::topology::history::PersistentLabel`]s, recorded generated), transforming every
 //! geometric support ([`Curve3`]/[`Surface`]) via [`Affine3`] and leaving every p-curve
 //! ([`Curve2`]) byte-for-byte unchanged (it lives in the face's own parameter space, which the
 //! same map leaves invariant — see `Surface::transformed`'s own docstring). `transform_solid_in_place`
@@ -16,17 +16,17 @@
 
 use std::collections::HashMap;
 
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::euler::{add_face, add_shell, add_solid, make_edge, make_loop, make_vertex};
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::primitives::Wire;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::{ArenaId, Curve2Id, Curve3Id, EdgeId, FaceId, LoopId, ShellId, SolidId, SurfaceId, VertexId};
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::error::KernelError;
+use crate::standards::v1::subsets::brep::schema::diff::euler::{add_face, add_shell, add_solid, make_edge, make_loop, make_vertex};
+use crate::standards::v1::subsets::brep::schema::diff::primitives::Wire;
+use crate::standards::v1::subsets::brep::schema::snapshot::arena::{ArenaId, Curve2Id, Curve3Id, EdgeId, FaceId, LoopId, ShellId, SolidId, SurfaceId, VertexId};
+use crate::standards::v1::subsets::brep::schema::snapshot::error::KernelError;
 #[cfg(test)]
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::surface::Surface;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::history::OpRecorder;
+use crate::standards::v1::subsets::brep::schema::snapshot::surface::Surface;
+use crate::standards::v1::subsets::brep::schema::snapshot::topology::history::OpRecorder;
 #[cfg(test)]
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::history::PersistentLabel;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::Body;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Affine3;
+use crate::standards::v1::subsets::brep::schema::snapshot::topology::history::PersistentLabel;
+use crate::standards::v1::subsets::brep::schema::snapshot::topology::Body;
+use crate::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Affine3;
 
 // #region 🔖️Validate
 
@@ -191,7 +191,7 @@ fn copy_shell(body: &mut Body, ctx: &mut CopyCtx, old_shell: ShellId, map: &Affi
 
 /// 🔁 Produces a NEW solid: every reachable vertex/edge/coedge/p-curve/loop/face/shell is deep
 /// copied into fresh entities (fresh [`PersistentLabel`]s, all recorded generated in `rec`'s
-/// [`crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::history::OpDelta`]), with every geometric support transformed by `map`
+/// [`crate::standards::v1::subsets::brep::schema::snapshot::topology::history::OpDelta`]), with every geometric support transformed by `map`
 /// and every tolerance scaled by `map.max_singular_value()`. Face count and edge count are exactly
 /// preserved; each face's surface stays its own analytic kind under a similarity `map`, else
 /// converts once to the exact equivalent NURBS ([`Surface::transformed`]). The original solid is
@@ -216,7 +216,7 @@ pub fn copy_solid(body: &mut Body, solid: SolidId, rec: &mut OpRecorder) -> Resu
 
 /// 🔁 Produces a NEW, detached face (not attached to any shell/solid) — the same deep-copy-and-
 /// transform as one face inside [`transform_solid`], usable standalone for a bare
-/// [`crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::Face`] handle.
+/// [`crate::standards::v1::subsets::brep::schema::snapshot::topology::Face`] handle.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn transform_face(body: &mut Body, face: FaceId, map: &Affine3, rec: &mut OpRecorder) -> Result<FaceId, KernelError> {
     require_face(body, face)?;
@@ -303,9 +303,9 @@ pub fn transform_solid_in_place(body: &mut Body, solid: SolidId, map: &Affine3, 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::primitives::{make_box, make_cylinder, make_sphere};
-    use crate::artifacts::semio::standards::v1::subsets::brep::schema::inferences::mass_properties::solid_volume;
-    use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::{Pnt3, Vec3};
+    use crate::standards::v1::subsets::brep::schema::diff::primitives::{make_box, make_cylinder, make_sphere};
+    use crate::standards::v1::subsets::brep::schema::inferences::mass_properties::solid_volume;
+    use crate::standards::v1::subsets::brep::schema::snapshot::vector::{Pnt3, Vec3};
 
     #[semio_framework_async_macros::async_test]
     async fn transform_solid_preserves_face_and_edge_counts_for_a_box() {

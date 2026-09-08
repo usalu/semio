@@ -1,7 +1,7 @@
 import authority from "./🚚️delivery.json" with { type: "json" };
 
 export interface AssetDeliveryAuthority {
-  readonly $schema: "./🧬️delivery.schema.json";
+  readonly $schema: "./🧬️schema/🔣️.json";
   readonly version: 1;
   readonly directoryName: "🖼️assets";
 }
@@ -10,7 +10,7 @@ export interface AssetDeliveryAuthority {
 export function parseAssetDeliveryAuthority(value: unknown): AssetDeliveryAuthority {
   if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error("Invalid asset delivery authority");
   const record = value as Record<string, unknown>;
-  if (Object.keys(record).length !== 3 || record.$schema !== "./🧬️delivery.schema.json" || record.version !== 1 || record.directoryName !== "🖼️assets") throw new Error("Unknown asset delivery authority");
+  if (Object.keys(record).length !== 3 || record.$schema !== "./🧬️schema/🔣️.json" || record.version !== 1 || record.directoryName !== "🖼️assets") throw new Error("Unknown asset delivery authority");
   return value as AssetDeliveryAuthority;
 }
 

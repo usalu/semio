@@ -3,8 +3,8 @@
 //! itself); `maxDepth` is the deepest element nesting level (`root` alone is depth 1);
 //! `textLength` sums every `Text`/`RawText` node's character count anywhere in the tree.
 
-use crate::artifacts::html::standards::v5::subsets::any::schema::snapshot::HtmlNode;
-use crate::artifacts::html::HtmlSnapshot;
+use crate::standards::v5::subsets::any::schema::snapshot::HtmlNode;
+use crate::HtmlSnapshot;
 
 //#region 🔖️Outline
 /// 🧾️ `Html` document outline.

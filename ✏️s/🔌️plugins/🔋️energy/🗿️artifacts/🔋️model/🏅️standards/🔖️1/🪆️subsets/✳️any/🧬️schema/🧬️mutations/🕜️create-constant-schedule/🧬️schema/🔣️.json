@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/energy/model/1/any/mutation/create-constant-schedule.json",
+  "title": "CreateConstantSchedule",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "index",
+    "id",
+    "value"
+  ],
+  "properties": {
+    "index": {
+      "type": "integer"
+    },
+    "id": {
+      "type": "integer"
+    },
+    "value": {
+      "type": "number"
+    }
+  }
+}

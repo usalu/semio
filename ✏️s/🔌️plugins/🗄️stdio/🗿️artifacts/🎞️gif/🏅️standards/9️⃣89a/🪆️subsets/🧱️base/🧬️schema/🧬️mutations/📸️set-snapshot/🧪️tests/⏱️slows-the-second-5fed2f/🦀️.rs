@@ -16,9 +16,9 @@
 //! `.pack.semio`/`.patch.semio` encodings are derived from it by `fixtures generate` and are
 //! asserted by the shared codec-matrix harness, not here.
 
-use crate::artifacts::gif::standards::v89a::subsets::any::schema::diff::GifDiff;
-use crate::artifacts::gif::standards::v89a::subsets::any::schema::mutations::{apply_gif_mutation, GifMutation};
-use crate::artifacts::gif::standards::v89a::subsets::any::schema::snapshot::GifSnapshot;
+use crate::standards::v89a::subsets::any::schema::diff::GifDiff;
+use crate::standards::v89a::subsets::any::schema::mutations::{apply_gif_mutation, GifMutation};
+use crate::standards::v89a::subsets::any::schema::snapshot::GifSnapshot;
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");
@@ -46,7 +46,7 @@ async fn applies_to_committed_after() {
     assert_eq!(snapshot.frames[1].delay_cs, 25, "set-snapshot/slows-the-second-frame-and-marks-it-do-not-dispose: the second frame must hold for 25 hundredths of a second");
     assert_eq!(
         snapshot.frames[1].disposal,
-        crate::artifacts::gif::standards::v89a::subsets::any::schema::snapshot::GifDisposal::DoNotDispose,
+        crate::standards::v89a::subsets::any::schema::snapshot::GifDisposal::DoNotDispose,
         "set-snapshot/slows-the-second-frame-and-marks-it-do-not-dispose: the second frame's GCE disposal method must become do-not-dispose"
     );
     assert_eq!(snapshot.frames[1].indices, vec![1u8, 0], "set-snapshot/slows-the-second-frame-and-marks-it-do-not-dispose: the frame's palette indices are unchanged by a timing edit");

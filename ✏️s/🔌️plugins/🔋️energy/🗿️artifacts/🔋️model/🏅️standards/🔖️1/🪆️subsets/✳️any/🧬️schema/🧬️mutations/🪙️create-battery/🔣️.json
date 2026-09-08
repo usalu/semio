@@ -5,7 +5,7 @@
   "displayName": "Create Battery",
   "emoji": "🪙️",
   "aggregateVariant": "CreateBattery",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "create-battery",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

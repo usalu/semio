@@ -1,29 +1,170 @@
 {
-  "$id": "https://semio.tech/schema/s.stdio.json/i-json/mutation.json",
-  "title": "JsonIJsonMutation",
-  "description": "🧬️ RFC 7493 I-JSON editing vocabulary. Four verbs carry a clause of the profile (setTopLevel §2.1, setSafeNumber §2.2, renameMember §2.3, setString §2.4); the other four object/array verbs are the ✳️any subset's, inherited unchanged.",
-  "$defs": {
-    "JsonValue": { "$ref": "../../../✳️any/🧬️schema/📸️snapshot/🔣️.json#/$defs/JsonValue" },
-    "JsonMember": { "$ref": "../../../✳️any/🧬️schema/📸️snapshot/🔣️.json#/$defs/JsonMember" },
-    "JsonSnapshot": { "$ref": "../../../✳️any/🧬️schema/📸️snapshot/🔣️.json" },
-    "JsonPath": { "$ref": "../../../✳️any/🧬️schema/🧬️mutations/🔣️.json#/$defs/JsonPath" },
-    "JsonIJsonRoot": {
-      "description": "§2.1 made structural — an I-JSON document root is an object or an array, and this type cannot spell anything else.",
-      "oneOf": [
-        { "type": "object", "required": ["kind", "members"], "properties": { "kind": { "const": "object" }, "members": { "type": "array", "items": { "$ref": "#/$defs/JsonMember" } } } },
-        { "type": "object", "required": ["kind", "items"], "properties": { "kind": { "const": "array" }, "items": { "type": "array", "items": { "$ref": "#/$defs/JsonValue" } } } }
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/json/rfc8259/i-json/mutations.json",
+  "title": "JsonIJsonRoot",
+  "description": "Discriminated union over this module's mutation leaves (internally tagged); every payload is the leaf's own schema, referenced, never restated.",
+  "oneOf": [
+    {
+      "allOf": [
+        {
+          "$ref": "./📥insert-array-element/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "insertArrayElement"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "./📤remove-array-element/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "removeArrayElement"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "./➖remove-member/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "removeMember"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "./🏷️rename-member/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "renameMember"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "./🔢set-safe-number/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "setSafeNumber"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "./📸️set-snapshot/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "setSnapshot"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "./🔤set-string/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "setString"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "./🌳set-top-level/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "setTopLevel"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "./➕upsert-member/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "upsertMember"
+            }
+          }
+        }
       ]
     }
-  },
-  "oneOf": [
-    { "type": "object", "required": ["mutation", "snapshot"], "properties": { "mutation": { "const": "setSnapshot" }, "snapshot": { "$ref": "#/$defs/JsonSnapshot" } } },
-    { "type": "object", "required": ["mutation", "root"], "properties": { "mutation": { "const": "setTopLevel" }, "root": { "$ref": "#/$defs/JsonIJsonRoot" } } },
-    { "type": "object", "required": ["mutation", "path", "key", "value"], "properties": { "mutation": { "const": "upsertMember" }, "path": { "$ref": "#/$defs/JsonPath" }, "key": { "type": "string" }, "value": { "$ref": "#/$defs/JsonValue" } } },
-    { "type": "object", "required": ["mutation", "path", "key"], "properties": { "mutation": { "const": "removeMember" }, "path": { "$ref": "#/$defs/JsonPath" }, "key": { "type": "string" } } },
-    { "type": "object", "required": ["mutation", "path", "from", "to"], "properties": { "mutation": { "const": "renameMember" }, "path": { "$ref": "#/$defs/JsonPath" }, "from": { "type": "string" }, "to": { "type": "string" } } },
-    { "type": "object", "required": ["mutation", "path", "lexeme"], "properties": { "mutation": { "const": "setSafeNumber" }, "path": { "$ref": "#/$defs/JsonPath" }, "lexeme": { "type": "string", "description": "An RFC 8259 number lexeme; an integer lexeme outside ±(2^53−1) is refused per RFC 7493 §2.2." } } },
-    { "type": "object", "required": ["mutation", "path", "value"], "properties": { "mutation": { "const": "setString" }, "path": { "$ref": "#/$defs/JsonPath" }, "value": { "type": "string" } } },
-    { "type": "object", "required": ["mutation", "path", "index", "value"], "properties": { "mutation": { "const": "insertArrayElement" }, "path": { "$ref": "#/$defs/JsonPath" }, "index": { "type": "integer", "minimum": 0 }, "value": { "$ref": "#/$defs/JsonValue" } } },
-    { "type": "object", "required": ["mutation", "path", "index"], "properties": { "mutation": { "const": "removeArrayElement" }, "path": { "$ref": "#/$defs/JsonPath" }, "index": { "type": "integer", "minimum": 0 } } }
   ]
 }

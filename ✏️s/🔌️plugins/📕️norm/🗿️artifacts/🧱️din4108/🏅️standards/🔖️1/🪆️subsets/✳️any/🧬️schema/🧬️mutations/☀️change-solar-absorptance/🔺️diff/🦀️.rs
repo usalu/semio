@@ -11,6 +11,6 @@ pub fn diff(payload: &ChangeSolarAbsorptance, base: &Din4108Snapshot) -> protoco
     if base.solar_absorptance == payload.new_solar_absorptance {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "Solar absorptance already has this value.");
     }
-    protocol::MutationOutcome::new(Din4108Diff { solar_absorptance: Some(payload.new_solar_absorptance.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(Din4108Diff { solar_absorptance: Some(payload.new_solar_absorptance), ..Default::default() })
 }
 //#endregion 🔖️Diff

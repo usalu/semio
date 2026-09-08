@@ -1,0 +1,37 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/zip/2.0/iso21320/mutation/add-stored-entry.json",
+  "title": "AddStoredEntry",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "entry"
+  ],
+  "properties": {
+    "entry": {
+      "$ref": "#/$defs/ZipEntry"
+    }
+  },
+  "$defs": {
+    "ZipEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          }
+        }
+      }
+    }
+  }
+}

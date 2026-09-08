@@ -1973,7 +1973,7 @@ impl Fem3dNumericalChild {
                     if bytes > maximum_bytes {
                         return (false, 0, 0);
                     }
-                    let released = element.close_mounted_string_step().map_or(0, |bytes| bytes);
+                    let released = element.close_mounted_string_step().unwrap_or(0);
                     return (false, 1, released);
                 }
                 self.pending_element = None;
@@ -1985,7 +1985,7 @@ impl Fem3dNumericalChild {
                     if bytes > maximum_bytes {
                         return (false, 0, 0);
                     }
-                    let released = element.close_mounted_string_step().map_or(0, |bytes| bytes);
+                    let released = element.close_mounted_string_step().unwrap_or(0);
                     return (false, 1, released);
                 }
                 self.pending_tet = None;
@@ -2005,7 +2005,7 @@ impl Fem3dNumericalChild {
             self.close_lane += 1;
             return (false, step.1, step.2);
         }
-        return step;
+        step
     }
 }
 

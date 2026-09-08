@@ -14,9 +14,9 @@
 //! (= unchanged), so no committed fixture may express it. Keeping the containment stable here
 //! leaves the slot absent, which is the shape that does round-trip.
 
-use crate::artifacts::semio::standards::v1::subsets::model::schema::diff::SemioModelDiff;
-use crate::artifacts::semio::standards::v1::subsets::model::schema::mutations::{apply_semio_model_mutation, SemioModelMutation};
-use crate::artifacts::semio::standards::v1::subsets::model::schema::snapshot::{GeometryRef, SemioModelSnapshot};
+use crate::standards::v1::subsets::model::schema::diff::SemioModelDiff;
+use crate::standards::v1::subsets::model::schema::mutations::{apply_semio_model_mutation, SemioModelMutation};
+use crate::standards::v1::subsets::model::schema::snapshot::{GeometryRef, SemioModelSnapshot};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");

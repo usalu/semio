@@ -1,5 +1,5 @@
 {
-  "$schema": "./🧬️catalog.schema.json",
+  "$schema": "./🧬️schema/🔣️.json",
   "version": 1,
   "encodings": { "ttf": "🔤️outline.ttf", "woff": "🌐️web.woff", "woff2": "🗜️compressed.woff2" },
   "weights": { "🪶️light": 300, "📖️regular": 400, "⚖️medium": 500, "🖋️semibold": 600, "🏋️bold": 700 },

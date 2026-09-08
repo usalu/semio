@@ -514,7 +514,7 @@
         {
           "id": "change-byte-order",
           "capability": "tiff-6-0-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -534,7 +534,7 @@
         {
           "id": "insert-ifd",
           "capability": "tiff-6-0-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -554,7 +554,7 @@
         {
           "id": "remove-ifd",
           "capability": "tiff-6-0-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -574,7 +574,7 @@
         {
           "id": "remove-tag",
           "capability": "tiff-6-0-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -594,7 +594,7 @@
         {
           "id": "replace-pixels",
           "capability": "tiff-6-0-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -614,7 +614,7 @@
         {
           "id": "replace-tag",
           "capability": "tiff-6-0-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],

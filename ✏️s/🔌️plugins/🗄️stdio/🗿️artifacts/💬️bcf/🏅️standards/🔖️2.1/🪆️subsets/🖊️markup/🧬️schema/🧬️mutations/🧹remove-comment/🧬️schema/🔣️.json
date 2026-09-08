@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/bcf/2.1/markup/mutation/remove-comment.json",
+  "title": "RemoveComment",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "topic_guid",
+    "guid"
+  ],
+  "properties": {
+    "topic_guid": {
+      "type": "string"
+    },
+    "guid": {
+      "type": "string"
+    }
+  }
+}

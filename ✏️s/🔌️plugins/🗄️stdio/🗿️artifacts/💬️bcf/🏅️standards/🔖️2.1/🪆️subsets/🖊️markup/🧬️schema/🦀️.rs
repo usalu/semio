@@ -1,8 +1,8 @@
 //! 🧬️ BcfArtifact schema — full artifact state.
 
-use crate::artifacts::bcf::schema::snapshot::{BcfRawPart, BcfTopic};
-use crate::artifacts::bcf::BcfSnapshot;
-use schema::ArtifactSchema;
+use crate::schema::snapshot::{BcfRawPart, BcfTopic};
+use crate::BcfSnapshot;
+use framework_schema::ArtifactSchema;
 
 //#region Artifact
 /// 🧬️ Full `stdio.bcf` artifact state.
@@ -58,31 +58,31 @@ impl BcfArtifact {
 //#region Descriptor
 /// 🧬️ Descriptor for `s.stdio.bcf`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn bcf_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
-    schema::ArtifactSchemaDescriptor {
+pub fn bcf_artifact_schema_descriptor() -> framework_schema::ArtifactSchemaDescriptor {
+    framework_schema::ArtifactSchemaDescriptor {
         id: "s.stdio.bcf",
-        artifact: schema::FacetLeaves {
+        artifact: framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),
             json_schema: include_str!("🔣️.json"),
             proto: include_str!("🛰️.proto"),
         },
-        snapshot: schema::FacetLeaves {
+        snapshot: framework_schema::FacetLeaves {
             rust: include_str!("📸️snapshot/🦀️.rs"),
             typescript: include_str!("📸️snapshot/🟦️.ts"),
             graphql: include_str!("📸️snapshot/🔗️.graphql"),
             json_schema: include_str!("📸️snapshot/🔣️.json"),
             proto: include_str!("📸️snapshot/🛰️.proto"),
         },
-        diff: schema::FacetLeaves {
+        diff: framework_schema::FacetLeaves {
             rust: include_str!("🔺️diff/🦀️.rs"),
             typescript: include_str!("🔺️diff/🟦️.ts"),
             graphql: include_str!("🔺️diff/🔗️.graphql"),
             json_schema: include_str!("🔺️diff/🔣️.json"),
             proto: include_str!("🔺️diff/🛰️.proto"),
         },
-        mutations: schema::FacetLeaves {
+        mutations: framework_schema::FacetLeaves {
             rust: include_str!("🧬️mutations/🦀️.rs"),
             typescript: include_str!("🧬️mutations/🟦️.ts"),
             graphql: include_str!("🧬️mutations/🔗️.graphql"),
@@ -94,7 +94,7 @@ pub fn bcf_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
 //#endregion Descriptor
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use crate::artifacts::bcf::{BcfDiff, BcfMutation, BcfSnapshot};
+    use crate::{BcfDiff, BcfMutation, BcfSnapshot};
     use semio_framework_plugin::ArtifactBuilder;
 
     //#region 🔖️Builder
@@ -122,7 +122,7 @@ pub mod derived_construction {
             Ok(Self::from_snapshot(<BcfSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
         fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
-            let diff = crate::artifacts::bcf::schema::mutations::apply_bcf_mutation(&mut self.snapshot, &mutation);
+            let diff = crate::schema::mutations::apply_bcf_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
         fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
@@ -144,7 +144,7 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use crate::artifacts::bcf::BcfSnapshot;
+    use crate::BcfSnapshot;
     use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     //#region 🔖️Parts
@@ -172,7 +172,7 @@ pub mod derived_analysis {
             // paying for a full `decode_zip` (which would also inflate every snapshot PNG payload
             // just to read names -- the same cost tradeoff the zip analyzer's own sniff makes by
             // stopping at "does a well-formed EOCD exist" rather than parsing every entry).
-            use crate::artifacts::zip::standards::v2_0::subsets::base::io::{sniff_zip_bytes, SniffConfidence};
+            use semio_s_artifact_stdio_zip::standards::v2_0::subsets::base::io::{sniff_zip_bytes, SniffConfidence};
             match source {
                 AnalyzeSource::Binary(bytes) => match sniff_zip_bytes(bytes) {
                     SniffConfidence::Low => IoConfidence::Low,
@@ -227,18 +227,18 @@ pub mod derived_analysis {
         #[semio_framework_async_macros::async_test]
         async fn sniff_bumps_to_high_when_bcf_version_entry_name_is_present() {
             let snap = BcfSnapshot { schema: "stdio.bcf".into(), version: "2.1".into(), topics: Vec::new(), parts: Vec::new() };
-            let bytes = crate::artifacts::bcf::io::encode_bcf(&snap).expect("encode");
+            let bytes = crate::io::encode_bcf(&snap).expect("encode");
             assert_eq!(BcfAnalyzerAnalysis::sniff(&AnalyzeSource::Binary(&bytes)), IoConfidence::High);
         }
 
         #[semio_framework_async_macros::async_test]
         async fn sniff_stays_medium_for_a_real_zip_without_bcf_version() {
-            let zip_snap = crate::artifacts::zip::ZipSnapshot {
-                schema: crate::artifacts::zip::STDIO_ZIP_DOCUMENT_SCHEMA.into(),
-                entries: vec![crate::artifacts::zip::schema::snapshot::ZipEntry { name: "unrelated.txt".into(), data: b"not a bcf archive".to_vec(), ..Default::default() }],
+            let zip_snap = semio_s_artifact_stdio_zip::ZipSnapshot {
+                schema: semio_s_artifact_stdio_zip::STDIO_ZIP_DOCUMENT_SCHEMA.into(),
+                entries: vec![semio_s_artifact_stdio_zip::schema::snapshot::ZipEntry { name: "unrelated.txt".into(), data: b"not a bcf archive".to_vec(), ..Default::default() }],
                 comment: String::new(),
             };
-            let bytes = crate::artifacts::zip::standards::v2_0::subsets::base::io::encode_zip(&zip_snap).expect("encode plain zip");
+            let bytes = semio_s_artifact_stdio_zip::standards::v2_0::subsets::base::io::encode_zip(&zip_snap).expect("encode plain zip");
             assert_eq!(BcfAnalyzerAnalysis::sniff(&AnalyzeSource::Binary(&bytes)), IoConfidence::Medium);
         }
 

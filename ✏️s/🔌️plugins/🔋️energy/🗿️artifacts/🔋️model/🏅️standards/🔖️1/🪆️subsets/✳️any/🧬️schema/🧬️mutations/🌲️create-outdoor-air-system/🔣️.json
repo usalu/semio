@@ -5,7 +5,7 @@
   "displayName": "Create Outdoor Air System",
   "emoji": "🌲️",
   "aggregateVariant": "CreateOutdoorAirSystem",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "create-outdoor-air-system",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

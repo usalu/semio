@@ -2,7 +2,7 @@
 /// 📦 Encodes a recognized mutation payload or declines another variant.
 pub type JpgMutationPayloadEncoder = fn(&JpgMutation) -> Option<Result<Vec<u8>, protocol::ProtocolError>>;
 
-use crate::artifacts::jpg::schema::mutations::JpgMutation;
+use crate::schema::mutations::JpgMutation;
 
 //#region Registry
 pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio");
@@ -13,16 +13,16 @@ pub struct Entry {
     pub decode: fn(&[u8]) -> Result<JpgMutation, protocol::ProtocolError>,
 }
 pub const REGISTRY: &[Entry] = &[
-    crate::artifacts::jpg::schema::mutations::change_jfif_header::binary::CODEC,
-    crate::artifacts::jpg::schema::mutations::replace_quant_table::binary::CODEC,
-    crate::artifacts::jpg::schema::mutations::remove_quant_table::binary::CODEC,
-    crate::artifacts::jpg::schema::mutations::replace_huffman_table::binary::CODEC,
-    crate::artifacts::jpg::schema::mutations::remove_huffman_table::binary::CODEC,
-    crate::artifacts::jpg::schema::mutations::change_restart_interval::binary::CODEC,
-    crate::artifacts::jpg::schema::mutations::insert_other_segment::binary::CODEC,
-    crate::artifacts::jpg::schema::mutations::remove_other_segment::binary::CODEC,
-    crate::artifacts::jpg::schema::mutations::replace_pixels::binary::CODEC,
-    crate::artifacts::jpg::schema::mutations::change_re_encode_quality::binary::CODEC,
+    crate::schema::mutations::change_jfif_header::binary::CODEC,
+    crate::schema::mutations::replace_quant_table::binary::CODEC,
+    crate::schema::mutations::remove_quant_table::binary::CODEC,
+    crate::schema::mutations::replace_huffman_table::binary::CODEC,
+    crate::schema::mutations::remove_huffman_table::binary::CODEC,
+    crate::schema::mutations::change_restart_interval::binary::CODEC,
+    crate::schema::mutations::insert_other_segment::binary::CODEC,
+    crate::schema::mutations::remove_other_segment::binary::CODEC,
+    crate::schema::mutations::replace_pixels::binary::CODEC,
+    crate::schema::mutations::change_re_encode_quality::binary::CODEC,
 ];
 //#endregion Registry
 

@@ -15,9 +15,9 @@
 //! Faces, normals, the `shell` group, the `tri` object, the `usemtl` range and the retained
 //! comment line are all identical across the change, so none of them may appear in the diff.
 
-use crate::artifacts::obj::schema::diff::ObjDiff;
-use crate::artifacts::obj::schema::mutations::{apply_obj_mutation, ObjMutation};
-use crate::artifacts::obj::schema::snapshot::ObjSnapshot;
+use crate::schema::diff::ObjDiff;
+use crate::schema::mutations::{apply_obj_mutation, ObjMutation};
+use crate::schema::snapshot::ObjSnapshot;
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");

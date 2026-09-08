@@ -1,7 +1,7 @@
 //! 🧬️ SvgArtifact schema — full artifact state.
 
-use crate::artifacts::svg::{SvgSnapshot, STDIO_SVG_DOCUMENT_SCHEMA};
-use schema::ArtifactSchema;
+use crate::{SvgSnapshot, STDIO_SVG_DOCUMENT_SCHEMA};
+use framework_schema::ArtifactSchema;
 
 //#region 🔖️Artifact
 /// 🧬️ Full `stdio.svg` artifact state.
@@ -13,7 +13,7 @@ pub struct SvgArtifact {
     pub schema: String,
     #[state(artifact)]
     #[value(default)]
-    pub doc: crate::artifacts::xml::schema::snapshot::XmlDocument,
+    pub doc: semio_s_artifact_stdio_xml::schema::snapshot::XmlDocument,
 }
 //#endregion 🔖️Artifact
 
@@ -49,31 +49,31 @@ impl SvgArtifact {
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.stdio.svg`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn svg_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
-    schema::ArtifactSchemaDescriptor {
+pub fn svg_artifact_schema_descriptor() -> framework_schema::ArtifactSchemaDescriptor {
+    framework_schema::ArtifactSchemaDescriptor {
         id: "s.stdio.svg",
-        artifact: schema::FacetLeaves {
+        artifact: framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),
             json_schema: include_str!("🔣️.json"),
             proto: include_str!("🛰️.proto"),
         },
-        snapshot: schema::FacetLeaves {
+        snapshot: framework_schema::FacetLeaves {
             rust: include_str!("📸️snapshot/🦀️.rs"),
             typescript: include_str!("📸️snapshot/🟦️.ts"),
             graphql: include_str!("📸️snapshot/🔗️.graphql"),
             json_schema: include_str!("📸️snapshot/🔣️.json"),
             proto: include_str!("📸️snapshot/🛰️.proto"),
         },
-        diff: schema::FacetLeaves {
+        diff: framework_schema::FacetLeaves {
             rust: include_str!("🔺️diff/🦀️.rs"),
             typescript: include_str!("🔺️diff/🟦️.ts"),
             graphql: include_str!("🔺️diff/🔗️.graphql"),
             json_schema: include_str!("🔺️diff/🔣️.json"),
             proto: include_str!("🔺️diff/🛰️.proto"),
         },
-        mutations: schema::FacetLeaves {
+        mutations: framework_schema::FacetLeaves {
             rust: include_str!("🧬️mutations/🦀️.rs"),
             typescript: include_str!("🧬️mutations/🟦️.ts"),
             graphql: include_str!("🧬️mutations/🔗️.graphql"),
@@ -85,9 +85,9 @@ pub fn svg_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
 //#endregion 🔖️Descriptor
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use crate::artifacts::svg::schema::snapshot::{set_element_attr, svg_element_to_xml_node, view_box_to_string, CommonAttrs, PathCommand, SvgElement, ViewBox};
-    use crate::artifacts::svg::{SvgDiff, SvgMutation, SvgSnapshot};
-    use crate::artifacts::xml::schema::snapshot::XmlNode;
+    use crate::schema::snapshot::{set_element_attr, svg_element_to_xml_node, view_box_to_string, CommonAttrs, PathCommand, SvgElement, ViewBox};
+    use crate::{SvgDiff, SvgMutation, SvgSnapshot};
+    use semio_s_artifact_stdio_xml::schema::snapshot::XmlNode;
     use semio_framework_plugin::ArtifactBuilder;
 
     //#region 🔖️PathBuilder
@@ -479,7 +479,7 @@ pub mod derived_construction {
             Ok(Self::from_snapshot(<SvgSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
         fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
-            let diff = crate::artifacts::svg::schema::mutations::apply_svg_mutation(&mut self.snapshot, &mutation);
+            let diff = crate::schema::mutations::apply_svg_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
         fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
@@ -528,9 +528,9 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use crate::artifacts::svg::schema::snapshot::{svg_document_to_typed, SvgElement};
-    use crate::artifacts::svg::SvgSnapshot;
-    use crate::artifacts::xml::schema::snapshot::{xml_document_from_text, XmlNode};
+    use crate::schema::snapshot::{svg_document_to_typed, SvgElement};
+    use crate::SvgSnapshot;
+    use semio_s_artifact_stdio_xml::schema::snapshot::{xml_document_from_text, XmlNode};
     use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     //#region 🔖️Parts
@@ -619,8 +619,8 @@ pub mod derived_analysis {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use crate::artifacts::svg::schema::snapshot::{parse_view_box, CommonAttrs, ViewBox};
-        use crate::artifacts::svg::standards::v1_1::subsets::base::schema::{ElementBuilder, GradientStopSpec, PathBuilder, SvgBuilderConstruction as SvgBuilder};
+        use crate::schema::snapshot::{parse_view_box, CommonAttrs, ViewBox};
+        use crate::standards::v1_1::subsets::base::schema::{ElementBuilder, GradientStopSpec, PathBuilder, SvgBuilderConstruction as SvgBuilder};
         use semio_framework_plugin::ArtifactBuilder;
 
         #[semio_framework_async_macros::async_test]
@@ -853,7 +853,7 @@ pub fn empty_svg_snapshot() -> SvgSnapshot {
 /// asserted equal by `fixture_honesty_law` in `../🚪️io`'s own tests).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn demo_svg_snapshot() -> SvgSnapshot {
-    use crate::artifacts::xml::schema::snapshot::{XmlAttr, XmlDeclaration, XmlDocument, XmlNode};
+    use semio_s_artifact_stdio_xml::schema::snapshot::{XmlAttr, XmlDeclaration, XmlDocument, XmlNode};
     let root = XmlNode::Element {
         name: "svg".into(),
         attrs: vec![XmlAttr { name: "xmlns".into(), value: "http://www.w3.org/2000/svg".into() }, XmlAttr { name: "xmlns:xlink".into(), value: "http://www.w3.org/1999/xlink".into() }, XmlAttr { name: "viewBox".into(), value: "0 0 100 100".into() }],
@@ -880,7 +880,7 @@ pub fn demo_svg_snapshot() -> SvgSnapshot {
         schema: STDIO_SVG_DOCUMENT_SCHEMA.into(),
         doc: XmlDocument { declaration: Some(XmlDeclaration { version: "1.0".into(), encoding: Some("UTF-8".into()), standalone: Some(true) }), doctype: Some("<!DOCTYPE svg>".into()), prolog: Vec::new(), root: Some(root) },
     };
-    let _text = crate::artifacts::svg::schema::snapshot::write_svg_xml(&snapshot.doc);
+    let _text = crate::schema::snapshot::write_svg_xml(&snapshot.doc);
     snapshot
 }
 //#endregion 🔖️DocumentHelpers

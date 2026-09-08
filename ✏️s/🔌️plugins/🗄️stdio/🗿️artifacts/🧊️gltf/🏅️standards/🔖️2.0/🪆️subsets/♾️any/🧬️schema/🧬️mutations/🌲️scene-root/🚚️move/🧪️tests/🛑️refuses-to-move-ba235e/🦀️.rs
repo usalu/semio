@@ -10,9 +10,9 @@
 //! leaf's own oracle. The derived `.op.semio`/`.spr.semio`/`.dsl.semio`/`.pack.semio`/
 //! `.patch.semio` encodings come from `fixtures generate`, not from here.
 
-use crate::artifacts::gltf::schema::mutations::move_scene_root_node::GltfMoveSceneRootNodePayload;
-use crate::artifacts::gltf::schema::mutations::move_scene_root_node;
-use crate::artifacts::gltf::GltfSnapshot;
+use crate::schema::mutations::move_scene_root_node::GltfMoveSceneRootNodePayload;
+use crate::schema::mutations::move_scene_root_node;
+use crate::GltfSnapshot;
 
 const CASE: &str = "move-scene-root-node/refuses-to-move-a-node-that-is-not-a-root-of-the-scene";
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");

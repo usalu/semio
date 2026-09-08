@@ -12,10 +12,10 @@
 //! leaf's own oracle. The derived `.op.semio`/`.spr.semio`/`.dsl.semio`/`.pack.semio`/
 //! `.patch.semio` encodings come from `fixtures generate`, not from here.
 
-use crate::artifacts::gltf::schema::mutations::change_material_alpha_mode::diff::GltfChangeMaterialAlphaModeDiff;
-use crate::artifacts::gltf::schema::mutations::change_material_alpha_mode::GltfChangeMaterialAlphaModePayload;
-use crate::artifacts::gltf::schema::mutations::change_material_alpha_mode::{diff, inverse, mutation};
-use crate::artifacts::gltf::GltfSnapshot;
+use crate::schema::mutations::change_material_alpha_mode::diff::GltfChangeMaterialAlphaModeDiff;
+use crate::schema::mutations::change_material_alpha_mode::GltfChangeMaterialAlphaModePayload;
+use crate::schema::mutations::change_material_alpha_mode::{diff, inverse, mutation};
+use crate::GltfSnapshot;
 
 const CASE: &str = "change-material-alpha-mode/switches-the-default-material-from-opaque-to-mask";
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
@@ -40,7 +40,7 @@ async fn applies_to_committed_after() {
     let mut snapshot = before();
     mutation::apply(&mut snapshot, &payload()).expect("change-material-alpha-mode applies to its committed before-snapshot");
     assert_eq!(snapshot, expected_after(), "{CASE}: applied state differs from committed after-snapshot");
-    assert_eq!(snapshot.document.materials[0].alpha_mode, crate::artifacts::gltf::schema::snapshot::GltfAlphaMode::Mask, "{CASE}: the material must switch to MASK");
+    assert_eq!(snapshot.document.materials[0].alpha_mode, crate::schema::snapshot::GltfAlphaMode::Mask, "{CASE}: the material must switch to MASK");
     assert_eq!(snapshot.document.materials[0].alpha_cutoff, 0.5, "{CASE}: alphaCutoff is a SEPARATE field and must keep its spec default of 0.5 — switching to MASK does not set it");
     assert!(!snapshot.document.materials[0].double_sided, "{CASE}: doubleSided belongs to a different leaf and must stay false");
 }
@@ -54,8 +54,8 @@ async fn inverse_restores_before() {
     mutation::apply(&mut restored, &payload()).expect("forward applies");
     inverse.apply(&mut restored).expect("inverse applies to the forward result");
     assert_eq!(restored, base, "{CASE}: inverse did not restore the before-snapshot");
-    assert_eq!(inverse.expected_alpha_mode, crate::artifacts::gltf::schema::snapshot::GltfAlphaMode::Mask, "{CASE}: the inverse must expect to find MASK — it is validated against the post-state, not the pre-state");
-    assert_eq!(inverse.alpha_mode, crate::artifacts::gltf::schema::snapshot::GltfAlphaMode::Opaque, "{CASE}: the inverse must write OPAQUE back");
+    assert_eq!(inverse.expected_alpha_mode, crate::schema::snapshot::GltfAlphaMode::Mask, "{CASE}: the inverse must expect to find MASK — it is validated against the post-state, not the pre-state");
+    assert_eq!(inverse.alpha_mode, crate::schema::snapshot::GltfAlphaMode::Opaque, "{CASE}: the inverse must write OPAQUE back");
 }
 
 /// 🔣️ Both committed snapshots and this leaf's committed payload are canonical: decode→encode
@@ -102,7 +102,7 @@ async fn produces_committed_diff() {
     let encoded = serde_json::to_value(&produced).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(encoded, committed, "{CASE}: produced diff differs from the committed 🔺️diff/🔣️.json");
-    assert_eq!(produced.expected_alpha_mode, crate::artifacts::gltf::schema::snapshot::GltfAlphaMode::Opaque, "{CASE}: the diff must witness the OPAQUE pre-state");
+    assert_eq!(produced.expected_alpha_mode, crate::schema::snapshot::GltfAlphaMode::Opaque, "{CASE}: the diff must witness the OPAQUE pre-state");
     assert_eq!(produced.touched_paths, vec!["document/materials/0/alphaMode".to_string()], "{CASE}: the descriptor family interpolates the material index into a CONCRETE path");
 }
 

@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeTowerMassT, base: &En1998Snapshot) -> protocol::Muta
     if base.tower_mass_t == payload.new_tower_mass_t {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Tower mass [t] is already {}.", payload.new_tower_mass_t));
     }
-    protocol::MutationOutcome::new(En1998Diff { tower_mass_t: Some(payload.new_tower_mass_t.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1998Diff { tower_mass_t: Some(payload.new_tower_mass_t), ..Default::default() })
 }
 //#endregion 🔖️Diff

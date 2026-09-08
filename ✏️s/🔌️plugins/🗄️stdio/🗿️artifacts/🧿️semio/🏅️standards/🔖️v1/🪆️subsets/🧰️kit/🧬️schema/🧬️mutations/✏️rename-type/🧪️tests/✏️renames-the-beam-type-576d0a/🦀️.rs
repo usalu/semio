@@ -5,9 +5,9 @@
 //! matched type — `id` stays the identity (this is a rename of the DISPLAY name, not a re-keying)
 //! and `category` is explicitly untouched.
 
-use crate::artifacts::semio::standards::v1::subsets::kit::schema::diff::SemioKitDiff;
-use crate::artifacts::semio::standards::v1::subsets::kit::schema::mutations::SemioKitMutation;
-use crate::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
+use crate::standards::v1::subsets::kit::schema::diff::SemioKitDiff;
+use crate::standards::v1::subsets::kit::schema::mutations::SemioKitMutation;
+use crate::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
 use protocol::{Mutation, MutationDiff};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");

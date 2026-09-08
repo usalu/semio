@@ -6,9 +6,9 @@
 //! `from: 0, to: 2` over a three-run sequence lands the run last rather than second-to-last — the
 //! whole point of this case.
 
-use crate::artifacts::semio::standards::v1::subsets::text::schema::diff::SemioTextDiff;
-use crate::artifacts::semio::standards::v1::subsets::text::schema::mutations::SemioTextMutation;
-use crate::artifacts::semio::standards::v1::subsets::text::schema::snapshot::SemioTextSnapshot;
+use crate::standards::v1::subsets::text::schema::diff::SemioTextDiff;
+use crate::standards::v1::subsets::text::schema::mutations::SemioTextMutation;
+use crate::standards::v1::subsets::text::schema::snapshot::SemioTextSnapshot;
 use protocol::{Mutation, MutationDiff};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
@@ -47,7 +47,7 @@ async fn the_undo_reorder_moves_the_run_back_to_the_head() {
     let undo = mutation.inverse(&base);
     assert_eq!(
         undo,
-        vec![SemioTextMutation::ReorderRuns(crate::artifacts::semio::standards::v1::subsets::text::schema::mutations::reorder_runs::ReorderRuns { from: 2, to: 0 })],
+        vec![SemioTextMutation::ReorderRuns(crate::standards::v1::subsets::text::schema::mutations::reorder_runs::ReorderRuns { from: 2, to: 0 })],
         "the undo must address the landed index #2 and send it back to #0"
     );
     let mut current = mutation.diff(&base).diff().apply(&base).expect("forward reorder-runs applies");

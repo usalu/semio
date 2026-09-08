@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/norm/en1995/1/any/mutation/change-f-ed-kn.json",
+  "title": "ChangeFEdKn",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newFEdKn"
+  ],
+  "properties": {
+    "newFEdKn": {
+      "type": "number"
+    }
+  }
+}

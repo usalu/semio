@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeKSoil, base: &En1998Snapshot) -> protocol::MutationO
     if base.k_soil == payload.new_k_soil {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Soil stiffness k [kN/m] is already {}.", payload.new_k_soil));
     }
-    protocol::MutationOutcome::new(En1998Diff { k_soil: Some(payload.new_k_soil.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1998Diff { k_soil: Some(payload.new_k_soil), ..Default::default() })
 }
 //#endregion 🔖️Diff

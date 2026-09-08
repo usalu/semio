@@ -1,5 +1,5 @@
 //! 📝️ Generic framing and descriptor roster for the transparent SvgMutation.
-use crate::artifacts::svg::schema::mutations::SvgMutation;
+use crate::schema::mutations::SvgMutation;
 pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 pub const TEXT_OPCODES: &[&str] = &["set-declaration", "set-doctype", "insert-element", "remove-element", "set-element-name", "set-attribute", "set-text", "set-view-box", "set-transform"];

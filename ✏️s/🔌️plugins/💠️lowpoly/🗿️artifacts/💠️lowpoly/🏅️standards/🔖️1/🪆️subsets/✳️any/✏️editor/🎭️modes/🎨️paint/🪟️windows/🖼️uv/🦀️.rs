@@ -73,8 +73,8 @@ fn uv_canvas_layers_json(doc: &LowpolyDocument, view: LowpolyView<'_>, texture_c
     }
     if let Ok(mesh) = doc.active_mesh() {
         if let Ok(transfer) = LowpolyDocument::tessellate_transfer_json(mesh) {
-            let edge_uvs: Vec<f32> = transfer.get("edgeUvs").and_then(|value| dsl::FromValue::from_value(value.clone().into()).ok()).unwrap_or_default();
-            let edge_is_seam: Vec<u8> = transfer.get("edgeIsSeam").and_then(|value| dsl::FromValue::from_value(value.clone().into()).ok()).unwrap_or_default();
+            let edge_uvs: Vec<f32> = transfer.get("edgeUvs").and_then(|value| dsl::FromValue::from_value(value.clone()).ok()).unwrap_or_default();
+            let edge_is_seam: Vec<u8> = transfer.get("edgeIsSeam").and_then(|value| dsl::FromValue::from_value(value.clone()).ok()).unwrap_or_default();
             let mut points: Vec<[f64; 2]> = Vec::new();
             for chunk in edge_uvs.as_chunks::<4>().0 {
                 let u0 = chunk[0] as f64;

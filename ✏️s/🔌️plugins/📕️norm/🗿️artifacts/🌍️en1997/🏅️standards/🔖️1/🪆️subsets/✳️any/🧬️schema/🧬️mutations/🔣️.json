@@ -1,139 +1,97 @@
 {
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://semio.tech/schema/s/norm/en1997/mutation.json",
   "title": "En1997Mutation",
-  "type": "object",
-  "additionalProperties": false,
-  "required": [
-    "vEdKn",
-    "hEdKn",
-    "footingAreaM2",
-    "phiDeg",
-    "cKpa",
-    "gammaKnM3",
-    "bM",
-    "dFM",
-    "eSMpa",
-    "nu",
-    "designApproach",
-    "annex",
-    "settlementLimitMm",
-    "nPileEdKn",
-    "alphaS",
-    "pileDM",
-    "qSKpa",
-    "pileLM",
-    "qBKpa",
-    "pileBaseAreaM2",
-    "pileNProfiles",
-    "zInvestigatedM"
-  ],
-  "properties": {
-    "vEdKn": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+  "oneOf": [
+    {
+      "$ref": "./🎚️change-alpha-s/🧬️schema/🔣️.json"
     },
-    "hEdKn": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🌍️change-annex/🧬️schema/🔣️.json"
     },
-    "footingAreaM2": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./↔️change-bm/🧬️schema/🔣️.json"
     },
-    "phiDeg": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🧲️change-c-kpa/🧬️schema/🔣️.json"
     },
-    "cKpa": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🧭️change-design-approach/🧬️schema/🔣️.json"
     },
-    "gammaKnM3": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./⬇️change-dfm/🧬️schema/🔣️.json"
     },
-    "bM": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🌀️change-es-mpa/🧬️schema/🔣️.json"
     },
-    "dFM": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🦶️change-footing-area-m2/🧬️schema/🔣️.json"
     },
-    "eSMpa": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./⚖️change-gamma-kn-m3/🧬️schema/🔣️.json"
     },
-    "nu": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./➡️change-h-ed-kn/🧬️schema/🔣️.json"
     },
-    "designApproach": {
-      "type": "string",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🏗️change-n-pile-ed-kn/🧬️schema/🔣️.json"
     },
-    "annex": {
-      "type": "string",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🧮️change-nu/🧬️schema/🔣️.json"
     },
-    "settlementLimitMm": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./📐️change-phi-deg/🧬️schema/🔣️.json"
     },
-    "nPileEdKn": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🔘️change-pile-base-area-m2/🧬️schema/🔣️.json"
     },
-    "alphaS": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./⭕️change-pile-dm/🧬️schema/🔣️.json"
     },
-    "pileDM": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./📏️change-pile-lm/🧬️schema/🔣️.json"
     },
-    "qSKpa": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🗺️change-pile-n-profiles/🧬️schema/🔣️.json"
     },
-    "pileLM": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🛡️change-qb-kpa/🧬️schema/🔣️.json"
     },
-    "qBKpa": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🪵️change-qs-kpa/🧬️schema/🔣️.json"
     },
-    "pileBaseAreaM2": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🚦️change-settlement-limit-mm/🧬️schema/🔣️.json"
     },
-    "pileNProfiles": {
-      "type": "integer",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🏋️change-v-ed-kn/🧬️schema/🔣️.json"
     },
-    "zInvestigatedM": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🔎️change-z-investigated-m/🧬️schema/🔣️.json"
     }
-  }
+  ],
+  "x-semio-mutationKinds": [
+    "change-alpha-s",
+    "change-annex",
+    "change-bm",
+    "change-c-kpa",
+    "change-design-approach",
+    "change-dfm",
+    "change-es-mpa",
+    "change-footing-area-m2",
+    "change-gamma-kn-m3",
+    "change-h-ed-kn",
+    "change-n-pile-ed-kn",
+    "change-nu",
+    "change-phi-deg",
+    "change-pile-base-area-m2",
+    "change-pile-dm",
+    "change-pile-lm",
+    "change-pile-n-profiles",
+    "change-qb-kpa",
+    "change-qs-kpa",
+    "change-settlement-limit-mm",
+    "change-v-ed-kn",
+    "change-z-investigated-m"
+  ]
 }

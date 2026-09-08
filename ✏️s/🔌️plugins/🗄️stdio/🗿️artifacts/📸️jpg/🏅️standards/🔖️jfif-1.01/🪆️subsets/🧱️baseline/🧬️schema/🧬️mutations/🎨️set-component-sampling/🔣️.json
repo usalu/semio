@@ -5,7 +5,7 @@
   "displayName": "Set Component Sampling",
   "emoji": "🎨",
   "aggregateVariant": "SetComponentSampling",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

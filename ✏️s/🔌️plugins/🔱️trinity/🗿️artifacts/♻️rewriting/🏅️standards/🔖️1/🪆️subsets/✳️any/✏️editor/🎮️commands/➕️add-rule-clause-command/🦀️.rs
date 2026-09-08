@@ -6,7 +6,7 @@ use crate::artifacts::rewriting::op::RewriteRuleMutation;
 use crate::artifacts::rewriting::schema::{ParameterKind, Rhs};
 use crate::artifacts::rewriting::RewritingSnapshot;
 use crate::editor::rewriting::config::RewritingConfigMutation;
-use semio_framework_plugin::{Emit, Fault};
+use semio_framework_plugin::Emit;
 
 fn add_rule_clause(state: &mut RewritingSnapshot, clause_kind: &str) -> bool {
     let Ok(mut lhs) = pack::from_json_str::<crate::artifacts::rewriting::schema::Lhs>(&state.lhs_json) else {
@@ -55,11 +55,11 @@ fn add_rule_clause(state: &mut RewritingSnapshot, clause_kind: &str) -> bool {
     }
     changed
 }
-pub(crate) fn add_rule_clause_command(state: &RewritingSnapshot, kind: &str) -> Result<Emit<RewriteRuleMutation, RewritingConfigMutation>, Fault> {
+pub(crate) fn add_rule_clause_command(state: &RewritingSnapshot, kind: &str) -> Emit<RewriteRuleMutation, RewritingConfigMutation> {
     let mut next = state.clone();
     if add_rule_clause(&mut next, kind) {
-        Ok(Emit::mutations(rewriting_snapshot_mutations(state, &next)))
+        Emit::mutations(rewriting_snapshot_mutations(state, &next))
     } else {
-        Ok(Emit::default())
+        Emit::default()
     }
 }

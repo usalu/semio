@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/norm/en1991/1/any/mutation/change-en-sk-kn-m2.json",
+  "title": "ChangeEnSKKnM2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newEnSKKnM2"
+  ],
+  "properties": {
+    "newEnSKKnM2": {
+      "type": "number"
+    }
+  }
+}

@@ -25,8 +25,8 @@
 //! including every unmodeled region (`other_tables`, `Other` entities/tables, `unknown_group_codes`
 //! / `extra_group_codes`) — see `codec_retention_law` in `⚙️engine` for the fixed-point proof.
 
-use crate::artifacts::dxf::STDIO_DXF_DOCUMENT_SCHEMA;
-use schema::ArtifactSchema;
+use crate::STDIO_DXF_DOCUMENT_SCHEMA;
+use framework_schema::ArtifactSchema;
 
 //#region 🔖️RawTag
 /// 🏷️ One raw DXF group-code/value pair — used only as the tokenizer's intermediate unit and as

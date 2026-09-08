@@ -1,9 +1,9 @@
 //! 🧬️ PptxMutation — document mutation dispatch. Every variant's `diff()` is handcrafted (never
 //! apply-and-capture) and every variant's `inverse()` is handcrafted, index-aware.
 
-use crate::artifacts::pptx::schema::diff::{diff_insert_shape, diff_insert_slide, diff_move_slide, diff_remove_shape, diff_remove_slide, diff_set_shape_position, diff_set_shape_text, diff_set_snapshot, PptxDiff};
-use crate::artifacts::pptx::schema::snapshot::{PptxParagraph, PptxShape, PptxSlide, PptxSnapshotRecord, PptxTransform};
-use crate::artifacts::pptx::PptxSnapshot;
+use crate::schema::diff::{diff_insert_shape, diff_insert_slide, diff_move_slide, diff_remove_shape, diff_remove_slide, diff_set_shape_position, diff_set_shape_text, diff_set_snapshot, PptxDiff};
+use crate::schema::snapshot::{PptxParagraph, PptxShape, PptxSlide, PptxSnapshotRecord, PptxTransform};
+use crate::PptxSnapshot;
 use protocol::OpBinary;
 use protocol::{Mutation, OpText};
 
@@ -267,7 +267,7 @@ impl OpBinary for PptxMutation {
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_fixture() -> PptxSnapshot {
-    crate::artifacts::pptx::standards::v_ecma_376::subsets::base::io::export::serializers::build_minimal_pptx(crate::artifacts::pptx::schema::snapshot::PptxPresentation {
+    crate::standards::v_ecma_376::subsets::base::io::export::serializers::build_minimal_pptx(crate::schema::snapshot::PptxPresentation {
         slides: vec![
             PptxSlide { shapes: vec![PptxShape::TextBox { text_frame: vec![PptxParagraph::text("first")], position: PptxTransform { x: 0, y: 0, cx: 100, cy: 100 } }] },
             PptxSlide { shapes: vec![PptxShape::TextBox { text_frame: vec![PptxParagraph::text("second")], position: PptxTransform::default() }] },
@@ -295,10 +295,10 @@ pub(crate) fn demo_mutation_cases() -> Vec<PptxMutation> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::pptx::schema::diff::{PptxOpcPartDiff, PptxShapeDiff};
-    use crate::artifacts::pptx::schema::snapshot::{PptxPresentation, PptxRun, PptxXmlPart};
-    use crate::artifacts::xml::schema::snapshot::{XmlDocument, XmlNode};
-    use crate::artifacts::zip::opc::{OpcPackage, OpcRelationship, OpcTargetMode, RELS_CONTENT_TYPE, REL_TYPE_OFFICE_DOCUMENT};
+    use crate::schema::diff::{PptxOpcPartDiff, PptxShapeDiff};
+    use crate::schema::snapshot::{PptxPresentation, PptxRun, PptxXmlPart};
+    use semio_s_artifact_stdio_xml::schema::snapshot::{XmlDocument, XmlNode};
+    use semio_s_artifact_stdio_zip::opc::{OpcPackage, OpcRelationship, OpcTargetMode, RELS_CONTENT_TYPE, REL_TYPE_OFFICE_DOCUMENT};
     use protocol::command::DiffAlgebra;
     use protocol::MutationDiff;
 
@@ -309,7 +309,7 @@ mod tests {
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn fixture() -> PptxSnapshot {
-        crate::artifacts::pptx::standards::v_ecma_376::subsets::base::io::export::serializers::build_minimal_pptx(PptxPresentation {
+        crate::standards::v_ecma_376::subsets::base::io::export::serializers::build_minimal_pptx(PptxPresentation {
             slides: vec![
                 PptxSlide { shapes: vec![PptxShape::TextBox { text_frame: vec![PptxParagraph::text("first")], position: PptxTransform { x: 0, y: 0, cx: 100, cy: 100 } }] },
                 PptxSlide { shapes: vec![PptxShape::TextBox { text_frame: vec![PptxParagraph::text("second")], position: PptxTransform::default() }] },
@@ -519,7 +519,7 @@ mod tests {
     /// engine shares with docx's, not a regression.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn mutated_fixture() -> PptxSnapshot {
-        crate::artifacts::pptx::standards::v_ecma_376::subsets::base::io::export::serializers::build_minimal_pptx(PptxPresentation {
+        crate::standards::v_ecma_376::subsets::base::io::export::serializers::build_minimal_pptx(PptxPresentation {
             slides: vec![
                 PptxSlide { shapes: vec![PptxShape::Placeholder { kind: "title".into(), text_frame: vec![PptxParagraph::text("changed first")], position: PptxTransform { x: 9, y: 9, cx: 9, cy: 9 } }] },
                 PptxSlide { shapes: vec![PptxShape::TextBox { text_frame: vec![PptxParagraph::text("changed second")], position: PptxTransform { x: 1, y: 2, cx: 3, cy: 4 } }] },
@@ -590,7 +590,7 @@ mod tests {
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn slides_diff(diff: &PptxDiff) -> &crate::artifacts::pptx::schema::diff::PptxSlidesDiff {
+    fn slides_diff(diff: &PptxDiff) -> &crate::schema::diff::PptxSlidesDiff {
         diff.presentation.as_ref().expect("presentation diff present").slides.as_ref().expect("slides diff present")
     }
 
@@ -692,7 +692,7 @@ mod tests {
         assert_eq!(MutationDiff::apply(&<PptxDiff as DiffAlgebra<PptxSnapshot>>::between(&sample, &sample), &sample).unwrap(), sample);
 
         // "Real" fixture leg: a realistic multi-slide presentation diffed against a mutated variant.
-        let real = crate::artifacts::pptx::standards::v_ecma_376::subsets::base::io::export::serializers::build_minimal_pptx(PptxPresentation {
+        let real = crate::standards::v_ecma_376::subsets::base::io::export::serializers::build_minimal_pptx(PptxPresentation {
             slides: vec![
                 PptxSlide { shapes: vec![PptxShape::Placeholder { kind: "title".into(), text_frame: vec![PptxParagraph::text("Chapter One")], position: PptxTransform::default() }] },
                 PptxSlide { shapes: vec![PptxShape::TextBox { text_frame: vec![PptxParagraph::text("Body text goes here.")], position: PptxTransform::default() }] },
@@ -709,7 +709,7 @@ mod tests {
     //#region 🔖️CodecRetentionLaw
     #[semio_framework_async_macros::async_test]
     async fn codec_retention_law() {
-        let authored = crate::artifacts::pptx::standards::v_ecma_376::subsets::base::io::export::serializers::build_minimal_pptx(PptxPresentation {
+        let authored = crate::standards::v_ecma_376::subsets::base::io::export::serializers::build_minimal_pptx(PptxPresentation {
             slides: vec![PptxSlide {
                 shapes: vec![
                     PptxShape::Placeholder {
@@ -722,8 +722,8 @@ mod tests {
                 ],
             }],
         });
-        let native = crate::artifacts::pptx::standards::v_ecma_376::subsets::base::io::export::serializers::encode_pptx(&authored).expect("encode authored");
-        let snap = crate::artifacts::pptx::standards::v_ecma_376::subsets::base::io::import::deserializers::decode_pptx(&native).expect("decode authored");
+        let native = crate::standards::v_ecma_376::subsets::base::io::export::serializers::encode_pptx(&authored).expect("encode authored");
+        let snap = crate::standards::v_ecma_376::subsets::base::io::import::deserializers::decode_pptx(&native).expect("decode authored");
         let bytes = store::ArtifactPack::encode_pack(&snap);
         let decoded = <PptxSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
         assert_eq!(decoded, snap);

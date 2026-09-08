@@ -25,9 +25,9 @@
 //! @see ../../🔣️oracle.json — the catalog `KINDS` below must match exactly.
 //! @see ../../../../../../🧪️tests/🔀️mutate-zip-2-0-iso21320/🥒️.feature — the case that exercises it.
 
-use crate::artifacts::zip::schema::diff::{self, ZipDiff};
-use crate::artifacts::zip::schema::snapshot::ZipEntry;
-use crate::artifacts::zip::ZipSnapshot;
+use crate::schema::diff::{self, ZipDiff};
+use crate::schema::snapshot::ZipEntry;
+use crate::ZipSnapshot;
 
 //#region 🔖️Model
 /// 🗜️ The two compression methods ISO/IEC 21320-1 §4.4 admits. Every other APPNOTE method is

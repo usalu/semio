@@ -7,11 +7,11 @@
 //! position). A `TiffTag` is a weak value (`kind`/`values` move together atomically), so a
 //! tag-triple's `modified`/`added` payload carries the whole new tag, never a nested diff.
 
-use crate::artifacts::tiff::schema::snapshot::{TiffByteOrder, TiffFieldType, TiffIfd, TiffTag, TiffValues};
-use crate::artifacts::tiff::TiffSnapshot;
+use crate::schema::snapshot::{TiffByteOrder, TiffFieldType, TiffIfd, TiffTag, TiffValues};
+use crate::TiffSnapshot;
 use protocol::command::DiffAlgebra;
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
-use schema::ArtifactSchema;
+use framework_schema::ArtifactSchema;
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 
 //#region 🔖️TagsTriple

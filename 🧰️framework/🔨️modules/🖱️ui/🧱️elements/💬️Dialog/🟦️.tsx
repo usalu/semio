@@ -32,6 +32,7 @@ export interface DialogProps {
   open?: boolean;
   defaultOpen?: boolean;
   onOpenChange?: (open: boolean) => void;
+  isolationRoot?: HTMLElement | null;
 }
 
 export interface DialogTriggerProps extends Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, "children"> {
@@ -71,9 +72,11 @@ interface DialogContextValue {
   titleId: string;
   descriptionId: string;
   open: boolean;
+  isolationRoot: HTMLElement | null;
   setOpen: (open: boolean) => void;
   triggerRef: React.MutableRefObject<HTMLElement | null>;
   portalRef: React.MutableRefObject<HTMLDivElement | null>;
+  floatingLayers: React.MutableRefObject<Set<React.RefObject<HTMLElement | null>>>;
 }
 
 interface IsolationSnapshot {
@@ -81,13 +84,24 @@ interface IsolationSnapshot {
   readonly inert: string | null;
 }
 
+interface DialogPortalContextValue {
+  readonly inside: boolean;
+  readonly isolationRoot: HTMLElement | null;
+}
+
+interface DialogPortalEntry {
+  readonly portal: HTMLElement;
+  readonly isolationRoot: HTMLElement | null;
+}
+
 const DialogContext = React.createContext<DialogContextValue | null>(null);
-const DialogPortalContext = React.createContext(false);
-const dialogStack: string[] = [];
-const dialogPortals = new Map<string, HTMLElement>();
-const isolationSnapshots = new Map<HTMLElement, IsolationSnapshot>();
+const DialogPortalContext = React.createContext<DialogPortalContextValue>({ inside: false, isolationRoot: null });
+const dialogStacks = new Map<HTMLElement | null, string[]>();
+const dialogPortals = new Map<string, DialogPortalEntry>();
+const isolationSnapshots = new Map<HTMLElement | null, Map<HTMLElement, IsolationSnapshot>>();
 let bodyOverflow = "";
 let bodyPaddingRight = "";
+let bodyBasePaddingRight = 0;
 
 const useIsomorphicLayoutEffect = typeof window === "undefined" ? React.useEffect : React.useLayoutEffect;
 
@@ -131,21 +145,23 @@ function focusableElements(content: HTMLElement): HTMLElement[] {
   );
 }
 
-function restoreIsolation(): void {
-  for (const [element, snapshot] of isolationSnapshots) {
+function restoreIsolation(isolationRoot: HTMLElement | null): void {
+  const snapshots = isolationSnapshots.get(isolationRoot);
+  if (!snapshots) return;
+  for (const [element, snapshot] of snapshots) {
     if (snapshot.ariaHidden === null) element.removeAttribute("aria-hidden");
     else element.setAttribute("aria-hidden", snapshot.ariaHidden);
     if (snapshot.inert === null) element.removeAttribute("inert");
     else element.setAttribute("inert", snapshot.inert);
   }
-  isolationSnapshots.clear();
+  isolationSnapshots.delete(isolationRoot);
 }
 
-function topDialogToken(): string | undefined {
+function topDialogToken(isolationRoot: HTMLElement | null): string | undefined {
   let selected: string | undefined;
   let selectedDepth = -1;
-  for (const token of dialogStack) {
-    const depth = dialogPortals.get(token)?.dataset.dialogBoundary?.split(" ").length ?? 0;
+  for (const token of dialogStacks.get(isolationRoot) ?? []) {
+    const depth = dialogPortals.get(token)?.portal.dataset.dialogBoundary?.split(" ").length ?? 0;
     if (depth >= selectedDepth) {
       selected = token;
       selectedDepth = depth;
@@ -155,71 +171,105 @@ function topDialogToken(): string | undefined {
 }
 
 /** 🌑️ Isolates the active modal and owns nested scroll locking without erasing prior attributes. */
-function syncModalEnvironment(): void {
+function syncModalEnvironment(isolationRoot: HTMLElement | null): void {
   if (typeof document === "undefined") return;
-  restoreIsolation();
-  const topToken = topDialogToken();
+  restoreIsolation(isolationRoot);
+  const topToken = topDialogToken(isolationRoot);
   if (!topToken) {
-    document.body.style.overflow = bodyOverflow;
-    document.body.style.paddingRight = bodyPaddingRight;
+    if (isolationRoot === null) {
+      document.body.style.overflow = bodyOverflow;
+      document.body.style.paddingRight = bodyPaddingRight;
+    }
     return;
   }
-  const topPortal = dialogPortals.get(topToken);
-  if (!topPortal) return;
+  const topPortal = dialogPortals.get(topToken)?.portal;
+  if (!topPortal || (isolationRoot !== null && !isolationRoot.contains(topPortal))) return;
+  const snapshots = new Map<HTMLElement, IsolationSnapshot>();
+  isolationSnapshots.set(isolationRoot, snapshots);
   let branch: HTMLElement = topPortal;
   while (branch.parentElement) {
     const parent = branch.parentElement;
     for (const sibling of Array.from(parent.children)) {
       if (!(sibling instanceof HTMLElement) || sibling === branch) continue;
-      isolationSnapshots.set(sibling, { ariaHidden: sibling.getAttribute("aria-hidden"), inert: sibling.getAttribute("inert") });
+      snapshots.set(sibling, { ariaHidden: sibling.getAttribute("aria-hidden"), inert: sibling.getAttribute("inert") });
       sibling.setAttribute("aria-hidden", "true");
       sibling.setAttribute("inert", "");
     }
-    if (parent === document.body) break;
+    if (parent === (isolationRoot ?? document.body)) break;
     branch = parent;
   }
+  if (isolationRoot !== null) return;
   document.body.style.overflow = "hidden";
   const scrollbarWidth = Math.max(0, window.innerWidth - document.documentElement.clientWidth);
   if (scrollbarWidth > 0) {
-    const paddingRight = Number.parseFloat(window.getComputedStyle(document.body).paddingRight) || 0;
-    document.body.style.paddingRight = `${paddingRight + scrollbarWidth}px`;
+    document.body.style.paddingRight = `${bodyBasePaddingRight + scrollbarWidth}px`;
   }
 }
 
-function registerDialog(token: string, portal: HTMLElement): void {
-  const index = dialogStack.indexOf(token);
-  if (index >= 0) dialogStack.splice(index, 1);
-  if (dialogStack.length === 0) {
+function registerDialog(token: string, portal: HTMLElement, isolationRoot: HTMLElement | null): void {
+  const existing = dialogPortals.get(token);
+  if (existing) {
+    const existingStack = dialogStacks.get(existing.isolationRoot);
+    const existingIndex = existingStack?.indexOf(token) ?? -1;
+    if (existingStack && existingIndex >= 0) existingStack.splice(existingIndex, 1);
+    dialogPortals.delete(token);
+    syncModalEnvironment(existing.isolationRoot);
+  }
+  if (isolationRoot !== null && !isolationRoot.contains(portal)) throw new Error("Dialog isolationRoot must contain its portal.");
+  const stack = dialogStacks.get(isolationRoot) ?? [];
+  if (stack.length === 0 && isolationRoot === null) {
     bodyOverflow = document.body.style.overflow;
     bodyPaddingRight = document.body.style.paddingRight;
+    bodyBasePaddingRight = Number.parseFloat(window.getComputedStyle(document.body).paddingRight) || 0;
   }
-  dialogStack.push(token);
-  dialogPortals.set(token, portal);
-  syncModalEnvironment();
+  stack.push(token);
+  dialogStacks.set(isolationRoot, stack);
+  dialogPortals.set(token, { portal, isolationRoot });
+  syncModalEnvironment(isolationRoot);
 }
 
 function activateDialog(token: string): void {
-  const index = dialogStack.indexOf(token);
-  if (index < 0 || index === dialogStack.length - 1) return;
-  dialogStack.splice(index, 1);
-  dialogStack.push(token);
-  syncModalEnvironment();
+  const entry = dialogPortals.get(token);
+  if (!entry) return;
+  const stack = dialogStacks.get(entry.isolationRoot);
+  const index = stack?.indexOf(token) ?? -1;
+  if (!stack || index < 0 || index === stack.length - 1) return;
+  stack.splice(index, 1);
+  stack.push(token);
+  syncModalEnvironment(entry.isolationRoot);
 }
 
 function unregisterDialog(token: string): void {
-  const index = dialogStack.indexOf(token);
-  if (index >= 0) dialogStack.splice(index, 1);
+  const entry = dialogPortals.get(token);
+  if (!entry) return;
+  const stack = dialogStacks.get(entry.isolationRoot);
+  const index = stack?.indexOf(token) ?? -1;
+  if (stack && index >= 0) stack.splice(index, 1);
+  if (stack?.length === 0) dialogStacks.delete(entry.isolationRoot);
   dialogPortals.delete(token);
-  syncModalEnvironment();
+  syncModalEnvironment(entry.isolationRoot);
 }
 
 function isTopmostDialog(token: string): boolean {
-  return topDialogToken() === token;
+  const entry = dialogPortals.get(token);
+  return entry !== undefined && topDialogToken(entry.isolationRoot) === token;
+}
+
+function isInsideDialogIsolation(target: EventTarget | null, isolationRoot: HTMLElement | null): boolean {
+  return isolationRoot === null || (target instanceof Node && isolationRoot.contains(target));
+}
+
+/** 🧭️ Detects whether an event target belongs to any currently modal scoped application root. */
+export function isInsideActiveScopedDialogIsolation(target: EventTarget | null): boolean {
+  if (!(target instanceof Node)) return false;
+  for (const [isolationRoot, stack] of dialogStacks) if (isolationRoot !== null && stack.length > 0 && isolationRoot.contains(target)) return true;
+  return false;
 }
 
 function isInsideDialogBoundary(target: EventTarget | null, context: DialogContextValue, content: HTMLElement | null): boolean {
   if (!(target instanceof Node)) return false;
   if (content?.contains(target) || context.triggerRef.current?.contains(target)) return true;
+  if ([...context.floatingLayers.current].some(layer => layer.current?.contains(target))) return true;
   const element = target instanceof Element ? target : target.parentElement;
   const portal = element?.closest<HTMLElement>("[data-dialog-boundary]");
   return portal?.dataset.dialogToken !== context.token && portal?.dataset.dialogBoundary?.split(" ").includes(context.token) === true;
@@ -227,16 +277,32 @@ function isInsideDialogBoundary(target: EventTarget | null, context: DialogConte
 // #endregion 📐️Contract
 
 // #region 🎛️Root
+/** 🪆️ Attaches an owned floating control to its enclosing modal without escaping isolation or dismissal order. */
+export function useDialogLayer(open: boolean, content: React.RefObject<HTMLElement | null>): { container: Element | null; isolationRoot: HTMLElement | null; ready: boolean } {
+  const context = React.useContext(DialogContext);
+  const [container, setContainer] = React.useState<Element | null>(null);
+  useIsomorphicLayoutEffect(() => {
+    if (!context || !open) return;
+    setContainer(context.portalRef.current);
+    context.floatingLayers.current.add(content);
+    return () => { context.floatingLayers.current.delete(content); };
+  }, [context?.portalRef, context?.floatingLayers, open, content]);
+  return { container: context ? container : null, isolationRoot: context?.isolationRoot ?? null, ready: !context || container !== null };
+}
+
 /** 🎛️ Owns controlled or uncontrolled open state and a logical nested-dialog boundary. */
-function Dialog({ children, open: controlledOpen, defaultOpen = false, onOpenChange }: DialogProps) {
+function Dialog({ children, open: controlledOpen, defaultOpen = false, onOpenChange, isolationRoot: ownedIsolationRoot }: DialogProps) {
   const parent = React.useContext(DialogContext);
+  const parentPortal = React.useContext(DialogPortalContext);
   const [uncontrolledOpen, setUncontrolledOpen] = React.useState(defaultOpen);
   const generatedId = React.useId().replace(/[^A-Za-z0-9_-]/g, "");
   const token = `semio-dialog-${generatedId}`;
   const boundary = parent ? `${parent.boundary} ${token}` : token;
+  const isolationRoot = ownedIsolationRoot === undefined ? (parentPortal.inside ? parentPortal.isolationRoot : null) : ownedIsolationRoot;
   const open = controlledOpen ?? uncontrolledOpen;
   const triggerRef = React.useRef<HTMLElement | null>(null);
   const portalRef = React.useRef<HTMLDivElement | null>(null);
+  const floatingLayers = React.useRef(new Set<React.RefObject<HTMLElement | null>>());
   const setOpen = React.useCallback(
     (nextOpen: boolean) => {
       if (nextOpen === open) return;
@@ -245,10 +311,10 @@ function Dialog({ children, open: controlledOpen, defaultOpen = false, onOpenCha
     },
     [controlledOpen, onOpenChange, open],
   );
-  const context = React.useMemo<DialogContextValue>(() => ({ boundary, token, contentId: `${token}-content`, titleId: `${token}-title`, descriptionId: `${token}-description`, open, setOpen, triggerRef, portalRef }), [boundary, open, setOpen, token]);
+  const context = React.useMemo<DialogContextValue>(() => ({ boundary, token, contentId: `${token}-content`, titleId: `${token}-title`, descriptionId: `${token}-description`, open, isolationRoot, setOpen, triggerRef, portalRef, floatingLayers }), [boundary, isolationRoot, open, setOpen, token]);
   return (
     <DialogContext.Provider value={context}>
-      <DialogPortalContext.Provider value={false}>{children}</DialogPortalContext.Provider>
+      <DialogPortalContext.Provider value={{ inside: false, isolationRoot }}>{children}</DialogPortalContext.Provider>
     </DialogContext.Provider>
   );
 }
@@ -324,15 +390,15 @@ function DialogPortal({ children, container }: DialogPortalProps) {
   const context = useDialogContext();
   if (!context.open || typeof document === "undefined") return null;
   return createPortal(
-    <div ref={context.portalRef} data-slot="dialog-portal" data-dialog-boundary={context.boundary} data-dialog-token={context.token}>
-      <DialogPortalContext.Provider value>{children}</DialogPortalContext.Provider>
+    <div ref={context.portalRef} className={cn("pointer-events-auto", context.isolationRoot && "absolute inset-0")} data-slot="dialog-portal" data-dialog-boundary={context.boundary} data-dialog-token={context.token} data-dialog-isolation={context.isolationRoot ? "scoped" : "page"}>
+      <DialogPortalContext.Provider value={{ inside: true, isolationRoot: context.isolationRoot }}>{children}</DialogPortalContext.Provider>
     </div>,
-    container ?? document.body,
+    container ?? context.isolationRoot ?? document.body,
   );
 }
 
 /** 🌑️ Paints the modal veil while dismissal remains owned by DialogContent. */
-const DialogOverlay = React.forwardRef<HTMLDivElement, DialogOverlayProps>(function DialogOverlay({ className, ...props }, forwardedRef) {
+const DialogOverlay = React.forwardRef<HTMLDivElement, DialogOverlayProps>(function DialogOverlay({ className, style, ...props }, forwardedRef) {
   const context = useDialogContext();
   if (!context.open) return null;
   return (
@@ -341,7 +407,8 @@ const DialogOverlay = React.forwardRef<HTMLDivElement, DialogOverlayProps>(funct
       data-slot="dialog-overlay"
       data-level="dialog"
       data-state="open"
-      className={cn(veilClass, "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-dialog", className)}
+      className={cn(veilClass, "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 inset-0 z-dialog", context.isolationRoot ? "absolute" : "fixed", className)}
+      style={{ position: context.isolationRoot ? "absolute" : "fixed", ...style }}
       {...props}
     />
   );
@@ -349,11 +416,11 @@ const DialogOverlay = React.forwardRef<HTMLDivElement, DialogOverlayProps>(funct
 
 /** 🪟️ Owns modal isolation, focus trapping, topmost dismissal, and accessible associations. */
 const DialogContent = React.forwardRef<HTMLDivElement, DialogContentProps>(function DialogContent(
-  { className, showCloseButton = true, children, onOpenAutoFocus, onCloseAutoFocus, onEscapeKeyDown, onPointerDownOutside, onFocusOutside, onInteractOutside, ...props },
+  { className, style, showCloseButton = true, children, onOpenAutoFocus, onCloseAutoFocus, onEscapeKeyDown, onPointerDownOutside, onFocusOutside, onInteractOutside, ...props },
   forwardedRef,
 ) {
   const context = useDialogContext();
-  const insidePortal = React.useContext(DialogPortalContext);
+  const portalContext = React.useContext(DialogPortalContext);
   const flow = useFlow();
   const closeLabel = useLabel("ui.common.close");
   const contentRef = React.useRef<HTMLDivElement | null>(null);
@@ -369,7 +436,7 @@ const DialogContent = React.forwardRef<HTMLDivElement, DialogContentProps>(funct
     if (!context.open || !content || !portal) return;
     dismissedRef.current = false;
     restoreFocusRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
-    registerDialog(context.token, portal);
+    registerDialog(context.token, portal, context.isolationRoot);
     const event = preventableEvent();
     callbacksRef.current.onOpenAutoFocus?.(event);
     if (!event.defaultPrevented) (focusableElements(content)[0] ?? content).focus({ preventScroll: true });
@@ -382,11 +449,12 @@ const DialogContent = React.forwardRef<HTMLDivElement, DialogContentProps>(funct
         target?.focus({ preventScroll: true });
       }
     };
-  }, [context.open, context.portalRef, context.token, context.triggerRef]);
+  }, [context.isolationRoot, context.open, context.portalRef, context.token, context.triggerRef]);
 
   React.useEffect(() => {
     if (!context.open) return;
     const dismiss = (event: PointerEvent | FocusEvent, kind: "pointer" | "focus") => {
+      if (!isInsideDialogIsolation(event.target, context.isolationRoot)) return;
       if (!isTopmostDialog(context.token)) return;
       if (isInsideDialogBoundary(event.target, context, contentRef.current)) {
         activateDialog(context.token);
@@ -411,8 +479,10 @@ const DialogContent = React.forwardRef<HTMLDivElement, DialogContentProps>(funct
     const handlePointerDown = (event: PointerEvent) => dismiss(event, "pointer");
     const handleFocusIn = (event: FocusEvent) => dismiss(event, "focus");
     const handleKeyDown = (event: KeyboardEvent) => {
+      if (!isInsideDialogIsolation(event.target, context.isolationRoot)) return;
       if (!isTopmostDialog(context.token)) return;
       if (event.key === "Escape") {
+        if ([...context.floatingLayers.current].some(layer => layer.current?.isConnected)) return;
         const owned = preventableEvent(event);
         callbacksRef.current.onEscapeKeyDown?.(owned);
         if (owned.defaultPrevented) return;
@@ -462,7 +532,7 @@ const DialogContent = React.forwardRef<HTMLDivElement, DialogContentProps>(funct
       ref={ref}
       id={context.contentId}
       role={props.role ?? "dialog"}
-      aria-modal={props["aria-modal"] ?? true}
+      aria-modal={props["aria-modal"] ?? (context.isolationRoot === null)}
       aria-labelledby={labelledBy}
       aria-describedby={describedBy}
       tabIndex={props.tabIndex ?? -1}
@@ -471,10 +541,12 @@ const DialogContent = React.forwardRef<HTMLDivElement, DialogContentProps>(funct
       data-state="open"
       dir={flow.inline === "rtl" ? "rtl" : undefined}
       className={cn(
-        "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-dialog grid w-full max-w-[calc(100%-2*var(--ui-spacing)*var(--medium))] translate-x-[-50%] translate-y-[-50%] gap-medium border p-medium duration-200 sm:max-w-lg",
+        "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 top-[50%] left-[50%] z-dialog grid w-full max-w-[calc(100%-2*var(--ui-spacing)*var(--medium))] translate-x-[-50%] translate-y-[-50%] gap-medium border p-medium duration-200 sm:max-w-lg",
+        context.isolationRoot ? "absolute" : "fixed",
         glassClass,
         className,
       )}
+      style={{ position: context.isolationRoot ? "absolute" : "fixed", ...style }}
       onFocusCapture={(event) => {
         props.onFocusCapture?.(event);
         if (!event.defaultPrevented) activateDialog(context.token);
@@ -495,7 +567,7 @@ const DialogContent = React.forwardRef<HTMLDivElement, DialogContentProps>(funct
       </SurfaceScope>
     </div>
   );
-  if (insidePortal) return renderedContent;
+  if (portalContext.inside) return renderedContent;
   return (
     <DialogPortal>
       <DialogOverlay />

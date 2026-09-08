@@ -1,5 +1,6 @@
 //! 📦️ ISO 16757 building-services product catalogue: parts 1, 2, 4, 5 — document entities.
 
+/// 📸️ Persisted snapshot — defined in `📸️snapshot/🧬️schema`, re-exported here.
 pub use crate::artifacts::iso16757::schema::snapshot::Iso16757Snapshot;
 
 use std::collections::BTreeMap;
@@ -864,7 +865,6 @@ pub mod part_5 {
     impl std::error::Error for ScriptError {}
 }
 // #endregion Part5
-/// 📸️ Persisted snapshot — defined in `📸️snapshot/🧬️schema`, re-exported here.
 
 // #region Session
 /// 🏷️ Canonical DSL file extension for ISO 16757 documents.

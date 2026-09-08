@@ -2,7 +2,7 @@
 
 use super::remove_signature_field::RemoveSignatureField;
 use super::PdfHMutation;
-use crate::artifacts::pdf::standards::v1_7::subsets::base::schema::{conformance_support as support, diff::PdfDiff, snapshot::PdfSnapshot};
+use crate::standards::v1_7::subsets::base::schema::{conformance_support as support, diff::PdfDiff, snapshot::PdfSnapshot};
 use protocol::command::DiffAlgebra;
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
 

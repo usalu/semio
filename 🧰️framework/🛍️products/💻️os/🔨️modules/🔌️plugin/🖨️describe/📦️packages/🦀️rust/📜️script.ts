@@ -37,6 +37,13 @@ const FRESH_COMPONENT_MAX_BYTES = 64 * 1024 * 1024;
 const FRESH_DESCRIPTOR_MAX_BYTES = 4 * 1024 * 1024;
 const FRESH_IO_CHUNK_BYTES = 64 * 1024;
 
+function freshWasmArtifactSize(path: string, maximum: number, label: string): number {
+  const info = lstatSync(path);
+  if (!info.isFile() || info.isSymbolicLink() || !Number.isSafeInteger(info.size) || info.size < 1 || info.size > maximum)
+    throw new Error(`${label} file bound: byteLength=${info.size} maximum=${maximum}`);
+  return info.size;
+}
+
 export type FreshComponentRequestV1 = Readonly<{
   pluginId: string;
   cargoPackage: string;
@@ -759,6 +766,7 @@ export async function produceFreshComponentV1<T>(
     await freshRun("cargo", cargo, repoRoot, env, control, "build", 0, total);
     const cargoComponent = pluginWasmArtifactPath(repoRoot, request.cargoPackage, request.componentProfile, targetRoot);
     if (cargoComponent !== join(targetRoot, "wasm32-wasip2", request.componentProfile, request.outputName)) throw new Error("fresh component output identity differs from the shared Cargo artifact path");
+    freshWasmArtifactSize(cargoComponent, FRESH_COMPONENT_MAX_BYTES, "fresh WASIp2 component");
     componentBytes = readStableBuildFile(cargoComponent, FRESH_COMPONENT_MAX_BYTES, { remaining: FRESH_COMPONENT_MAX_BYTES }, () => freshCheckpoint(control, "snapshot", 1, total));
     if (!componentBytes.byteLength) throw new Error("fresh component is empty");
     const component = join(workRoot, "component.wasm");
@@ -769,7 +777,9 @@ export async function produceFreshComponentV1<T>(
     mkdirSync(extractRoot, { mode: 0o700 });
     const baseName = request.outputName.slice(0, -".wasm".length);
     await freshRun("node", [jco, "transpile", component, "-o", extractRoot, "--name", baseName, "--map", "semio:framework/pure=./pure.js", "--map", "semio:framework/host-async=./host-async.js"], repoRoot, env, control, "extract-core", 1, total);
-    coreBytes = readStableBuildFile(join(extractRoot, `${baseName}.core.wasm`), FRESH_COMPONENT_MAX_BYTES, { remaining: FRESH_COMPONENT_MAX_BYTES }, () => freshCheckpoint(control, "snapshot-core", 2, total));
+    const corePath = join(extractRoot, `${baseName}.core.wasm`);
+    freshWasmArtifactSize(corePath, FRESH_COMPONENT_MAX_BYTES, "fresh extracted core Wasm module");
+    coreBytes = readStableBuildFile(corePath, FRESH_COMPONENT_MAX_BYTES, { remaining: FRESH_COMPONENT_MAX_BYTES }, () => freshCheckpoint(control, "snapshot-core", 2, total));
     if (!coreBytes.byteLength) throw new Error("fresh core module is empty");
     const core = join(workRoot, "core.wasm");
     freshStage(coreBytes, core, control, "snapshot-core", 2, total);
@@ -971,6 +981,8 @@ export async function testFreshComponentStagingV1(repoRoot: string): Promise<voi
     ["descriptorJson", Buffer.from(JSON.stringify(descriptor))],
   ] as const)
     writeFileSync(paths[key], bytes);
+  assert.equal(freshWasmArtifactSize(paths.component, component.byteLength, "fixture WASIp2 component"), component.byteLength);
+  assert.throws(() => freshWasmArtifactSize(paths.component, component.byteLength - 1, "fixture WASIp2 component"), new RegExp(`byteLength=${component.byteLength} maximum=${component.byteLength - 1}`));
   const control: FreshBuildControlV1 = { cancelled: () => false, remainingMs: () => 60_000, checkpoint() {} };
   const capturedComponent = readStableBuildFile(paths.component, FRESH_COMPONENT_MAX_BYTES, { remaining: FRESH_COMPONENT_MAX_BYTES }, () => {});
   const capturedCore = readStableBuildFile(paths.core, FRESH_COMPONENT_MAX_BYTES, { remaining: FRESH_COMPONENT_MAX_BYTES }, () => {});

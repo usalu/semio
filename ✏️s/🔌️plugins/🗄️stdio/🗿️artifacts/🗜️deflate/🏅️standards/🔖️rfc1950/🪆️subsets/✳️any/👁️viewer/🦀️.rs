@@ -5,7 +5,7 @@
 //! Must not import anything from the sibling mutation-capable surface (policy forbids the substring
 //! outright, including inside comments).
 
-use crate::artifacts::deflate::{DeflateMutation, DeflateSnapshot, STDIO_DEFLATE_DOCUMENT_SCHEMA};
+use crate::{DeflateMutation, DeflateSnapshot, STDIO_DEFLATE_DOCUMENT_SCHEMA};
 use crate::viewer::deflate::modes::view;
 use crate::viewer::deflate::modes::view::windows::main;
 use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId, ViewEmit, Viewer};

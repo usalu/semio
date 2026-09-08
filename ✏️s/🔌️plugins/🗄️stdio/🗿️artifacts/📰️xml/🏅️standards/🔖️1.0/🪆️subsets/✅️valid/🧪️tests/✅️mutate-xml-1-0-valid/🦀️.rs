@@ -133,11 +133,11 @@ fn round_trip_oracle_once(input: &[u8], what: &str) -> Result<(Vec<u8>, Json), S
 mod subject {
     use super::{mutable_input, projection_divergence, KINDS};
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_plugin_stdio::artifacts::xml::standards::v1_0::subsets::base::schema::mutations::XmlNodePath;
-    use semio_s_plugin_stdio::artifacts::xml::standards::v1_0::subsets::base::schema::snapshot::{XmlDtdDeclaration, XmlExternalId};
-    use semio_s_plugin_stdio::artifacts::xml::standards::v1_0::subsets::valid::schema::valid_mutations::{declare_doctype::DeclareDoctype, declare_entity::DeclareEntity, rename_document_element::RenameDocumentElement, set_external_subset::SetExternalSubset, set_internal_subset::SetInternalSubset, set_snapshot::SetSnapshot, set_standalone::SetStandalone, set_text::SetText};
-    use semio_s_plugin_stdio::artifacts::xml::standards::v1_0::subsets::valid::schema::{apply_xml_valid_mutation, inverse_xml_valid_mutation, XmlValidMutation};
-    use semio_s_plugin_stdio::artifacts::xml::XmlSnapshot;
+    use crate::standards::v1_0::subsets::base::schema::mutations::XmlNodePath;
+    use crate::standards::v1_0::subsets::base::schema::snapshot::{XmlDtdDeclaration, XmlExternalId};
+    use crate::standards::v1_0::subsets::valid::schema::valid_mutations::{declare_doctype::DeclareDoctype, declare_entity::DeclareEntity, rename_document_element::RenameDocumentElement, set_external_subset::SetExternalSubset, set_internal_subset::SetInternalSubset, set_snapshot::SetSnapshot, set_standalone::SetStandalone, set_text::SetText};
+    use crate::standards::v1_0::subsets::valid::schema::{apply_xml_valid_mutation, inverse_xml_valid_mutation, XmlValidMutation};
+    use crate::XmlSnapshot;
     use semio_s_plugin_stdio_test_oracle::artifacts::xml::standards::v1_0::subsets::valid::project_xml_valid;
 
     //#region 🔖️SpecCodec

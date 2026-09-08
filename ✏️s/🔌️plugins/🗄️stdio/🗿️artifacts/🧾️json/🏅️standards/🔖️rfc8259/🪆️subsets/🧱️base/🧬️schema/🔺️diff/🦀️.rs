@@ -4,14 +4,14 @@
 //! `snapshot: Option<JsonSnapshot>` full-replace slot anywhere — `SetSnapshot`'s own diff is the
 //! sparse `between(base, next)` just like every other mutation.
 
-use crate::artifacts::json::schema::snapshot::{JsonMember, JsonValue};
-use crate::artifacts::json::JsonSnapshot;
+use crate::schema::snapshot::{JsonMember, JsonValue};
+use crate::JsonSnapshot;
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
 // 🧭️ `DiffAlgebra` isn't yet on the `protocol` facade's curated re-export list (S1 added the
 // trait but the facade wasn't updated — see s1-spine-report.md) so it's reached via the
 // still-public `os_spr::command` path instead of touching that framework facade file.
 use protocol::os_spr::command::DiffAlgebra;
-use schema::ArtifactSchema;
+use framework_schema::ArtifactSchema;
 use std::collections::{HashMap, HashSet};
 
 //#region 🔖️CollectionDiffs
@@ -1162,7 +1162,7 @@ impl protocol::DiffCodec for JsonDiff {
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_diff_cases() -> Vec<JsonDiff> {
-    use crate::artifacts::json::STDIO_JSON_DOCUMENT_SCHEMA;
+    use crate::STDIO_JSON_DOCUMENT_SCHEMA;
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn snap(value: JsonValue) -> JsonSnapshot {
@@ -1206,7 +1206,7 @@ pub(crate) fn demo_diff_cases() -> Vec<JsonDiff> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::json::STDIO_JSON_DOCUMENT_SCHEMA;
+    use crate::STDIO_JSON_DOCUMENT_SCHEMA;
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn snap(value: JsonValue) -> JsonSnapshot {

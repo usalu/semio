@@ -1,18 +1,5 @@
-//! @emoji 📸 `RenderSnapshot` — the immutable, atomically-published frame artifact ticket
-//! `26/08/20/INTERACTIVE-JOB-RUNTIME-REFACTOR` Phase 3 (packet P3a) asks for, and
-//! [`RenderSnapshotSink`] — its publish/acquire mechanism, mirroring the actor crate's already-proven
-//! `SceneStore`/`SceneSnapshot` pattern (`🎭️actor/🦀️.rs` ~1834-1918: `apply_patch`/
-//! `commit_frame`, Arc-based copy-on-write, readers hold snapshots indefinitely). **Not** a raw
-//! `Arc`+`AtomicPtr` scheme despite that being this packet's own first attempt — see
-//! [`RenderSnapshotSink`]'s own doc for the real use-after-free bug a concurrent stress test caught in
-//! that version and why a `Mutex<Arc<T>>` is the correct fix here, not a compromise.
-//!
-//! The mounted native renderer owns `AppRuntime` behind a bounded completion mailbox and submits
-//! `AppRuntime::frame` through `FrameBuildHandle` to the process worker pool. The UI callback
-//! non-blockingly polls the capacity-one completion channel, presents only an immutable prepared
-//! packet, and keeps the last valid snapshot when the worker stalls. This sink carries the
-//! cursor/IME scheduling subset of that publication. The retained hit-test index and damage regions
-//! are still explicit optional gaps below; neither is represented by an invented placeholder.
+//! 📸️ Immutable cursor and IME directives published with each completed native frame.
+//! Readers retain the last valid snapshot while a new frame is being prepared.
 
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};
@@ -20,41 +7,19 @@ use ui_render::{CursorRequest, ImeDirective};
 
 //#region 🔖️RenderSnapshot
 
-/// 📸️ One immutable, fully-prepared frame — everything [`crate::os_host::OsHost::redraw`] needs to
-/// present without touching model state, running layout, or allocating substantially. Carries the
-/// UI-thread-relevant subset the design doc's §4.2 sketch names (revision, generation, timestamp,
-/// cursor/IME directives, damage regions); `dispatch_tree`/`wgpu_target`/texture-upload references from
-/// that sketch are Element/FrameEngine-pipeline concepts this crate's still-`DrawList`-based renderer
-/// does not yet have a real value for (see this file's own module docstring) — carried here as `None`-
-/// capable `Option`s rather than invented placeholders, so a future packet's real values slot in without
-/// a breaking field-shape change.
+/// 📸️ Cursor and IME state from a fully prepared frame.
 #[derive(Clone)]
 pub struct RenderSnapshot {
-    /// 🔢️ Bumped on every publish — lets a caller detect "this is the same snapshot I already
-    /// presented" without comparing contents.
+    /// 🔢️ Publication identity assigned by the snapshot sink.
     pub revision: u64,
-    /// 🔢️ P1e's own frame-generation counter, threaded through so a snapshot and the
-    /// `semio_framework_trace::Watchdog` call that built it share one identity.
-    pub generation: semio_framework_trace::Generation,
-    pub timestamp_us: u64,
-    /// 🖱️ The cursor this frame settled on — see `winit_app.rs`'s own `semio_cursor_to_request` for
-    /// the narrowing from `AppRuntime`'s richer 13-variant `SemioCursor`.
     pub cursor: CursorRequest,
     pub ime: Option<ImeDirective>,
-    /// 🌳️ Hit-test index for the frame this snapshot represents. This crate's actual hit-testing
-    /// (`ui_wgpu::wgpu::InputState::hit_at`) is immediate-mode against live `AppRuntime` state, not a
-    /// `ui_render::DispatchTree` — so there is no real value to carry here yet. `None` is an explicit
-    /// remaining P3 input-contract gap, not a synthetic index.
-    pub dispatch_tree: Option<Arc<()>>,
-    /// 🩹️ Damage/dirty regions this frame touched — not tracked by the immediate-mode `DrawList`
-    /// pipeline today (it always repaints the full surface); `None` until damage tracking exists.
-    pub damage_regions: Option<Vec<()>>,
 }
 
 impl RenderSnapshot {
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-    pub fn new(revision: u64, generation: semio_framework_trace::Generation, timestamp_us: u64, cursor: CursorRequest, ime: Option<ImeDirective>) -> Self {
-        Self { revision, generation, timestamp_us, cursor, ime, dispatch_tree: None, damage_regions: None }
+    pub fn new(revision: u64, cursor: CursorRequest, ime: Option<ImeDirective>) -> Self {
+        Self { revision, cursor, ime }
     }
 }
 
@@ -134,7 +99,7 @@ mod tests {
     use super::*;
 
     fn snapshot(revision: u64) -> RenderSnapshot {
-        RenderSnapshot::new(revision, semio_framework_trace::Generation(revision), 0, CursorRequest::Default, None)
+        RenderSnapshot::new(revision, CursorRequest::Default, None)
     }
 
     #[test]

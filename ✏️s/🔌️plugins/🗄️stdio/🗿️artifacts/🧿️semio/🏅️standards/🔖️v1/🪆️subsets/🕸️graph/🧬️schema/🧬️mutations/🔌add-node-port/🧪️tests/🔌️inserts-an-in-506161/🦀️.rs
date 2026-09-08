@@ -5,9 +5,9 @@
 //! `mutation.no-op` (name-collision, not value-equality); otherwise the port is inserted into the
 //! node's NESTED ordered `ports` at `min(index, len)`. Inserting at index 0 in front of an existing
 //! port is what pins position rather than mere membership.
-use crate::artifacts::semio::standards::v1::subsets::graph::schema::diff::SemioGraphDiff;
-use crate::artifacts::semio::standards::v1::subsets::graph::schema::mutations::SemioGraphMutation;
-use crate::artifacts::semio::standards::v1::subsets::graph::schema::snapshot::SemioGraphSnapshot;
+use crate::standards::v1::subsets::graph::schema::diff::SemioGraphDiff;
+use crate::standards::v1::subsets::graph::schema::mutations::SemioGraphMutation;
+use crate::standards::v1::subsets::graph::schema::snapshot::SemioGraphSnapshot;
 use protocol::{Mutation, MutationDiff};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");

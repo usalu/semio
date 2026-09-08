@@ -11,9 +11,9 @@
 //! leaf's own oracle. The derived `.op.semio`/`.spr.semio`/`.dsl.semio`/`.pack.semio`/
 //! `.patch.semio` encodings come from `fixtures generate`, not from here.
 
-use crate::artifacts::gltf::schema::mutations::move_node_child::GltfMoveNodeChildPayload;
-use crate::artifacts::gltf::schema::mutations::move_node_child;
-use crate::artifacts::gltf::GltfSnapshot;
+use crate::schema::mutations::move_node_child::GltfMoveNodeChildPayload;
+use crate::schema::mutations::move_node_child;
+use crate::GltfSnapshot;
 
 const CASE: &str = "move-node-child/refuses-a-move-whose-destination-is-the-childs-current-slot";
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");

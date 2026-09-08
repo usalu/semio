@@ -5,9 +5,9 @@
 //! `target` node (both `mutation.invariant`). Referential integrity is therefore checked BEFORE the
 //! edge is pushed, and the edge lands at the end of `edges`. `nodes` stays `None` — connecting two
 //! existing nodes rewrites no node.
-use crate::artifacts::semio::standards::v1::subsets::graph::schema::diff::SemioGraphDiff;
-use crate::artifacts::semio::standards::v1::subsets::graph::schema::mutations::SemioGraphMutation;
-use crate::artifacts::semio::standards::v1::subsets::graph::schema::snapshot::SemioGraphSnapshot;
+use crate::standards::v1::subsets::graph::schema::diff::SemioGraphDiff;
+use crate::standards::v1::subsets::graph::schema::mutations::SemioGraphMutation;
+use crate::standards::v1::subsets::graph::schema::snapshot::SemioGraphSnapshot;
 use protocol::{Mutation, MutationDiff};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");

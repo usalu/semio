@@ -1,7 +1,7 @@
 //! 🔺️ Diff for `set-snapshot`.
 
-use crate::artifacts::zip::ZipSnapshot;
-use crate::artifacts::zip::schema::diff::{ZipDiff, diff_set_snapshot};
+use crate::ZipSnapshot;
+use crate::schema::diff::{ZipDiff, diff_set_snapshot};
 
 /// 🔺️ Diff helper for set-snapshot — the sparse field-by-field `between(base, next)` (no
 /// full-replace slot exists on `ZipDiff` to short-circuit into).

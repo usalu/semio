@@ -5,7 +5,7 @@
   "displayName": "Delete Room Air Model Assignment",
   "emoji": "🧺️",
   "aggregateVariant": "DeleteRoomAirModelAssignment",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "delete-room-air-model-assignment",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

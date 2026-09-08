@@ -1,0 +1,1801 @@
+{
+ "modules": {
+  "framework.trace.clock.contention": {
+   "path": "🧰️framework/🔨️modules/⏱️trace/⏱️clock/🧬️contention/🧬️schema/🔣️.json",
+   "id": "https://semio.tech/schema/framework/trace/clock/contention/schema.json",
+   "exports": [
+    "Contention"
+   ],
+   "sources": [
+    "🧰️framework/🔨️modules/⏱️trace/⏱️clock/🧬️contention/🔣️.schema.json"
+   ],
+   "definitionRenames": {}
+  },
+  "framework.async.use": {
+   "path": "🧰️framework/🔨️modules/⏳️async/🔐️use/🧬️schema/🔣️.json",
+   "id": "https://semio.tech/schema/framework/async/use/schema.json",
+   "exports": [
+    "UseFixture"
+   ],
+   "sources": [
+    "🧰️framework/🔨️modules/⏳️async/🔐️use/🧪️fixtures/🧬️.schema.json"
+   ],
+   "definitionRenames": {}
+  },
+  "framework.async.deferred-wake": {
+   "path": "🧰️framework/🔨️modules/⏳️async/🔔️deferred-wake/🧬️schema/🔣️.json",
+   "id": "https://semio.tech/schema/framework/async/deferred-wake/schema.json",
+   "exports": [
+    "DeferredWakeFixture"
+   ],
+   "sources": [
+    "🧰️framework/🔨️modules/⏳️async/🔔️deferred-wake/🧪️fixtures/🧬️.schema.json"
+   ],
+   "definitionRenames": {}
+  },
+  "framework.async.maintenance": {
+   "path": "🧰️framework/🔨️modules/⏳️async/🔔️maintenance/🧬️schema/🔣️.json",
+   "id": "https://semio.tech/schema/framework/async/maintenance/schema.json",
+   "exports": [
+    "MaintenanceFixture"
+   ],
+   "sources": [
+    "🧰️framework/🔨️modules/⏳️async/🔔️maintenance/🧪️fixtures/🧬️.schema.json"
+   ],
+   "definitionRenames": {}
+  },
+  "framework.value.resident": {
+   "path": "🧰️framework/🔨️modules/🌱️value/💾️resident/🧬️schema/🔣️.json",
+   "id": "https://semio.tech/schema/framework/value/resident/schema.json",
+   "exports": [
+    "ResidentFixture",
+    "Resident"
+   ],
+   "sources": [
+    "🧰️framework/🔨️modules/🌱️value/💾️resident/📐️schema/🔣️.json",
+    "🧰️framework/🔨️modules/🌱️value/💾️resident/🧬️schema.json"
+   ],
+   "definitionRenames": {}
+  },
+  "framework.value.resident.admission": {
+   "path": "🧰️framework/🔨️modules/🌱️value/💾️resident/📨️admission/🧬️schema/🔣️.json",
+   "id": "https://semio.tech/schema/framework/value/resident/admission/schema.json",
+   "exports": [
+    "AdmissionFixture",
+    "Admission"
+   ],
+   "sources": [
+    "🧰️framework/🔨️modules/🌱️value/💾️resident/📨️admission/📐️schema/🔣️.json",
+    "🧰️framework/🔨️modules/🌱️value/💾️resident/📨️admission/🧬️schema.json"
+   ],
+   "definitionRenames": {}
+  },
+  "framework.value.codec": {
+   "path": "🧰️framework/🔨️modules/🌱️value/🔁️codec/🧬️schema/🔣️.json",
+   "id": "https://semio.tech/schema/framework/value/codec/schema.json",
+   "exports": [
+    "CodecFixture"
+   ],
+   "sources": [
+    "🧰️framework/🔨️modules/🌱️value/🔁️codec/🧪️fixtures/🧬️.schema.json"
+   ],
+   "definitionRenames": {}
+  },
+  "framework.value.ordered": {
+   "path": "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🧬️schema/🔣️.json",
+   "id": "https://semio.tech/schema/framework/value/ordered/schema.json",
+   "exports": [
+    "SharedOwnerFixture",
+    "OrderedMapFixture"
+   ],
+   "sources": [
+    "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🧫️fixtures/👥️shared-owner/🧬️.schema.json",
+    "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🧫️fixtures/🧬️.schema.json"
+   ],
+   "definitionRenames": {}
+  },
+  "framework.value.ordered.numeric": {
+   "path": "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🔢️numeric/🧬️schema/🔣️.json",
+   "id": "https://semio.tech/schema/framework/value/ordered/numeric/schema.json",
+   "exports": [
+    "ReferencesFixture",
+    "NumericIndexFixture"
+   ],
+   "sources": [
+    "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🔢️numeric/🧪️fixtures/🛡️references.schema.json",
+    "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🔢️numeric/🧪️fixtures/🧬️numeric-index.schema.json"
+   ],
+   "definitionRenames": {}
+  },
+  "framework.value.ordered.set": {
+   "path": "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🧺️set/🧬️schema/🔣️.json",
+   "id": "https://semio.tech/schema/framework/value/ordered/set/schema.json",
+   "exports": [
+    "OrderedSet"
+   ],
+   "sources": [
+    "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🧺️set/🧬️schema/🔣️.schema.json"
+   ],
+   "definitionRenames": {}
+  },
+  "framework.kernel": {
+   "path": "🧰️framework/🔨️modules/🎠️kernel/🧬️schema/🔣️.json",
+   "id": "https://semio.tech/schema/framework/kernel/schema.json",
+   "exports": [
+    "DescriptorLoadFixture",
+    "SourceWatchFixture",
+    "TurnPatchOwnerFixture",
+    "AppRouterPluginFaultsFixture"
+   ],
+   "sources": [
+    "🧰️framework/🔨️modules/🎠️kernel/🧫️fixtures/📇️descriptor-load/🧬️.schema.json",
+    "🧰️framework/🔨️modules/🎠️kernel/🧫️fixtures/📐️source-watch.schema.json",
+    "🧰️framework/🔨️modules/🎠️kernel/🧫️fixtures/🚪️turn-patch-owner/🧬️.schema.json",
+    "🧰️framework/🔨️modules/🎠️kernel/🧫️fixtures/🧫️app-router-plugin-faults/🧬️.schema.json"
+   ],
+   "definitionRenames": {}
+  },
+  "framework.kernel.return.content": {
+   "path": "🧰️framework/🔨️modules/🎠️kernel/📤️return/📦️content/🧬️schema/🔣️.json",
+   "id": "https://semio.tech/schema/framework/kernel/return/content/schema.json",
+   "exports": [
+    "Content",
+    "ContentFixture"
+   ],
+   "sources": [
+    "🧰️framework/🔨️modules/🎠️kernel/📤️return/📦️content/📐️fixture-schema/🔣️.json"
+   ],
+   "definitionRenames": {}
+  },
+  "framework.kernel.return.content.input.builder": {
+   "path": "🧰️framework/🔨️modules/🎠️kernel/📤️return/📦️content/📥️input/🏗️builder/🧬️schema/🔣️.json",
+   "id": "https://semio.tech/schema/framework/kernel/return/content/input/builder/schema.json",
+   "exports": [
+    "Builder",
+    "BuilderFixture"
+   ],
+   "sources": [
+    "🧰️framework/🔨️modules/🎠️kernel/📤️return/📦️content/📥️input/🏗️builder/📐️fixture-schema/🔣️.json"
+   ],
+   "definitionRenames": {}
+  },
+  "framework.kernel.return.content.input.payload": {
+   "path": "🧰️framework/🔨️modules/🎠️kernel/📤️return/📦️content/📥️input/📦️payload/🧬️schema/🔣️.json",
+   "id": "https://semio.tech/schema/framework/kernel/return/content/input/payload/schema.json",
+   "exports": [
+    "Payload",
+    "PayloadFixture"
+   ],
+   "sources": [
+    "🧰️framework/🔨️modules/🎠️kernel/📤️return/📦️content/📥️input/📦️payload/📐️fixture-schema/🔣️.json"
+   ],
+   "definitionRenames": {}
+  },
+  "framework.kernel.return.content.input.release": {
+   "path": "🧰️framework/🔨️modules/🎠️kernel/📤️return/📦️content/📥️input/🧾️release/🧬️schema/🔣️.json",
+   "id": "https://semio.tech/schema/framework/kernel/return/content/input/release/schema.json",
+   "exports": [
+    "Release",
+    "ReleaseFixture"
+   ],
+   "sources": [
+    "🧰️framework/🔨️modules/🎠️kernel/📤️return/📦️content/📥️input/🧾️release/📐️fixture-schema/🔣️.json"
+   ],
+   "definitionRenames": {}
+  },
+  "framework.kernel.poll.composition": {
+   "path": "🧰️framework/🔨️modules/🎠️kernel/📥️poll/🏘️composition/🧬️schema/🔣️.json",
+   "id": "https://semio.tech/schema/framework/kernel/poll/composition/schema.json",
+   "exports": [
+    "Composition",
+    "CompositionFixture"
+   ],
+   "sources": [
+    "🧰️framework/🔨️modules/🎠️kernel/📥️poll/🏘️composition/📐️fixture-schema/🔣️.json"
+   ],
+   "definitionRenames": {}
+  },
+  "framework.actor.activation-reservation": {
+   "path": "🧰️framework/🔨️modules/🎭️actor/🎠️activation/🧬️schema/🔣️.json",
+   "id": "https://semio.tech/schema/framework/actor/activation-reservation/schema.json",
+   "exports": [
+    "ActivationReservation"
+   ],
+   "sources": [
+    "🧰️framework/🔨️modules/🎭️actor/🎠️activation/🧬️schema.json"
+   ],
+   "definitionRenames": {}
+  },
+  "framework.actor.composition": {
+   "path": "🧰️framework/🔨️modules/🎭️actor/🏘️composition/🧬️schema/🔣️.json",
+   "id": "https://semio.tech/schema/framework/actor/composition/schema.json",
+   "exports": [
+    "Composition"
+   ],
+   "sources": [
+    "🧰️framework/🔨️modules/🎭️actor/🏘️composition/🧬️schema.json"
+   ],
+   "definitionRenames": {}
+  },
+  "framework.actor.composition.bootstrap": {
+   "path": "🧰️framework/🔨️modules/🎭️actor/🏘️composition/🏗️bootstrap/🧬️schema/🔣️.json",
+   "id": "https://semio.tech/schema/framework/actor/composition/bootstrap/schema.json",
+   "exports": [
+    "Bootstrap"
+   ],
+   "sources": [
+    "🧰️framework/🔨️modules/🎭️actor/🏘️composition/🏗️bootstrap/🧬️schema.json"
+   ],
+   "definitionRenames": {}
+  },
+  "framework.actor.page": {
+   "path": "🧰️framework/🔨️modules/🎭️actor/📃️page/🧬️schema/🔣️.json",
+   "id": "https://semio.tech/schema/framework/actor/page/schema.json",
+   "exports": [
+    "PageFixture",
+    "Page"
+   ],
+   "sources": [
+    "🧰️framework/🔨️modules/🎭️actor/📃️page/📐️schema/🔣️.json",
+    "🧰️framework/🔨️modules/🎭️actor/📃️page/🧬️schema.json"
+   ],
+   "definitionRenames": {}
+  },
+  "framework.actor.return": {
+   "path": "🧰️framework/🔨️modules/🎭️actor/📤️return/🧬️schema/🔣️.json",
+   "id": "https://semio.tech/schema/framework/actor/return/schema.json",
+   "exports": [
+    "ReturnFixture",
+    "Return"
+   ],
+   "sources": [
+    "🧰️framework/🔨️modules/🎭️actor/📤️return/📐️schema/🔣️.json",
+    "🧰️framework/🔨️modules/🎭️actor/📤️return/🧬️schema.json"
+   ],
+   "definitionRenames": {}
+  },
+  "framework.actor.return.framing": {
+   "path": "🧰️framework/🔨️modules/🎭️actor/📤️return/🌿️framing/🧬️schema/🔣️.json",
+   "id": "https://semio.tech/schema/framework/actor/return/framing/schema.json",
+   "exports": [
+    "Framing"
+   ],
+   "sources": [
+    "🧰️framework/🔨️modules/🎭️actor/📤️return/🌿️framing/🧬️schema.json"
+   ],
+   "definitionRenames": {}
+  },
+  "framework.actor.return.response": {
+   "path": "🧰️framework/🔨️modules/🎭️actor/📤️return/📨️response/🧬️schema/🔣️.json",
+   "id": "https://semio.tech/schema/framework/actor/return/response/schema.json",
+   "exports": [
+    "ResponseFixture",
+    "Response"
+   ],
+   "sources": [
+    "🧰️framework/🔨️modules/🎭️actor/📤️return/📨️response/📐️schema/🔣️.json",
+    "🧰️framework/🔨️modules/🎭️actor/📤️return/📨️response/🧬️schema.json"
+   ],
+   "definitionRenames": {}
+  },
+  "framework.actor.return.response.framing": {
+   "path": "🧰️framework/🔨️modules/🎭️actor/📤️return/📨️response/🌿️framing/🧬️schema/🔣️.json",
+   "id": "https://semio.tech/schema/framework/actor/return/response/framing/schema.json",
+   "exports": [
+    "Framing"
+   ],
+   "sources": [
+    "🧰️framework/🔨️modules/🎭️actor/📤️return/📨️response/🌿️framing/🧬️schema.json"
+   ],
+   "definitionRenames": {}
+  },
+  "framework.actor.return.response.credit": {
+   "path": "🧰️framework/🔨️modules/🎭️actor/📤️return/📨️response/🎟️credit/🧬️schema/🔣️.json",
+   "id": "https://semio.tech/schema/framework/actor/return/response/credit/schema.json",
+   "exports": [
+    "CreditFixture",
+    "Credit"
+   ],
+   "sources": [
+    "🧰️framework/🔨️modules/🎭️actor/📤️return/📨️response/🎟️credit/📐️schema/🔣️.json",
+    "🧰️framework/🔨️modules/🎭️actor/📤️return/📨️response/🎟️credit/🧬️schema.json"
+   ],
+   "definitionRenames": {}
+  },
+  "framework.actor.return.response.credit.metadata": {
+   "path": "🧰️framework/🔨️modules/🎭️actor/📤️return/📨️response/🎟️credit/📋️metadata/🧬️schema/🔣️.json",
+   "id": "https://semio.tech/schema/framework/actor/return/response/credit/metadata/schema.json",
+   "exports": [
+    "Metadata"
+   ],
+   "sources": [
+    "🧰️framework/🔨️modules/🎭️actor/📤️return/📨️response/🎟️credit/📋️metadata/🧬️schema.json"
+   ],
+   "definitionRenames": {}
+  },
+  "framework.actor.return.response.credit.metadata.inbox": {
+   "path": "🧰️framework/🔨️modules/🎭️actor/📤️return/📨️response/🎟️credit/📋️metadata/📥️inbox/🧬️schema/🔣️.json",
+   "id": "https://semio.tech/schema/framework/actor/return/response/credit/metadata/inbox/schema.json",
+   "exports": [
+    "Inbox"
+   ],
+   "sources": [
+    "🧰️framework/🔨️modules/🎭️actor/📤️return/📨️response/🎟️credit/📋️metadata/📥️inbox/🧬️schema.json"
+   ],
+   "definitionRenames": {}
+  },
+  "framework.actor.shard-client": {
+   "path": "🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🧬️schema/🔣️.json",
+   "id": "https://semio.tech/schema/framework/actor/shard-client/schema.json",
+   "exports": [
+    "ShardClient"
+   ],
+   "sources": [
+    "🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🧬️schema.json"
+   ],
+   "definitionRenames": {}
+  },
+  "framework.actor.lifetime": {
+   "path": "🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🧬️schema/🔣️.json",
+   "id": "https://semio.tech/schema/framework/actor/lifetime/schema.json",
+   "exports": [
+    "LifetimeFixture",
+    "Lifetime",
+    "CloseFaultFixture"
+   ],
+   "sources": [
+    "🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/📐️schema/🔣️.json",
+    "🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🧬️schema.json",
+    "🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🧯️fault.schema.json"
+   ],
+   "definitionRenames": {}
+  },
+  "framework.actor.lifetime.patch": {
+   "path": "🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🩹️patch/🧬️schema/🔣️.json",
+   "id": "https://semio.tech/schema/framework/actor/lifetime/patch/schema.json",
+   "exports": [
+    "PatchFixture",
+    "Patch"
+   ],
+   "sources": [
+    "🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🩹️patch/📐️schema/🔣️.json",
+    "🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🩹️patch/🧬️schema.json"
+   ],
+   "definitionRenames": {}
+  },
+  "framework.actor.activation": {
+   "path": "🧰️framework/🔨️modules/🎭️actor/🪪️activation/🧬️schema/🔣️.json",
+   "id": "https://semio.tech/schema/framework/actor/activation/schema.json",
+   "exports": [
+    "ActivationFixture"
+   ],
+   "sources": [
+    "🧰️framework/🔨️modules/🎭️actor/🪪️activation/📐️schema/🔣️.json"
+   ],
+   "definitionRenames": {}
+  },
+  "framework.actor.activation.return": {
+   "path": "🧰️framework/🔨️modules/🎭️actor/🪪️activation/📤️return/🧬️schema/🔣️.json",
+   "id": "https://semio.tech/schema/framework/actor/activation/return/schema.json",
+   "exports": [
+    "ReturnFixture"
+   ],
+   "sources": [
+    "🧰️framework/🔨️modules/🎭️actor/🪪️activation/📤️return/📐️schema/🔣️.json"
+   ],
+   "definitionRenames": {}
+  },
+  "framework.actor.activation.return.admission": {
+   "path": "🧰️framework/🔨️modules/🎭️actor/🪪️activation/📤️return/🏘️admission/🧬️schema/🔣️.json",
+   "id": "https://semio.tech/schema/framework/actor/activation/return/admission/schema.json",
+   "exports": [
+    "AdmissionFixture",
+    "Admission"
+   ],
+   "sources": [
+    "🧰️framework/🔨️modules/🎭️actor/🪪️activation/📤️return/🏘️admission/📐️schema/🔣️.json",
+    "🧰️framework/🔨️modules/🎭️actor/🪪️activation/📤️return/🏘️admission/🧬️schema.json"
+   ],
+   "definitionRenames": {}
+  },
+  "framework.actor.activation.inbound": {
+   "path": "🧰️framework/🔨️modules/🎭️actor/🪪️activation/📨️inbound/🧬️schema/🔣️.json",
+   "id": "https://semio.tech/schema/framework/actor/activation/inbound/schema.json",
+   "exports": [
+    "InboundFixture"
+   ],
+   "sources": [
+    "🧰️framework/🔨️modules/🎭️actor/🪪️activation/📨️inbound/📐️schema/🔣️.json"
+   ],
+   "definitionRenames": {}
+  },
+  "framework.actor.activation.instance": {
+   "path": "🧰️framework/🔨️modules/🎭️actor/🪪️activation/🚪️instance/🧬️schema/🔣️.json",
+   "id": "https://semio.tech/schema/framework/actor/activation/instance/schema.json",
+   "exports": [
+    "InstanceFixture"
+   ],
+   "sources": [
+    "🧰️framework/🔨️modules/🎭️actor/🪪️activation/🚪️instance/📐️schema/🔣️.json"
+   ],
+   "definitionRenames": {}
+  },
+  "framework.actor.activation.instance.output": {
+   "path": "🧰️framework/🔨️modules/🎭️actor/🪪️activation/🚪️instance/📥️output/🧬️schema/🔣️.json",
+   "id": "https://semio.tech/schema/framework/actor/activation/instance/output/schema.json",
+   "exports": [
+    "Output"
+   ],
+   "sources": [
+    "🧰️framework/🔨️modules/🎭️actor/🪪️activation/🚪️instance/📥️output/🧬️schema.json"
+   ],
+   "definitionRenames": {}
+  },
+  "framework.actor.activation.instance.output.admission": {
+   "path": "🧰️framework/🔨️modules/🎭️actor/🪪️activation/🚪️instance/📥️output/🏘️admission/🧬️schema/🔣️.json",
+   "id": "https://semio.tech/schema/framework/actor/activation/instance/output/admission/schema.json",
+   "exports": [
+    "AdmissionFixture",
+    "Admission"
+   ],
+   "sources": [
+    "🧰️framework/🔨️modules/🎭️actor/🪪️activation/🚪️instance/📥️output/🏘️admission/📐️schema/🔣️.json",
+    "🧰️framework/🔨️modules/🎭️actor/🪪️activation/🚪️instance/📥️output/🏘️admission/🧬️schema.json"
+   ],
+   "definitionRenames": {}
+  },
+  "framework.actor.activation.instance.output.fault": {
+   "path": "🧰️framework/🔨️modules/🎭️actor/🪪️activation/🚪️instance/📥️output/🧯️fault/🧬️schema/🔣️.json",
+   "id": "https://semio.tech/schema/framework/actor/activation/instance/output/fault/schema.json",
+   "exports": [
+    "Fault"
+   ],
+   "sources": [
+    "🧰️framework/🔨️modules/🎭️actor/🪪️activation/🚪️instance/📥️output/🧯️fault/🧬️schema.json"
+   ],
+   "definitionRenames": {}
+  },
+  "framework.action-bus.wire-retirement": {
+   "path": "🧰️framework/🔨️modules/🎯️action-bus/🧹️wire-retirement/🧬️schema/🔣️.json",
+   "id": "https://semio.tech/schema/framework/action-bus/wire-retirement/schema.json",
+   "exports": [
+    "WireRetirementFixture"
+   ],
+   "sources": [
+    "🧰️framework/🔨️modules/🎯️action-bus/🧹️wire-retirement/🧪️fixture/🧬️.schema.json"
+   ],
+   "definitionRenames": {}
+  },
+  "framework.replication": {
+   "path": "🧰️framework/🔨️modules/📡️replication/🧬️schema/🔣️.json",
+   "id": "https://semio.tech/schema/framework/replication/schema.json",
+   "exports": [
+    "ArtifactBootstrapFixture"
+   ],
+   "sources": [
+    "🧰️framework/🔨️modules/📡️replication/🧫️fixtures/🚀️artifact-bootstrap/🧬️.schema.json"
+   ],
+   "definitionRenames": {
+    "ArtifactBootstrapFixture": {
+     "$defs/hash": "hash",
+     "$defs/evenHex": "evenHex",
+     "$defs/frontier": "frontier"
+    }
+   }
+  },
+  "framework.replication.mutation": {
+   "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧬️schema/🔣️.json",
+   "id": "https://semio.tech/schema/framework/replication/mutation/schema.json",
+   "exports": [
+    "MutationLeafContractFixture",
+    "MutationLeafSourceContractFixture"
+   ],
+   "sources": [
+    "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧪️tests/🤝️mutation-leaf-contract/🛂️schema/🔣️.json",
+    "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧪️tests/🧭️mutation-leaf-source-contract/🛂️schema/🔣️.json"
+   ],
+   "definitionRenames": {
+    "MutationLeafSourceContractFixture": {
+     "$defs/path": "path",
+     "$defs/token": "token",
+     "$defs/canonical": "canonical",
+     "$defs/overrides": "overrides",
+     "$defs/expectation": "expectation",
+     "$defs/case": "case"
+    }
+   }
+  },
+  "framework.replication.wire.local-interaction": {
+   "path": "🧰️framework/🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🧬️schema/🔣️.json",
+   "id": "https://semio.tech/schema/framework/replication/wire/local-interaction/schema.json",
+   "exports": [
+    "RetirementFixture",
+    "LocalInteractionFixture",
+    "QueryFixture",
+    "TopologyAuthorityFixture",
+    "LocalInteraction"
+   ],
+   "sources": [
+    "🧰️framework/🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🧫️fixtures/♻️retirement/🧬️.schema.json",
+    "🧰️framework/🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🧫️fixtures/🏠️local-interaction/🧬️.schema.json",
+    "🧰️framework/🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🧫️fixtures/📃️query/🧬️.schema.json",
+    "🧰️framework/🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🧫️fixtures/🔐️topology-authority/🧬️.schema.json",
+    "🧰️framework/🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🧬️schema/🏠️local-interaction/🔣️.schema.json"
+   ],
+   "definitionRenames": {
+    "LocalInteraction": {
+     "$defs/id": "id",
+     "$defs/generation": "generation",
+     "$defs/revision": "revision",
+     "$defs/mode": "mode",
+     "$defs/identity": "identity",
+     "$defs/selection": "selection",
+     "$defs/state": "state",
+     "$defs/domainPatch": "domainPatch",
+     "$defs/capture": "capture",
+     "$defs/restore": "restore",
+     "$defs/page": "page"
+    }
+   }
+  },
+  "framework.replication.wire.local-interaction.root": {
+   "path": "🧰️framework/🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🌳️root/🧬️schema/🔣️.json",
+   "id": "https://semio.tech/schema/framework/replication/wire/local-interaction/root/schema.json",
+   "exports": [
+    "RootFixture"
+   ],
+   "sources": [
+    "🧰️framework/🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🌳️root/📐️schema/🔣️.json"
+   ],
+   "definitionRenames": {}
+  },
+  "framework.replication.wire.local-interaction.root.update": {
+   "path": "🧰️framework/🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🌳️root/🩹️update/🧬️schema/🔣️.json",
+   "id": "https://semio.tech/schema/framework/replication/wire/local-interaction/root/update/schema.json",
+   "exports": [
+    "UpdateFixture"
+   ],
+   "sources": [
+    "🧰️framework/🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🌳️root/🩹️update/📐️schema/🔣️.json"
+   ],
+   "definitionRenames": {}
+  },
+  "framework.replication.wire.local-interaction.transport": {
+   "path": "🧰️framework/🔨️modules/📡️replication/📡️wire/🏠️local-interaction/📡️transport/🧬️schema/🔣️.json",
+   "id": "https://semio.tech/schema/framework/replication/wire/local-interaction/transport/schema.json",
+   "exports": [
+    "Transport",
+    "TransportFixture"
+   ],
+   "sources": [
+    "🧰️framework/🔨️modules/📡️replication/📡️wire/🏠️local-interaction/📡️transport/📐️schema/🔣️.json"
+   ],
+   "definitionRenames": {
+    "Transport": {
+     "$defs/token": "token",
+     "$defs/command": "command",
+     "$defs/reply": "reply"
+    }
+   }
+  },
+  "framework.graph.manifest": {
+   "path": "🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🧬️schema/🔣️.json",
+   "id": "https://semio.tech/schema/framework/graph/manifest/schema.json",
+   "exports": [
+    "Outputs"
+   ],
+   "sources": [
+    "🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🧬️outputs.schema.json"
+   ],
+   "definitionRenames": {}
+  },
+  "framework.ui": {
+   "path": "🧰️framework/🔨️modules/🖱️ui/🧬️schema/🔣️.json",
+   "id": "https://semio.tech/schema/framework/ui/schema.json",
+   "exports": [
+    "UIDialogModalFixture",
+    "RetainedCommandLimits",
+    "RetainedCommandRoutes",
+    "RetainedCommandRoutesDocument"
+   ],
+   "sources": [
+    "🧰️framework/🔨️modules/🖱️ui/🧱️elements/📨️UIDialog/🧬️contracts/♿️modal/🧬️.schema.json"
+   ],
+   "definitionRenames": {}
+  },
+  "framework.ui.styling": {
+   "path": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🧬️schema/🔣️.json",
+   "id": "https://semio.tech/schema/framework/ui/styling/schema.json",
+   "exports": [
+    "Favicon"
+   ],
+   "sources": [
+    "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🧬️favicon.schema.json"
+   ],
+   "definitionRenames": {}
+  },
+  "framework.ui.render.targets.metal.packages.rust": {
+   "path": "🧰️framework/🔨️modules/🖱️ui/🖌️render/🎯️targets/🍎️metal/📦️packages/🦀️rust/🧬️schema/🔣️.json",
+   "id": "https://semio.tech/schema/framework/ui/render/targets/metal/packages/rust/schema.json",
+   "exports": [
+    "ObjcRuntimeAbiFixture"
+   ],
+   "sources": [
+    "🧰️framework/🔨️modules/🖱️ui/🖌️render/🎯️targets/🍎️metal/📦️packages/🦀️rust/🧬️schema/🔣️.schema.json"
+   ],
+   "definitionRenames": {}
+  },
+  "framework.ui.runtime.retirement.tree": {
+   "path": "🧰️framework/🔨️modules/🖱️ui/🧠️runtime/♻️retirement/🌲️tree/🧬️schema/🔣️.json",
+   "id": "https://semio.tech/schema/framework/ui/runtime/retirement/tree/schema.json",
+   "exports": [
+    "Tree"
+   ],
+   "sources": [
+    "🧰️framework/🔨️modules/🖱️ui/🧠️runtime/♻️retirement/🌲️tree/🧬️schema.json"
+   ],
+   "definitionRenames": {}
+  },
+  "framework.ui.runtime.document": {
+   "path": "🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📃️document/🧬️schema/🔣️.json",
+   "id": "https://semio.tech/schema/framework/ui/runtime/document/schema.json",
+   "exports": [
+    "Document"
+   ],
+   "sources": [
+    "🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📃️document/🧬️schema.json"
+   ],
+   "definitionRenames": {}
+  },
+  "framework.ui.runtime.ownership": {
+   "path": "🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📏️ownership/🧬️schema/🔣️.json",
+   "id": "https://semio.tech/schema/framework/ui/runtime/ownership/schema.json",
+   "exports": [
+    "Ownership"
+   ],
+   "sources": [
+    "🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📏️ownership/🧬️schema.json"
+   ],
+   "definitionRenames": {}
+  },
+  "framework.ui.runtime.output": {
+   "path": "🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📤️output/🧬️schema/🔣️.json",
+   "id": "https://semio.tech/schema/framework/ui/runtime/output/schema.json",
+   "exports": [
+    "Output"
+   ],
+   "sources": [
+    "🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📤️output/🧬️schema.json"
+   ],
+   "definitionRenames": {}
+  },
+  "framework.ui.runtime.transaction": {
+   "path": "🧰️framework/🔨️modules/🖱️ui/🧠️runtime/🔄️transaction/🧬️schema/🔣️.json",
+   "id": "https://semio.tech/schema/framework/ui/runtime/transaction/schema.json",
+   "exports": [
+    "Transaction"
+   ],
+   "sources": [
+    "🧰️framework/🔨️modules/🖱️ui/🧠️runtime/🔄️transaction/🧬️schema.json"
+   ],
+   "definitionRenames": {}
+  },
+  "framework.ui.runtime.handback": {
+   "path": "🧰️framework/🔨️modules/🖱️ui/🧠️runtime/🚪️handback/🧬️schema/🔣️.json",
+   "id": "https://semio.tech/schema/framework/ui/runtime/handback/schema.json",
+   "exports": [
+    "Handback"
+   ],
+   "sources": [
+    "🧰️framework/🔨️modules/🖱️ui/🧠️runtime/🚪️handback/🧬️schema.json"
+   ],
+   "definitionRenames": {}
+  },
+  "framework.ui.runtime.patch": {
+   "path": "🧰️framework/🔨️modules/🖱️ui/🧠️runtime/🩹️patch/🧬️schema/🔣️.json",
+   "id": "https://semio.tech/schema/framework/ui/runtime/patch/schema.json",
+   "exports": [
+    "Patch"
+   ],
+   "sources": [
+    "🧰️framework/🔨️modules/🖱️ui/🧠️runtime/🩹️patch/🧬️schema.json"
+   ],
+   "definitionRenames": {}
+  },
+  "framework.ui.contract": {
+   "path": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧬️schema/🔣️.json",
+   "id": "https://semio.tech/schema/framework/ui/contract/schema.json",
+   "exports": [
+    "ConformanceCatalogFixture",
+    "ContractFixture"
+   ],
+   "sources": [
+    "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📚️examples/🧪️conformance/🧬️catalog.schema.json",
+    "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧪️fixtures/🔣️.schema.json"
+   ],
+   "definitionRenames": {}
+  },
+  "framework.ui.contract.retirement": {
+   "path": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/♻️retirement/🧬️schema/🔣️.json",
+   "id": "https://semio.tech/schema/framework/ui/contract/retirement/schema.json",
+   "exports": [
+    "RetirementFixture"
+   ],
+   "sources": [
+    "🧰️framework/🔨️modules/🖱️ui/🧬️contract/♻️retirement/📐️schema/🔣️.json"
+   ],
+   "definitionRenames": {}
+  },
+  "framework.ui.contract.retirement.built": {
+   "path": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/♻️retirement/🌲️built/🧬️schema/🔣️.json",
+   "id": "https://semio.tech/schema/framework/ui/contract/retirement/built/schema.json",
+   "exports": [
+    "Built"
+   ],
+   "sources": [
+    "🧰️framework/🔨️modules/🖱️ui/🧬️contract/♻️retirement/🌲️built/🧬️schema.json"
+   ],
+   "definitionRenames": {}
+  },
+  "framework.ui.contract.retirement.typed": {
+   "path": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/♻️retirement/🌳️typed/🧬️schema/🔣️.json",
+   "id": "https://semio.tech/schema/framework/ui/contract/retirement/typed/schema.json",
+   "exports": [
+    "TypedFixture",
+    "Components"
+   ],
+   "sources": [
+    "🧰️framework/🔨️modules/🖱️ui/🧬️contract/♻️retirement/🌳️typed/📐️schema/🔣️.json",
+    "🧰️framework/🔨️modules/🖱️ui/🧬️contract/♻️retirement/🌳️typed/🧬️components.schema.json"
+   ],
+   "definitionRenames": {}
+  },
+  "framework.ui.contract.retirement.list": {
+   "path": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/♻️retirement/📋️list/🧬️schema/🔣️.json",
+   "id": "https://semio.tech/schema/framework/ui/contract/retirement/list/schema.json",
+   "exports": [
+    "ListFixture"
+   ],
+   "sources": [
+    "🧰️framework/🔨️modules/🖱️ui/🧬️contract/♻️retirement/📋️list/📐️schema/🔣️.json"
+   ],
+   "definitionRenames": {}
+  },
+  "framework.ui.contract.retirement.handback": {
+   "path": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/♻️retirement/📮️handback/🧬️schema/🔣️.json",
+   "id": "https://semio.tech/schema/framework/ui/contract/retirement/handback/schema.json",
+   "exports": [
+    "HandbackFixture"
+   ],
+   "sources": [
+    "🧰️framework/🔨️modules/🖱️ui/🧬️contract/♻️retirement/📮️handback/📐️schema/🔣️.json"
+   ],
+   "definitionRenames": {}
+  },
+  "framework.ui.contract.retirement.patch": {
+   "path": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/♻️retirement/🩹️patch/🧬️schema/🔣️.json",
+   "id": "https://semio.tech/schema/framework/ui/contract/retirement/patch/schema.json",
+   "exports": [
+    "PatchFixture"
+   ],
+   "sources": [
+    "🧰️framework/🔨️modules/🖱️ui/🧬️contract/♻️retirement/🩹️patch/📐️schema/🔣️.json"
+   ],
+   "definitionRenames": {}
+  },
+  "framework.ui.contract.retirement.patch.pending.whole": {
+   "path": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/♻️retirement/🩹️patch/📨️pending/📦️whole/🧬️schema/🔣️.json",
+   "id": "https://semio.tech/schema/framework/ui/contract/retirement/patch/pending/whole/schema.json",
+   "exports": [
+    "Whole"
+   ],
+   "sources": [
+    "🧰️framework/🔨️modules/🖱️ui/🧬️contract/♻️retirement/🩹️patch/📨️pending/📦️whole/🧬️schema.json"
+   ],
+   "definitionRenames": {}
+  },
+  "framework.ui.contract.compare": {
+   "path": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/⚖️compare/🧬️schema/🔣️.json",
+   "id": "https://semio.tech/schema/framework/ui/contract/compare/schema.json",
+   "exports": [
+    "Compare"
+   ],
+   "sources": [
+    "🧰️framework/🔨️modules/🖱️ui/🧬️contract/⚖️compare/🧬️schema.json"
+   ],
+   "definitionRenames": {}
+  },
+  "framework.ui.contract.compare.document": {
+   "path": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/⚖️compare/📃️document/🧬️schema/🔣️.json",
+   "id": "https://semio.tech/schema/framework/ui/contract/compare/document/schema.json",
+   "exports": [
+    "Document"
+   ],
+   "sources": [
+    "🧰️framework/🔨️modules/🖱️ui/🧬️contract/⚖️compare/📃️document/🧬️schema.json"
+   ],
+   "definitionRenames": {}
+  },
+  "framework.ui.contract.resident": {
+   "path": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🎟️resident/🧬️schema/🔣️.json",
+   "id": "https://semio.tech/schema/framework/ui/contract/resident/schema.json",
+   "exports": [
+    "Resident"
+   ],
+   "sources": [
+    "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🎟️resident/🧬️schema.json"
+   ],
+   "definitionRenames": {}
+  },
+  "framework.ui.contract.resident.root": {
+   "path": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🎟️resident/🌳️root/🧬️schema/🔣️.json",
+   "id": "https://semio.tech/schema/framework/ui/contract/resident/root/schema.json",
+   "exports": [
+    "Root"
+   ],
+   "sources": [
+    "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🎟️resident/🌳️root/🧬️schema.json"
+   ],
+   "definitionRenames": {}
+  },
+  "framework.ui.contract.resident.fixed": {
+   "path": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🎟️resident/🗃️fixed/🧬️schema/🔣️.json",
+   "id": "https://semio.tech/schema/framework/ui/contract/resident/fixed/schema.json",
+   "exports": [
+    "Fixed"
+   ],
+   "sources": [
+    "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🎟️resident/🗃️fixed/🧬️schema.json"
+   ],
+   "definitionRenames": {}
+  },
+  "framework.ui.contract.document.assembly": {
+   "path": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📃️document/🎟️assembly/🧬️schema/🔣️.json",
+   "id": "https://semio.tech/schema/framework/ui/contract/document/assembly/schema.json",
+   "exports": [
+    "Assembly"
+   ],
+   "sources": [
+    "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📃️document/🎟️assembly/🧬️schema.json"
+   ],
+   "definitionRenames": {}
+  },
+  "framework.ui.contract.list": {
+   "path": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📋️list/🧬️schema/🔣️.json",
+   "id": "https://semio.tech/schema/framework/ui/contract/list/schema.json",
+   "exports": [
+    "List"
+   ],
+   "sources": [
+    "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📋️list/🧬️schema.json"
+   ],
+   "definitionRenames": {}
+  },
+  "framework.ui.contract.bindings.copy": {
+   "path": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🔗️bindings/📋️copy/🧬️schema/🔣️.json",
+   "id": "https://semio.tech/schema/framework/ui/contract/bindings/copy/schema.json",
+   "exports": [
+    "Copy"
+   ],
+   "sources": [
+    "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🔗️bindings/📋️copy/🧬️schema.json"
+   ],
+   "definitionRenames": {}
+  },
+  "framework.ui.contract.retained": {
+   "path": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧬️schema/🔣️.json",
+   "id": "https://semio.tech/schema/framework/ui/contract/retained/schema.json",
+   "exports": [
+    "OwnedOperationsFixture",
+    "RootSourceFixture",
+    "OwnedNodesFixture",
+    "ReadLeaseFixture",
+    "OwnedSceneFixture",
+    "NativeChildFixture",
+    "ResidentFixture",
+    "SceneJsonDocumentFixture",
+    "ReadPublicationFixture",
+    "IntakeFixture",
+    "SceneGenericPackFixture",
+    "WireOperationsFixture",
+    "OwnedHashFixture",
+    "IntakeNotificationFixture",
+    "SceneBindingFixture",
+    "SceneNumericFixture",
+    "SceneJsonFixture",
+    "SceneTextBytesFixture",
+    "OwnedSurfaceFixture",
+    "IntakeCloseFaultFixture",
+    "InstanceCloseFixture",
+    "InstanceMaintenanceFixture",
+    "OwnedValidationFixture",
+    "ScenePackFieldFixture",
+    "SceneJsonStringFixture",
+    "TypedSceneFixture",
+    "PatchFixture",
+    "SurfaceChildFixture",
+    "InstanceOwnerFixture"
+   ],
+   "sources": [
+    "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️fixtures/⚙️owned-operations/🧬️.schema.json",
+    "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️fixtures/🌱️root-source/🧬️.schema.json",
+    "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️fixtures/🌳️owned-nodes/🧬️.schema.json",
+    "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️fixtures/🎟️read-lease/🧬️.schema.json",
+    "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️fixtures/🎬️owned-scene/🧬️.schema.json",
+    "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️fixtures/👶️native-child/🧬️.schema.json",
+    "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️fixtures/💾️resident/🧬️.schema.json",
+    "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️fixtures/📃️scene-json-document/🧬️.schema.json",
+    "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️fixtures/📤️read-publication/🧬️.schema.json",
+    "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️fixtures/📥️intake/🧬️.schema.json",
+    "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️fixtures/📦️scene-generic-pack/🧬️.schema.json",
+    "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️fixtures/📨️wire-operations/🧬️.schema.json",
+    "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️fixtures/🔏️owned-hash/🧬️.schema.json",
+    "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️fixtures/🔔️intake-notification/🧬️.schema.json",
+    "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️fixtures/🔗️scene-binding/🧬️.schema.json",
+    "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️fixtures/🔢️scene-numeric/🧬️.schema.json",
+    "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️fixtures/🔣️scene-json/🧬️.schema.json",
+    "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️fixtures/🔤️scene-text-bytes/🧬️.schema.json",
+    "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️fixtures/🗺️owned-surface/🧬️.schema.json",
+    "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️fixtures/🚨️intake-close-fault/🧬️.schema.json",
+    "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️fixtures/🚪️instance-close/🧬️.schema.json",
+    "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️fixtures/🛠️instance-maintenance/🧬️.schema.json",
+    "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️fixtures/🛡️owned-validation/🧬️.schema.json",
+    "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️fixtures/🧳️scene-pack-field/🧬️.schema.json",
+    "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️fixtures/🧵️scene-json-string/🧬️.schema.json",
+    "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️fixtures/🧾️typed-scene/🧬️.schema.json",
+    "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️fixtures/🩹️patch/🧬️.schema.json",
+    "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️fixtures/🪆️surface-child/🧬️.schema.json",
+    "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️fixtures/🪪️instance-owner/🧬️.schema.json"
+   ],
+   "definitionRenames": {}
+  },
+  "framework.ui.contract.retained.scene.typed": {
+   "path": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🎬️scene/🧾️typed/🧬️schema/🔣️.json",
+   "id": "https://semio.tech/schema/framework/ui/contract/retained/scene/typed/schema.json",
+   "exports": [
+    "TypedScene"
+   ],
+   "sources": [
+    "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🎬️scene/🧾️typed/🔣️.schema.json"
+   ],
+   "definitionRenames": {}
+  },
+  "framework.ui.contract.retained.resident": {
+   "path": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/🧬️schema/🔣️.json",
+   "id": "https://semio.tech/schema/framework/ui/contract/retained/resident/schema.json",
+   "exports": [
+    "Resident"
+   ],
+   "sources": [
+    "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/🧬️schema.json"
+   ],
+   "definitionRenames": {}
+  },
+  "framework.ui.contract.retained.resident.builder": {
+   "path": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/🏗️builder/🧬️schema/🔣️.json",
+   "id": "https://semio.tech/schema/framework/ui/contract/retained/resident/builder/schema.json",
+   "exports": [
+    "BuilderFixture",
+    "Builder"
+   ],
+   "sources": [
+    "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/🏗️builder/📐️schema/🔣️.json",
+    "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/🏗️builder/🧬️schema.json"
+   ],
+   "definitionRenames": {}
+  },
+  "framework.ui.contract.retained.resident.page": {
+   "path": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/📃️page/🧬️schema/🔣️.json",
+   "id": "https://semio.tech/schema/framework/ui/contract/retained/resident/page/schema.json",
+   "exports": [
+    "PageFixture",
+    "Page"
+   ],
+   "sources": [
+    "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/📃️page/📐️schema/🔣️.json",
+    "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/📃️page/🧬️schema.json"
+   ],
+   "definitionRenames": {}
+  },
+  "framework.ui.contract.retained.resident.page.binding": {
+   "path": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/📃️page/🔗️binding/🧬️schema/🔣️.json",
+   "id": "https://semio.tech/schema/framework/ui/contract/retained/resident/page/binding/schema.json",
+   "exports": [
+    "BindingFixture",
+    "Binding"
+   ],
+   "sources": [
+    "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/📃️page/🔗️binding/📐️schema/🔣️.json",
+    "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/📃️page/🔗️binding/🧬️schema.json"
+   ],
+   "definitionRenames": {}
+  },
+  "framework.ui.contract.retained.resident.reader": {
+   "path": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/📖️reader/🧬️schema/🔣️.json",
+   "id": "https://semio.tech/schema/framework/ui/contract/retained/resident/reader/schema.json",
+   "exports": [
+    "ReaderFixture",
+    "Reader"
+   ],
+   "sources": [
+    "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/📖️reader/📐️schema/🔣️.json",
+    "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/📖️reader/🧬️schema.json"
+   ],
+   "definitionRenames": {}
+  },
+  "framework.ui.contract.retained.resident.payload": {
+   "path": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/📦️payload/🧬️schema/🔣️.json",
+   "id": "https://semio.tech/schema/framework/ui/contract/retained/resident/payload/schema.json",
+   "exports": [
+    "PayloadFixture",
+    "Payload"
+   ],
+   "sources": [
+    "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/📦️payload/📐️schema/🔣️.json",
+    "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/📦️payload/🧬️schema.json"
+   ],
+   "definitionRenames": {}
+  },
+  "framework.ui.contract.retained.resident.slot": {
+   "path": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/📨️slot/🧬️schema/🔣️.json",
+   "id": "https://semio.tech/schema/framework/ui/contract/retained/resident/slot/schema.json",
+   "exports": [
+    "SlotFixture",
+    "Slot"
+   ],
+   "sources": [
+    "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/📨️slot/📐️schema/🔣️.json",
+    "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/📨️slot/🧬️schema.json"
+   ],
+   "definitionRenames": {}
+  },
+  "framework.ui.contract.retained.resident.evidence": {
+   "path": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/🧾️evidence/🧬️schema/🔣️.json",
+   "id": "https://semio.tech/schema/framework/ui/contract/retained/resident/evidence/schema.json",
+   "exports": [
+    "EvidenceFixture",
+    "Evidence"
+   ],
+   "sources": [
+    "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/🧾️evidence/📐️schema/🔣️.json",
+    "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/🧾️evidence/🧬️schema.json"
+   ],
+   "definitionRenames": {}
+  },
+  "framework.ui.contract.retained.resident.evidence.copied": {
+   "path": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/🧾️evidence/📋️copied/🧬️schema/🔣️.json",
+   "id": "https://semio.tech/schema/framework/ui/contract/retained/resident/evidence/copied/schema.json",
+   "exports": [
+    "CopiedFixture",
+    "Copied"
+   ],
+   "sources": [
+    "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/🧾️evidence/📋️copied/📐️schema/🔣️.json",
+    "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/🧾️evidence/📋️copied/🧬️schema.json"
+   ],
+   "definitionRenames": {}
+  },
+  "framework.ui.contract.retained.resident.evidence.cancellation": {
+   "path": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/🧾️evidence/🚫️cancellation/🧬️schema/🔣️.json",
+   "id": "https://semio.tech/schema/framework/ui/contract/retained/resident/evidence/cancellation/schema.json",
+   "exports": [
+    "CancellationFixture",
+    "Cancellation"
+   ],
+   "sources": [
+    "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/🧾️evidence/🚫️cancellation/📐️schema/🔣️.json",
+    "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/🧾️evidence/🚫️cancellation/🧬️schema.json"
+   ],
+   "definitionRenames": {}
+  },
+  "framework.ui.contract.retained.resident.metadata": {
+   "path": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/🪪️metadata/🧬️schema/🔣️.json",
+   "id": "https://semio.tech/schema/framework/ui/contract/retained/resident/metadata/schema.json",
+   "exports": [
+    "MetadataFixture",
+    "Metadata"
+   ],
+   "sources": [
+    "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/🪪️metadata/📐️schema/🔣️.json",
+    "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/🪪️metadata/🧬️schema.json"
+   ],
+   "definitionRenames": {}
+  },
+  "framework.ui.contract.retained.wire": {
+   "path": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/📦️wire/🧬️schema/🔣️.json",
+   "id": "https://semio.tech/schema/framework/ui/contract/retained/wire/schema.json",
+   "exports": [
+    "FieldsFixture",
+    "DecodeFixture",
+    "SurfaceBytesFixture",
+    "TypedFixture"
+   ],
+   "sources": [
+    "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/📦️wire/🧪️fixtures/🏷️fields/🧬️.schema.json",
+    "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/📦️wire/🧪️fixtures/📤️decode/🧬️.schema.json",
+    "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/📦️wire/🧪️fixtures/🗺️surface-bytes/🧬️.schema.json",
+    "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/📦️wire/🧪️fixtures/🧾️typed/🧬️.schema.json"
+   ],
+   "definitionRenames": {}
+  },
+  "framework.ui.contract.retained.operations.wire.pages": {
+   "path": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🩹️operations/📥️wire/📃️pages/🧬️schema/🔣️.json",
+   "id": "https://semio.tech/schema/framework/ui/contract/retained/operations/wire/pages/schema.json",
+   "exports": [
+    "PagesFixture",
+    "Pages"
+   ],
+   "sources": [
+    "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🩹️operations/📥️wire/📃️pages/📐️schema/🔣️.json",
+    "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🩹️operations/📥️wire/📃️pages/🧬️schema.json"
+   ],
+   "definitionRenames": {}
+  },
+  "framework.ui.contract.copy": {
+   "path": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🪞️copy/🧬️schema/🔣️.json",
+   "id": "https://semio.tech/schema/framework/ui/contract/copy/schema.json",
+   "exports": [
+    "Copy"
+   ],
+   "sources": [
+    "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🪞️copy/🧬️schema.json"
+   ],
+   "definitionRenames": {}
+  },
+  "framework.assets.metabolism.representation": {
+   "path": "🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🎨️representation/🧬️schema/🔣️.json",
+   "id": "https://semio.tech/schema/framework/assets/metabolism/representation/schema.json",
+   "exports": [
+    "RepresentationCatalog"
+   ],
+   "sources": [
+    "🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🎨️representation/🧬️catalog.schema.json"
+   ],
+   "definitionRenames": {}
+  },
+  "framework.assets.resolver": {
+   "path": "🧰️framework/🔨️modules/🖼️assets/🔍️resolver/🧬️schema/🔣️.json",
+   "id": "https://semio.tech/schema/framework/assets/resolver/schema.json",
+   "exports": [
+    "Delivery"
+   ],
+   "sources": [
+    "🧰️framework/🔨️modules/🖼️assets/🔍️resolver/🧬️delivery.schema.json"
+   ],
+   "definitionRenames": {}
+  },
+  "framework.assets.fonts": {
+   "path": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/🧬️schema/🔣️.json",
+   "id": "https://semio.tech/schema/framework/assets/fonts/schema.json",
+   "exports": [
+    "FontCatalog"
+   ],
+   "sources": [
+    "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/🧬️catalog.schema.json"
+   ],
+   "definitionRenames": {}
+  },
+  "framework.assets.mesh": {
+   "path": "🧰️framework/🔨️modules/🖼️assets/🥽️mesh/🧬️schema/🔣️.json",
+   "id": "https://semio.tech/schema/framework/assets/mesh/schema.json",
+   "exports": [
+    "MeshCatalog"
+   ],
+   "sources": [
+    "🧰️framework/🔨️modules/🖼️assets/🥽️mesh/🧬️catalog.schema.json"
+   ],
+   "definitionRenames": {}
+  },
+  "framework.surface": {
+   "path": "🧰️framework/🔨️modules/🗺️surface/🧬️schema/🔣️.json",
+   "id": "https://semio.tech/schema/framework/surface/schema.json",
+   "exports": [
+    "BindingsFixture"
+   ],
+   "sources": [
+    "🧰️framework/🔨️modules/🗺️surface/🧪️tests/🧬️bindings.schema.json"
+   ],
+   "definitionRenames": {}
+  },
+  "framework.manifest": {
+   "path": "🧰️framework/🔨️modules/🛂️manifest/🧬️schema/🔣️.json",
+   "id": "https://semio.tech/schema/framework/manifest/schema.json",
+   "exports": [
+    "TutorialLocalInteractionFixture",
+    "ActionSemanticsFixture",
+    "ArtifactKindFormatsFixture",
+    "TutorialDocumentTrackFixture"
+   ],
+   "sources": [
+    "🧰️framework/🔨️modules/🛂️manifest/🧪️fixtures/🎛️tutorial-local-interaction.schema.json",
+    "🧰️framework/🔨️modules/🛂️manifest/🧪️fixtures/📜️action-semantics.schema.json",
+    "🧰️framework/🔨️modules/🛂️manifest/🧪️fixtures/🗄️artifact-kind-formats.schema.json",
+    "🧰️framework/🔨️modules/🛂️manifest/🧪️fixtures/🛤️tutorial-document-track.schema.json"
+   ],
+   "definitionRenames": {}
+  },
+  "framework.job": {
+   "path": "🧰️framework/🔨️modules/🧵️job/🧬️schema/🔣️.json",
+   "id": "https://semio.tech/schema/framework/job/schema.json",
+   "exports": [
+    "SharedFrameworkActionRoutesFixture",
+    "FixedOperationRegistryFixture"
+   ],
+   "sources": [
+    "🧰️framework/🔨️modules/🧵️job/🧪️fixtures/📡️shared-framework-action-routes.schema.json",
+    "🧰️framework/🔨️modules/🧵️job/🧪️fixtures/🧬️fixed-operation-registry.schema.json"
+   ],
+   "definitionRenames": {}
+  }
+ },
+ "idRewrites": {
+  "https://semio.tech/schemas/async/worker-pool-use-v1.json": {
+   "id": "https://semio.tech/schema/framework/async/use/schema.json",
+   "export": "UseFixture"
+  },
+  "semio.framework.async.worker-deferred-wake/v1": {
+   "id": "https://semio.tech/schema/framework/async/deferred-wake/schema.json",
+   "export": "DeferredWakeFixture"
+  },
+  "semio.value.resident.fixture.v1": {
+   "id": "https://semio.tech/schema/framework/value/resident/schema.json",
+   "export": "ResidentFixture"
+  },
+  "semio.value.resident.capacity.v1": {
+   "id": "https://semio.tech/schema/framework/value/resident/schema.json",
+   "export": "Resident"
+  },
+  "semio.value.resident.admission.fixture.v1": {
+   "id": "https://semio.tech/schema/framework/value/resident/admission/schema.json",
+   "export": "AdmissionFixture"
+  },
+  "semio.value.resident.admission.contract.v1": {
+   "id": "https://semio.tech/schema/framework/value/resident/admission/schema.json",
+   "export": "Admission"
+  },
+  "https://semio.tech/schemas/value/exact-integer-codec-v1.json": {
+   "id": "https://semio.tech/schema/framework/value/codec/schema.json",
+   "export": "CodecFixture"
+  },
+  "semio.value.ordered-map.shared-owner": {
+   "id": "https://semio.tech/schema/framework/value/ordered/schema.json",
+   "export": "SharedOwnerFixture"
+  },
+  "semio.value.ordered-map": {
+   "id": "https://semio.tech/schema/framework/value/ordered/schema.json",
+   "export": "OrderedMapFixture"
+  },
+  "semio.value.ordered-set.v1": {
+   "id": "https://semio.tech/schema/framework/value/ordered/set/schema.json",
+   "export": "OrderedSet"
+  },
+  "semio.kernel.return-content-declaration.v1": {
+   "id": "https://semio.tech/schema/framework/kernel/return/content/schema.json",
+   "export": "Content"
+  },
+  "semio.kernel.return-content.fixture.v1": {
+   "id": "https://semio.tech/schema/framework/kernel/return/content/schema.json",
+   "export": "ContentFixture"
+  },
+  "kernel-return-builder-binding.v1": {
+   "id": "https://semio.tech/schema/framework/kernel/return/content/input/builder/schema.json",
+   "export": "Builder"
+  },
+  "kernel-return-builder-binding-tests.v1": {
+   "id": "https://semio.tech/schema/framework/kernel/return/content/input/builder/schema.json",
+   "export": "BuilderFixture"
+  },
+  "semio.kernel.return.input.resident-payload.v1": {
+   "id": "https://semio.tech/schema/framework/kernel/return/content/input/payload/schema.json",
+   "export": "Payload"
+  },
+  "semio.kernel.return-input.release.contract.v1": {
+   "id": "https://semio.tech/schema/framework/kernel/return/content/input/release/schema.json",
+   "export": "Release"
+  },
+  "semio.kernel.return-input.release.fixture.v1": {
+   "id": "https://semio.tech/schema/framework/kernel/return/content/input/release/schema.json",
+   "export": "ReleaseFixture"
+  },
+  "semio.kernel.poll.composition.v1": {
+   "id": "https://semio.tech/schema/framework/kernel/poll/composition/schema.json",
+   "export": "Composition"
+  },
+  "semio.kernel.poll.composition.fixture.v1": {
+   "id": "https://semio.tech/schema/framework/kernel/poll/composition/schema.json",
+   "export": "CompositionFixture"
+  },
+  "semio.actor.resident-composition.v1": {
+   "id": "https://semio.tech/schema/framework/actor/composition/schema.json",
+   "export": "Composition"
+  },
+  "semio.actor.worker-metadata-preparation.v1": {
+   "id": "https://semio.tech/schema/framework/actor/composition/bootstrap/schema.json",
+   "export": "Bootstrap"
+  },
+  "semio.actor.byte-page.fixture.v1": {
+   "id": "https://semio.tech/schema/framework/actor/page/schema.json",
+   "export": "PageFixture"
+  },
+  "semio.actor.byte-page.v1": {
+   "id": "https://semio.tech/schema/framework/actor/page/schema.json",
+   "export": "Page"
+  },
+  "semio.actor.retained-return.fixture.v1": {
+   "id": "https://semio.tech/schema/framework/actor/return/schema.json",
+   "export": "ReturnFixture"
+  },
+  "semio.actor.retained-return.v1": {
+   "id": "https://semio.tech/schema/framework/actor/return/schema.json",
+   "export": "Return"
+  },
+  "semio.actor.return-result.framing.v1": {
+   "id": "https://semio.tech/schema/framework/actor/return/framing/schema.json",
+   "export": "Framing"
+  },
+  "semio.actor.return-response.fixture.v1": {
+   "id": "https://semio.tech/schema/framework/actor/return/response/schema.json",
+   "export": "ResponseFixture"
+  },
+  "semio.actor.return-response.v1": {
+   "id": "https://semio.tech/schema/framework/actor/return/response/schema.json",
+   "export": "Response"
+  },
+  "semio.actor.return-response.framing.v1": {
+   "id": "https://semio.tech/schema/framework/actor/return/response/framing/schema.json",
+   "export": "Framing"
+  },
+  "semio.actor.return-response.credit.fixture.v1": {
+   "id": "https://semio.tech/schema/framework/actor/return/response/credit/schema.json",
+   "export": "CreditFixture"
+  },
+  "semio.actor.return-response.credit.v1": {
+   "id": "https://semio.tech/schema/framework/actor/return/response/credit/schema.json",
+   "export": "Credit"
+  },
+  "semio.actor.return-response.metadata.v1": {
+   "id": "https://semio.tech/schema/framework/actor/return/response/credit/metadata/schema.json",
+   "export": "Metadata"
+  },
+  "semio.actor.return-response.inbox-inventory.v1": {
+   "id": "https://semio.tech/schema/framework/actor/return/response/credit/metadata/inbox/schema.json",
+   "export": "Inbox"
+  },
+  "semio.actor.shard-liveness.v1": {
+   "id": "https://semio.tech/schema/framework/actor/shard-client/schema.json",
+   "export": "ShardClient"
+  },
+  "semio.actor.instance-lifetime-close.v1": {
+   "id": "https://semio.tech/schema/framework/actor/lifetime/schema.json",
+   "export": "Lifetime"
+  },
+  "semio.actor.instance-close.fault-fixture.v1": {
+   "id": "https://semio.tech/schema/framework/actor/lifetime/schema.json",
+   "export": "CloseFaultFixture"
+  },
+  "semio.actor.ui-patch-receipt.v1": {
+   "id": "https://semio.tech/schema/framework/actor/lifetime/patch/schema.json",
+   "export": "Patch"
+  },
+  "semio.actor.captured-return.admission.fixture.v1": {
+   "id": "https://semio.tech/schema/framework/actor/activation/return/admission/schema.json",
+   "export": "AdmissionFixture"
+  },
+  "semio.actor.captured-return.admission.v1": {
+   "id": "https://semio.tech/schema/framework/actor/activation/return/admission/schema.json",
+   "export": "Admission"
+  },
+  "https://semio.tech/schema/actor/output/admission-fixture.v1": {
+   "id": "https://semio.tech/schema/framework/actor/activation/instance/output/admission/schema.json",
+   "export": "AdmissionFixture"
+  },
+  "https://semio.tech/schema/actor/output/admission.v1": {
+   "id": "https://semio.tech/schema/framework/actor/activation/instance/output/admission/schema.json",
+   "export": "Admission"
+  },
+  "actor-output-owned-fault.v1": {
+   "id": "https://semio.tech/schema/framework/actor/activation/instance/output/fault/schema.json",
+   "export": "Fault"
+  },
+  "https://semio.tech/schema/replication/artifact-bootstrap-fixture-v1.json": {
+   "id": "https://semio.tech/schema/framework/replication/schema.json",
+   "export": "ArtifactBootstrapFixture"
+  },
+  "semio:local-interaction": {
+   "id": "https://semio.tech/schema/framework/replication/wire/local-interaction/schema.json",
+   "export": "LocalInteraction"
+  },
+  "semio:local-interaction-query-transport": {
+   "id": "https://semio.tech/schema/framework/replication/wire/local-interaction/transport/schema.json",
+   "export": "Transport"
+  },
+  "semio://framework/ui/render/metal/objc2-runtime-abi/1": {
+   "id": "https://semio.tech/schema/framework/ui/render/targets/metal/packages/rust/schema.json",
+   "export": "ObjcRuntimeAbiFixture"
+  },
+  "semio.ui.value-retirement.fixture.v1": {
+   "id": "https://semio.tech/schema/framework/ui/contract/retirement/schema.json",
+   "export": "RetirementFixture"
+  },
+  "semio.ui.fixed-list-retirement.fixture.v1": {
+   "id": "https://semio.tech/schema/framework/ui/contract/retirement/list/schema.json",
+   "export": "ListFixture"
+  },
+  "semio.ui.resident.composition-capacity.v1": {
+   "id": "https://semio.tech/schema/framework/ui/contract/retained/resident/schema.json",
+   "export": "Resident"
+  },
+  "semio.ui.resident.builder-admission.v1": {
+   "id": "https://semio.tech/schema/framework/ui/contract/retained/resident/builder/schema.json",
+   "export": "Builder"
+  },
+  "semio.ui.resident.payload-admission.v1": {
+   "id": "https://semio.tech/schema/framework/ui/contract/retained/resident/payload/schema.json",
+   "export": "Payload"
+  },
+  "semio.ui.resident.parent-slot.v1": {
+   "id": "https://semio.tech/schema/framework/ui/contract/retained/resident/slot/schema.json",
+   "export": "Slot"
+  },
+  "semio.ui.resident.input-evidence.v1": {
+   "id": "https://semio.tech/schema/framework/ui/contract/retained/resident/evidence/schema.json",
+   "export": "Evidence"
+  },
+  "semio.ui.resident.metadata.v1": {
+   "id": "https://semio.tech/schema/framework/ui/contract/retained/resident/metadata/schema.json",
+   "export": "Metadata"
+  },
+  "semio.ui.retained.operation-payload.v1": {
+   "id": "https://semio.tech/schema/framework/ui/contract/retained/operations/wire/pages/schema.json",
+   "export": "Pages"
+  },
+  "semio.manifest.action-semantics-defaults.v1": {
+   "id": "https://semio.tech/schema/framework/manifest/schema.json",
+   "export": "ActionSemanticsFixture"
+  },
+  "https://semio.tech/schemas/manifest/artifact-kind-formats-fixture-v1.json": {
+   "id": "https://semio.tech/schema/framework/manifest/schema.json",
+   "export": "ArtifactKindFormatsFixture"
+  },
+  "semio://framework/plugin/shared-framework-action-routes/v1": {
+   "id": "https://semio.tech/schema/framework/job/schema.json",
+   "export": "SharedFrameworkActionRoutesFixture"
+  },
+  "semio://framework/job/fixed-operation-registry-law/v1": {
+   "id": "https://semio.tech/schema/framework/job/schema.json",
+   "export": "FixedOperationRegistryFixture"
+  }
+ },
+ "pathRewrites": {
+  "🧰️framework/🔨️modules/⏱️trace/⏱️clock/🧬️contention/🔣️.schema.json": "🧰️framework/🔨️modules/⏱️trace/⏱️clock/🧬️contention/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/⏳️async/🔐️use/🧪️fixtures/🧬️.schema.json": "🧰️framework/🔨️modules/⏳️async/🔐️use/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/⏳️async/🔔️deferred-wake/🧪️fixtures/🧬️.schema.json": "🧰️framework/🔨️modules/⏳️async/🔔️deferred-wake/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/⏳️async/🔔️maintenance/🧪️fixtures/🧬️.schema.json": "🧰️framework/🔨️modules/⏳️async/🔔️maintenance/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🌱️value/💾️resident/📐️schema/🔣️.json": "🧰️framework/🔨️modules/🌱️value/💾️resident/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🌱️value/💾️resident/🧬️schema.json": "🧰️framework/🔨️modules/🌱️value/💾️resident/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🌱️value/💾️resident/📨️admission/📐️schema/🔣️.json": "🧰️framework/🔨️modules/🌱️value/💾️resident/📨️admission/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🌱️value/💾️resident/📨️admission/🧬️schema.json": "🧰️framework/🔨️modules/🌱️value/💾️resident/📨️admission/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🌱️value/🔁️codec/🧪️fixtures/🧬️.schema.json": "🧰️framework/🔨️modules/🌱️value/🔁️codec/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🧫️fixtures/👥️shared-owner/🧬️.schema.json": "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🧫️fixtures/🧬️.schema.json": "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🔢️numeric/🧪️fixtures/🛡️references.schema.json": "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🔢️numeric/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🔢️numeric/🧪️fixtures/🧬️numeric-index.schema.json": "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🔢️numeric/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🧺️set/🧬️schema/🔣️.schema.json": "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🧺️set/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🎠️kernel/🧫️fixtures/📇️descriptor-load/🧬️.schema.json": "🧰️framework/🔨️modules/🎠️kernel/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🎠️kernel/🧫️fixtures/📐️source-watch.schema.json": "🧰️framework/🔨️modules/🎠️kernel/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🎠️kernel/🧫️fixtures/🚪️turn-patch-owner/🧬️.schema.json": "🧰️framework/🔨️modules/🎠️kernel/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🎠️kernel/🧫️fixtures/🧫️app-router-plugin-faults/🧬️.schema.json": "🧰️framework/🔨️modules/🎠️kernel/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🎠️kernel/📤️return/📦️content/📐️fixture-schema/🔣️.json": "🧰️framework/🔨️modules/🎠️kernel/📤️return/📦️content/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🎠️kernel/📤️return/📦️content/📥️input/🏗️builder/📐️fixture-schema/🔣️.json": "🧰️framework/🔨️modules/🎠️kernel/📤️return/📦️content/📥️input/🏗️builder/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🎠️kernel/📤️return/📦️content/📥️input/📦️payload/📐️fixture-schema/🔣️.json": "🧰️framework/🔨️modules/🎠️kernel/📤️return/📦️content/📥️input/📦️payload/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🎠️kernel/📤️return/📦️content/📥️input/🧾️release/📐️fixture-schema/🔣️.json": "🧰️framework/🔨️modules/🎠️kernel/📤️return/📦️content/📥️input/🧾️release/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🎠️kernel/📥️poll/🏘️composition/📐️fixture-schema/🔣️.json": "🧰️framework/🔨️modules/🎠️kernel/📥️poll/🏘️composition/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🎭️actor/🎠️activation/🧬️schema.json": "🧰️framework/🔨️modules/🎭️actor/🎠️activation/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🎭️actor/🏘️composition/🧬️schema.json": "🧰️framework/🔨️modules/🎭️actor/🏘️composition/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🎭️actor/🏘️composition/🏗️bootstrap/🧬️schema.json": "🧰️framework/🔨️modules/🎭️actor/🏘️composition/🏗️bootstrap/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🎭️actor/📃️page/📐️schema/🔣️.json": "🧰️framework/🔨️modules/🎭️actor/📃️page/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🎭️actor/📃️page/🧬️schema.json": "🧰️framework/🔨️modules/🎭️actor/📃️page/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🎭️actor/📤️return/📐️schema/🔣️.json": "🧰️framework/🔨️modules/🎭️actor/📤️return/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🎭️actor/📤️return/🧬️schema.json": "🧰️framework/🔨️modules/🎭️actor/📤️return/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🎭️actor/📤️return/🌿️framing/🧬️schema.json": "🧰️framework/🔨️modules/🎭️actor/📤️return/🌿️framing/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🎭️actor/📤️return/📨️response/📐️schema/🔣️.json": "🧰️framework/🔨️modules/🎭️actor/📤️return/📨️response/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🎭️actor/📤️return/📨️response/🧬️schema.json": "🧰️framework/🔨️modules/🎭️actor/📤️return/📨️response/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🎭️actor/📤️return/📨️response/🌿️framing/🧬️schema.json": "🧰️framework/🔨️modules/🎭️actor/📤️return/📨️response/🌿️framing/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🎭️actor/📤️return/📨️response/🎟️credit/📐️schema/🔣️.json": "🧰️framework/🔨️modules/🎭️actor/📤️return/📨️response/🎟️credit/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🎭️actor/📤️return/📨️response/🎟️credit/🧬️schema.json": "🧰️framework/🔨️modules/🎭️actor/📤️return/📨️response/🎟️credit/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🎭️actor/📤️return/📨️response/🎟️credit/📋️metadata/🧬️schema.json": "🧰️framework/🔨️modules/🎭️actor/📤️return/📨️response/🎟️credit/📋️metadata/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🎭️actor/📤️return/📨️response/🎟️credit/📋️metadata/📥️inbox/🧬️schema.json": "🧰️framework/🔨️modules/🎭️actor/📤️return/📨️response/🎟️credit/📋️metadata/📥️inbox/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🧬️schema.json": "🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/📐️schema/🔣️.json": "🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🧬️schema.json": "🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🧯️fault.schema.json": "🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🩹️patch/📐️schema/🔣️.json": "🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🩹️patch/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🩹️patch/🧬️schema.json": "🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🩹️patch/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🎭️actor/🪪️activation/📐️schema/🔣️.json": "🧰️framework/🔨️modules/🎭️actor/🪪️activation/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🎭️actor/🪪️activation/📤️return/📐️schema/🔣️.json": "🧰️framework/🔨️modules/🎭️actor/🪪️activation/📤️return/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🎭️actor/🪪️activation/📤️return/🏘️admission/📐️schema/🔣️.json": "🧰️framework/🔨️modules/🎭️actor/🪪️activation/📤️return/🏘️admission/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🎭️actor/🪪️activation/📤️return/🏘️admission/🧬️schema.json": "🧰️framework/🔨️modules/🎭️actor/🪪️activation/📤️return/🏘️admission/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🎭️actor/🪪️activation/📨️inbound/📐️schema/🔣️.json": "🧰️framework/🔨️modules/🎭️actor/🪪️activation/📨️inbound/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🎭️actor/🪪️activation/🚪️instance/📐️schema/🔣️.json": "🧰️framework/🔨️modules/🎭️actor/🪪️activation/🚪️instance/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🎭️actor/🪪️activation/🚪️instance/📥️output/🧬️schema.json": "🧰️framework/🔨️modules/🎭️actor/🪪️activation/🚪️instance/📥️output/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🎭️actor/🪪️activation/🚪️instance/📥️output/🏘️admission/📐️schema/🔣️.json": "🧰️framework/🔨️modules/🎭️actor/🪪️activation/🚪️instance/📥️output/🏘️admission/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🎭️actor/🪪️activation/🚪️instance/📥️output/🏘️admission/🧬️schema.json": "🧰️framework/🔨️modules/🎭️actor/🪪️activation/🚪️instance/📥️output/🏘️admission/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🎭️actor/🪪️activation/🚪️instance/📥️output/🧯️fault/🧬️schema.json": "🧰️framework/🔨️modules/🎭️actor/🪪️activation/🚪️instance/📥️output/🧯️fault/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🎯️action-bus/🧹️wire-retirement/🧪️fixture/🧬️.schema.json": "🧰️framework/🔨️modules/🎯️action-bus/🧹️wire-retirement/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/📡️replication/🧫️fixtures/🚀️artifact-bootstrap/🧬️.schema.json": "🧰️framework/🔨️modules/📡️replication/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧪️tests/🤝️mutation-leaf-contract/🛂️schema/🔣️.json": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧪️tests/🧭️mutation-leaf-source-contract/🛂️schema/🔣️.json": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🧫️fixtures/♻️retirement/🧬️.schema.json": "🧰️framework/🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🧫️fixtures/🏠️local-interaction/🧬️.schema.json": "🧰️framework/🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🧫️fixtures/📃️query/🧬️.schema.json": "🧰️framework/🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🧫️fixtures/🔐️topology-authority/🧬️.schema.json": "🧰️framework/🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🧬️schema/🏠️local-interaction/🔣️.schema.json": "🧰️framework/🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🌳️root/📐️schema/🔣️.json": "🧰️framework/🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🌳️root/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🌳️root/🩹️update/📐️schema/🔣️.json": "🧰️framework/🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🌳️root/🩹️update/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/📡️replication/📡️wire/🏠️local-interaction/📡️transport/📐️schema/🔣️.json": "🧰️framework/🔨️modules/📡️replication/📡️wire/🏠️local-interaction/📡️transport/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🧬️outputs.schema.json": "🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧱️elements/📨️UIDialog/🧬️contracts/♿️modal/🧬️.schema.json": "🧰️framework/🔨️modules/🖱️ui/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🧬️favicon.schema.json": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🖱️ui/🖌️render/🎯️targets/🍎️metal/📦️packages/🦀️rust/🧬️schema/🔣️.schema.json": "🧰️framework/🔨️modules/🖱️ui/🖌️render/🎯️targets/🍎️metal/📦️packages/🦀️rust/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧠️runtime/♻️retirement/🌲️tree/🧬️schema.json": "🧰️framework/🔨️modules/🖱️ui/🧠️runtime/♻️retirement/🌲️tree/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📃️document/🧬️schema.json": "🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📃️document/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📏️ownership/🧬️schema.json": "🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📏️ownership/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📤️output/🧬️schema.json": "🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📤️output/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧠️runtime/🔄️transaction/🧬️schema.json": "🧰️framework/🔨️modules/🖱️ui/🧠️runtime/🔄️transaction/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧠️runtime/🚪️handback/🧬️schema.json": "🧰️framework/🔨️modules/🖱️ui/🧠️runtime/🚪️handback/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧠️runtime/🩹️patch/🧬️schema.json": "🧰️framework/🔨️modules/🖱️ui/🧠️runtime/🩹️patch/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📚️examples/🧪️conformance/🧬️catalog.schema.json": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧪️fixtures/🔣️.schema.json": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/♻️retirement/📐️schema/🔣️.json": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/♻️retirement/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/♻️retirement/🌲️built/🧬️schema.json": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/♻️retirement/🌲️built/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/♻️retirement/🌳️typed/📐️schema/🔣️.json": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/♻️retirement/🌳️typed/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/♻️retirement/🌳️typed/🧬️components.schema.json": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/♻️retirement/🌳️typed/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/♻️retirement/📋️list/📐️schema/🔣️.json": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/♻️retirement/📋️list/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/♻️retirement/📮️handback/📐️schema/🔣️.json": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/♻️retirement/📮️handback/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/♻️retirement/🩹️patch/📐️schema/🔣️.json": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/♻️retirement/🩹️patch/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/♻️retirement/🩹️patch/📨️pending/📦️whole/🧬️schema.json": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/♻️retirement/🩹️patch/📨️pending/📦️whole/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/⚖️compare/🧬️schema.json": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/⚖️compare/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/⚖️compare/📃️document/🧬️schema.json": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/⚖️compare/📃️document/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🎟️resident/🧬️schema.json": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🎟️resident/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🎟️resident/🌳️root/🧬️schema.json": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🎟️resident/🌳️root/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🎟️resident/🗃️fixed/🧬️schema.json": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🎟️resident/🗃️fixed/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📃️document/🎟️assembly/🧬️schema.json": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📃️document/🎟️assembly/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📋️list/🧬️schema.json": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📋️list/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🔗️bindings/📋️copy/🧬️schema.json": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🔗️bindings/📋️copy/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️fixtures/⚙️owned-operations/🧬️.schema.json": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️fixtures/🌱️root-source/🧬️.schema.json": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️fixtures/🌳️owned-nodes/🧬️.schema.json": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️fixtures/🎟️read-lease/🧬️.schema.json": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️fixtures/🎬️owned-scene/🧬️.schema.json": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️fixtures/👶️native-child/🧬️.schema.json": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️fixtures/💾️resident/🧬️.schema.json": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️fixtures/📃️scene-json-document/🧬️.schema.json": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️fixtures/📤️read-publication/🧬️.schema.json": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️fixtures/📥️intake/🧬️.schema.json": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️fixtures/📦️scene-generic-pack/🧬️.schema.json": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️fixtures/📨️wire-operations/🧬️.schema.json": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️fixtures/🔏️owned-hash/🧬️.schema.json": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️fixtures/🔔️intake-notification/🧬️.schema.json": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️fixtures/🔗️scene-binding/🧬️.schema.json": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️fixtures/🔢️scene-numeric/🧬️.schema.json": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️fixtures/🔣️scene-json/🧬️.schema.json": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️fixtures/🔤️scene-text-bytes/🧬️.schema.json": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️fixtures/🗺️owned-surface/🧬️.schema.json": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️fixtures/🚨️intake-close-fault/🧬️.schema.json": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️fixtures/🚪️instance-close/🧬️.schema.json": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️fixtures/🛠️instance-maintenance/🧬️.schema.json": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️fixtures/🛡️owned-validation/🧬️.schema.json": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️fixtures/🧳️scene-pack-field/🧬️.schema.json": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️fixtures/🧵️scene-json-string/🧬️.schema.json": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️fixtures/🧾️typed-scene/🧬️.schema.json": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️fixtures/🩹️patch/🧬️.schema.json": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️fixtures/🪆️surface-child/🧬️.schema.json": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️fixtures/🪪️instance-owner/🧬️.schema.json": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🎬️scene/🧾️typed/🔣️.schema.json": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🎬️scene/🧾️typed/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/🧬️schema.json": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/🏗️builder/📐️schema/🔣️.json": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/🏗️builder/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/🏗️builder/🧬️schema.json": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/🏗️builder/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/📃️page/📐️schema/🔣️.json": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/📃️page/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/📃️page/🧬️schema.json": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/📃️page/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/📃️page/🔗️binding/📐️schema/🔣️.json": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/📃️page/🔗️binding/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/📃️page/🔗️binding/🧬️schema.json": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/📃️page/🔗️binding/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/📖️reader/📐️schema/🔣️.json": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/📖️reader/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/📖️reader/🧬️schema.json": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/📖️reader/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/📦️payload/📐️schema/🔣️.json": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/📦️payload/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/📦️payload/🧬️schema.json": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/📦️payload/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/📨️slot/📐️schema/🔣️.json": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/📨️slot/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/📨️slot/🧬️schema.json": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/📨️slot/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/🧾️evidence/📐️schema/🔣️.json": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/🧾️evidence/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/🧾️evidence/🧬️schema.json": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/🧾️evidence/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/🧾️evidence/📋️copied/📐️schema/🔣️.json": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/🧾️evidence/📋️copied/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/🧾️evidence/📋️copied/🧬️schema.json": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/🧾️evidence/📋️copied/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/🧾️evidence/🚫️cancellation/📐️schema/🔣️.json": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/🧾️evidence/🚫️cancellation/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/🧾️evidence/🚫️cancellation/🧬️schema.json": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/🧾️evidence/🚫️cancellation/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/🪪️metadata/📐️schema/🔣️.json": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/🪪️metadata/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/🪪️metadata/🧬️schema.json": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/🪪️metadata/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/📦️wire/🧪️fixtures/🏷️fields/🧬️.schema.json": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/📦️wire/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/📦️wire/🧪️fixtures/📤️decode/🧬️.schema.json": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/📦️wire/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/📦️wire/🧪️fixtures/🗺️surface-bytes/🧬️.schema.json": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/📦️wire/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/📦️wire/🧪️fixtures/🧾️typed/🧬️.schema.json": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/📦️wire/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🩹️operations/📥️wire/📃️pages/📐️schema/🔣️.json": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🩹️operations/📥️wire/📃️pages/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🩹️operations/📥️wire/📃️pages/🧬️schema.json": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🩹️operations/📥️wire/📃️pages/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🪞️copy/🧬️schema.json": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🪞️copy/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🎨️representation/🧬️catalog.schema.json": "🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🎨️representation/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🖼️assets/🔍️resolver/🧬️delivery.schema.json": "🧰️framework/🔨️modules/🖼️assets/🔍️resolver/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/🧬️catalog.schema.json": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🖼️assets/🥽️mesh/🧬️catalog.schema.json": "🧰️framework/🔨️modules/🖼️assets/🥽️mesh/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🗺️surface/🧪️tests/🧬️bindings.schema.json": "🧰️framework/🔨️modules/🗺️surface/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🛂️manifest/🧪️fixtures/🎛️tutorial-local-interaction.schema.json": "🧰️framework/🔨️modules/🛂️manifest/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🛂️manifest/🧪️fixtures/📜️action-semantics.schema.json": "🧰️framework/🔨️modules/🛂️manifest/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🛂️manifest/🧪️fixtures/🗄️artifact-kind-formats.schema.json": "🧰️framework/🔨️modules/🛂️manifest/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🛂️manifest/🧪️fixtures/🛤️tutorial-document-track.schema.json": "🧰️framework/🔨️modules/🛂️manifest/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🧵️job/🧪️fixtures/📡️shared-framework-action-routes.schema.json": "🧰️framework/🔨️modules/🧵️job/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🧵️job/🧪️fixtures/🧬️fixed-operation-registry.schema.json": "🧰️framework/🔨️modules/🧵️job/🧬️schema/🔣️.json"
+ },
+ "deleted": [
+  "🧰️framework/🔨️modules/⏱️trace/⏱️clock/🧬️contention/🔣️.schema.json",
+  "🧰️framework/🔨️modules/⏳️async/🔐️use/🧪️fixtures/🧬️.schema.json",
+  "🧰️framework/🔨️modules/⏳️async/🔔️deferred-wake/🧪️fixtures/🧬️.schema.json",
+  "🧰️framework/🔨️modules/⏳️async/🔔️maintenance/🧪️fixtures/🧬️.schema.json",
+  "🧰️framework/🔨️modules/🌱️value/💾️resident/📐️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🌱️value/💾️resident/🧬️schema.json",
+  "🧰️framework/🔨️modules/🌱️value/💾️resident/📨️admission/📐️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🌱️value/💾️resident/📨️admission/🧬️schema.json",
+  "🧰️framework/🔨️modules/🌱️value/🔁️codec/🧪️fixtures/🧬️.schema.json",
+  "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🧫️fixtures/👥️shared-owner/🧬️.schema.json",
+  "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🧫️fixtures/🧬️.schema.json",
+  "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🔢️numeric/🧪️fixtures/🛡️references.schema.json",
+  "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🔢️numeric/🧪️fixtures/🧬️numeric-index.schema.json",
+  "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🧺️set/🧬️schema/🔣️.schema.json",
+  "🧰️framework/🔨️modules/🎠️kernel/🧫️fixtures/📇️descriptor-load/🧬️.schema.json",
+  "🧰️framework/🔨️modules/🎠️kernel/🧫️fixtures/📐️source-watch.schema.json",
+  "🧰️framework/🔨️modules/🎠️kernel/🧫️fixtures/🚪️turn-patch-owner/🧬️.schema.json",
+  "🧰️framework/🔨️modules/🎠️kernel/🧫️fixtures/🧫️app-router-plugin-faults/🧬️.schema.json",
+  "🧰️framework/🔨️modules/🎠️kernel/📤️return/📦️content/📐️fixture-schema/🔣️.json",
+  "🧰️framework/🔨️modules/🎠️kernel/📤️return/📦️content/📥️input/🏗️builder/📐️fixture-schema/🔣️.json",
+  "🧰️framework/🔨️modules/🎠️kernel/📤️return/📦️content/📥️input/📦️payload/📐️fixture-schema/🔣️.json",
+  "🧰️framework/🔨️modules/🎠️kernel/📤️return/📦️content/📥️input/🧾️release/📐️fixture-schema/🔣️.json",
+  "🧰️framework/🔨️modules/🎠️kernel/📥️poll/🏘️composition/📐️fixture-schema/🔣️.json",
+  "🧰️framework/🔨️modules/🎭️actor/🎠️activation/🧬️schema.json",
+  "🧰️framework/🔨️modules/🎭️actor/🏘️composition/🧬️schema.json",
+  "🧰️framework/🔨️modules/🎭️actor/🏘️composition/🏗️bootstrap/🧬️schema.json",
+  "🧰️framework/🔨️modules/🎭️actor/📃️page/📐️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🎭️actor/📃️page/🧬️schema.json",
+  "🧰️framework/🔨️modules/🎭️actor/📤️return/📐️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🎭️actor/📤️return/🧬️schema.json",
+  "🧰️framework/🔨️modules/🎭️actor/📤️return/🌿️framing/🧬️schema.json",
+  "🧰️framework/🔨️modules/🎭️actor/📤️return/📨️response/📐️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🎭️actor/📤️return/📨️response/🧬️schema.json",
+  "🧰️framework/🔨️modules/🎭️actor/📤️return/📨️response/🌿️framing/🧬️schema.json",
+  "🧰️framework/🔨️modules/🎭️actor/📤️return/📨️response/🎟️credit/📐️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🎭️actor/📤️return/📨️response/🎟️credit/🧬️schema.json",
+  "🧰️framework/🔨️modules/🎭️actor/📤️return/📨️response/🎟️credit/📋️metadata/🧬️schema.json",
+  "🧰️framework/🔨️modules/🎭️actor/📤️return/📨️response/🎟️credit/📋️metadata/📥️inbox/🧬️schema.json",
+  "🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🧬️schema.json",
+  "🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/📐️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🧬️schema.json",
+  "🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🧯️fault.schema.json",
+  "🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🩹️patch/📐️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🩹️patch/🧬️schema.json",
+  "🧰️framework/🔨️modules/🎭️actor/🪪️activation/📐️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🎭️actor/🪪️activation/📤️return/📐️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🎭️actor/🪪️activation/📤️return/🏘️admission/📐️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🎭️actor/🪪️activation/📤️return/🏘️admission/🧬️schema.json",
+  "🧰️framework/🔨️modules/🎭️actor/🪪️activation/📨️inbound/📐️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🎭️actor/🪪️activation/🚪️instance/📐️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🎭️actor/🪪️activation/🚪️instance/📥️output/🧬️schema.json",
+  "🧰️framework/🔨️modules/🎭️actor/🪪️activation/🚪️instance/📥️output/🏘️admission/📐️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🎭️actor/🪪️activation/🚪️instance/📥️output/🏘️admission/🧬️schema.json",
+  "🧰️framework/🔨️modules/🎭️actor/🪪️activation/🚪️instance/📥️output/🧯️fault/🧬️schema.json",
+  "🧰️framework/🔨️modules/🎯️action-bus/🧹️wire-retirement/🧪️fixture/🧬️.schema.json",
+  "🧰️framework/🔨️modules/📡️replication/🧫️fixtures/🚀️artifact-bootstrap/🧬️.schema.json",
+  "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧪️tests/🤝️mutation-leaf-contract/🛂️schema/🔣️.json",
+  "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧪️tests/🧭️mutation-leaf-source-contract/🛂️schema/🔣️.json",
+  "🧰️framework/🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🧫️fixtures/♻️retirement/🧬️.schema.json",
+  "🧰️framework/🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🧫️fixtures/🏠️local-interaction/🧬️.schema.json",
+  "🧰️framework/🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🧫️fixtures/📃️query/🧬️.schema.json",
+  "🧰️framework/🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🧫️fixtures/🔐️topology-authority/🧬️.schema.json",
+  "🧰️framework/🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🧬️schema/🏠️local-interaction/🔣️.schema.json",
+  "🧰️framework/🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🌳️root/📐️schema/🔣️.json",
+  "🧰️framework/🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🌳️root/🩹️update/📐️schema/🔣️.json",
+  "🧰️framework/🔨️modules/📡️replication/📡️wire/🏠️local-interaction/📡️transport/📐️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🧬️outputs.schema.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧱️elements/📨️UIDialog/🧬️contracts/♿️modal/🧬️.schema.json",
+  "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🧬️favicon.schema.json",
+  "🧰️framework/🔨️modules/🖱️ui/🖌️render/🎯️targets/🍎️metal/📦️packages/🦀️rust/🧬️schema/🔣️.schema.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧠️runtime/♻️retirement/🌲️tree/🧬️schema.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📃️document/🧬️schema.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📏️ownership/🧬️schema.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📤️output/🧬️schema.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧠️runtime/🔄️transaction/🧬️schema.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧠️runtime/🚪️handback/🧬️schema.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧠️runtime/🩹️patch/🧬️schema.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📚️examples/🧪️conformance/🧬️catalog.schema.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧪️fixtures/🔣️.schema.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/♻️retirement/📐️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/♻️retirement/🌲️built/🧬️schema.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/♻️retirement/🌳️typed/📐️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/♻️retirement/🌳️typed/🧬️components.schema.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/♻️retirement/📋️list/📐️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/♻️retirement/📮️handback/📐️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/♻️retirement/🩹️patch/📐️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/♻️retirement/🩹️patch/📨️pending/📦️whole/🧬️schema.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/⚖️compare/🧬️schema.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/⚖️compare/📃️document/🧬️schema.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🎟️resident/🧬️schema.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🎟️resident/🌳️root/🧬️schema.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🎟️resident/🗃️fixed/🧬️schema.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📃️document/🎟️assembly/🧬️schema.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📋️list/🧬️schema.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🔗️bindings/📋️copy/🧬️schema.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️fixtures/⚙️owned-operations/🧬️.schema.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️fixtures/🌱️root-source/🧬️.schema.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️fixtures/🌳️owned-nodes/🧬️.schema.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️fixtures/🎟️read-lease/🧬️.schema.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️fixtures/🎬️owned-scene/🧬️.schema.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️fixtures/👶️native-child/🧬️.schema.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️fixtures/💾️resident/🧬️.schema.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️fixtures/📃️scene-json-document/🧬️.schema.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️fixtures/📤️read-publication/🧬️.schema.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️fixtures/📥️intake/🧬️.schema.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️fixtures/📦️scene-generic-pack/🧬️.schema.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️fixtures/📨️wire-operations/🧬️.schema.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️fixtures/🔏️owned-hash/🧬️.schema.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️fixtures/🔔️intake-notification/🧬️.schema.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️fixtures/🔗️scene-binding/🧬️.schema.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️fixtures/🔢️scene-numeric/🧬️.schema.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️fixtures/🔣️scene-json/🧬️.schema.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️fixtures/🔤️scene-text-bytes/🧬️.schema.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️fixtures/🗺️owned-surface/🧬️.schema.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️fixtures/🚨️intake-close-fault/🧬️.schema.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️fixtures/🚪️instance-close/🧬️.schema.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️fixtures/🛠️instance-maintenance/🧬️.schema.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️fixtures/🛡️owned-validation/🧬️.schema.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️fixtures/🧳️scene-pack-field/🧬️.schema.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️fixtures/🧵️scene-json-string/🧬️.schema.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️fixtures/🧾️typed-scene/🧬️.schema.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️fixtures/🩹️patch/🧬️.schema.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️fixtures/🪆️surface-child/🧬️.schema.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️fixtures/🪪️instance-owner/🧬️.schema.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🎬️scene/🧾️typed/🔣️.schema.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/🧬️schema.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/🏗️builder/📐️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/🏗️builder/🧬️schema.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/📃️page/📐️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/📃️page/🧬️schema.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/📃️page/🔗️binding/📐️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/📃️page/🔗️binding/🧬️schema.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/📖️reader/📐️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/📖️reader/🧬️schema.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/📦️payload/📐️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/📦️payload/🧬️schema.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/📨️slot/📐️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/📨️slot/🧬️schema.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/🧾️evidence/📐️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/🧾️evidence/🧬️schema.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/🧾️evidence/📋️copied/📐️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/🧾️evidence/📋️copied/🧬️schema.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/🧾️evidence/🚫️cancellation/📐️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/🧾️evidence/🚫️cancellation/🧬️schema.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/🪪️metadata/📐️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/🪪️metadata/🧬️schema.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/📦️wire/🧪️fixtures/🏷️fields/🧬️.schema.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/📦️wire/🧪️fixtures/📤️decode/🧬️.schema.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/📦️wire/🧪️fixtures/🗺️surface-bytes/🧬️.schema.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/📦️wire/🧪️fixtures/🧾️typed/🧬️.schema.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🩹️operations/📥️wire/📃️pages/📐️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🩹️operations/📥️wire/📃️pages/🧬️schema.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🪞️copy/🧬️schema.json",
+  "🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🎨️representation/🧬️catalog.schema.json",
+  "🧰️framework/🔨️modules/🖼️assets/🔍️resolver/🧬️delivery.schema.json",
+  "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/🧬️catalog.schema.json",
+  "🧰️framework/🔨️modules/🖼️assets/🥽️mesh/🧬️catalog.schema.json",
+  "🧰️framework/🔨️modules/🗺️surface/🧪️tests/🧬️bindings.schema.json",
+  "🧰️framework/🔨️modules/🛂️manifest/🧪️fixtures/🎛️tutorial-local-interaction.schema.json",
+  "🧰️framework/🔨️modules/🛂️manifest/🧪️fixtures/📜️action-semantics.schema.json",
+  "🧰️framework/🔨️modules/🛂️manifest/🧪️fixtures/🗄️artifact-kind-formats.schema.json",
+  "🧰️framework/🔨️modules/🛂️manifest/🧪️fixtures/🛤️tutorial-document-track.schema.json",
+  "🧰️framework/🔨️modules/🧵️job/🧪️fixtures/📡️shared-framework-action-routes.schema.json",
+  "🧰️framework/🔨️modules/🧵️job/🧪️fixtures/🧬️fixed-operation-registry.schema.json"
+ ]
+}

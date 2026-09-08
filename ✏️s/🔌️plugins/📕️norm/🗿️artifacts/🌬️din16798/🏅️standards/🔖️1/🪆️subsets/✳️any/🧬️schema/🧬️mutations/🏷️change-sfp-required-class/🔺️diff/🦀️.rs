@@ -9,6 +9,6 @@ pub fn diff(payload: &ChangeSfpRequiredClass, base: &Din16798Snapshot) -> protoc
     if base.sfp_required_class == payload.new_sfp_required_class {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Required SFP class is already {}.", payload.new_sfp_required_class));
     }
-    protocol::MutationOutcome::new(Din16798Diff { sfp_required_class: Some(payload.new_sfp_required_class.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(Din16798Diff { sfp_required_class: Some(payload.new_sfp_required_class), ..Default::default() })
 }
 //#endregion 🔖️Diff

@@ -4,22 +4,30 @@
   "title": "VcsMutation",
   "oneOf": [
     {
-      "$ref": "https://semio.tech/schema/s/vcs/vcs/mutation/rename-vcs.json"
+      "$ref": "./🏷️add-tag/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/vcs/vcs/mutation/change-counter.json"
+      "$ref": "./🔢change-counter/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/vcs/vcs/mutation/change-notes.json"
+      "$ref": "./📝change-notes/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/vcs/vcs/mutation/change-status.json"
+      "$ref": "./🚦change-status/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/vcs/vcs/mutation/add-tag.json"
+      "$ref": "./🗑️remove-tag/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/vcs/vcs/mutation/remove-tag.json"
+      "$ref": "./✏️rename-vcs/🧬️schema/🔣️.json"
     }
+  ],
+  "x-semio-mutationKinds": [
+    "add-tag",
+    "change-counter",
+    "change-notes",
+    "change-status",
+    "remove-tag",
+    "rename-vcs"
   ]
 }

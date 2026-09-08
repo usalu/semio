@@ -1,5 +1,8 @@
 //! 🧰️ Drawing owned envelope decoder, recursive retirement, and retained store initializer.
 
+/// ♻️ Rebuilt source, removed layer, reverse arena and forward arena.
+type DrawingRebuiltLayerOwners = (Vec<DrawingLayerNode>, Option<DrawingLayerNode>, Vec<DrawingLayerNode>, Vec<DrawingLayerNode>);
+
 use crate::artifacts::drawing::op::DrawingMutation;
 use crate::artifacts::drawing::{DrawingAttributes, DrawingImageAsset, DrawingLayerBase, DrawingLayerNode, DrawingSnapshot, FillStyle, GradientStop, PathSegment, StrokeStyle};
 use protocol::{Mutation, OpBinary};
@@ -1173,7 +1176,7 @@ impl DrawingMutationArenaBootstrapJob {
                 DrawingMutationArenaProcessState::Retiring(_) => {}
                 DrawingMutationArenaProcessState::Fault(fault) => {
                     self.terminal = true;
-                    return DrawingMutationArenaBootstrapStep::Fault(*fault);
+                    return DrawingMutationArenaBootstrapStep::Fault(fault);
                 }
             }
         }
@@ -1197,7 +1200,7 @@ impl DrawingMutationArenaBootstrapJob {
             }
             DrawingMutationArenaProcessState::Fault(error) => {
                 self.terminal = true;
-                return DrawingMutationArenaBootstrapStep::Fault(*error);
+                return DrawingMutationArenaBootstrapStep::Fault(error);
             }
             DrawingMutationArenaProcessState::Retiring(bootstrap) => {
                 let fault = bootstrap.fault.unwrap_or("drawing-store.mutation-arena-bootstrap-fault");
@@ -1285,7 +1288,7 @@ pub fn request_drawing_mutation_arena_pool() -> DrawingMutationArenaPoolAvailabi
     };
     match &*state {
         DrawingMutationArenaProcessState::Ready(_) => DrawingMutationArenaPoolAvailability::Ready,
-        DrawingMutationArenaProcessState::Fault(fault) => DrawingMutationArenaPoolAvailability::Fault(*fault),
+        DrawingMutationArenaProcessState::Fault(fault) => DrawingMutationArenaPoolAvailability::Fault(fault),
         DrawingMutationArenaProcessState::Inert | DrawingMutationArenaProcessState::Building(_) | DrawingMutationArenaProcessState::Retiring(_) => DrawingMutationArenaPoolAvailability::NotReady,
     }
 }
@@ -1982,7 +1985,7 @@ impl DrawingLayerLocator {
         Self { root: 0, depth: 0, path: [0; DRAWING_MAXIMUM_LAYER_DEPTH], frames: [DrawingTraversalFrame::EMPTY; DRAWING_MAXIMUM_LAYER_DEPTH], found: None, terminal: false }
     }
 
-    fn node_at<'a>(snapshot: &'a DrawingSnapshot, address: DrawingLayerAddress) -> Option<&'a DrawingLayerNode> {
+    fn node_at(snapshot: &DrawingSnapshot, address: DrawingLayerAddress) -> Option<&DrawingLayerNode> {
         let mut value = snapshot.layers.get(address.indices[0])?;
         for index in &address.indices[1..address.length] {
             let DrawingLayerNode::Group(group) = value else { return None };
@@ -1991,7 +1994,7 @@ impl DrawingLayerLocator {
         Some(value)
     }
 
-    fn node_at_mut<'a>(snapshot: &'a mut DrawingSnapshot, address: DrawingLayerAddress) -> Option<&'a mut DrawingLayerNode> {
+    fn node_at_mut(snapshot: &mut DrawingSnapshot, address: DrawingLayerAddress) -> Option<&mut DrawingLayerNode> {
         fn descend<'a>(value: &'a mut DrawingLayerNode, path: &[usize]) -> Option<&'a mut DrawingLayerNode> {
             let Some((head, tail)) = path.split_first() else { return Some(value) };
             let DrawingLayerNode::Group(group) = value else { return None };
@@ -2001,7 +2004,7 @@ impl DrawingLayerLocator {
         descend(value, &address.indices[1..address.length])
     }
 
-    fn container_mut<'a>(snapshot: &'a mut DrawingSnapshot, parent: Option<DrawingLayerAddress>) -> Option<&'a mut Vec<DrawingLayerNode>> {
+    fn container_mut(snapshot: &mut DrawingSnapshot, parent: Option<DrawingLayerAddress>) -> Option<&mut Vec<DrawingLayerNode>> {
         match parent {
             None => Some(&mut snapshot.layers),
             Some(address) => match Self::node_at_mut(snapshot, address)? {
@@ -2239,7 +2242,7 @@ impl DrawingContainerRebuildAuthority {
         self.advance().map(|(complete, _)| complete)
     }
 
-    fn take(&mut self) -> Option<(Vec<DrawingLayerNode>, Option<DrawingLayerNode>, Vec<DrawingLayerNode>, Vec<DrawingLayerNode>)> {
+    fn take(&mut self) -> Option<DrawingRebuiltLayerOwners> {
         self.terminal.then(|| {
             (
                 self.source.take().expect("Drawing rebuilt source container remains retained"),
@@ -2572,7 +2575,7 @@ impl DrawingSemanticDigestCredit {
         self.add_source_owner(1, size_of::<String>() + value.capacity())
     }
 
-    fn derived_string(&mut self, value: &String) -> Result<(), &'static str> {
+    fn derived_string(&mut self, value: &str) -> Result<(), &'static str> {
         if value.len() > DRAWING_OWNED_FIELD_BYTES {
             return Err("drawing-store.mutation-derived-string-page-capacity");
         }
@@ -2585,7 +2588,7 @@ impl DrawingSemanticDigestCredit {
         self.add_source_owner(items, bytes)
     }
 
-    fn derived_vec<T>(&mut self, value: &Vec<T>) -> Result<(), &'static str> {
+    fn derived_vec<T>(&mut self, value: &[T]) -> Result<(), &'static str> {
         let bytes = value.len().checked_mul(size_of::<T>()).ok_or("drawing-store.mutation-derived-owner-byte-overflow")?;
         let pages = bytes.checked_add(DRAWING_MUTATION_RETAINED_PAGE_BYTES - 1).ok_or("drawing-store.mutation-derived-owner-byte-overflow")? / DRAWING_MUTATION_RETAINED_PAGE_BYTES;
         self.add_derived_owner(pages.max(1), 0)
@@ -4241,13 +4244,13 @@ impl DrawingMutationCandidateAuthority {
                 let address = self.primary;
                 match mutation {
                     DrawingMutation::SetLayerVisible(value) => {
-                        crate::artifacts::drawing::schema::layer_base_mut(DrawingLayerLocator::node_at_mut(source, address.ok_or("drawing-store.mutation-primary-missing")?).ok_or("drawing-store.mutation-target-lost")?).visible = value.visible
+                        crate::artifacts::drawing::schema::layer_base_mut(DrawingLayerLocator::node_at_mut(source, address.ok_or("drawing-store.mutation-primary-missing")?).ok_or("drawing-store.mutation-target-lost")?).visible = value.visible;
                     }
                     DrawingMutation::SetLayerLocked(value) => {
-                        crate::artifacts::drawing::schema::layer_base_mut(DrawingLayerLocator::node_at_mut(source, address.ok_or("drawing-store.mutation-primary-missing")?).ok_or("drawing-store.mutation-target-lost")?).locked = value.locked
+                        crate::artifacts::drawing::schema::layer_base_mut(DrawingLayerLocator::node_at_mut(source, address.ok_or("drawing-store.mutation-primary-missing")?).ok_or("drawing-store.mutation-target-lost")?).locked = value.locked;
                     }
                     DrawingMutation::SetLayerOpacity(value) if value.opacity.is_finite() => {
-                        crate::artifacts::drawing::schema::layer_base_mut(DrawingLayerLocator::node_at_mut(source, address.ok_or("drawing-store.mutation-primary-missing")?).ok_or("drawing-store.mutation-target-lost")?).opacity = value.opacity
+                        crate::artifacts::drawing::schema::layer_base_mut(DrawingLayerLocator::node_at_mut(source, address.ok_or("drawing-store.mutation-primary-missing")?).ok_or("drawing-store.mutation-target-lost")?).opacity = value.opacity;
                     }
                     DrawingMutation::SetLayerOpacity(_) => return Err("drawing-store.mutation-opacity-invalid"),
                     DrawingMutation::SetLayerBlendMode(value) => {
@@ -4530,7 +4533,7 @@ impl DrawingMutationCandidateAuthority {
         }
         if !self.overlay.as_ref().is_some_and(|overlay| overlay.committed) {
             if let Some(undo) = self.source_undo {
-                let Some(source) = source.as_deref_mut() else { return Ok(store::SnapshotRetirementStep::Blocked) };
+                let Some(source) = source else { return Ok(store::SnapshotRetirementStep::Blocked) };
                 self.start_rebuild(source, undo.parent, None, Some(undo.index), DrawingContainerRebuildRole::CloseSourceUndo)?;
                 return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
             }
@@ -4961,7 +4964,7 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<DrawingSnapsho
                     }
                     1 => self.phase = DrawingStoreInitializationPhase::SeedHistory { edit, lane: 2, index: 0 },
                     2 if index < entry.mutation_meta.len() => {
-                        runtime.observe_timestamp(entry.mutation_meta[index].timestamp.clone());
+                        runtime.observe_timestamp(entry.mutation_meta[index].timestamp);
                         self.phase = DrawingStoreInitializationPhase::SeedHistory { edit, lane, index: index + 1 };
                     }
                     _ => self.phase = DrawingStoreInitializationPhase::SeedHistory { edit: edit + 1, lane: 0, index: 0 },
@@ -5201,8 +5204,8 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<DrawingSnapsho
             DrawingStoreInitializationPhase::RetireCancelled | DrawingStoreInitializationPhase::RetireFault => match self.pump_terminal_retirement() {
                 Ok(false) => semio_framework_job::StepOutcome::Yield,
                 Ok(true) => {
-                    drop(self.initial_digest.take());
-                    drop(self.edit_digest.take());
+                    self.initial_digest = None;
+                    self.edit_digest = None;
                     self.terminal_handoff = true;
                     if self.phase == DrawingStoreInitializationPhase::RetireCancelled {
                         self.phase = DrawingStoreInitializationPhase::Cancelled;
@@ -5255,8 +5258,8 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<DrawingSnapsho
         match self.pump_terminal_retirement() {
             Ok(false) => Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 1, released_bytes: 0 }),
             Ok(true) => {
-                drop(self.initial_digest.take());
-                drop(self.edit_digest.take());
+                self.initial_digest = None;
+                self.edit_digest = None;
                 drop(self.mutation_digest.take());
                 drop(self.mutation_candidate.take());
                 self.terminal_handoff = true;
@@ -5271,8 +5274,8 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<DrawingSnapsho
             return None;
         }
         let candidate = self.candidate.take()?;
-        drop(self.initial_digest.take());
-        drop(self.edit_digest.take());
+        self.initial_digest = None;
+        self.edit_digest = None;
         drop(self.mutation_digest.take());
         drop(self.mutation_candidate.take());
         self.terminal_handoff = true;

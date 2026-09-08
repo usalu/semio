@@ -5,7 +5,7 @@
   "displayName": "Update Ground Temperature",
   "emoji": "🌡️",
   "aggregateVariant": "UpdateGroundTemperature",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "update-ground-temperature",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

@@ -1,9 +1,9 @@
 //! 🧪️ Executes delete-scene laws from the canonical JSON vector.
 #[cfg(test)]
 mod tests {
-    use crate::artifacts::gltf::schema::mutations::delete_scene::{diff, inverse, mutation};
-    use crate::artifacts::gltf::schema::snapshot::GltfScene;
-    use crate::artifacts::gltf::GltfSnapshot;
+    use crate::schema::mutations::delete_scene::{diff, inverse, mutation};
+    use crate::schema::snapshot::GltfScene;
+    use crate::GltfSnapshot;
     #[derive(value_derive::FromValue)]
     #[value(rename_all = "camelCase")]
     struct Contract {

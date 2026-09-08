@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeFanTRunH, base: &Din16798Snapshot) -> protocol::Muta
     if base.fan_t_run_h == payload.new_fan_t_run_h {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Fan running time is already {}.", payload.new_fan_t_run_h));
     }
-    protocol::MutationOutcome::new(Din16798Diff { fan_t_run_h: Some(payload.new_fan_t_run_h.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(Din16798Diff { fan_t_run_h: Some(payload.new_fan_t_run_h), ..Default::default() })
 }
 //#endregion 🔖️Diff

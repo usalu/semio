@@ -53,9 +53,9 @@ const SCAN: &str = "shared://🧪️abbau-aufbau-masterarbeit-grundriss/🖼️.
 #[cfg(feature = "sut")]
 mod subject {
     use semio_repo_test_host::{parse_json, Context, Json, Outcome};
-    use semio_s_plugin_stdio::artifacts::tiff::standards::v6_0::subsets::document::io::{decode_tiff, encode_tiff};
-    use semio_s_plugin_stdio::artifacts::tiff::standards::v6_0::subsets::document::schema::snapshot::TiffSnapshot;
-    use semio_s_plugin_stdio::artifacts::tiff::standards::v6_0::subsets::baseline::schema::mutations::{apply_tiff_baseline_mutation, encode_tiff_baseline_projection_json, inverse_tiff_baseline_mutation, tiff_baseline_conformance_codes, TiffBaselineMutation};
+    use crate::standards::v6_0::subsets::document::io::{decode_tiff, encode_tiff};
+    use crate::standards::v6_0::subsets::document::schema::snapshot::TiffSnapshot;
+    use crate::standards::v6_0::subsets::baseline::schema::mutations::{apply_tiff_baseline_mutation, encode_tiff_baseline_projection_json, inverse_tiff_baseline_mutation, tiff_baseline_conformance_codes, TiffBaselineMutation};
     use semio_s_plugin_stdio_test_oracle::artifacts::tiff::standards::v6_0::subsets::document::project_tiff;
     use semio_s_plugin_stdio_test_oracle::law;
 
@@ -89,20 +89,20 @@ mod subject {
             "set-snapshot" => {
                 let mut snapshot = base.clone();
                 for step in [
-                    TiffBaselineMutation::SetCompression(semio_s_plugin_stdio::artifacts::tiff::standards::v6_0::subsets::baseline::schema::mutations::set_compression::SetCompression { compression: number(params, "compression", 5.0) as u16 }),
-                    TiffBaselineMutation::SetPhotometricInterpretation(semio_s_plugin_stdio::artifacts::tiff::standards::v6_0::subsets::baseline::schema::mutations::set_photometric_interpretation::SetPhotometricInterpretation { photometric: number(params, "photometric", 6.0) as u16 }),
-                    TiffBaselineMutation::SetBitsPerSample(semio_s_plugin_stdio::artifacts::tiff::standards::v6_0::subsets::baseline::schema::mutations::set_bits_per_sample::SetBitsPerSample { bits: numbers(params, "bits").into_iter().map(|value| value as u16).collect() }),
+                    TiffBaselineMutation::SetCompression(crate::standards::v6_0::subsets::baseline::schema::mutations::set_compression::SetCompression { compression: number(params, "compression", 5.0) as u16 }),
+                    TiffBaselineMutation::SetPhotometricInterpretation(crate::standards::v6_0::subsets::baseline::schema::mutations::set_photometric_interpretation::SetPhotometricInterpretation { photometric: number(params, "photometric", 6.0) as u16 }),
+                    TiffBaselineMutation::SetBitsPerSample(crate::standards::v6_0::subsets::baseline::schema::mutations::set_bits_per_sample::SetBitsPerSample { bits: numbers(params, "bits").into_iter().map(|value| value as u16).collect() }),
                 ] {
                     apply_tiff_baseline_mutation(&mut snapshot, &step);
                 }
-                Ok(TiffBaselineMutation::SetSnapshot(semio_s_plugin_stdio::artifacts::tiff::standards::v6_0::subsets::baseline::schema::mutations::set_snapshot::SetSnapshot { snapshot }))
+                Ok(TiffBaselineMutation::SetSnapshot(crate::standards::v6_0::subsets::baseline::schema::mutations::set_snapshot::SetSnapshot { snapshot }))
             }
-            "set-compression" => Ok(TiffBaselineMutation::SetCompression(semio_s_plugin_stdio::artifacts::tiff::standards::v6_0::subsets::baseline::schema::mutations::set_compression::SetCompression { compression: number(params, "compression", 5.0) as u16 })),
-            "set-photometric-interpretation" => Ok(TiffBaselineMutation::SetPhotometricInterpretation(semio_s_plugin_stdio::artifacts::tiff::standards::v6_0::subsets::baseline::schema::mutations::set_photometric_interpretation::SetPhotometricInterpretation { photometric: number(params, "photometric", 6.0) as u16 })),
-            "set-bits-per-sample" => Ok(TiffBaselineMutation::SetBitsPerSample(semio_s_plugin_stdio::artifacts::tiff::standards::v6_0::subsets::baseline::schema::mutations::set_bits_per_sample::SetBitsPerSample { bits: numbers(params, "bits").into_iter().map(|value| value as u16).collect() })),
-            "insert-tile-tags" => Ok(TiffBaselineMutation::InsertTileTags(semio_s_plugin_stdio::artifacts::tiff::standards::v6_0::subsets::baseline::schema::mutations::insert_tile_tags::InsertTileTags { tile_width: number(params, "tileWidth", 256.0) as u32, tile_length: number(params, "tileLength", 256.0) as u32 })),
+            "set-compression" => Ok(TiffBaselineMutation::SetCompression(crate::standards::v6_0::subsets::baseline::schema::mutations::set_compression::SetCompression { compression: number(params, "compression", 5.0) as u16 })),
+            "set-photometric-interpretation" => Ok(TiffBaselineMutation::SetPhotometricInterpretation(crate::standards::v6_0::subsets::baseline::schema::mutations::set_photometric_interpretation::SetPhotometricInterpretation { photometric: number(params, "photometric", 6.0) as u16 })),
+            "set-bits-per-sample" => Ok(TiffBaselineMutation::SetBitsPerSample(crate::standards::v6_0::subsets::baseline::schema::mutations::set_bits_per_sample::SetBitsPerSample { bits: numbers(params, "bits").into_iter().map(|value| value as u16).collect() })),
+            "insert-tile-tags" => Ok(TiffBaselineMutation::InsertTileTags(crate::standards::v6_0::subsets::baseline::schema::mutations::insert_tile_tags::InsertTileTags { tile_width: number(params, "tileWidth", 256.0) as u32, tile_length: number(params, "tileLength", 256.0) as u32 })),
             "remove-tile-tags" => Ok(TiffBaselineMutation::RemoveTileTags(remove_tile_tags::RemoveTileTags {})),
-            "set-strip-offsets" => Ok(TiffBaselineMutation::SetStripOffsets(semio_s_plugin_stdio::artifacts::tiff::standards::v6_0::subsets::baseline::schema::mutations::set_strip_offsets::SetStripOffsets { offsets: numbers(params, "offsets").into_iter().map(|value| value as u32).collect() })),
+            "set-strip-offsets" => Ok(TiffBaselineMutation::SetStripOffsets(crate::standards::v6_0::subsets::baseline::schema::mutations::set_strip_offsets::SetStripOffsets { offsets: numbers(params, "offsets").into_iter().map(|value| value as u32).collect() })),
             "remove-strip-offsets" => Ok(TiffBaselineMutation::RemoveStripOffsets(remove_strip_offsets::RemoveStripOffsets {})),
             other => Err(format!("mutate-tiff-6-0-baseline: no params grammar for kind {other:?}")),
         }

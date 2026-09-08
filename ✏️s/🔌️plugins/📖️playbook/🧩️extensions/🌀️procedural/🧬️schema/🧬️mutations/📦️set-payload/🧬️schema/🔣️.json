@@ -1,0 +1,42 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/playbook/procedural/mutation/set-payload.json",
+  "title": "SetPayload",
+  "type": "object",
+  "properties": {
+    "payload": {
+      "type": "object",
+      "properties": {
+        "fixtureSlug": {
+          "type": "string"
+        },
+        "params": {},
+        "questionId": {
+          "type": "string"
+        },
+        "controllerId": {
+          "type": "string"
+        },
+        "surface": {
+          "type": "string"
+        },
+        "interactive": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "fixtureSlug",
+        "params",
+        "questionId",
+        "controllerId",
+        "surface",
+        "interactive"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "payload"
+  ],
+  "additionalProperties": false
+}

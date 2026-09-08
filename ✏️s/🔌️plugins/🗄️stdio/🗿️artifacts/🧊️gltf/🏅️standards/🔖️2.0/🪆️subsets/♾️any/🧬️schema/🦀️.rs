@@ -1,8 +1,8 @@
 //! 🧬️ GltfArtifact schema — full artifact state.
 
-use crate::artifacts::gltf::schema::snapshot::{GltfAccessor, GltfBuffer, GltfBufferView, GltfDocument, GltfJson, GltfMesh, GltfPrimitive, GltfSourceForm};
-use crate::artifacts::gltf::{GltfSnapshot, STDIO_GLTF_DOCUMENT_SCHEMA};
-use schema::ArtifactSchema;
+use crate::schema::snapshot::{GltfAccessor, GltfBuffer, GltfBufferView, GltfDocument, GltfJson, GltfMesh, GltfPrimitive, GltfSourceForm};
+use crate::{GltfSnapshot, STDIO_GLTF_DOCUMENT_SCHEMA};
+use framework_schema::ArtifactSchema;
 
 //#region 🔖️Artifact
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
@@ -53,31 +53,31 @@ impl GltfArtifact {
 
 //#region 🔖️Descriptor
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn gltf_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
-    schema::ArtifactSchemaDescriptor {
+pub fn gltf_artifact_schema_descriptor() -> framework_schema::ArtifactSchemaDescriptor {
+    framework_schema::ArtifactSchemaDescriptor {
         id: "s.stdio.gltf",
-        artifact: schema::FacetLeaves {
+        artifact: framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),
             json_schema: include_str!("🔣️.json"),
             proto: include_str!("🛰️.proto"),
         },
-        snapshot: schema::FacetLeaves {
+        snapshot: framework_schema::FacetLeaves {
             rust: include_str!("📸️snapshot/🦀️.rs"),
             typescript: include_str!("📸️snapshot/🟦️.ts"),
             graphql: include_str!("📸️snapshot/🔗️.graphql"),
             json_schema: include_str!("📸️snapshot/🔣️.json"),
             proto: include_str!("📸️snapshot/🛰️.proto"),
         },
-        diff: schema::FacetLeaves {
+        diff: framework_schema::FacetLeaves {
             rust: include_str!("🔺️diff/🦀️.rs"),
             typescript: include_str!("🔺️diff/🟦️.ts"),
             graphql: include_str!("🔺️diff/🔗️.graphql"),
             json_schema: include_str!("🔺️diff/🔣️.json"),
             proto: include_str!("🔺️diff/🛰️.proto"),
         },
-        mutations: schema::FacetLeaves {
+        mutations: framework_schema::FacetLeaves {
             rust: include_str!("🧬️mutations/🦀️.rs"),
             typescript: include_str!("🧬️mutations/🟦️.ts"),
             graphql: include_str!("🧬️mutations/🔗️.graphql"),
@@ -89,10 +89,10 @@ pub fn gltf_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
 //#endregion 🔖️Descriptor
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use crate::artifacts::gltf::engine::{GltfAccessorType, GltfComponentType};
-    use crate::artifacts::gltf::schema::mutations::GltfMutation;
-    use crate::artifacts::gltf::schema::snapshot::{GltfAccessor, GltfBuffer, GltfBufferView, GltfJson, GltfMaterial, GltfMesh, GltfNode, GltfPrimitive, GltfScene};
-    use crate::artifacts::gltf::{GltfDiff, GltfSnapshot};
+    use crate::engine::{GltfAccessorType, GltfComponentType};
+    use crate::schema::mutations::GltfMutation;
+    use crate::schema::snapshot::{GltfAccessor, GltfBuffer, GltfBufferView, GltfJson, GltfMaterial, GltfMesh, GltfNode, GltfPrimitive, GltfScene};
+    use crate::{GltfDiff, GltfSnapshot};
     use semio_framework_plugin::ArtifactBuilder;
 
     //#region 🔖️Builder
@@ -303,7 +303,7 @@ pub mod derived_construction {
         /// 📸️ Peeks the in-progress document -- used by tests/callers that need to inspect state
         /// mid-construction without consuming the builder via `build()`.
         // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-        pub fn document(&self) -> &crate::artifacts::gltf::schema::snapshot::GltfDocument {
+        pub fn document(&self) -> &crate::schema::snapshot::GltfDocument {
             &self.snapshot.document
         }
 
@@ -334,7 +334,7 @@ pub mod derived_construction {
             let buf = b.add_buffer(bytes);
             let bv = b.add_buffer_view(buf, 0, 36, None, Some(34962));
             let acc = b.add_accessor(GltfAccessorSpec::new(GltfComponentType::Float, GltfAccessorType::Vec3, 3).with_buffer_view(bv, 0).with_min_max(vec![0.0, 0.0, 0.0], vec![1.0, 1.0, 0.0]));
-            let mat = b.add_material(GltfMaterial { pbr_metallic_roughness: Some(crate::artifacts::gltf::schema::snapshot::GltfPbrMetallicRoughness { base_color_factor: [1.0, 0.0, 0.0, 1.0], ..Default::default() }), ..Default::default() });
+            let mat = b.add_material(GltfMaterial { pbr_metallic_roughness: Some(crate::schema::snapshot::GltfPbrMetallicRoughness { base_color_factor: [1.0, 0.0, 0.0, 1.0], ..Default::default() }), ..Default::default() });
             let mesh = b.add_mesh();
             b.add_mesh_primitive(mesh, &[("POSITION", acc)], None, Some(mat), None);
             let node = b.add_node(Some(mesh));
@@ -343,7 +343,7 @@ pub mod derived_construction {
             let snapshot = b.build().expect("build");
 
             assert_eq!(snapshot.document.asset.version, "2.0");
-            let decoded = crate::artifacts::gltf::engine::decode_accessor(&snapshot.document, &snapshot.buffers, acc).expect("decode");
+            let decoded = crate::engine::decode_accessor(&snapshot.document, &snapshot.buffers, acc).expect("decode");
             assert_eq!(decoded.components, vec![0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0]);
         }
     }
@@ -354,7 +354,7 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use crate::artifacts::gltf::GltfSnapshot;
+    use crate::GltfSnapshot;
     use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     //#region 🔖️Parts
@@ -425,7 +425,7 @@ pub mod derived_analysis {
                         // A genuine `.gltf` JSON document parses directly through the real codec; only
                         // fall back to the SemioEnvelope-wrapped `ArtifactDsl` preamble form (used by
                         // this crate's own internal store round-trips) when the text isn't bare JSON.
-                        let result = if looks_like_gltf_json(text) { crate::artifacts::gltf::engine::parse_gltf_document(text.trim().as_bytes()) } else { <GltfSnapshot as store::ArtifactDsl>::parse_dsl(text).map_err(|e| e.to_string()) };
+                        let result = if looks_like_gltf_json(text) { crate::engine::parse_gltf_document(text.trim().as_bytes()) } else { <GltfSnapshot as store::ArtifactDsl>::parse_dsl(text).map_err(|e| e.to_string()) };
                         match result {
                             Ok(snapshot) => parts.snapshot = Some(snapshot),
                             Err(err) => {
@@ -438,7 +438,7 @@ pub mod derived_analysis {
                         // A genuine raw `.glb` container decodes directly through the real codec; only
                         // fall back to the SemioEnvelope-wrapped `ArtifactPack` form (this crate's own
                         // internal store round-trip encoding) when the bytes aren't a `.glb` container.
-                        let result = if looks_like_glb(bytes) { crate::artifacts::gltf::engine::decode_glb(bytes) } else { <GltfSnapshot as store::ArtifactPack>::decode_pack(bytes).map_err(|e| e.to_string()) };
+                        let result = if looks_like_glb(bytes) { crate::engine::decode_glb(bytes) } else { <GltfSnapshot as store::ArtifactPack>::decode_pack(bytes).map_err(|e| e.to_string()) };
                         match result {
                             Ok(snapshot) => parts.snapshot = Some(snapshot),
                             Err(err) => {
@@ -504,7 +504,7 @@ semio_framework_plugin::derive_artifact_facets!(
 //#region 🔖️DocumentHelpers
 /// 🌱 Empty persisted snapshot. Dissolved out of `⚙️engine`
 /// (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) — reached as
-/// `crate::artifacts::gltf::engine::empty_gltf_snapshot` through the `engine` barrel shim.
+/// `crate::engine::empty_gltf_snapshot` through the `engine` barrel shim.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn empty_gltf_snapshot() -> GltfSnapshot {
     GltfSnapshot::default()
@@ -518,8 +518,8 @@ pub fn empty_gltf_snapshot() -> GltfSnapshot {
 /// mandate). Mirrors `demo_json_snapshot`'s own role in json's pilot report.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn demo_gltf_snapshot() -> GltfSnapshot {
-    use crate::artifacts::gltf::engine::{GltfAccessorType, GltfComponentType};
-    use crate::artifacts::gltf::schema::snapshot::{
+    use crate::engine::{GltfAccessorType, GltfComponentType};
+    use crate::schema::snapshot::{
         GltfAnimation, GltfAnimationChannel, GltfAnimationChannelTarget, GltfAnimationPath, GltfAsset, GltfCamera, GltfCameraProjection, GltfImage, GltfInterpolation, GltfMaterial, GltfNode, GltfPbrMetallicRoughness, GltfPerspective, GltfSampler,
         GltfScene, GltfSkin, GltfTexture,
     };
@@ -551,7 +551,7 @@ pub fn demo_gltf_snapshot() -> GltfSnapshot {
         // `None`, a real asymmetry discovered by `fixture_honesty_law` -- setting a genuine data
         // URI up front keeps BOTH the text (`parse_gltf_document`) and GLB (`decode_glb`, which
         // never embeds when a buffer already declares a `uri`) facets byte-for-byte lossless.
-        buffers: vec![GltfBuffer { byte_length: 36, uri: Some(crate::artifacts::gltf::engine::encode_data_uri("application/octet-stream", &[0u8; 36])), name: Some("geometry".into()), extensions: None, extras: None }],
+        buffers: vec![GltfBuffer { byte_length: 36, uri: Some(crate::engine::encode_data_uri("application/octet-stream", &[0u8; 36])), name: Some("geometry".into()), extensions: None, extras: None }],
         materials: vec![GltfMaterial {
             name: Some("triangle-material".into()),
             pbr_metallic_roughness: Some(GltfPbrMetallicRoughness { base_color_factor: [1.0, 0.0, 0.0, 1.0], metallic_factor: 0.0, roughness_factor: 0.8, ..GltfPbrMetallicRoughness::default() }),
@@ -563,7 +563,7 @@ pub fn demo_gltf_snapshot() -> GltfSnapshot {
         skins: vec![GltfSkin { joints: vec![0], name: Some("root-skin".into()), ..GltfSkin::default() }],
         animations: vec![GltfAnimation {
             channels: vec![GltfAnimationChannel { sampler: 0, target: GltfAnimationChannelTarget { node: Some(0), path: GltfAnimationPath::Translation, extensions: None, extras: None }, extensions: None, extras: None }],
-            samplers: vec![crate::artifacts::gltf::schema::snapshot::GltfAnimationSampler { input: 0, interpolation: GltfInterpolation::Linear, output: 0, extensions: None, extras: None }],
+            samplers: vec![crate::schema::snapshot::GltfAnimationSampler { input: 0, interpolation: GltfInterpolation::Linear, output: 0, extensions: None, extras: None }],
             name: Some("spin".into()),
             extensions: None,
             extras: None,

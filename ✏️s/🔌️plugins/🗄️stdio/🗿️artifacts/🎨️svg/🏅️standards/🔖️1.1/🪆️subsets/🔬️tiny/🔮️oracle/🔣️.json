@@ -94,7 +94,7 @@
         {
           "id": "insert-tiny-element",
           "capability": "svg-1-1-tiny-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied",
             "rejected"
@@ -115,7 +115,7 @@
         {
           "id": "remove-element",
           "capability": "svg-1-1-tiny-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -135,7 +135,7 @@
         {
           "id": "set-snapshot",
           "capability": "svg-1-1-tiny-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -155,7 +155,7 @@
         {
           "id": "set-text",
           "capability": "svg-1-1-tiny-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -175,7 +175,7 @@
         {
           "id": "set-tiny-attribute",
           "capability": "svg-1-1-tiny-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied",
             "rejected"
@@ -196,7 +196,7 @@
         {
           "id": "set-transform",
           "capability": "svg-1-1-tiny-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -216,7 +216,7 @@
         {
           "id": "set-view-box",
           "capability": "svg-1-1-tiny-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -236,7 +236,7 @@
         {
           "id": "stamp-base-profile",
           "capability": "svg-1-1-tiny-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -256,7 +256,7 @@
         {
           "id": "strip-non-tiny",
           "capability": "svg-1-1-tiny-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],

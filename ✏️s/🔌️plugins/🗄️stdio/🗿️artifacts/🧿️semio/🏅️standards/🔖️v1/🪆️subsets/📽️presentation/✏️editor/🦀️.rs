@@ -2,8 +2,8 @@
 //! 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §2.1). `SemioPresentationEditor`
 //! implements `ArtifactEditor`, wiring the shared `MeshWindowKit` to a single Main window.
 
-use crate::artifacts::semio::standards::v1::subsets::presentation::schema::mutations::SemioPresentationMutation;
-use crate::artifacts::semio::standards::v1::subsets::presentation::schema::snapshot::SemioPresentationSnapshot;
+use crate::standards::v1::subsets::presentation::schema::mutations::SemioPresentationMutation;
+use crate::standards::v1::subsets::presentation::schema::snapshot::SemioPresentationSnapshot;
 use crate::editor::semio_presentation::modes::edit;
 use crate::editor::semio_presentation::modes::edit::windows::main;
 use semio_framework_plugin::app::InteractionView;

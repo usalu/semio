@@ -1,0 +1,41 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/document/mutation/insert-image.json",
+  "title": "InsertImage",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "image"
+  ],
+  "properties": {
+    "image": {
+      "$ref": "#/$defs/DocImage"
+    },
+    "kind": {
+      "const": "insertImage",
+      "description": "Aggregate discriminator spliced in by DocPathSegment; absent when the payload stands alone."
+    }
+  },
+  "$defs": {
+    "DocImage": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "mime": {
+          "type": "string"
+        },
+        "bytes": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          }
+        }
+      }
+    }
+  }
+}

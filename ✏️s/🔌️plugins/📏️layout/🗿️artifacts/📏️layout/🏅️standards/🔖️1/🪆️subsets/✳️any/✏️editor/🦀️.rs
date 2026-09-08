@@ -205,9 +205,7 @@ fn layout_retained_contract() -> ToolExecutionContract {
     ToolExecutionContract::bounded_first_step(LAYOUT_RETAINED_RAW_BYTES, 64, 1, 16_384, 7_500)
 }
 
-fn layout_retained_extent(_command: &LayoutCommand, _snapshot: &LayoutSnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
-    Some(1)
-}
+
 
 fn layout_retained_reduce(
     command: &LayoutCommand,
@@ -577,7 +575,7 @@ impl ArtifactEditor for LayoutPlayApp {
             return Err(Fault::from("layout-command-tool-mismatch"));
         }
         let tool_id = request.command.command_id();
-        let work = Box::new(semio_framework_plugin::retained_command::BoundedArtifactCommandWork::new(tool_id, layout_retained_reduce, layout_retained_extent));
+        let work = Box::new(semio_framework_plugin::retained_command::BoundedArtifactCommandWork::new(tool_id, layout_retained_reduce, |_, _, _| Some(1)));
         let operation_context = AppOperationContext {
             app_instance_id: request.app_instance_id,
             parent_document_id: request.parent_document_id.clone(),

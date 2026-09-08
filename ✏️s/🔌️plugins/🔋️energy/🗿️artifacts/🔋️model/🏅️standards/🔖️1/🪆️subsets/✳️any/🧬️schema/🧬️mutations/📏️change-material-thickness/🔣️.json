@@ -5,7 +5,7 @@
   "displayName": "Change Material Thickness",
   "emoji": "📏️",
   "aggregateVariant": "ChangeMaterialThickness",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-material-thickness",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

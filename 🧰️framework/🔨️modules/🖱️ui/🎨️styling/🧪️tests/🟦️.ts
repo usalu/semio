@@ -108,7 +108,7 @@ describe("favicon delivery", () => {
   it("serves only the exact handpicked browser-icon routes with unchanged payloads", async () => {
     const fixture = JSON.parse(readFileSync(resolve(import.meta.dir, "🌐️favicon-delivery.json"), "utf8"));
     const authority = JSON.parse(readFileSync(resolve(import.meta.dir, "../🌐️favicon.json"), "utf8"));
-    const schema = JSON.parse(readFileSync(resolve(import.meta.dir, "../🧬️favicon.schema.json"), "utf8"));
+    const schema = JSON.parse(readFileSync(resolve(import.meta.dir, "../🧬️schema/🔣️.json"), "utf8"));
     const { default: Ajv } = await import("ajv");
     const validate = new Ajv({ strict: true }).compile(schema);
     expect(validate(authority)).toBe(true);

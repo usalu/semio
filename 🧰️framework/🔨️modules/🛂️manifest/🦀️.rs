@@ -3588,6 +3588,26 @@ pub fn missing_required_args(defs: &[ActionArgDef], effective: &DslValue) -> Vec
         .collect()
 }
 
+/// 🔽️ Closed choices must belong to their current host-resolved option set.
+pub fn action_arg_requires_choice(def: &ActionArgDef) -> bool {
+    matches!(&def.schema, ArgSchema::String { options, format, .. } if !options.is_empty() || matches!(format, Some(ArgFormat::ArtifactKind { .. } | ArgFormat::SurfaceApp { .. })))
+}
+
+/// 🚫️ Returns supplied choices absent from the current catalog, including an unavailable catalog.
+pub fn invalid_action_choice_args(defs: &[ActionArgDef], effective: &DslValue) -> Vec<String> {
+    defs.iter().filter(|def| {
+        let Some(value) = effective.get(&def.id) else { return false; };
+        if matches!(value, DslValue::Null) || value.as_str() == Some("") || !action_arg_requires_choice(def) { return false; }
+        matches!(&def.schema, ArgSchema::String { options, .. } if !options.iter().any(|option| value.as_str() == Some(option.value.as_str())))
+    }).map(|def| def.id.clone()).collect()
+}
+
+/// 🛑️ Gates staged submission on required presence and exact current choice membership.
+pub fn unresolved_action_args(defs: &[ActionArgDef], effective: &DslValue) -> Vec<String> {
+    let unresolved: std::collections::HashSet<String> = missing_required_args(defs, effective).into_iter().chain(invalid_action_choice_args(defs, effective)).collect();
+    defs.iter().filter(|def| unresolved.contains(&def.id)).map(|def| def.id.clone()).collect()
+}
+
 /// @emoji 🚦️ Whether an action is eligible to appear in a window's Actions panel — excludes the six
 /// framework History actions (rendered by the History rail) and the injected `setActiveUtility`/
 /// `setActiveTool` (internal View actions wired to the utility bar/tool panel, never the panel).
@@ -5915,6 +5935,30 @@ mod app_label_tests {
         let effective = effective_action_args(&[], &DslValue::Object(Vec::new()), Some(&seed));
         assert_eq!(effective.get("spaceId"), Some(&DslValue::String("sp-1".into())));
         assert_eq!(effective.get("confirmed"), Some(&DslValue::Bool(true)));
+    }
+
+    /// 🔽️ Shares the schema-first choice cases with the TypeScript AJV enum oracle.
+    #[semio_framework_async_macros::async_test]
+    async fn unresolved_action_choices_follow_neutral_catalog_contract() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧩️action-argument-resolution/🧬️contracts/🔽️choices/🔣️.json")).unwrap();
+        for row in fixture["cases"].as_array().unwrap() {
+            let options = row["options"].as_array().unwrap().iter().map(|value| ActionArgOption::new(value.as_str().unwrap(), LocalizedLabel::data(value.as_str().unwrap()))).collect();
+            let mut def = ActionArgDef::select("kindChoice", LocalizedLabel::data("Kind"), options);
+            def.required = row["required"].as_bool().unwrap();
+            if let super::ArgSchema::String { format, .. } = &mut def.schema {
+                *format = match row["format"].as_str().unwrap() {
+                    "artifactKind" => Some(super::ArgFormat::ArtifactKind { roles: vec![AppRole::Editor] }),
+                    "surfaceApp" => Some(super::ArgFormat::SurfaceApp { roles: vec![AppRole::Editor], dialect_arg: "dialect".into() }),
+                    _ => None,
+                };
+            }
+            let arguments = serde_json::json!({ "kindChoice": row["value"] }).to_string();
+            let effective = dsl::os_pack::json::to_dsl_value(&dsl::os_pack::json::parse(&arguments).unwrap());
+            let unresolved = super::unresolved_action_args(&[def], &effective);
+            let expected: Vec<String> = if row["unresolved"].as_bool().unwrap() { vec!["kindChoice".into()] } else { Vec::new() };
+            assert_eq!(unresolved, expected, "{}", row["id"]);
+        }
+        eprintln!("[DEBUG] Action choice validation: Rust neutral=12 shared-TypeScript-AJV-oracle=12");
     }
 
     #[semio_framework_async_macros::async_test]

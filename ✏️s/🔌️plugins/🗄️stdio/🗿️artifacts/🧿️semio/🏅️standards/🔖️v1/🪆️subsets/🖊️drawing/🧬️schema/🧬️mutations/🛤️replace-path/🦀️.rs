@@ -1,9 +1,9 @@
 //! 🛤️️ `replace-path` — whole-value swap of a `Path` node's `segments` (SMO-approved; a path's
 //! control points are edited piecewise by any real editor, so this is `replace`, not `change`).
 
-use crate::artifacts::semio::standards::v1::subsets::drawing::schema::diff::NodePath;
-use crate::artifacts::semio::standards::v1::subsets::drawing::schema::mutations::SemioDrawingMutation;
-use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{PathSegment, SemioDrawingSnapshot};
+use crate::standards::v1::subsets::drawing::schema::diff::NodePath;
+use crate::standards::v1::subsets::drawing::schema::mutations::SemioDrawingMutation;
+use crate::standards::v1::subsets::drawing::schema::snapshot::{PathSegment, SemioDrawingSnapshot};
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]

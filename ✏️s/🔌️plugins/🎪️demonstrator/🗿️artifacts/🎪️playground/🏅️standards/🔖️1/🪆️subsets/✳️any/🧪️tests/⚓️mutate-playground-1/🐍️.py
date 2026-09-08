@@ -5,7 +5,7 @@ No third-party library reads or writes `.dsl.semio`/`.pack.semio` — `Playgroun
 repository-internal demonstrator document with no published grammar anywhere outside this repository,
 so there is no ecosystem to search. The reference is therefore a second IMPLEMENTATION, written from
 this subset's own committed `../../🧬️schema/📸️snapshot/🔣️.json` and
-`../../🧬️schema/🧬️mutations/✒️change-schema/🧬️.schema.json`, and from
+`../../🧬️schema/🧬️mutations/✒️change-schema/🧬️schema/🔣️.json`, and from
 `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-DIRECT-LEAF-OVERHAUL/📓️taxonomy.md`'s
 `change` verb entry ("set one scalar field to a new value … inverse partner: `change` (old value)").
 It imports nothing from the Rust it judges and transliterates none of it.

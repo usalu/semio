@@ -5,7 +5,7 @@
   "displayName": "Change Space Floor Area",
   "emoji": "🧮️",
   "aggregateVariant": "ChangeSpaceFloorArea",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-space-floor-area",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

@@ -2,8 +2,8 @@
 //! 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §2.1). `SemioMeshEditor`
 //! implements `ArtifactEditor`, wiring the shared `MeshWindowKit` to a single Main window.
 
-use crate::artifacts::semio::standards::v1::subsets::mesh::schema::mutations::SemioMeshMutation;
-use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
+use crate::standards::v1::subsets::mesh::schema::mutations::SemioMeshMutation;
+use crate::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
 use crate::editor::semio_mesh::modes::edit;
 use crate::editor::semio_mesh::modes::edit::windows::main;
 use semio_framework::DslValue;
@@ -104,8 +104,8 @@ impl ArtifactEditor for SemioMeshEditor {
         if primitive.positions.get(args.vertex_index).is_none() {
             return Ok(Emit::default());
         }
-        let new_point = crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioPoint3 { x: args.point[0], y: args.point[1], z: args.point[2] };
-        let mutation = SemioMeshMutation::MoveVertex(crate::artifacts::semio::standards::v1::subsets::mesh::schema::mutations::move_vertex::MoveVertex {
+        let new_point = crate::standards::v1::subsets::base::schema::geometry::SemioPoint3 { x: args.point[0], y: args.point[1], z: args.point[2] };
+        let mutation = SemioMeshMutation::MoveVertex(crate::standards::v1::subsets::mesh::schema::mutations::move_vertex::MoveVertex {
             mesh_id: mesh.id.clone(),
             primitive_id: primitive.id.clone(),
             vertex_index: args.vertex_index,

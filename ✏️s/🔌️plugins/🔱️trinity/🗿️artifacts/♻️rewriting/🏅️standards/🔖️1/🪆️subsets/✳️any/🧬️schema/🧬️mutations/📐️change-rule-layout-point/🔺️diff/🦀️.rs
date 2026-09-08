@@ -9,7 +9,7 @@ pub fn diff(payload: &super::ChangeRuleLayoutPoint, base: &RewritingSnapshot) ->
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Rule layout point \"{}\" is unchanged.", payload.key));
     }
     let mut layout = BTreeMap::new();
-    layout.insert(payload.key.clone(), Some(payload.new_point.clone()));
+    layout.insert(payload.key.clone(), Some(payload.new_point));
     protocol::MutationOutcome::new(RewritingDiff { rule_layout: Some(layout), ..Default::default() })
 }
 //#endregion 🔖️Diff

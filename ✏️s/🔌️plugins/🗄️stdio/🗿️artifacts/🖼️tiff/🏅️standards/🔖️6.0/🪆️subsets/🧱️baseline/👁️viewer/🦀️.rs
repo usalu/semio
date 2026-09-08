@@ -4,9 +4,9 @@
 //! the sole runtime adapter, so this file can never structurally emit an artifact or draft mutation.
 //! MUST NOT import anything from the sibling `editor` module (`policyViewerPurityBreaches`).
 
-use crate::artifacts::tiff::standards::v6_0::subsets::baseline::schema::mutations::TiffBaselineMutation;
-use crate::artifacts::tiff::standards::v6_0::subsets::baseline::schema::snapshot::TiffSnapshot;
-use crate::artifacts::tiff::{STDIO_TIFF_DOCUMENT_SCHEMA, TIFF_BASELINE_DIALECT};
+use crate::standards::v6_0::subsets::baseline::schema::mutations::TiffBaselineMutation;
+use crate::standards::v6_0::subsets::baseline::schema::snapshot::TiffSnapshot;
+use crate::{STDIO_TIFF_DOCUMENT_SCHEMA, TIFF_BASELINE_DIALECT};
 use crate::viewer::tiff_baseline::modes::view;
 use crate::viewer::tiff_baseline::modes::view::windows::main;
 use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, ViewEmit, Viewer};

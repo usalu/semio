@@ -104,6 +104,7 @@ function migrateIconKindToIconSelectorMode(prev: string, mode: IconSelectorMode,
 }
 
 export interface IconSelectorProps {
+  "aria-labelledby"?: string;
   id: string;
   value: string;
   onChange: (next: string) => void;
@@ -113,7 +114,7 @@ export interface IconSelectorProps {
 }
 
 /** @emoji 🖼️ Canonical `iconKind` editor for all canvases. */
-export function IconSelector({ id, value, onChange, disabled = false, uniform = true, classifyIconSelectorMode: classifyModeProp }: IconSelectorProps): React.ReactElement {
+export function IconSelector({ id, value, onChange, disabled = false, uniform = true, classifyIconSelectorMode: classifyModeProp, "aria-labelledby": labelledBy }: IconSelectorProps): React.ReactElement {
   const classifyMode = classifyModeProp ?? classifyIconSelectorMode;
   const activeMode = classifyMode(value);
   const fileInputRef = reactHostPort.useRef<HTMLInputElement>(null);
@@ -197,7 +198,7 @@ export function IconSelector({ id, value, onChange, disabled = false, uniform = 
   return (
     <div className={cn("flex min-w-0 flex-col gap-2 rounded-md border p-2", locked && "pointer-events-none opacity-60")} data-slot="icon-selector">
       <Select id={`${id}.mode.select`} disabled={locked} onValueChange={onModeSelect} value={activeMode}>
-        <SelectTrigger className="h-8 w-full min-w-0 px-2 text-xs whitespace-normal" id={`${id}.mode`}>
+        <SelectTrigger aria-labelledby={labelledBy} className="h-8 w-full min-w-0 px-2 text-xs whitespace-normal" id={`${id}.mode`}>
           <SelectValue />
         </SelectTrigger>
         <SelectContent position="popper">
@@ -227,6 +228,7 @@ export function IconSelector({ id, value, onChange, disabled = false, uniform = 
       <Textarea
         className={cn("min-h-layout-preview font-mono text-xs", (activeMode === "data" || activeMode === "vector") && "min-h-layout-preview-md")}
         id={`${id}.field`}
+        aria-labelledby={labelledBy}
         key={activeMode}
         mixed={!uniform}
         onChange={onEditorChange}

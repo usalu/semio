@@ -22,14 +22,14 @@
 //!   `f64` positions realistically carry, but SOME quantization is an inherent, real LAS property,
 //!   not an artifact of this codec — never claimed to be bit-exact.
 
-use crate::artifacts::las::schema::snapshot::{LasHeader, LasPoint};
-use crate::artifacts::las::LasSnapshot;
+use semio_s_artifact_stdio_las::schema::snapshot::{LasHeader, LasPoint};
+use semio_s_artifact_stdio_las::LasSnapshot;
 use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
 
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("mesh") };
 const INTO_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.las", standard: StandardId("1.0"), subset: SubsetId::ANY };
 
-use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
+use crate::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
 
 pub struct SemioMeshToLas;
 
@@ -80,9 +80,9 @@ impl ArtifactSerializer for SemioMeshToLas {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::{SemioPoint3, SemioRgba};
-    use crate::artifacts::semio::standards::v1::subsets::mesh::io::import::deserializers::artifacts::las::v1_0::any::SemioMeshFromLas;
-    use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::{SemioMesh, SemioPrimitive, SemioTopology};
+    use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint3, SemioRgba};
+    use crate::standards::v1::subsets::mesh::io::import::deserializers::artifacts::las::v1_0::any::SemioMeshFromLas;
+    use crate::standards::v1::subsets::mesh::schema::snapshot::{SemioMesh, SemioPrimitive, SemioTopology};
     use semio_framework_plugin::ArtifactDeserializer;
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9

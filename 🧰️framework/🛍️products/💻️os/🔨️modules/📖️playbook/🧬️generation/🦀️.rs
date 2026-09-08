@@ -80,14 +80,14 @@ struct GenerationRetirementState {
 pub struct GenerationRootRetirement { owned: ManuallyDrop<GenerationRetirementState> }
 
 impl GenerationRetirementState {
-    fn close_step(&mut self, items: usize, bytes: usize) -> Result<store::SnapshotRetirementStep, String> {
+    fn close_step(&mut self, items: usize, bytes: usize) -> store::SnapshotRetirementStep {
         use store::SnapshotRetirementStep as Step;
-        if items == 0 || bytes == 0 { return Ok(Step::Blocked); }
+        if items == 0 || bytes == 0 { return Step::Blocked; }
         if let Some(value) = self.bytes.as_mut() {
             let released_bytes = bytes.min(value.len());
             value.truncate(value.len() - released_bytes);
             if value.is_empty() { self.bytes = None; }
-            return Ok(Step::Pending { released_items: 0, released_bytes });
+            return Step::Pending { released_items: 0, released_bytes };
         }
         if let Some(owner) = self.owners.pop_front() {
             match owner {
@@ -102,7 +102,7 @@ impl GenerationRetirementState {
                     self.bytes = Some(key.into_bytes());
                 },
             }
-            return Ok(Step::Pending { released_items: 1, released_bytes: 0 });
+            return Step::Pending { released_items: 1, released_bytes: 0 };
         }
         if let Some(state) = self.state.as_mut() {
             if let Some(generation) = state.generations.pop() {
@@ -111,19 +111,19 @@ impl GenerationRetirementState {
                 self.bytes = Some(generation.id.into_bytes());
             } else if let Some(value) = state.selected_generation_id.take().or_else(|| state.preview_text.take()) { self.bytes = Some(value.into_bytes()); }
             else { self.state = None; }
-            return Ok(Step::Pending { released_items: 1, released_bytes: 0 });
+            return Step::Pending { released_items: 1, released_bytes: 0 };
         }
         if let Some(root) = self.root.take() {
             self.state = Arc::into_inner(root);
-            return Ok(Step::Pending { released_items: 1, released_bytes: 0 });
+            return Step::Pending { released_items: 1, released_bytes: 0 };
         }
-        Ok(Step::Complete)
+        Step::Complete
     }
     fn terminal_is_empty(&self) -> bool { self.root.is_none() && self.state.is_none() && self.owners.is_empty() && self.bytes.is_none() }
 }
 
 impl store::ErasedSnapshotRetirement for GenerationRootRetirement {
-    fn close_step(&mut self, items: usize, bytes: usize) -> Result<store::SnapshotRetirementStep, String> { self.owned.close_step(items, bytes) }
+    fn close_step(&mut self, items: usize, bytes: usize) -> Result<store::SnapshotRetirementStep, String> { Ok(self.owned.close_step(items, bytes)) }
     fn terminal_is_empty(&self) -> bool { self.owned.terminal_is_empty() }
 }
 

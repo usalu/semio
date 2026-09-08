@@ -5,7 +5,7 @@
   "displayName": "Replace Validation Record",
   "emoji": "♻️",
   "aggregateVariant": "ReplaceValidationRecord",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

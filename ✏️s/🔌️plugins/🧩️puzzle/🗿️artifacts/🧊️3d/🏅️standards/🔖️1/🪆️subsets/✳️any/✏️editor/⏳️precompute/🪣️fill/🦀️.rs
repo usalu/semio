@@ -1168,6 +1168,7 @@ pub(crate) enum FillBuilderOwnerCensusStep {
     Rejected,
 }
 
+#[derive(Default)]
 pub(crate) struct FillBuilderOwnerCensusCursor {
     field: u8,
     section: u8,
@@ -1180,11 +1181,6 @@ pub(crate) struct FillBuilderOwnerCensusCursor {
     credit: FillBuilderOwnerCredit,
 }
 
-impl Default for FillBuilderOwnerCensusCursor {
-    fn default() -> Self {
-        Self { field: 0, section: 0, phase: 0, index: 0, inner: 0, leaf: 0, dsl: None, spatial: CollisionIndexOwnerCensusCursor::default(), credit: FillBuilderOwnerCredit::default() }
-    }
-}
 
 enum FillOwnerCensusUnit {
     Credit(FillBuilderOwnerCredit),
@@ -2802,11 +2798,7 @@ impl FillBuilderRetirementCursor {
             },
             21 => retire_fixed_collection_backing(fill),
             22 => {
-                if !fill.spatial_index.retire_one_owner() {
-                    true
-                } else {
-                    false
-                }
+                !fill.spatial_index.retire_one_owner()
             }
             23 if fill.collection_over_capacity => {
                 fill.collection_over_capacity = false;
@@ -3855,7 +3847,7 @@ impl FillBuilder {
                     source_vortex_index: preview.source_vortex_index,
                     origin: preview.origin,
                     orientation: preview.orientation,
-                    scale: preview.scale.clone(),
+                    scale: preview.scale,
                 };
                 let Some(kind) = self.catalogs.objects.iter().find(|kind| kind.id == payload.object_kind_id) else {
                     self.reject_candidate("placement-kind-missing");

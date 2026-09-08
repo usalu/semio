@@ -5,9 +5,9 @@
 //! `IndexAdded` entry in the `layers` triple. `layers` is INDEX-keyed (z-order matters) even though
 //! a layer also carries an id, so the diff transports a position, not a name.
 
-use crate::artifacts::semio::standards::v1::subsets::drawing::schema::diff::SemioDrawingDiff;
-use crate::artifacts::semio::standards::v1::subsets::drawing::schema::mutations::SemioDrawingMutation;
-use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot;
+use crate::standards::v1::subsets::drawing::schema::diff::SemioDrawingDiff;
+use crate::standards::v1::subsets::drawing::schema::mutations::SemioDrawingMutation;
+use crate::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot;
 use protocol::{Mutation, MutationDiff};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");

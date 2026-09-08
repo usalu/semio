@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/norm/din16798/1/any/mutation/change-floor-area-m2.json",
+  "title": "ChangeFloorAreaM2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newFloorAreaM2"
+  ],
+  "properties": {
+    "newFloorAreaM2": {
+      "type": "number"
+    }
+  }
+}

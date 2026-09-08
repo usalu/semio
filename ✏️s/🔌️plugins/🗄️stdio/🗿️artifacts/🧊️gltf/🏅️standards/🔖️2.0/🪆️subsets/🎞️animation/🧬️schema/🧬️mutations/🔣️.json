@@ -1,7 +1,8 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/stdio/gltf/2.0/mutation/animation",
+  "$id": "https://semio.tech/schema/s/stdio/gltf/2.0/animation/mutations.json",
   "title": "glTF Animation Mutation",
+  "description": "View over the any subset's mutation leaves (adjacently tagged); every payload is the owning leaf's own schema, referenced, never restated.",
   "oneOf": [
     {
       "type": "object",
@@ -12,10 +13,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "create-animation"
+          "const": "createAnimation"
         },
         "payload": {
-          "$ref": "🎞️animation/🌱️create/🧬️.schema.json"
+          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🎞️animation/🌱️create/🧬️schema/🔣️.json"
         }
       }
     },
@@ -28,10 +29,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "delete-animation"
+          "const": "deleteAnimation"
         },
         "payload": {
-          "$ref": "🎞️animation/🗑️delete/🧬️.schema.json"
+          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🎞️animation/🗑️delete/🧬️schema/🔣️.json"
         }
       }
     },
@@ -44,10 +45,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "move-animation"
+          "const": "moveAnimation"
         },
         "payload": {
-          "$ref": "🎞️animation/🚚️move/🧬️.schema.json"
+          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🎞️animation/🚚️move/🧬️schema/🔣️.json"
         }
       }
     },
@@ -60,10 +61,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "reorder-animations"
+          "const": "reorderAnimations"
         },
         "payload": {
-          "$ref": "🎞️animation/🔀️reorder/🧬️.schema.json"
+          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🎞️animation/🔀️reorder/🧬️schema/🔣️.json"
         }
       }
     }

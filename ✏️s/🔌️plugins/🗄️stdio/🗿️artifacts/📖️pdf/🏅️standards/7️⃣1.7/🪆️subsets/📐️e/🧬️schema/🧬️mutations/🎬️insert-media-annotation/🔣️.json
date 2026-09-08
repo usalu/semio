@@ -5,7 +5,7 @@
   "displayName": "Insert Media Annotation",
   "emoji": "🎬️",
   "aggregateVariant": "InsertMediaAnnotation",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "insert-media-annotation",
   "binaryTag": 6,
   "invertibility": "explicit-mutation",

@@ -5,7 +5,7 @@
   "displayName": "Discard Try Value Staging",
   "emoji": "🗑️",
   "aggregateVariant": "DiscardTryValueStaging",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "discard-try-value-staging",
   "binaryTag": 3,
   "invertibility": "non-invertible",

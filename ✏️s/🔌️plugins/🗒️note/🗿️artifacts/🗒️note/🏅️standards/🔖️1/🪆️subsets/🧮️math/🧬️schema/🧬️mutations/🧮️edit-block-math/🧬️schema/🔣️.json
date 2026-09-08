@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/note/note/1/math/mutation/edit-block-math.json",
+  "title": "EditBlockMath",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newTex"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "newTex": {
+      "type": "string"
+    }
+  }
+}

@@ -5,7 +5,7 @@
   "displayName": "Delete Lighting Gain",
   "emoji": "🕯️",
   "aggregateVariant": "DeleteLightingGain",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "delete-lighting-gain",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

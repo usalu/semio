@@ -23,22 +23,22 @@
 //!
 //! 🦑 Codec + `register_schema_specs` dissolved out of the former `⚙️engine` (ticket
 //! 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES); registration otherwise flows through
-//! `crate::artifacts::pdf::declaration_1_4()` (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE).
+//! `crate::declaration_1_4()` (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE).
 
-use crate::artifacts::pdf::standards::v1_4::subsets::base::schema::{
+use crate::standards::v1_4::subsets::base::schema::{
     snapshot::{PageDoc, PdfSnapshot},
 };
-use crate::artifacts::pdf::STDIO_PDF_DOCUMENT_SCHEMA;
+use crate::STDIO_PDF_DOCUMENT_SCHEMA;
 use std::collections::{HashMap, HashSet};
 
 /// 🔀️ The shared COS syntax layer, hosted in the 1.7 subtree (see the module doc comment).
-use crate::artifacts::pdf::standards::v1_7::subsets::base::io as cos;
-use crate::artifacts::pdf::standards::v1_7::subsets::base::schema::snapshot::{ObjRef, PdfDictEntry, PdfObject};
+use crate::standards::v1_7::subsets::base::io as cos;
+use crate::standards::v1_7::subsets::base::schema::snapshot::{ObjRef, PdfDictEntry, PdfObject};
 
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use crate::artifacts::pdf::standards::v1_4::subsets::base::schema::snapshot::PdfSnapshot;
-    use crate::artifacts::pdf::standards::v1_4::subsets::base::schema::PdfAnalyzer;
+    use crate::standards::v1_4::subsets::base::schema::snapshot::PdfSnapshot;
+    use crate::standards::v1_4::subsets::base::schema::PdfAnalyzer;
     use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.pdf", standard: StandardId("1.4"), subset: SubsetId("*") };
@@ -564,7 +564,7 @@ pub fn encode_pdf(snapshot: &PdfSnapshot) -> Result<Vec<u8>, String> {
 
     let mut kids = String::new();
     for (page, (page_number, content_number)) in pages.iter().zip(&page_numbers) {
-        let compressed = crate::artifacts::deflate::standards::v_rfc1950::subsets::any::io::zlib_compress(&content_ops(page))?;
+        let compressed = semio_s_artifact_stdio_deflate::standards::v_rfc1950::subsets::any::io::zlib_compress(&content_ops(page))?;
         let mut content = Vec::new();
         content.extend_from_slice(format!("{content_number} 0 obj\n<< /Length {} /Filter /FlateDecode >>\nstream\n", compressed.len()).as_bytes());
         content.extend_from_slice(&compressed);
@@ -628,7 +628,7 @@ pub fn register_schema_specs() {}
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::pdf::standards::v1_4::subsets::base::schema::snapshot::demo_pdf_snapshot;
+    use crate::standards::v1_4::subsets::base::schema::snapshot::demo_pdf_snapshot;
 
     /// 🧫️ The real committed document every 1.4 test case runs on — 65 pages, a classic
     /// cross-reference table, page 1 typeset at A4.
@@ -707,10 +707,10 @@ mod tests {
     /// here (the engine's own test region), not any framework file.
     mod conformance_laws {
         use super::*;
-        use crate::artifacts::pdf::standards::v1_4::subsets::base::schema::mutations::PdfMutation;
+        use crate::standards::v1_4::subsets::base::schema::mutations::PdfMutation;
         #[cfg(test)]
-use crate::artifacts::pdf::standards::v1_4::subsets::base::schema::diff::PdfDiff;
-use crate::artifacts::pdf::standards::v1_4::subsets::base::schema::{diff, mutations, snapshot};
+use crate::standards::v1_4::subsets::base::schema::diff::PdfDiff;
+use crate::standards::v1_4::subsets::base::schema::{diff, mutations, snapshot};
         use protocol::{DiffCodec, OpBinary, OpText};
 
         // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -830,9 +830,9 @@ use crate::artifacts::pdf::standards::v1_4::subsets::base::schema::{diff, mutati
 
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
-    use crate::artifacts::pdf::standards::v1_4::subsets::a::schema::PdfAComposer;
-    use crate::artifacts::pdf::standards::v1_4::subsets::base::schema::PdfComposer as PdfRawAnyComposer;
-    use crate::artifacts::pdf::standards::v1_4::subsets::x::schema::PdfXComposer;
+    use crate::standards::v1_4::subsets::a::schema::PdfAComposer;
+    use crate::standards::v1_4::subsets::base::schema::PdfComposer as PdfRawAnyComposer;
+    use crate::standards::v1_4::subsets::x::schema::PdfXComposer;
     use semio_framework_plugin::{composer_entry_of, ComposerEntry};
     use std::sync::OnceLock;
 

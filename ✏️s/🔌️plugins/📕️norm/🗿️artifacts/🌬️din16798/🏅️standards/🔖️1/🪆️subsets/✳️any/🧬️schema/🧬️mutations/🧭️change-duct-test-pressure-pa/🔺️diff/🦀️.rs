@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeDuctTestPressurePa, base: &Din16798Snapshot) -> prot
     if base.duct_test_pressure_pa == payload.new_duct_test_pressure_pa {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Duct test pressure is already {}.", payload.new_duct_test_pressure_pa));
     }
-    protocol::MutationOutcome::new(Din16798Diff { duct_test_pressure_pa: Some(payload.new_duct_test_pressure_pa.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(Din16798Diff { duct_test_pressure_pa: Some(payload.new_duct_test_pressure_pa), ..Default::default() })
 }
 //#endregion 🔖️Diff

@@ -1,7 +1,7 @@
 //! 💾️ Direct insert-palette-entry binary codec.
 use super::*;
 use super::text;
-use crate::artifacts::bmp::schema::mutations::binary::Entry;
+use crate::schema::mutations::binary::Entry;
 pub const BINARY_TAG: u8 = 3;
 pub const CODEC: Entry = Entry { tag: BINARY_TAG, encode, decode };
 

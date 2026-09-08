@@ -13,9 +13,9 @@
 //! `.pack.semio`/`.patch.semio` encodings are derived from it by `fixtures generate` and are
 //! asserted by the shared codec-matrix harness, not here.
 
-use crate::artifacts::csv::standards::v_rfc4180::subsets::any::schema::diff::CsvDiff;
-use crate::artifacts::csv::standards::v_rfc4180::subsets::any::schema::mutations::{apply_csv_mutation, CsvMutation};
-use crate::artifacts::csv::standards::v_rfc4180::subsets::any::schema::snapshot::CsvSnapshot;
+use crate::standards::v_rfc4180::subsets::any::schema::diff::CsvDiff;
+use crate::standards::v_rfc4180::subsets::any::schema::mutations::{apply_csv_mutation, CsvMutation};
+use crate::standards::v_rfc4180::subsets::any::schema::snapshot::CsvSnapshot;
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");

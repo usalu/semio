@@ -6,7 +6,7 @@
 //! own top-level format artifact) and the SAME rank/unrank absorb algorithm, adapted from gif
 //! 89a's `GifDiff` absorb (`🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🧬️schema/🔺️diff/🦀️.rs`).
 
-use crate::artifacts::avi::standards::v1_0::subsets::any::schema::snapshot::{AviChunk, AviMainHeader, AviSnapshot, AviStream, AviStreamFormat, AviStreamHeader, RiffChunk};
+use crate::standards::v1_0::subsets::any::schema::snapshot::{AviChunk, AviMainHeader, AviSnapshot, AviStream, AviStreamFormat, AviStreamHeader, RiffChunk};
 use protocol::command::DiffAlgebra;
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
 
@@ -454,7 +454,7 @@ pub fn diff_set_snapshot(base: &AviSnapshot, snapshot: &AviSnapshot) -> AviDiff 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::avi::standards::v1_0::subsets::any::schema::snapshot::STDIO_AVI_DOCUMENT_SCHEMA;
+    use crate::standards::v1_0::subsets::any::schema::snapshot::STDIO_AVI_DOCUMENT_SCHEMA;
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn chunk(n: u8) -> AviChunk {

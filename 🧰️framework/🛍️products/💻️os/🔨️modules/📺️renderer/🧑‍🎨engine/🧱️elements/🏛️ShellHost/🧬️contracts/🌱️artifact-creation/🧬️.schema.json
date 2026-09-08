@@ -47,10 +47,11 @@
         "catalog": {
           "type": "object",
           "additionalProperties": false,
-          "required": ["loading", "ready", "unavailable"],
+          "required": ["loading", "ready", "unavailable", "empty"],
           "properties": {
             "loading": { "type": "string", "minLength": 1 },
             "ready": { "type": "string", "minLength": 1 },
+            "empty": { "type": "string", "minLength": 1 },
             "unavailable": { "type": "string", "minLength": 1 }
           }
         },
@@ -87,11 +88,12 @@
     "catalogCase": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["id", "locale", "phase", "role", "live"],
+      "required": ["id", "locale", "phase", "role", "live", "hasChoices"],
       "properties": {
         "id": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$" },
         "locale": { "enum": ["en", "de"] },
         "phase": { "enum": ["loading", "ready", "unavailable"] },
+        "hasChoices": { "type": "boolean" },
         "role": { "enum": ["status", "alert"] },
         "live": { "enum": ["polite", "assertive"] }
       }

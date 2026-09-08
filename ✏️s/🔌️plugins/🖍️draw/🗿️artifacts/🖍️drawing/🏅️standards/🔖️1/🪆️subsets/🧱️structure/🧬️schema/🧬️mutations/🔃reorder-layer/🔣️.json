@@ -5,7 +5,7 @@
   "displayName": "Reorder Layer",
   "emoji": "🔃",
   "aggregateVariant": "ReorderLayer",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "reorder-layer",
   "binaryTag": 13,
   "invertibility": "explicit-mutation",

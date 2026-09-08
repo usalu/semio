@@ -1,7 +1,7 @@
 //! 🧬️ Authoritative replace-quant-table mutation.
-use crate::artifacts::jpg::schema::diff::*;
-use crate::artifacts::jpg::schema::mutations::JpgMutation;
-use crate::artifacts::jpg::schema::snapshot::*;
+use crate::schema::diff::*;
+use crate::schema::mutations::JpgMutation;
+use crate::schema::snapshot::*;
 
 //#region Payload
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
@@ -34,7 +34,7 @@ impl protocol::MutationKind<JpgSnapshot, JpgMutation> for ReplaceQuantTableMutat
         }
         match base.quant_tables.iter().find(|t| t.id == table.id) {
             Some(existing) => vec![JpgMutation::ReplaceQuantTable(ReplaceQuantTableMutation { table: existing.clone() })],
-            None => vec![JpgMutation::RemoveQuantTable(crate::artifacts::jpg::schema::mutations::RemoveQuantTableMutation { id: table.id })],
+            None => vec![JpgMutation::RemoveQuantTable(crate::schema::mutations::RemoveQuantTableMutation { id: table.id })],
         }
     }
     fn label(&self) -> String {

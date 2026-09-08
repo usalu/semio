@@ -5,7 +5,7 @@
   "displayName": "Delete Time Series Schedule",
   "emoji": "🎞️",
   "aggregateVariant": "DeleteTimeSeriesSchedule",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "delete-time-series-schedule",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

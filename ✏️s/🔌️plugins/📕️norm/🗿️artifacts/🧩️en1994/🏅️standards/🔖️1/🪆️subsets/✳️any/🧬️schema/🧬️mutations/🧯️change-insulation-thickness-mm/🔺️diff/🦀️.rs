@@ -11,6 +11,6 @@ pub fn diff(payload: &ChangeInsulationThicknessMm, base: &En1994Snapshot) -> pro
     if base.insulation_thickness_mm == payload.new_insulation_thickness_mm {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "Insulation thickness mm already has this value.");
     }
-    protocol::MutationOutcome::new(En1994Diff { insulation_thickness_mm: Some(payload.new_insulation_thickness_mm.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1994Diff { insulation_thickness_mm: Some(payload.new_insulation_thickness_mm), ..Default::default() })
 }
 //#endregion 🔖️Diff

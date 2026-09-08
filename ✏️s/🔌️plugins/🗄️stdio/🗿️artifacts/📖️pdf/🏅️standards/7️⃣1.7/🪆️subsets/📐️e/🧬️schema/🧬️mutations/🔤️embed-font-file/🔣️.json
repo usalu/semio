@@ -5,7 +5,7 @@
   "displayName": "Embed Font File",
   "emoji": "🔤️",
   "aggregateVariant": "EmbedFontFile",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "embed-font-file",
   "binaryTag": 10,
   "invertibility": "explicit-mutation",

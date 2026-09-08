@@ -4,8 +4,8 @@
 //! 📤️export/🧵️serializers.
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use crate::artifacts::tsv::standards::iana::subsets::any::schema::snapshot::TsvSnapshot;
-    use crate::artifacts::tsv::standards::iana::subsets::any::schema::TsvAnalyzer;
+    use crate::standards::iana::subsets::any::schema::snapshot::TsvSnapshot;
+    use crate::standards::iana::subsets::any::schema::TsvAnalyzer;
     use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.tsv", standard: StandardId("iana"), subset: SubsetId("*") };
@@ -45,10 +45,10 @@ pub mod derived_composition {
     /// this artifact's standard-level `engine::register()`.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn register() {
-        ::schema::register_artifact_schema_descriptor(crate::artifacts::tsv::standards::iana::subsets::any::schema::tsv_artifact_schema_descriptor());
+        ::framework_schema::register_artifact_schema_descriptor(crate::standards::iana::subsets::any::schema::tsv_artifact_schema_descriptor());
         register_artifact_inferences();
-        store::register_document_codec(store::ArtifactCodec::of::<TsvSnapshot, crate::artifacts::tsv::standards::iana::subsets::any::schema::mutations::TsvMutation>(
-            crate::artifacts::tsv::standards::iana::subsets::any::schema::snapshot::STDIO_TSV_DOCUMENT_SCHEMA,
+        store::register_document_codec(store::ArtifactCodec::of::<TsvSnapshot, crate::standards::iana::subsets::any::schema::mutations::TsvMutation>(
+            crate::standards::iana::subsets::any::schema::snapshot::STDIO_TSV_DOCUMENT_SCHEMA,
         )).expect("static Stdio registration must be available and conflict-free");
     }
 
@@ -57,7 +57,7 @@ pub mod derived_composition {
     /// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn register_artifact_inferences() {
-        ::schema::register_artifact_inference_descriptor(crate::artifacts::tsv::standards::iana::subsets::any::schema::inferences::tsv_artifact_inference_descriptor());
+        ::framework_schema::register_artifact_inference_descriptor(crate::standards::iana::subsets::any::schema::inferences::tsv_artifact_inference_descriptor());
     }
     //#endregion 🔖️Register
 }
@@ -69,7 +69,7 @@ pub use derived_composition::*;
 /// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) — pure `ComposerEntry` aggregation, no
 /// engine needed.
 pub mod io_registry {
-    use crate::artifacts::tsv::standards::iana::subsets::any::schema::TsvComposer as TsvRawAnyComposer;
+    use crate::standards::iana::subsets::any::schema::TsvComposer as TsvRawAnyComposer;
     use semio_framework_plugin::{composer_entry_of, ComposerEntry};
     use std::sync::OnceLock;
 

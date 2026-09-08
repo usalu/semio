@@ -1,13 +1,13 @@
 //! 🧬️ Transparent JsonMutation aggregate.
-use crate::artifacts::json::schema::diff::JsonDiff;
-use crate::artifacts::json::JsonSnapshot;
+use crate::schema::diff::JsonDiff;
+use crate::JsonSnapshot;
 
 pub use super::set_member::{SetMemberMutation, SetMemberPayload};
 pub use super::remove_member::{RemoveMemberMutation, RemoveMemberPayload};
 pub use super::insert_array_element::{InsertArrayElementMutation, InsertArrayElementPayload};
 pub use super::remove_array_element::{RemoveArrayElementMutation, RemoveArrayElementPayload};
 pub use super::set_scalar::{SetScalarMutation, SetScalarPayload};
-pub use crate::artifacts::json::schema::mutation_support::{JsonPath, JsonPathSegment};
+pub use crate::schema::mutation_support::{JsonPath, JsonPathSegment};
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
 #[value(tag = "mutation", content = "payload", rename_all = "camelCase")]
@@ -28,7 +28,7 @@ pub fn apply_json_mutation(snapshot: &mut JsonSnapshot, mutation: &JsonMutation)
 
 #[cfg(test)]
 pub(crate) fn demo_mutation_cases() -> Vec<JsonMutation> {
-    use crate::artifacts::json::schema::snapshot::JsonValue;
+    use crate::schema::snapshot::JsonValue;
     vec![
         JsonMutation::SetMember(SetMemberMutation::Apply(SetMemberPayload { path: Vec::new(), key: "member".into(), value: JsonValue::Null })),
         JsonMutation::RemoveMember(RemoveMemberMutation::Apply(RemoveMemberPayload { path: Vec::new(), key: "member".into() })),

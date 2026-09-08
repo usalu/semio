@@ -1,5 +1,5 @@
 //! 📝️ Framing and direct codec registry for PngMutation.
-use crate::artifacts::png::schema::mutations::PngMutation;
+use crate::schema::mutations::PngMutation;
 
 //#region Registry
 pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
@@ -10,21 +10,21 @@ pub struct Entry {
     pub parse: fn(&str) -> Result<PngMutation, String>,
 }
 pub const REGISTRY: &[Entry] = &[
-    crate::artifacts::png::schema::mutations::change_header::text::CODEC,
-    crate::artifacts::png::schema::mutations::replace_palette::text::CODEC,
-    crate::artifacts::png::schema::mutations::change_transparency::text::CODEC,
-    crate::artifacts::png::schema::mutations::change_gamma::text::CODEC,
-    crate::artifacts::png::schema::mutations::change_chromaticities::text::CODEC,
-    crate::artifacts::png::schema::mutations::change_srgb_intent::text::CODEC,
-    crate::artifacts::png::schema::mutations::change_physical_dims::text::CODEC,
-    crate::artifacts::png::schema::mutations::change_timestamp::text::CODEC,
-    crate::artifacts::png::schema::mutations::change_background::text::CODEC,
-    crate::artifacts::png::schema::mutations::insert_text_chunk::text::CODEC,
-    crate::artifacts::png::schema::mutations::remove_text_chunk::text::CODEC,
-    crate::artifacts::png::schema::mutations::replace_text_chunk::text::CODEC,
-    crate::artifacts::png::schema::mutations::replace_pixels::text::CODEC,
-    crate::artifacts::png::schema::mutations::insert_unknown_chunk::text::CODEC,
-    crate::artifacts::png::schema::mutations::remove_unknown_chunk::text::CODEC,
+    crate::schema::mutations::change_header::text::CODEC,
+    crate::schema::mutations::replace_palette::text::CODEC,
+    crate::schema::mutations::change_transparency::text::CODEC,
+    crate::schema::mutations::change_gamma::text::CODEC,
+    crate::schema::mutations::change_chromaticities::text::CODEC,
+    crate::schema::mutations::change_srgb_intent::text::CODEC,
+    crate::schema::mutations::change_physical_dims::text::CODEC,
+    crate::schema::mutations::change_timestamp::text::CODEC,
+    crate::schema::mutations::change_background::text::CODEC,
+    crate::schema::mutations::insert_text_chunk::text::CODEC,
+    crate::schema::mutations::remove_text_chunk::text::CODEC,
+    crate::schema::mutations::replace_text_chunk::text::CODEC,
+    crate::schema::mutations::replace_pixels::text::CODEC,
+    crate::schema::mutations::insert_unknown_chunk::text::CODEC,
+    crate::schema::mutations::remove_unknown_chunk::text::CODEC,
 ];
 //#endregion Registry
 

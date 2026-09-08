@@ -5,7 +5,7 @@
   "displayName": "Set Photometric Interpretation",
   "emoji": "🌈️",
   "aggregateVariant": "SetPhotometricInterpretation",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

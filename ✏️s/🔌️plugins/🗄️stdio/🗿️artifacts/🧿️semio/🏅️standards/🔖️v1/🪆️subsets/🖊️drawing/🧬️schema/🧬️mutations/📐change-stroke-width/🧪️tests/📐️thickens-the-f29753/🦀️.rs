@@ -6,9 +6,9 @@
 //! proves the stroke triads really are decomposed — this diff must mention `strokeWidth` and NOT
 //! `stroke`.
 
-use crate::artifacts::semio::standards::v1::subsets::drawing::schema::diff::SemioDrawingDiff;
-use crate::artifacts::semio::standards::v1::subsets::drawing::schema::mutations::SemioDrawingMutation;
-use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot;
+use crate::standards::v1::subsets::drawing::schema::diff::SemioDrawingDiff;
+use crate::standards::v1::subsets::drawing::schema::mutations::SemioDrawingMutation;
+use crate::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot;
 use protocol::{Mutation, MutationDiff};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");

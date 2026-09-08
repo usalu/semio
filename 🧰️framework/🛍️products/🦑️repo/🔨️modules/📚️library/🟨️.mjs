@@ -11,6 +11,9 @@ const TEST_TARGET = "test";
 const TEST_LEVELS = ["quick", "long", "exhaustive"];
 
 const LIBRARY_ROOT = dirname(fileURLToPath(import.meta.url));
+const RUNTIME_COMPONENT_MODULE = "🕸️dependencies/🧩️runtime/🟨️.mjs";
+const runtimeRevision = createHash("sha256").update(readFileSync(join(LIBRARY_ROOT, RUNTIME_COMPONENT_MODULE))).digest("hex");
+const { runtimeComponentClosure } = await import(new URL(`./${RUNTIME_COMPONENT_MODULE}?revision=${runtimeRevision}`, import.meta.url).href);
 const POLICY = JSON.parse(readFileSync(join(LIBRARY_ROOT, "⚡️caching/🔣️policy.json"), "utf8"));
 const IMPLEMENTATION_REVISION = new URL(import.meta.url).searchParams.get("revision") ?? implementationRevision();
 const nxPath = (path) => path.split("\\").join("/");
@@ -301,7 +304,9 @@ function nativeCommandInputs(workspaceRoot) {
   const cargo = POLICY.toolchains.cargo, javascript = POLICY.toolchains.javascript;
   return [
     ...relativeScriptInputs([script], workspaceRoot),
-    ...[...javascript.files, ...cargo.files].map((file) => `{workspaceRoot}/${file}`),
+    ...[...javascript.files.filter((file) => !["package.json", "bun.lock"].includes(file)), ...cargo.files].map((file) => `{workspaceRoot}/${file}`),
+    { json: "{workspaceRoot}/package.json", fields: ["name"] },
+    { externalDependencies: ["@iarna/toml"] },
     ...cargo.environment.filter((env) => !env.startsWith("SEMIO_")).map((env) => ({ env })),
     ...[...javascript.commands, ...cargo.commands].map((runtime) => ({ runtime })),
     { runtime: 'node -p "process.platform.concat(process.arch)"' },
@@ -668,14 +673,7 @@ function playgroundPreparationTargets(configFiles, workspaceRoot, projectRoot) {
   const linked = (composition.semio?.browserSessionFactories ?? []).map((row) => row.engine);
   const result = {};
   for (const playground of playgrounds) {
-    const own = components.get(playground.pluginId), selected = new Set(own.host ? components.keys() : [playground.pluginId]);
-    if (!own.host) for (const [id, component] of components) if ((component.contributes ?? []).some((topic) => (own.consumes ?? []).includes(topic))) selected.add(id);
-    const pending = [...selected];
-    while (pending.length) {
-      const id = pending.pop(), component = components.get(id);
-      if (!component) throw new Error(`Unknown runtime component dependency ${id} in ${playground.variant}`);
-      for (const dependency of [...(component.extends ? [component.extends] : []), ...(component["depends-on"] ?? [])]) if (!selected.has(dependency)) { selected.add(dependency); pending.push(dependency); }
-    }
+    const own = components.get(playground.pluginId), selected = runtimeComponentClosure([...components].map(([pluginId, row]) => ({ ...row, pluginId, dependsOn: [...(row.extends ? [row.extends] : []), ...(row["depends-on"] ?? [])] })), [playground.pluginId]);
     const engines = new Set([...baseline, ...linked, ...(own.host ? playgrounds : [playground]).flatMap((row) => row.engines ?? [])].map((path) => {
       const root = nxPath(relative(workspaceRoot, resolve(workspaceRoot, path))), project = projectAt(root);
       if (root.startsWith("../") || !project?.name || !project.targets?.wasm) throw new Error(`Playground engine must name an authored wasm producer: ${path}`);
@@ -849,7 +847,7 @@ function createDependenciesImplementation(_options, context) {
 
 /** ♻️ Reloads authored graph code and policy while retaining Nx's daemon and task cache. */
 function implementationRevision() {
-  return createHash("sha256").update(readFileSync(fileURLToPath(import.meta.url))).update(readFileSync(join(LIBRARY_ROOT, "⚡️caching/🔣️policy.json"))).digest("hex");
+  return createHash("sha256").update(readFileSync(fileURLToPath(import.meta.url))).update(readFileSync(join(LIBRARY_ROOT, "⚡️caching/🔣️policy.json"))).update(readFileSync(join(LIBRARY_ROOT, RUNTIME_COMPONENT_MODULE))).digest("hex");
 }
 
 function invokeCurrentImplementation(kind, args) {
@@ -868,4 +866,4 @@ export default {
   createDependencies,
 };
 
-export const cacheInternals = { bunLockGraph, printDocumentTargets, targetPolicy, nativeDependencies, nativeDependencyRoots, nativePreparation, withNativePreparation, cargoTargets, goDependencies, rustSourceFiles, createRustSourceCache, relativeScriptInputs, projectInputs, rootCommandTargets };
+export const cacheInternals = { runtimeComponentClosure, playgroundPreparationTargets, bunLockGraph, printDocumentTargets, targetPolicy, nativeDependencies, nativeDependencyRoots, nativePreparation, withNativePreparation, cargoTargets, goDependencies, rustSourceFiles, createRustSourceCache, relativeScriptInputs, projectInputs, rootCommandTargets };

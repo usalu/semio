@@ -5,7 +5,7 @@
   "displayName": "Create Thermostat",
   "emoji": "🩺️",
   "aggregateVariant": "CreateThermostat",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "create-thermostat",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

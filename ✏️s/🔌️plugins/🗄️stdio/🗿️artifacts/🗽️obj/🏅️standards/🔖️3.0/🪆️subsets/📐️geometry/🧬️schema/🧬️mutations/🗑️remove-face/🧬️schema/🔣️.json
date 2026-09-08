@@ -1,0 +1,20 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/obj/3.0/geometry/mutation/remove-face.json",
+  "title": "RemoveFace",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "index"
+  ],
+  "properties": {
+    "index": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "mutation": {
+      "const": "removeFace",
+      "description": "Aggregate discriminator spliced in by ObjMutation; absent when the payload stands alone."
+    }
+  }
+}

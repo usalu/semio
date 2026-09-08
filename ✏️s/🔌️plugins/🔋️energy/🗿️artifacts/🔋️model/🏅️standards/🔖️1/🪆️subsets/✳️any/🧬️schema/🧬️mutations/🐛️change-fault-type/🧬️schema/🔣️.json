@@ -1,0 +1,25 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/energy/model/1/any/mutation/change-fault-type.json",
+  "title": "ChangeFaultType",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newFaultType"
+  ],
+  "properties": {
+    "id": {
+      "type": "integer"
+    },
+    "newFaultType": {
+      "enum": [
+        "SensorBias",
+        "CoilFouling",
+        "DamperStuck",
+        "ChillerFouling",
+        "BoilerEfficiencyDegradation"
+      ]
+    }
+  }
+}

@@ -15,8 +15,8 @@ pub mod spatial;
 
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use crate::artifacts::ifc::standards::v4::subsets::any::schema::IfcAnalyzer;
-    use crate::artifacts::ifc::IfcSnapshot;
+    use crate::standards::v4::subsets::any::schema::IfcAnalyzer;
+    use crate::IfcSnapshot;
     use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.ifc", standard: StandardId("4"), subset: SubsetId("*") };
@@ -61,9 +61,9 @@ pub use derived_composition::*;
 #[cfg(test)]
 mod tests {
 
-    use crate::artifacts::ifc::standards::v4::engine::{demo_ifc_snapshot, empty_ifc_snapshot};
-    use crate::artifacts::ifc::IfcSnapshot;
-    use crate::artifacts::ifc::STDIO_IFC_DOCUMENT_SCHEMA;
+    use crate::standards::v4::engine::{demo_ifc_snapshot, empty_ifc_snapshot};
+    use crate::IfcSnapshot;
+    use crate::STDIO_IFC_DOCUMENT_SCHEMA;
 
     #[semio_framework_async_macros::async_test]
     async fn empty_snapshot_matches_schema() {
@@ -91,7 +91,7 @@ mod tests {
     /// artifact's own.
     mod conformance_laws {
         use super::*;
-        use crate::artifacts::ifc::schema::{diff, mutations, snapshot};
+        use crate::schema::{diff, mutations, snapshot};
         use protocol::{DiffCodec, OpBinary, OpText};
 
         /// ✅️ "committed files parse": all 6 handcrafted `.grammar.semio`/`.protocol.semio` files
@@ -202,7 +202,7 @@ mod tests {
 //#region 🚪️DerivedIoRegistry
 /// 🚪️ Dissolved out of `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES).
 pub mod io_registry {
-    use crate::artifacts::ifc::standards::v4::subsets::any::schema::IfcComposer as IfcRawAnyComposer;
+    use crate::standards::v4::subsets::any::schema::IfcComposer as IfcRawAnyComposer;
     use semio_framework_plugin::{composer_entry_of, ComposerEntry};
     use std::sync::OnceLock;
 

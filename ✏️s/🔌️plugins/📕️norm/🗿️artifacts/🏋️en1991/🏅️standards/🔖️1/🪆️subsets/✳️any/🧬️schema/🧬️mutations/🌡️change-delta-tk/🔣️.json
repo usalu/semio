@@ -5,7 +5,7 @@
   "displayName": "Change Delta Tk",
   "emoji": "🌡️",
   "aggregateVariant": "ChangeDeltaTK",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

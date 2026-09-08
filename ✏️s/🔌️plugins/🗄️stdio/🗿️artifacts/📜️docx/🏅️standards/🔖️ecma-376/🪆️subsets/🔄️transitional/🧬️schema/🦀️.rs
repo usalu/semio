@@ -5,7 +5,7 @@
 //! leaf exists so `🪆️subsets/🔄️transitional/🧬️schema/` is present per `🔣️taxonomy.json`'s
 //! `subsetChildDirs`, without duplicating the schema definition.
 
-pub use crate::artifacts::docx::standards::v_ecma_376::subsets::base::schema::*;
+pub use crate::standards::v_ecma_376::subsets::base::schema::*;
 //#region 🧬️Mutations
 // 🧬️ This subset's OWN conformance-class vocabulary, mounted here rather than in the crate's shared
 // `🦀️.rs`: that file is one wiring file for every stdio artifact at once, and the rationale the
@@ -21,12 +21,12 @@ pub mod mutations;
 
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use crate::artifacts::docx::schema::snapshot::{DocxParagraph, DocxRun, DocxStyle, DocxTable};
-    use crate::artifacts::docx::standards::v_ecma_376::subsets::base::schema::DocxBuilderConstruction as DocxAnyBuilder;
+    use crate::schema::snapshot::{DocxParagraph, DocxRun, DocxStyle, DocxTable};
+    use crate::standards::v_ecma_376::subsets::base::schema::DocxBuilderConstruction as DocxAnyBuilder;
     #[cfg(test)]
-    use crate::artifacts::docx::schema::mutations::set_snapshot;
-    use crate::artifacts::docx::standards::v_ecma_376::subsets::transitional::schema::check_transitional_conformance;
-    use crate::artifacts::docx::{DocxDiff, DocxMutation, DocxSnapshot};
+    use crate::schema::mutations::set_snapshot;
+    use crate::standards::v_ecma_376::subsets::transitional::schema::check_transitional_conformance;
+    use crate::{DocxDiff, DocxMutation, DocxSnapshot};
     use dsl::{Diagnostic, Severity};
     use semio_framework_plugin::ArtifactBuilder;
 
@@ -111,7 +111,7 @@ pub mod derived_construction {
         /// this wraps doesn't materialize either until actual encode.
         fn build(self) -> Result<Self::Snapshot, Vec<Diagnostic>> {
             let mut snapshot = self.inner.build()?;
-            crate::artifacts::docx::standards::v_ecma_376::subsets::base::io::export::serializers::sync_main_part(&mut snapshot);
+            crate::standards::v_ecma_376::subsets::base::io::export::serializers::sync_main_part(&mut snapshot);
             let hard: Vec<Diagnostic> = check_transitional_conformance(&snapshot).into_iter().filter(|d| matches!(d.severity, Severity::Error | Severity::Fatal)).collect();
             if hard.is_empty() {
                 Ok(snapshot)
@@ -143,7 +143,7 @@ pub mod derived_construction {
             snapshot.opc.set_part("word/styles.xml", "application/xml", b"<w:styles xmlns:w=\"http://purl.oclc.org/ooxml/wordprocessingml/main\"/>".to_vec());
             let (mutated, _diff) = DocxTransitionalBuilderConstruction::from_snapshot(DocxSnapshot::default()).mutate(DocxMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }));
             let err = mutated.build().expect_err("mixed-in strict namespace must fail build()");
-            assert!(err.iter().any(|d| d.code.0 == crate::artifacts::docx::standards::v_ecma_376::subsets::transitional::schema::CODE_STRICT_NS_PRESENT));
+            assert!(err.iter().any(|d| d.code.0 == crate::standards::v_ecma_376::subsets::transitional::schema::CODE_STRICT_NS_PRESENT));
         }
     }
 }
@@ -152,9 +152,9 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use crate::artifacts::docx::standards::v_ecma_376::subsets::base::schema::{DocxAnalyzer as DocxAnyAnalyzer, DocxParts};
-    use crate::artifacts::docx::DocxSnapshot;
-    use crate::artifacts::zip::opc::{resolve_relationship_target, OpcPackage, OpcPart};
+    use crate::standards::v_ecma_376::subsets::base::schema::{DocxAnalyzer as DocxAnyAnalyzer, DocxParts};
+    use crate::DocxSnapshot;
+    use semio_s_artifact_stdio_zip::opc::{resolve_relationship_target, OpcPackage, OpcPart};
     use dsl::{Diagnostic, FaultCode, FaultScope, Severity, TextSpan};
     use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
@@ -272,7 +272,7 @@ pub mod derived_analysis {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use crate::artifacts::zip::opc::{OpcPackage, RELS_CONTENT_TYPE, REL_TYPE_OFFICE_DOCUMENT};
+        use semio_s_artifact_stdio_zip::opc::{OpcPackage, RELS_CONTENT_TYPE, REL_TYPE_OFFICE_DOCUMENT};
 
         // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         fn transitional_document_bytes() -> Vec<u8> {

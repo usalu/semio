@@ -8,7 +8,7 @@
 //! exactly what is shown (a documented first-pass limitation, not silent data loss: the comment
 //! line states it explicitly).
 
-use crate::artifacts::binary::BinarySnapshot;
+use crate::BinarySnapshot;
 use semio_framework_plugin::app::{TextView, TextWindowKit, WindowKit};
 use semio_framework_plugin::{BuiltNode, LocalizedLabel, WindowKindDefinition};
 

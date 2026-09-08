@@ -8,7 +8,7 @@ use crate::artifacts::equation::{equation_snapshot_with_state, EquationGeometry,
 use semio_framework::io::io_mechanism::Deserializer;
 use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};
-use semio_s_plugin_stdio::artifacts::csv::{CsvSnapshot, STDIO_CSV_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_csv::{CsvSnapshot, STDIO_CSV_DOCUMENT_SCHEMA};
 
 pub const CSV_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.csv", standard: StandardId("rfc4180"), subset: SubsetId::ANY };
 
@@ -28,7 +28,7 @@ impl Deserializer<EquationSnapshot> for CsvIntoEquation {
             .iter()
             .enumerate()
             .map(|(index, record)| {
-                let id = record.fields.first().map(|field| field.value.clone()).unwrap_or_else(|| format!("node-{index}"));
+                let id = record.fields.first().map_or_else(|| format!("node-{index}"), |field| field.value.clone());
                 let label = record.fields.get(1).map(|field| field.value.clone()).unwrap_or_default();
                 let x = record.fields.get(2).and_then(|field| field.value.parse().ok()).unwrap_or(0.0);
                 let y = record.fields.get(3).and_then(|field| field.value.parse().ok()).unwrap_or(0.0);

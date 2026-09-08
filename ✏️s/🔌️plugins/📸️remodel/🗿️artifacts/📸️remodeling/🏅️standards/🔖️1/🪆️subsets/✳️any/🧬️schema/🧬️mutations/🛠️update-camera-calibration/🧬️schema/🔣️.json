@@ -1,0 +1,80 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/remodel/remodeling/1/any/mutation/update-camera-calibration.json",
+  "title": "UpdateCameraCalibration",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "camera"
+  ],
+  "properties": {
+    "camera": {
+      "type": "object",
+      "title": "CameraCalibration",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "label",
+        "model",
+        "fx",
+        "fy",
+        "cx",
+        "cy",
+        "skew",
+        "distortion",
+        "rmsReprojectionPx",
+        "locked"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "model": {
+          "type": "string"
+        },
+        "fx": {
+          "type": "number",
+          "format": "double"
+        },
+        "fy": {
+          "type": "number",
+          "format": "double"
+        },
+        "cx": {
+          "type": "number",
+          "format": "double"
+        },
+        "cy": {
+          "type": "number",
+          "format": "double"
+        },
+        "skew": {
+          "type": "number",
+          "format": "double"
+        },
+        "distortion": {
+          "type": "array",
+          "items": {
+            "type": "number",
+            "format": "float"
+          },
+          "minItems": 5,
+          "maxItems": 5
+        },
+        "rmsReprojectionPx": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "format": "float"
+        },
+        "locked": {
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}

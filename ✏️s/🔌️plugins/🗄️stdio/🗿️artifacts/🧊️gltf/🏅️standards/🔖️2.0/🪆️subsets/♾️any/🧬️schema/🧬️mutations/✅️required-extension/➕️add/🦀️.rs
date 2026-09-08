@@ -1,7 +1,7 @@
 //! 🧬️ Direct add-required-extension mutation owner: payload, validation, typed diff, inverse, and outcomes.
-use crate::artifacts::gltf::schema::modules::mutation_support::top_level::rejection_outcome;
-use crate::artifacts::gltf::GltfSnapshot;
-use crate::artifacts::gltf::schema::modules::mutation_support::top_level::{reject, GltfTopLevelMutationRejection};
+use crate::schema::modules::mutation_support::top_level::rejection_outcome;
+use crate::GltfSnapshot;
+use crate::schema::modules::mutation_support::top_level::{reject, GltfTopLevelMutationRejection};
 pub const ID: &str = "s.stdio.gltf.mutation.add-required-extension.v1";
 pub const TOUCHED_PATHS: &[&str] = &["document/extensionsRequired"];
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
@@ -22,15 +22,15 @@ pub fn apply(payload: &GltfRequireExtensionPayload, base: &GltfSnapshot) -> Resu
 #[value(tag = "phase", content = "value", rename_all = "camelCase")]
 pub enum AddRequiredExtensionMutation {
     Apply(GltfRequireExtensionPayload),
-    Restore(Box<crate::artifacts::gltf::schema::diff::GltfDiff>),
+    Restore(Box<crate::schema::diff::GltfDiff>),
 }
 
 impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for AddRequiredExtensionMutation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "add", entity: "required-extension", kind: "add-required-extension", record: "AddedRequiredExtension" };
 
-    fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<crate::artifacts::gltf::schema::diff::GltfDiff> {
+    fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<crate::schema::diff::GltfDiff> {
         match self {
-            Self::Apply(payload) => { match apply(payload, base) { Ok(next) => protocol::MutationOutcome::new(<crate::artifacts::gltf::schema::diff::GltfDiff as protocol::DiffAlgebra<GltfSnapshot>>::between(base, &next)), Err(error) => rejection_outcome(&error.code, &error.path, error.detail) } }
+            Self::Apply(payload) => { match apply(payload, base) { Ok(next) => protocol::MutationOutcome::new(<crate::schema::diff::GltfDiff as protocol::DiffAlgebra<GltfSnapshot>>::between(base, &next)), Err(error) => rejection_outcome(&error.code, &error.path, error.detail) } }
             Self::Restore(diff) => match protocol::MutationDiff::apply(diff.as_ref(), base) {
                 Ok(_) => protocol::MutationOutcome::new(diff.as_ref().clone()),
                 Err(error) => protocol::MutationOutcome::fatal("mutation.invariant", error.to_string(), error.target),
@@ -43,7 +43,7 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for AddRequiredEx
         if !outcome.messages().is_empty() || outcome.diff().is_empty_diff() {
             return Vec::new();
         }
-        let inverse = <crate::artifacts::gltf::schema::diff::GltfDiff as protocol::DiffAlgebra<GltfSnapshot>>::inverse(outcome.diff(), base);
+        let inverse = <crate::schema::diff::GltfDiff as protocol::DiffAlgebra<GltfSnapshot>>::inverse(outcome.diff(), base);
         vec![super::GltfMutation::AddRequiredExtension(Self::Restore(Box::new(inverse)))]
     }
 

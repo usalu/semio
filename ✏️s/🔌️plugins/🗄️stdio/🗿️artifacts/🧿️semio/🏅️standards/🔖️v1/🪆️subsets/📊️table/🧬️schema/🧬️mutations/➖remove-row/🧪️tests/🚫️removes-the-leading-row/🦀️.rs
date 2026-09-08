@@ -5,9 +5,9 @@
 //! `None`. Removing row #0 — the one that shifts every remaining index — is the case committed
 //! here, and its inverse must re-insert at that same BASE index rather than appending.
 
-use crate::artifacts::semio::standards::v1::subsets::table::schema::diff::SemioTableDiff;
-use crate::artifacts::semio::standards::v1::subsets::table::schema::mutations::SemioTableMutation;
-use crate::artifacts::semio::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot;
+use crate::standards::v1::subsets::table::schema::diff::SemioTableDiff;
+use crate::standards::v1::subsets::table::schema::mutations::SemioTableMutation;
+use crate::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot;
 use protocol::{Mutation, MutationDiff};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");

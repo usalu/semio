@@ -1,0 +1,6 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/os/mcp/component.json",
+  "title": "Semio OS MCP Gateway",
+  "$defs": {}
+}

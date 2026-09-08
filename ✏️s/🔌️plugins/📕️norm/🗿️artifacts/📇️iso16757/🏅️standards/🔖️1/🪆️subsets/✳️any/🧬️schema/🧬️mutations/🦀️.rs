@@ -122,11 +122,11 @@ impl Iso16757Mutation {
         let mut mutations = Vec::new();
         mutations.push(Iso16757Mutation::RenameCatalogue(rename_catalogue::mutation::RenameCatalogue { new_name: target.catalogue.metadata.names.preferred.text.clone() }));
         mutations.push(Iso16757Mutation::RenameManufacturer(rename_manufacturer::mutation::RenameManufacturer { new_name: target.catalogue.manufacturer.names.preferred.text.clone() }));
-        mutations.push(Iso16757Mutation::ChangeExchangeProcess(change_exchange_process::mutation::ChangeExchangeProcess { new_exchange_process: target.exchange_process.clone() }));
+        mutations.push(Iso16757Mutation::ChangeExchangeProcess(change_exchange_process::mutation::ChangeExchangeProcess { new_exchange_process: target.exchange_process }));
         mutations.push(Iso16757Mutation::UpdateScriptLimits(update_script_limits::mutation::UpdateScriptLimits {
-            new_max_steps: target.script_limits.max_steps.clone(),
-            new_max_recursion: target.script_limits.max_recursion.clone(),
-            new_timeout_ms: target.script_limits.timeout_ms.clone(),
+            new_max_steps: target.script_limits.max_steps,
+            new_max_recursion: target.script_limits.max_recursion,
+            new_timeout_ms: target.script_limits.timeout_ms,
         }));
         mutations.push(Iso16757Mutation::ReplacePartNumberRule(replace_part_number_rule::mutation::ReplacePartNumberRule { new_rule: target.part_number_rule.clone() }));
         mutations.push(Iso16757Mutation::ChangeSelectionClass(change_selection_class::mutation::ChangeSelectionClass { new_class_id: target.selection.class_id.clone() }));

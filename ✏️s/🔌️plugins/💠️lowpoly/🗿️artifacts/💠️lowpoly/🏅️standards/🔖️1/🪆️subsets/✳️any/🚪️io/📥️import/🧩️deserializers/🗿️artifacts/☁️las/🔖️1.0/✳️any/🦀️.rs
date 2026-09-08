@@ -4,7 +4,7 @@
 //! import would need to synthesize a `LowpolyObject` (and a resolvable mesh child artifact) from
 //! parsed points -- an out-of-scope architecture change, not a pure `&LasSnapshot -> …` mapping.
 use crate::artifacts::lowpoly::schema::snapshot::LowpolySnapshot;
-use semio_s_plugin_stdio::artifacts::las::LasSnapshot;
+use semio_s_artifact_stdio_las::LasSnapshot;
 
 pub fn register() {}
 

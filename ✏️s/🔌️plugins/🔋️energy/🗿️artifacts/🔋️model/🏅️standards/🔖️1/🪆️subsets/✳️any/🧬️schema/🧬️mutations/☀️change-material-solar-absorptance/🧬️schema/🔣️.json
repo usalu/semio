@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/energy/model/1/any/mutation/change-material-solar-absorptance.json",
+  "title": "ChangeMaterialSolarAbsorptance",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newSolarAbsorptance"
+  ],
+  "properties": {
+    "id": {
+      "type": "integer"
+    },
+    "newSolarAbsorptance": {
+      "type": "number"
+    }
+  }
+}

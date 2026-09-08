@@ -5,7 +5,7 @@
   "displayName": "Create Fenestration",
   "emoji": "🪟️",
   "aggregateVariant": "CreateFenestration",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "create-fenestration",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

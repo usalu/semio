@@ -1,12 +1,25 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://semio.tech/schema/imperative/1/any/mutation.json",
   "title": "ProcedureMutation",
   "oneOf": [
-    {"$ref": "./🌱create-step/🧬️.schema.json"},
-    {"$ref": "./🗑️delete-step/🧬️.schema.json"},
-    {"$ref": "./🔀reorder-steps/🧬️.schema.json"},
-    {"$ref": "./🔧edit-step-params/🧬️.schema.json"}
+    {
+      "$ref": "./🌱create-step/🧬️schema/🔣️.json"
+    },
+    {
+      "$ref": "./🗑️delete-step/🧬️schema/🔣️.json"
+    },
+    {
+      "$ref": "./🔧edit-step-params/🧬️schema/🔣️.json"
+    },
+    {
+      "$ref": "./🔀reorder-steps/🧬️schema/🔣️.json"
+    }
   ],
-  "x-semio-mutationKinds": ["create-step", "delete-step", "reorder-steps", "edit-step-params"]
+  "x-semio-mutationKinds": [
+    "create-step",
+    "delete-step",
+    "edit-step-params",
+    "reorder-steps"
+  ]
 }

@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/docx/ecma-376/transitional/mutation/set-main-namespace.json",
+  "title": "SetMainNamespace",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "namespace"
+  ],
+  "properties": {
+    "namespace": {
+      "type": "string"
+    }
+  }
+}

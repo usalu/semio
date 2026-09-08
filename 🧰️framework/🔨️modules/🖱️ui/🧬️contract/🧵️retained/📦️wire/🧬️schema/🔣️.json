@@ -1,0 +1,346 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/framework/ui/contract/retained/wire/schema.json",
+  "title": "Ui Contract Retained Wire Schema Module",
+  "$defs": {
+    "FieldsFixture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "fieldNames",
+        "node",
+        "replacement",
+        "repeat",
+        "expected",
+        "laws"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "fieldNames": {
+          "const": [
+            "component",
+            "layout",
+            "style",
+            "accessibility",
+            "bindings",
+            "menu",
+            "children"
+          ]
+        },
+        "node": {
+          "type": "object"
+        },
+        "replacement": {
+          "type": "object"
+        },
+        "repeat": {
+          "const": 1024
+        },
+        "expected": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "directFieldOwners",
+            "ancestorOwners",
+            "oldBytesAfterReplacement",
+            "id",
+            "component"
+          ],
+          "properties": {
+            "directFieldOwners": {
+              "const": 7
+            },
+            "ancestorOwners": {
+              "const": 0
+            },
+            "oldBytesAfterReplacement": {
+              "const": [
+                3,
+                7,
+                11
+              ]
+            },
+            "id": {
+              "const": 9007199254740991
+            },
+            "component": {
+              "const": {
+                "type": "text",
+                "value": "Neu 😀",
+                "emphasize": null,
+                "dataAttributes": null
+              }
+            }
+          }
+        },
+        "laws": {
+          "type": "array",
+          "minItems": 9,
+          "maxItems": 9,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "old-reader-holds-replaced-bytes",
+              "unchanged-field-allocation-identity",
+              "fixed-seven-direct-fields",
+              "cancelled-candidate-does-not-close-current",
+              "last-reader-releases-old-bytes",
+              "wrong-field-owner-rejected-before-move",
+              "zero-grant-close-preserves-fields",
+              "capabilities-cannot-be-shadowed",
+              "capture-saturation-is-atomic"
+            ]
+          }
+        }
+      }
+    },
+    "DecodeFixture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "nativeBounds",
+        "vectors",
+        "hostile",
+        "large"
+      ],
+      "properties": {
+        "nativeBounds": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "textBytes",
+            "collectionItems",
+            "grantBytes"
+          ],
+          "properties": {
+            "textBytes": {
+              "const": 512
+            },
+            "collectionItems": {
+              "const": 256
+            },
+            "grantBytes": {
+              "const": 4096
+            }
+          }
+        },
+        "vectors": {
+          "type": "array",
+          "minItems": 5,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "hex",
+              "expected"
+            ],
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "hex": {
+                "type": "string",
+                "pattern": "^(?:[0-9a-f]{2})+$"
+              },
+              "expected": {}
+            }
+          }
+        },
+        "hostile": {
+          "type": "array",
+          "minItems": 8,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "hex"
+            ],
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "hex": {
+                "type": "string",
+                "pattern": "^(?:[0-9a-f]{2})*$"
+              }
+            }
+          }
+        },
+        "large": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "rows",
+            "text",
+            "repeat"
+          ],
+          "properties": {
+            "rows": {
+              "const": 128
+            },
+            "text": {
+              "const": "😀ä\"\\"
+            },
+            "repeat": {
+              "const": 48
+            }
+          }
+        }
+      }
+    },
+    "SurfaceBytesFixture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "maximumBytes",
+        "pageBytes",
+        "lengths",
+        "pattern",
+        "invalidLengths"
+      ],
+      "properties": {
+        "maximumBytes": {
+          "const": 32768
+        },
+        "pageBytes": {
+          "const": 256
+        },
+        "lengths": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 32768
+          },
+          "minItems": 7
+        },
+        "pattern": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "multiply",
+            "add",
+            "modulo"
+          ],
+          "properties": {
+            "multiply": {
+              "const": 17
+            },
+            "add": {
+              "const": 3
+            },
+            "modulo": {
+              "const": 256
+            }
+          }
+        },
+        "invalidLengths": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 4
+        }
+      }
+    },
+    "TypedFixture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "grant",
+        "components",
+        "defaults",
+        "hostile",
+        "lifecycle"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "grant": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "maxItems",
+            "maxBytes"
+          ],
+          "properties": {
+            "maxItems": {
+              "const": 1
+            },
+            "maxBytes": {
+              "const": 4096
+            }
+          }
+        },
+        "components": {
+          "type": "array",
+          "minItems": 18,
+          "maxItems": 18,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "wire",
+              "expected"
+            ],
+            "properties": {
+              "wire": {
+                "type": "object"
+              },
+              "expected": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "defaults": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "style",
+            "accessibility"
+          ],
+          "properties": {
+            "style": {
+              "type": "object"
+            },
+            "accessibility": {
+              "type": "object"
+            }
+          }
+        },
+        "hostile": {
+          "type": "array",
+          "minItems": 10,
+          "items": {
+            "type": "object"
+          }
+        },
+        "lifecycle": {
+          "type": "array",
+          "minItems": 8,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "cancel-before-decode",
+              "cancel-during-value",
+              "cancel-during-normalization",
+              "cancel-after-byte-capture",
+              "decoder-close-before-publication",
+              "two-snapshot-readers",
+              "older-reader-closes-last",
+              "zero-grant-close"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

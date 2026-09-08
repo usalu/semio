@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/norm/en1996/1/any/mutation/change-exposure.json",
+  "title": "ChangeExposure",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newExposure"
+  ],
+  "properties": {
+    "newExposure": {
+      "type": "string",
+      "enum": [
+        "Mx1",
+        "Mx2",
+        "Mx3",
+        "Mx4",
+        "Mx5"
+      ]
+    }
+  }
+}

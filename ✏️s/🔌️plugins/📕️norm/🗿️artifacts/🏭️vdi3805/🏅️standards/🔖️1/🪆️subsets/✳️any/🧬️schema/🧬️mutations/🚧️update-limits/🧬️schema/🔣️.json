@@ -1,0 +1,41 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/norm/vdi3805/1/any/mutation/update-limits.json",
+  "title": "UpdateLimits",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newLimits"
+  ],
+  "properties": {
+    "newLimits": {
+      "title": "SecurityLimits",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "maxFieldLength",
+        "maxFileBytes",
+        "maxNestingDepth",
+        "maxRecords"
+      ],
+      "properties": {
+        "maxFileBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "maxRecords": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "maxFieldLength": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "maxNestingDepth": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    }
+  }
+}

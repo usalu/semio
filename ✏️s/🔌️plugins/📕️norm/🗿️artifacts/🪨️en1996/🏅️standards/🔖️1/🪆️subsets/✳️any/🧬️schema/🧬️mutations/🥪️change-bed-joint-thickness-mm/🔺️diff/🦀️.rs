@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeBedJointThicknessMm, base: &En1996Snapshot) -> proto
     if base.bed_joint_thickness_mm == payload.new_bed_joint_thickness_mm {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "Bed joint thickness mm already has this value.");
     }
-    protocol::MutationOutcome::new(En1996Diff { bed_joint_thickness_mm: Some(payload.new_bed_joint_thickness_mm.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1996Diff { bed_joint_thickness_mm: Some(payload.new_bed_joint_thickness_mm), ..Default::default() })
 }
 //#endregion 🔖️Diff

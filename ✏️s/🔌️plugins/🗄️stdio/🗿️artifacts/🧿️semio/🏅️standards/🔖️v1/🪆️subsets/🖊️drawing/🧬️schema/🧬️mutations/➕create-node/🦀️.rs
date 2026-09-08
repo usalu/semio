@@ -4,9 +4,9 @@
 //! `NodePath` — the same structural substitute the sibling `🔺️diff` facet's own `diff_at_path`/
 //! `node_at` already establish for every node-addressed mutation in this facet.
 
-use crate::artifacts::semio::standards::v1::subsets::drawing::schema::diff::NodePath;
-use crate::artifacts::semio::standards::v1::subsets::drawing::schema::mutations::SemioDrawingMutation;
-use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{DrawNode, SemioDrawingSnapshot};
+use crate::standards::v1::subsets::drawing::schema::diff::NodePath;
+use crate::standards::v1::subsets::drawing::schema::mutations::SemioDrawingMutation;
+use crate::standards::v1::subsets::drawing::schema::snapshot::{DrawNode, SemioDrawingSnapshot};
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]

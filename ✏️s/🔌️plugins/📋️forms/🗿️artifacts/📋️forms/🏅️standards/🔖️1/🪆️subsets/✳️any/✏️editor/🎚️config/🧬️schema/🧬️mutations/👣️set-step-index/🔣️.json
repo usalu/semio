@@ -5,7 +5,7 @@
   "displayName": "Set Step Index",
   "emoji": "👣️",
   "aggregateVariant": "SetStepIndex",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "set-step-index",
   "binaryTag": 1,
   "invertibility": "explicit-mutation",

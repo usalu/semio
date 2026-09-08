@@ -27,133 +27,16 @@ use crate::catalog::{CapabilityDefinition, CapabilityKind, CapabilityOwner, Capa
 use crate::errors::{GatewayError, GatewayErrorCode};
 use crate::tool_from_capability;
 use crate::protocol::{CallToolResult, ContentBlock, GatewayBackend, InMemoryToolRegistry};
-use crate::schema::RevisionStamp;
+use crate::schema::{
+    artifact_create_input_schema, artifact_create_output_schema, artifact_export_input_schema, artifact_export_output_schema, artifact_open_input_schema, artifact_open_output_schema, artifact_snapshot_input_schema,
+    artifact_snapshot_output_schema, artifact_validate_input_schema, artifact_validate_output_schema, RevisionStamp,
+};
 use crate::workspace::{find_plugin_entry, find_repo_root, load_package_descriptor, load_plugin_registry, HeadlessWorkspace};
 use std::sync::Arc;
 
 //#region 🔖️Schemas
-/// 📐️ `RevisionStamp`-shaped, nullable — used as a sub-schema (never a top-level tool schema, so no
-/// `$schema`/`$id` of its own).
-fn revision_stamp_schema() -> serde_json::Value {
-    serde_json::json!({
-        "type": ["object", "null"],
-        "properties": { "artifactId": { "type": "string" }, "headEditId": { "type": "string" }, "cursor": { "type": "string" } },
-    })
-}
-
-fn artifact_open_input_schema() -> serde_json::Value {
-    serde_json::json!({
-        "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "$id": "semio://capability/artifact.open/input",
-        "type": "object",
-        "properties": { "artifactId": { "type": "string" } },
-        "required": ["artifactId"],
-        "additionalProperties": false,
-    })
-}
-
-/// 📐️ Deliberately NOT the resource's full-body shape (`semio://artifact/{id}` — packBytes/
-/// sprBytes/packBase64) — this file's own module doc: `artifact_open` answers identity/kind/
-/// revision/size, never the whole body.
-fn artifact_open_output_schema() -> serde_json::Value {
-    serde_json::json!({
-        "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "$id": "semio://capability/artifact.open/output",
-        "type": "object",
-        "properties": {
-            "artifactId": { "type": "string" },
-            "kind": { "type": ["string", "null"] },
-            "revision": revision_stamp_schema(),
-            "sizeBytes": { "type": ["integer", "null"] },
-        },
-    })
-}
-
-fn artifact_create_input_schema() -> serde_json::Value {
-    serde_json::json!({
-        "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "$id": "semio://capability/artifact.create/input",
-        "type": "object",
-        "properties": { "artifactId": { "type": "string" }, "kind": { "type": "string" }, "initial": {} },
-        "required": ["artifactId", "kind"],
-        "additionalProperties": false,
-    })
-}
-
-fn artifact_create_output_schema() -> serde_json::Value {
-    serde_json::json!({
-        "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "$id": "semio://capability/artifact.create/output",
-        "type": "object",
-        "properties": { "artifactId": { "type": "string" }, "kind": { "type": "string" }, "revision": revision_stamp_schema() },
-    })
-}
-
-fn artifact_validate_input_schema() -> serde_json::Value {
-    serde_json::json!({
-        "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "$id": "semio://capability/artifact.validate/input",
-        "type": "object",
-        "properties": { "artifactId": { "type": "string" } },
-        "required": ["artifactId"],
-        "additionalProperties": false,
-    })
-}
-
-/// 📐️ Deliberately permissive: the real wire protocol has no validate query command yet
-/// (`🏠️workspace/🦀️.rs` `read_artifact_resource`'s `validation` arm), so no shape can be
-/// pinned down before that lands.
-fn artifact_validate_output_schema() -> serde_json::Value {
-    serde_json::json!({ "$schema": "https://json-schema.org/draft/2020-12/schema", "$id": "semio://capability/artifact.validate/output", "type": "object" })
-}
-
-fn artifact_snapshot_input_schema() -> serde_json::Value {
-    serde_json::json!({
-        "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "$id": "semio://capability/artifact.snapshot/input",
-        "type": "object",
-        "properties": { "artifactId": { "type": "string" }, "revision": revision_stamp_schema() },
-        "required": ["artifactId"],
-        "additionalProperties": false,
-    })
-}
-
-fn artifact_snapshot_output_schema() -> serde_json::Value {
-    serde_json::json!({
-        "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "$id": "semio://capability/artifact.snapshot/output",
-        "type": "object",
-        "properties": {
-            "artifactId": { "type": "string" },
-            "packBytes": { "type": ["integer", "null"] },
-            "sprBytes": { "type": ["integer", "null"] },
-            "packBase64": { "type": ["string", "null"] },
-        },
-    })
-}
-
-fn artifact_export_input_schema() -> serde_json::Value {
-    serde_json::json!({
-        "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "$id": "semio://capability/artifact.export/input",
-        "type": "object",
-        "properties": { "artifactId": { "type": "string" }, "format": { "type": "string" } },
-        "required": ["artifactId"],
-        "additionalProperties": false,
-    })
-}
-
-/// 📐️ The shape a real export would answer with once the wire protocol grows an export command —
-/// today every call ends in a tool-error carrying `availableFormats` in its `details` instead (see
-/// [`artifact_export_handler`]).
-fn artifact_export_output_schema() -> serde_json::Value {
-    serde_json::json!({
-        "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "$id": "semio://capability/artifact.export/output",
-        "type": "object",
-        "properties": { "artifactId": { "type": "string" }, "format": { "type": "string" }, "contentBase64": { "type": ["string", "null"] }, "mimeType": { "type": ["string", "null"] } },
-    })
-}
+// 📐️ Every `artifact_*` tool schema is a named export of `🧬️schema/🦀️.rs` (scope `os.mcp`), imported
+// above — this facet stamps none of its own.
 //#endregion 🔖️Schemas
 
 //#region 🔖️Capabilities

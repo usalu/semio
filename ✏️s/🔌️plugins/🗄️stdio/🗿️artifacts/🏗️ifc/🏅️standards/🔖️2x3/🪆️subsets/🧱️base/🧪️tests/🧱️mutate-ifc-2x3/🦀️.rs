@@ -243,10 +243,10 @@ fn round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::{inverse_spec, json_obj, json_spec, mutable_input};
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_plugin_stdio::artifacts::ifc::standards::v2x3::subsets::base::io::{decode_ifc2x3, encode_ifc2x3};
-    use semio_s_plugin_stdio::artifacts::ifc::standards::v2x3::subsets::base::schema::mutations::{apply_ifc2x3_mutation, remove_instance, set_header, set_snapshot, upsert_instance, Ifc2x3Mutation};
-    use semio_s_plugin_stdio::artifacts::ifc::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot;
-    use semio_s_plugin_stdio::artifacts::step::standards::v_ap214::engine::part21::{Part21Header, Part21Instance, Part21Value};
+    use crate::standards::v2x3::subsets::base::io::{decode_ifc2x3, encode_ifc2x3};
+    use crate::standards::v2x3::subsets::base::schema::mutations::{apply_ifc2x3_mutation, remove_instance, set_header, set_snapshot, upsert_instance, Ifc2x3Mutation};
+    use crate::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot;
+    use semio_s_artifact_stdio_step::standards::v_ap214::engine::part21::{Part21Header, Part21Instance, Part21Value};
     use semio_s_plugin_stdio_test_oracle::artifacts::ifc::standards::v2x3::subsets::base::project_ifc_2x3_any;
 
     //#region 🔖️SpecReading

@@ -289,12 +289,12 @@ fn round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::{inverse_specs, moved_the_document, mutable_input, project};
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_plugin_stdio::artifacts::obj::standards::v3_0::subsets::any::io::{decode_obj, encode_obj};
-    use semio_s_plugin_stdio::artifacts::obj::standards::v3_0::subsets::any::schema::mutations::{
+    use crate::standards::v3_0::subsets::any::io::{decode_obj, encode_obj};
+    use crate::standards::v3_0::subsets::any::schema::mutations::{
         apply_obj_mutation, insert_face, insert_normal, insert_texcoord, insert_vertex, remove_face, remove_group, remove_normal, remove_object, remove_texcoord, remove_vertex, set_face, set_group, set_mtllib, set_normal, set_object, set_smoothing_groups,
         set_snapshot, set_texcoord, set_unknown_statements, set_usemtl, set_vertex, ObjMutation,
     };
-    use semio_s_plugin_stdio::artifacts::obj::standards::v3_0::subsets::any::schema::snapshot::{ObjFace, ObjFaceVertex, ObjGroup, ObjNormal, ObjObject, ObjSmoothingRange, ObjSnapshot, ObjTexCoord, ObjUnknownStatement, ObjUsemtlRange, ObjVertex};
+    use crate::standards::v3_0::subsets::any::schema::snapshot::{ObjFace, ObjFaceVertex, ObjGroup, ObjNormal, ObjObject, ObjSmoothingRange, ObjSnapshot, ObjTexCoord, ObjUnknownStatement, ObjUsemtlRange, ObjVertex};
 
     //#region 🔖️SpecReading
     fn json_num(value: &Json, key: &str) -> Option<f64> {

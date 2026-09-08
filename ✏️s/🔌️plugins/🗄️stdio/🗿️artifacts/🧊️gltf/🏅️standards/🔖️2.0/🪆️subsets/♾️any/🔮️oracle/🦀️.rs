@@ -11,7 +11,7 @@
 //!
 //! **Why `json` (json-rust), not the `gltf` crate (1.4.1, MIT):** `gltf` is a credible, actively
 //! maintained reader and IS already production-reachable in this repository — but confirmed
-//! genuinely independent of this subset's own codec first. `crate::artifacts::gltf::schema::
+//! genuinely independent of this subset's own codec first. `crate::schema::
 //! snapshot::🦀️.rs`'s `GltfSnapshot`/`GltfDocument`/`GltfJson` never names `gltf::`
 //! anywhere (no `impl From<gltf::…>`, no import), and `decode_glb`/`encode_glb`/`parse_gltf_document`
 //! (`../🚪️io/🦀️.rs`) are hand-rolled over `serde_json` alone. Every real `gltf::` call site

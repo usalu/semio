@@ -1,8 +1,8 @@
 //! ✏️ `bmp` edit (any) — Main window: real `ImageWindowKit`
 //! render of the current document (editable variant).
 
-use crate::artifacts::bmp::standards::v_v3::subsets::any::io::encode_bmp;
-use crate::artifacts::bmp::standards::v_v3::subsets::any::schema::snapshot::BmpSnapshot;
+use crate::standards::v_v3::subsets::any::io::encode_bmp;
+use crate::standards::v_v3::subsets::any::schema::snapshot::BmpSnapshot;
 use semio_framework_plugin::app::{ImageView, ImageWindowKit};
 use semio_framework_plugin::{BuiltNode, WindowKindDefinition, WindowKit};
 

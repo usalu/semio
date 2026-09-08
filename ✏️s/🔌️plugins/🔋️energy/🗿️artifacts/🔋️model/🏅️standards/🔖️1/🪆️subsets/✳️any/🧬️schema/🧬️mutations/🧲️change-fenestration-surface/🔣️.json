@@ -5,7 +5,7 @@
   "displayName": "Change Fenestration Surface",
   "emoji": "🧲️",
   "aggregateVariant": "ChangeFenestrationSurface",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-fenestration-surface",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

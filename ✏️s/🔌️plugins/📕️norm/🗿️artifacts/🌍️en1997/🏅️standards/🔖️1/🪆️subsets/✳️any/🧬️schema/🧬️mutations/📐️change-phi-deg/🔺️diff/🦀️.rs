@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangePhiDeg, base: &En1997Snapshot) -> protocol::Mutation
     if base.phi_deg == payload.new_phi_deg {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Friction angle phi [deg] is already {}.", payload.new_phi_deg));
     }
-    protocol::MutationOutcome::new(En1997Diff { phi_deg: Some(payload.new_phi_deg.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1997Diff { phi_deg: Some(payload.new_phi_deg), ..Default::default() })
 }
 //#endregion 🔖️Diff

@@ -1,0 +1,40 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/energy/model/1/any/mutation/replace-airflow-network.json",
+  "title": "ReplaceAirflowNetwork",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "present",
+    "zoneIds",
+    "nodeIds",
+    "outdoorNodeId",
+    "linkIds"
+  ],
+  "properties": {
+    "present": {
+      "type": "boolean"
+    },
+    "zoneIds": {
+      "type": "array",
+      "items": {
+        "type": "integer"
+      }
+    },
+    "nodeIds": {
+      "type": "array",
+      "items": {
+        "type": "integer"
+      }
+    },
+    "outdoorNodeId": {
+      "type": "integer"
+    },
+    "linkIds": {
+      "type": "array",
+      "items": {
+        "type": "integer"
+      }
+    }
+  }
+}

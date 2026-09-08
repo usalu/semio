@@ -1,7 +1,7 @@
 //! 🕳️ `delete-texture` — removes an id-keyed texture.
 
-use crate::artifacts::semio::standards::v1::subsets::mesh::schema::mutations::SemioMeshMutation;
-use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
+use crate::standards::v1::subsets::mesh::schema::mutations::SemioMeshMutation;
+use crate::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]

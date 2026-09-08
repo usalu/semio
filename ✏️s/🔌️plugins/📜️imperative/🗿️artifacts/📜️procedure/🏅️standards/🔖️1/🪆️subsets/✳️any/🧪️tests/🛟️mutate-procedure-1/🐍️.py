@@ -3,7 +3,7 @@ vocabulary.
 
 Nothing third-party reads `.imperative.dsl.semio` — a semio-NATIVE program document — so no reference
 LIBRARY exists. The reference is therefore a second IMPLEMENTATION, written from this subset's own
-committed `../../🧬️schema/📸️snapshot/🔣️.json` and each mutation's `🧬️.schema.json`, and from
+committed `../../🧬️schema/📸️snapshot/🔣️.json` and each mutation's `🧬️schema/🔣️.json`, and from
 `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-DIRECT-LEAF-OVERHAUL/📓️taxonomy.md`'s
 `create`/`delete`/`reorder`/`edit` verb entries and `📓️derivation-rules.md`'s per-id-keyed and
 per-index-keyed collection recipes (a step list is id-keyed at every scope, so `create`/`delete` win

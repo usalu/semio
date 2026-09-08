@@ -5,8 +5,8 @@
 //! text chunks (tEXt/zTXt/iTXt), decoded pixels, and chunk-ORDER + unknown-chunk verbatim
 //! retention so nothing real on disk is silently dropped (`## Snapshot completeness spec`).
 
-use crate::artifacts::png::STDIO_PNG_DOCUMENT_SCHEMA;
-use schema::ArtifactSchema;
+use crate::STDIO_PNG_DOCUMENT_SCHEMA;
+use framework_schema::ArtifactSchema;
 
 //#region ColorModel
 /// 🎨️ PNG §11.2.2 `IHDR` color type. `Palette` requires a `PLTE` chunk; `compression method`
@@ -346,11 +346,11 @@ impl store::ArtifactDsl for PngSnapshot {
             bytes.push(byte);
             i += 2;
         }
-        crate::artifacts::png::engine::decode_png(&bytes).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        crate::engine::decode_png(&bytes).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 
     fn print_dsl(&self) -> String {
-        let bytes = crate::artifacts::png::engine::encode_png(self).unwrap_or_default();
+        let bytes = crate::engine::encode_png(self).unwrap_or_default();
         let body: String = bytes.iter().map(|b| format!("{b:02x}")).collect();
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
@@ -360,7 +360,7 @@ impl store::ArtifactDsl for PngSnapshot {
 impl store::ArtifactPack for PngSnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
-        let raw = crate::artifacts::png::engine::encode_png(self).map_err(store::PackError::Schema)?;
+        let raw = crate::engine::encode_png(self).map_err(store::PackError::Schema)?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
@@ -371,7 +371,7 @@ impl store::ArtifactPack for PngSnapshot {
             return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
         }
         let _ = options;
-        crate::artifacts::png::engine::decode_png(&inner).map_err(store::PackError::Schema)
+        crate::engine::decode_png(&inner).map_err(store::PackError::Schema)
     }
 }
 //#endregion HandcraftedArtifactCodecs

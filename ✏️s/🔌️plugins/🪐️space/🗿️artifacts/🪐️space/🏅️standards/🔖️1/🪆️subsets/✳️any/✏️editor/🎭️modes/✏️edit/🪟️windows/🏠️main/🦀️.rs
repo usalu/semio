@@ -94,8 +94,8 @@ fn render_table(config: &SpaceIndexConfig) -> semio_framework_plugin::UiAssembly
 /// clears `--window-content-dead-line` (26px) — the same clearance `TableHost` already gets for free.
 /// Two empty separators reliably clear it (measured live). Real fix belongs in the interpreter's
 /// `UiStackHost` (framework-owned, outside this lane's lease).
-fn window_content_dead_line_spacer() -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    Ok(semio_framework_ui_contract::BuiltNode::empty_separator())
+fn window_content_dead_line_spacer() -> semio_framework_plugin::BuiltNode {
+    semio_framework_ui_contract::BuiltNode::empty_separator()
 }
 
 /// 🆕️ ticket §C0 lane 4-F — the `#s-space-create-artifact` toolbar button, always rendered above the
@@ -120,7 +120,7 @@ fn create_artifact_button() -> semio_framework_plugin::UiAssemblyResult<semio_fr
 
 pub fn render(_document: &SSpaceSnapshot, config: &SpaceIndexConfig) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let mut children = semio_framework_plugin::UiFixedList::<semio_framework_plugin::BuiltNode>::default();
-    for child in [window_content_dead_line_spacer()?, window_content_dead_line_spacer()?, create_artifact_button()?, render_table(config)?] {
+    for child in [window_content_dead_line_spacer(), window_content_dead_line_spacer(), create_artifact_button()?, render_table(config)?] {
         children.try_push(child).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.window.children", "fixed window child admission failed"))?;
     }
     semio_framework_ui_contract::column()

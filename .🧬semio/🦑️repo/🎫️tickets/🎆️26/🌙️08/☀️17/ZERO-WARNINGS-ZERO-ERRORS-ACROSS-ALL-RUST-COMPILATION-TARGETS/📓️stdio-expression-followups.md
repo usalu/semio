@@ -258,3 +258,8 @@ Captured full current bodies for all 27 indexed-loop diagnostics, matching the c
 ## Pass 415 — Direct Slice Iteration
 
 Addressed all 27 recorded loop diagnostics with bounded slice fills, ordered iteration, and element enumeration. JPEG transform summation order, spline accumulation order, Adam7 pass indices, and DEFLATE symbol order are preserved. Slice bounds retain the original input-size requirements. Gaussian elimination copies the three-entry pivot row before updating a later row; sewing and revolution iterate their existing id lists. Full-loop guards passed, compiler and numerical/codec tests pending.
+
+
+## Pass 427 — Final WASI 421 Follow-Ups
+
+Strict WASI 421 completed with two diagnostics: plane_torus now inherits infallibility from its corrected helper callees, and recover_edge only mutates existing triangles. The private intersection helper returns its vector directly with Result retained at the public dispatcher, and edge recovery accepts a mutable slice. Fresh strict compilation remains required.

@@ -1044,8 +1044,8 @@ impl ArtifactEditor for Fem3dPlayApp {
                 };
                 let base_z = value.get("baseZ").and_then(Value::as_f64).unwrap_or(0.0);
                 let height = value.get("height").and_then(Value::as_f64).unwrap_or(1.0);
-                let layers = value.get("layers").and_then(Value::as_u64).map(|v| v as usize).unwrap_or(1);
-                let material_id = doc.snapshot.materials.first().map(|material| material.id.clone()).unwrap_or_else(|| "unassigned".into());
+                let layers = value.get("layers").and_then(Value::as_u64).map_or(1, |v| v as usize);
+                let material_id = doc.snapshot.materials.first().map_or_else(|| "unassigned".into(), |material| material.id.clone());
                 let id = crate::app_surface::next_id(doc.snapshot.solids.iter().map(|s| s.id.clone()), "sol");
                 let solid = crate::artifacts::fem3d::FemSolid { id, name: "Imported Geometry".into(), outline, holes, base_z, height, layers, mesh_size: 0.5, material_id };
                 Ok(Emit::mutations(vec![Fem3dMutation::CreateSolid(crate::artifacts::fem3d::mutations::create_solid::CreateSolid { solid })]))

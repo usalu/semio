@@ -23,6 +23,7 @@ export default defineConfig({
       "../../../../🧱️elements/📋️MenuItem/🧪️tests/🟦️.tsx",
       "../../../../🧱️elements/🧾️Form/🧪️tests/🟦️.tsx",
       "../../../../🧱️elements/💬️Dialog/🧪️tests/🟦️.tsx",
+      "../../../../🧱️elements/📨️UIDialog/🧪️tests/🟦️.tsx",
       "../../../../🧱️elements/⌨️Command/🧪️tests/🟦️.tsx",
       "../../../../🧱️elements/📻️TableAvatar/🧪️tests/🟦️.tsx",
       "../../../../🧱️elements/🗨️Popover/🧪️tests/🟦️.tsx",

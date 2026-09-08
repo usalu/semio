@@ -7,9 +7,9 @@
 //! own curve (not just a straight-line control polygon) and every face its own surface (not just
 //! `PLANE`), matching AP214's real vocabulary of surface/curve kinds.
 
-use crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioPoint3};
-use crate::artifacts::semio::standards::v1::subsets::base::schema::triples::{split_top_level, strip_brackets};
-use schema::ArtifactSchema;
+use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioPoint3};
+use crate::standards::v1::subsets::base::schema::triples::{split_top_level, strip_brackets};
+use framework_schema::ArtifactSchema;
 
 //#region 🔖️Ids
 pub const STDIO_SEMIOBREP_DOCUMENT_SCHEMA: &str = "stdio.semio.brep";
@@ -163,7 +163,7 @@ pub struct BrepVertex {
     pub id: String,
     pub point: SemioPoint3,
     /// 🎚️ Native `Vertex::tol` (containment ball radius, model units) — `0.0` (the Rust default)
-    /// means "unspecified"; [`crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::body::Body::from_snapshot`]
+    /// means "unspecified"; [`crate::standards::v1::subsets::brep::schema::snapshot::body::Body::from_snapshot`]
     /// treats `<= 0.0` as "use the kernel default" rather than a literal zero tolerance, so
     /// pre-this-wave fixture JSON (missing this field) still reconstructs a valid `Body`.
     #[value(default)]
@@ -306,7 +306,7 @@ pub struct SemioBrepSnapshot {
     pub solids: Vec<BrepSolid>,
     /// 🧱️ First-class coedges — see [`BrepCoedge`]'s own doc comment for why this is a separate
     /// collection rather than a widened `BrepLoopEdge`. Empty for every snapshot produced before
-    /// this field existed (STEP import, hand-authored fixtures): [`crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::body::Body::from_snapshot`]
+    /// this field existed (STEP import, hand-authored fixtures): [`crate::standards::v1::subsets::brep::schema::snapshot::body::Body::from_snapshot`]
     /// falls back to reconstructing coedges from `BrepLoop.edges` (no pcurve) when this is empty.
     #[state(artifact)]
     #[value(default)]

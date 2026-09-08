@@ -1,0 +1,42 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/writer/writer/1/any/editor/config/mutation/set-editor-settings.json",
+  "title": "SetEditorSettings",
+  "type": "object",
+  "properties": {
+    "settings": {
+      "type": "object",
+      "properties": {
+        "showLineNumbers": {
+          "type": "boolean"
+        },
+        "fontPx": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "lineHeight": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "tabSize": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        }
+      },
+      "required": [
+        "showLineNumbers",
+        "fontPx",
+        "lineHeight",
+        "tabSize"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "settings"
+  ],
+  "additionalProperties": false
+}

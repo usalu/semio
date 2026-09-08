@@ -10,7 +10,7 @@
 //! standards genuinely differ in shape, which is why 87a→89a is the plan's "Tier 2"
 //! (snapshot-type-changing) evolution pilot rather than a same-type dialect move.
 
-use schema::ArtifactSchema;
+use framework_schema::ArtifactSchema;
 
 //#region Ids
 /// 🏷️ Document schema / DSL envelope id — distinct from 87a's `"stdio.gif"` so the two
@@ -253,11 +253,11 @@ impl store::ArtifactDsl for GifSnapshot {
             bytes.push(byte);
             i += 2;
         }
-        crate::artifacts::gif::standards::v89a::engine::decode_gif(&bytes).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        crate::standards::v89a::engine::decode_gif(&bytes).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 
     fn print_dsl(&self) -> String {
-        let bytes = crate::artifacts::gif::standards::v89a::engine::encode_gif(self).unwrap_or_default();
+        let bytes = crate::standards::v89a::engine::encode_gif(self).unwrap_or_default();
         let body: String = bytes.iter().map(|b| format!("{b:02x}")).collect();
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
@@ -267,7 +267,7 @@ impl store::ArtifactDsl for GifSnapshot {
 impl store::ArtifactPack for GifSnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
-        let raw = crate::artifacts::gif::standards::v89a::engine::encode_gif(self).map_err(store::PackError::Schema)?;
+        let raw = crate::standards::v89a::engine::encode_gif(self).map_err(store::PackError::Schema)?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
@@ -278,7 +278,7 @@ impl store::ArtifactPack for GifSnapshot {
             return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
         }
         let _ = options;
-        crate::artifacts::gif::standards::v89a::engine::decode_gif(&inner).map_err(store::PackError::Schema)
+        crate::standards::v89a::engine::decode_gif(&inner).map_err(store::PackError::Schema)
     }
 }
 //#endregion HandcraftedArtifactCodecs

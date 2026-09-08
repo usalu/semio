@@ -3,7 +3,7 @@
 //! is a single length read, not a fold over per-frame content), so this holds only the value type
 //! + its pure `compute` fn (no `InferredField`).
 
-use crate::artifacts::semio::standards::v1::subsets::image::schema::snapshot::{SemioColorspace, SemioImageSnapshot};
+use crate::standards::v1::subsets::image::schema::snapshot::{SemioColorspace, SemioImageSnapshot};
 
 //#region 🔖️Dimensions
 /// 📐️ Semio image header-derived raster geometry. `has_alpha` reads the explicit `colorspace`
@@ -39,7 +39,7 @@ pub fn compute_semio_image_dimensions(snapshot: &SemioImageSnapshot) -> SemioIma
 //#region 🧪️Tests
 mod tests {
     use super::*;
-    use crate::artifacts::semio::standards::v1::subsets::image::schema::snapshot::{SemioImageFrame, STDIO_SEMIOIMAGE_DOCUMENT_SCHEMA};
+    use crate::standards::v1::subsets::image::schema::snapshot::{SemioImageFrame, STDIO_SEMIOIMAGE_DOCUMENT_SCHEMA};
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn snapshot(width: u32, height: u32, colorspace: SemioColorspace, bit_depth: u8, frame_count: usize) -> SemioImageSnapshot {

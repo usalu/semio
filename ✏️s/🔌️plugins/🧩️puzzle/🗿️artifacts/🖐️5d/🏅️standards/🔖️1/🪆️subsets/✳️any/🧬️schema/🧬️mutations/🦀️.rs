@@ -313,7 +313,7 @@ pub fn inverse_puzzle5d_mutation(projection: &Puzzle5dSnapshot, mutation: &Puzzl
 fn normalize_kind_catalogs_for_snapshot_value(value: &Value) -> Value {
     let mut value = value.clone();
     let Some(object) = value.as_object_mut() else { return value };
-    let is_embedded = object.get("kindCatalogs").map(|catalogs| catalogs.is_object() && catalogs.get("childId").is_none()).unwrap_or(false);
+    let is_embedded = object.get("kindCatalogs").is_some_and(|catalogs| catalogs.is_object() && catalogs.get("childId").is_none());
     if !is_embedded {
         return value;
     }

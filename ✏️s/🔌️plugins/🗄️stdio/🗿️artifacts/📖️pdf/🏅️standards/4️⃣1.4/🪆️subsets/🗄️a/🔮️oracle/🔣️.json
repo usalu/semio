@@ -121,7 +121,7 @@
         {
           "id": "clear-page-text",
           "capability": "pdf-1-4-a-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "rejected",
             "applied"
@@ -142,7 +142,7 @@
         {
           "id": "set-page-text",
           "capability": "pdf-1-4-a-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "rejected",
             "applied"

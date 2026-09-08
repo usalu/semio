@@ -40,7 +40,7 @@ use semio_framework_plugin::{
 };
 use semio_framework_plugin::retained_command::{ArtifactCommandWork, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
 use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::{Brep, GeometryHandle};
+use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::engine::{Brep, GeometryHandle};
 // 🚧️ SDK GAP: `ArtifactEditor`/`Editor`/`Dialect` (ticket 26/08/16 contract §2.1/§2.4)? are not yet
 // in `semio_framework_plugin`'s curated crate-root re-export list (`🔌️plugin/🦀️.rs:17858`)
 // — only reachable through the `app` submodule they're actually declared in. Not fixable here
@@ -458,7 +458,7 @@ pub fn preview_transition_snapshot_of(runtime: &CadPlayRuntime, base: &CadConfig
             return Err(Fault::from("cad.preview.invalid: engagement preview generation is negative"));
         }
         config.engagement_preview_generation =
-            base.engagement_preview_generation.checked_add(1).filter(|generation| *generation <= CAD_PREVIEW_GENERATION_MAX).ok_or_else(|| Fault::from("cad.preview.conflict: engagement preview generation exhausted"))?;
+            base.engagement_preview_generation.checked_add(1).ok_or_else(|| Fault::from("cad.preview.conflict: engagement preview generation exhausted"))?;
         config.engagement_preview_operation_json = Some(json_string_of(operation));
     }
     Ok(CadConfigMutation::Snapshot { config })
@@ -1163,7 +1163,7 @@ fn cad_retained_reduce(
     let doc = ArtifactView::with_operation(snapshot, history, operation.clone());
     let cfg = ConfigView { snapshot: config };
     let selection = interaction.selection.get(CAD_INTERACTION_DOMAIN).cloned().unwrap_or_default();
-    let retained_interaction = CadInteractionSnapshot { granularity: selection.granularity.clone(), ids: selection.ids.clone(), anchor_id: selection.anchor_id.clone() };
+    let retained_interaction = CadInteractionSnapshot { granularity: selection.granularity.clone(), ids: selection.ids.clone(), anchor_id: selection.anchor_id };
     let mut ctx = CadDispatchCtx { interaction: retained_interaction, preview_operation: Some(CadPreviewOperationIdentity::from(operation)) };
     if CAD_RETAINED_ARTIFACT_TOOL_IDS.contains(&command.command_id()) {
         admit_cad_snapshot(snapshot).map_err(Fault::from)?;

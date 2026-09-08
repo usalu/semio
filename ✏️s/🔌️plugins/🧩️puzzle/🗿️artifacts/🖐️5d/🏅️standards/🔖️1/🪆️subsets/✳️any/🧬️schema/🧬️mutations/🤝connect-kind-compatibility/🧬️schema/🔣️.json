@@ -1,0 +1,38 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/puzzle/5d/1/any/mutation/connect-kind-compatibility.json",
+  "title": "ConnectKindCompatibility",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "bidirectional",
+    "important",
+    "source",
+    "specificity",
+    "target"
+  ],
+  "properties": {
+    "source": {
+      "type": "string"
+    },
+    "target": {
+      "type": "string"
+    },
+    "bidirectional": {
+      "type": "boolean"
+    },
+    "important": {
+      "type": "boolean"
+    },
+    "specificity": {
+      "type": "string",
+      "enum": [
+        "general",
+        "part",
+        "fastener",
+        "grip",
+        "rope"
+      ]
+    }
+  }
+}

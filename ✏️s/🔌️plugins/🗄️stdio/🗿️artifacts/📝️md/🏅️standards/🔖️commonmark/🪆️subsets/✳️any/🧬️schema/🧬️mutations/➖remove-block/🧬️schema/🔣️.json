@@ -1,0 +1,72 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/md/commonmark/any/mutation/remove-block.json",
+  "title": "RemoveBlock",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "path",
+    "index"
+  ],
+  "properties": {
+    "path": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/MdPathStep"
+      }
+    },
+    "index": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "mutation": {
+      "const": "removeBlock",
+      "description": "Aggregate discriminator spliced in by MdMutation; absent when the payload stands alone."
+    }
+  },
+  "$defs": {
+    "MdPathStep": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "step",
+            "index"
+          ],
+          "properties": {
+            "step": {
+              "const": "blockQuote"
+            },
+            "index": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "step",
+            "index",
+            "item"
+          ],
+          "properties": {
+            "step": {
+              "const": "listItem"
+            },
+            "index": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "item": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        }
+      ]
+    }
+  }
+}

@@ -603,7 +603,7 @@ mod tests {
             assert_eq!(bounded_retain_cycles(usize::MAX), Err("retain-cycle fixture exceeds its bounded test budget"));
             assert!(unsafe { Owned::<NSString>::from_new(std::ptr::null_mut()) }.is_none());
             let fixture = format!(
-                "{{\n  \"$schema\": \"../🧬️schema/🔣️.schema.json\",\n  \"schemaVersion\": 1,\n  \"contract\": \"owned-objective-c-runtime\",\n  \"oracle\": {{ \"package\": \"objc2\", \"version\": \"0.6.4\" }},\n  \"layout\": {{ \"ownedBytes\": {}, \"ownedAlign\": {}, \"optionalOwnedBytes\": {} }},\n  \"ownership\": {{ \"cloneRetainDelta\": 1, \"dropRestores\": true, \"nullOwnedAccepted\": false, \"autoreleasePoolDrained\": true }},\n  \"boundaries\": {{ \"empty\": \"accepted\", \"single\": \"accepted\", \"maximum\": 4096, \"maximumPlusOne\": \"rejected\", \"hostileNull\": \"rejected\" }}\n}}\n",
+                "{{\n  \"$schema\": \"../🧬️schema/🔣️.json\",\n  \"schemaVersion\": 1,\n  \"contract\": \"owned-objective-c-runtime\",\n  \"oracle\": {{ \"package\": \"objc2\", \"version\": \"0.6.4\" }},\n  \"layout\": {{ \"ownedBytes\": {}, \"ownedAlign\": {}, \"optionalOwnedBytes\": {} }},\n  \"ownership\": {{ \"cloneRetainDelta\": 1, \"dropRestores\": true, \"nullOwnedAccepted\": false, \"autoreleasePoolDrained\": true }},\n  \"boundaries\": {{ \"empty\": \"accepted\", \"single\": \"accepted\", \"maximum\": 4096, \"maximumPlusOne\": \"rejected\", \"hostileNull\": \"rejected\" }}\n}}\n",
                 size_of::<Owned<NSString>>(),
                 align_of::<Owned<NSString>>(),
                 size_of::<Option<Owned<NSString>>>()

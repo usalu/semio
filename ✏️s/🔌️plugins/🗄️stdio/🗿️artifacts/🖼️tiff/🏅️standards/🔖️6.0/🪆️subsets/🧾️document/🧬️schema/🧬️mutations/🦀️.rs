@@ -1,8 +1,8 @@
 //! 🧬️ Transparent TiffMutation aggregate.
-use crate::artifacts::tiff::schema::diff::TiffDiff;
-use crate::artifacts::tiff::TiffSnapshot;
+use crate::schema::diff::TiffDiff;
+use crate::TiffSnapshot;
 
-pub use crate::artifacts::tiff::schema::operations::{apply_tiff_mutation, inverse_tiff_mutation};
+pub use crate::schema::operations::{apply_tiff_mutation, inverse_tiff_mutation};
 
 //#region Owners
 pub use super::change_byte_order::ChangeByteOrderMutation;
@@ -31,11 +31,11 @@ pub enum TiffMutation {
 #[cfg(test)]
 pub(crate) fn demo_mutation_cases() -> Vec<TiffMutation> {
     vec![
-        crate::artifacts::tiff::schema::mutations::change_byte_order::test_case(),
-        crate::artifacts::tiff::schema::mutations::insert_ifd::test_case(),
-        crate::artifacts::tiff::schema::mutations::remove_ifd::test_case(),
-        crate::artifacts::tiff::schema::mutations::replace_tag::test_case(),
-        crate::artifacts::tiff::schema::mutations::remove_tag::test_case(),
-        crate::artifacts::tiff::schema::mutations::replace_pixels::test_case(),
+        crate::schema::mutations::change_byte_order::test_case(),
+        crate::schema::mutations::insert_ifd::test_case(),
+        crate::schema::mutations::remove_ifd::test_case(),
+        crate::schema::mutations::replace_tag::test_case(),
+        crate::schema::mutations::remove_tag::test_case(),
+        crate::schema::mutations::replace_pixels::test_case(),
     ]
 }

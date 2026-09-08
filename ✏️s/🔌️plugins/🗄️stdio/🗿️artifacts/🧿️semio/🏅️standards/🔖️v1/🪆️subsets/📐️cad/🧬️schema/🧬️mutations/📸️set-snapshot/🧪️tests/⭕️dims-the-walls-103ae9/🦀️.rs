@@ -11,9 +11,9 @@
 //! circle arrives re-stated in full rather than as a `radius`-only sub-patch; that is the artifact's
 //! own choice and is what this fixture pins.
 
-use crate::artifacts::semio::standards::v1::subsets::cad::schema::diff::SemioCadDiff;
-use crate::artifacts::semio::standards::v1::subsets::cad::schema::mutations::{apply_semio_cad_mutation, SemioCadMutation};
-use crate::artifacts::semio::standards::v1::subsets::cad::schema::snapshot::{CadEntity, SemioCadSnapshot};
+use crate::standards::v1::subsets::cad::schema::diff::SemioCadDiff;
+use crate::standards::v1::subsets::cad::schema::mutations::{apply_semio_cad_mutation, SemioCadMutation};
+use crate::standards::v1::subsets::cad::schema::snapshot::{CadEntity, SemioCadSnapshot};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");

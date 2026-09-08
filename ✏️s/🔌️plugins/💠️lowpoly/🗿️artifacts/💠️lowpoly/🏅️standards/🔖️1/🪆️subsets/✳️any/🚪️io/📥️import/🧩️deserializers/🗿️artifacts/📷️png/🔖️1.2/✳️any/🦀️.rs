@@ -6,8 +6,8 @@
 //! comment) and are not consulted here.
 use crate::artifacts::lowpoly::schema::snapshot::text::parse_dsl;
 use crate::artifacts::lowpoly::schema::snapshot::{dec_str, LowpolySnapshot};
-use semio_s_plugin_stdio::artifacts::png::engine::decode_png;
-use semio_s_plugin_stdio::artifacts::png::PngSnapshot;
+use semio_s_artifact_stdio_png::engine::decode_png;
+use semio_s_artifact_stdio_png::PngSnapshot;
 
 pub fn register() {}
 

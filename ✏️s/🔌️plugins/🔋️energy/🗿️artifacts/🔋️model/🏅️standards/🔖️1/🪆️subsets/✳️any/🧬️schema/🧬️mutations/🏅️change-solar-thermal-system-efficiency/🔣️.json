@@ -5,7 +5,7 @@
   "displayName": "Change Solar Thermal System Efficiency",
   "emoji": "🏅️",
   "aggregateVariant": "ChangeSolarThermalSystemEfficiency",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-solar-thermal-system-efficiency",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

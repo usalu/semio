@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/energy/model/1/any/mutation/bind-fenestration-glazing-construction.json",
+  "title": "BindFenestrationGlazingConstruction",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "constructionId"
+  ],
+  "properties": {
+    "id": {
+      "type": "integer"
+    },
+    "constructionId": {
+      "type": "integer"
+    }
+  }
+}

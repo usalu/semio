@@ -5,9 +5,9 @@
 //! `BrepVertex` in `added` and NOTHING else — `removed`/`modified` are empty vectors, which
 //! `skip_serializing_if = "Vec::is_empty"` drops from the JSON entirely. All six brep collections
 //! are id-keyed, so the new vertex is appended by `apply_named` rather than positioned.
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::decode_semio_brep_diff_json;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::mutations::{decode_semio_brep_mutation_json, SemioBrepMutation};
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::{decode_semio_brep_snapshot_json, SemioBrepSnapshot};
+use crate::standards::v1::subsets::brep::schema::diff::decode_semio_brep_diff_json;
+use crate::standards::v1::subsets::brep::schema::mutations::{decode_semio_brep_mutation_json, SemioBrepMutation};
+use crate::standards::v1::subsets::brep::schema::snapshot::{decode_semio_brep_snapshot_json, SemioBrepSnapshot};
 use pack::value::ToValue;
 use protocol::{Mutation, MutationDiff};
 

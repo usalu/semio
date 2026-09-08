@@ -5,7 +5,7 @@
   "displayName": "Change Mesh Extra Data",
   "emoji": "📝️",
   "aggregateVariant": "ChangeMeshExtraData",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

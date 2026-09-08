@@ -10,7 +10,7 @@ use crate::artifacts::program::ProgramSnapshot;
 pub fn diff(payload: &CreateDocument, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
     let id = payload.document.header.id.clone();
     if base.artifacts.iter().any(|row| row.header.id == id) {
-        return protocol::MutationOutcome::fatal("mutation.duplicate-id", "A document already exists with this id.", [id.0.clone()]);
+        return protocol::MutationOutcome::fatal("mutation.duplicate-id", "A document already exists with this id.", [id.0]);
     }
     protocol::MutationOutcome::new(ProgramDiff { documents: Some(ProgramArtifactsDelta { added: vec![payload.document.clone()], ..Default::default() }), ..Default::default() })
 }

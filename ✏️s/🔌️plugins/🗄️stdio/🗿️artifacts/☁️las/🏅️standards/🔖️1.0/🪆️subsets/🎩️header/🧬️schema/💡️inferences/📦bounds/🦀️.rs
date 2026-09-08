@@ -5,7 +5,7 @@
 //! declare, several of which legitimately carry a header bbox looser than the actual point
 //! extent). A pure whole-snapshot scalar read — no `InferredField` needed.
 
-use crate::artifacts::las::LasSnapshot;
+use crate::LasSnapshot;
 
 //#region 🔖️Bounds
 /// 📦️ Las header-declared bounding box and point count.
@@ -35,8 +35,8 @@ pub fn compute_las_bounds(snapshot: &LasSnapshot) -> LasBounds {
 //#region 🧪️Tests
 mod tests {
     use super::*;
-    use crate::artifacts::las::schema::snapshot::{LasHeader, LasPoint, LasVlr};
-    use crate::artifacts::las::STDIO_LAS_DOCUMENT_SCHEMA;
+    use crate::schema::snapshot::{LasHeader, LasPoint, LasVlr};
+    use crate::STDIO_LAS_DOCUMENT_SCHEMA;
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn snapshot_with(header: LasHeader, points: Vec<LasPoint>) -> LasSnapshot {

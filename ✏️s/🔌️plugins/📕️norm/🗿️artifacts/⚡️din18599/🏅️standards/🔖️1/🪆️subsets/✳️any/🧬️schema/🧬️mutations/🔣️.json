@@ -1,85 +1,61 @@
 {
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://semio.tech/schema/s/norm/din18599/mutation.json",
   "title": "Din18599Mutation",
-  "type": "object",
-  "additionalProperties": false,
-  "required": [
-    "useClass",
-    "heatedAreaM2",
-    "occupants",
-    "hT",
-    "hV",
-    "climate",
-    "internalGainsWM2",
-    "solarGainsKwh",
-    "systemLossesKwh",
-    "renewableKwh",
-    "annualLimitKwh",
-    "energyCarrier",
-    "referenceQPKwh"
-  ],
-  "properties": {
-    "useClass": {
-      "type": "string",
-      "x-semio-state": "artifact"
+  "oneOf": [
+    {
+      "$ref": "./🚦️change-annual-limit-kwh/🧬️schema/🔣️.json"
     },
-    "heatedAreaM2": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🔋️change-energy-carrier/🧬️schema/🔣️.json"
     },
-    "occupants": {
-      "type": "integer",
-      "format": "uint32",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./📐️change-heated-area-m2/🧬️schema/🔣️.json"
     },
-    "hT": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🧱️change-ht/🧬️schema/🔣️.json"
     },
-    "hV": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🌬️change-hv/🧬️schema/🔣️.json"
     },
-    "climate": {
-      "$ref": "#/$defs/Din18599MonthlyClimate",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🔥️change-internal-gains-wm2/🧬️schema/🔣️.json"
     },
-    "internalGainsWM2": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./👥️change-occupants/🧬️schema/🔣️.json"
     },
-    "solarGainsKwh": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🏢️change-reference-qp-kwh/🧬️schema/🔣️.json"
     },
-    "systemLossesKwh": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./♻️change-renewable-kwh/🧬️schema/🔣️.json"
     },
-    "renewableKwh": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./☀️change-solar-gains-kwh/🧬️schema/🔣️.json"
     },
-    "annualLimitKwh": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./📉️change-system-losses-kwh/🧬️schema/🔣️.json"
     },
-    "energyCarrier": {
-      "type": "string",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🏷️change-use-class/🧬️schema/🔣️.json"
     },
-    "referenceQPKwh": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🌦️update-climate/🧬️schema/🔣️.json"
     }
-  }
+  ],
+  "x-semio-mutationKinds": [
+    "change-annual-limit-kwh",
+    "change-energy-carrier",
+    "change-heated-area-m2",
+    "change-ht",
+    "change-hv",
+    "change-internal-gains-wm2",
+    "change-occupants",
+    "change-reference-qp-kwh",
+    "change-renewable-kwh",
+    "change-solar-gains-kwh",
+    "change-system-losses-kwh",
+    "change-use-class",
+    "update-climate"
+  ]
 }

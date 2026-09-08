@@ -22,7 +22,7 @@ this same carrier.
   whole-snapshot-shaped generic schema `s.architect.program`'s own mutation schema records itself as
   superseding, never replaced here. It has since been replaced: that file is now a real `oneOf` of the
   twenty-six branches, internally tagged on `mutation` with the camelCase variant name, and each
-  ``🧬️mutations/<kind>/🧬️.schema.json`` leaf carries that same branch as its own per-mutation record.
+  ``🧬️mutations/<kind>/🧬️schema/🔣️.json`` leaf carries that same branch as its own per-mutation record.
   Both were written from the Rust types, and every payload this reference reads validates against
   them — so the argument lists below are now confirmed by a schema, not only by the payloads.
 * rules 2, 4 and 7 of

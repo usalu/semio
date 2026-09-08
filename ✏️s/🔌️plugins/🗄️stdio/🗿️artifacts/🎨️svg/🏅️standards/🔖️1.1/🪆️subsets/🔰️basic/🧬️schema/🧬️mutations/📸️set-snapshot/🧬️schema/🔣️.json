@@ -1,0 +1,318 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/svg/1.1/basic/mutation/set-snapshot.json",
+  "title": "SetSnapshot",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "snapshot"
+  ],
+  "properties": {
+    "snapshot": {
+      "$ref": "#/$defs/SvgSnapshot"
+    }
+  },
+  "$defs": {
+    "SvgSnapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema"
+      ],
+      "properties": {
+        "schema": {
+          "type": "string"
+        },
+        "doc": {
+          "$ref": "#/$defs/XmlDocument"
+        }
+      }
+    },
+    "XmlDocument": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "root": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/XmlNode"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "doctype": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/XmlDoctype"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "declaration": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/XmlDeclaration"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "prolog": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/XmlNode"
+          }
+        }
+      }
+    },
+    "XmlNode": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "name"
+          ],
+          "properties": {
+            "kind": {
+              "const": "element"
+            },
+            "name": {
+              "type": "string"
+            },
+            "attrs": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/XmlAttr"
+              }
+            },
+            "children": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/XmlNode"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "text"
+          ],
+          "properties": {
+            "kind": {
+              "const": "text"
+            },
+            "text": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "text"
+          ],
+          "properties": {
+            "kind": {
+              "const": "cData"
+            },
+            "text": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "text"
+          ],
+          "properties": {
+            "kind": {
+              "const": "comment"
+            },
+            "text": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "target",
+            "data"
+          ],
+          "properties": {
+            "kind": {
+              "const": "processingInstruction"
+            },
+            "target": {
+              "type": "string"
+            },
+            "data": {
+              "type": "string"
+            }
+          }
+        }
+      ]
+    },
+    "XmlAttr": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "value"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        }
+      }
+    },
+    "XmlDoctype": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "externalId": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/XmlExternalId"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "declarations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/XmlDtdDeclaration"
+          }
+        }
+      }
+    },
+    "XmlExternalId": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "systemId"
+          ],
+          "properties": {
+            "kind": {
+              "const": "system"
+            },
+            "systemId": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "publicId",
+            "systemId"
+          ],
+          "properties": {
+            "kind": {
+              "const": "public"
+            },
+            "publicId": {
+              "type": "string"
+            },
+            "systemId": {
+              "type": "string"
+            }
+          }
+        }
+      ]
+    },
+    "XmlDtdDeclaration": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "parameter",
+            "name",
+            "value"
+          ],
+          "properties": {
+            "kind": {
+              "const": "entity"
+            },
+            "parameter": {
+              "type": "boolean"
+            },
+            "name": {
+              "type": "string"
+            },
+            "value": {
+              "type": "string"
+            }
+          }
+        }
+      ]
+    },
+    "XmlDeclaration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version"
+      ],
+      "properties": {
+        "version": {
+          "type": "string"
+        },
+        "encoding": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "standalone": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    }
+  }
+}

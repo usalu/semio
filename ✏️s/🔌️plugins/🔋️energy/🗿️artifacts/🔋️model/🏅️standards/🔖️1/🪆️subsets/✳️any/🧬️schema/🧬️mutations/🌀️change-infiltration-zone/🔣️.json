@@ -5,7 +5,7 @@
   "displayName": "Change Infiltration Zone",
   "emoji": "🌀️",
   "aggregateVariant": "ChangeInfiltrationZone",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-infiltration-zone",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

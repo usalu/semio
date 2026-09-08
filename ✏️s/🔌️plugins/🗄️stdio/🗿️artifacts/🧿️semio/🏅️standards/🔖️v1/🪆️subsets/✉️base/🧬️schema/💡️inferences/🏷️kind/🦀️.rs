@@ -5,7 +5,7 @@
 //! wire dispatch. A pure O(1) tag read off an already-decoded enum discriminant — no
 //! `InferredField` needed.
 
-use crate::artifacts::semio::standards::v1::subsets::base::schema::snapshot::{subset_ordinal, subset_tag, SemioSnapshot};
+use crate::standards::v1::subsets::base::schema::snapshot::{subset_ordinal, subset_tag, SemioSnapshot};
 
 //#region 🔖️Kind
 /// 🏷️ The envelope's wrapped-subset dispatch tag/ordinal.
@@ -39,8 +39,8 @@ pub fn compute_semio_kind(snapshot: &SemioSnapshot) -> SemioKind {
 //#region 🧪️Tests
 mod tests {
     use super::*;
-    use crate::artifacts::semio::standards::v1::subsets::base::schema::snapshot::{SemioSubsetSnapshot, STDIO_SEMIO_DOCUMENT_SCHEMA};
-    use crate::artifacts::semio::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
+    use crate::standards::v1::subsets::base::schema::snapshot::{SemioSubsetSnapshot, STDIO_SEMIO_DOCUMENT_SCHEMA};
+    use crate::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn snapshot(subset: SemioSubsetSnapshot) -> SemioSnapshot {

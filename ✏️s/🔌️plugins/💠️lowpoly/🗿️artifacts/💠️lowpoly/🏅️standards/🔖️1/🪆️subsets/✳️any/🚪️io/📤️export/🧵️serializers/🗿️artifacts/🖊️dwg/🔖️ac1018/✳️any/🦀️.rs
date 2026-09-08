@@ -7,7 +7,7 @@
 //! why). Left as an HONEST stub pending that architecture work -- see this ticket's
 //! `📝️io-implementation-result.md` handoff.
 use crate::artifacts::lowpoly::schema::snapshot::LowpolySnapshot;
-use semio_s_plugin_stdio::artifacts::dwg::DwgSnapshot;
+use semio_s_artifact_stdio_dwg::DwgSnapshot;
 
 pub fn register() {}
 

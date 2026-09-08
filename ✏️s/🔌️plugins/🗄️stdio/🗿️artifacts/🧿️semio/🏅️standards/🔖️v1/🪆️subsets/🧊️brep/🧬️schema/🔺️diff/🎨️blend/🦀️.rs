@@ -13,20 +13,20 @@
 
 use std::collections::HashSet;
 
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::euler::{make_edge, make_loop, make_vertex};
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::offset::{ruled_surface_from_curves, set_face_pcurves};
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::primitives::{attach_face, finish_solid, line_edge};
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::inferences::mass_properties::edge_length;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::{Curve2Id, EdgeId, FaceId, SolidId};
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::bspline::KnotVector;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::curve_ops::{interpolate_curve, ParamMethod};
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::Curve3;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::error::KernelError;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::surface::Surface;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::tolerance::Tol;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::history::OpRecorder;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::Body;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::{Pnt3, Vec3};
+use crate::standards::v1::subsets::brep::schema::diff::euler::{make_edge, make_loop, make_vertex};
+use crate::standards::v1::subsets::brep::schema::diff::offset::{ruled_surface_from_curves, set_face_pcurves};
+use crate::standards::v1::subsets::brep::schema::diff::primitives::{attach_face, finish_solid, line_edge};
+use crate::standards::v1::subsets::brep::schema::inferences::mass_properties::edge_length;
+use crate::standards::v1::subsets::brep::schema::snapshot::arena::{Curve2Id, EdgeId, FaceId, SolidId};
+use crate::standards::v1::subsets::brep::schema::snapshot::curve::bspline::KnotVector;
+use crate::standards::v1::subsets::brep::schema::snapshot::curve::curve_ops::{interpolate_curve, ParamMethod};
+use crate::standards::v1::subsets::brep::schema::snapshot::curve::Curve3;
+use crate::standards::v1::subsets::brep::schema::snapshot::error::KernelError;
+use crate::standards::v1::subsets::brep::schema::snapshot::surface::Surface;
+use crate::standards::v1::subsets::brep::schema::snapshot::tolerance::Tol;
+use crate::standards::v1::subsets::brep::schema::snapshot::topology::history::OpRecorder;
+use crate::standards::v1::subsets::brep::schema::snapshot::topology::Body;
+use crate::standards::v1::subsets::brep::schema::snapshot::vector::{Pnt3, Vec3};
 
 const BLEND_TOL: f64 = 1e-6;
 const BLEND_SAMPLES: usize = 9;
@@ -121,11 +121,11 @@ fn edge_two_faces(body: &Body, solid_faces: &HashSet<FaceId>, edge: EdgeId) -> R
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn coedge_on_face(body: &Body, edge: EdgeId, face: FaceId) -> Option<crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::CoedgeId> {
+fn coedge_on_face(body: &Body, edge: EdgeId, face: FaceId) -> Option<crate::standards::v1::subsets::brep::schema::snapshot::arena::CoedgeId> {
     body.edge_coedges(edge).into_iter().find(|&cid| body.coedges.get(cid).and_then(|c| body.loops.get(c.loop_id)).map(|lp| lp.face) == Some(face))
 }
 
-/// 🎨️ Outward normal of `face0`/`face1` (accounting for [`crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::Face::flipped`]) and the
+/// 🎨️ Outward normal of `face0`/`face1` (accounting for [`crate::standards::v1::subsets::brep::schema::snapshot::topology::Face::flipped`]) and the
 /// 3D point, all evaluated at `edge`'s own curve parameter `t` via each face's stored p-curve
 /// (exact — the edge already lies on both surfaces, no numerical closest-point search needed).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -144,7 +144,7 @@ fn station_normals(body: &Body, edge: EdgeId, f0: FaceId, f1: FaceId, s0: &Surfa
                     normal_with_pole_fallback(s, uv.x, uv.y)?
                 }
                 None => {
-                    let cu = crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::surface::surface_ops::closest_uv(s, s.domain(), p, BLEND_TOL);
+                    let cu = crate::standards::v1::subsets::brep::schema::snapshot::surface::surface_ops::closest_uv(s, s.domain(), p, BLEND_TOL);
                     normal_with_pole_fallback(s, cu.u, cu.v)?
                 }
             }
@@ -162,7 +162,7 @@ fn station_normals(body: &Body, edge: EdgeId, f0: FaceId, f1: FaceId, s0: &Surfa
 }
 
 /// 🎨️ [`Surface::normal`] degenerates exactly at a pole/apex singularity; nudge `v` toward the
-/// domain interior and retry once (same technique as [`crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::offset`]'s own fallback).
+/// domain interior and retry once (same technique as [`crate::standards::v1::subsets::brep::schema::diff::offset`]'s own fallback).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn normal_with_pole_fallback(surf: &Surface, u: f64, v: f64) -> Result<Vec3, KernelError> {
     if let Some(n) = surf.normal(u, v) {
@@ -255,7 +255,7 @@ fn circular_arc_bezier(center: Pnt3, a: Pnt3, b: Pnt3, r: f64) -> ([Pnt3; 3], [f
 /// close-to-exact piecewise-linear approximation when it varies, e.g. along a plane/cylinder
 /// junction). Tangency curves are fit through the same stations via [`interpolate_curve`] with
 /// [`ParamMethod::Uniform`] so both share parameter `[0, 1]` — required by
-/// [`crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::offset::ruled_surface_from_curves`]'s callers elsewhere, and just as valid here for building
+/// [`crate::standards::v1::subsets::brep::schema::diff::offset::ruled_surface_from_curves`]'s callers elsewhere, and just as valid here for building
 /// the blend face's own trim edges.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn build_fillet_geometry(body: &Body, edge: EdgeId, (f0, f1): (FaceId, FaceId), (s0, s1): (&Surface, &Surface), (t_lo, t_hi): (f64, f64), radius_at: &dyn Fn(f64) -> f64) -> Result<(Surface, Curve3, Curve3), KernelError> {
@@ -305,9 +305,9 @@ fn fillet_one_edge(body: &mut Body, solid_faces: &HashSet<FaceId>, edge: EdgeId,
     // SAME physical point at both ends. Building two separate end-closure edges for that (the
     // open-strip construction below) makes them exact geometric duplicates occupying the same 3D
     // segment — a degenerate, self-overlapping loop that fed NaN/garbage into the exact-predicate
-    // fallback ([`crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::predicates`], downstream in `solid_volume`). The
+    // fallback ([`crate::standards::v1::subsets::brep::schema::snapshot::vector::predicates`], downstream in `solid_volume`). The
     // correct closed-loop construction reuses ONE end edge as a genuine seam (same convention
-    // [`crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::primitives::make_cylinder`] already uses for its own lateral seam:
+    // [`crate::standards::v1::subsets::brep::schema::diff::primitives::make_cylinder`] already uses for its own lateral seam:
     // one edge, traversed forward then reverse) — the blend face becomes a real closed
     // torus-band, not an open strip.
     let is_closed = edge_ent.v0 == edge_ent.v1;
@@ -487,8 +487,8 @@ pub fn chamfer_edges(body: &mut Body, solid: SolidId, edges: &[EdgeId], d1: f64,
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::primitives::make_box;
-    use crate::artifacts::semio::standards::v1::subsets::brep::schema::inferences::mass_properties::solid_volume;
+    use crate::standards::v1::subsets::brep::schema::diff::primitives::make_box;
+    use crate::standards::v1::subsets::brep::schema::inferences::mass_properties::solid_volume;
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn box_edges(body: &Body, solid: SolidId) -> Vec<EdgeId> {
@@ -534,7 +534,7 @@ mod tests {
     async fn fillet_plane_cylinder_junction_decreases_volume() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
-        let solid = crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::primitives::make_cylinder(&mut body, 1.0, 2.0, &mut rec).unwrap();
+        let solid = crate::standards::v1::subsets::brep::schema::diff::primitives::make_cylinder(&mut body, 1.0, 2.0, &mut rec).unwrap();
         let v0 = solid_volume(&body, solid, 1e-4).unwrap();
         let solid_faces: HashSet<FaceId> = body.solid_faces(solid).into_iter().collect();
         let edge = solid_edge_set(&body, solid).into_iter().find(|&e| edge_two_faces(&body, &solid_faces, e).is_ok()).expect("a real dihedral edge (lateral/cap) exists");

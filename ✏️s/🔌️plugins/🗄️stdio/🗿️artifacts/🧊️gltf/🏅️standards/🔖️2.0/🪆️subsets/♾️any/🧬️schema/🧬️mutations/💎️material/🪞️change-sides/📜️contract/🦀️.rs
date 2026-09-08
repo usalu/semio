@@ -1,8 +1,8 @@
 //! 🧪️ Rust executor for the shared double-sided canonical vector.
 #[cfg(test)]
 mod tests {
-    use crate::artifacts::gltf::schema::mutations::change_material_double_sided::{diff, inverse, mutation};
-    use crate::artifacts::gltf::GltfSnapshot;
+    use crate::schema::mutations::change_material_double_sided::{diff, inverse, mutation};
+    use crate::GltfSnapshot;
     use std::collections::BTreeMap;
     #[derive(value_derive::FromValue)]
     #[value(rename_all = "camelCase")]

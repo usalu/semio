@@ -5,7 +5,7 @@
   "displayName": "Set Page Crop Box",
   "emoji": "✂️",
   "aggregateVariant": "SetPageCropBox",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "set-page-crop-box",
   "binaryTag": 3,
   "invertibility": "explicit-mutation",

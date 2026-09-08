@@ -16,9 +16,9 @@ pub fn diff(payload: &super::ResizeNode, base: &WiresSnapshot) -> protocol::Muta
             return protocol::MutationOutcome::fatal("mutation.invariant", format!("Node \"{}\" extent must be finite and positive, got {}.", payload.node_id, value), [payload.node_id.clone()]);
         }
     }
-    let unchanged = payload.new_radius.map_or(true, |v| node.get("radius").and_then(|value| value.as_f64()) == Some(v))
-        && payload.new_width.map_or(true, |v| node.get("width").and_then(|value| value.as_f64()) == Some(v))
-        && payload.new_height.map_or(true, |v| node.get("height").and_then(|value| value.as_f64()) == Some(v));
+    let unchanged = payload.new_radius.is_none_or(|v| node.get("radius").and_then(|value| value.as_f64()) == Some(v))
+        && payload.new_width.is_none_or(|v| node.get("width").and_then(|value| value.as_f64()) == Some(v))
+        && payload.new_height.is_none_or(|v| node.get("height").and_then(|value| value.as_f64()) == Some(v));
     if unchanged {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Node \"{}\" extent is unchanged.", payload.node_id));
     }

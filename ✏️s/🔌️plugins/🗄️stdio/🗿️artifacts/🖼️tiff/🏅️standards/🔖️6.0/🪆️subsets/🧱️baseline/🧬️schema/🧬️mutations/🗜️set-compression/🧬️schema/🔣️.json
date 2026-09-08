@@ -1,0 +1,17 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/tiff/6.0/baseline/mutation/set-compression.json",
+  "title": "SetCompression",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "compression"
+  ],
+  "properties": {
+    "compression": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 65535
+    }
+  }
+}

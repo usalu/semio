@@ -1,7 +1,7 @@
 //! 🧬️ GifArtifact schema (89a) — full artifact state, mirrors `GifSnapshot`'s frame/GCE/loop model.
 
-use crate::artifacts::gif::standards::v89a::subsets::any::schema::snapshot::{GifAppExtension, GifColorTable, GifFrame, GifSnapshot};
-use schema::ArtifactSchema;
+use crate::standards::v89a::subsets::any::schema::snapshot::{GifAppExtension, GifColorTable, GifFrame, GifSnapshot};
+use framework_schema::ArtifactSchema;
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
@@ -89,31 +89,31 @@ impl GifArtifact {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn gif_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
-    schema::ArtifactSchemaDescriptor {
+pub fn gif_artifact_schema_descriptor() -> framework_schema::ArtifactSchemaDescriptor {
+    framework_schema::ArtifactSchemaDescriptor {
         id: "s.stdio.gif.89a",
-        artifact: schema::FacetLeaves {
+        artifact: framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),
             json_schema: include_str!("🔣️.json"),
             proto: include_str!("🛰️.proto"),
         },
-        snapshot: schema::FacetLeaves {
+        snapshot: framework_schema::FacetLeaves {
             rust: include_str!("📸️snapshot/🦀️.rs"),
             typescript: include_str!("📸️snapshot/🟦️.ts"),
             graphql: include_str!("📸️snapshot/🔗️.graphql"),
             json_schema: include_str!("📸️snapshot/🔣️.json"),
             proto: include_str!("📸️snapshot/🛰️.proto"),
         },
-        diff: schema::FacetLeaves {
+        diff: framework_schema::FacetLeaves {
             rust: include_str!("🔺️diff/🦀️.rs"),
             typescript: include_str!("🔺️diff/🟦️.ts"),
             graphql: include_str!("🔺️diff/🔗️.graphql"),
             json_schema: include_str!("🔺️diff/🔣️.json"),
             proto: include_str!("🔺️diff/🛰️.proto"),
         },
-        mutations: schema::FacetLeaves {
+        mutations: framework_schema::FacetLeaves {
             rust: include_str!("🧬️mutations/🦀️.rs"),
             typescript: include_str!("🧬️mutations/🟦️.ts"),
             graphql: include_str!("🧬️mutations/🔗️.graphql"),
@@ -124,9 +124,9 @@ pub fn gif_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
 }
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use crate::artifacts::gif::standards::v89a::subsets::any::schema::diff::GifDiff;
-    use crate::artifacts::gif::standards::v89a::subsets::any::schema::mutations::GifMutation;
-    use crate::artifacts::gif::standards::v89a::subsets::any::schema::snapshot::{GifAppExtension, GifColorTable, GifFrame, GifSnapshot};
+    use crate::standards::v89a::subsets::any::schema::diff::GifDiff;
+    use crate::standards::v89a::subsets::any::schema::mutations::GifMutation;
+    use crate::standards::v89a::subsets::any::schema::snapshot::{GifAppExtension, GifColorTable, GifFrame, GifSnapshot};
     use semio_framework_plugin::ArtifactBuilder;
 
     //#region 🔖️Builder
@@ -205,7 +205,7 @@ pub mod derived_construction {
             Ok(Self::from_snapshot(<GifSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
         fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
-            let diff = crate::artifacts::gif::standards::v89a::subsets::any::schema::mutations::apply_gif_mutation(&mut self.snapshot, &mutation);
+            let diff = crate::standards::v89a::subsets::any::schema::mutations::apply_gif_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
         fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
@@ -227,7 +227,7 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use crate::artifacts::gif::standards::v89a::subsets::any::schema::snapshot::GifSnapshot;
+    use crate::standards::v89a::subsets::any::schema::snapshot::GifSnapshot;
     use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     //#region 🔖️Parts
@@ -247,7 +247,7 @@ pub mod derived_analysis {
         const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.gif", standard: StandardId("89a"), subset: SubsetId("*") };
 
         fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
-            crate::artifacts::gif::standards::v87a::engine::sniff_magic(source, b"GIF89a")
+            crate::standards::v87a::engine::sniff_magic(source, b"GIF89a")
         }
 
         fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
@@ -299,7 +299,7 @@ semio_framework_plugin::derive_artifact_facets!(
 // document type, destination rule 5); `GifEngine` (zero construction sites) deleted outright;
 // the real GIF89a codec (multi-frame animation, Graphic Control Extension, NETSCAPE2.0 loop —
 // reusing 87a's own `pub` byte-level LZW/sub-block/color-table/quantize/interlace helpers
-// verbatim) + the protected `register()` cluster (`crate::artifacts::gif::engine::register()`'s
+// verbatim) + the protected `register()` cluster (`crate::engine::register()`'s
 // own local override explicitly calls BOTH `standards::v87a::engine::register()` AND
 // `standards::v89a::engine::register()` — untouched) + `io_registry` all moved to `../🚪️io`;
 // tests moved beside what they now test.
@@ -311,11 +311,11 @@ pub fn empty_gif_snapshot() -> GifSnapshot {
 /// 🧪️ P2-FG2: real, deterministic demo `GifSnapshot` for `conformance_laws` (in `../🚪️io`'s own
 /// tests) and the shipped `.dsl.semio`/`.pack.semio` fixtures (`../📚️examples/🎬️demo/🖼️assets/`)
 /// — per the ticket's own instruction, this reuses the REAL `dancing.gif` fixture
-/// (`crate::artifacts::gif::examples::dancing::decoded_snapshot()`, 54 frames, 800×800,
+/// (`crate::examples::dancing::decoded_snapshot()`, 54 frames, 800×800,
 /// per-frame LCTs, NETSCAPE2.0 loop) decoded via the real 89a codec, for byte-real
 /// conformance — not a synthetic stand-in.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn demo_gif_snapshot() -> GifSnapshot {
-    crate::artifacts::gif::examples::dancing::decoded_snapshot()
+    crate::examples::dancing::decoded_snapshot()
 }
 //#endregion 🔖️DocumentHelpers

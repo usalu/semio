@@ -7,19 +7,21 @@ export type OwnedShellDialogProps<Arg extends ActionArgDef = ActionArgDef> = Rea
   owner: ShellDialogV1;
   dialog: UIDialogProps<Arg>["dialog"];
   renderField: UIDialogProps<Arg>["renderField"];
+  notice?: UIDialogProps<Arg>["notice"];
+  choiceRevisions?: UIDialogProps<Arg>["choiceRevisions"];
   isCurrent: (origin: ShellDialogOriginV1) => boolean;
   close: (openingId: number) => boolean;
   dispatch: (actionId: string, origin: ShellDialogOriginV1, args?: Record<string, unknown>) => void;
 }>;
 
 /** 📨️ A new opening remounts staged fields; late callbacks can only consume their exact opening. */
-export function OwnedShellDialog<Arg extends ActionArgDef>({ owner, dialog, renderField, isCurrent, close, dispatch }: OwnedShellDialogProps<Arg>): React.ReactElement | null {
+export function OwnedShellDialog<Arg extends ActionArgDef>({ owner, dialog, renderField, notice, choiceRevisions, isCurrent, close, dispatch }: OwnedShellDialogProps<Arg>): React.ReactElement | null {
   if (!isCurrent(owner.origin)) return null;
   const settle = (actionId: string | undefined, args?: Record<string, unknown>): void => {
     const current = isCurrent(owner.origin);
     if (!close(owner.openingId) || !current || actionId === undefined) return;
     dispatch(actionId, owner.origin, args);
   };
-  return <UIDialog<Arg> key={owner.openingId} dialog={dialog} seedArgs={owner.seedArgs} renderField={renderField}
+  return <UIDialog<Arg> key={owner.openingId} dialog={dialog} seedArgs={owner.seedArgs} renderField={renderField} notice={notice} choiceRevisions={choiceRevisions}
     onSubmit={(args) => settle(dialog.submitAction, args)} onCancel={() => settle(dialog.cancelAction)} />;
 }

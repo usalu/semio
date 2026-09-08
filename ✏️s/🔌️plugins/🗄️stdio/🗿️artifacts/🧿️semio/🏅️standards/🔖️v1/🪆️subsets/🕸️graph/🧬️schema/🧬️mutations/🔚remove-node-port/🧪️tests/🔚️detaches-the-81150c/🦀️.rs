@@ -4,9 +4,9 @@
 //! `mutation.target-missing` branches: an unknown `node_id` (target `[node_id]`) and an `index`
 //! past the end of that node's `ports` (target `[node_id, index]`). Neither fires here — the node
 //! exists and carries two ports, and only the one at nested index 1 is detached.
-use crate::artifacts::semio::standards::v1::subsets::graph::schema::diff::SemioGraphDiff;
-use crate::artifacts::semio::standards::v1::subsets::graph::schema::mutations::SemioGraphMutation;
-use crate::artifacts::semio::standards::v1::subsets::graph::schema::snapshot::SemioGraphSnapshot;
+use crate::standards::v1::subsets::graph::schema::diff::SemioGraphDiff;
+use crate::standards::v1::subsets::graph::schema::mutations::SemioGraphMutation;
+use crate::standards::v1::subsets::graph::schema::snapshot::SemioGraphSnapshot;
 use protocol::{Mutation, MutationDiff};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");

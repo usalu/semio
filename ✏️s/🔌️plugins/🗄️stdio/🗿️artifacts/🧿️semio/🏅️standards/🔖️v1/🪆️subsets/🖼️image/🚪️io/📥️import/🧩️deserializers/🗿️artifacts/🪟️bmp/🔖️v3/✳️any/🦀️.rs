@@ -14,9 +14,9 @@
 //!   textual home and is dropped (pixels are already palette-resolved).
 
 #[cfg(test)]
-use crate::artifacts::bmp::schema::snapshot::BmpRowOrder;
-use crate::artifacts::bmp::BmpSnapshot;
-use crate::artifacts::semio::standards::v1::subsets::image::schema::snapshot::{SemioColorspace, SemioImageFrame, SemioImageMetadataEntry, SemioImageSnapshot, STDIO_SEMIOIMAGE_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_bmp::schema::snapshot::BmpRowOrder;
+use semio_s_artifact_stdio_bmp::BmpSnapshot;
+use crate::standards::v1::subsets::image::schema::snapshot::{SemioColorspace, SemioImageFrame, SemioImageMetadataEntry, SemioImageSnapshot, STDIO_SEMIOIMAGE_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId};
 
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.bmp", standard: StandardId("v3"), subset: SubsetId::ANY };

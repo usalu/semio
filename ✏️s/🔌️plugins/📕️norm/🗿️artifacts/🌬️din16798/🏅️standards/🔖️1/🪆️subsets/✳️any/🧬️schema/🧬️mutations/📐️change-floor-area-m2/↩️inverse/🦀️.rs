@@ -7,6 +7,6 @@ use crate::artifacts::din16798::Din16798Snapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(_payload: &ChangeFloorAreaM2, base: &Din16798Snapshot) -> Vec<Din16798Mutation> {
-    vec![Din16798Mutation::ChangeFloorAreaM2(ChangeFloorAreaM2 { new_floor_area_m2: base.floor_area_m2.clone() })]
+    vec![Din16798Mutation::ChangeFloorAreaM2(ChangeFloorAreaM2 { new_floor_area_m2: base.floor_area_m2 })]
 }
 //#endregion 🔖️Inverse

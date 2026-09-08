@@ -1,6 +1,6 @@
 //! puzzle2d <- dwg
 use crate::artifacts::puzzle2d::Puzzle2dSnapshot;
-use semio_s_plugin_stdio::artifacts::dwg::{DwgSnapshot, STDIO_DWG_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_dwg::{DwgSnapshot, STDIO_DWG_DOCUMENT_SCHEMA};
 
 pub fn register() {}
 

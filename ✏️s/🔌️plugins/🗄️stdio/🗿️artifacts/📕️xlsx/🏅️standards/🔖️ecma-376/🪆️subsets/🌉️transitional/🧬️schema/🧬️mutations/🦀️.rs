@@ -20,10 +20,10 @@
 //! @see ../../🔣️oracle.json — the mutation catalog `KINDS` is measured against.
 //! @see ../🦀️.rs — this subset's conformance check, one axis per variant below.
 
-use crate::artifacts::xlsx::standards::v_ecma_376::subsets::base::schema::diff::{NamedModified, NamedTripleDiff, XlsxDiff, XlsxOpcContentTypesDiff, XlsxOpcCtEntriesDiff, XlsxOpcDiff, XlsxOpcPartDiff, XlsxOpcPartsDiff, XlsxOpcRelationshipsDiff};
-use crate::artifacts::xlsx::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxSnapshot;
-use crate::artifacts::xml::schema::snapshot::{xml_document_from_text, xml_document_to_text, XmlAttr, XmlDocument, XmlNode};
-use crate::artifacts::zip::opc::{resolve_relationship_target, OpcPart};
+use crate::standards::v_ecma_376::subsets::base::schema::diff::{NamedModified, NamedTripleDiff, XlsxDiff, XlsxOpcContentTypesDiff, XlsxOpcCtEntriesDiff, XlsxOpcDiff, XlsxOpcPartDiff, XlsxOpcPartsDiff, XlsxOpcRelationshipsDiff};
+use crate::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxSnapshot;
+use semio_s_artifact_stdio_xml::schema::snapshot::{xml_document_from_text, xml_document_to_text, XmlAttr, XmlDocument, XmlNode};
+use semio_s_artifact_stdio_zip::opc::{resolve_relationship_target, OpcPart};
 use protocol::command::DiffAlgebra;
 use protocol::Mutation;
 

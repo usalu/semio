@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeInternalGainsWM2, base: &Din18599Snapshot) -> protoc
     if base.internal_gains_w_m2 == payload.new_internal_gains_w_m2 {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "Internal gains wm2 already has this value.");
     }
-    protocol::MutationOutcome::new(Din18599Diff { internal_gains_w_m2: Some(payload.new_internal_gains_w_m2.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(Din18599Diff { internal_gains_w_m2: Some(payload.new_internal_gains_w_m2), ..Default::default() })
 }
 //#endregion 🔖️Diff

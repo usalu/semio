@@ -1,7 +1,7 @@
 //! ↩️ Inverse for `set-snapshot`.
 
-use crate::artifacts::semio::standards::v1::subsets::value::schema::mutations::{SemioValueMutation, apply_semio_value_mutation};
-use crate::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValueSnapshot;
+use crate::standards::v1::subsets::value::schema::mutations::{SemioValueMutation, apply_semio_value_mutation};
+use crate::standards::v1::subsets::value::schema::snapshot::SemioValueSnapshot;
 use protocol::Mutation;
 
 /// ↩️ Inverse of set-snapshot.

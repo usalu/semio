@@ -117,8 +117,7 @@ pub fn parse_result_display(args: Option<&DslValue>) -> ResultDisplay {
         .and_then(|v| v.get("modeIndex"))
         .and_then(DslValue::as_f64)
         .filter(|value| value.is_finite() && *value >= 0.0 && value.fract() == 0.0 && *value <= usize::MAX as f64)
-        .map(|value| value as usize)
-        .unwrap_or(0);
+        .map_or(0, |value| value as usize);
     let mode = match args.and_then(|v| v.get("mode")).and_then(DslValue::as_str) {
         Some("modal") => DisplayMode::Modal(mode_index),
         Some("buckling") => DisplayMode::Buckling(mode_index),

@@ -1,0 +1,448 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/docx/ecma-376/strict/mutation/set-snapshot.json",
+  "title": "SetSnapshot",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "snapshot"
+  ],
+  "properties": {
+    "snapshot": {
+      "$ref": "#/$defs/DocxSnapshot"
+    }
+  },
+  "$defs": {
+    "DocxSnapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema"
+      ],
+      "properties": {
+        "schema": {
+          "type": "string"
+        },
+        "opc": {
+          "$ref": "#/$defs/OpcPackage"
+        },
+        "document": {
+          "$ref": "#/$defs/DocxDocument"
+        }
+      }
+    },
+    "OpcPackage": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "parts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/OpcPart"
+          }
+        },
+        "contentTypes": {
+          "$ref": "#/$defs/OpcContentTypes"
+        },
+        "comment": {
+          "type": "string"
+        }
+      }
+    },
+    "OpcPart": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "contentType"
+      ],
+      "properties": {
+        "path": {
+          "type": "string"
+        },
+        "contentType": {
+          "type": "string"
+        },
+        "bytes": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          }
+        }
+      }
+    },
+    "OpcContentTypes": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "defaults": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "additionalItems": false,
+            "minItems": 2,
+            "maxItems": 2
+          }
+        },
+        "overrides": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "additionalItems": false,
+            "minItems": 2,
+            "maxItems": 2
+          }
+        }
+      }
+    },
+    "DocxDocument": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "body": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/DocxBlock"
+          }
+        },
+        "styles": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/DocxStyle"
+          }
+        }
+      }
+    },
+    "DocxBlock": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "paragraph"
+            },
+            "runs": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/DocxRun"
+              }
+            },
+            "style": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "extraParagraphProperties": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/XmlNode"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "table"
+            },
+            "rows": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/DocxTableRow"
+              }
+            },
+            "extraTableProperties": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/XmlNode"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "DocxParagraph": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "runs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/DocxRun"
+          }
+        },
+        "style": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "extraParagraphProperties": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/XmlNode"
+          }
+        }
+      }
+    },
+    "DocxRun": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "text"
+      ],
+      "properties": {
+        "text": {
+          "type": "string"
+        },
+        "bold": {
+          "type": "boolean"
+        },
+        "italic": {
+          "type": "boolean"
+        },
+        "underline": {
+          "type": "boolean"
+        },
+        "extraRunProperties": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/XmlNode"
+          }
+        }
+      }
+    },
+    "XmlNode": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "name"
+          ],
+          "properties": {
+            "kind": {
+              "const": "element"
+            },
+            "name": {
+              "type": "string"
+            },
+            "attrs": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/XmlAttr"
+              }
+            },
+            "children": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/XmlNode"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "text"
+          ],
+          "properties": {
+            "kind": {
+              "const": "text"
+            },
+            "text": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "text"
+          ],
+          "properties": {
+            "kind": {
+              "const": "cData"
+            },
+            "text": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "text"
+          ],
+          "properties": {
+            "kind": {
+              "const": "comment"
+            },
+            "text": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "target",
+            "data"
+          ],
+          "properties": {
+            "kind": {
+              "const": "processingInstruction"
+            },
+            "target": {
+              "type": "string"
+            },
+            "data": {
+              "type": "string"
+            }
+          }
+        }
+      ]
+    },
+    "XmlAttr": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "value"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        }
+      }
+    },
+    "DocxTable": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "rows": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/DocxTableRow"
+          }
+        },
+        "extraTableProperties": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/XmlNode"
+          }
+        }
+      }
+    },
+    "DocxTableRow": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "cells": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/DocxTableCell"
+          }
+        },
+        "extraRowProperties": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/XmlNode"
+          }
+        }
+      }
+    },
+    "DocxTableCell": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "blocks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/DocxBlock"
+          }
+        },
+        "extraCellProperties": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/XmlNode"
+          }
+        }
+      }
+    },
+    "DocxStyle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "basedOn": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    }
+  }
+}

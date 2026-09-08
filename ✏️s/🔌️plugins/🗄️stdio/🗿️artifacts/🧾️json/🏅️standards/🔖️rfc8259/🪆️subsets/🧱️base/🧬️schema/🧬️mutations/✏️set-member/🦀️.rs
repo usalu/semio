@@ -1,8 +1,8 @@
 //! 🧬️ Direct set-member mutation owner.
-use crate::artifacts::json::schema::diff::{JsonDiff, JsonObjectAdded, JsonObjectDiff, JsonObjectModified, JsonValueDiff};
-use crate::artifacts::json::schema::mutation_support::{diff_at_path, resolve, JsonPath};
-use crate::artifacts::json::schema::snapshot::JsonValue;
-use crate::artifacts::json::JsonSnapshot;
+use crate::schema::diff::{JsonDiff, JsonObjectAdded, JsonObjectDiff, JsonObjectModified, JsonValueDiff};
+use crate::schema::mutation_support::{diff_at_path, resolve, JsonPath};
+use crate::schema::snapshot::JsonValue;
+use crate::JsonSnapshot;
 
 #[path = "📝️text/🦀️.rs"]
 pub mod text;
@@ -30,7 +30,7 @@ impl protocol::MutationKind<JsonSnapshot, super::JsonMutation> for SetMemberMuta
         match self {
             Self::Apply(payload) => protocol::MutationOutcome::new(match resolve(&base.value, &payload.path) {
                 Some(JsonValue::Object { members }) => match members.iter().find(|member| member.key == payload.key) {
-                    Some(existing) => { let leaf = crate::artifacts::json::schema::diff::value_diff_between(&existing.value, &payload.value); diff_at_path(&payload.path, leaf.map(|diff| JsonValueDiff::Object { diff: JsonObjectDiff { removed: Vec::new(), added: Vec::new(), modified: vec![JsonObjectModified { key: payload.key.clone(), diff }] } })) }
+                    Some(existing) => { let leaf = crate::schema::diff::value_diff_between(&existing.value, &payload.value); diff_at_path(&payload.path, leaf.map(|diff| JsonValueDiff::Object { diff: JsonObjectDiff { removed: Vec::new(), added: Vec::new(), modified: vec![JsonObjectModified { key: payload.key.clone(), diff }] } })) }
                     None => diff_at_path(&payload.path, Some(JsonValueDiff::Object { diff: JsonObjectDiff { removed: Vec::new(), modified: Vec::new(), added: vec![JsonObjectAdded { index: members.len(), key: payload.key.clone(), item: payload.value.clone() }] } })),
                 },
                 _ => JsonDiff::default(),

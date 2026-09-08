@@ -4,9 +4,9 @@
 //! aggregator, and the `SubsetValidator` directly), not per-leaf `register()`.
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use crate::artifacts::ifc::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot;
-    use crate::artifacts::ifc::standards::v2x3::subsets::base::schema::Ifc2x3Composer as Ifc2x3AnyComposer;
-    use crate::artifacts::ifc::standards::v2x3::subsets::cv20::schema::check_cv20_conformance;
+    use crate::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot;
+    use crate::standards::v2x3::subsets::base::schema::Ifc2x3Composer as Ifc2x3AnyComposer;
+    use crate::standards::v2x3::subsets::cv20::schema::check_cv20_conformance;
     use dsl::{Diagnostic, FaultCode, Severity, TextSpan};
     use semio_framework_plugin::{register_subset_validator, subset_validator_entry_of, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, IoPayload, StandardId, SubsetId, SubsetValidator, SubsetValidatorEntry};
     use std::sync::OnceLock;
@@ -86,8 +86,8 @@ pub mod derived_composition {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use crate::artifacts::ifc::standards::v2x3::subsets::cv20::schema::Ifc2x3Cv20BuilderConstruction as Ifc2x3Cv20Builder;
-        use crate::artifacts::ifc::standards::v2x3::subsets::cv20::schema::CODE_VIEW_DEFINITION;
+        use crate::standards::v2x3::subsets::cv20::schema::Ifc2x3Cv20BuilderConstruction as Ifc2x3Cv20Builder;
+        use crate::standards::v2x3::subsets::cv20::schema::CODE_VIEW_DEFINITION;
         use semio_framework_plugin::AnalyzeSource;
         use semio_framework_plugin::ArtifactBuilder as _;
 
@@ -103,7 +103,7 @@ pub mod derived_composition {
         #[semio_framework_async_macros::async_test]
         async fn wrong_view_definition_fails_compose_with_real_diagnostic() {
             let mut snapshot = Ifc2x3Cv20Builder::new().build().expect("build");
-            snapshot.document.header.file_description[0] = crate::artifacts::step::engine::part21::Part21Value::List(vec![crate::artifacts::step::engine::part21::Part21Value::Str("ViewDefinition [StructuralAnalysisView]".into())]);
+            snapshot.document.header.file_description[0] = semio_s_artifact_stdio_step::engine::part21::Part21Value::List(vec![semio_s_artifact_stdio_step::engine::part21::Part21Value::Str("ViewDefinition [StructuralAnalysisView]".into())]);
             let bytes = <Ifc2x3Snapshot as store::ArtifactPack>::encode_pack(&snapshot);
             let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Binary(&bytes) }];
             let err = Ifc2x3Cv20ComposerComposition::compose(&sources).expect_err("wrong ViewDefinition must not stamp cv20");

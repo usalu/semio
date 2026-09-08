@@ -1,12 +1,12 @@
 //! 🔺️ Diff for `MoveVertex`.
 
-use crate::artifacts::semio::standards::v1::subsets::mesh::schema::diff::SemioMeshDiff;
-use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
+use crate::standards::v1::subsets::mesh::schema::diff::SemioMeshDiff;
+use crate::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
 
 //#region 🔖️Diff
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn diff(payload: &super::MoveVertex, base: &SemioMeshSnapshot) -> protocol::MutationOutcome<SemioMeshDiff> {
-    let Some(primitive) = crate::artifacts::semio::standards::v1::subsets::mesh::schema::diff::primitive_at(base, &payload.mesh_id, &payload.primitive_id) else {
+    let Some(primitive) = crate::standards::v1::subsets::mesh::schema::diff::primitive_at(base, &payload.mesh_id, &payload.primitive_id) else {
         return protocol::MutationOutcome::error(
             "mutation.target-missing",
             format!("Primitive \"{}\" does not exist in mesh \"{}\".", payload.primitive_id, payload.mesh_id),
@@ -30,6 +30,6 @@ pub fn diff(payload: &super::MoveVertex, base: &SemioMeshSnapshot) -> protocol::
             [format!("{}:{}:{}", payload.mesh_id, payload.primitive_id, payload.vertex_index)],
         );
     }
-    protocol::MutationOutcome::new(crate::artifacts::semio::standards::v1::subsets::mesh::schema::diff::diff_move_vertex(base, &payload.mesh_id, &payload.primitive_id, payload.vertex_index, payload.new_point))
+    protocol::MutationOutcome::new(crate::standards::v1::subsets::mesh::schema::diff::diff_move_vertex(base, &payload.mesh_id, &payload.primitive_id, payload.vertex_index, payload.new_point))
 }
 //#endregion 🔖️Diff

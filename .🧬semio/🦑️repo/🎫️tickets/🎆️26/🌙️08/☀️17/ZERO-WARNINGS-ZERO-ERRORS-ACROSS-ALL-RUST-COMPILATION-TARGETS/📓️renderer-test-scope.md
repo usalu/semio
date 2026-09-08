@@ -1379,3 +1379,57 @@ Restricted the three text-editor state/menu types plus window-measure traversal 
 ## Pass 423 — Remaining Private Function Reachability
 
 Rebuilt the unique-name function graph from the completed native 402 and browser 401 diagnostics. Already test-gated functions are included as candidates, and calls between dead helpers form graph edges before test/production root classification. Attribute strings remain observable references. This read-only pass identifies removal candidates, additional test-only helpers, and already scoped helpers to keep; ambiguous methods remain excluded.
+
+
+## Pass 424 — Remove Unreachable Shell Helper Chains
+
+Removed 55 private Shell functions/methods with no production or test root in the rebuilt graph. These included chains already gated to tests but never invoked by a test. Attached cfg attributes and documentation were removed with each item. Two additional helpers used by existing tests now share their test scope. Eight already scoped functions with test roots were retained. Guarded source edits preserve live renderer paths and ambiguous methods; fresh native/browser checks remain required.
+
+
+## Pass 430 — Engine State and Introspection Scope
+
+Removed the map-request cursor that had no constructor calls and whose two storage slots were always initialized to None. Its empty retirement phase now advances directly to Board; actual map ownership and retirement remain in MapHost. Removed the unused build-context DPR and duplicate published GPU dimensions; generation fields used only to make packet fixtures are scoped to tests, while the production empty resource sink uses Default. Eight introspection items consumed only by browser exports now compile only for wasm32; the native walk/path tests retain their shared helpers. Source guards and full-file concurrent checks cover all writes. Native/browser compilation must be rerun after these changes.
+
+
+## Pass 431 — Store Only Consumed Scene Projection Fields
+
+SceneSurfaceState's unused image-digest maps are removed. Paint2d interaction decoding now projects the camera only; layer data is not consumed by these handlers and remains in the original document owned by the paint surface. Valid document camera values and defaults are unchanged, while unrelated layer fields are ignored by this projection. The navigator's test record retains only the geometry it uses. The icon-chrome test projects width and height from its existing full request fixture. Five unread grid/pencil fields are removed from both Ink interaction projections and their fixture/default constructors; snap and eraser controls remain. These private Deserialize projections do not serialize or rewrite stored documents. Existing navigator, icon-chrome and Ink interaction laws are the relevant runtime checks; fresh compilation is required.
+
+
+## Pass 432 — Shell Fixture Scope and Empty Action Registry
+
+Scoped the synchronous preference test oracle (capture, load/write helpers and grouped lock values) to tests; production uses its existing resumable preference steps. PrefsStore now follows its browser/test implementers. Removed two unconstructed measure-render fixtures, their unused traversal capacity, and the never-populated measure action registry. Its unreachable dispatch alternatives are removed; populated widget_maps select/toggle/slider dispatch remains. Removed unused tutorial bookkeeping and Dock's already-applied corner value from the resulting layout record. Removed imports left without consumers by pass 424. Full-file guards precede writes; new native/browser diagnostics remain the acceptance check.
+
+
+## Pass 434 — Isolate the Unrouted Kernel-Mailbox Fixture
+
+The kernel_seam module's own documentation and the repository call graph agree: its default exchange echoes a surface, no production caller submits intents or drains outcomes, and the host only installs an unused waker. The module is now test-only. Removed that idle fixture from OsHost construction/retirement and the two platform waker installations. Actual RuntimeMailbox wakeups, frame completions and kernel-runtime retirement remain. Its three mailbox/wakeup laws are retained. Updated module documentation to state the current ownership boundary. All sixteen Stdio 433 laws passed; the 419 link receipt also contains one macOS unwind-section warning, now recorded accurately in the verification report.
+
+
+## Pass 435 — Remaining Platform and Test Helper Boundaries
+
+Removed the now-unused DPR argument from the pre-input frame step and the already-applied bootstrap DPR cache. Window-based boot is native-only; browser boot uses its separate OffscreenCanvas bootstrap. Removed three unreachable browser fallback helpers whose callers are native-only, and scoped sync-document/FFmpeg helpers accordingly. Engine timing helpers had no callers and were removed. Local action constructors/argument mergers, scene double-click timing and three associated state fields are scoped to their existing tests. Browser 426 completed with 50 warnings on source preceding 432/434; that inventory includes one new unused DPR argument corrected here. The brief malformed module-doc boundary introduced in 434 was immediately repaired with an exact patch before this pass.
+
+
+## Pass 436 — Remaining Private Function Reachability
+
+Rebuilt the unique-name function graph from the completed native 402 and browser 401 diagnostics. Already test-gated functions are included as candidates, and calls between dead helpers form graph edges before test/production root classification. Attribute strings remain observable references. This read-only pass identifies removal candidates, additional test-only helpers, and already scoped helpers to keep; ambiguous methods remain excluded.
+
+
+## Pass 438 — Remove Remaining Uncalled Test Rendering Chain
+
+Rebuilt reachability after the Shell cleanup, correcting nested cfg-expression classification in the audit. Eight functions now have no call roots: the synchronous test document renderer, its pointer/offset/composition helpers, and two former Shell color helpers. Removed those definitions and their attached attributes/docs; current retained document-step rendering and the separately called geometry/introspection tests remain. Restored DockDropZone's test import and removed four diagnosed unused import groups after native 425 reported the missing symbol. Native 425 had one compiler error, 35 dead-code, four unused-import and two unused-variable diagnostics; fresh acceptance checks are required.
+
+
+## Pass 439 — Remove Unused Scene-Host Borrows
+
+FrameworkSceneHost now retains only the five input/theme/widget-state borrows consumed by its scene-slot paint implementation. Removed seven unused state/resource parameters from document-step traversal and the two forwarded resource arguments through Shell's main-window, panel and chrome methods. All definitions and call sites were arity-checked, with the removed arguments verified by name. Existing resource-presence checks remain at the frame boundary. Removed the unused chrome child y coordinate and fallback flag; fallback priority already follows HashMap entry insertion versus primary replacement. Fresh checks are required.
+
+
+## Pass 443 — Native Continuation Boundaries
+
+The standalone interaction continuation is only submitted by native plugin reload. Removed its unused wasm methods, scoped its restoration variant/match arm to native, and followed native-only reservation/cancellation and maintenance callers. The bounded completion queue retains corresponding native/test APIs. Removed the empty browser completion-waker method and an uncalled frame-stage getter. RuntimeDispatchCursor's standalone close helper is test-only, matching its event-retirement law; production drains events via take_next. No cancellation check or active continuation was removed. Fresh checks remain required.
+
+Pass 455 removes three unread duplicate metadata fields from the progress presentation lease, retained replay request, and retained document build, plus the replay field's unused getter. Exact lease index/epoch checks, the raw replay job identity, the live request rejection identity, and the generation already carried by UiDocumentBuilder remain in use. Native compile validation is pending.
+
+Pass 456 removes unused generation/timestamp copies and always-None hit-test/damage placeholders from RenderSnapshot. Constructors and the seven snapshot sink tests use the smaller cursor/IME/revision record. The existing generation comparison in AppPresentStep::Complete is unchanged and still rejects stale frames before publication. The sink publication revision remains; its production-read warning is still under review. Compiler/runtime verification is pending.

@@ -20,11 +20,11 @@
 //!   access, matching the gltf engine's own `resolve_document_buffers` precedent for external
 //!   buffer uris.
 
-use crate::artifacts::gltf::engine::{decode_accessor, decode_data_uri, GltfComponentType};
-use crate::artifacts::gltf::schema::snapshot::{GltfDocument, GltfImage, GltfPrimitive};
-use crate::artifacts::gltf::GltfSnapshot;
-use crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::{SemioPoint3, SemioRgba, SemioUv};
-use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::{SemioMaterial, SemioMesh, SemioMeshSnapshot, SemioPrimitive, SemioTexture, SemioTopology, STDIO_SEMIOMESH_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_gltf::engine::{decode_accessor, decode_data_uri, GltfComponentType};
+use semio_s_artifact_stdio_gltf::schema::snapshot::{GltfDocument, GltfImage, GltfPrimitive};
+use semio_s_artifact_stdio_gltf::GltfSnapshot;
+use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint3, SemioRgba, SemioUv};
+use crate::standards::v1::subsets::mesh::schema::snapshot::{SemioMaterial, SemioMesh, SemioMeshSnapshot, SemioPrimitive, SemioTexture, SemioTopology, STDIO_SEMIOMESH_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId};
 
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.gltf", standard: StandardId("2.0"), subset: SubsetId::ANY };
@@ -191,9 +191,9 @@ impl ArtifactDeserializer for SemioMeshFromGltf {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::gltf::engine::GltfAccessorType;
-    use crate::artifacts::gltf::schema::snapshot::{GltfAccessor, GltfBuffer, GltfBufferView};
-    use crate::artifacts::gltf::schema::snapshot::{GltfAsset, GltfMaterial, GltfMesh, GltfPbrMetallicRoughness};
+    use semio_s_artifact_stdio_gltf::engine::GltfAccessorType;
+    use semio_s_artifact_stdio_gltf::schema::snapshot::{GltfAccessor, GltfBuffer, GltfBufferView};
+    use semio_s_artifact_stdio_gltf::schema::snapshot::{GltfAsset, GltfMaterial, GltfMesh, GltfPbrMetallicRoughness};
 
     /// 🏗️ A real-shaped 2-triangle quad (shared POSITION/NORMAL/TEXCOORD_0/COLOR_0/indices) with
     /// one PBR material and one embedded (data-uri) texture — exercises every mapped field.
@@ -253,7 +253,7 @@ mod tests {
             occlusion_texture: None,
             emissive_texture: None,
             emissive_factor: [0.0, 0.0, 0.0],
-            alpha_mode: crate::artifacts::gltf::schema::snapshot::GltfAlphaMode::Opaque,
+            alpha_mode: semio_s_artifact_stdio_gltf::schema::snapshot::GltfAlphaMode::Opaque,
             alpha_cutoff: 0.5,
             double_sided: false,
             extensions: None,
@@ -263,7 +263,7 @@ mod tests {
         document.accessors = accessors;
         document.buffers = vec![GltfBuffer { byte_length: buf.len(), uri: None, name: None, extensions: None, extras: None }];
 
-        GltfSnapshot { schema: "stdio.gltf".into(), document, buffers: vec![buf], source_form: crate::artifacts::gltf::schema::snapshot::GltfSourceForm::Json }
+        GltfSnapshot { schema: "stdio.gltf".into(), document, buffers: vec![buf], source_form: semio_s_artifact_stdio_gltf::schema::snapshot::GltfSourceForm::Json }
     }
 
     #[semio_framework_async_macros::async_test]

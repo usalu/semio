@@ -1,0 +1,39 @@
+{
+  "primary": "generator",
+  "additionalBuildVariants": [
+    "generation3d"
+  ],
+  "pluginIds": [
+    "cad",
+    "demonstrator",
+    "flow",
+    "gis",
+    "procedural",
+    "process",
+    "puzzle",
+    "sourcing"
+  ],
+  "extensionIds": [
+    "flow-extension-bim",
+    "flow-extension-brep",
+    "flow-extension-dictionary",
+    "flow-extension-draw",
+    "flow-extension-list",
+    "flow-extension-logic",
+    "flow-extension-math",
+    "flow-extension-primitive",
+    "flow-extension-text",
+    "process-extension-concrete",
+    "process-extension-metal",
+    "process-extension-robotic",
+    "process-extension-wood"
+  ],
+  "invalidVariants": [
+    "",
+    "unknown"
+  ],
+  "supportDirectories": [
+    "🪞️vendor",
+    "🧵️shard"
+  ]
+}

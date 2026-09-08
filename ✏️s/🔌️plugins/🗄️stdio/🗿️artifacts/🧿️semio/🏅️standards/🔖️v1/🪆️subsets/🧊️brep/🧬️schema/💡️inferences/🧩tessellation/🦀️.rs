@@ -22,15 +22,15 @@ pub type TessellationLoopUv = (Vec<Pnt3>, Vec<(f64, f64)>, Vec<bool>);
 
 use std::collections::HashMap;
 
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::primitives::Wire;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::engine::{CurveKind, EdgeGroup, EdgeInfo, FaceGroup, FaceInfo, MeshTransfer, SurfaceKind};
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::{EdgeId, FaceId, LoopId, SolidId};
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::Curve3;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::error::KernelError;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::surface::surface_ops;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::surface::Surface;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::{Body, Coedge, Edge};
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::{Pnt3, Vec3};
+use crate::standards::v1::subsets::brep::schema::diff::primitives::Wire;
+use crate::standards::v1::subsets::brep::schema::engine::{CurveKind, EdgeGroup, EdgeInfo, FaceGroup, FaceInfo, MeshTransfer, SurfaceKind};
+use crate::standards::v1::subsets::brep::schema::snapshot::arena::{EdgeId, FaceId, LoopId, SolidId};
+use crate::standards::v1::subsets::brep::schema::snapshot::curve::Curve3;
+use crate::standards::v1::subsets::brep::schema::snapshot::error::KernelError;
+use crate::standards::v1::subsets::brep::schema::snapshot::surface::surface_ops;
+use crate::standards::v1::subsets::brep::schema::snapshot::surface::Surface;
+use crate::standards::v1::subsets::brep::schema::snapshot::topology::{Body, Coedge, Edge};
+use crate::standards::v1::subsets::brep::schema::snapshot::vector::{Pnt3, Vec3};
 
 // #region 🔖️Constants
 
@@ -846,7 +846,7 @@ fn edge_in_triangulation(tris: &[Tri], i: usize, j: usize) -> bool {
 /// edge, or no more flips are found (best-effort — leaves whatever partial recovery it achieved
 /// rather than failing the whole tessellation over one pathological edge).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn recover_edge(pts: &[(f64, f64)], tris: &mut Vec<Tri>, i: usize, j: usize) {
+fn recover_edge(pts: &[(f64, f64)], tris: &mut [Tri], i: usize, j: usize) {
     if i == j {
         return;
     }
@@ -1051,16 +1051,16 @@ fn triangle_needs_refine(surface: &Surface, positions: &[Pnt3], uvs: &[(f64, f64
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::euler::{add_face, add_shell, add_solid, make_edge, make_loop, make_vertex};
-    use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::ArenaId;
-    use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::primitives::{make_cylinder, make_rectangle_wire, make_sphere};
-    use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::{Curve2, Curve3};
-    use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::surface::Surface;
-    use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::tolerance::Tol;
-    use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::history::OpRecorder;
-    use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::Body;
-    use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Frame3;
-    use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::{Pnt2, Vec2};
+    use crate::standards::v1::subsets::brep::schema::diff::euler::{add_face, add_shell, add_solid, make_edge, make_loop, make_vertex};
+    use crate::standards::v1::subsets::brep::schema::snapshot::arena::ArenaId;
+    use crate::standards::v1::subsets::brep::schema::diff::primitives::{make_cylinder, make_rectangle_wire, make_sphere};
+    use crate::standards::v1::subsets::brep::schema::snapshot::curve::{Curve2, Curve3};
+    use crate::standards::v1::subsets::brep::schema::snapshot::surface::Surface;
+    use crate::standards::v1::subsets::brep::schema::snapshot::tolerance::Tol;
+    use crate::standards::v1::subsets::brep::schema::snapshot::topology::history::OpRecorder;
+    use crate::standards::v1::subsets::brep::schema::snapshot::topology::Body;
+    use crate::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Frame3;
+    use crate::standards::v1::subsets::brep::schema::snapshot::vector::{Pnt2, Vec2};
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn build_unit_box(body: &mut Body, rec: &mut OpRecorder) -> SolidId {

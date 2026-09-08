@@ -5,7 +5,7 @@
   "displayName": "Reorder Required Extensions",
   "emoji": "🔀️",
   "aggregateVariant": "ReorderRequiredExtensions",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

@@ -1,40 +1,206 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s.stdio.pdf.1.7.ua/mutation.json",
+  "$id": "https://semio.tech/schema/s/stdio/pdf/1.7/ua/mutations.json",
   "title": "PdfUaMutation",
+  "description": "Discriminated union over this module's mutation leaves (internally tagged); every payload is the leaf's own schema, referenced, never restated.",
   "oneOf": [
     {
-      "$ref": "./✅️set-mark-info/🧬️.schema.json"
+      "allOf": [
+        {
+          "$ref": "./🔤️embed-font-file/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "embedFontFile"
+            }
+          }
+        }
+      ]
     },
     {
-      "$ref": "./🗑️remove-mark-info/🧬️.schema.json"
+      "allOf": [
+        {
+          "$ref": "./🚫️remove-display-doc-title/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "removeDisplayDocTitle"
+            }
+          }
+        }
+      ]
     },
     {
-      "$ref": "./🌲️set-struct-tree-root/🧬️.schema.json"
+      "allOf": [
+        {
+          "$ref": "./🧺️remove-font-file/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "removeFontFile"
+            }
+          }
+        }
+      ]
     },
     {
-      "$ref": "./🪓️remove-struct-tree-root/🧬️.schema.json"
+      "allOf": [
+        {
+          "$ref": "./🤐️remove-lang/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "removeLang"
+            }
+          }
+        }
+      ]
     },
     {
-      "$ref": "./🗣️set-lang/🧬️.schema.json"
+      "allOf": [
+        {
+          "$ref": "./🗑️remove-mark-info/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "removeMarkInfo"
+            }
+          }
+        }
+      ]
     },
     {
-      "$ref": "./🤐️remove-lang/🧬️.schema.json"
+      "allOf": [
+        {
+          "$ref": "./🪓️remove-struct-tree-root/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "removeStructTreeRoot"
+            }
+          }
+        }
+      ]
     },
     {
-      "$ref": "./🪧️set-display-doc-title/🧬️.schema.json"
+      "allOf": [
+        {
+          "$ref": "./🪧️set-display-doc-title/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setDisplayDocTitle"
+            }
+          }
+        }
+      ]
     },
     {
-      "$ref": "./🚫️remove-display-doc-title/🧬️.schema.json"
+      "allOf": [
+        {
+          "$ref": "./📰️set-info-title/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setInfoTitle"
+            }
+          }
+        }
+      ]
     },
     {
-      "$ref": "./📰️set-info-title/🧬️.schema.json"
+      "allOf": [
+        {
+          "$ref": "./🗣️set-lang/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setLang"
+            }
+          }
+        }
+      ]
     },
     {
-      "$ref": "./🔤️embed-font-file/🧬️.schema.json"
+      "allOf": [
+        {
+          "$ref": "./✅️set-mark-info/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setMarkInfo"
+            }
+          }
+        }
+      ]
     },
     {
-      "$ref": "./🧺️remove-font-file/🧬️.schema.json"
+      "allOf": [
+        {
+          "$ref": "./🌲️set-struct-tree-root/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setStructTreeRoot"
+            }
+          }
+        }
+      ]
     }
   ]
 }

@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "cases": [
+    { "name": "request-burst", "phase": "nodes", "changes": 0, "requests": 16, "invalidate": false, "plugins": false, "dotenv": false, "computations": 1 },
+    { "name": "source-burst-during-nodes", "phase": "nodes", "changes": 16, "requests": 16, "invalidate": false, "plugins": false, "dotenv": false, "computations": 2 },
+    { "name": "source-burst-during-dependencies", "phase": "dependencies", "changes": 16, "requests": 8, "invalidate": false, "plugins": false, "dotenv": false, "computations": 2 },
+    { "name": "environment-invalidation", "phase": "nodes", "changes": 0, "requests": 8, "invalidate": true, "plugins": false, "dotenv": false, "computations": 2 },
+    { "name": "plugin-change", "phase": "nodes", "changes": 0, "requests": 8, "invalidate": false, "plugins": true, "dotenv": false, "computations": 2 },
+    { "name": "dotenv-replay", "phase": "dependencies", "changes": 0, "requests": 8, "invalidate": false, "plugins": false, "dotenv": true, "computations": 2 }
+  ],
+  "maximumConcurrentComputations": 1,
+  "failures": ["configuration", "plugins", "nodes", "dependencies"]
+}

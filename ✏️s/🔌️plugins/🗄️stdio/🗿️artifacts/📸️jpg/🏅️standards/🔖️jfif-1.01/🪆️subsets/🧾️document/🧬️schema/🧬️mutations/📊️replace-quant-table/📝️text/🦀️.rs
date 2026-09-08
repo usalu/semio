@@ -1,6 +1,6 @@
 //! 📝️ Direct replace-quant-table text codec.
 use super::*;
-use crate::artifacts::jpg::schema::mutations::text::Entry;
+use crate::schema::mutations::text::Entry;
 pub const TEXT_OPCODE: &str = "replace-quant-table";
 pub const CODEC: Entry = Entry { opcode: TEXT_OPCODE, print, parse };
 

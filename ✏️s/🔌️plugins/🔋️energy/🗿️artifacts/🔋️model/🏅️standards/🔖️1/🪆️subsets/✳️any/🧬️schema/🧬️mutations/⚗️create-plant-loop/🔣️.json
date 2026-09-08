@@ -5,7 +5,7 @@
   "displayName": "Create Plant Loop",
   "emoji": "⚗️",
   "aggregateVariant": "CreatePlantLoop",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "create-plant-loop",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

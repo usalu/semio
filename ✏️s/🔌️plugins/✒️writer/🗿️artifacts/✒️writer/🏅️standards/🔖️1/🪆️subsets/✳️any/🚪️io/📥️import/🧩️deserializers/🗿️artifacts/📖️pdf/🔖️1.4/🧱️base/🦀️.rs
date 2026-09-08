@@ -4,7 +4,7 @@ use crate::artifacts::writer::{writer_snapshot_with_text, WriterSnapshot, WRITER
 use semio_framework::io::io_mechanism::Deserializer;
 use semio_framework::io_schema::{IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{Dialect, StandardId, SubsetId};
-use semio_s_plugin_stdio::artifacts::pdf::standards::v1_4::subsets::base::schema::snapshot::PdfSnapshot;
+use semio_s_artifact_stdio_pdf::standards::v1_4::subsets::base::schema::snapshot::PdfSnapshot;
 
 pub const PDF_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.pdf", standard: StandardId("1.4"), subset: SubsetId("base") };
 

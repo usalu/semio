@@ -11,9 +11,9 @@
 //! leaf's own oracle. The derived `.op.semio`/`.spr.semio`/`.dsl.semio`/`.pack.semio`/
 //! `.patch.semio` encodings come from `fixtures generate`, not from here.
 
-use crate::artifacts::gltf::schema::mutations::unbind_default_scene::GltfUnbindDefaultScenePayload;
-use crate::artifacts::gltf::schema::mutations::unbind_default_scene::{diff, inverse, mutation};
-use crate::artifacts::gltf::GltfSnapshot;
+use crate::schema::mutations::unbind_default_scene::GltfUnbindDefaultScenePayload;
+use crate::schema::mutations::unbind_default_scene::{diff, inverse, mutation};
+use crate::GltfSnapshot;
 
 const CASE: &str = "unbind-default-scene/clears-the-default-scene-pointer";
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
@@ -47,7 +47,7 @@ async fn inverse_restores_before() {
     let base = before();
     let inverse = inverse::derive(&payload(), &base).expect("unbind-default-scene inverse derives from the exact base");
     let after = mutation::apply(&payload(), &base).expect("forward applies");
-    let restored = <crate::artifacts::gltf::schema::diff::GltfDiff as protocol::MutationDiff<GltfSnapshot>>::apply(&inverse, &after).expect("inverse applies to the forward result");
+    let restored = <crate::schema::diff::GltfDiff as protocol::MutationDiff<GltfSnapshot>>::apply(&inverse, &after).expect("inverse applies to the forward result");
     assert_eq!(restored, base, "{CASE}: inverse did not restore the before-snapshot");
     assert_eq!(restored.document.scene, Some(0), "{CASE}: the inverse must restore scene 0 as the default");
     assert_eq!(inverse.scene, Some(Some(0)), "{CASE}: the INVERSE of this leaf is a set pointer, so unlike the forward diff it survives JSON intact");
@@ -102,7 +102,7 @@ async fn produces_committed_diff() {
 /// 🔣️ The committed diff is itself canonical and decodes to this leaf's own diff type.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical() {
-    let decoded: crate::artifacts::gltf::schema::diff::GltfDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
+    let decoded: crate::schema::diff::GltfDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
     assert!(decoded.scene.is_none(), "{CASE}: decoding an explicit JSON null for the scene slot yields None, NOT Some(None) — this is the Option<Option<_>> limitation, pinned deliberately");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(original.get("scene"), Some(&serde_json::Value::Null), "{CASE}: the committed file must still carry the explicit null that the TYPED diff produces");
@@ -113,7 +113,7 @@ async fn committed_diff_is_canonical() {
 /// a complete description of the change, not a summary of it.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: crate::artifacts::gltf::schema::diff::GltfDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
+    let decoded: crate::schema::diff::GltfDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
     // 🧨️ `GltfDiff::scene` is an `Option<Option<usize>>` and this leaf writes `Some(None)`, which serde
     // encodes as a bare `null` — indistinguishable from the field being absent. Decoding the committed
     // JSON therefore yields `None`, NOT `Some(None)`, so the fixed-point assertion the other leaves use
@@ -121,6 +121,6 @@ async fn committed_diff_applies_to_after() {
     // is still complete.
     let produced = diff::derive(&payload(), &before()).expect("unbind-default-scene derives its diff");
     assert_ne!(decoded, produced, "{CASE}: the JSON round trip is expected to LOSE this leaf's Option<Option<_>> slot — if it ever survives, drop this pin and assert equality instead");
-    let applied = <crate::artifacts::gltf::schema::diff::GltfDiff as protocol::MutationDiff<GltfSnapshot>>::apply(&produced, &before()).expect("the TYPED diff applies to the before-snapshot");
+    let applied = <crate::schema::diff::GltfDiff as protocol::MutationDiff<GltfSnapshot>>::apply(&produced, &before()).expect("the TYPED diff applies to the before-snapshot");
     assert_eq!(applied, expected_after(), "{CASE}: the TYPED delta still carries before to after — only its JSON encoding is lossy");
 }

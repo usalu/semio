@@ -12,8 +12,8 @@
 //! its own doc comment -- so this bridge doesn't fabricate a decode ID3v1's own type declines to
 //! do either).
 
-use crate::artifacts::mp3::Mp3Snapshot;
-use crate::artifacts::semio::standards::v1::subsets::audio::schema::snapshot::{SemioAudioChannel, SemioAudioFormat, SemioAudioSnapshot, SemioAudioTag, STDIO_SEMIOAUDIO_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_mp3::Mp3Snapshot;
+use crate::standards::v1::subsets::audio::schema::snapshot::{SemioAudioChannel, SemioAudioFormat, SemioAudioSnapshot, SemioAudioTag, STDIO_SEMIOAUDIO_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId};
 
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.mp3", standard: StandardId("mpeg1-layer3"), subset: SubsetId("*") };
@@ -89,7 +89,7 @@ fn decode_id3_text(data: &[u8]) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::mp3::standards::mpeg1_layer3::subsets::any::schema::snapshot::{Id3Frame, Id3v1Tag, Id3v2Tag, Mp3Frame, Mp3FrameHeader};
+    use semio_s_artifact_stdio_mp3::standards::mpeg1_layer3::subsets::any::schema::snapshot::{Id3Frame, Id3v1Tag, Id3v2Tag, Mp3Frame, Mp3FrameHeader};
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn real_world_mp3() -> Mp3Snapshot {

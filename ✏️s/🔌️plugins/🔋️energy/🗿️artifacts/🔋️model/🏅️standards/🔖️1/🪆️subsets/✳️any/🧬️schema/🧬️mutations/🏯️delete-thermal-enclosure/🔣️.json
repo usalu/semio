@@ -5,7 +5,7 @@
   "displayName": "Delete Thermal Enclosure",
   "emoji": "🏯️",
   "aggregateVariant": "DeleteThermalEnclosure",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "delete-thermal-enclosure",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

@@ -13,10 +13,10 @@ pub type HarmonizedCurveControls = (KnotVector, Vec<Vec<f64>>, Vec<Vec<f64>>);
 use super::bezier::RationalBezier3;
 use super::bspline::{basis_functions, de_boor, elevate_bezier_span_multi, elevate_degree, insert_knot, insert_knot_multi, KnotVector};
 use super::{Curve3, NurbsCurve3};
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::polynomial::{isolate_roots, refine_root, Bernstein, Poly};
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::surface::Surface;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Frame3;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::{Pnt3, Vec3};
+use crate::standards::v1::subsets::brep::schema::snapshot::polynomial::{isolate_roots, refine_root, Bernstein, Poly};
+use crate::standards::v1::subsets::brep::schema::snapshot::surface::Surface;
+use crate::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Frame3;
+use crate::standards::v1::subsets::brep::schema::snapshot::vector::{Pnt3, Vec3};
 
 // #region 🔖️Length
 
@@ -1117,8 +1117,8 @@ mod tests {
     use super::super::bspline::de_boor;
     use super::Curve3;
     use super::*;
-    use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Frame3;
-    use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::Vec3;
+    use crate::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Frame3;
+    use crate::standards::v1::subsets::brep::schema::snapshot::vector::Vec3;
 
     #[semio_framework_async_macros::async_test]
     async fn arc_length_of_line_equals_euclidean_distance() {

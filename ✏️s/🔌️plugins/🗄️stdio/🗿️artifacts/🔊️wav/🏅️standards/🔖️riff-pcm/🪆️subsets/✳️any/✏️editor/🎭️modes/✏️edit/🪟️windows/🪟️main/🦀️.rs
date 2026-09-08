@@ -1,7 +1,7 @@
 //! ✏️ `wav` edit (any) — Main window: real `MediaWindowKit`
 //! render of the current document (editable variant).
 
-use crate::artifacts::wav::standards::riff_pcm::subsets::any::schema::snapshot::WavSnapshot;
+use crate::standards::riff_pcm::subsets::any::schema::snapshot::WavSnapshot;
 use semio_framework_plugin::app::{MediaKind, MediaView, MediaWindowKit};
 use semio_framework_plugin::{BuiltNode, WindowKindDefinition, WindowKit};
 

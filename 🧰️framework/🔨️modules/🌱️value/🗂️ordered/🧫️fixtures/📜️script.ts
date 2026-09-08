@@ -5,8 +5,8 @@ import stableStringify from "fast-json-stable-stringify";
 
 //#region 🧬️Contract
 const fixture = await Bun.file(new URL("./🔣️ordered-map.json", import.meta.url)).json();
-const schema = await Bun.file(new URL("./🧬️.schema.json", import.meta.url)).json();
-const validate = new Ajv({ strict: true, allErrors: true }).compile(schema);
+const schema = await Bun.file(new URL("./../🧬️schema/🔣️.json", import.meta.url)).json();
+const validate = new Ajv({ strict: true, allErrors: true }).addSchema(schema).getSchema(`${schema.$id}#/$defs/OrderedMapFixture`)!;
 assert(validate(fixture), JSON.stringify(validate.errors));
 assert.equal(new Set(fixture.cases.map((row: any) => row.id)).size, fixture.cases.length);
 const key = (value: any): string => value.prefix.repeat(value.repetitions) + value.suffix;
@@ -46,8 +46,8 @@ for (const mutate of [
 //#endregion 🧬️Contract
 //#region 📤️SharedOwnership
 const sharedFixture = await Bun.file(new URL("./👥️shared-owner/🔣️.json", import.meta.url)).json();
-const sharedSchema = await Bun.file(new URL("./👥️shared-owner/🧬️.schema.json", import.meta.url)).json();
-const validateShared = new Ajv({ strict: true, allErrors: true }).compile(sharedSchema);
+const sharedSchema = schema;
+const validateShared = new Ajv({ strict: true, allErrors: true }).addSchema(schema).getSchema(`${schema.$id}#/$defs/SharedOwnerFixture`)!;
 assert(validateShared(sharedFixture), JSON.stringify(validateShared.errors));
 const sharedKey = sharedFixture.key.text.repeat(sharedFixture.key.repetitions);
 assert.equal(Buffer.byteLength(sharedKey), sharedFixture.expected.keyBytes);
@@ -58,7 +58,7 @@ console.log("[DEBUG] Shared-owner source fixtures=1 hostileRejections=2 oracle=f
 //#endregion 📤️SharedOwnership
 //#region 🧺️SetContract
 const setFixture = await Bun.file(new URL("../🧺️set/🧫️fixtures/🔣️.json", import.meta.url)).json();
-const setSchema = await Bun.file(new URL("../🧺️set/🧬️schema/🔣️.schema.json", import.meta.url)).json();
+const setSchema = await Bun.file(new URL("../🧺️set/🧬️schema/🔣️.json", import.meta.url)).json();
 const validateSet = new Ajv({ strict: true, allErrors: true }).compile(setSchema);
 assert(validateSet(setFixture), JSON.stringify(validateSet.errors));
 const orderedSet = [...new Set<string>(setFixture.values)].sort((a, b) => Buffer.compare(Buffer.from(a), Buffer.from(b)));

@@ -5,8 +5,8 @@
 //! inference gets its own `<emoji><slug>/` child (currently: `⏱️duration/`, derived from every
 //! track's real ISO-BMFF `stts`-flattened per-sample `duration`/`timescale` pair).
 
-use crate::artifacts::mp4::standards::isobmff::subsets::any::schema::snapshot::Mp4Snapshot;
-use schema::ArtifactSchema;
+use crate::standards::isobmff::subsets::any::schema::snapshot::Mp4Snapshot;
+use framework_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 
 use super::duration::{compute_mp4_duration, Mp4Duration};
@@ -55,7 +55,7 @@ impl protocol::InferenceSpec<Mp4Snapshot> for Mp4Inference {
 /// O(n) in total sample count with no honest per-entity incremental decomposition (a merkle
 /// dep-chain over one flat `Vec<Mp4Track>` costs more than the fold it would cache) — the default
 /// `infer_cached` passthrough is exact.
-impl ArtifactInferrer for crate::artifacts::mp4::standards::isobmff::subsets::any::schema::Mp4Builder {
+impl ArtifactInferrer for crate::standards::isobmff::subsets::any::schema::Mp4Builder {
     type Snapshot = Mp4Snapshot;
     type Inference = Mp4Inference;
 }
@@ -65,10 +65,10 @@ impl ArtifactInferrer for crate::artifacts::mp4::standards::isobmff::subsets::an
 /// 💡️ Registers `s.stdio.mp4.inference`'s facet leaves into the OS-wide inference catalog — call
 /// once at plugin init, alongside `mp4_artifact_schema_descriptor`'s registration.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn mp4_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
-    schema::ArtifactInferenceDescriptor {
+pub fn mp4_artifact_inference_descriptor() -> framework_schema::ArtifactInferenceDescriptor {
+    framework_schema::ArtifactInferenceDescriptor {
         id: "s.stdio.mp4.inference",
-        inference: schema::FacetLeaves {
+        inference: framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),

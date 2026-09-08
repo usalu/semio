@@ -11,9 +11,9 @@
 //! `OpText`/`OpBinary` already depend on stays byte-for-byte identical — serde's internally-tagged
 //! representation supports a newtype variant wrapping a plain struct.
 
-use crate::artifacts::html::standards::v5::subsets::any::schema::diff::{dec_html_node, dec_str, decode_option, enc_html_node, enc_str, encode_option, split_top_level, strip_brackets};
-use crate::artifacts::html::standards::v5::subsets::any::schema::diff::{diff_at_path, diff_set_snapshot, HtmlAttrAdded, HtmlAttrModified, HtmlAttributesDiff, HtmlChildAdded, HtmlChildrenDiff, HtmlDiff, HtmlElementDiff, HtmlNodeDiff};
-use crate::artifacts::html::standards::v5::subsets::any::schema::snapshot::{element_attr, node_at, HtmlNode, HtmlSnapshot, NodePath};
+use crate::standards::v5::subsets::any::schema::diff::{dec_html_node, dec_str, decode_option, enc_html_node, enc_str, encode_option, split_top_level, strip_brackets};
+use crate::standards::v5::subsets::any::schema::diff::{diff_at_path, diff_set_snapshot, HtmlAttrAdded, HtmlAttrModified, HtmlAttributesDiff, HtmlChildAdded, HtmlChildrenDiff, HtmlDiff, HtmlElementDiff, HtmlNodeDiff};
+use crate::standards::v5::subsets::any::schema::snapshot::{element_attr, node_at, HtmlNode, HtmlSnapshot, NodePath};
 use protocol::OpBinary;
 use protocol::{Mutation, OpText};
 
@@ -287,8 +287,8 @@ impl OpBinary for HtmlMutation {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::html::standards::v5::subsets::any::schema::diff::{HtmlChildAdded as HtmlChildAddedT, HtmlNodeDiff as HtmlNodeDiffT};
-    use crate::artifacts::html::standards::v5::subsets::any::schema::snapshot::{write_html_document, HtmlAttr, STDIO_HTML_DOCUMENT_SCHEMA};
+    use crate::standards::v5::subsets::any::schema::diff::{HtmlChildAdded as HtmlChildAddedT, HtmlNodeDiff as HtmlNodeDiffT};
+    use crate::standards::v5::subsets::any::schema::snapshot::{write_html_document, HtmlAttr, STDIO_HTML_DOCUMENT_SCHEMA};
     use protocol::command::DiffAlgebra;
     use protocol::MutationDiff;
 

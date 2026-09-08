@@ -5,7 +5,7 @@
   "displayName": "Change Zone Conditioned",
   "emoji": "🌬️",
   "aggregateVariant": "ChangeZoneConditioned",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-zone-conditioned",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

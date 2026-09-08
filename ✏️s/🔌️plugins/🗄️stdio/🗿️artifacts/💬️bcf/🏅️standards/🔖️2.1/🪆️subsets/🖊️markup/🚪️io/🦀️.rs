@@ -5,19 +5,19 @@
 //! own simple wrapper directly on `zip::ZipEntry` rather than reusing `zip::opc::OpcPackage` —
 //! see the F5 report §1. 🦑 Codec dissolved out of the former `⚙️engine` (ticket
 //! 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES); registration flows through
-//! `crate::artifacts::bcf::declaration()` (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE).
+//! `crate::declaration()` (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE).
 
-use crate::artifacts::bcf::{
+use crate::{
     schema::snapshot::{BcfCamera, BcfColoring, BcfComment, BcfComponents, BcfPoint3, BcfRawPart, BcfTopic, BcfViewpoint, BcfVisibility},
     BcfSnapshot, STDIO_BCF_DOCUMENT_SCHEMA,
 };
-use crate::artifacts::xml::schema::snapshot::{xml_document_from_text, xml_document_to_text, XmlAttr, XmlDocument, XmlNode};
-use crate::artifacts::zip::schema::snapshot::ZipEntry;
+use semio_s_artifact_stdio_xml::schema::snapshot::{xml_document_from_text, xml_document_to_text, XmlAttr, XmlDocument, XmlNode};
+use semio_s_artifact_stdio_zip::schema::snapshot::ZipEntry;
 
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use crate::artifacts::bcf::standards::v2_1::subsets::any::schema::BcfAnalyzer;
-    use crate::artifacts::bcf::BcfSnapshot;
+    use crate::standards::v2_1::subsets::any::schema::BcfAnalyzer;
+    use crate::BcfSnapshot;
     use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.bcf", standard: StandardId("2.1"), subset: SubsetId("*") };
@@ -446,13 +446,13 @@ pub fn encode_bcf(snap: &BcfSnapshot) -> Result<Vec<u8>, String> {
     for part in &snap.parts {
         entries.push(ZipEntry { name: part.name.clone(), data: part.data.clone() });
     }
-    let zip_snap = crate::artifacts::zip::ZipSnapshot { schema: crate::artifacts::zip::STDIO_ZIP_DOCUMENT_SCHEMA.into(), entries, comment: String::new() };
-    crate::artifacts::zip::standards::v2_0::subsets::base::io::encode_zip(&zip_snap).map_err(|e| e.to_string())
+    let zip_snap = semio_s_artifact_stdio_zip::ZipSnapshot { schema: semio_s_artifact_stdio_zip::STDIO_ZIP_DOCUMENT_SCHEMA.into(), entries, comment: String::new() };
+    semio_s_artifact_stdio_zip::standards::v2_0::subsets::base::io::encode_zip(&zip_snap).map_err(|e| e.to_string())
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn decode_bcf(data: &[u8]) -> Result<BcfSnapshot, String> {
-    let zip = crate::artifacts::zip::standards::v2_0::subsets::base::io::decode_zip(data).map_err(|e| e.to_string())?;
+    let zip = semio_s_artifact_stdio_zip::standards::v2_0::subsets::base::io::decode_zip(data).map_err(|e| e.to_string())?;
 
     let mut version = String::new();
     let mut consumed: std::collections::HashSet<String> = std::collections::HashSet::new();
@@ -515,11 +515,11 @@ pub fn decode_bcf(data: &[u8]) -> Result<BcfSnapshot, String> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::bcf::schema::diff::BcfDiff;
-    use crate::artifacts::bcf::schema::mutations::{
+    use crate::schema::diff::BcfDiff;
+    use crate::schema::mutations::{
         apply_bcf_mutation, insert_comment, insert_topic, insert_viewpoint, remove_comment, remove_topic, remove_viewpoint, set_comment, set_snapshot, set_topic_markup, set_version, set_viewpoint_camera, set_viewpoint_components, set_viewpoint_snapshot, BcfMutation,
     };
-    use crate::artifacts::bcf::standards::v2_1::subsets::any::schema::snapshot::{demo_bcf_snapshot, empty_bcf_snapshot};
+    use crate::standards::v2_1::subsets::any::schema::snapshot::{demo_bcf_snapshot, empty_bcf_snapshot};
     use protocol::command::DiffAlgebra;
     use protocol::{DiffCodec, Mutation, MutationDiff, OpBinary, OpText};
 
@@ -624,12 +624,12 @@ mod tests {
     /// parts, never fabricated into a bogus topic.
     #[semio_framework_async_macros::async_test]
     async fn folder_without_markup_becomes_raw_parts() {
-        let zip_snap = crate::artifacts::zip::ZipSnapshot {
-            schema: crate::artifacts::zip::STDIO_ZIP_DOCUMENT_SCHEMA.into(),
+        let zip_snap = semio_s_artifact_stdio_zip::ZipSnapshot {
+            schema: semio_s_artifact_stdio_zip::STDIO_ZIP_DOCUMENT_SCHEMA.into(),
             entries: vec![ZipEntry { name: "bcf.version".into(), data: bcf_version_bytes("2.1"), ..Default::default() }, ZipEntry { name: "stray/notes.txt".into(), data: b"not a topic".to_vec(), ..Default::default() }],
             comment: String::new(),
         };
-        let bytes = crate::artifacts::zip::standards::v2_0::subsets::base::io::encode_zip(&zip_snap).unwrap();
+        let bytes = semio_s_artifact_stdio_zip::standards::v2_0::subsets::base::io::encode_zip(&zip_snap).unwrap();
         let decoded = decode_bcf(&bytes).unwrap();
         assert!(decoded.topics.is_empty());
         assert!(decoded.parts.iter().any(|p| p.name == "stray/notes.txt"));
@@ -1061,7 +1061,7 @@ mod tests {
     /// reach at all.
     mod conformance_laws {
         use super::*;
-        use crate::artifacts::bcf::schema::{diff, mutations, snapshot};
+        use crate::schema::{diff, mutations, snapshot};
         use protocol::{DiffCodec, OpBinary, OpText};
 
         /// ✅️ "committed files parse": all 6 handcrafted `.grammar.semio`/`.protocol.semio` files
@@ -1097,7 +1097,7 @@ mod tests {
 
             let demo = demo_bcf_snapshot();
             let bytes = encode_bcf(&demo).expect("encode demo bcf");
-            let zip = crate::artifacts::zip::standards::v2_0::subsets::base::io::decode_zip(&bytes).expect("decode zip");
+            let zip = semio_s_artifact_stdio_zip::standards::v2_0::subsets::base::io::decode_zip(&bytes).expect("decode zip");
 
             let mut checked = 0;
             for entry in &zip.entries {
@@ -1199,7 +1199,7 @@ mod tests {
 
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
-    use crate::artifacts::bcf::standards::v2_1::subsets::any::schema::BcfComposer as BcfRawAnyComposer;
+    use crate::standards::v2_1::subsets::any::schema::BcfComposer as BcfRawAnyComposer;
     use semio_framework_plugin::{composer_entry_of, ComposerEntry};
     use std::sync::OnceLock;
 

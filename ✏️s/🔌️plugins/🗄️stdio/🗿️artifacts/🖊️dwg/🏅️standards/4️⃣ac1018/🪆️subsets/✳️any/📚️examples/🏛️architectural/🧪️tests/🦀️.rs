@@ -1,13 +1,13 @@
 //! 🧪️ Tests for example `🏛️architectural` — real fixture, real D1/D2 decode assertions.
 
-use crate::artifacts::binary::{BinarySnapshot, STDIO_BINARY_DOCUMENT_SCHEMA};
-use crate::artifacts::dwg::examples::architectural::{source, FIXTURE_BYTES};
-use crate::artifacts::dwg::schema::diff::DwgDiff;
-use crate::artifacts::dwg::schema::mutations::{apply_dwg_mutation, set_snapshot, set_version_info, DwgMutation};
-use crate::artifacts::dwg::schema::snapshot::{decode_dwg, encode_dwg, DwgSnapshot};
-use crate::artifacts::dwg::standards::v_ac1024::subsets::any::io::export::serializers::artifacts::binary::v_raw::any as raw_export;
-use crate::artifacts::dwg::standards::v_ac1024::subsets::any::io::import::deserializers::artifacts::binary::v_raw::any as raw_import;
-use crate::artifacts::dwg::standards::v_ac1024::subsets::any::schema::DwgAnalyzer;
+use semio_s_artifact_stdio_binary::{BinarySnapshot, STDIO_BINARY_DOCUMENT_SCHEMA};
+use crate::examples::architectural::{source, FIXTURE_BYTES};
+use crate::schema::diff::DwgDiff;
+use crate::schema::mutations::{apply_dwg_mutation, set_snapshot, set_version_info, DwgMutation};
+use crate::schema::snapshot::{decode_dwg, encode_dwg, DwgSnapshot};
+use crate::standards::v_ac1024::subsets::any::io::export::serializers::artifacts::binary::v_raw::any as raw_export;
+use crate::standards::v_ac1024::subsets::any::io::import::deserializers::artifacts::binary::v_raw::any as raw_import;
+use crate::standards::v_ac1024::subsets::any::schema::DwgAnalyzer;
 use protocol::command::DiffAlgebra;
 use protocol::{Mutation, MutationDiff};
 use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeSource, Dialect, StandardId, SubsetId};
@@ -40,7 +40,7 @@ async fn source_nonempty() {
 async fn real_decode_projects_logical_state() {
     let snap = decode_dwg(FIXTURE_BYTES).expect("real fixture must decode");
     assert_eq!(snap.version, "AC1024");
-    assert_eq!(snap.schema, crate::artifacts::dwg::STDIO_DWG_DOCUMENT_SCHEMA);
+    assert_eq!(snap.schema, crate::STDIO_DWG_DOCUMENT_SCHEMA);
     assert!(snap.codepage > 0);
     assert!(snap.drawing.layers.len() >= 7, "real fixture must project its standard layer table records");
     assert_eq!(snap.drawing.entities().len(), 68, "real fixture must derive LINE, ARC and LWPOLYLINE projections from handle-keyed bodies");
@@ -48,17 +48,17 @@ async fn real_decode_projects_logical_state() {
     assert!(snap.drawing.objects.iter().all(|object| !object.class_name.is_empty()), "every framed object must resolve to a fixed or custom class name");
     let relation_bodies =
         snap.drawing.objects.iter().filter(|object| object.owner_handle.is_some() || !object.reactor_handles.is_empty() || object.extension_dictionary_handle.is_some() || !object.referenced_handles.is_empty() || object.body.is_some()).count();
-    let named_dictionaries = snap.drawing.objects.iter().filter(|object| matches!(&object.body, Some(crate::artifacts::dwg::schema::snapshot::DwgLogicalObjectBody::Dictionary(body)) if !body.entries.is_empty())).count();
-    let named_records = snap.drawing.objects.iter().filter(|object| matches!(&object.body, Some(crate::artifacts::dwg::schema::snapshot::DwgLogicalObjectBody::TableRecord(_)))).count();
-    let table_controls = snap.drawing.objects.iter().filter(|object| matches!(&object.body, Some(crate::artifacts::dwg::schema::snapshot::DwgLogicalObjectBody::TableControl(body)) if !body.entry_handles().is_empty())).count();
-    let xrecords = snap.drawing.objects.iter().filter(|object| matches!(&object.body, Some(crate::artifacts::dwg::schema::snapshot::DwgLogicalObjectBody::XRecord(_)))).count();
-    let typed_xrecords = snap.drawing.objects.iter().filter(|object| matches!(&object.body, Some(crate::artifacts::dwg::schema::snapshot::DwgLogicalObjectBody::XRecord(body)) if !body.values.is_empty())).count();
+    let named_dictionaries = snap.drawing.objects.iter().filter(|object| matches!(&object.body, Some(crate::schema::snapshot::DwgLogicalObjectBody::Dictionary(body)) if !body.entries.is_empty())).count();
+    let named_records = snap.drawing.objects.iter().filter(|object| matches!(&object.body, Some(crate::schema::snapshot::DwgLogicalObjectBody::TableRecord(_)))).count();
+    let table_controls = snap.drawing.objects.iter().filter(|object| matches!(&object.body, Some(crate::schema::snapshot::DwgLogicalObjectBody::TableControl(body)) if !body.entry_handles().is_empty())).count();
+    let xrecords = snap.drawing.objects.iter().filter(|object| matches!(&object.body, Some(crate::schema::snapshot::DwgLogicalObjectBody::XRecord(_)))).count();
+    let typed_xrecords = snap.drawing.objects.iter().filter(|object| matches!(&object.body, Some(crate::schema::snapshot::DwgLogicalObjectBody::XRecord(body)) if !body.values.is_empty())).count();
     let xrecord_values = snap
         .drawing
         .objects
         .iter()
         .filter_map(|object| match &object.body {
-            Some(crate::artifacts::dwg::schema::snapshot::DwgLogicalObjectBody::XRecord(body)) => Some(body.values.len()),
+            Some(crate::schema::snapshot::DwgLogicalObjectBody::XRecord(body)) => Some(body.values.len()),
             _ => None,
         })
         .sum::<usize>();
@@ -67,7 +67,7 @@ async fn real_decode_projects_logical_state() {
         .objects
         .iter()
         .filter_map(|object| match &object.body {
-            Some(crate::artifacts::dwg::schema::snapshot::DwgLogicalObjectBody::XRecord(body)) => Some(body.object_id_handles.len()),
+            Some(crate::schema::snapshot::DwgLogicalObjectBody::XRecord(body)) => Some(body.object_id_handles.len()),
             _ => None,
         })
         .sum::<usize>();
@@ -76,7 +76,7 @@ async fn real_decode_projects_logical_state() {
         .objects
         .iter()
         .filter_map(|object| match &object.body {
-            Some(crate::artifacts::dwg::schema::snapshot::DwgLogicalObjectBody::XRecord(body)) => Some(body.values.iter().filter(|value| matches!(value, crate::artifacts::dwg::schema::snapshot::DwgXRecordValue::ObjectId { .. })).count()),
+            Some(crate::schema::snapshot::DwgLogicalObjectBody::XRecord(body)) => Some(body.values.iter().filter(|value| matches!(value, crate::schema::snapshot::DwgXRecordValue::ObjectId { .. })).count()),
             _ => None,
         })
         .sum::<usize>();
@@ -157,7 +157,7 @@ async fn exact_fixture_roundtrips_through_snapshot_diff_mutation_and_raw_io() {
     let analyzed = analysis.parts.snapshot.expect("analyzer snapshot");
     assert_fixture_bytes(&encode_dwg(&analyzed).expect("analyzer export"), "analyzer export").await;
     let dialect = Dialect { artifact_kind: "s.stdio.dwg", standard: StandardId("ac1024"), subset: SubsetId("*") };
-    let composition = crate::artifacts::dwg::standards::v_ac1024::subsets::any::io::derived_composition::DwgComposerComposition::compose(&[ComposeSource { dialect, payload: AnalyzeSource::Binary(&pack) }]).expect("composer snapshot");
+    let composition = crate::standards::v_ac1024::subsets::any::io::derived_composition::DwgComposerComposition::compose(&[ComposeSource { dialect, payload: AnalyzeSource::Binary(&pack) }]).expect("composer snapshot");
     assert_fixture_bytes(&encode_dwg(&composition.snapshot).expect("composer export"), "composer export").await;
 
     let empty = DwgDiff::between(&original, &original);

@@ -114,10 +114,10 @@ fn round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::{mutable_input, resolve_spec, KINDS};
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_plugin_stdio::artifacts::tiff::standards::v6_0::subsets::document::io::{decode_tiff, encode_tiff};
-    use semio_s_plugin_stdio::artifacts::tiff::standards::v6_0::subsets::document::schema::mutations::apply_tiff_mutation;
-    use semio_s_plugin_stdio::artifacts::tiff::standards::v6_0::subsets::document::schema::snapshot::{TiffByteOrder, TiffFieldType, TiffIfd, TiffTag, TiffValues};
-    use semio_s_plugin_stdio::artifacts::tiff::{TiffMutation, TiffSnapshot};
+    use crate::standards::v6_0::subsets::document::io::{decode_tiff, encode_tiff};
+    use crate::standards::v6_0::subsets::document::schema::mutations::apply_tiff_mutation;
+    use crate::standards::v6_0::subsets::document::schema::snapshot::{TiffByteOrder, TiffFieldType, TiffIfd, TiffTag, TiffValues};
+    use crate::{TiffMutation, TiffSnapshot};
     use semio_s_plugin_stdio_test_oracle::artifacts::tiff::standards::v6_0::subsets::document::project_tiff;
 
     //#region 🔖️SpecParsing
@@ -223,23 +223,23 @@ mod subject {
         let p_num = |key: &str| -> Option<f64> { params.and_then(|p| j_num(p, key)) };
         let p_str = |key: &str| -> Option<&str> { params.and_then(|p| j_str(p, key)) };
         Ok(match kind.as_str() {
-            "change-byte-order" => TiffMutation::ChangeByteOrder(semio_s_plugin_stdio::artifacts::tiff::schema::mutations::ChangeByteOrderMutation { byte_order: if p_str("byteOrder") == Some("big-endian") { TiffByteOrder::BigEndian } else { TiffByteOrder::LittleEndian } }),
+            "change-byte-order" => TiffMutation::ChangeByteOrder(crate::schema::mutations::ChangeByteOrderMutation { byte_order: if p_str("byteOrder") == Some("big-endian") { TiffByteOrder::BigEndian } else { TiffByteOrder::LittleEndian } }),
             "insert-ifd" => {
                 let index = p_num("index").ok_or("insert-ifd needs `index`")? as usize;
                 let ifd_json = params.and_then(|p| p.get("ifd")).ok_or("insert-ifd needs `ifd`")?;
                 let (ifd, _strip) = ifd_from_json(ifd_json)?;
-                TiffMutation::InsertIfd(semio_s_plugin_stdio::artifacts::tiff::schema::mutations::InsertIfdMutation { index, ifd })
+                TiffMutation::InsertIfd(crate::schema::mutations::InsertIfdMutation { index, ifd })
             }
-            "remove-ifd" => TiffMutation::RemoveIfd(semio_s_plugin_stdio::artifacts::tiff::schema::mutations::RemoveIfdMutation { index: p_num("index").ok_or("remove-ifd needs `index`")? as usize }),
+            "remove-ifd" => TiffMutation::RemoveIfd(crate::schema::mutations::RemoveIfdMutation { index: p_num("index").ok_or("remove-ifd needs `index`")? as usize }),
             "replace-tag" => {
                 let ifd_index = p_num("ifdIndex").ok_or("replace-tag needs `ifdIndex`")? as usize;
                 let tag = p_num("tag").ok_or("replace-tag needs `tag`")? as u16;
                 let type_code = p_num("type").ok_or("replace-tag needs `type`")? as u16;
                 let values = params.and_then(|p| p.get("values")).ok_or("replace-tag needs `values`")?;
-                TiffMutation::ReplaceTag(semio_s_plugin_stdio::artifacts::tiff::schema::mutations::ReplaceTagMutation { ifd_index, tag, kind: TiffFieldType::from_u16(type_code)?, values: values_from_json(type_code, values)? })
+                TiffMutation::ReplaceTag(crate::schema::mutations::ReplaceTagMutation { ifd_index, tag, kind: TiffFieldType::from_u16(type_code)?, values: values_from_json(type_code, values)? })
             }
-            "remove-tag" => TiffMutation::RemoveTag(semio_s_plugin_stdio::artifacts::tiff::schema::mutations::RemoveTagMutation { ifd_index: p_num("ifdIndex").ok_or("remove-tag needs `ifdIndex`")? as usize, tag: p_num("tag").ok_or("remove-tag needs `tag`")? as u16 }),
-            "replace-pixels" => TiffMutation::ReplacePixels(semio_s_plugin_stdio::artifacts::tiff::schema::mutations::ReplacePixelsMutation { pixels: hex_decode(p_str("pixels").ok_or("replace-pixels needs `pixels`")?)? }),
+            "remove-tag" => TiffMutation::RemoveTag(crate::schema::mutations::RemoveTagMutation { ifd_index: p_num("ifdIndex").ok_or("remove-tag needs `ifdIndex`")? as usize, tag: p_num("tag").ok_or("remove-tag needs `tag`")? as u16 }),
+            "replace-pixels" => TiffMutation::ReplacePixels(crate::schema::mutations::ReplacePixelsMutation { pixels: hex_decode(p_str("pixels").ok_or("replace-pixels needs `pixels`")?)? }),
             other => return Err(format!("subject: unrecognized mutation kind {other:?}")),
         })
     }
@@ -252,7 +252,7 @@ mod subject {
     /// `protocol` crate as an extra direct dependency of this generated test crate for no gain: the
     /// mutation this scenario actually puts under test is still `apply_tiff_mutation`, exercised in
     /// BOTH directions below.
-    fn inverse_of(mutation: &TiffMutation, base: &TiffSnapshot) -> Vec<TiffMutation> { semio_s_plugin_stdio::artifacts::tiff::schema::mutations::inverse_tiff_mutation(mutation, base) }
+    fn inverse_of(mutation: &TiffMutation, base: &TiffSnapshot) -> Vec<TiffMutation> { crate::schema::mutations::inverse_tiff_mutation(mutation, base) }
     //#endregion 🔖️Inverse
 
     //#region 🔖️Handlers

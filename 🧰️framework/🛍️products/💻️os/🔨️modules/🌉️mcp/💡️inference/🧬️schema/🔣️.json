@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/os/mcp/inference/component.json",
+  "title": "Semio OS MCP Inference Discovery",
+  "$defs": {
+    "InferenceIdV1": { "type": "string", "minLength": 1, "maxLength": 256, "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$" },
+    "InferenceVersionV1": { "type": "integer", "minimum": 1, "maximum": 9007199254740991 },
+    "DeclaredInferenceV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "owner",
+        "artifactKind",
+        "artifactSchema",
+        "artifactSchemaVersion",
+        "documentSchema",
+        "documentSchemaVersion",
+        "inferenceSchema",
+        "inferenceSchemaVersion",
+        "algorithmVersion",
+        "policyVersion",
+        "contributor",
+        "dependsOn"
+      ],
+      "properties": {
+        "owner": { "$ref": "#/$defs/InferenceIdV1" },
+        "artifactKind": { "$ref": "#/$defs/InferenceIdV1" },
+        "artifactSchema": { "$ref": "#/$defs/InferenceIdV1" },
+        "artifactSchemaVersion": { "$ref": "#/$defs/InferenceVersionV1" },
+        "documentSchema": { "$ref": "#/$defs/InferenceIdV1" },
+        "documentSchemaVersion": { "$ref": "#/$defs/InferenceVersionV1" },
+        "inferenceSchema": { "$ref": "#/$defs/InferenceIdV1" },
+        "inferenceSchemaVersion": { "$ref": "#/$defs/InferenceVersionV1" },
+        "algorithmVersion": { "$ref": "#/$defs/InferenceVersionV1" },
+        "policyVersion": { "$ref": "#/$defs/InferenceVersionV1" },
+        "contributor": { "$ref": "#/$defs/InferenceIdV1" },
+        "dependsOn": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/InferenceIdV1" } }
+      }
+    },
+    "InferenceDiscoveryRosterV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["declared"],
+      "properties": {
+        "declared": { "type": "array", "items": { "$ref": "#/$defs/DeclaredInferenceV1" } }
+      }
+    }
+  }
+}

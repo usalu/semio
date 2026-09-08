@@ -5,7 +5,7 @@
   "displayName": "Set Dpart Metadata",
   "emoji": "🏷️",
   "aggregateVariant": "SetDpartMetadata",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "set-dpart-metadata",
   "binaryTag": 16,
   "invertibility": "explicit-mutation",

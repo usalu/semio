@@ -3,7 +3,7 @@
 //! mutation-capable surface — the same `EpwSnapshot.records` read, no edit affordances
 //! (`window_kind()`, the read-only variant, not the editable one).
 
-use crate::artifacts::epw::EpwSnapshot;
+use crate::EpwSnapshot;
 use semio_framework_plugin::app::{TableView, TableWindowKit, WindowKit};
 use semio_framework_plugin::{BuiltNode, LocalizedLabel, WindowKindDefinition};
 

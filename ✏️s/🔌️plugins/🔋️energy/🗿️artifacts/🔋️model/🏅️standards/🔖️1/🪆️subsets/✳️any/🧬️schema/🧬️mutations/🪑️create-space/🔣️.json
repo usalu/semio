@@ -5,7 +5,7 @@
   "displayName": "Create Space",
   "emoji": "🪑️",
   "aggregateVariant": "CreateSpace",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "create-space",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

@@ -11,9 +11,9 @@
 //! chunk) -- `other_chunks` is always empty on export, so tags do not survive an
 //! `audio→wav→audio` round trip; every numeric/sample field does.
 
-use crate::artifacts::semio::standards::v1::subsets::audio::schema::snapshot::SemioAudioSnapshot;
-use crate::artifacts::wav::standards::riff_pcm::subsets::any::schema::snapshot::{WavData, WavFmt};
-use crate::artifacts::wav::WavSnapshot;
+use crate::standards::v1::subsets::audio::schema::snapshot::SemioAudioSnapshot;
+use semio_s_artifact_stdio_wav::standards::riff_pcm::subsets::any::schema::snapshot::{WavData, WavFmt};
+use semio_s_artifact_stdio_wav::WavSnapshot;
 use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
 
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("audio") };
@@ -46,8 +46,8 @@ impl ArtifactSerializer for SemioAudioToWav {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::semio::standards::v1::subsets::audio::io::wav_deserializer::SemioAudioFromWav;
-    use crate::artifacts::semio::standards::v1::subsets::audio::schema::snapshot::{SemioAudioChannel, SemioAudioFormat, SemioAudioTag, STDIO_SEMIOAUDIO_DOCUMENT_SCHEMA};
+    use crate::standards::v1::subsets::audio::io::wav_deserializer::SemioAudioFromWav;
+    use crate::standards::v1::subsets::audio::schema::snapshot::{SemioAudioChannel, SemioAudioFormat, SemioAudioTag, STDIO_SEMIOAUDIO_DOCUMENT_SCHEMA};
     use semio_framework_plugin::ArtifactDeserializer;
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9

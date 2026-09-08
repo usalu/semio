@@ -3,8 +3,8 @@
 //! Inserting `SemioValue::Null` at the same index into every row keeps the CRITICAL row/column
 //! alignment invariant (see `📸️snapshot/🦀️.rs`'s own doc comment).
 
-use crate::artifacts::semio::standards::v1::subsets::table::schema::mutations::SemioTableMutation;
-use crate::artifacts::semio::standards::v1::subsets::table::schema::snapshot::{SemioTableCellKind, SemioTableSnapshot};
+use crate::standards::v1::subsets::table::schema::mutations::SemioTableMutation;
+use crate::standards::v1::subsets::table::schema::snapshot::{SemioTableCellKind, SemioTableSnapshot};
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]

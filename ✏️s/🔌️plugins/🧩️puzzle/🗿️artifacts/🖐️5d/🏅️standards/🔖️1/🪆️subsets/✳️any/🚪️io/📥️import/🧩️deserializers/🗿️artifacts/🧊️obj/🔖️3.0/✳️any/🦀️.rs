@@ -1,6 +1,6 @@
 //! puzzle5d <- obj
 use crate::artifacts::puzzle5d::Puzzle5dSnapshot;
-use semio_s_plugin_stdio::artifacts::obj::{ObjSnapshot, STDIO_OBJ_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_obj::{ObjSnapshot, STDIO_OBJ_DOCUMENT_SCHEMA};
 
 pub fn register() {}
 

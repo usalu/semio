@@ -44,12 +44,12 @@ impl Vdi3805Artifact {
             manufacturer_file: self.manufacturer_file.clone(),
             catalog: self.catalog.clone(),
             edition_profile: self.edition_profile.clone(),
-            correction_as_of: self.correction_as_of.clone(),
+            correction_as_of: self.correction_as_of,
             strict_mode: self.strict_mode,
             index: self.index.clone(),
             geometry: self.geometry.clone(),
             curves: self.curves.clone(),
-            limits: self.limits.clone(),
+            limits: self.limits,
         }
     }
 

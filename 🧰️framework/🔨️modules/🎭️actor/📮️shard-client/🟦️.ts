@@ -403,7 +403,7 @@ type InboundMessage =
  * (`🔌️plugin/📦️packages/🟦️typescript/🟦️.ts`'s `shardWorkerSource`, which interpolates
  * `progressIntervalMs` straight out of the fixture below) and the shell's per-plugin load deadline
  * (`🛠️ShellHelpers/🟦️.tsx`'s `loadPluginModuleResilient`). Language-agnostic owner:
- * `🧬️schema.json` (`semio.actor.shard-liveness.v1`) + `🧪️fixture/🔣️.json`'s `policy` block; this
+ * `🧬️schema/🔣️.json` (`https://semio.tech/schema/framework/actor/shard-client/schema.json#/$defs/ShardClient`) + `🧪️fixture/🔣️.json`'s `policy` block; this
  * mirror is asserted field-for-field equal to that fixture by this file's own in-source suite, so a
  * literal edited here alone fails closed rather than silently diverging. */
 export const SHARD_LIVENESS_POLICY = Object.freeze({
@@ -2243,8 +2243,8 @@ if (import.meta.vitest) {
 
   it("ShardWorkerBootstrap declares only original metadata preparation and close methods", async () => {
     const { default: fixture } = await import("../🏘️composition/🏗️bootstrap/🧪️fixture/🔣️.json");
-    const { default: schema } = await import("../🏘️composition/🏗️bootstrap/🧬️schema.json");
-    const { default: residentSchema } = await import("../../🌱️value/💾️resident/🧬️schema.json"); const { default: Ajv } = await import("ajv");
+    const { default: schema } = await import("../🏘️composition/🏗️bootstrap/🧬️schema/🔣️.json");
+    const { default: residentSchema } = await import("../../🌱️value/💾️resident/🧬️schema/🔣️.json"); const { default: Ajv } = await import("ajv");
     expect(new Ajv({ strict: true }).addSchema(residentSchema).compile(schema)(fixture)).toBe(true);
     const { client, workers } = harness(1, { residentLedger: new OwnedResidentLedger(fixture.capacity) }); const posts = workers[0]!.sent.length;
     expect(typeof Reflect.get(client, fixture.methods.prepare)).toBe("function"); expect(typeof Reflect.get(client, fixture.methods.close)).toBe("function");
@@ -2497,8 +2497,8 @@ if (import.meta.vitest) {
 
   it("ShardResidentComposition requires the original ledger before creating workers", async () => {
     const { OwnedResidentLedger } = await import("../../🌱️value/💾️resident/🟦️.ts");
-    const { default: fixture } = await import("../🏘️composition/🧪️fixture/🔣️.json"); const { default: schema } = await import("../🏘️composition/🧬️schema.json");
-    const { default: residentSchema } = await import("../../🌱️value/💾️resident/🧬️schema.json"); const { default: Ajv } = await import("ajv");
+    const { default: fixture } = await import("../🏘️composition/🧪️fixture/🔣️.json"); const { default: schema } = await import("../🏘️composition/🧬️schema/🔣️.json");
+    const { default: residentSchema } = await import("../../🌱️value/💾️resident/🧬️schema/🔣️.json"); const { default: Ajv } = await import("ajv");
     expect(new Ajv({ strict: true }).addSchema(residentSchema).compile(schema)(fixture)).toBe(true);
     const ledger = new OwnedResidentLedger(fixture.capacity); let workers = 0;
     const createWorker = () => { workers++; return new FakeShardWorker(0); };
@@ -2515,8 +2515,8 @@ if (import.meta.vitest) {
   });
 
   it("ShardResidentComposition matches only the privately captured original activation owner", async () => {
-    const { default: fixture } = await import("../🏘️composition/🧪️fixture/🔣️.json"); const { default: schema } = await import("../🏘️composition/🧬️schema.json");
-    const { default: residentSchema } = await import("../../🌱️value/💾️resident/🧬️schema.json"); const { default: Ajv } = await import("ajv");
+    const { default: fixture } = await import("../🏘️composition/🧪️fixture/🔣️.json"); const { default: schema } = await import("../🏘️composition/🧬️schema/🔣️.json");
+    const { default: residentSchema } = await import("../../🌱️value/💾️resident/🧬️schema/🔣️.json"); const { default: Ajv } = await import("ajv");
     const { readFile } = await import("node:fs/promises"); const ts = await import("typescript"); const row = fixture.activationBinding;
     expect(new Ajv({ strict: true }).addSchema(residentSchema).compile(schema)(fixture)).toBe(true);
     const ledger = new OwnedResidentLedger(fixture.capacity); const local = harness(1, { residentLedger: ledger }); const foreign = harness(1, { residentLedger: ledger });
@@ -2783,7 +2783,7 @@ if (import.meta.vitest) {
   async function fixtureResidentScope(pool: OwnedUiResidentPool, ledger: OwnedResidentLedger, lease: ShardInstanceLifecycleLease): Promise<OwnedUiResidentInstance> {
     const { OwnedUiResidentInstance } = await import("../../🖱️ui/🧬️contract/🧵️retained/💾️resident/🟦️.ts");
     const { default: fixture } = await import("../../🖱️ui/🧬️contract/🧵️retained/💾️resident/📨️slot/🧪️fixture/🔣️.json");
-    const { default: schema } = await import("../../🖱️ui/🧬️contract/🧵️retained/💾️resident/📨️slot/📐️schema/🔣️.json"); const { default: Ajv } = await import("ajv"); const { produce } = await import("immer");
+    const { default: schema } = await import("../../🖱️ui/🧬️contract/🧵️retained/💾️resident/📨️slot/🧬️schema/🔣️.json"); const { default: Ajv } = await import("ajv"); const { produce } = await import("immer");
     expect(new Ajv({ strict: true }).compile(schema)(fixture)).toBe(true);
     const owner = fixtureHosts.get(lease); const lifetime = lease.lifetime; if (!owner || !lifetime) throw new Error("Original fixture host has not been captured");
     const before = ledger.usage.data; let scope: OwnedUiResidentInstance | null = null;
@@ -2803,7 +2803,7 @@ if (import.meta.vitest) {
   async function fixtureResidentPayload(scope: OwnedUiResidentInstance, ledger: OwnedResidentLedger, field: NonNullable<OwnedKernelReturnContent["field"]>): Promise<OwnedUiResidentPayload> {
     const { OwnedUiResidentPayload } = await import("../../🖱️ui/🧬️contract/🧵️retained/💾️resident/🟦️.ts");
     const { OwnedKernelReturnInputField } = await import("../../🎠️kernel/📤️return/📦️content/📥️input/🟦️.ts");
-    const { default: fixture } = await import("../../🖱️ui/🧬️contract/🧵️retained/💾️resident/📦️payload/🧪️fixture/🔣️.json"); const { default: schema } = await import("../../🖱️ui/🧬️contract/🧵️retained/💾️resident/📦️payload/📐️schema/🔣️.json");
+    const { default: fixture } = await import("../../🖱️ui/🧬️contract/🧵️retained/💾️resident/📦️payload/🧪️fixture/🔣️.json"); const { default: schema } = await import("../../🖱️ui/🧬️contract/🧵️retained/💾️resident/📦️payload/🧬️schema/🔣️.json");
     const { default: Ajv } = await import("ajv"); const { produce } = await import("immer"); expect(new Ajv({ strict: true }).compile(schema)(fixture)).toBe(true);
     const before = ledger.usage.data; let payload: OwnedUiResidentPayload | null = null;
     for (let index = 0; index < fixture.admissionBytes.length; index++) {
@@ -2822,7 +2822,7 @@ if (import.meta.vitest) {
   async function fixtureResidentBuilder(ledger: OwnedResidentLedger, field: NonNullable<OwnedKernelReturnContent["field"]>, resident: OwnedUiResidentPayload) {
     const { OwnedUiOperationPayloadBuilder } = await import("../../🖱️ui/🧬️contract/🧵️retained/🩹️operations/📥️wire/📃️pages/🟦️.ts");
     const { OwnedKernelReturnInputField } = await import("../../🎠️kernel/📤️return/📦️content/📥️input/🟦️.ts");
-    const { default: fixture } = await import("../../🖱️ui/🧬️contract/🧵️retained/💾️resident/🏗️builder/🧪️fixture/🔣️.json"); const { default: schema } = await import("../../🖱️ui/🧬️contract/🧵️retained/💾️resident/🏗️builder/📐️schema/🔣️.json");
+    const { default: fixture } = await import("../../🖱️ui/🧬️contract/🧵️retained/💾️resident/🏗️builder/🧪️fixture/🔣️.json"); const { default: schema } = await import("../../🖱️ui/🧬️contract/🧵️retained/💾️resident/🏗️builder/🧬️schema/🔣️.json");
     const { default: Ajv } = await import("ajv"); const { produce } = await import("immer"); expect(new Ajv({ strict: true }).compile(schema)(fixture)).toBe(true);
     const before = ledger.usage.data;
     for (let index = 0; index < fixture.grants.length; index++) {
@@ -2928,9 +2928,9 @@ if (import.meta.vitest) {
 
   describe("ShardClient captured return authority", () => {
     it("CapturedReturnAdmission validates its exact parent phases and independent fixed ledger inventory", async () => {
-      const { default: contract } = await import("../🪪️activation/📤️return/🏘️admission/🤝️contract.json"); const { default: schema } = await import("../🪪️activation/📤️return/🏘️admission/🧬️schema.json");
-      const { default: fixture } = await import("../🪪️activation/📤️return/🏘️admission/🧪️fixture/🔣️.json"); const { default: fixtureSchema } = await import("../🪪️activation/📤️return/🏘️admission/📐️schema/🔣️.json");
-      const { default: Ajv } = await import("ajv"); const { produce } = await import("immer"); const ajv = new Ajv({ strict: true }); expect(ajv.validate(schema, contract)).toBe(true); expect(ajv.validate(fixtureSchema, fixture)).toBe(true);
+      const { default: contract } = await import("../🪪️activation/📤️return/🏘️admission/🤝️contract.json"); const { default: schema } = await import("../🪪️activation/📤️return/🏘️admission/🧬️schema/🔣️.json");
+      const { default: fixture } = await import("../🪪️activation/📤️return/🏘️admission/🧪️fixture/🔣️.json"); const { default: fixtureSchema } = await import("../🪪️activation/📤️return/🏘️admission/🧬️schema/🔣️.json");
+      const { default: Ajv } = await import("ajv"); const { produce } = await import("immer"); const ajv = new Ajv({ strict: true }); expect(ajv.validate(schema, contract)).toBe(true); expect(ajv.addSchema(fixtureSchema).getSchema(`${fixtureSchema.$id}#/$defs/AdmissionFixture`)!(fixture)).toBe(true);
       const words = [contract.parentFields, contract.stateFields, contract.rosterFields, contract.facadeFields]; const bytes = words.reduce((sum, fields) => sum + BigInt(contract.model.recordBytes) + BigInt(fields.length) * BigInt(contract.model.fieldBytes), 0n);
       expect({ bytes: Number(bytes), slots: words.length, owners: words.length }).toEqual(contract.domain);
       const retained = produce({ bytes: 0, slots: 0, owners: 0 }, value => { for (const envelope of [contract.domain, contract.intrinsicRecord, contract.admissionCell]) { value.bytes += envelope.bytes; value.slots += envelope.slots; value.owners += envelope.owners; } });
@@ -3080,7 +3080,7 @@ if (import.meta.vitest) {
 
     it("CapturedReturnConstruction fences the original parent after a retained child finalizer fault", async () => {
       const { OwnedActorTurnOutput } = await import("../🪪️activation/🚪️instance/📥️output/🟦️.ts");
-      const { default: fixture } = await import("../🪪️activation/🚪️instance/📥️output/🧯️fault/🧪️fixture/🔣️.json"); const { default: schema } = await import("../🪪️activation/🚪️instance/📥️output/🧯️fault/🧬️schema.json"); const { default: Ajv } = await import("ajv"); expect(new Ajv({ strict: true }).validate(schema, fixture)).toBe(true);
+      const { default: fixture } = await import("../🪪️activation/🚪️instance/📥️output/🧯️fault/🧪️fixture/🔣️.json"); const { default: schema } = await import("../🪪️activation/🚪️instance/📥️output/🧯️fault/🧬️schema/🔣️.json"); const { default: Ajv } = await import("ajv"); expect(new Ajv({ strict: true }).validate(schema, fixture)).toBe(true);
       for (const boundary of fixture.boundaries) for (const kind of fixture.values) {
         const { client, worker, instance } = await captured(); const source = await fixtureCapturedReturn(instance, 2); const state = capturedReturnState(source); const posts = worker.sent.length; let reads = 0;
         const fault = kind === "null" ? null : kind === "undefined" ? undefined : kind === "false" ? false : kind === "zero" ? 0 : { payload: new Uint8Array(fixture.unknownBytes), get message() { reads++; throw new Error("Foreign child fault getter"); } };
@@ -3095,7 +3095,7 @@ if (import.meta.vitest) {
 
     it("CapturedReturnConstruction retains the original parent and raw fault before facade finalization", async () => {
       const { default: fixture } = await import("../🪪️activation/📤️return/🧪️fixture/🔣️.json");
-      const { default: schema } = await import("../🪪️activation/📤️return/📐️schema/🔣️.json");
+      const { default: schema } = await import("../🪪️activation/📤️return/🧬️schema/🔣️.json");
       const { default: Ajv } = await import("ajv"); const { produce } = await import("immer"); const ts = await import("typescript"); const { readFile } = await import("node:fs/promises");
       expect(new Ajv({ strict: true }).validate(schema, fixture)).toBe(true);
       for (const boundary of fixture.construction.boundaries) for (const kind of fixture.construction.faults) {
@@ -3258,9 +3258,9 @@ if (import.meta.vitest) {
 
     it("OwnedKernelReturnBuilderBinding validates two-way close traces with an independent state oracle", async () => {
       const { default: contract } = await import("../../🎠️kernel/📤️return/📦️content/📥️input/🏗️builder/📜️contract/🔣️.json"); const { default: schema } = await import("../../🎠️kernel/📤️return/📦️content/📥️input/🏗️builder/🧬️schema/🔣️.json");
-      const { default: fixture } = await import("../../🎠️kernel/📤️return/📦️content/📥️input/🏗️builder/🧫️fixture/🔣️.json"); const { default: fixtureSchema } = await import("../../🎠️kernel/📤️return/📦️content/📥️input/🏗️builder/📐️fixture-schema/🔣️.json");
+      const { default: fixture } = await import("../../🎠️kernel/📤️return/📦️content/📥️input/🏗️builder/🧫️fixture/🔣️.json"); const { default: fixtureSchema } = await import("../../🎠️kernel/📤️return/📦️content/📥️input/🏗️builder/🧬️schema/🔣️.json");
       const { default: Ajv } = await import("ajv"); const { produce } = await import("immer"); const validator = new Ajv({ strict: true });
-      expect(validator.validate(schema, contract)).toBe(true); expect(validator.validate(fixtureSchema, fixture)).toBe(true);
+      expect(validator.validate(schema, contract)).toBe(true); expect(validator.addSchema(fixtureSchema).getSchema(`${fixtureSchema.$id}#/$defs/AdmissionFixture`)!(fixture)).toBe(true);
       const price = (fields: number) => BigInt(contract.metadata.recordBytes) + BigInt(contract.metadata.fieldBytes) * BigInt(fields);
       expect(price(contract.fieldFields.length)).toBe(BigInt(contract.metadata.fieldBytesTotal)); expect(price(contract.witnessFields.length)).toBe(BigInt(contract.metadata.witnessBytes));
       for (const vector of fixture.traces) {
@@ -3318,9 +3318,9 @@ if (import.meta.vitest) {
 
     it("OwnedKernelReturnInputEvidence validates exact detach phases with an independent state oracle", async () => {
       const { default: contract } = await import("../../🎠️kernel/📤️return/📦️content/📥️input/🧾️release/📜️contract/🔣️.json"); const { default: schema } = await import("../../🎠️kernel/📤️return/📦️content/📥️input/🧾️release/🧬️schema/🔣️.json");
-      const { default: fixture } = await import("../../🎠️kernel/📤️return/📦️content/📥️input/🧾️release/🧫️fixture/🔣️.json"); const { default: fixtureSchema } = await import("../../🎠️kernel/📤️return/📦️content/📥️input/🧾️release/📐️fixture-schema/🔣️.json");
+      const { default: fixture } = await import("../../🎠️kernel/📤️return/📦️content/📥️input/🧾️release/🧫️fixture/🔣️.json"); const { default: fixtureSchema } = await import("../../🎠️kernel/📤️return/📦️content/📥️input/🧾️release/🧬️schema/🔣️.json");
       const { default: Ajv } = await import("ajv"); const { produce } = await import("immer"); const validator = new Ajv({ strict: true });
-      expect(validator.compile(schema)(contract)).toBe(true); expect(validator.compile(fixtureSchema)(fixture)).toBe(true);
+      expect(validator.compile(schema)(contract)).toBe(true); expect(validator.addSchema(fixtureSchema).getSchema(`${fixtureSchema.$id}#/$defs/AdmissionFixture`)!(fixture)).toBe(true);
       const metadata = contract.metadata; const price = (fields: number) => BigInt(metadata.recordBytes) + BigInt(metadata.fieldBytes) * BigInt(fields);
       expect(price(contract.releaseFields.length)).toBe(BigInt(metadata.releaseBytes)); expect(price(contract.fragmentFields.length)).toBe(BigInt(metadata.fragmentBytes)); expect(price(contract.fieldFields.length)).toBe(BigInt(metadata.fieldBytesTotal));
       expect(price(metadata.priorReleaseFields)).toBe(BigInt(metadata.priorReleaseBytes)); expect(metadata.releaseBytes - metadata.priorReleaseBytes).toBe(metadata.additionalBytes);
@@ -3378,9 +3378,9 @@ if (import.meta.vitest) {
 
     it("OwnedKernelReturnInput validates the two-way resident payload declaration with an independent state oracle", async () => {
       const { default: contract } = await import("../../🎠️kernel/📤️return/📦️content/📥️input/📦️payload/📜️contract/🔣️.json"); const { default: schema } = await import("../../🎠️kernel/📤️return/📦️content/📥️input/📦️payload/🧬️schema/🔣️.json");
-      const { default: fixture } = await import("../../🎠️kernel/📤️return/📦️content/📥️input/📦️payload/🧫️fixture/🔣️.json"); const { default: fixtureSchema } = await import("../../🎠️kernel/📤️return/📦️content/📥️input/📦️payload/📐️fixture-schema/🔣️.json");
+      const { default: fixture } = await import("../../🎠️kernel/📤️return/📦️content/📥️input/📦️payload/🧫️fixture/🔣️.json"); const { default: fixtureSchema } = await import("../../🎠️kernel/📤️return/📦️content/📥️input/📦️payload/🧬️schema/🔣️.json");
       const { default: Ajv } = await import("ajv"); const { produce } = await import("immer"); const validator = new Ajv({ strict: true });
-      expect(validator.compile(schema)(contract)).toBe(true); expect(validator.compile(fixtureSchema)(fixture)).toBe(true);
+      expect(validator.compile(schema)(contract)).toBe(true); expect(validator.addSchema(fixtureSchema).getSchema(`${fixtureSchema.$id}#/$defs/AdmissionFixture`)!(fixture)).toBe(true);
       const metadata = contract.fixedSubset; expect(metadata.fieldBytesTotal).toBe(metadata.recordBytes + metadata.fieldBytes * contract.sourceFields.length); expect(metadata.observationBytesTotal).toBe(metadata.recordBytes + metadata.fieldBytes * contract.observationFields.length); expect(metadata.total.bytes).toBe(metadata.fieldBytesTotal + metadata.observationBytesTotal);
       let state: { phase: string; sourcePayload: string | null; observedPayload: string | null; observedProof: string | null; uiDetached: boolean } = { phase: "unbound", sourcePayload: null, observedPayload: null, observedProof: null, uiDetached: false };
       for (const row of fixture.trace) {
@@ -3643,9 +3643,9 @@ if (import.meta.vitest) {
       const { default: builders } = await import("../../🖱️ui/🧬️contract/🧵️retained/💾️resident/🏗️builder/🧪️fixture/🔣️.json");
       const { default: payloads } = await import("../../🖱️ui/🧬️contract/🧵️retained/💾️resident/📦️payload/🧪️fixture/🔣️.json");
       const { default: scopes } = await import("../../🖱️ui/🧬️contract/🧵️retained/💾️resident/📨️slot/🧪️fixture/🔣️.json");
-      const { default: copiedSchema } = await import("../../🖱️ui/🧬️contract/🧵️retained/💾️resident/🧾️evidence/📋️copied/📐️schema/🔣️.json");
+      const { default: copiedSchema } = await import("../../🖱️ui/🧬️contract/🧵️retained/💾️resident/🧾️evidence/📋️copied/🧬️schema/🔣️.json");
       const { default: Ajv } = await import("ajv"); const { Buffer } = await import("node:buffer"); const { produce } = await import("immer");
-      expect(new Ajv({ strict: true }).validate(copiedSchema, copied)).toBe(true);
+      expect(new Ajv({ strict: true }).addSchema(copiedSchema).getSchema(`${copiedSchema.$id}#/$defs/CopiedFixture`)!(copied)).toBe(true);
       for (const length of vector.continuation.copiedPayloadBytes) {
         const { client, residentLedger, instance, source, response, payload, worker } = await deliveredInput(undefined, length);
         const input = new OwnedKernelReturnContent(source, fixtureHosts.get(instance)!, instance.activation, instance.lifetime!);
@@ -3714,9 +3714,9 @@ if (import.meta.vitest) {
       const { default: builders } = await import("../../🖱️ui/🧬️contract/🧵️retained/💾️resident/🏗️builder/🧪️fixture/🔣️.json");
       const { default: payloads } = await import("../../🖱️ui/🧬️contract/🧵️retained/💾️resident/📦️payload/🧪️fixture/🔣️.json");
       const { default: scopes } = await import("../../🖱️ui/🧬️contract/🧵️retained/💾️resident/📨️slot/🧪️fixture/🔣️.json");
-      const { default: bindingSchema } = await import("../../🖱️ui/🧬️contract/🧵️retained/💾️resident/📃️page/🔗️binding/📐️schema/🔣️.json");
+      const { default: bindingSchema } = await import("../../🖱️ui/🧬️contract/🧵️retained/💾️resident/📃️page/🔗️binding/🧬️schema/🔣️.json");
       const { default: Ajv } = await import("ajv"); const { Buffer } = await import("node:buffer");
-      expect(new Ajv({ strict: true }).validate(bindingSchema, binding)).toBe(true);
+      expect(new Ajv({ strict: true }).addSchema(bindingSchema).getSchema(`${bindingSchema.$id}#/$defs/BindingFixture`)!(binding)).toBe(true);
       const { client, residentLedger, instance, source, response, payload, worker } = await deliveredInput(undefined, vector.crossPage.payloadBytes, vector.crossPage.firstPageBytes);
       const input = new OwnedKernelReturnContent(source, fixtureHosts.get(instance)!, instance.activation, instance.lifetime!);
       for (let turn = 0; turn < 256 && !input.field; turn++) input.advance({ maxItems: 1, maxBytes: 4096 });
@@ -3764,7 +3764,7 @@ if (import.meta.vitest) {
 
     it("mints a page only from the original captured response and keeps controls on its old worker", async () => {
       const { default: Ajv } = await import("ajv");
-      const { default: schema } = await import("../🪪️activation/📤️return/📐️schema/🔣️.json");
+      const { default: schema } = await import("../🪪️activation/📤️return/🧬️schema/🔣️.json");
       const { encodeActorReturnResult, decodeActorReturnDrive } = await import("../📤️return/🟦️.ts");
       const { row, client, workers, worker, instance } = await captured();
       const oracle = new Ajv({ strict: true }); expect(oracle.validate(schema, row)).toBe(true);
@@ -3916,7 +3916,7 @@ if (import.meta.vitest) {
       const { readFileSync } = await import("node:fs");
       const { default: Ajv } = await import("ajv");
       const fixture = JSON.parse(readFileSync(new URL("../🪪️activation/🚪️instance/🧪️fixture/🔣️.json", import.meta.url), "utf8"));
-      const schema = JSON.parse(readFileSync(new URL("../🪪️activation/🚪️instance/📐️schema/🔣️.json", import.meta.url), "utf8"));
+      const schema = JSON.parse(readFileSync(new URL("../🪪️activation/🚪️instance/🧬️schema/🔣️.json", import.meta.url), "utf8"));
       const oracle = new Ajv({ strict: true });
       expect(oracle.validate(schema, fixture)).toBe(true);
       const { client, workers } = harness(1);
@@ -4165,7 +4165,7 @@ if (import.meta.vitest) {
       const { default: Ajv } = await import("ajv");
       const { readFileSync } = await import("node:fs");
       const row = await fixture();
-      const schema = JSON.parse(readFileSync(new URL("../🪪️activation/📐️schema/🔣️.json", import.meta.url), "utf8"));
+      const schema = JSON.parse(readFileSync(new URL("../🪪️activation/🧬️schema/🔣️.json", import.meta.url), "utf8"));
       expect(new Ajv().validate(schema, row)).toBe(true);
       const { client, workers } = harness(1);
       expect(() => client.captureActorActivation(row.actorId)).toThrow("actor-activation.not-ready");
@@ -4275,7 +4275,7 @@ if (import.meta.vitest) {
 
     it("disposes the captured worker after a moved or released route and preserves refusal for retry", async () => {
       const { default: rows } = await import("../🪪️activation/🧪️fixture/🔣️.json");
-      const { default: schema } = await import("../🪪️activation/📐️schema/🔣️.json");
+      const { default: schema } = await import("../🪪️activation/🧬️schema/🔣️.json");
       const { default: Ajv } = await import("ajv");
       const oracle = new Ajv({ strict: true });
       expect(oracle.validate(schema, rows)).toBe(true);
@@ -4662,7 +4662,7 @@ if (import.meta.vitest) {
 
     async function livenessFixture(): Promise<LivenessFixture> {
       const { default: fixture } = await import("./🧪️fixture/🔣️.json");
-      const { default: schema } = await import("./🧬️schema.json");
+      const { default: schema } = await import("./🧬️schema/🔣️.json");
       const { default: Ajv } = await import("ajv");
       const validate = new Ajv({ strict: true }).compile(schema);
       expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
@@ -5358,7 +5358,7 @@ if (import.meta.vitest) {
       const { default: Ajv } = await import("ajv");
       const { readFileSync } = await import("node:fs");
       const fixture = JSON.parse(readFileSync(new URL("../🪪️activation/📨️inbound/🧪️fixture/🔣️.json", import.meta.url), "utf8")) as { actorId: string; requestId: string; cases: Array<{ name: string; effects: number; traps: number }> };
-      const schema = JSON.parse(readFileSync(new URL("../🪪️activation/📨️inbound/📐️schema/🔣️.json", import.meta.url), "utf8"));
+      const schema = JSON.parse(readFileSync(new URL("../🪪️activation/📨️inbound/🧬️schema/🔣️.json", import.meta.url), "utf8"));
       const oracle = new Ajv();
       expect(oracle.validate(schema, fixture)).toBe(true);
       for (const row of fixture.cases) {

@@ -5,7 +5,7 @@
   "displayName": "Change Node Morph Weights",
   "emoji": "⚖️",
   "aggregateVariant": "ChangeNodeMorphWeights",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

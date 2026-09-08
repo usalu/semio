@@ -1,0 +1,67 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/presentation/mutation/set-shape-frame.json",
+  "title": "SetShapeFrame",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "slide_index",
+    "shape_index",
+    "frame"
+  ],
+  "properties": {
+    "slide_index": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "shape_index": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "frame": {
+      "$ref": "#/$defs/SlideFrame"
+    },
+    "mutation": {
+      "const": "setShapeFrame",
+      "description": "Aggregate discriminator spliced in by SemioPresentationMutation; absent when the payload stands alone."
+    }
+  },
+  "$defs": {
+    "SlideFrame": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "origin",
+        "width",
+        "height"
+      ],
+      "properties": {
+        "origin": {
+          "$ref": "#/$defs/SemioPoint2"
+        },
+        "width": {
+          "type": "number"
+        },
+        "height": {
+          "type": "number"
+        }
+      }
+    },
+    "SemioPoint2": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y"
+      ],
+      "properties": {
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        }
+      }
+    }
+  }
+}

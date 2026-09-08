@@ -5,7 +5,7 @@
   "displayName": "Change Fenestration SHGC",
   "emoji": "🌇️",
   "aggregateVariant": "ChangeFenestrationShgc",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-fenestration-shgc",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

@@ -337,7 +337,7 @@ function admittedCount(value) {
 /* ../../🚚️browser-frame-transport/🟦️.ts */
 var FRAME_WORKER_LOSSLESS_ITEM_CAPACITY = 64;
 var FRAME_WORKER_BYTE_CAPACITY = 256 * 1024;
-var FRAME_WORKER_BOOT_STALL_TIMEOUT_MS = 15000;
+var FRAME_WORKER_BOOT_STALL_TIMEOUT_MS = 60000;
 var FRAME_WORKER_POINTER_CAPACITY = 16;
 var FRAME_WORKER_MESSAGE_BYTE_CAPACITY = 4 * 1024;
 var FRAME_WORKER_TEXT_CHUNK_CODE_UNITS = 1024;
@@ -623,6 +623,11 @@ class BrowserFrameTransport {
       if (!this.runUiHook("ready-hook", () => this.onReady?.()))
         return;
       this.requestFrame();
+      return;
+    }
+    if (message.kind === "boot-liveness") {
+      if (this.status === "booting")
+        this.armBootStallTimer();
       return;
     }
     if (message.kind === "boot-progress") {

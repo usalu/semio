@@ -5,8 +5,8 @@
 //! inference gets its own `<emoji><slug>/` child (currently: `⏱️duration/`, derived from the real
 //! `fmt ` chunk's `sampleRate`/`channels` plus the real decoded `data` sample count).
 
-use crate::artifacts::wav::standards::riff_pcm::subsets::any::schema::snapshot::WavSnapshot;
-use schema::ArtifactSchema;
+use crate::standards::riff_pcm::subsets::any::schema::snapshot::WavSnapshot;
+use framework_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 
 use super::duration::{compute_wav_duration, WavDuration};
@@ -55,7 +55,7 @@ impl protocol::InferenceSpec<WavSnapshot> for WavInference {
 /// O(n) in sample count with no honest per-entity incremental decomposition (a merkle dep-chain
 /// over one flat sample buffer costs more than the fold it would cache) — the default
 /// `infer_cached` passthrough is exact.
-impl ArtifactInferrer for crate::artifacts::wav::standards::riff_pcm::subsets::any::schema::WavBuilder {
+impl ArtifactInferrer for crate::standards::riff_pcm::subsets::any::schema::WavBuilder {
     type Snapshot = WavSnapshot;
     type Inference = WavInference;
 }
@@ -65,10 +65,10 @@ impl ArtifactInferrer for crate::artifacts::wav::standards::riff_pcm::subsets::a
 /// 💡️ Registers `s.stdio.wav.inference`'s facet leaves into the OS-wide inference catalog — call
 /// once at plugin init, alongside `wav_artifact_schema_descriptor`'s registration.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn wav_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
-    schema::ArtifactInferenceDescriptor {
+pub fn wav_artifact_inference_descriptor() -> framework_schema::ArtifactInferenceDescriptor {
+    framework_schema::ArtifactInferenceDescriptor {
         id: "s.stdio.wav.inference",
-        inference: schema::FacetLeaves {
+        inference: framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),

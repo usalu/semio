@@ -5,6 +5,6 @@ use crate::artifacts::en1991::{En1991Mutation, En1991Snapshot};
 
 //#region 🔖️Inverse
 pub fn inverse(_payload: &ChangeBridgeSpanM, base: &En1991Snapshot) -> Vec<En1991Mutation> {
-    vec![En1991Mutation::ChangeBridgeSpanM(ChangeBridgeSpanM { new_bridge_span_m: base.bridge_span_m.clone() })]
+    vec![En1991Mutation::ChangeBridgeSpanM(ChangeBridgeSpanM { new_bridge_span_m: base.bridge_span_m })]
 }
 //#endregion 🔖️Inverse

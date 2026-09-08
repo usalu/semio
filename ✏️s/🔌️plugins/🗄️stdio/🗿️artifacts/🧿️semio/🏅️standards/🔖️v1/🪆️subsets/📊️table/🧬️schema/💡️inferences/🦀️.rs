@@ -7,8 +7,8 @@
 //! shape does not apply here since table has no heading/text structure — a table's honest
 //! structural summary is its dimensions and declared column kinds).
 
-use crate::artifacts::semio::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot;
-use schema::ArtifactSchema;
+use crate::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot;
+use framework_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 
 use super::shape::{compute_semio_table_shape, SemioTableShape};
@@ -57,7 +57,7 @@ impl protocol::InferenceSpec<SemioTableSnapshot> for SemioTableInference {
 /// 💡️ No `InferredField`s here (a column-kind census is a single whole-snapshot fold over already-
 /// flat `columns`, `rowCount` a single length read) — the default `infer_cached` passthrough
 /// (`ArtifactInferrer::infer_cached`) is exact.
-impl ArtifactInferrer for crate::artifacts::semio::standards::v1::subsets::table::schema::SemioTableBuilder {
+impl ArtifactInferrer for crate::standards::v1::subsets::table::schema::SemioTableBuilder {
     type Snapshot = SemioTableSnapshot;
     type Inference = SemioTableInference;
 }
@@ -67,10 +67,10 @@ impl ArtifactInferrer for crate::artifacts::semio::standards::v1::subsets::table
 /// 💡️ Registers `s.stdio.semio.table.inference`'s facet leaves into the OS-wide inference catalog
 /// — call once at plugin init, alongside `semio_table_artifact_schema_descriptor`'s registration.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn semio_table_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
-    schema::ArtifactInferenceDescriptor {
+pub fn semio_table_artifact_inference_descriptor() -> framework_schema::ArtifactInferenceDescriptor {
+    framework_schema::ArtifactInferenceDescriptor {
         id: "s.stdio.semio.table.inference",
-        inference: schema::FacetLeaves {
+        inference: framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),

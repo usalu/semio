@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeSiloNRdKn, base: &En1998Snapshot) -> protocol::Mutat
     if base.silo_n_rd_kn == payload.new_silo_n_rd_kn {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Silo axial resistance N_Rd [kN] is already {}.", payload.new_silo_n_rd_kn));
     }
-    protocol::MutationOutcome::new(En1998Diff { silo_n_rd_kn: Some(payload.new_silo_n_rd_kn.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1998Diff { silo_n_rd_kn: Some(payload.new_silo_n_rd_kn), ..Default::default() })
 }
 //#endregion 🔖️Diff

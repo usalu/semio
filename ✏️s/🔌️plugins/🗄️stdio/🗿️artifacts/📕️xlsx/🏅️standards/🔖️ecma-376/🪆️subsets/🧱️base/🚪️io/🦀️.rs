@@ -13,7 +13,7 @@
 /// never fabricated into a partial/empty workbook.
 #[derive(Clone, Debug, PartialEq)]
 pub enum XlsxError {
-    Opc(crate::artifacts::zip::opc::OpcError),
+    Opc(semio_s_artifact_stdio_zip::opc::OpcError),
     MissingWorkbookRelationship,
     MissingPart(String),
     Xml { part: String, detail: String },
@@ -34,8 +34,8 @@ impl std::fmt::Display for XlsxError {
 
 impl std::error::Error for XlsxError {}
 
-impl From<crate::artifacts::zip::opc::OpcError> for XlsxError {
-    fn from(e: crate::artifacts::zip::opc::OpcError) -> Self {
+impl From<semio_s_artifact_stdio_zip::opc::OpcError> for XlsxError {
+    fn from(e: semio_s_artifact_stdio_zip::opc::OpcError) -> Self {
         Self::Opc(e)
     }
 }
@@ -65,12 +65,12 @@ pub const REL_TYPE_OFFICE_DOCUMENT_STRICT: &str = "http://purl.oclc.org/ooxml/of
 pub const REL_TYPE_SHARED_STRINGS_STRICT: &str = "http://purl.oclc.org/ooxml/officeDocument/relationships/sharedStrings";
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn attr(name: &str, value: &str) -> crate::artifacts::xml::schema::snapshot::XmlAttr {
-    crate::artifacts::xml::schema::snapshot::XmlAttr { name: name.into(), value: value.into() }
+pub fn attr(name: &str, value: &str) -> semio_s_artifact_stdio_xml::schema::snapshot::XmlAttr {
+    semio_s_artifact_stdio_xml::schema::snapshot::XmlAttr { name: name.into(), value: value.into() }
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn attr_val<'a>(attrs: &'a [crate::artifacts::xml::schema::snapshot::XmlAttr], name: &str) -> Option<&'a str> {
+pub fn attr_val<'a>(attrs: &'a [semio_s_artifact_stdio_xml::schema::snapshot::XmlAttr], name: &str) -> Option<&'a str> {
     attrs.iter().find(|a| a.name == name).map(|a| a.value.as_str())
 }
 //#endregion 🔖️Constants
@@ -114,8 +114,8 @@ pub fn column_letters_of(reference: &str) -> &str {
 
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use crate::artifacts::xlsx::standards::v_ecma_376::subsets::base::schema::XlsxAnalyzer;
-    use crate::artifacts::xlsx::XlsxSnapshot;
+    use crate::standards::v_ecma_376::subsets::base::schema::XlsxAnalyzer;
+    use crate::XlsxSnapshot;
     use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.xlsx", standard: StandardId("ecma-376"), subset: SubsetId("*") };
@@ -159,9 +159,9 @@ pub use derived_composition::*;
 
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
-    use crate::artifacts::xlsx::standards::v_ecma_376::subsets::base::schema::XlsxComposer as XlsxRawAnyComposer;
-    use crate::artifacts::xlsx::standards::v_ecma_376::subsets::strict::schema::XlsxStrictComposer;
-    use crate::artifacts::xlsx::standards::v_ecma_376::subsets::transitional::schema::XlsxTransitionalComposer;
+    use crate::standards::v_ecma_376::subsets::base::schema::XlsxComposer as XlsxRawAnyComposer;
+    use crate::standards::v_ecma_376::subsets::strict::schema::XlsxStrictComposer;
+    use crate::standards::v_ecma_376::subsets::transitional::schema::XlsxTransitionalComposer;
     use semio_framework_plugin::{composer_entry_of, ComposerEntry};
     use std::sync::OnceLock;
 

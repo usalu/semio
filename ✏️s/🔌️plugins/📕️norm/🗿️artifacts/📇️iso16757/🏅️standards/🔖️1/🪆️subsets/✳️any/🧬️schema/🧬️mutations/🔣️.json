@@ -1,53 +1,93 @@
 {
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://semio.tech/schema/s/norm/iso16757/mutation.json",
   "title": "Iso16757Mutation",
-  "type": "object",
-  "additionalProperties": false,
-  "required": [
-    "catalogue",
-    "dictionary",
-    "geometry",
-    "selection",
-    "partNumberRule",
-    "partNumberInputs",
-    "scriptLimits",
-    "exchangeProcess"
-  ],
-  "properties": {
-    "catalogue": {
-      "type": "object",
-      "x-semio-state": "artifact"
+  "oneOf": [
+    {
+      "$ref": "./🔒️add-selection-constraint/🧬️schema/🔣️.json"
     },
-    "dictionary": {
-      "type": "object",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🔄️change-exchange-process/🧬️schema/🔣️.json"
     },
-    "geometry": {
-      "type": "object",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🎛️change-part-number-input/🧬️schema/🔣️.json"
     },
-    "selection": {
-      "type": "object",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🎯️change-selection-class/🧬️schema/🔣️.json"
     },
-    "partNumberRule": {
-      "type": "object",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🧵️change-selection-series/🧬️schema/🔣️.json"
     },
-    "partNumberInputs": {
-      "type": "object",
-      "additionalProperties": {
-        "type": "string"
-      },
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./📦️create-product/🧬️schema/🔣️.json"
     },
-    "scriptLimits": {
-      "type": "object",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🧺️create-product-group/🧬️schema/🔣️.json"
     },
-    "exchangeProcess": {
-      "type": "object",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./📐️create-property-definition/🧬️schema/🔣️.json"
+    },
+    {
+      "$ref": "./🌳️create-subject/🧬️schema/🔣️.json"
+    },
+    {
+      "$ref": "./🚫️delete-product/🧬️schema/🔣️.json"
+    },
+    {
+      "$ref": "./🧹️delete-product-group/🧬️schema/🔣️.json"
+    },
+    {
+      "$ref": "./🧽️delete-property-definition/🧬️schema/🔣️.json"
+    },
+    {
+      "$ref": "./✂️delete-subject/🧬️schema/🔣️.json"
+    },
+    {
+      "$ref": "./🔌️remove-part-number-input/🧬️schema/🔣️.json"
+    },
+    {
+      "$ref": "./🔓️remove-selection-constraint/🧬️schema/🔣️.json"
+    },
+    {
+      "$ref": "./📇️rename-catalogue/🧬️schema/🔣️.json"
+    },
+    {
+      "$ref": "./🏭️rename-manufacturer/🧬️schema/🔣️.json"
+    },
+    {
+      "$ref": "./🏷️rename-product/🧬️schema/🔣️.json"
+    },
+    {
+      "$ref": "./🗂️rename-product-group/🧬️schema/🔣️.json"
+    },
+    {
+      "$ref": "./🧮️replace-part-number-rule/🧬️schema/🔣️.json"
+    },
+    {
+      "$ref": "./🚦️update-script-limits/🧬️schema/🔣️.json"
     }
-  }
+  ],
+  "x-semio-mutationKinds": [
+    "add-selection-constraint",
+    "change-exchange-process",
+    "change-part-number-input",
+    "change-selection-class",
+    "change-selection-series",
+    "create-product",
+    "create-product-group",
+    "create-property-definition",
+    "create-subject",
+    "delete-product",
+    "delete-product-group",
+    "delete-property-definition",
+    "delete-subject",
+    "remove-part-number-input",
+    "remove-selection-constraint",
+    "rename-catalogue",
+    "rename-manufacturer",
+    "rename-product",
+    "rename-product-group",
+    "replace-part-number-rule",
+    "update-script-limits"
+  ]
 }

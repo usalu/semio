@@ -5,7 +5,7 @@
   "displayName": "Bind Default Scene",
   "emoji": "🔗️",
   "aggregateVariant": "BindDefaultScene",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

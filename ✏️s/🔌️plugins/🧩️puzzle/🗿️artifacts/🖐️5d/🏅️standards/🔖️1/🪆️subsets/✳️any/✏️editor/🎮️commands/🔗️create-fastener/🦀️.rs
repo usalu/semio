@@ -77,6 +77,6 @@ pub fn create_fastener(ctx: &mut Puzzle5dActionCtx<'_>, args: Option<&Value>) {
     if !compatible {
         return;
     }
-    let id = arg_str(args, "id").or_else(|| arg_str(args, "fastenerId")).map(str::to_string).unwrap_or_else(|| Puzzle5dFreshIds::from_document(&ctx.scene.document).next_fastener());
+    let id = arg_str(args, "id").or_else(|| arg_str(args, "fastenerId")).map_or_else(|| Puzzle5dFreshIds::from_document(&ctx.scene.document).next_fastener(), str::to_string);
     ctx.scene.document.fasteners.push(fastener_from_args(id, source, target, args));
 }

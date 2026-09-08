@@ -110,7 +110,7 @@ fn selection_args(ids: impl IntoIterator<Item = String>, merge: &str) -> semio_f
 /// which now highlights any `.interaction_domain(LAYOUT_INTERACTION_ELEMENTS)?` row on hover
 /// automatically (matching hover-source id against the row's own `id`), no per-row wiring needed
 /// (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
-
+///
 /// 🕹️ `_config` is unused now — page/frame selection moved into the framework-owned "elements"
 /// interaction domain; `.interaction_domain(LAYOUT_INTERACTION_ELEMENTS)?` below has the framework's
 /// renderer translate row hover into `interactionHover` and stamp presence from `InteractionState`,

@@ -10,7 +10,7 @@ use crate::artifacts::program::ProgramSnapshot;
 pub fn diff(payload: &CreateTemplateRecord, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
     let id = payload.template_record.header.id.clone();
     if base.templates.iter().any(|row| row.header.id == id) {
-        return protocol::MutationOutcome::fatal("mutation.duplicate-id", "A template record already exists with this id.", [id.0.clone()]);
+        return protocol::MutationOutcome::fatal("mutation.duplicate-id", "A template record already exists with this id.", [id.0]);
     }
     protocol::MutationOutcome::new(ProgramDiff { templates: Some(ProgramTemplatesDelta { added: vec![payload.template_record.clone()], ..Default::default() }), ..Default::default() })
 }

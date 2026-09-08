@@ -1,0 +1,55 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/step/ap214/base/mutation/set-file-name.json",
+  "title": "SetFileName",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "file_name"
+  ],
+  "properties": {
+    "file_name": {
+      "$ref": "#/$defs/StepFileName"
+    },
+    "mutation": {
+      "const": "setFileName",
+      "description": "Aggregate discriminator spliced in by StepMutation; absent when the payload stands alone."
+    }
+  },
+  "$defs": {
+    "StepFileName": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "timestamp": {
+          "type": "string"
+        },
+        "author": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "organization": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "preprocessorVersion": {
+          "type": "string"
+        },
+        "originatingSystem": {
+          "type": "string"
+        },
+        "authorization": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

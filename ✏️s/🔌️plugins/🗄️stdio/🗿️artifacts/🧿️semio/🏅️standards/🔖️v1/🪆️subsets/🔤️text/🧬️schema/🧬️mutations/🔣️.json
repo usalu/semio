@@ -1,14 +1,92 @@
 {
-  "$id": "https://semio.tech/schema/s.stdio.semio.text/mutations.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/text/mutations.json",
   "title": "SemioTextMutation",
-  "description": "Closed, seven-variant mutation dispatch over SemioTextSnapshot's runs collection and each run's nested marks collection.",
+  "description": "Discriminated union over this module's mutation leaves (externally tagged); every payload is the leaf's own schema, referenced, never restated.",
   "oneOf": [
-    { "properties": { "mutation": { "const": "insertRun" }, "payload": { "type": "object", "properties": { "index": { "type": "integer" }, "run": { "type": "object" } } } } },
-    { "properties": { "mutation": { "const": "removeRun" }, "payload": { "type": "object", "properties": { "index": { "type": "integer" } } } } },
-    { "properties": { "mutation": { "const": "editRun" }, "payload": { "type": "object", "properties": { "index": { "type": "integer" }, "newContent": { "type": "string" } } } } },
-    { "properties": { "mutation": { "const": "changeRunLanguage" }, "payload": { "type": "object", "properties": { "index": { "type": "integer" }, "newLanguage": { "type": "string" } } } } },
-    { "properties": { "mutation": { "const": "reorderRuns" }, "payload": { "type": "object", "properties": { "from": { "type": "integer" }, "to": { "type": "integer" } } } } },
-    { "properties": { "mutation": { "const": "addMark" }, "payload": { "type": "object", "properties": { "runIndex": { "type": "integer" }, "index": { "type": "integer" }, "mark": { "type": "object" } } } } },
-    { "properties": { "mutation": { "const": "removeMark" }, "payload": { "type": "object", "properties": { "runIndex": { "type": "integer" }, "index": { "type": "integer" } } } } }
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "AddMark"
+      ],
+      "properties": {
+        "AddMark": {
+          "$ref": "./➕add-mark/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeRunLanguage"
+      ],
+      "properties": {
+        "ChangeRunLanguage": {
+          "$ref": "./🌐change-run-language/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "EditRun"
+      ],
+      "properties": {
+        "EditRun": {
+          "$ref": "./✏️edit-run/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "InsertRun"
+      ],
+      "properties": {
+        "InsertRun": {
+          "$ref": "./📥insert-run/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "RemoveMark"
+      ],
+      "properties": {
+        "RemoveMark": {
+          "$ref": "./➖remove-mark/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "RemoveRun"
+      ],
+      "properties": {
+        "RemoveRun": {
+          "$ref": "./🗑️remove-run/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ReorderRuns"
+      ],
+      "properties": {
+        "ReorderRuns": {
+          "$ref": "./🔀reorder-runs/🧬️schema/🔣️.json"
+        }
+      }
+    }
   ]
 }

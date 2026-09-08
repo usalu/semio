@@ -1,8 +1,8 @@
 //! 🧬️ Direct set-transform mutation owner.
-use crate::artifacts::svg::schema::diff::SvgDiff;
-use crate::artifacts::svg::schema::mutation_support::attribute_diff_at_path;
-use crate::artifacts::svg::schema::snapshot::{transform_list_to_string, NodePath, TransformOp};
-use crate::artifacts::svg::SvgSnapshot;
+use crate::schema::diff::SvgDiff;
+use crate::schema::mutation_support::attribute_diff_at_path;
+use crate::schema::snapshot::{transform_list_to_string, NodePath, TransformOp};
+use crate::SvgSnapshot;
 
 #[path = "📝️text/🦀️.rs"]
 pub mod text;

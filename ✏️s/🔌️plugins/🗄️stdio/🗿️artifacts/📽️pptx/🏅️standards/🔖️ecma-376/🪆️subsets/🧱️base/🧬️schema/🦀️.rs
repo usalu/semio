@@ -1,9 +1,9 @@
 //! 🧬️ PptxArtifact schema — full artifact state.
 
-use crate::artifacts::pptx::schema::snapshot::{PptxPresentation, PptxXmlPart};
-use crate::artifacts::pptx::PptxSnapshot;
-use crate::artifacts::zip::opc::OpcPackage;
-use schema::ArtifactSchema;
+use crate::schema::snapshot::{PptxPresentation, PptxXmlPart};
+use crate::PptxSnapshot;
+use semio_s_artifact_stdio_zip::opc::OpcPackage;
+use framework_schema::ArtifactSchema;
 
 //#region Artifact
 /// 🧬️ Full `stdio.pptx` artifact state.
@@ -55,31 +55,31 @@ impl PptxArtifact {
 
 //#region Descriptor
 /// 🧬️ Descriptor for `s.stdio.pptx`.
-pub fn pptx_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
-    schema::ArtifactSchemaDescriptor {
+pub fn pptx_artifact_schema_descriptor() -> framework_schema::ArtifactSchemaDescriptor {
+    framework_schema::ArtifactSchemaDescriptor {
         id: "s.stdio.pptx",
-        artifact: schema::FacetLeaves {
+        artifact: framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),
             json_schema: include_str!("🔣️.json"),
             proto: include_str!("🛰️.proto"),
         },
-        snapshot: schema::FacetLeaves {
+        snapshot: framework_schema::FacetLeaves {
             rust: include_str!("📸️snapshot/🦀️.rs"),
             typescript: include_str!("📸️snapshot/🟦️.ts"),
             graphql: include_str!("📸️snapshot/🔗️.graphql"),
             json_schema: include_str!("📸️snapshot/🔣️.json"),
             proto: include_str!("📸️snapshot/🛰️.proto"),
         },
-        diff: schema::FacetLeaves {
+        diff: framework_schema::FacetLeaves {
             rust: include_str!("🔺️diff/🦀️.rs"),
             typescript: include_str!("🔺️diff/🟦️.ts"),
             graphql: include_str!("🔺️diff/🔗️.graphql"),
             json_schema: include_str!("🔺️diff/🔣️.json"),
             proto: include_str!("🔺️diff/🛰️.proto"),
         },
-        mutations: schema::FacetLeaves {
+        mutations: framework_schema::FacetLeaves {
             rust: include_str!("🧬️mutations/🦀️.rs"),
             typescript: include_str!("🧬️mutations/🟦️.ts"),
             graphql: include_str!("🧬️mutations/🔗️.graphql"),
@@ -91,8 +91,8 @@ pub fn pptx_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
 //#endregion Descriptor
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use crate::artifacts::pptx::schema::snapshot::{PptxParagraph, PptxRun, PptxShape, PptxSlide, PptxTransform};
-    use crate::artifacts::pptx::{PptxDiff, PptxMutation, PptxSnapshot};
+    use crate::schema::snapshot::{PptxParagraph, PptxRun, PptxShape, PptxSlide, PptxTransform};
+    use crate::{PptxDiff, PptxMutation, PptxSnapshot};
     use semio_framework_plugin::ArtifactBuilder;
 
     //#region 🔖️Builder
@@ -120,7 +120,7 @@ pub mod derived_construction {
             Ok(Self::from_snapshot(<PptxSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
         fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
-            let diff = crate::artifacts::pptx::schema::mutations::apply_pptx_mutation(&mut self.snapshot, &mutation);
+            let diff = crate::schema::mutations::apply_pptx_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
         fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
@@ -171,7 +171,7 @@ pub mod derived_construction {
         }
 
         async fn rebuild(mut self) -> Self {
-            self.snapshot = crate::artifacts::pptx::standards::v_ecma_376::subsets::base::io::export::serializers::build_minimal_pptx(self.snapshot.presentation);
+            self.snapshot = crate::standards::v_ecma_376::subsets::base::io::export::serializers::build_minimal_pptx(self.snapshot.presentation);
             self
         }
     }
@@ -182,7 +182,7 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use crate::artifacts::pptx::PptxSnapshot;
+    use crate::PptxSnapshot;
     use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     //#region 🔖️Parts
@@ -205,7 +205,7 @@ pub mod derived_analysis {
             // 🕵️ Real sniff: OPC-shaped bytes whose root officeDocument relationship resolves under
             // `ppt/` — disambiguates from docx/xlsx, which share the same zip magic and OPC shape.
             match source {
-                AnalyzeSource::Binary(bytes) if crate::artifacts::pptx::standards::v_ecma_376::subsets::base::io::import::deserializers::sniff_pptx_bytes(bytes) => IoConfidence::High,
+                AnalyzeSource::Binary(bytes) if crate::standards::v_ecma_376::subsets::base::io::import::deserializers::sniff_pptx_bytes(bytes) => IoConfidence::High,
                 AnalyzeSource::Binary(_) | AnalyzeSource::Text(_) => IoConfidence::Low,
             }
         }
@@ -224,8 +224,8 @@ pub mod derived_analysis {
                         }
                     },
                     AnalyzeSource::Binary(bytes) => {
-                        let result = if crate::artifacts::pptx::standards::v_ecma_376::subsets::base::io::import::deserializers::sniff_pptx_bytes(bytes) {
-                            crate::artifacts::pptx::standards::v_ecma_376::subsets::base::io::import::deserializers::decode_pptx(bytes).map_err(|err| err.to_string())
+                        let result = if crate::standards::v_ecma_376::subsets::base::io::import::deserializers::sniff_pptx_bytes(bytes) {
+                            crate::standards::v_ecma_376::subsets::base::io::import::deserializers::decode_pptx(bytes).map_err(|err| err.to_string())
                         } else {
                             <PptxSnapshot as store::ArtifactPack>::decode_pack(bytes).map_err(|err| err.to_string())
                         };
@@ -261,9 +261,9 @@ pub async fn empty_pptx_snapshot() -> PptxSnapshot {
 /// asserted equal by `fixture_honesty_law` below) — same shape docx's own `demo_docx_snapshot()`
 /// establishes.
 pub async fn demo_pptx_snapshot() -> PptxSnapshot {
-    use crate::artifacts::pptx::schema::snapshot::{PptxParagraph, PptxRun, PptxShape, PptxSlide, PptxTransform};
-    use crate::artifacts::pptx::standards::v_ecma_376::subsets::base::io::export::serializers::{build_minimal_pptx, encode_pptx};
-    use crate::artifacts::pptx::standards::v_ecma_376::subsets::base::io::import::deserializers::decode_pptx;
+    use crate::schema::snapshot::{PptxParagraph, PptxRun, PptxShape, PptxSlide, PptxTransform};
+    use crate::standards::v_ecma_376::subsets::base::io::export::serializers::{build_minimal_pptx, encode_pptx};
+    use crate::standards::v_ecma_376::subsets::base::io::import::deserializers::decode_pptx;
     let presentation = PptxPresentation {
         slides: vec![
             PptxSlide {
@@ -298,7 +298,7 @@ pub async fn demo_pptx_snapshot() -> PptxSnapshot {
                     // should paper over by accident. Keeping every attr non-empty here keeps the
                     // conformance law honest without exercising that known gap.
                     PptxShape::Other {
-                        node: crate::artifacts::xml::schema::snapshot::xml_document_from_text(r#"<p:graphicFrame><p:nvGraphicFramePr><p:cNvPr id="9" name="Table 1"/></p:nvGraphicFramePr></p:graphicFrame>"#)
+                        node: semio_s_artifact_stdio_xml::schema::snapshot::xml_document_from_text(r#"<p:graphicFrame><p:nvGraphicFramePr><p:cNvPr id="9" name="Table 1"/></p:nvGraphicFramePr></p:graphicFrame>"#)
                             .expect("valid logical fallback XML")
                             .root
                             .expect("fallback XML root"),
@@ -333,14 +333,14 @@ semio_framework_plugin::derive_artifact_facets!(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::pptx::schema::snapshot::{PptxParagraph, PptxRun, PptxShape, PptxSlide, PptxTransform};
-    use crate::artifacts::pptx::standards::v_ecma_376::subsets::base::io::export::serializers::{build_minimal_pptx, encode_pptx};
-    use crate::artifacts::pptx::standards::v_ecma_376::subsets::base::io::import::deserializers::{decode_pptx, sniff_pptx_bytes};
-    use crate::artifacts::pptx::standards::v_ecma_376::subsets::base::io::{
+    use crate::schema::snapshot::{PptxParagraph, PptxRun, PptxShape, PptxSlide, PptxTransform};
+    use crate::standards::v_ecma_376::subsets::base::io::export::serializers::{build_minimal_pptx, encode_pptx};
+    use crate::standards::v_ecma_376::subsets::base::io::import::deserializers::{decode_pptx, sniff_pptx_bytes};
+    use crate::standards::v_ecma_376::subsets::base::io::{
         PptxError, MINIMAL_SLIDE_MASTER_XML, PRESENTATION_CONTENT_TYPE, PRESENTATION_PART, REL_TYPE_OFFICE_DOCUMENT_STRICT, REL_TYPE_SLIDE, REL_TYPE_SLIDE_LAYOUT, REL_TYPE_SLIDE_MASTER, SLIDE_CONTENT_TYPE, SLIDE_LAYOUT_PART,
         SLIDE_MASTER_CONTENT_TYPE, SLIDE_MASTER_PART, THEME_PART,
     };
-    use crate::artifacts::zip::opc::{self, OpcPackage, RELS_CONTENT_TYPE, REL_TYPE_OFFICE_DOCUMENT};
+    use semio_s_artifact_stdio_zip::opc::{self, OpcPackage, RELS_CONTENT_TYPE, REL_TYPE_OFFICE_DOCUMENT};
 
     async fn sample_presentation() -> PptxPresentation {
         PptxPresentation {
@@ -631,8 +631,8 @@ mod tests {
                     format!(" compressed_name={} actual_version={} expected_version={} actual_flags={} expected_flags={} actual_method={} expected_method={} actual_time={} expected_time={} actual_date={} expected_date={} actual_crc={} expected_crc={} actual_uncompressed={} expected_uncompressed={} actual_extra={:?} expected_extra={:?} actual_compressed={} expected_compressed={} compressed_prefix={prefix}", left.0, left.1, right.1, left.2, right.2, left.3, right.3, left.4, right.4, left.5, right.5, left.6, right.6, left.7, right.7, left.8, right.8, left.9.len(), right.9.len())
                 })
                 .unwrap_or_default();
-            let actual_zip = crate::artifacts::zip::standards::v2_0::subsets::base::io::decode_zip(&actual).expect("decode actual mismatch");
-            let expected_zip = crate::artifacts::zip::standards::v2_0::subsets::base::io::decode_zip(expected).expect("decode expected mismatch");
+            let actual_zip = semio_s_artifact_stdio_zip::standards::v2_0::subsets::base::io::decode_zip(&actual).expect("decode actual mismatch");
+            let expected_zip = semio_s_artifact_stdio_zip::standards::v2_0::subsets::base::io::decode_zip(expected).expect("decode expected mismatch");
             let first_entry = actual_zip.entries.iter().zip(&expected_zip.entries).position(|(left, right)| left != right).unwrap_or(actual_zip.entries.len().min(expected_zip.entries.len()));
             let logical_mismatch_separator = ",";
             let logical_mismatches = actual_zip
@@ -683,8 +683,8 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn fixture_survives_logical_io_persistence_diff_and_mutation_pipelines() {
-        use crate::artifacts::pptx::schema::mutations::{set_shape_position, set_shape_text, set_snapshot};
-        use crate::artifacts::pptx::{PptxDiff, PptxMutation};
+        use crate::schema::mutations::{set_shape_position, set_shape_text, set_snapshot};
+        use crate::{PptxDiff, PptxMutation};
         use protocol::{DiffAlgebra, DiffCodec, Mutation, MutationDiff, OpBinary, OpText};
         use semio_framework_plugin::{AnalyzeSource, ArtifactAnalysis, ArtifactComposition, ComposeSource};
 
@@ -695,7 +695,7 @@ mod tests {
         let xml_paths: std::collections::HashSet<&str> = snapshot.xml_parts.iter().map(|part| part.path.as_str()).collect();
         assert_eq!(xml_paths.len(), snapshot.xml_parts.len(), "every logical XML part must have one authority");
         assert!(snapshot.xml_parts.iter().any(|part| part.path == "ppt/drawings/vmlDrawing1.vml"), "VML must be parsed as logical XML");
-        assert!(snapshot.opc.parts.iter().all(|part| !crate::artifacts::pptx::schema::snapshot::pptx_part_is_xml(&part.path, &part.content_type)), "OPC byte parts must contain no XML");
+        assert!(snapshot.opc.parts.iter().all(|part| !crate::schema::snapshot::pptx_part_is_xml(&part.path, &part.content_type)), "OPC byte parts must contain no XML");
         assert!(snapshot.opc.parts.iter().all(|part| !xml_paths.contains(part.path.as_str())), "XML and binary authorities must be disjoint");
         assert!(
             snapshot.opc.parts.iter().all(|part| {
@@ -718,11 +718,11 @@ mod tests {
         assert_exact_export(&analyzed, &exact_bytes).await;
 
         let dialect = <PptxAnalyzerAnalysis as ArtifactAnalysis>::DIALECT;
-        let composition = crate::artifacts::pptx::standards::v_ecma_376::subsets::base::io::PptxComposerComposition::compose(&[ComposeSource { dialect, payload: AnalyzeSource::Binary(&exact_bytes) }]).expect("compose native PPTX fixture");
+        let composition = crate::standards::v_ecma_376::subsets::base::io::PptxComposerComposition::compose(&[ComposeSource { dialect, payload: AnalyzeSource::Binary(&exact_bytes) }]).expect("compose native PPTX fixture");
         assert_eq!(composition.snapshot, snapshot);
         assert_exact_export(&composition.snapshot, &exact_bytes).await;
 
-        let zip = crate::artifacts::zip::standards::v2_0::subsets::base::io::decode_zip(&exact_bytes).expect("decode exact zip");
+        let zip = semio_s_artifact_stdio_zip::standards::v2_0::subsets::base::io::decode_zip(&exact_bytes).expect("decode exact zip");
         assert_eq!(zip.entries.len(), 211);
         assert_eq!(zip.entries.iter().filter(|entry| entry.name.starts_with("ppt/slides/slide") && entry.name.ends_with(".xml")).count(), 62);
         assert_eq!(zip.entries.iter().filter(|entry| entry.name.ends_with(".rels")).count(), 78);
@@ -732,8 +732,8 @@ mod tests {
         assert_eq!(unpacked, snapshot);
         assert_exact_export(&unpacked, &exact_bytes).await;
 
-        let binary = crate::artifacts::pptx::standards::v_ecma_376::subsets::base::io::export::serializers::artifacts::zip::v2_0::base::serialize(&snapshot).expect("serialize exact fixture to binary");
-        let from_binary = crate::artifacts::pptx::standards::v_ecma_376::subsets::base::io::import::deserializers::artifacts::zip::v2_0::base::deserialize(&binary).expect("deserialize exact fixture from binary");
+        let binary = crate::standards::v_ecma_376::subsets::base::io::export::serializers::artifacts::zip::v2_0::base::serialize(&snapshot).expect("serialize exact fixture to binary");
+        let from_binary = crate::standards::v_ecma_376::subsets::base::io::import::deserializers::artifacts::zip::v2_0::base::deserialize(&binary).expect("deserialize exact fixture from binary");
         assert_eq!(from_binary, snapshot);
         assert_exact_export(&from_binary, &exact_bytes).await;
 
@@ -751,7 +751,7 @@ mod tests {
         // returns `PptxDiff::default()` when the addressed slide doesn't exist), so it stands in
         // for the removed unit variant here.
         let mut no_op = snapshot.clone();
-        let no_op_diff = crate::artifacts::pptx::schema::mutations::apply_pptx_mutation(&mut no_op, &PptxMutation::SetShapeText(set_shape_text::SetShapeText { slide_index: usize::MAX, shape_index: usize::MAX, text_frame: Vec::new() }));
+        let no_op_diff = crate::schema::mutations::apply_pptx_mutation(&mut no_op, &PptxMutation::SetShapeText(set_shape_text::SetShapeText { slide_index: usize::MAX, shape_index: usize::MAX, text_frame: Vec::new() }));
         assert!(no_op_diff.diff().is_empty());
         assert_exact_export(&no_op, &exact_bytes).await;
 
@@ -759,11 +759,11 @@ mod tests {
         let changed_x = if position.x == i64::MAX { position.x - 1 } else { position.x + 1 };
         let mutation = PptxMutation::SetShapePosition(set_shape_position::SetShapePosition { slide_index, shape_index, position: PptxTransform { x: changed_x, ..position } });
         let mut changed = snapshot.clone();
-        let forward = crate::artifacts::pptx::schema::mutations::apply_pptx_mutation(&mut changed, &mutation);
+        let forward = crate::schema::mutations::apply_pptx_mutation(&mut changed, &mutation);
         assert_ne!(changed, snapshot);
         assert_ne!(encode_pptx(&changed).expect("encode mutated presentation"), exact_bytes);
         for inverse in mutation.inverse(&snapshot) {
-            crate::artifacts::pptx::schema::mutations::apply_pptx_mutation(&mut changed, &inverse);
+            crate::schema::mutations::apply_pptx_mutation(&mut changed, &inverse);
         }
         assert_eq!(changed, snapshot);
         assert_exact_export(&changed, &exact_bytes).await;
@@ -792,12 +792,12 @@ mod tests {
         let printed_op = set_snapshot.print_op();
         let parsed_op = PptxMutation::parse_op(&printed_op).expect("parse exact set-snapshot");
         let mut via_text_op = without_xml_parts.clone();
-        crate::artifacts::pptx::schema::mutations::apply_pptx_mutation(&mut via_text_op, &parsed_op);
+        crate::schema::mutations::apply_pptx_mutation(&mut via_text_op, &parsed_op);
         assert_exact_export(&via_text_op, &exact_bytes).await;
         let encoded_op = set_snapshot.encode_op().expect("encode exact set-snapshot");
         let decoded_op = PptxMutation::decode_op(&encoded_op).expect("decode exact set-snapshot");
         let mut via_binary_op = without_xml_parts;
-        crate::artifacts::pptx::schema::mutations::apply_pptx_mutation(&mut via_binary_op, &decoded_op);
+        crate::schema::mutations::apply_pptx_mutation(&mut via_binary_op, &decoded_op);
         assert_exact_export(&via_binary_op, &exact_bytes).await;
     }
     //#endregion 🔖️ExactSourceRoundtrip
@@ -812,7 +812,7 @@ mod tests {
     /// framework's `m5` auto-discovery does not reach at all.
     mod conformance_laws {
         use super::*;
-        use crate::artifacts::pptx::schema::{diff, mutations, snapshot};
+        use crate::schema::{diff, mutations, snapshot};
         use protocol::{DiffCodec, OpBinary, OpText};
 
         /// ✅️ "committed files parse": all 6 handcrafted `.grammar.semio`/`.protocol.semio` files
@@ -847,7 +847,7 @@ mod tests {
 
             let demo = demo_pptx_snapshot().await;
             let bytes = encode_pptx(&demo).expect("encode demo pptx");
-            let zip = crate::artifacts::zip::standards::v2_0::subsets::base::io::decode_zip(&bytes).expect("decode zip");
+            let zip = semio_s_artifact_stdio_zip::standards::v2_0::subsets::base::io::decode_zip(&bytes).expect("decode zip");
 
             let fixed_parts = ["[Content_Types].xml", "_rels/.rels", "ppt/presentation.xml"];
             let mut checked = 0;

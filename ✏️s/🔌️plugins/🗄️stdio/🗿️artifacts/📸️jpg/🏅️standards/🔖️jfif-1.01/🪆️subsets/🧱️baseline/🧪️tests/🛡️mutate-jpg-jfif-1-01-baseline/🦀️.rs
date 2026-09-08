@@ -54,11 +54,11 @@ const SCAN: &str = "shared://🧪️abbau-aufbau-masterarbeit-grundriss/🖼️.
 #[cfg(feature = "sut")]
 mod subject {
     use semio_repo_test_host::{parse_json, Context, Json, Outcome};
-    use semio_s_plugin_stdio::artifacts::jpg::io::{decode_jpg, encode_jpg};
-    use semio_s_plugin_stdio::artifacts::jpg::schema::snapshot::{JpgFrameComponent, JpgHuffmanClass, JpgHuffmanTable};
-    use semio_s_plugin_stdio::artifacts::jpg::standards::v_jfif_1_01::subsets::baseline::schema::mutations::{apply_jpg_baseline_mutation, encode_jpg_baseline_projection_json, inverse_jpg_baseline_mutation, jpg_baseline_conformance_codes, JpgBaselineMutation};
-    use semio_s_plugin_stdio::artifacts::jpg::schema::diff::JpgHuffmanTableKey;
-    use semio_s_plugin_stdio::artifacts::jpg::JpgSnapshot;
+    use crate::io::{decode_jpg, encode_jpg};
+    use crate::schema::snapshot::{JpgFrameComponent, JpgHuffmanClass, JpgHuffmanTable};
+    use crate::standards::v_jfif_1_01::subsets::baseline::schema::mutations::{apply_jpg_baseline_mutation, encode_jpg_baseline_projection_json, inverse_jpg_baseline_mutation, jpg_baseline_conformance_codes, JpgBaselineMutation};
+    use crate::schema::diff::JpgHuffmanTableKey;
+    use crate::JpgSnapshot;
     use semio_s_plugin_stdio_test_oracle::artifacts::jpg::standards::v_jfif_1_01::subsets::document::project_jpg_mutation;
     use semio_s_plugin_stdio_test_oracle::law;
 
@@ -99,19 +99,19 @@ mod subject {
                 if let Some(frame) = snapshot.frame.as_mut() {
                     frame.precision = number(params, "precision", 12.0) as u8;
                 }
-                Ok(JpgBaselineMutation::SetSnapshot(semio_s_plugin_stdio::artifacts::jpg::standards::v_jfif_1_01::subsets::baseline::schema::mutations::set_snapshot::SetSnapshot { snapshot }))
+                Ok(JpgBaselineMutation::SetSnapshot(crate::standards::v_jfif_1_01::subsets::baseline::schema::mutations::set_snapshot::SetSnapshot { snapshot }))
             }
-            "set-sof-marker" => Ok(JpgBaselineMutation::SetSofMarker(semio_s_plugin_stdio::artifacts::jpg::standards::v_jfif_1_01::subsets::baseline::schema::mutations::set_sof_marker::SetSofMarker { marker: number(params, "marker", 194.0) as u8 })),
-            "set-sample-precision" => Ok(JpgBaselineMutation::SetSamplePrecision(semio_s_plugin_stdio::artifacts::jpg::standards::v_jfif_1_01::subsets::baseline::schema::mutations::set_sample_precision::SetSamplePrecision { precision: number(params, "precision", 12.0) as u8 })),
-            "set-arithmetic" => Ok(JpgBaselineMutation::SetArithmetic(semio_s_plugin_stdio::artifacts::jpg::standards::v_jfif_1_01::subsets::baseline::schema::mutations::set_arithmetic::SetArithmetic { arithmetic: matches!(params.get("arithmetic"), Some(Json::Bool(true))) })),
-            "insert-huffman-table" => Ok(JpgBaselineMutation::InsertHuffmanTable(semio_s_plugin_stdio::artifacts::jpg::standards::v_jfif_1_01::subsets::baseline::schema::mutations::insert_huffman_table::InsertHuffmanTable { index: number(params, "index", 0.0) as usize, table: inert_table(class_of(params), number(params, "id", 2.0) as u8) })),
-            "remove-huffman-table" => Ok(JpgBaselineMutation::RemoveHuffmanTable(semio_s_plugin_stdio::artifacts::jpg::standards::v_jfif_1_01::subsets::baseline::schema::mutations::remove_huffman_table::RemoveHuffmanTable { key: JpgHuffmanTableKey { class: class_of(params), id: number(params, "id", 0.0) as u8 } })),
-            "insert-frame-component" => Ok(JpgBaselineMutation::InsertFrameComponent(semio_s_plugin_stdio::artifacts::jpg::standards::v_jfif_1_01::subsets::baseline::schema::mutations::insert_frame_component::InsertFrameComponent {
+            "set-sof-marker" => Ok(JpgBaselineMutation::SetSofMarker(crate::standards::v_jfif_1_01::subsets::baseline::schema::mutations::set_sof_marker::SetSofMarker { marker: number(params, "marker", 194.0) as u8 })),
+            "set-sample-precision" => Ok(JpgBaselineMutation::SetSamplePrecision(crate::standards::v_jfif_1_01::subsets::baseline::schema::mutations::set_sample_precision::SetSamplePrecision { precision: number(params, "precision", 12.0) as u8 })),
+            "set-arithmetic" => Ok(JpgBaselineMutation::SetArithmetic(crate::standards::v_jfif_1_01::subsets::baseline::schema::mutations::set_arithmetic::SetArithmetic { arithmetic: matches!(params.get("arithmetic"), Some(Json::Bool(true))) })),
+            "insert-huffman-table" => Ok(JpgBaselineMutation::InsertHuffmanTable(crate::standards::v_jfif_1_01::subsets::baseline::schema::mutations::insert_huffman_table::InsertHuffmanTable { index: number(params, "index", 0.0) as usize, table: inert_table(class_of(params), number(params, "id", 2.0) as u8) })),
+            "remove-huffman-table" => Ok(JpgBaselineMutation::RemoveHuffmanTable(crate::standards::v_jfif_1_01::subsets::baseline::schema::mutations::remove_huffman_table::RemoveHuffmanTable { key: JpgHuffmanTableKey { class: class_of(params), id: number(params, "id", 0.0) as u8 } })),
+            "insert-frame-component" => Ok(JpgBaselineMutation::InsertFrameComponent(crate::standards::v_jfif_1_01::subsets::baseline::schema::mutations::insert_frame_component::InsertFrameComponent {
                 index: number(params, "index", 0.0) as usize,
                 component: JpgFrameComponent { id: number(params, "id", 4.0) as u8, h_sampling: number(params, "hSampling", 1.0) as u8, v_sampling: number(params, "vSampling", 1.0) as u8, quant_table_id: 0 },
             })),
-            "remove-frame-component" => Ok(JpgBaselineMutation::RemoveFrameComponent(semio_s_plugin_stdio::artifacts::jpg::standards::v_jfif_1_01::subsets::baseline::schema::mutations::remove_frame_component::RemoveFrameComponent { id: number(params, "id", 3.0) as u8 })),
-            "set-component-sampling" => Ok(JpgBaselineMutation::SetComponentSampling(semio_s_plugin_stdio::artifacts::jpg::standards::v_jfif_1_01::subsets::baseline::schema::mutations::set_component_sampling::SetComponentSampling { id: number(params, "id", 1.0) as u8, h_sampling: number(params, "hSampling", 5.0) as u8, v_sampling: number(params, "vSampling", 1.0) as u8 })),
+            "remove-frame-component" => Ok(JpgBaselineMutation::RemoveFrameComponent(crate::standards::v_jfif_1_01::subsets::baseline::schema::mutations::remove_frame_component::RemoveFrameComponent { id: number(params, "id", 3.0) as u8 })),
+            "set-component-sampling" => Ok(JpgBaselineMutation::SetComponentSampling(crate::standards::v_jfif_1_01::subsets::baseline::schema::mutations::set_component_sampling::SetComponentSampling { id: number(params, "id", 1.0) as u8, h_sampling: number(params, "hSampling", 5.0) as u8, v_sampling: number(params, "vSampling", 1.0) as u8 })),
             other => Err(format!("mutate-jpg-jfif-1-01-baseline: no params grammar for kind {other:?}")),
         }
     }

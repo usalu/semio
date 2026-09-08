@@ -6,8 +6,8 @@
 //! block-quote contents included); `wordCount` is a whitespace-split word count over every
 //! block's own flattened text (headings, paragraphs, code blocks, list items, block quotes).
 
-use crate::artifacts::md::schema::snapshot::{MdBlock, MdInline};
-use crate::artifacts::md::MdSnapshot;
+use crate::schema::snapshot::{MdBlock, MdInline};
+use crate::MdSnapshot;
 
 //#region 🔖️Outline
 /// 🧾️ One `sectionOutline` entry — a heading's level + flattened text.

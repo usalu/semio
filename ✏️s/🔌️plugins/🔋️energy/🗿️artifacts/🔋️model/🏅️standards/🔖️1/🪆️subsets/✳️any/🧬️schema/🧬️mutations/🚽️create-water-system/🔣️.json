@@ -5,7 +5,7 @@
   "displayName": "Create Water System",
   "emoji": "🚽️",
   "aggregateVariant": "CreateWaterSystem",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "create-water-system",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

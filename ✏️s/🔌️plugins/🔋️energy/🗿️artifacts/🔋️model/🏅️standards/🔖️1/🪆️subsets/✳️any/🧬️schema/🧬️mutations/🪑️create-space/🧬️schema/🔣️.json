@@ -1,0 +1,27 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/energy/model/1/any/mutation/create-space.json",
+  "title": "CreateSpace",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "name",
+    "zoneId",
+    "floorAreaM2"
+  ],
+  "properties": {
+    "id": {
+      "type": "integer"
+    },
+    "name": {
+      "type": "string"
+    },
+    "zoneId": {
+      "type": "integer"
+    },
+    "floorAreaM2": {
+      "type": "number"
+    }
+  }
+}

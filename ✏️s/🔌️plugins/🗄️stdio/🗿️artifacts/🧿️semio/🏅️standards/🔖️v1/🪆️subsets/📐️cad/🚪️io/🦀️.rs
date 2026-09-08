@@ -3,14 +3,14 @@
 //! import/export leaves under 📥️import/🧩️deserializers and 📤️export/🧵️serializers.
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use crate::artifacts::semio::standards::v1::subsets::cad::io::export::serializers::artifacts::dwg::v_ac1024::any::SemioCadToDwg;
-    use crate::artifacts::semio::standards::v1::subsets::cad::io::export::serializers::artifacts::dxf::v_r12::any::SemioCadToDxf;
-    use crate::artifacts::semio::standards::v1::subsets::cad::io::export::serializers::artifacts::step::v_ap214::any::SemioCadToStep;
-    use crate::artifacts::semio::standards::v1::subsets::cad::io::import::deserializers::artifacts::dwg::v_ac1024::any::SemioCadFromDwg;
-    use crate::artifacts::semio::standards::v1::subsets::cad::io::import::deserializers::artifacts::dxf::v_r12::any::SemioCadFromDxf;
-    use crate::artifacts::semio::standards::v1::subsets::cad::io::import::deserializers::artifacts::step::v_ap214::any::SemioCadFromStep;
-    use crate::artifacts::semio::standards::v1::subsets::cad::schema::snapshot::{CadEntity, SemioCadSnapshot};
-    use crate::artifacts::semio::standards::v1::subsets::cad::schema::SemioCadAnalyzer;
+    use crate::standards::v1::subsets::cad::io::export::serializers::artifacts::dwg::v_ac1024::any::SemioCadToDwg;
+    use crate::standards::v1::subsets::cad::io::export::serializers::artifacts::dxf::v_r12::any::SemioCadToDxf;
+    use crate::standards::v1::subsets::cad::io::export::serializers::artifacts::step::v_ap214::any::SemioCadToStep;
+    use crate::standards::v1::subsets::cad::io::import::deserializers::artifacts::dwg::v_ac1024::any::SemioCadFromDwg;
+    use crate::standards::v1::subsets::cad::io::import::deserializers::artifacts::dxf::v_r12::any::SemioCadFromDxf;
+    use crate::standards::v1::subsets::cad::io::import::deserializers::artifacts::step::v_ap214::any::SemioCadFromStep;
+    use crate::standards::v1::subsets::cad::schema::snapshot::{CadEntity, SemioCadSnapshot};
+    use crate::standards::v1::subsets::cad::schema::SemioCadAnalyzer;
     use semio_framework_plugin::{
         deserializer_entry_of, register_composer_entries, register_subset_validator, serializer_entry_of, subset_validator_entry_of, AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, ComposerEntry, Composition, Dialect, IoPayload,
         StandardId, SubsetId, SubsetValidator, SubsetValidatorEntry,
@@ -59,7 +59,7 @@ pub mod derived_composition {
         let layer_names: std::collections::BTreeSet<&str> = snapshot.layers.iter().map(|l| l.name.as_str()).collect();
         let block_names: std::collections::BTreeSet<&str> = snapshot.blocks.iter().map(|b| b.name.as_str()).collect();
 
-        let check_record = |diagnostics: &mut Vec<dsl::Diagnostic>, owning_block: Option<&str>, rec: &crate::artifacts::semio::standards::v1::subsets::cad::schema::snapshot::CadEntityRecord| {
+        let check_record = |diagnostics: &mut Vec<dsl::Diagnostic>, owning_block: Option<&str>, rec: &crate::standards::v1::subsets::cad::schema::snapshot::CadEntityRecord| {
             if !layer_names.contains(rec.layer.as_str()) {
                 diagnostics.push(dsl::Diagnostic::error("stdio.semio_cad.dangling-layer", dsl::TextSpan::at(1, 1), format!("entity {:?} (handle {:?}) references undefined layer {:?}", owning_block.unwrap_or("<top-level>"), rec.handle, rec.layer)));
             }
@@ -136,9 +136,9 @@ pub mod derived_composition {
     /// semio↔format io bridges. Called from this artifact's standard-level `engine::register()`.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn register() {
-        ::schema::register_artifact_schema_descriptor(crate::artifacts::semio::standards::v1::subsets::cad::schema::semio_cad_artifact_schema_descriptor());
-        store::register_document_codec(store::ArtifactCodec::of::<SemioCadSnapshot, crate::artifacts::semio::standards::v1::subsets::cad::schema::mutations::SemioCadMutation>(
-            crate::artifacts::semio::standards::v1::subsets::cad::schema::snapshot::STDIO_SEMIOCAD_DOCUMENT_SCHEMA,
+        ::framework_schema::register_artifact_schema_descriptor(crate::standards::v1::subsets::cad::schema::semio_cad_artifact_schema_descriptor());
+        store::register_document_codec(store::ArtifactCodec::of::<SemioCadSnapshot, crate::standards::v1::subsets::cad::schema::mutations::SemioCadMutation>(
+            crate::standards::v1::subsets::cad::schema::snapshot::STDIO_SEMIOCAD_DOCUMENT_SCHEMA,
         )).expect("static Stdio registration must be available and conflict-free");
         register_subset_validator(validator_entry()).expect("static Stdio registration must be available and conflict-free");
         register_composer_entries(io_entries()).expect("static Stdio registration must be available and conflict-free");
@@ -150,7 +150,7 @@ pub mod derived_composition {
     /// ticket 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn register_artifact_inferences() {
-        ::schema::register_artifact_inference_descriptor(crate::artifacts::semio::standards::v1::subsets::cad::schema::inferences::semio_cad_artifact_inference_descriptor());
+        ::framework_schema::register_artifact_inference_descriptor(crate::standards::v1::subsets::cad::schema::inferences::semio_cad_artifact_inference_descriptor());
     }
     //#endregion 🔖️Register
 
@@ -158,13 +158,13 @@ pub mod derived_composition {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioPoint2;
-        use crate::artifacts::semio::standards::v1::subsets::cad::schema::snapshot::{CadBlock, CadEntityRecord, CadLayer};
+        use crate::standards::v1::subsets::base::schema::geometry::SemioPoint2;
+        use crate::standards::v1::subsets::cad::schema::snapshot::{CadBlock, CadEntityRecord, CadLayer};
 
         #[semio_framework_async_macros::async_test]
         async fn validator_accepts_a_fully_referenced_snapshot() {
             let snapshot = SemioCadSnapshot {
-                schema: crate::artifacts::semio::standards::v1::subsets::cad::schema::snapshot::STDIO_SEMIOCAD_DOCUMENT_SCHEMA.into(),
+                schema: crate::standards::v1::subsets::cad::schema::snapshot::STDIO_SEMIOCAD_DOCUMENT_SCHEMA.into(),
                 layers: vec![CadLayer { name: "0".into(), color_index: 7, line_type: "CONTINUOUS".into(), visible: true }],
                 blocks: vec![CadBlock { name: "door".into(), base_point: SemioPoint2::default(), entities: Vec::new() }],
                 entities: vec![CadEntityRecord { handle: "h1".into(), layer: "0".into(), entity: CadEntity::Insert { block_name: "door".into(), insertion_point: SemioPoint2::default(), scale: SemioPoint2 { x: 1.0, y: 1.0 }, rotation: 0.0 } }],
@@ -175,7 +175,7 @@ pub mod derived_composition {
         #[semio_framework_async_macros::async_test]
         async fn validator_flags_dangling_layer_and_dangling_block_insert() {
             let snapshot = SemioCadSnapshot {
-                schema: crate::artifacts::semio::standards::v1::subsets::cad::schema::snapshot::STDIO_SEMIOCAD_DOCUMENT_SCHEMA.into(),
+                schema: crate::standards::v1::subsets::cad::schema::snapshot::STDIO_SEMIOCAD_DOCUMENT_SCHEMA.into(),
                 layers: Vec::new(),
                 blocks: Vec::new(),
                 entities: vec![CadEntityRecord {
@@ -192,7 +192,7 @@ pub mod derived_composition {
         #[semio_framework_async_macros::async_test]
         async fn validator_flags_self_referential_block_insert() {
             let snapshot = SemioCadSnapshot {
-                schema: crate::artifacts::semio::standards::v1::subsets::cad::schema::snapshot::STDIO_SEMIOCAD_DOCUMENT_SCHEMA.into(),
+                schema: crate::standards::v1::subsets::cad::schema::snapshot::STDIO_SEMIOCAD_DOCUMENT_SCHEMA.into(),
                 layers: vec![CadLayer { name: "0".into(), color_index: 7, line_type: "CONTINUOUS".into(), visible: true }],
                 blocks: vec![CadBlock {
                     name: "loopy".into(),
@@ -215,7 +215,7 @@ pub mod derived_composition {
         /// calls (no test module of its own, and out of this ticket's `📐️cad/`-only edit scope anyway).
         mod conformance_laws {
 
-            use crate::artifacts::semio::standards::v1::subsets::cad::schema::{diff, mutations, snapshot};
+            use crate::standards::v1::subsets::cad::schema::{diff, mutations, snapshot};
             use protocol::{DiffCodec, OpBinary, OpText};
 
             /// ✅️ "committed files parse": all 6 handcrafted `.grammar.semio`/`.protocol.semio` files

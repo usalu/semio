@@ -9,10 +9,10 @@
 //! leaf's own oracle. The derived `.op.semio`/`.spr.semio`/`.dsl.semio`/`.pack.semio`/
 //! `.patch.semio` encodings come from `fixtures generate`, not from here.
 
-use crate::artifacts::gltf::schema::mutations::create_mesh::diff::GltfCreateMeshDiff;
-use crate::artifacts::gltf::schema::mutations::create_mesh::GltfCreateMeshPayload;
-use crate::artifacts::gltf::schema::mutations::create_mesh::{diff, inverse, mutation};
-use crate::artifacts::gltf::GltfSnapshot;
+use crate::schema::mutations::create_mesh::diff::GltfCreateMeshDiff;
+use crate::schema::mutations::create_mesh::GltfCreateMeshPayload;
+use crate::schema::mutations::create_mesh::{diff, inverse, mutation};
+use crate::GltfSnapshot;
 
 const CASE: &str = "create-mesh/inserts-an-empty-mesh-ahead-of-the-hull-mesh";
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");

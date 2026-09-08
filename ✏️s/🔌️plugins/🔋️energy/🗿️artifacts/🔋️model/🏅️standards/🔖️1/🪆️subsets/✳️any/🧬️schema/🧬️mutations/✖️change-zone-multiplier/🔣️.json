@@ -5,7 +5,7 @@
   "displayName": "Change Zone Multiplier",
   "emoji": "✖️",
   "aggregateVariant": "ChangeZoneMultiplier",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-zone-multiplier",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

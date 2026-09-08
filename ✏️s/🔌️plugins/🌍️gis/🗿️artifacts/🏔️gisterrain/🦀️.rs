@@ -1,14 +1,13 @@
 // GIS terrain artifact — the document entity the 3d app edits (constitutional: general).
 
+/// 📸️ Persisted GIS terrain snapshot — defined in `📸️ snapshot/🧬️ schema`, re-exported here.
 pub use crate::artifacts::gisterrain::schema::snapshot::GisTerrainSnapshot;
 
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioPoint3;
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::{SemioMesh, SemioMeshSnapshot, SemioPrimitive, SemioTopology};
+use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::SemioPoint3;
+use semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::schema::snapshot::{SemioMesh, SemioMeshSnapshot, SemioPrimitive, SemioTopology};
 
 //#region 🔹Constants
-/// VCS-backed, undoable document for GIS 3D — deliberately minimal for the first pass: the only
-/// editable/undoable property is vertical exaggeration (a genuinely useful terrain control).
-
+/// 🏔️ Schema for undoable GIS terrain documents.
 pub const GIS_3D_TERRAIN_SCHEMA: &str = "gis.terrain";
 
 /// 🪪️ One canonical terrain identity shared by definition, composer and both app roles.
@@ -16,7 +15,6 @@ pub const GISTERRAIN_DIALECT: semio_framework_plugin::Dialect = semio_framework_
 //#endregion 🔹Constants
 
 //#region 🔹Types
-/// 📸️ Persisted GIS terrain snapshot — defined in `📸️ snapshot/🧬️ schema`, re-exported here.
 //#endregion 🔹Types
 
 // 🧱️ `mesh_artifact_kind()` (the shared `3d.mesh` interchange kind duplicate) REMOVED — ticket
@@ -70,7 +68,7 @@ pub fn gis_terrain_snapshot_with_derived_mesh(mut document: GisTerrainSnapshot) 
 /// to grow real per-vertex elevation.
 pub fn gis_terrain_mesh_from_snapshot(document: &GisTerrainSnapshot) -> SemioMeshSnapshot {
     let bounds = crate::artifacts::gisterrain::standards::v1::subsets::any::schema::inferences::bounds::lon_lat_bounds(&crate::artifacts::gisterrain::standards::v1::subsets::any::schema::inferences::bounds::imported_lon_lat_positions(document));
-    let (min_x, min_y, max_x, max_y) = bounds.map(|b| (b.lon_min, b.lat_min, b.lon_max, b.lat_max)).unwrap_or((0.0, 0.0, 1.0, 1.0));
+    let (min_x, min_y, max_x, max_y) = bounds.map_or((0.0, 0.0, 1.0, 1.0), |b| (b.lon_min, b.lat_min, b.lon_max, b.lat_max));
     let (min_x, max_x) = if min_x < max_x { (min_x, max_x) } else { (min_x, min_x + 1.0) };
     let (min_y, max_y) = if min_y < max_y { (min_y, max_y) } else { (min_y, min_y + 1.0) };
     // 🏔️ Honest gap (matches `gis3d_scene_media`'s own doc comment): with no DEM heightfield, every

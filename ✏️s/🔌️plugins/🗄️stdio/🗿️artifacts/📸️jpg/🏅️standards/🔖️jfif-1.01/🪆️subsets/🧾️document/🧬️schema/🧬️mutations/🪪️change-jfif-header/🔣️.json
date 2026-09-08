@@ -5,7 +5,7 @@
   "displayName": "Change Jfif Header",
   "emoji": "🪪️",
   "aggregateVariant": "ChangeJfifHeader",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-jfif-header",
   "binaryTag": 2,
   "invertibility": "explicit-mutation",

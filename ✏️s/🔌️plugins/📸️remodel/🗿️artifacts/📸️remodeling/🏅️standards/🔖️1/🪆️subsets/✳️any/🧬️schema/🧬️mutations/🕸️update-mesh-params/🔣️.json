@@ -5,7 +5,7 @@
   "displayName": "Update Mesh Params",
   "emoji": "🕸️",
   "aggregateVariant": "UpdateMeshParams",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "update-mesh-params",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

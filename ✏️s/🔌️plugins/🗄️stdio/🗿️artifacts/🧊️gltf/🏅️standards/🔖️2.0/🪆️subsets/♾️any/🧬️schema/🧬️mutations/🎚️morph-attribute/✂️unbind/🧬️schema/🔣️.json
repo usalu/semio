@@ -1,0 +1,41 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/morph-attribute/unbind.json",
+  "title": "GltfUnbindMorphTargetAttributeMutation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mesh",
+    "primitive",
+    "target",
+    "semantic"
+  ],
+  "properties": {
+    "mesh": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "primitive": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "target": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "semantic": {
+      "type": "string"
+    }
+  },
+  "x-semio": {
+    "id": "s.stdio.gltf.mutation.unbind-morph-target-attribute.v1",
+    "version": 1,
+    "phase": "mutation",
+    "kind": "unbind",
+    "touchedPaths": [
+      "document/meshes/*/primitives/*/targets/*/attributes"
+    ],
+    "referencePolicy": "removes one target semantic relationship"
+  },
+  "x-semio-mutation": "unbind-morph-target-attribute"
+}

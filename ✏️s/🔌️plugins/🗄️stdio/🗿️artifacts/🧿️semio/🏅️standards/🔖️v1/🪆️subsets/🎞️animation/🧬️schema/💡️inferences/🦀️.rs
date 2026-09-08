@@ -5,8 +5,8 @@
 //! inference gets its own `<emoji><slug>/` child (currently: `⏱️duration/`, honestly derivable
 //! from `timelines` alone — its own nested `channels`/`keyframes`).
 
-use crate::artifacts::semio::standards::v1::subsets::animation::schema::snapshot::SemioAnimationSnapshot;
-use schema::ArtifactSchema;
+use crate::standards::v1::subsets::animation::schema::snapshot::SemioAnimationSnapshot;
+use framework_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 
 use super::duration::{compute_semio_animation_duration, SemioAnimationDuration};
@@ -53,7 +53,7 @@ impl protocol::InferenceSpec<SemioAnimationSnapshot> for SemioAnimationInference
 /// 💡️ No `InferredField`s here — `duration` is a single max-`t` fold over every keyframe of every
 /// channel of every timeline, already O(n) in total keyframe count with no honest per-entity
 /// incremental decomposition — the default `infer_cached` passthrough is exact.
-impl ArtifactInferrer for crate::artifacts::semio::standards::v1::subsets::animation::schema::SemioAnimationBuilder {
+impl ArtifactInferrer for crate::standards::v1::subsets::animation::schema::SemioAnimationBuilder {
     type Snapshot = SemioAnimationSnapshot;
     type Inference = SemioAnimationInference;
 }
@@ -64,10 +64,10 @@ impl ArtifactInferrer for crate::artifacts::semio::standards::v1::subsets::anima
 /// catalog — call once at plugin init, alongside `semio_animation_artifact_schema_descriptor`'s
 /// registration.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn semio_animation_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
-    schema::ArtifactInferenceDescriptor {
+pub fn semio_animation_artifact_inference_descriptor() -> framework_schema::ArtifactInferenceDescriptor {
+    framework_schema::ArtifactInferenceDescriptor {
         id: "s.stdio.semio.animation.inference",
-        inference: schema::FacetLeaves {
+        inference: framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),

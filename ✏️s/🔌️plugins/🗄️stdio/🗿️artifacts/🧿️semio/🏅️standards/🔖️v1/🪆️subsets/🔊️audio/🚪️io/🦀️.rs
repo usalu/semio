@@ -14,9 +14,9 @@ pub mod wav_deserializer;
 pub mod wav_serializer;
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use crate::artifacts::semio::standards::v1::subsets::audio::io::{mp3_deserializer::SemioAudioFromMp3, mp3_serializer::SemioAudioToMp3, wav_deserializer::SemioAudioFromWav, wav_serializer::SemioAudioToWav};
-    use crate::artifacts::semio::standards::v1::subsets::audio::schema::snapshot::SemioAudioSnapshot;
-    use crate::artifacts::semio::standards::v1::subsets::audio::schema::SemioAudioAnalyzer;
+    use crate::standards::v1::subsets::audio::io::{mp3_deserializer::SemioAudioFromMp3, mp3_serializer::SemioAudioToMp3, wav_deserializer::SemioAudioFromWav, wav_serializer::SemioAudioToWav};
+    use crate::standards::v1::subsets::audio::schema::snapshot::SemioAudioSnapshot;
+    use crate::standards::v1::subsets::audio::schema::SemioAudioAnalyzer;
     use dsl::{Diagnostic, FaultScope, Severity, TextSpan};
     use semio_framework_plugin::{
         deserializer_entry_of, register_composer_entries, register_subset_validator, serializer_entry_of, subset_validator_entry_of, AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, ComposerEntry, Composition, Dialect, IoPayload,
@@ -132,9 +132,9 @@ pub mod derived_composition {
     /// artifact's standard-level `engine::register()`.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn register() {
-        ::schema::register_artifact_schema_descriptor(crate::artifacts::semio::standards::v1::subsets::audio::schema::semio_audio_artifact_schema_descriptor());
-        store::register_document_codec(store::ArtifactCodec::of::<SemioAudioSnapshot, crate::artifacts::semio::standards::v1::subsets::audio::schema::mutations::SemioAudioMutation>(
-            crate::artifacts::semio::standards::v1::subsets::audio::schema::snapshot::STDIO_SEMIOAUDIO_DOCUMENT_SCHEMA,
+        ::framework_schema::register_artifact_schema_descriptor(crate::standards::v1::subsets::audio::schema::semio_audio_artifact_schema_descriptor());
+        store::register_document_codec(store::ArtifactCodec::of::<SemioAudioSnapshot, crate::standards::v1::subsets::audio::schema::mutations::SemioAudioMutation>(
+            crate::standards::v1::subsets::audio::schema::snapshot::STDIO_SEMIOAUDIO_DOCUMENT_SCHEMA,
         )).expect("static Stdio registration must be available and conflict-free");
         register_subset_validator(validator_entry()).expect("static Stdio registration must be available and conflict-free");
         register_composer_entries(bridge_entries()).expect("static Stdio registration must be available and conflict-free");
@@ -146,7 +146,7 @@ pub mod derived_composition {
     /// ticket 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn register_artifact_inferences() {
-        ::schema::register_artifact_inference_descriptor(crate::artifacts::semio::standards::v1::subsets::audio::schema::inferences::semio_audio_artifact_inference_descriptor());
+        ::framework_schema::register_artifact_inference_descriptor(crate::standards::v1::subsets::audio::schema::inferences::semio_audio_artifact_inference_descriptor());
     }
 
     /// 🌉️ audio↔mp3 / audio↔wav bridge entries (W4) -- forward + reverse rows per pair, giving all 4
@@ -162,7 +162,7 @@ pub mod derived_composition {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use crate::artifacts::semio::standards::v1::subsets::audio::schema::snapshot::{SemioAudioChannel, SemioAudioTag};
+        use crate::standards::v1::subsets::audio::schema::snapshot::{SemioAudioChannel, SemioAudioTag};
 
         #[semio_framework_async_macros::async_test]
         async fn compose_decodes_a_real_binary_source_with_no_advisories() {
@@ -215,7 +215,7 @@ pub mod derived_composition {
         /// `ws-codec-image-report.md`) — same 6 test names, same shape, only the facet modules and
         /// demo-case helpers differ.
         mod conformance_laws {
-            use crate::artifacts::semio::standards::v1::subsets::audio::schema::{diff, mutations, snapshot};
+            use crate::standards::v1::subsets::audio::schema::{diff, mutations, snapshot};
             use protocol::{DiffCodec, OpBinary, OpText};
 
             /// ✅️ "committed files parse": all 6 handcrafted `.grammar.semio`/`.protocol.semio` files

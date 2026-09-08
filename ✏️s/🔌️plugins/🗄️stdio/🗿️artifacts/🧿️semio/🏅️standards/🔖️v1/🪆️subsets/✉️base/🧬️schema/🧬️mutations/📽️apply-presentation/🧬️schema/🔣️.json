@@ -1,0 +1,5711 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/base/mutation/apply-presentation.json",
+  "title": "ApplyPresentation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation"
+  ],
+  "properties": {
+    "mutation": {
+      "$ref": "#/$defs/SemioPresentationMutation"
+    }
+  },
+  "$defs": {
+    "SemioPresentationMutation": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "mutation",
+            "snapshot"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setSnapshot"
+            },
+            "snapshot": {
+              "$ref": "#/$defs/SemioSnapshot"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "mutation",
+            "index",
+            "slide"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "insertSlide"
+            },
+            "index": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "slide": {
+              "$ref": "#/$defs/Slide"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "mutation",
+            "index"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "removeSlide"
+            },
+            "index": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "mutation",
+            "index"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setSlideLayout"
+            },
+            "index": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "layout_id": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "mutation",
+            "index",
+            "notes"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setSlideNotes"
+            },
+            "index": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "notes": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/DocBlock"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "mutation",
+            "slide_index",
+            "shape_index",
+            "shape"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "insertShape"
+            },
+            "slide_index": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "shape_index": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "shape": {
+              "$ref": "#/$defs/SlideShape"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "mutation",
+            "slide_index",
+            "shape_index"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "removeShape"
+            },
+            "slide_index": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "shape_index": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "mutation",
+            "slide_index",
+            "shape_index",
+            "frame"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setShapeFrame"
+            },
+            "slide_index": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "shape_index": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "frame": {
+              "$ref": "#/$defs/SlideFrame"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "mutation",
+            "slide_index",
+            "shape_index",
+            "blocks"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setTextBoxBlocks"
+            },
+            "slide_index": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "shape_index": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "blocks": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/DocBlock"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "mutation",
+            "master"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "insertMaster"
+            },
+            "master": {
+              "$ref": "#/$defs/SlideMaster"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "mutation",
+            "id"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "removeMaster"
+            },
+            "id": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "mutation",
+            "layout"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "insertLayout"
+            },
+            "layout": {
+              "$ref": "#/$defs/SlideLayout"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "mutation",
+            "id"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "removeLayout"
+            },
+            "id": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "mutation",
+            "id",
+            "master_id"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setLayoutMaster"
+            },
+            "id": {
+              "type": "string"
+            },
+            "master_id": {
+              "type": "string"
+            }
+          }
+        }
+      ]
+    },
+    "SetSnapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "snapshot"
+      ],
+      "properties": {
+        "snapshot": {
+          "$ref": "#/$defs/SemioSnapshot"
+        }
+      }
+    },
+    "SemioSnapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "subset"
+      ],
+      "properties": {
+        "schema": {
+          "type": "string"
+        },
+        "subset": {
+          "$ref": "#/$defs/SemioSubsetSnapshot"
+        }
+      }
+    },
+    "SemioSubsetSnapshot": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "subset",
+            "schema"
+          ],
+          "properties": {
+            "subset": {
+              "const": "brep"
+            },
+            "schema": {
+              "type": "string"
+            },
+            "vertices": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/BrepVertex"
+              }
+            },
+            "edges": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/BrepEdge"
+              }
+            },
+            "loops": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/BrepLoop"
+              }
+            },
+            "faces": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/BrepFace"
+              }
+            },
+            "shells": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/BrepShell"
+              }
+            },
+            "solids": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/BrepSolid"
+              }
+            },
+            "coedges": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/BrepCoedge"
+              }
+            },
+            "nextLabel": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "subset",
+            "schema"
+          ],
+          "properties": {
+            "subset": {
+              "const": "mesh"
+            },
+            "schema": {
+              "type": "string"
+            },
+            "meshes": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/SemioMesh"
+              }
+            },
+            "materials": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/SemioMaterial"
+              }
+            },
+            "textures": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/SemioTexture"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "subset",
+            "schema"
+          ],
+          "properties": {
+            "subset": {
+              "const": "model"
+            },
+            "schema": {
+              "type": "string"
+            },
+            "spatial": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/SpatialNode"
+              }
+            },
+            "elements": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/SemioModelElement"
+              }
+            },
+            "relations": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/ModelRelation"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "subset",
+            "schema",
+            "root"
+          ],
+          "properties": {
+            "subset": {
+              "const": "value"
+            },
+            "schema": {
+              "type": "string"
+            },
+            "root": {
+              "$ref": "#/$defs/SemioValue"
+            },
+            "nodes": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/SemioValueNode"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "subset",
+            "schema"
+          ],
+          "properties": {
+            "subset": {
+              "const": "document"
+            },
+            "schema": {
+              "type": "string"
+            },
+            "styles": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/DocStyle"
+              }
+            },
+            "images": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/DocImage"
+              }
+            },
+            "blocks": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/DocBlock"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "subset",
+            "schema"
+          ],
+          "properties": {
+            "subset": {
+              "const": "cad"
+            },
+            "schema": {
+              "type": "string"
+            },
+            "layers": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/CadLayer"
+              }
+            },
+            "blocks": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/CadBlock"
+              }
+            },
+            "entities": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/CadEntityRecord"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "subset",
+            "schema",
+            "canvas"
+          ],
+          "properties": {
+            "subset": {
+              "const": "drawing"
+            },
+            "schema": {
+              "type": "string"
+            },
+            "canvas": {
+              "$ref": "#/$defs/DrawCanvas"
+            },
+            "styles": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/DrawStyle"
+              }
+            },
+            "layers": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/DrawLayer"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "subset",
+            "schema",
+            "width",
+            "height"
+          ],
+          "properties": {
+            "subset": {
+              "const": "image"
+            },
+            "schema": {
+              "type": "string"
+            },
+            "width": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4294967295
+            },
+            "height": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4294967295
+            },
+            "colorspace": {
+              "$ref": "#/$defs/SemioColorspace"
+            },
+            "bitDepth": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 255
+            },
+            "frames": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/SemioImageFrame"
+              }
+            },
+            "icc": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 255
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "metadata": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/SemioImageMetadataEntry"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "subset",
+            "schema"
+          ],
+          "properties": {
+            "subset": {
+              "const": "video"
+            },
+            "schema": {
+              "type": "string"
+            },
+            "streams": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/SemioVideoStream"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "subset",
+            "schema",
+            "sampleRate"
+          ],
+          "properties": {
+            "subset": {
+              "const": "audio"
+            },
+            "schema": {
+              "type": "string"
+            },
+            "sampleRate": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4294967295
+            },
+            "format": {
+              "$ref": "#/$defs/SemioAudioFormat"
+            },
+            "channels": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/SemioAudioChannel"
+              }
+            },
+            "tags": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/SemioAudioTag"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "subset",
+            "schema"
+          ],
+          "properties": {
+            "subset": {
+              "const": "animation"
+            },
+            "schema": {
+              "type": "string"
+            },
+            "timelines": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/AnimTimeline"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "subset",
+            "schema"
+          ],
+          "properties": {
+            "subset": {
+              "const": "presentation"
+            },
+            "schema": {
+              "type": "string"
+            },
+            "masters": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/SlideMaster"
+              }
+            },
+            "layouts": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/SlideLayout"
+              }
+            },
+            "slides": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Slide"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "subset",
+            "schema"
+          ],
+          "properties": {
+            "subset": {
+              "const": "flow"
+            },
+            "schema": {
+              "type": "string"
+            },
+            "nodes": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/FlowNode"
+              }
+            },
+            "edges": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/FlowEdge"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "subset",
+            "schema"
+          ],
+          "properties": {
+            "subset": {
+              "const": "text"
+            },
+            "schema": {
+              "type": "string"
+            },
+            "runs": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/SemioTextRun"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "subset",
+            "schema"
+          ],
+          "properties": {
+            "subset": {
+              "const": "table"
+            },
+            "schema": {
+              "type": "string"
+            },
+            "columns": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/SemioTableColumn"
+              }
+            },
+            "rows": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/SemioTableRow"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "subset",
+            "schema"
+          ],
+          "properties": {
+            "subset": {
+              "const": "graph"
+            },
+            "schema": {
+              "type": "string"
+            },
+            "nodes": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/SemioGraphNode"
+              }
+            },
+            "edges": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/SemioGraphEdge"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "subset",
+            "schema",
+            "transform"
+          ],
+          "properties": {
+            "subset": {
+              "const": "object"
+            },
+            "schema": {
+              "type": "string"
+            },
+            "transform": {
+              "$ref": "#/$defs/SemioTransform"
+            },
+            "brep": {
+              "anyOf": [
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "childId",
+                    "target"
+                  ],
+                  "properties": {
+                    "childId": {
+                      "type": "string"
+                    },
+                    "target": {
+                      "$ref": "#/$defs/ArtifactRef"
+                    }
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "mesh": {
+              "anyOf": [
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "childId",
+                    "target"
+                  ],
+                  "properties": {
+                    "childId": {
+                      "type": "string"
+                    },
+                    "target": {
+                      "$ref": "#/$defs/ArtifactRef"
+                    }
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "properties": {
+              "anyOf": [
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "childId",
+                    "target"
+                  ],
+                  "properties": {
+                    "childId": {
+                      "type": "string"
+                    },
+                    "target": {
+                      "$ref": "#/$defs/ArtifactRef"
+                    }
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "subset",
+            "schema",
+            "types",
+            "designs",
+            "objects",
+            "models",
+            "representations"
+          ],
+          "properties": {
+            "subset": {
+              "const": "kit"
+            },
+            "schema": {
+              "type": "string"
+            },
+            "types": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/SemioKitType"
+              }
+            },
+            "designs": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/SemioKitDesign"
+              }
+            },
+            "objects": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "childId",
+                  "target"
+                ],
+                "properties": {
+                  "childId": {
+                    "type": "string"
+                  },
+                  "target": {
+                    "$ref": "#/$defs/ArtifactRef"
+                  }
+                }
+              }
+            },
+            "models": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "childId",
+                  "target"
+                ],
+                "properties": {
+                  "childId": {
+                    "type": "string"
+                  },
+                  "target": {
+                    "$ref": "#/$defs/ArtifactRef"
+                  }
+                }
+              }
+            },
+            "properties": {
+              "anyOf": [
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "childId",
+                    "target"
+                  ],
+                  "properties": {
+                    "childId": {
+                      "type": "string"
+                    },
+                    "target": {
+                      "$ref": "#/$defs/ArtifactRef"
+                    }
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "representations": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/ArtifactLink"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "SemioBrepSnapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema"
+      ],
+      "properties": {
+        "schema": {
+          "type": "string"
+        },
+        "vertices": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/BrepVertex"
+          }
+        },
+        "edges": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/BrepEdge"
+          }
+        },
+        "loops": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/BrepLoop"
+          }
+        },
+        "faces": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/BrepFace"
+          }
+        },
+        "shells": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/BrepShell"
+          }
+        },
+        "solids": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/BrepSolid"
+          }
+        },
+        "coedges": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/BrepCoedge"
+          }
+        },
+        "nextLabel": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "BrepVertex": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "point"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "point": {
+          "$ref": "#/$defs/SemioPoint3"
+        },
+        "tol": {
+          "type": "number"
+        }
+      }
+    },
+    "SemioPoint3": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y",
+        "z"
+      ],
+      "properties": {
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "z": {
+          "type": "number"
+        }
+      }
+    },
+    "BrepEdge": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "startVertex",
+        "endVertex",
+        "curve"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "startVertex": {
+          "type": "string"
+        },
+        "endVertex": {
+          "type": "string"
+        },
+        "curve": {
+          "$ref": "#/$defs/BrepCurve"
+        },
+        "tol": {
+          "type": "number"
+        }
+      }
+    },
+    "BrepCurve": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "origin",
+            "direction"
+          ],
+          "properties": {
+            "kind": {
+              "const": "line"
+            },
+            "origin": {
+              "$ref": "#/$defs/SemioPoint3"
+            },
+            "direction": {
+              "$ref": "#/$defs/SemioPoint3"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "center",
+            "axis",
+            "radius"
+          ],
+          "properties": {
+            "kind": {
+              "const": "circle"
+            },
+            "center": {
+              "$ref": "#/$defs/SemioPoint3"
+            },
+            "axis": {
+              "$ref": "#/$defs/SemioPoint3"
+            },
+            "radius": {
+              "type": "number"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "center",
+            "axis",
+            "radiusMajor",
+            "radiusMinor"
+          ],
+          "properties": {
+            "kind": {
+              "const": "ellipse"
+            },
+            "center": {
+              "$ref": "#/$defs/SemioPoint3"
+            },
+            "axis": {
+              "$ref": "#/$defs/SemioPoint3"
+            },
+            "radiusMajor": {
+              "type": "number"
+            },
+            "radiusMinor": {
+              "type": "number"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "controlPoints",
+            "weights",
+            "degree",
+            "knots"
+          ],
+          "properties": {
+            "kind": {
+              "const": "nurbs"
+            },
+            "controlPoints": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/SemioPoint3"
+              }
+            },
+            "weights": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              }
+            },
+            "degree": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4294967295
+            },
+            "knots": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "BrepLoop": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "edges": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/BrepLoopEdge"
+          }
+        }
+      }
+    },
+    "BrepLoopEdge": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "edge",
+        "orientation"
+      ],
+      "properties": {
+        "edge": {
+          "type": "string"
+        },
+        "orientation": {
+          "type": "boolean"
+        }
+      }
+    },
+    "BrepFace": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "outerLoop",
+        "surface",
+        "orientation"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "outerLoop": {
+          "type": "string"
+        },
+        "innerLoops": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "surface": {
+          "$ref": "#/$defs/BrepSurface"
+        },
+        "orientation": {
+          "type": "boolean"
+        },
+        "tol": {
+          "type": "number"
+        }
+      }
+    },
+    "BrepSurface": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "origin",
+            "normal"
+          ],
+          "properties": {
+            "kind": {
+              "const": "plane"
+            },
+            "origin": {
+              "$ref": "#/$defs/SemioPoint3"
+            },
+            "normal": {
+              "$ref": "#/$defs/SemioPoint3"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "origin",
+            "axis",
+            "radius"
+          ],
+          "properties": {
+            "kind": {
+              "const": "cylinder"
+            },
+            "origin": {
+              "$ref": "#/$defs/SemioPoint3"
+            },
+            "axis": {
+              "$ref": "#/$defs/SemioPoint3"
+            },
+            "radius": {
+              "type": "number"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "origin",
+            "axis",
+            "radius",
+            "halfAngle"
+          ],
+          "properties": {
+            "kind": {
+              "const": "cone"
+            },
+            "origin": {
+              "$ref": "#/$defs/SemioPoint3"
+            },
+            "axis": {
+              "$ref": "#/$defs/SemioPoint3"
+            },
+            "radius": {
+              "type": "number"
+            },
+            "halfAngle": {
+              "type": "number"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "center",
+            "radius"
+          ],
+          "properties": {
+            "kind": {
+              "const": "sphere"
+            },
+            "center": {
+              "$ref": "#/$defs/SemioPoint3"
+            },
+            "radius": {
+              "type": "number"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "center",
+            "axis",
+            "majorRadius",
+            "minorRadius"
+          ],
+          "properties": {
+            "kind": {
+              "const": "torus"
+            },
+            "center": {
+              "$ref": "#/$defs/SemioPoint3"
+            },
+            "axis": {
+              "$ref": "#/$defs/SemioPoint3"
+            },
+            "majorRadius": {
+              "type": "number"
+            },
+            "minorRadius": {
+              "type": "number"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "controlPoints",
+            "weights",
+            "uCount",
+            "vCount",
+            "degreeU",
+            "degreeV",
+            "knotsU",
+            "knotsV"
+          ],
+          "properties": {
+            "kind": {
+              "const": "nurbs"
+            },
+            "controlPoints": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/SemioPoint3"
+              }
+            },
+            "weights": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              }
+            },
+            "uCount": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4294967295
+            },
+            "vCount": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4294967295
+            },
+            "degreeU": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4294967295
+            },
+            "degreeV": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4294967295
+            },
+            "knotsU": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              }
+            },
+            "knotsV": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "BrepShell": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "faces": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/BrepShellFace"
+          }
+        }
+      }
+    },
+    "BrepShellFace": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "face",
+        "orientation"
+      ],
+      "properties": {
+        "face": {
+          "type": "string"
+        },
+        "orientation": {
+          "type": "boolean"
+        }
+      }
+    },
+    "BrepSolid": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "shells": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/BrepSolidShell"
+          }
+        }
+      }
+    },
+    "BrepSolidShell": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "shell",
+        "isVoid"
+      ],
+      "properties": {
+        "shell": {
+          "type": "string"
+        },
+        "isVoid": {
+          "type": "boolean"
+        }
+      }
+    },
+    "BrepCoedge": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "edge",
+        "forward",
+        "loopId",
+        "next",
+        "prev"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "edge": {
+          "type": "string"
+        },
+        "forward": {
+          "type": "boolean"
+        },
+        "pcurve": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BrepCurve2"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "prange": {
+          "type": "array",
+          "items": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            }
+          ],
+          "additionalItems": false,
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "loopId": {
+          "type": "string"
+        },
+        "next": {
+          "type": "string"
+        },
+        "prev": {
+          "type": "string"
+        }
+      }
+    },
+    "BrepCurve2": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "origin",
+            "direction"
+          ],
+          "properties": {
+            "kind": {
+              "const": "line"
+            },
+            "origin": {
+              "$ref": "#/$defs/SemioPoint2"
+            },
+            "direction": {
+              "$ref": "#/$defs/SemioPoint2"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "center",
+            "radius"
+          ],
+          "properties": {
+            "kind": {
+              "const": "circle"
+            },
+            "center": {
+              "$ref": "#/$defs/SemioPoint2"
+            },
+            "radius": {
+              "type": "number"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "center",
+            "xAxis",
+            "radiusMajor",
+            "radiusMinor"
+          ],
+          "properties": {
+            "kind": {
+              "const": "ellipse"
+            },
+            "center": {
+              "$ref": "#/$defs/SemioPoint2"
+            },
+            "xAxis": {
+              "$ref": "#/$defs/SemioPoint2"
+            },
+            "radiusMajor": {
+              "type": "number"
+            },
+            "radiusMinor": {
+              "type": "number"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "controlPoints",
+            "weights",
+            "degree",
+            "knots"
+          ],
+          "properties": {
+            "kind": {
+              "const": "nurbs"
+            },
+            "controlPoints": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/SemioPoint2"
+              }
+            },
+            "weights": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              }
+            },
+            "degree": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4294967295
+            },
+            "knots": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "SemioPoint2": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y"
+      ],
+      "properties": {
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        }
+      }
+    },
+    "SemioMeshSnapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema"
+      ],
+      "properties": {
+        "schema": {
+          "type": "string"
+        },
+        "meshes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SemioMesh"
+          }
+        },
+        "materials": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SemioMaterial"
+          }
+        },
+        "textures": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SemioTexture"
+          }
+        }
+      }
+    },
+    "SemioMesh": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "primitives": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SemioPrimitive"
+          }
+        }
+      }
+    },
+    "SemioPrimitive": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "topology": {
+          "$ref": "#/$defs/SemioTopology"
+        },
+        "positions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SemioPoint3"
+          }
+        },
+        "normals": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SemioPoint3"
+          }
+        },
+        "uvs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SemioUv"
+          }
+        },
+        "colors": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SemioRgba"
+          }
+        },
+        "indices": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4294967295
+          }
+        },
+        "materialId": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "SemioTopology": {
+      "type": "string",
+      "enum": [
+        "points",
+        "lines",
+        "lineStrip",
+        "triangles",
+        "triangleStrip",
+        "triangleFan"
+      ]
+    },
+    "SemioUv": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "u",
+        "v"
+      ],
+      "properties": {
+        "u": {
+          "type": "number"
+        },
+        "v": {
+          "type": "number"
+        }
+      }
+    },
+    "SemioRgba": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "r",
+        "g",
+        "b",
+        "a"
+      ],
+      "properties": {
+        "r": {
+          "type": "number"
+        },
+        "g": {
+          "type": "number"
+        },
+        "b": {
+          "type": "number"
+        },
+        "a": {
+          "type": "number"
+        }
+      }
+    },
+    "SemioMaterial": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "baseColor": {
+          "$ref": "#/$defs/SemioRgba"
+        },
+        "metallic": {
+          "type": "number"
+        },
+        "roughness": {
+          "type": "number"
+        }
+      }
+    },
+    "SemioTexture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "mime": {
+          "type": "string"
+        },
+        "bytes": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          }
+        }
+      }
+    },
+    "SemioModelSnapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema"
+      ],
+      "properties": {
+        "schema": {
+          "type": "string"
+        },
+        "spatial": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SpatialNode"
+          }
+        },
+        "elements": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SemioModelElement"
+          }
+        },
+        "relations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ModelRelation"
+          }
+        }
+      }
+    },
+    "SpatialNode": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "kind",
+        "name"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "kind": {
+          "$ref": "#/$defs/SpatialKind"
+        },
+        "name": {
+          "type": "string"
+        },
+        "parentId": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "placement": {
+          "$ref": "#/$defs/SemioTransform"
+        }
+      }
+    },
+    "SpatialKind": {
+      "type": "string",
+      "enum": [
+        "site",
+        "building",
+        "storey",
+        "space"
+      ]
+    },
+    "SemioTransform": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "translation",
+        "rotation",
+        "scale"
+      ],
+      "properties": {
+        "translation": {
+          "$ref": "#/$defs/SemioPoint3"
+        },
+        "rotation": {
+          "$ref": "#/$defs/SemioQuaternion"
+        },
+        "scale": {
+          "$ref": "#/$defs/SemioPoint3"
+        }
+      }
+    },
+    "SemioQuaternion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y",
+        "z",
+        "w"
+      ],
+      "properties": {
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "z": {
+          "type": "number"
+        },
+        "w": {
+          "type": "number"
+        }
+      }
+    },
+    "SemioModelElement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "class"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "class": {
+          "$ref": "#/$defs/ElementClass"
+        },
+        "placement": {
+          "$ref": "#/$defs/SemioTransform"
+        },
+        "geometry": {
+          "$ref": "#/$defs/GeometryRef"
+        },
+        "spatialId": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "psets": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PropertySet"
+          }
+        }
+      }
+    },
+    "ElementClass": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "wall"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "slab"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "column"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "beam"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "door"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "window"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "roof"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "stair"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "furniture"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "name"
+          ],
+          "properties": {
+            "kind": {
+              "const": "other"
+            },
+            "name": {
+              "type": "string"
+            }
+          }
+        }
+      ]
+    },
+    "GeometryRef": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "none"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "brepId"
+          ],
+          "properties": {
+            "kind": {
+              "const": "brep"
+            },
+            "brepId": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "meshId"
+          ],
+          "properties": {
+            "kind": {
+              "const": "mesh"
+            },
+            "meshId": {
+              "type": "string"
+            }
+          }
+        }
+      ]
+    },
+    "PropertySet": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "properties": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Property"
+          }
+        }
+      }
+    },
+    "Property": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key",
+        "value"
+      ],
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "value": {
+          "$ref": "#/$defs/PsetValue"
+        }
+      }
+    },
+    "PsetValue": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ],
+          "properties": {
+            "kind": {
+              "const": "text"
+            },
+            "value": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ],
+          "properties": {
+            "kind": {
+              "const": "number"
+            },
+            "value": {
+              "type": "number"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ],
+          "properties": {
+            "kind": {
+              "const": "boolean"
+            },
+            "value": {
+              "type": "boolean"
+            }
+          }
+        }
+      ]
+    },
+    "ModelRelation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "kind",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "kind": {
+          "$ref": "#/$defs/RelationKind"
+        },
+        "from": {
+          "type": "string"
+        },
+        "to": {
+          "type": "string"
+        }
+      }
+    },
+    "RelationKind": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "aggregates"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "containedIn"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "connectsTo"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "fillsVoid"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "voidsElement"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "label"
+          ],
+          "properties": {
+            "kind": {
+              "const": "other"
+            },
+            "label": {
+              "type": "string"
+            }
+          }
+        }
+      ]
+    },
+    "SemioValueSnapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "root"
+      ],
+      "properties": {
+        "schema": {
+          "type": "string"
+        },
+        "root": {
+          "$ref": "#/$defs/SemioValue"
+        },
+        "nodes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SemioValueNode"
+          }
+        }
+      }
+    },
+    "SemioValue": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "null"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ],
+          "properties": {
+            "kind": {
+              "const": "bool"
+            },
+            "value": {
+              "type": "boolean"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "lexeme"
+          ],
+          "properties": {
+            "kind": {
+              "const": "int"
+            },
+            "lexeme": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "lexeme"
+          ],
+          "properties": {
+            "kind": {
+              "const": "float"
+            },
+            "lexeme": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ],
+          "properties": {
+            "kind": {
+              "const": "str"
+            },
+            "value": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ],
+          "properties": {
+            "kind": {
+              "const": "bytes"
+            },
+            "value": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 255
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "items"
+          ],
+          "properties": {
+            "kind": {
+              "const": "list"
+            },
+            "items": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/SemioValue"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "entries"
+          ],
+          "properties": {
+            "kind": {
+              "const": "map"
+            },
+            "entries": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/SemioValueEntry"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "id"
+          ],
+          "properties": {
+            "kind": {
+              "const": "ref"
+            },
+            "id": {
+              "$ref": "#/$defs/ValueId"
+            }
+          }
+        }
+      ]
+    },
+    "SemioValueEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key",
+        "value"
+      ],
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "value": {
+          "$ref": "#/$defs/SemioValue"
+        }
+      }
+    },
+    "ValueId": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "value"
+      ],
+      "properties": {
+        "value": {
+          "type": "string"
+        }
+      }
+    },
+    "SemioValueNode": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "value"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/ValueId"
+        },
+        "value": {
+          "$ref": "#/$defs/SemioValue"
+        }
+      }
+    },
+    "SemioDocumentSnapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema"
+      ],
+      "properties": {
+        "schema": {
+          "type": "string"
+        },
+        "styles": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/DocStyle"
+          }
+        },
+        "images": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/DocImage"
+          }
+        },
+        "blocks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/DocBlock"
+          }
+        }
+      }
+    },
+    "DocStyle": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "basedOn": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "DocImage": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "mime": {
+          "type": "string"
+        },
+        "bytes": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          }
+        }
+      }
+    },
+    "DocBlock": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "paragraph"
+            },
+            "styleId": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "runs": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/DocRun"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "level"
+          ],
+          "properties": {
+            "kind": {
+              "const": "heading"
+            },
+            "level": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 255
+            },
+            "styleId": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "runs": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/DocRun"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "list"
+            },
+            "ordered": {
+              "type": "boolean"
+            },
+            "items": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/DocListItem"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "table"
+            },
+            "rows": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/DocTableRow"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "code"
+            },
+            "language": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "text": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "quote"
+            },
+            "blocks": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/DocBlock"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "imageId"
+          ],
+          "properties": {
+            "kind": {
+              "const": "image"
+            },
+            "imageId": {
+              "type": "string"
+            },
+            "alt": {
+              "type": "string"
+            },
+            "width": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "height": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "pageBreak"
+            }
+          }
+        }
+      ]
+    },
+    "DocRun": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "text"
+      ],
+      "properties": {
+        "text": {
+          "type": "string"
+        },
+        "style": {
+          "$ref": "#/$defs/RunStyle"
+        }
+      }
+    },
+    "RunStyle": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "bold": {
+          "type": "boolean"
+        },
+        "italic": {
+          "type": "boolean"
+        },
+        "underline": {
+          "type": "boolean"
+        },
+        "size": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "font": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "color": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "link": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "DocListItem": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "blocks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/DocBlock"
+          }
+        }
+      }
+    },
+    "DocTableRow": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "cells": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/DocTableCell"
+          }
+        }
+      }
+    },
+    "DocTableCell": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "blocks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/DocBlock"
+          }
+        }
+      }
+    },
+    "SemioCadSnapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema"
+      ],
+      "properties": {
+        "schema": {
+          "type": "string"
+        },
+        "layers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CadLayer"
+          }
+        },
+        "blocks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CadBlock"
+          }
+        },
+        "entities": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CadEntityRecord"
+          }
+        }
+      }
+    },
+    "CadLayer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "colorIndex",
+        "lineType",
+        "visible"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "colorIndex": {
+          "type": "integer",
+          "minimum": -2147483648,
+          "maximum": 2147483647
+        },
+        "lineType": {
+          "type": "string"
+        },
+        "visible": {
+          "type": "boolean"
+        }
+      }
+    },
+    "CadBlock": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "basePoint"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "basePoint": {
+          "$ref": "#/$defs/SemioPoint2"
+        },
+        "entities": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CadEntityRecord"
+          }
+        }
+      }
+    },
+    "CadEntityRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "handle",
+        "layer",
+        "entity"
+      ],
+      "properties": {
+        "handle": {
+          "type": "string"
+        },
+        "layer": {
+          "type": "string"
+        },
+        "entity": {
+          "$ref": "#/$defs/CadEntity"
+        }
+      }
+    },
+    "CadEntity": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "a",
+            "b"
+          ],
+          "properties": {
+            "kind": {
+              "const": "line"
+            },
+            "a": {
+              "$ref": "#/$defs/SemioPoint2"
+            },
+            "b": {
+              "$ref": "#/$defs/SemioPoint2"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "center",
+            "radius",
+            "startAngle",
+            "endAngle"
+          ],
+          "properties": {
+            "kind": {
+              "const": "arc"
+            },
+            "center": {
+              "$ref": "#/$defs/SemioPoint2"
+            },
+            "radius": {
+              "type": "number"
+            },
+            "startAngle": {
+              "type": "number"
+            },
+            "endAngle": {
+              "type": "number"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "center",
+            "radius"
+          ],
+          "properties": {
+            "kind": {
+              "const": "circle"
+            },
+            "center": {
+              "$ref": "#/$defs/SemioPoint2"
+            },
+            "radius": {
+              "type": "number"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "center",
+            "majorAxisEnd",
+            "ratio",
+            "startParam",
+            "endParam"
+          ],
+          "properties": {
+            "kind": {
+              "const": "ellipse"
+            },
+            "center": {
+              "$ref": "#/$defs/SemioPoint2"
+            },
+            "majorAxisEnd": {
+              "$ref": "#/$defs/SemioPoint2"
+            },
+            "ratio": {
+              "type": "number"
+            },
+            "startParam": {
+              "type": "number"
+            },
+            "endParam": {
+              "type": "number"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "vertices",
+            "closed"
+          ],
+          "properties": {
+            "kind": {
+              "const": "polyline"
+            },
+            "vertices": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/SemioPoint2"
+              }
+            },
+            "closed": {
+              "type": "boolean"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "position",
+            "height",
+            "rotation",
+            "content"
+          ],
+          "properties": {
+            "kind": {
+              "const": "text"
+            },
+            "position": {
+              "$ref": "#/$defs/SemioPoint2"
+            },
+            "height": {
+              "type": "number"
+            },
+            "rotation": {
+              "type": "number"
+            },
+            "content": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "blockName",
+            "insertionPoint",
+            "scale",
+            "rotation"
+          ],
+          "properties": {
+            "kind": {
+              "const": "insert"
+            },
+            "blockName": {
+              "type": "string"
+            },
+            "insertionPoint": {
+              "$ref": "#/$defs/SemioPoint2"
+            },
+            "scale": {
+              "$ref": "#/$defs/SemioPoint2"
+            },
+            "rotation": {
+              "type": "number"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "p1",
+            "p2",
+            "p3",
+            "p4"
+          ],
+          "properties": {
+            "kind": {
+              "const": "solid"
+            },
+            "p1": {
+              "$ref": "#/$defs/SemioPoint2"
+            },
+            "p2": {
+              "$ref": "#/$defs/SemioPoint2"
+            },
+            "p3": {
+              "$ref": "#/$defs/SemioPoint2"
+            },
+            "p4": {
+              "$ref": "#/$defs/SemioPoint2"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "defPoint",
+            "textPosition",
+            "measurement",
+            "text"
+          ],
+          "properties": {
+            "kind": {
+              "const": "dimension"
+            },
+            "defPoint": {
+              "$ref": "#/$defs/SemioPoint2"
+            },
+            "textPosition": {
+              "$ref": "#/$defs/SemioPoint2"
+            },
+            "measurement": {
+              "type": "number"
+            },
+            "text": {
+              "type": "string"
+            }
+          }
+        }
+      ]
+    },
+    "SemioDrawingSnapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "canvas"
+      ],
+      "properties": {
+        "schema": {
+          "type": "string"
+        },
+        "canvas": {
+          "$ref": "#/$defs/DrawCanvas"
+        },
+        "styles": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/DrawStyle"
+          }
+        },
+        "layers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/DrawLayer"
+          }
+        }
+      }
+    },
+    "DrawCanvas": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "width",
+        "height"
+      ],
+      "properties": {
+        "width": {
+          "type": "number"
+        },
+        "height": {
+          "type": "number"
+        },
+        "background": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SemioRgba"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "DrawStyle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "fill": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SemioRgba"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "stroke": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SemioRgba"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "strokeWidth": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "opacity": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "DrawLayer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "visible",
+        "root"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "visible": {
+          "type": "boolean"
+        },
+        "root": {
+          "$ref": "#/$defs/DrawNode"
+        }
+      }
+    },
+    "DrawNode": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "segments"
+          ],
+          "properties": {
+            "kind": {
+              "const": "path"
+            },
+            "segments": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/PathSegment"
+              }
+            },
+            "style": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value",
+            "at"
+          ],
+          "properties": {
+            "kind": {
+              "const": "text"
+            },
+            "value": {
+              "type": "string"
+            },
+            "at": {
+              "$ref": "#/$defs/SemioPoint2"
+            },
+            "style": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "transform"
+          ],
+          "properties": {
+            "kind": {
+              "const": "group"
+            },
+            "transform": {
+              "$ref": "#/$defs/SemioTransform"
+            },
+            "children": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/DrawNode"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "at",
+            "width",
+            "height",
+            "mime",
+            "bytes"
+          ],
+          "properties": {
+            "kind": {
+              "const": "image"
+            },
+            "at": {
+              "$ref": "#/$defs/SemioPoint2"
+            },
+            "width": {
+              "type": "number"
+            },
+            "height": {
+              "type": "number"
+            },
+            "mime": {
+              "type": "string"
+            },
+            "bytes": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 255
+              }
+            }
+          }
+        }
+      ]
+    },
+    "PathSegment": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "to"
+          ],
+          "properties": {
+            "kind": {
+              "const": "moveTo"
+            },
+            "to": {
+              "$ref": "#/$defs/SemioPoint2"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "to"
+          ],
+          "properties": {
+            "kind": {
+              "const": "lineTo"
+            },
+            "to": {
+              "$ref": "#/$defs/SemioPoint2"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "c1",
+            "c2",
+            "to"
+          ],
+          "properties": {
+            "kind": {
+              "const": "cubicTo"
+            },
+            "c1": {
+              "$ref": "#/$defs/SemioPoint2"
+            },
+            "c2": {
+              "$ref": "#/$defs/SemioPoint2"
+            },
+            "to": {
+              "$ref": "#/$defs/SemioPoint2"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "c",
+            "to"
+          ],
+          "properties": {
+            "kind": {
+              "const": "quadTo"
+            },
+            "c": {
+              "$ref": "#/$defs/SemioPoint2"
+            },
+            "to": {
+              "$ref": "#/$defs/SemioPoint2"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "rx",
+            "ry",
+            "xRotation",
+            "largeArc",
+            "sweep",
+            "to"
+          ],
+          "properties": {
+            "kind": {
+              "const": "arcTo"
+            },
+            "rx": {
+              "type": "number"
+            },
+            "ry": {
+              "type": "number"
+            },
+            "xRotation": {
+              "type": "number"
+            },
+            "largeArc": {
+              "type": "boolean"
+            },
+            "sweep": {
+              "type": "boolean"
+            },
+            "to": {
+              "$ref": "#/$defs/SemioPoint2"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "close"
+            }
+          }
+        }
+      ]
+    },
+    "SemioImageSnapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "width",
+        "height"
+      ],
+      "properties": {
+        "schema": {
+          "type": "string"
+        },
+        "width": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "height": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "colorspace": {
+          "$ref": "#/$defs/SemioColorspace"
+        },
+        "bitDepth": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "frames": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SemioImageFrame"
+          }
+        },
+        "icc": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 255
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "metadata": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SemioImageMetadataEntry"
+          }
+        }
+      }
+    },
+    "SemioColorspace": {
+      "type": "string",
+      "enum": [
+        "rgb",
+        "rgba",
+        "grayscale",
+        "grayscaleAlpha",
+        "indexed"
+      ]
+    },
+    "SemioImageFrame": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "delayMs"
+      ],
+      "properties": {
+        "delayMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "rgba8": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          }
+        }
+      }
+    },
+    "SemioImageMetadataEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key"
+      ],
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        }
+      }
+    },
+    "SemioVideoSnapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema"
+      ],
+      "properties": {
+        "schema": {
+          "type": "string"
+        },
+        "streams": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SemioVideoStream"
+          }
+        }
+      }
+    },
+    "SemioVideoStream": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "$ref": "#/$defs/SemioVideoStreamKind"
+        },
+        "codec": {
+          "type": "string"
+        },
+        "width": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "height": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "rate": {
+          "$ref": "#/$defs/SemioRational"
+        },
+        "samples": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SemioVideoSample"
+          }
+        }
+      }
+    },
+    "SemioVideoStreamKind": {
+      "type": "string",
+      "enum": [
+        "video",
+        "audio",
+        "subtitle"
+      ]
+    },
+    "SemioRational": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "num",
+        "den"
+      ],
+      "properties": {
+        "num": {
+          "type": "integer"
+        },
+        "den": {
+          "type": "integer"
+        }
+      }
+    },
+    "SemioVideoSample": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "pts"
+      ],
+      "properties": {
+        "pts": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "key": {
+          "type": "boolean"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          }
+        }
+      }
+    },
+    "SemioAudioSnapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "sampleRate"
+      ],
+      "properties": {
+        "schema": {
+          "type": "string"
+        },
+        "sampleRate": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "format": {
+          "$ref": "#/$defs/SemioAudioFormat"
+        },
+        "channels": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SemioAudioChannel"
+          }
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SemioAudioTag"
+          }
+        }
+      }
+    },
+    "SemioAudioFormat": {
+      "type": "string",
+      "enum": [
+        "pcm8",
+        "pcm16",
+        "pcm24",
+        "pcm32",
+        "float32",
+        "float64"
+      ]
+    },
+    "SemioAudioChannel": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "samples": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "SemioAudioTag": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key",
+        "value"
+      ],
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        }
+      }
+    },
+    "SemioAnimationSnapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema"
+      ],
+      "properties": {
+        "schema": {
+          "type": "string"
+        },
+        "timelines": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/AnimTimeline"
+          }
+        }
+      }
+    },
+    "AnimTimeline": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "channels": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/AnimChannel"
+          }
+        }
+      }
+    },
+    "AnimChannel": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "target"
+      ],
+      "properties": {
+        "target": {
+          "$ref": "#/$defs/AnimTarget"
+        },
+        "interpolation": {
+          "$ref": "#/$defs/AnimInterpolation"
+        },
+        "keyframes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/AnimKeyframe"
+          }
+        }
+      }
+    },
+    "AnimTarget": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "node"
+      ],
+      "properties": {
+        "node": {
+          "type": "string"
+        },
+        "property": {
+          "$ref": "#/$defs/AnimTargetProperty"
+        }
+      }
+    },
+    "AnimTargetProperty": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "translation"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "rotation"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "scale"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "weights"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "name"
+          ],
+          "properties": {
+            "kind": {
+              "const": "custom"
+            },
+            "name": {
+              "type": "string"
+            }
+          }
+        }
+      ]
+    },
+    "AnimInterpolation": {
+      "type": "string",
+      "enum": [
+        "linear",
+        "step",
+        "cubicSpline"
+      ]
+    },
+    "AnimKeyframe": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "t"
+      ],
+      "properties": {
+        "t": {
+          "type": "number"
+        },
+        "value": {
+          "$ref": "#/$defs/AnimValue"
+        }
+      }
+    },
+    "AnimValue": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ],
+          "properties": {
+            "kind": {
+              "const": "scalar"
+            },
+            "value": {
+              "type": "number"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ],
+          "properties": {
+            "kind": {
+              "const": "vec3"
+            },
+            "value": {
+              "$ref": "#/$defs/SemioPoint3"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ],
+          "properties": {
+            "kind": {
+              "const": "quat"
+            },
+            "value": {
+              "$ref": "#/$defs/SemioQuaternion"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "values"
+          ],
+          "properties": {
+            "kind": {
+              "const": "weights"
+            },
+            "values": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "SemioPresentationSnapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema"
+      ],
+      "properties": {
+        "schema": {
+          "type": "string"
+        },
+        "masters": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SlideMaster"
+          }
+        },
+        "layouts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SlideLayout"
+          }
+        },
+        "slides": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Slide"
+          }
+        }
+      }
+    },
+    "SlideMaster": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "shapes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SlideShape"
+          }
+        }
+      }
+    },
+    "SlideShape": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "shapeKind",
+            "frame"
+          ],
+          "properties": {
+            "shapeKind": {
+              "const": "textBox"
+            },
+            "frame": {
+              "$ref": "#/$defs/SlideFrame"
+            },
+            "blocks": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/DocBlock"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "shapeKind",
+            "frame",
+            "image"
+          ],
+          "properties": {
+            "shapeKind": {
+              "const": "picture"
+            },
+            "frame": {
+              "$ref": "#/$defs/SlideFrame"
+            },
+            "image": {
+              "$ref": "#/$defs/SlidePictureImage"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "shapeKind",
+            "frame"
+          ],
+          "properties": {
+            "shapeKind": {
+              "const": "table"
+            },
+            "frame": {
+              "$ref": "#/$defs/SlideFrame"
+            },
+            "rows": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/SlideTableRow"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "shapeKind",
+            "frame",
+            "kind"
+          ],
+          "properties": {
+            "shapeKind": {
+              "const": "placeholder"
+            },
+            "frame": {
+              "$ref": "#/$defs/SlideFrame"
+            },
+            "kind": {
+              "$ref": "#/$defs/PlaceholderKind"
+            }
+          }
+        }
+      ]
+    },
+    "SlideFrame": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "origin",
+        "width",
+        "height"
+      ],
+      "properties": {
+        "origin": {
+          "$ref": "#/$defs/SemioPoint2"
+        },
+        "width": {
+          "type": "number"
+        },
+        "height": {
+          "type": "number"
+        }
+      }
+    },
+    "SlidePictureImage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "assetId",
+        "mime"
+      ],
+      "properties": {
+        "assetId": {
+          "type": "string"
+        },
+        "mime": {
+          "type": "string"
+        },
+        "bytes": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          }
+        }
+      }
+    },
+    "SlideTableRow": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "cells": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SlideTableCell"
+          }
+        }
+      }
+    },
+    "SlideTableCell": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "blocks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/DocBlock"
+          }
+        }
+      }
+    },
+    "PlaceholderKind": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "title"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "subtitle"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "body"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "footer"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "slideNumber"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "dateTime"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ],
+          "properties": {
+            "kind": {
+              "const": "other"
+            },
+            "value": {
+              "type": "string"
+            }
+          }
+        }
+      ]
+    },
+    "SlideLayout": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "masterId"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "masterId": {
+          "type": "string"
+        },
+        "shapes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SlideShape"
+          }
+        }
+      }
+    },
+    "Slide": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "layoutId": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "shapes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SlideShape"
+          }
+        },
+        "notes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/DocBlock"
+          }
+        }
+      }
+    },
+    "SemioFlowSnapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema"
+      ],
+      "properties": {
+        "schema": {
+          "type": "string"
+        },
+        "nodes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/FlowNode"
+          }
+        },
+        "edges": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/FlowEdge"
+          }
+        }
+      }
+    },
+    "FlowNode": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "kind",
+        "label",
+        "position"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "params": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/FlowParam"
+          }
+        },
+        "position": {
+          "$ref": "#/$defs/SemioPoint2"
+        }
+      }
+    },
+    "FlowParam": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key",
+        "value"
+      ],
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        }
+      }
+    },
+    "FlowEdge": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to",
+        "kind"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "$ref": "#/$defs/PortRef"
+        },
+        "to": {
+          "$ref": "#/$defs/PortRef"
+        },
+        "kind": {
+          "type": "string"
+        }
+      }
+    },
+    "PortRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "node",
+        "port"
+      ],
+      "properties": {
+        "node": {
+          "type": "string"
+        },
+        "port": {
+          "type": "string"
+        }
+      }
+    },
+    "SemioTextSnapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema"
+      ],
+      "properties": {
+        "schema": {
+          "type": "string"
+        },
+        "runs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SemioTextRun"
+          }
+        }
+      }
+    },
+    "SemioTextRun": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "language": {
+          "type": "string"
+        },
+        "content": {
+          "type": "string"
+        },
+        "marks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SemioTextMark"
+          }
+        }
+      }
+    },
+    "SemioTextMark": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind"
+      ],
+      "properties": {
+        "kind": {
+          "$ref": "#/$defs/SemioTextMarkKind"
+        },
+        "href": {
+          "type": "string"
+        }
+      }
+    },
+    "SemioTextMarkKind": {
+      "type": "string",
+      "enum": [
+        "bold",
+        "italic",
+        "code",
+        "link"
+      ]
+    },
+    "SemioTableSnapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema"
+      ],
+      "properties": {
+        "schema": {
+          "type": "string"
+        },
+        "columns": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SemioTableColumn"
+          }
+        },
+        "rows": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SemioTableRow"
+          }
+        }
+      }
+    },
+    "SemioTableColumn": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "kind"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "kind": {
+          "$ref": "#/$defs/SemioTableCellKind"
+        }
+      }
+    },
+    "SemioTableCellKind": {
+      "type": "string",
+      "enum": [
+        "null",
+        "bool",
+        "int",
+        "float",
+        "str",
+        "bytes"
+      ]
+    },
+    "SemioTableRow": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "cells": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SemioValue"
+          }
+        }
+      }
+    },
+    "SemioGraphSnapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema"
+      ],
+      "properties": {
+        "schema": {
+          "type": "string"
+        },
+        "nodes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SemioGraphNode"
+          }
+        },
+        "edges": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SemioGraphEdge"
+          }
+        }
+      }
+    },
+    "SemioGraphNode": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/GraphNodeId"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "position": {
+          "$ref": "#/$defs/SemioPoint2"
+        },
+        "ports": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SemioGraphPort"
+          }
+        },
+        "properties": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SemioValueEntry"
+          }
+        }
+      }
+    },
+    "GraphNodeId": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "value"
+      ],
+      "properties": {
+        "value": {
+          "type": "string"
+        }
+      }
+    },
+    "SemioGraphPort": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "kind"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "kind": {
+          "$ref": "#/$defs/SemioGraphPortKind"
+        }
+      }
+    },
+    "SemioGraphPortKind": {
+      "type": "string",
+      "enum": [
+        "in",
+        "out",
+        "inOut"
+      ]
+    },
+    "SemioGraphEdge": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "source",
+        "target"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/GraphEdgeId"
+        },
+        "source": {
+          "$ref": "#/$defs/GraphNodeId"
+        },
+        "target": {
+          "$ref": "#/$defs/GraphNodeId"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        }
+      }
+    },
+    "GraphEdgeId": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "value"
+      ],
+      "properties": {
+        "value": {
+          "type": "string"
+        }
+      }
+    },
+    "SemioObjectSnapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "transform"
+      ],
+      "properties": {
+        "schema": {
+          "type": "string"
+        },
+        "transform": {
+          "$ref": "#/$defs/SemioTransform"
+        },
+        "brep": {
+          "anyOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "childId",
+                "target"
+              ],
+              "properties": {
+                "childId": {
+                  "type": "string"
+                },
+                "target": {
+                  "$ref": "#/$defs/ArtifactRef"
+                }
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "mesh": {
+          "anyOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "childId",
+                "target"
+              ],
+              "properties": {
+                "childId": {
+                  "type": "string"
+                },
+                "target": {
+                  "$ref": "#/$defs/ArtifactRef"
+                }
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "properties": {
+          "anyOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "childId",
+                "target"
+              ],
+              "properties": {
+                "childId": {
+                  "type": "string"
+                },
+                "target": {
+                  "$ref": "#/$defs/ArtifactRef"
+                }
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "ArtifactRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "artifactId",
+        "dialect"
+      ],
+      "properties": {
+        "artifactId": {
+          "type": "string"
+        },
+        "dialect": {
+          "$ref": "#/$defs/ArtifactDialect"
+        }
+      }
+    },
+    "ArtifactDialect": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "artifactKind",
+        "standard",
+        "subset"
+      ],
+      "properties": {
+        "artifactKind": {
+          "type": "string"
+        },
+        "standard": {
+          "type": "string"
+        },
+        "subset": {
+          "type": "string"
+        }
+      }
+    },
+    "SemioKitSnapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "types",
+        "designs",
+        "objects",
+        "models",
+        "representations"
+      ],
+      "properties": {
+        "schema": {
+          "type": "string"
+        },
+        "types": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SemioKitType"
+          }
+        },
+        "designs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SemioKitDesign"
+          }
+        },
+        "objects": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "childId",
+              "target"
+            ],
+            "properties": {
+              "childId": {
+                "type": "string"
+              },
+              "target": {
+                "$ref": "#/$defs/ArtifactRef"
+              }
+            }
+          }
+        },
+        "models": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "childId",
+              "target"
+            ],
+            "properties": {
+              "childId": {
+                "type": "string"
+              },
+              "target": {
+                "$ref": "#/$defs/ArtifactRef"
+              }
+            }
+          }
+        },
+        "properties": {
+          "anyOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "childId",
+                "target"
+              ],
+              "properties": {
+                "childId": {
+                  "type": "string"
+                },
+                "target": {
+                  "$ref": "#/$defs/ArtifactRef"
+                }
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "representations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ArtifactLink"
+          }
+        }
+      }
+    },
+    "SemioKitType": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "category"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "category": {
+          "type": "string"
+        }
+      }
+    },
+    "SemioKitDesign": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "pieces",
+        "connections"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "pieces": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SemioKitPiece"
+          }
+        },
+        "connections": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SemioKitConnection"
+          }
+        }
+      }
+    },
+    "SemioKitPiece": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "typeId",
+        "transform"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "typeId": {
+          "type": "string"
+        },
+        "transform": {
+          "$ref": "#/$defs/SemioTransform"
+        }
+      }
+    },
+    "SemioKitConnection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "connectingPieceId",
+        "connectingPort",
+        "connectedPieceId",
+        "connectedPort"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "connectingPieceId": {
+          "type": "string"
+        },
+        "connectingPort": {
+          "type": "string"
+        },
+        "connectedPieceId": {
+          "type": "string"
+        },
+        "connectedPort": {
+          "type": "string"
+        }
+      }
+    },
+    "ArtifactLink": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "target",
+        "pin",
+        "role"
+      ],
+      "properties": {
+        "target": {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        "pin": {
+          "$ref": "#/$defs/LinkPin"
+        },
+        "role": {
+          "type": "string"
+        }
+      }
+    },
+    "LinkPin": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "head"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "id"
+          ],
+          "properties": {
+            "kind": {
+              "const": "checkpoint"
+            },
+            "id": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "blob"
+          ],
+          "properties": {
+            "kind": {
+              "const": "snapshot"
+            },
+            "blob": {
+              "$ref": "#/$defs/BlobRef"
+            }
+          }
+        }
+      ]
+    },
+    "BlobRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "hash",
+        "size",
+        "mediaType"
+      ],
+      "properties": {
+        "hash": {
+          "type": "string"
+        },
+        "size": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "mediaType": {
+          "type": "string"
+        }
+      }
+    },
+    "InsertSlide": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "slide"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "slide": {
+          "$ref": "#/$defs/Slide"
+        }
+      }
+    },
+    "RemoveSlide": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "SetSlideLayout": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "layout_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "SetSlideNotes": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "notes"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "notes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/DocBlock"
+          }
+        }
+      }
+    },
+    "InsertShape": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "slide_index",
+        "shape_index",
+        "shape"
+      ],
+      "properties": {
+        "slide_index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "shape_index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "shape": {
+          "$ref": "#/$defs/SlideShape"
+        }
+      }
+    },
+    "RemoveShape": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "slide_index",
+        "shape_index"
+      ],
+      "properties": {
+        "slide_index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "shape_index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "SetShapeFrame": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "slide_index",
+        "shape_index",
+        "frame"
+      ],
+      "properties": {
+        "slide_index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "shape_index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "frame": {
+          "$ref": "#/$defs/SlideFrame"
+        }
+      }
+    },
+    "SetTextBoxBlocks": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "slide_index",
+        "shape_index",
+        "blocks"
+      ],
+      "properties": {
+        "slide_index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "shape_index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "blocks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/DocBlock"
+          }
+        }
+      }
+    },
+    "InsertMaster": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "master"
+      ],
+      "properties": {
+        "master": {
+          "$ref": "#/$defs/SlideMaster"
+        }
+      }
+    },
+    "RemoveMaster": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        }
+      }
+    },
+    "InsertLayout": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "layout"
+      ],
+      "properties": {
+        "layout": {
+          "$ref": "#/$defs/SlideLayout"
+        }
+      }
+    },
+    "RemoveLayout": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        }
+      }
+    },
+    "SetLayoutMaster": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "master_id"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "master_id": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

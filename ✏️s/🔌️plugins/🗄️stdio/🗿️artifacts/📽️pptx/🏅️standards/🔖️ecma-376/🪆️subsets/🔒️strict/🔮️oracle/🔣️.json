@@ -95,7 +95,7 @@
         {
           "id": "insert-alternate-content",
           "capability": "pptx-ecma-376-strict-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -115,7 +115,7 @@
         {
           "id": "insert-vml-part",
           "capability": "pptx-ecma-376-strict-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -135,7 +135,7 @@
         {
           "id": "remove-alternate-content",
           "capability": "pptx-ecma-376-strict-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -155,7 +155,7 @@
         {
           "id": "remove-conformance-attribute",
           "capability": "pptx-ecma-376-strict-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -175,7 +175,7 @@
         {
           "id": "remove-vml-part",
           "capability": "pptx-ecma-376-strict-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -195,7 +195,7 @@
         {
           "id": "set-conformance-attribute",
           "capability": "pptx-ecma-376-strict-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -215,7 +215,7 @@
         {
           "id": "set-drawing-namespace",
           "capability": "pptx-ecma-376-strict-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -235,7 +235,7 @@
         {
           "id": "set-main-namespace",
           "capability": "pptx-ecma-376-strict-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -255,7 +255,7 @@
         {
           "id": "set-relationship-base",
           "capability": "pptx-ecma-376-strict-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -275,7 +275,7 @@
         {
           "id": "set-snapshot",
           "capability": "pptx-ecma-376-strict-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],

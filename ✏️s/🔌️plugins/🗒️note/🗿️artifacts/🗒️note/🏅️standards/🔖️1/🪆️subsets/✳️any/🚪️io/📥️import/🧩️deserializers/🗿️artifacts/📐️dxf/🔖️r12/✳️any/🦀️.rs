@@ -7,7 +7,7 @@ use crate::artifacts::note::{NoteBlockNode, NoteSnapshot};
 use semio_framework::io::io_mechanism::Deserializer;
 use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};
-use semio_s_plugin_stdio::artifacts::dxf::schema::snapshot::{parse_dxf_document, DxfEntity};
+use semio_s_artifact_stdio_dxf::schema::snapshot::{parse_dxf_document, DxfEntity};
 
 pub const DXF_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.dxf", standard: StandardId("r12"), subset: SubsetId::ANY };
 

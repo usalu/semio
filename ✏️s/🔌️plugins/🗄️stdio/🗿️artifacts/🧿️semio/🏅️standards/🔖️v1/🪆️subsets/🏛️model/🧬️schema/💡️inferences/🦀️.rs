@@ -8,8 +8,8 @@
 //! inlined here (this file's own module doc comment) — so a true geometry bounding box is not
 //! honestly derivable from `model` alone; the placement translations ARE owned data).
 
-use crate::artifacts::semio::standards::v1::subsets::model::schema::snapshot::SemioModelSnapshot;
-use schema::ArtifactSchema;
+use crate::standards::v1::subsets::model::schema::snapshot::SemioModelSnapshot;
+use framework_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 
 use super::bounds::{compute_semio_model_bounds, SemioModelBounds};
@@ -58,7 +58,7 @@ impl protocol::InferenceSpec<SemioModelSnapshot> for SemioModelInference {
 /// 💡️ No `InferredField`s here (a position-envelope fold is a single whole-snapshot pass over
 /// already-flat `spatial`/`elements` collections, no per-entity incremental decomposition applies)
 /// — the default `infer_cached` passthrough (`ArtifactInferrer::infer_cached`) is exact.
-impl ArtifactInferrer for crate::artifacts::semio::standards::v1::subsets::model::schema::SemioModelBuilder {
+impl ArtifactInferrer for crate::standards::v1::subsets::model::schema::SemioModelBuilder {
     type Snapshot = SemioModelSnapshot;
     type Inference = SemioModelInference;
 }
@@ -68,10 +68,10 @@ impl ArtifactInferrer for crate::artifacts::semio::standards::v1::subsets::model
 /// 💡️ Registers `s.stdio.semio.model.inference`'s facet leaves into the OS-wide inference catalog
 /// — call once at plugin init, alongside `semio_model_artifact_schema_descriptor`'s registration.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn semio_model_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
-    schema::ArtifactInferenceDescriptor {
+pub fn semio_model_artifact_inference_descriptor() -> framework_schema::ArtifactInferenceDescriptor {
+    framework_schema::ArtifactInferenceDescriptor {
         id: "s.stdio.semio.model.inference",
-        inference: schema::FacetLeaves {
+        inference: framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),

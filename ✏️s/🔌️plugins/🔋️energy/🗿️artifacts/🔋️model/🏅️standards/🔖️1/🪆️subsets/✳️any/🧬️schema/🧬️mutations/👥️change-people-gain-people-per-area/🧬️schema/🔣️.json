@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/energy/model/1/any/mutation/change-people-gain-people-per-area.json",
+  "title": "ChangePeopleGainPeoplePerArea",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newPeoplePerArea"
+  ],
+  "properties": {
+    "id": {
+      "type": "integer"
+    },
+    "newPeoplePerArea": {
+      "type": "number"
+    }
+  }
+}

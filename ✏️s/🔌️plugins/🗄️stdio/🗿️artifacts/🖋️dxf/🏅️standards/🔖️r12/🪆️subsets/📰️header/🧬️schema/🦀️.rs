@@ -1,9 +1,9 @@
 //! 🧬️ DxfArtifact schema — full artifact state (mirrors `DxfSnapshot`'s persisted fields
 //! one-for-one; see `📸️snapshot/🦀️.rs` module docs for the full typed-model rationale).
 
-use crate::artifacts::dxf::schema::snapshot::{DxfBlock, DxfEntity, DxfHeaderVar, DxfOtherTable, DxfTables};
-use crate::artifacts::dxf::DxfSnapshot;
-use schema::ArtifactSchema;
+use crate::schema::snapshot::{DxfBlock, DxfEntity, DxfHeaderVar, DxfOtherTable, DxfTables};
+use crate::DxfSnapshot;
+use framework_schema::ArtifactSchema;
 
 //#region 🔖️Artifact
 /// 🧬️ Full `stdio.dxf` artifact state.
@@ -67,31 +67,31 @@ impl DxfArtifact {
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.stdio.dxf`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn dxf_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
-    schema::ArtifactSchemaDescriptor {
+pub fn dxf_artifact_schema_descriptor() -> framework_schema::ArtifactSchemaDescriptor {
+    framework_schema::ArtifactSchemaDescriptor {
         id: "s.stdio.dxf",
-        artifact: schema::FacetLeaves {
+        artifact: framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),
             json_schema: include_str!("🔣️.json"),
             proto: include_str!("🛰️.proto"),
         },
-        snapshot: schema::FacetLeaves {
+        snapshot: framework_schema::FacetLeaves {
             rust: include_str!("📸️snapshot/🦀️.rs"),
             typescript: include_str!("📸️snapshot/🟦️.ts"),
             graphql: include_str!("📸️snapshot/🔗️.graphql"),
             json_schema: include_str!("📸️snapshot/🔣️.json"),
             proto: include_str!("📸️snapshot/🛰️.proto"),
         },
-        diff: schema::FacetLeaves {
+        diff: framework_schema::FacetLeaves {
             rust: include_str!("🔺️diff/🦀️.rs"),
             typescript: include_str!("🔺️diff/🟦️.ts"),
             graphql: include_str!("🔺️diff/🔗️.graphql"),
             json_schema: include_str!("🔺️diff/🔣️.json"),
             proto: include_str!("🔺️diff/🛰️.proto"),
         },
-        mutations: schema::FacetLeaves {
+        mutations: framework_schema::FacetLeaves {
             rust: include_str!("🧬️mutations/🦀️.rs"),
             typescript: include_str!("🧬️mutations/🟦️.ts"),
             graphql: include_str!("🧬️mutations/🔗️.graphql"),
@@ -103,7 +103,7 @@ pub fn dxf_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
 //#endregion 🔖️Descriptor
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use crate::artifacts::dxf::{DxfDiff, DxfMutation, DxfSnapshot};
+    use crate::{DxfDiff, DxfMutation, DxfSnapshot};
     use semio_framework_plugin::ArtifactBuilder;
 
     //#region 🔖️Builder
@@ -131,7 +131,7 @@ pub mod derived_construction {
             Ok(Self::from_snapshot(<DxfSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
         fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
-            let diff = crate::artifacts::dxf::schema::mutations::apply_dxf_mutation(&mut self.snapshot, &mutation);
+            let diff = crate::schema::mutations::apply_dxf_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
         fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
@@ -153,7 +153,7 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use crate::artifacts::dxf::DxfSnapshot;
+    use crate::DxfSnapshot;
     use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     //#region 🔖️Parts
@@ -243,7 +243,7 @@ semio_framework_plugin::derive_artifact_facets!(
 //#endregion 🧬️DerivedArtifactFacets
 
 //#region 🔖️DocumentHelpers
-use crate::artifacts::dxf::STDIO_DXF_DOCUMENT_SCHEMA;
+use crate::STDIO_DXF_DOCUMENT_SCHEMA;
 
 /// 🌱 Empty persisted snapshot.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -256,7 +256,7 @@ pub fn empty_dxf_snapshot() -> DxfSnapshot {
 /// `🎒️.pack.semio` fixtures AND `grammar_conformance_law`/`protocol_walk_law`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn demo_dxf_snapshot() -> DxfSnapshot {
-    use crate::artifacts::dxf::schema::snapshot::{DxfBlock, DxfEntity, DxfHeaderVar, DxfLayer, DxfLinetype, DxfOtherTable, DxfStyle, DxfTables, DxfTag, DxfValue};
+    use crate::schema::snapshot::{DxfBlock, DxfEntity, DxfHeaderVar, DxfLayer, DxfLinetype, DxfOtherTable, DxfStyle, DxfTables, DxfTag, DxfValue};
     DxfSnapshot {
         schema: STDIO_DXF_DOCUMENT_SCHEMA.into(),
         header_vars: vec![
@@ -306,7 +306,7 @@ mod tests {
     /// the SECOND generation onward decode/encode is a true fixed point.
     #[semio_framework_async_macros::async_test]
     async fn codec_retention_law() {
-        use crate::artifacts::dxf::schema::snapshot::{parse_dxf_document, print_dxf_document, DxfEntity, DxfHeaderVar, DxfLayer, DxfLinetype, DxfOtherTable, DxfStyle, DxfTables, DxfTag, DxfValue};
+        use crate::schema::snapshot::{parse_dxf_document, print_dxf_document, DxfEntity, DxfHeaderVar, DxfLayer, DxfLinetype, DxfOtherTable, DxfStyle, DxfTables, DxfTag, DxfValue};
         let snap1 = DxfSnapshot {
             schema: STDIO_DXF_DOCUMENT_SCHEMA.into(),
             header_vars: vec![
@@ -341,7 +341,7 @@ mod tests {
     /// `encode_pack`/`encode_op`/`encode_diff` bytes, and the fixture-honesty round-trip.
     mod conformance_laws {
         use super::*;
-        use crate::artifacts::dxf::schema::{diff, mutations, snapshot};
+        use crate::schema::{diff, mutations, snapshot};
         use protocol::{DiffCodec, OpBinary, OpText};
 
         #[semio_framework_async_macros::async_test]

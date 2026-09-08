@@ -5,7 +5,7 @@
   "displayName": "Set Revision",
   "emoji": "🔢️",
   "aggregateVariant": "SetRevision",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "set-revision",
   "binaryTag": 11,
   "invertibility": "explicit-mutation",

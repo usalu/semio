@@ -1,0 +1,9 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/forms/forms/1/any/editor/config/mutation/clear-try-values.json",
+  "title": "ClearTryValues",
+  "type": "object",
+  "properties": {},
+  "required": [],
+  "additionalProperties": false
+}

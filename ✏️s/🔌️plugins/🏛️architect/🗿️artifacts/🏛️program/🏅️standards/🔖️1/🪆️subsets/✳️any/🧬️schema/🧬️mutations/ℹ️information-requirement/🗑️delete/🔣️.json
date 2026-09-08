@@ -5,7 +5,7 @@
   "displayName": "Delete Information Requirement",
   "emoji": "🗑️",
   "aggregateVariant": "DeleteInformationRequirement",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

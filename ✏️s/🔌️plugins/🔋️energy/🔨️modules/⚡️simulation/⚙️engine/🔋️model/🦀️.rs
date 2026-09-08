@@ -91,7 +91,7 @@ impl<K: ToValue, V: ToValue> ToValue for FixedTable<K, V> {
 impl<K: FromValue, V: FromValue> FromValue for FixedTable<K, V> {
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
         let entries = DslValue::into_object(value)?;
-        let field = |key: &str| entries.iter().find(|(k, _)| k == key).map(|(_, v)| v.clone()).unwrap_or(DslValue::Null);
+        let field = |key: &str| entries.iter().find(|(k, _)| k == key).map_or(DslValue::Null, |(_, v)| v.clone());
         let slots_array = match field("slots") {
             DslValue::Array(items) => items,
             other => return Err(ValueError::new(format!("expected an array, found {other:?}")).under("slots")),

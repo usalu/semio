@@ -1,8 +1,8 @@
 //! 🧬️ Logical ZIP mutations over member names, decompressed payloads, ordering, and archive comment.
 
-use crate::artifacts::zip::schema::diff::{self, ZipDiff};
-use crate::artifacts::zip::schema::snapshot::ZipEntry;
-use crate::artifacts::zip::ZipSnapshot;
+use crate::schema::diff::{self, ZipDiff};
+use crate::schema::snapshot::ZipEntry;
+use crate::ZipSnapshot;
 
 //#region 🔖️Model
 //#region 🔖️Leaves

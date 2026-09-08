@@ -4,9 +4,9 @@
 //! the sole runtime adapter, so this file can never structurally emit an artifact or draft mutation.
 //! MUST NOT import anything from the sibling `editor` module (`policyViewerPurityBreaches`).
 
-use crate::artifacts::wav::standards::riff_pcm::subsets::any::schema::mutations::WavMutation;
-use crate::artifacts::wav::standards::riff_pcm::subsets::any::schema::snapshot::WavSnapshot;
-use crate::artifacts::wav::{STDIO_WAV_DOCUMENT_SCHEMA, WAV_DIALECT};
+use crate::standards::riff_pcm::subsets::any::schema::mutations::WavMutation;
+use crate::standards::riff_pcm::subsets::any::schema::snapshot::WavSnapshot;
+use crate::{STDIO_WAV_DOCUMENT_SCHEMA, WAV_DIALECT};
 use crate::viewer::wav::modes::view;
 use crate::viewer::wav::modes::view::windows::main;
 use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, ViewEmit, Viewer};

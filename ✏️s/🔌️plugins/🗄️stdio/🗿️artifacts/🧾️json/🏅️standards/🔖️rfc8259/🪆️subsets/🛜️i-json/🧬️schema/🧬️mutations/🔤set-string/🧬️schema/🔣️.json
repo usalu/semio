@@ -1,0 +1,65 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/json/rfc8259/i-json/mutation/set-string.json",
+  "title": "SetString",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "path",
+    "value"
+  ],
+  "properties": {
+    "path": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/JsonPathSegment"
+      }
+    },
+    "value": {
+      "type": "string"
+    },
+    "kind": {
+      "const": "setString",
+      "description": "Aggregate discriminator spliced in by JsonIJsonRoot; absent when the payload stands alone."
+    }
+  },
+  "$defs": {
+    "JsonPathSegment": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ],
+          "properties": {
+            "kind": {
+              "const": "key"
+            },
+            "value": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ],
+          "properties": {
+            "kind": {
+              "const": "index"
+            },
+            "value": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        }
+      ]
+    }
+  }
+}

@@ -2,9 +2,9 @@
 //! leaves. Registration flows through `🎹️composer::register`, not per-leaf `register()`.
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use crate::artifacts::ifc::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot;
-    use crate::artifacts::ifc::standards::v2x3::subsets::base::schema::Ifc2x3Composer as Ifc2x3AnyComposer;
-    use crate::artifacts::ifc::standards::v2x3::subsets::sav::schema::check_sav_conformance;
+    use crate::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot;
+    use crate::standards::v2x3::subsets::base::schema::Ifc2x3Composer as Ifc2x3AnyComposer;
+    use crate::standards::v2x3::subsets::sav::schema::check_sav_conformance;
     use dsl::{Diagnostic, FaultCode, Severity, TextSpan};
     use semio_framework_plugin::{register_subset_validator, subset_validator_entry_of, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, IoPayload, StandardId, SubsetId, SubsetValidator, SubsetValidatorEntry};
     use std::sync::OnceLock;
@@ -81,8 +81,8 @@ pub mod derived_composition {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use crate::artifacts::ifc::standards::v2x3::subsets::sav::schema::Ifc2x3SavBuilderConstruction as Ifc2x3SavBuilder;
-        use crate::artifacts::ifc::standards::v2x3::subsets::sav::schema::CODE_NO_ANALYSIS_MODEL;
+        use crate::standards::v2x3::subsets::sav::schema::Ifc2x3SavBuilderConstruction as Ifc2x3SavBuilder;
+        use crate::standards::v2x3::subsets::sav::schema::CODE_NO_ANALYSIS_MODEL;
         use semio_framework_plugin::AnalyzeSource;
         use semio_framework_plugin::ArtifactBuilder as _;
 

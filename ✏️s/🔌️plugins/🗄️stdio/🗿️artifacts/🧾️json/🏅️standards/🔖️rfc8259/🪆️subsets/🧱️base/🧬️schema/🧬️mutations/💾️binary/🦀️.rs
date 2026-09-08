@@ -1,5 +1,5 @@
 //! 💾️ Generic framing and descriptor roster for the transparent JsonMutation.
-use crate::artifacts::json::schema::mutations::JsonMutation;
+use crate::schema::mutations::JsonMutation;
 pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio");
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.protocol.semio");
 pub const BINARY_TAGS: &[(&str, u32)] = &[("set-member", 1), ("remove-member", 2), ("insert-array-element", 3), ("remove-array-element", 4), ("set-scalar", 5)];

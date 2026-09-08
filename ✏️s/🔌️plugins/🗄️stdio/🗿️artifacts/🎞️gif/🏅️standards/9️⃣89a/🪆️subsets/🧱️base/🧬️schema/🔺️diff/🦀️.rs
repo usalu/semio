@@ -12,11 +12,11 @@
 /// 🧩 Ordered removed keys, modified values, and inserted items.
 pub(crate) type IndexedDiffParts<D, T> = (Vec<usize>, Vec<(usize, D)>, Vec<(usize, T)>);
 
-use crate::artifacts::gif::standards::v89a::subsets::any::schema::snapshot::{GifAppExtension, GifColorTable, GifDisposal, GifFrame, GifPlainText, GifRgb, GifSnapshot};
+use crate::standards::v89a::subsets::any::schema::snapshot::{GifAppExtension, GifColorTable, GifDisposal, GifFrame, GifPlainText, GifRgb, GifSnapshot};
 use protocol::os_spr::command::DiffAlgebra;
 use protocol::DiffCodec;
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
-use schema::ArtifactSchema;
+use framework_schema::ArtifactSchema;
 
 //#region 🔖️IndexTransport
 /// 📐️ Shared rank/unrank arithmetic for index-keyed collection diffs (`between`/`absorb`/
@@ -1663,7 +1663,7 @@ impl DiffCodec for GifDiff {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::gif::standards::v89a::subsets::any::schema::snapshot::{GifRgb, STDIO_GIF89A_DOCUMENT_SCHEMA};
+    use crate::standards::v89a::subsets::any::schema::snapshot::{GifRgb, STDIO_GIF89A_DOCUMENT_SCHEMA};
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn frame(seed: u8, w: u32, h: u32) -> GifFrame {

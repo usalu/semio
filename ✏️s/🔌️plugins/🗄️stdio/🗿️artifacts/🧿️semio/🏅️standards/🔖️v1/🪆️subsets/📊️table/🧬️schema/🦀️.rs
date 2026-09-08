@@ -1,8 +1,8 @@
 //! 🧬️ SemioTableArtifact schema — full artifact state, mirrors `SemioTableSnapshot` field for
 //! field (see `🔤️text`'s `SemioTextArtifact` for the precedent this follows).
 
-use crate::artifacts::semio::standards::v1::subsets::table::schema::snapshot::{SemioTableColumn, SemioTableRow, SemioTableSnapshot};
-use schema::ArtifactSchema;
+use crate::standards::v1::subsets::table::schema::snapshot::{SemioTableColumn, SemioTableRow, SemioTableSnapshot};
+use framework_schema::ArtifactSchema;
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
@@ -42,31 +42,31 @@ impl SemioTableArtifact {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn semio_table_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
-    schema::ArtifactSchemaDescriptor {
+pub fn semio_table_artifact_schema_descriptor() -> framework_schema::ArtifactSchemaDescriptor {
+    framework_schema::ArtifactSchemaDescriptor {
         id: "s.stdio.semio.table",
-        artifact: schema::FacetLeaves {
+        artifact: framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),
             json_schema: include_str!("🔣️.json"),
             proto: include_str!("🛰️.proto"),
         },
-        snapshot: schema::FacetLeaves {
+        snapshot: framework_schema::FacetLeaves {
             rust: include_str!("📸️snapshot/🦀️.rs"),
             typescript: include_str!("📸️snapshot/🟦️.ts"),
             graphql: include_str!("📸️snapshot/🔗️.graphql"),
             json_schema: include_str!("📸️snapshot/🔣️.json"),
             proto: include_str!("📸️snapshot/🛰️.proto"),
         },
-        diff: schema::FacetLeaves {
+        diff: framework_schema::FacetLeaves {
             rust: include_str!("🔺️diff/🦀️.rs"),
             typescript: include_str!("🔺️diff/🟦️.ts"),
             graphql: include_str!("🔺️diff/🔗️.graphql"),
             json_schema: include_str!("🔺️diff/🔣️.json"),
             proto: include_str!("🔺️diff/🛰️.proto"),
         },
-        mutations: schema::FacetLeaves {
+        mutations: framework_schema::FacetLeaves {
             rust: include_str!("🧬️mutations/🦀️.rs"),
             typescript: include_str!("🧬️mutations/🟦️.ts"),
             graphql: include_str!("🧬️mutations/🔗️.graphql"),
@@ -77,9 +77,9 @@ pub fn semio_table_artifact_schema_descriptor() -> schema::ArtifactSchemaDescrip
 }
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use crate::artifacts::semio::standards::v1::subsets::table::schema::diff::SemioTableDiff;
-    use crate::artifacts::semio::standards::v1::subsets::table::schema::mutations::{apply_semio_table_mutation, SemioTableMutation};
-    use crate::artifacts::semio::standards::v1::subsets::table::schema::snapshot::{SemioTableCellKind, SemioTableColumn, SemioTableRow, SemioTableSnapshot};
+    use crate::standards::v1::subsets::table::schema::diff::SemioTableDiff;
+    use crate::standards::v1::subsets::table::schema::mutations::{apply_semio_table_mutation, SemioTableMutation};
+    use crate::standards::v1::subsets::table::schema::snapshot::{SemioTableCellKind, SemioTableColumn, SemioTableRow, SemioTableSnapshot};
     use semio_framework_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
@@ -142,7 +142,7 @@ pub mod derived_construction {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use crate::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValue;
+        use crate::standards::v1::subsets::value::schema::snapshot::SemioValue;
 
         #[semio_framework_async_macros::async_test]
         async fn typed_constructors_build_a_populated_snapshot() {
@@ -158,7 +158,7 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use crate::artifacts::semio::standards::v1::subsets::table::schema::snapshot::{SemioTableSnapshot, STDIO_SEMIOTABLE_DOCUMENT_SCHEMA};
+    use crate::standards::v1::subsets::table::schema::snapshot::{SemioTableSnapshot, STDIO_SEMIOTABLE_DOCUMENT_SCHEMA};
     use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     #[derive(Clone, Debug, Default)]

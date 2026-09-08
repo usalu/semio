@@ -1,11 +1,11 @@
 //! 🔀 Exact imprint→classify→select→stitch boolean pipeline for solids bounded by planes,
-//! cylinders, cones, spheres and tori (and NURBS via [`crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::intersect`]'s marching SSI): face-pair
+//! cylinders, cones, spheres and tori (and NURBS via [`crate::standards::v1::subsets::brep::schema::diff::intersect`]'s marching SSI): face-pair
 //! candidates via AABB overlap → [`intersect_surface_surface`] (W2-A) → the SSI curve's domain
 //! clipped to both faces' trims → an imprint edge shared by both operands (so stitching needs no
-//! fuzzy vertex welding, only shared-edge adjacency) → [`crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::euler::split_face_by_edge`]/
-//! [`crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::euler::split_face_by_interior_curve`] imprint each side → every resulting piece classified
-//! against the OTHER solid via [`crate::artifacts::semio::standards::v1::subsets::brep::schema::inferences::classification::point_in_solid`] → selected per [`BooleanOp`] → stitched into
-//! shell(s)/solid(s) → [`crate::artifacts::semio::standards::v1::subsets::brep::schema::inferences::validation_report::validate_body`]. No tessellate→triangle-soup rebuild on this path — the
+//! fuzzy vertex welding, only shared-edge adjacency) → [`crate::standards::v1::subsets::brep::schema::diff::euler::split_face_by_edge`]/
+//! [`crate::standards::v1::subsets::brep::schema::diff::euler::split_face_by_interior_curve`] imprint each side → every resulting piece classified
+//! against the OTHER solid via [`crate::standards::v1::subsets::brep::schema::inferences::classification::point_in_solid`] → selected per [`BooleanOp`] → stitched into
+//! shell(s)/solid(s) → [`crate::standards::v1::subsets::brep::schema::inferences::validation_report::validate_body`]. No tessellate→triangle-soup rebuild on this path — the
 //! old mesh pipeline survives only as the explicit opt-in [`boolean_solid_mesh_preview`]. A
 //! trivial disjoint/contained fast path and a box-specific exact-analytic fast path (both still
 //! genuinely exact, not mesh-derived) run before the general engine when they apply.
@@ -25,23 +25,23 @@
 
 use std::collections::{HashMap, HashSet};
 
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::euler::{add_shell, add_solid, make_edge, make_vertex, split_face_by_edge, split_face_by_interior_curve, split_face_by_seam_crossing};
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::intersect::{intersect_curve_surface, intersect_surface_surface, IntCurve};
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::primitives::{make_box, make_convex_hull, solid_from_triangle_soup};
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::inferences::bounding_volume::face_aabb;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::inferences::classification::point_in_face_uv;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::inferences::mass_properties::{closest_point_on_solid, shell_signed_volume, solid_bounding_box, solid_volume, AxisAlignedBox};
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::inferences::tessellation::tessellate_solid;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::inferences::validation_report::validate_body;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::{ArenaId, Curve2Id, EdgeId, FaceId, LoopId, ShellId, SolidId, VertexId};
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::curve_ops::closest_parameter;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::error::{BooleanError, KernelError, ValidationIssue};
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::surface::Surface;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::tolerance::Tol;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::history::OpRecorder;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::Body;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::{Pnt2, Pnt3, Vec3};
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::engine::{MeshTransfer, PointClassification};
+use crate::standards::v1::subsets::brep::schema::diff::euler::{add_shell, add_solid, make_edge, make_vertex, split_face_by_edge, split_face_by_interior_curve, split_face_by_seam_crossing};
+use crate::standards::v1::subsets::brep::schema::diff::intersect::{intersect_curve_surface, intersect_surface_surface, IntCurve};
+use crate::standards::v1::subsets::brep::schema::diff::primitives::{make_box, make_convex_hull, solid_from_triangle_soup};
+use crate::standards::v1::subsets::brep::schema::inferences::bounding_volume::face_aabb;
+use crate::standards::v1::subsets::brep::schema::inferences::classification::point_in_face_uv;
+use crate::standards::v1::subsets::brep::schema::inferences::mass_properties::{closest_point_on_solid, shell_signed_volume, solid_bounding_box, solid_volume, AxisAlignedBox};
+use crate::standards::v1::subsets::brep::schema::inferences::tessellation::tessellate_solid;
+use crate::standards::v1::subsets::brep::schema::inferences::validation_report::validate_body;
+use crate::standards::v1::subsets::brep::schema::snapshot::arena::{ArenaId, Curve2Id, EdgeId, FaceId, LoopId, ShellId, SolidId, VertexId};
+use crate::standards::v1::subsets::brep::schema::snapshot::curve::curve_ops::closest_parameter;
+use crate::standards::v1::subsets::brep::schema::snapshot::error::{BooleanError, KernelError, ValidationIssue};
+use crate::standards::v1::subsets::brep::schema::snapshot::surface::Surface;
+use crate::standards::v1::subsets::brep::schema::snapshot::tolerance::Tol;
+use crate::standards::v1::subsets::brep::schema::snapshot::topology::history::OpRecorder;
+use crate::standards::v1::subsets::brep::schema::snapshot::topology::Body;
+use crate::standards::v1::subsets::brep::schema::snapshot::vector::{Pnt2, Pnt3, Vec3};
+use crate::standards::v1::subsets::brep::schema::engine::{MeshTransfer, PointClassification};
 
 // #region 🔖️Api
 
@@ -57,7 +57,7 @@ pub enum BooleanOp {
 /// box-specific exact-analytic shortcut when both operands genuinely are axis boxes, then the
 /// general exact imprint→classify→select→stitch engine — never the mesh path (see
 /// [`boolean_solid_mesh_preview`] for that, behind explicit opt-in). `rec` accumulates the whole
-/// operation's [`crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::history::OpDelta`].
+/// operation's [`crate::standards::v1::subsets::brep::schema::snapshot::topology::history::OpDelta`].
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn boolean_solid(body: &mut Body, a: SolidId, b: SolidId, op: BooleanOp, tol: f64, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
     require_tol(tol)?;
@@ -144,7 +144,7 @@ pub fn section_solid_by_plane(body: &mut Body, solid: SolidId, origin: Pnt3, nor
         return Ok(Vec::new());
     }
     // Build a planar face from the convex hull of section points in-plane.
-    let face = crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::primitives::make_planar_face_from_points(body, &section_pts, rec)?;
+    let face = crate::standards::v1::subsets::brep::schema::diff::primitives::make_planar_face_from_points(body, &section_pts, rec)?;
     Ok(vec![face])
 }
 
@@ -572,7 +572,7 @@ fn pre_existing_entity_strings(body: &Body, solids: &HashSet<SolidId>) -> HashSe
 
 /// 🔀 Clips `ic`'s shared parameter domain to the sub-ranges where BOTH `pcurve_a` (on `face_a`)
 /// and `pcurve_b` (on `face_b`) land inside their own face's trim, sampling at a fixed resolution
-/// (matching [`crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::intersect::surface_surface::general_marching`]'s own documented-simplification sampling style).
+/// (matching [`crate::standards::v1::subsets::brep::schema::diff::intersect::surface_surface::general_marching`]'s own documented-simplification sampling style).
 /// A periodic curve whose valid runs cover (within 0.1% of the period) the WHOLE domain is
 /// returned as ONE fully-closed range (`closed = true`) — this covers both "never touches either
 /// boundary" and "touches a seam at exactly one physical point," which reads as a narrow gap
@@ -656,7 +656,7 @@ fn refine_boundary(valid: &impl Fn(f64) -> bool, mut outside: f64, mut inside: f
     inside
 }
 
-/// 🔀 [`IntCurve::domain`] is infinite for an unbounded [`crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::Curve3::Line`] (e.g. plane/plane,
+/// 🔀 [`IntCurve::domain`] is infinite for an unbounded [`crate::standards::v1::subsets::brep::schema::snapshot::curve::Curve3::Line`] (e.g. plane/plane,
 /// coincident-cylinder-axis lines); windows it around the two faces' combined AABB so sampling
 /// stays finite and relevant.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -673,7 +673,7 @@ fn intcurve_finite_bracket(body: &Body, ic: &IntCurve, face_a: FaceId, face_b: F
         let dz = (ba.max[2] - ba.min[2]).max(bb.max[2] - bb.min[2]);
         radius = (dx * dx + dy * dy + dz * dz).sqrt().max(1.0) * 4.0;
         let centroid = Pnt3::new((ba.min[0] + ba.max[0] + bb.min[0] + bb.max[0]) * 0.25, (ba.min[1] + ba.max[1] + bb.min[1] + bb.max[1]) * 0.25, (ba.min[2] + ba.max[2] + bb.min[2] + bb.max[2]) * 0.25);
-        if let crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::Curve3::Line { origin, dir } = &ic.curve3 {
+        if let crate::standards::v1::subsets::brep::schema::snapshot::curve::Curve3::Line { origin, dir } = &ic.curve3 {
             let n2 = dir.norm_sq();
             if n2 > 1e-30 {
                 center = dir.dot(centroid - *origin) / n2;
@@ -688,7 +688,7 @@ fn intcurve_finite_bracket(body: &Body, ic: &IntCurve, face_a: FaceId, face_b: F
 /// genuine contact circle/ellipse from a near-zero-radius numerical artifact of a tolerant
 /// overlap test (see the near-tangent-spheres skip at this function's call site).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn curve3_extent(curve: &crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::Curve3, domain: (f64, f64)) -> f64 {
+fn curve3_extent(curve: &crate::standards::v1::subsets::brep::schema::snapshot::curve::Curve3, domain: (f64, f64)) -> f64 {
     const K: usize = 16;
     let (lo, hi) = domain;
     if hi.partial_cmp(&lo) != Some(std::cmp::Ordering::Greater) {
@@ -959,7 +959,7 @@ fn local_point_in_solid(body: &Body, solid: SolidId, point: Pnt3, tol: f64) -> R
     let mut outside_votes = 0u32;
     for raw_dir in LOCAL_RAY_RETRY_DIRS {
         let dir = Vec3::new(raw_dir[0], raw_dir[1], raw_dir[2]);
-        let ray = crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::Curve3::Line { origin: point, dir };
+        let ray = crate::standards::v1::subsets::brep::schema::snapshot::curve::Curve3::Line { origin: point, dir };
         let mut grazing = false;
         let mut hits: Vec<f64> = Vec::new();
         for &face in &faces {
@@ -1484,7 +1484,7 @@ fn aabb_contains(outer: &AxisAlignedBox, inner: &AxisAlignedBox, tol: f64) -> bo
 /// [`AxisAlignedBox`] — inflated by `tol` on every side so a face pair whose supports are exactly
 /// tangent still gets a chance to intersect.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn aabb_overlap(a: &crate::artifacts::semio::standards::v1::subsets::brep::schema::engine::Aabb, b: &crate::artifacts::semio::standards::v1::subsets::brep::schema::engine::Aabb, tol: f64) -> bool {
+fn aabb_overlap(a: &crate::standards::v1::subsets::brep::schema::engine::Aabb, b: &crate::standards::v1::subsets::brep::schema::engine::Aabb, tol: f64) -> bool {
     (0..3).all(|i| a.min[i] - tol <= b.max[i] + tol && b.min[i] - tol <= a.max[i] + tol)
 }
 
@@ -1520,9 +1520,9 @@ fn plane_normal(normal: Vec3) -> Result<Vec3, KernelError> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::primitives::{make_box, make_cylinder, make_sphere};
-    use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::transform::transform_solid;
-    use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Affine3;
+    use crate::standards::v1::subsets::brep::schema::diff::primitives::{make_box, make_cylinder, make_sphere};
+    use crate::standards::v1::subsets::brep::schema::diff::transform::transform_solid;
+    use crate::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Affine3;
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn translate_solid(body: &mut Body, solid: SolidId, delta: Vec3, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {

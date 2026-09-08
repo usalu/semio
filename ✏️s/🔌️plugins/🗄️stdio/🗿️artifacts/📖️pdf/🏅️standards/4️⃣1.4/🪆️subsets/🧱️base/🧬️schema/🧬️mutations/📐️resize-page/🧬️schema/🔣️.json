@@ -1,0 +1,24 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/pdf/1.4/base/mutation/resize-page.json",
+  "title": "ResizePage",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "index",
+    "width",
+    "height"
+  ],
+  "properties": {
+    "index": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "width": {
+      "type": "number"
+    },
+    "height": {
+      "type": "number"
+    }
+  }
+}

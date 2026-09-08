@@ -1,5 +1,220 @@
 # Current End-to-End Acceptance Frontier
 
+## 2026-09-08 14:13 UTC Native Build Release and Verification Entry Repair
+
+Home2954 terminated after62m14s during GIS compilation: renamed Stdio direct
+dependencies were unresolved; no creation law ran. Root88899 then stopped before
+Cargo because current taxonomy validation rejected print/report owned preview
+routes. Both native slots were explicitly released; WGPU owns the next fresh
+current component/browser process. Root has no live Cargo.
+
+Registry54468 regenerated the catalog and launch entries, including the new
+framework native choice law. Final queued-submit capture test64914 passed7:
+retiring the generation during capture does not submit its queued old tuple.
+No speculative callback guard was added after this passing behavioral result.
+
+Root corrected the two preview routes to their declared owner script routers,
+reusing their existing implementations without changing generated content, and
+fixed discovery's overloaded readdirSync return annotation to Dirent<string>[].
+These repairs address observed gate failures, not a broad taxonomy rewrite.
+Type4442 and registry83189 are running. The fleet briefly hit service limits;
+all three existing agents were resumed and are now confirmed running.
+
+The next root boundary is successful durable creation followed by failed local
+opening: clean the exact document route/socket waiter, choose explicit app
+disposition, and retain localized Ready/open-failed recovery guidance. No
+implementation or passing test is yet claimed for that boundary.
+
+## 2026-09-08 14:01 UTC Catalog Form Qualification and Native Parity
+
+Full renderer88075 passed612 tests/11files. Focused3685 passed12 catalog/host-owner
+tests, including bilingual inside-dialog notices, disabled empty picker, stale
+selection clearing and exact resubmission. The field revision API is now a
+per-argument map, so an artifact catalog rotation preserves unrelated static
+selects as well as free text. Native framework parity and the WGPU staged-submit
+consumer are authored with the same12-row JSON contract; native execution has
+not started while Home2954 owns the shared target.
+
+Type38298 exposed a new test's inferred string[] AppRole mismatch. Its explicit
+owned type fixes that issue; type61627 compiled an intermediate duplicate import
+(subsequently removed) and concurrent taxonomy code lacking its validator.
+Registry14721 stopped on the same missing validator before generation. The
+definition is present again in current source; fresh type and generation retries
+are running. No unrelated taxonomy edits were made.
+
+Focused64914 is testing the final queued-handler generation boundary. Home owns
+current/ref/captured catalog membership across asynchronous guest effects and
+action/command draft retirement. WGPU owns semantics-preserving bounded current
+component production and the hermetic browser process. Goal remains active.
+
+## 2026-09-08 13:50 UTC Scoped Modals and Catalog Admission
+
+Renderer type60702 passed after the full609 renderer result. Home reports full
+UI35870 passed701 tests/21files, scoped Dialog/Select/UIDialog28 and UI typecheck
+passed. This qualifies controlled scoped modal behavior, not the fresh browser
+journey. Native2954 remains under Home ownership; WGPU is finishing hermetic
+current Space/GIS staging and bounded raw-component materialization diagnostics.
+
+Root catalog48884 reproduced two failures: absent common choice validation and
+a forged preseeded kind enabling Submit. A neutral12-row strict schema and AJV
+enum oracle now cover missing, optional, selected, stale, nonmember and unavailable
+host choices. Root is implementing shared staged-form validation, disabled empty
+choice pickers, in-dialog bilingual catalog feedback, and clearing retired choices
+without clearing unrelated text. Home is adding exact catalog membership at the
+Shell dispatch seam and preserving the generation for staged choice retirement.
+Fresh root focused12631 is still running. No composed end-to-end result is claimed.
+
+## 2026-09-08 13:34 UTC Full Renderer Serial-Lane Qualification
+
+Full renderer32125 passed609 tests across11files. This run includes the final
+quiescent drain, protected direct claim,6 requested-play/clock-held rows,3 serial
+director/close/latest-pending cases, delayed successor, failure quarantine,
+snapshot-after-drain and coalesced seek intent. Earlier71781 overlapped the
+fixture extension and compiled the old3-row test against the new6-row JSON;
+its one mismatch is superseded by this fresh full run, not presented as a
+production failure. Type60702 remains running. Scoped diff whitespace is clean.
+
+Root awaits final read-only serial audit; the next ordinary-create inspection is
+the unresolved catalog's form presentation: an empty artifactKind currently
+falls through to a free-text field, while catalog feedback may sit outside the
+modal's accessibility boundary. Home owns scoped modal isolation and its native
+2954 verification. WGPU owns bounded component materialization + current private
+browser staging. Goal and existing ticket remain active.
+
+## 2026-09-08 13:31 UTC Drain Linearization and Fresh-Process Boundary
+
+Serial34686 reproduced the promoted-successor drain gap (11 passed/1 failed):
+waiting only the original physical promise returned while the successor remained
+busy. Drain now re-reads running/pending state through quiescence; direct token
+claims cannot replace an admitted physical write. Added tests cover one pending
+replacement, delayed successor, drain-before-original-snapshot restore, and
+quarantine after an ambiguous physical failure. Resume uses current explicit
+Shell playing intent (including a new Play while seek is busy), not the physical
+clock's intentionally suspended state; the older prior-playing report wording
+is superseded by this requested-state rule.
+
+Renderer46702 and type60905 stopped before execution on project-graph drift;
+60905's exact cause was an obsolete file-map path to removed Stdio TypeScript
+source. The fresh ticket-private graph34686 executed correctly. No broad cache
+deletion or other agents' file restoration was performed.
+
+Old browser37366 finally terminated diagnostic RED after310minutes: its older
+retained Hub built, but component stable-file reading hit64MiB before Chromium.
+WGPU owns exact-size/bounded materializer repair and fresh hermetic staging.
+There is still no completed two-peer current-source approval/Undo/restart journey.
+
+## 2026-09-08 13:24 UTC Serialized Tutorial Queue and Fleet Handoff
+
+Full renderer19070 passed604/11files and UI type56454 passed before serial-lane
+extension. Serial10493 failed without enqueue/drain. Focused84109 now passed10
+dialog/tutorial owner laws including actual-clock paused seek and active director
+drain. The physical queue has one active batch and one replaceable pending seek;
+enqueue never overwrites an active batch's token. Director time advances only
+after the awaited batch; seek reads its source cursor only after acquiring the
+lane. Retirement drops pending admission and drains submitted work before owned
+baseline restoration. Director History action calls are now awaited with exact
+origin and propagated failure instead of escaping the physical lane. Full fresh
+qualification of these later edits remains pending.
+
+Home owns scoped modal isolation: explicit per-Shell isolation root and per-root
+topmost behavior, preserving standalone page-modal defaults. WGPU's hermetic
+stage contract16857 and launch freshness62944/11340 passed; it is taking actual
+private Space/GIS preparation and two-peer environment wiring. Native Home2954
+remains active; no fresh mixed-source browser proof is promoted. Home's authored
+runtime declaration repaired the demonstrator type boundary; a new duplicate
+root test type import is being corrected. Tutorial DSL load and crossed history
+seek reconstruction remain explicit unfinished functionality, not accepted paths.
+
+## 2026-09-08 13:14 UTC Full UI Green and Paused Seek Implementation
+
+Full UI21521 passed all698 tests across21 files, including the six composed
+UIDialog laws, owned Dialog/Select/Popover suites, fixed nested padding and the
+deterministic Diagram notification law. This is controlled DOM evidence, not a
+fresh browser/Hub acceptance result. Renderer type71021 exposed an owned new
+test's missing generic specialization (now fixed) and concurrent demonstrator
+runtime declaration drift (assigned Home). UI/renderer type closure is rerunning.
+
+Actual TutorialClock neutral seek59954 failed before implementation as expected.
+The new3 cases cover delayed live seek, user pause while awaiting, and owner close.
+runPausedTutorialSeekV1 now pauses synchronously before claiming drive ownership,
+retains that token across mutations/refresh, and resumes only with the original
+playing state plus unchanged owner/token/current user intent. A pre-existing
+already-in-flight director slice still needs independent audit; this small repair
+does not claim complete serialization of every crossed tutorial history command.
+
+## 2026-09-08 13:08 UTC Composed Modal Regression Findings
+
+The neutral modal focus/field/keyboard contract passed48032 (3), then owned
+Select passed56159 (4) after69133 exposed focus being stolen from its body portal.
+Owned Popover76799 reproduced the same focus defect; shared modal-layer ownership
+now covers both and the subsequent UI run56501 passed696/697. Its sole remaining
+Diagram notification test used fake rAF timestamps with a real CPU deadline;
+the existing deterministic budget clock now covers that scheduling assertion.
+No Diagram runtime budget was enlarged.
+
+Scoped portal88811 reproduced controls missing from Shell lookup. UIDialog now
+uses its Shell portal layer and shared modal boundaries have pointer input enabled.
+The scope test explicitly initializes German;59251 passed it and the other4
+focus/field checks, while reproducing Escape ignoring a custom cancel binding.
+That remap is now handled through the primitive's preventable Escape hook.
+Dialog4458 independently reproduced nested scroll padding accumulating2048px
+instead of1024px; padding is now always derived from the captured original base.
+UIDialog uses z-dialog, below child menus, instead of introduction's z-tutorial.
+
+The real catalog picker71139/79921 exposed an ordinary cold-creation bug:
+renderStagedArgControl passed undefined to Select, silently selecting its first
+option without notifying the staged form. Choosing that same sole kind could
+never enable Create. It now passes an explicit empty controlled value. The next
+renderer95670 passed the real picker but leaked its mounted modal into3 later
+tests; the test now unmounts its owned view. Full regression is being repeated.
+UI type70048 found a test-only actor worker rejection callback typed Error instead
+of its actual unknown promise-rejection input; that bounded typing is corrected.
+
+## 2026-09-08 12:53 UTC Modal Accessibility and Current Native Queue
+
+UIDialog neutral English/German fixtures use AJV and dom-accessibility-api as
+independent oracles. Initial78067 failed all3 as expected: missing modal role and
+global remapped submission. Owned Dialog composition, explicit field label and
+required bindings, and scoped owned key chords passed48032 (3 tests); renderer
+typecheck38605 passed. Shell staged fields now carry the binding through actual
+Input, SelectTrigger, Toggle, Slider, vector and icon editors. Full regressions
+are pending. The new real owned Select test69133 exposed focus being stolen by
+the enclosing modal; the portal/isolation/child-first Escape repair is in progress
+and is not yet qualified. No browser completion claim follows from these tests.
+
+Home77662 qualified16 library creation laws, but its binary build failed before
+any4 binary laws on an undefined test timestamp. Home repaired the bounded fixture
+and owns active warm retry2954. WGPU continues ticket-owned hermetic browser
+staging; old37366 remains diagnostic only. Terra identified a live tutorial seek
+race: an active director can submit a mutation already awaiting in seek. Root
+will add the deterministic delayed-mutation regression and pause playback around
+the exact owned seek. The full user acceptance journey remains unfinished.
+
+## 2026-09-08 12:37:27 UTC Renderer Lifetime Pass Green
+
+Full renderer35589 passed602 tests in11 files after replacing tutorial's bare
+driven boolean with per-operation ownership tokens. Typecheck92022 also passed.
+The corpus includes3 close/supersede drive sequences,5 retained tutorial snapshot
+races,3 admitted instance handoffs,11 exact origin mutations, mounted staged
+reset, stale Submit/Cancel and removed-spawned-source suppression. Older
+operation completion cannot clear a newer operation's driven state, and close,
+stop, start and unmount invalidate it synchronously. Scoped source ownership
+continues through admitted guest creation and explicit document handoff.
+
+WGPU independently qualified creation progress/cancel/catalog feedback:
+13603 passed6 renderer and4 real worker laws; typecheck21140 and full OS66012
+(296 tests/4 files) passed, as did registry generation/freshness26784/12403.
+The native binary and ticket-owned staged browser journey are still pending.
+Root's next UI task is UIDialog modal accessibility using the existing owned
+Dialog primitive, not a new runtime library.
+
+Full renderer43788 subsequently passed all601 tests in11 files (exit0, 20.02s).
+This qualifies the dialog/source/tutorial/admitted-instance corpus together with
+the current renderer suite. The explicit closeDocument tutorial retirement
+guard was added afterward and remains part of the next fresh regression.
+Scoped whitespace checks are green; current typecheck is running after Home
+repaired the repository-wrapper graph preflight.
+
 ## 2026-09-08 12:28:41 UTC Lifetime Fences and Native Boundary
 
 Focused renderer57132 passed8 laws, including mounted dialog staged reset, stale

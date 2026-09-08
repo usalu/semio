@@ -5,7 +5,7 @@
   "displayName": "Set Dict Entry",
   "emoji": "🔑️",
   "aggregateVariant": "SetDictEntry",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "set-dict-entry",
   "binaryTag": 9,
   "invertibility": "explicit-mutation",

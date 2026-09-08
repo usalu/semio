@@ -56,12 +56,12 @@ mod structural_correspondence_tests {
             assert!(!source.contains(concat!("::", "mutation::")));
             assert_eq!(descriptor["semanticKind"], kind);
             assert_eq!(descriptor["aggregateVariant"], variant);
-            assert_eq!(descriptor["payloadSchema"], "🧬️.schema.json");
+            assert_eq!(descriptor["payloadSchema"], "🧬️schema/🔣️.json");
             assert_eq!(descriptor["textOpcode"], kind);
             assert_eq!(descriptor["binaryTag"], tag);
             assert_eq!(descriptor["outcomeClasses"], outcome_classes(outcomes));
             assert_eq!(descriptor["requiredLanguageSurfaces"], pack::json!(["rust", "typescript", "json-schema", "text", "binary"]));
-            let payload: pack::JsonValue = pack::parse_json(&std::fs::read_to_string(owner.join("🧬️.schema.json")).expect("direct payload schema")).expect("valid direct payload schema");
+            let payload: pack::JsonValue = pack::parse_json(&std::fs::read_to_string(owner.join("🧬️schema/🔣️.json")).expect("direct payload schema")).expect("valid direct payload schema");
             assert_eq!(payload["title"], variant);
             {
                 let surface_source = std::fs::read_to_string(owner.join("🟦️.ts")).expect("direct language surface");
@@ -90,12 +90,12 @@ mod structural_correspondence_tests {
             assert!(!source.contains(concat!("::", "mutation::")));
             assert_eq!(descriptor["semanticKind"], kind);
             assert_eq!(descriptor["aggregateVariant"], variant);
-            assert_eq!(descriptor["payloadSchema"], "🧬️.schema.json");
+            assert_eq!(descriptor["payloadSchema"], "🧬️schema/🔣️.json");
             assert_eq!(descriptor["textOpcode"], kind);
             assert_eq!(descriptor["binaryTag"], tag);
             assert_eq!(descriptor["outcomeClasses"], outcome_classes(outcomes));
             assert_eq!(descriptor["requiredLanguageSurfaces"], pack::json!(["rust", "typescript", "json-schema", "text", "binary"]));
-            let payload: pack::JsonValue = pack::parse_json(&std::fs::read_to_string(owner.join("🧬️.schema.json")).expect("direct payload schema")).expect("valid direct payload schema");
+            let payload: pack::JsonValue = pack::parse_json(&std::fs::read_to_string(owner.join("🧬️schema/🔣️.json")).expect("direct payload schema")).expect("valid direct payload schema");
             assert_eq!(payload["title"], variant);
             {
                 let surface_source = std::fs::read_to_string(owner.join("🟦️.ts")).expect("direct language surface");
@@ -124,12 +124,12 @@ mod structural_correspondence_tests {
             assert!(!source.contains(concat!("::", "mutation::")));
             assert_eq!(descriptor["semanticKind"], kind);
             assert_eq!(descriptor["aggregateVariant"], variant);
-            assert_eq!(descriptor["payloadSchema"], "🧬️.schema.json");
+            assert_eq!(descriptor["payloadSchema"], "🧬️schema/🔣️.json");
             assert_eq!(descriptor["textOpcode"], kind);
             assert_eq!(descriptor["binaryTag"], tag);
             assert_eq!(descriptor["outcomeClasses"], outcome_classes(outcomes));
             assert_eq!(descriptor["requiredLanguageSurfaces"], pack::json!(["rust", "typescript", "json-schema", "text", "binary"]));
-            let payload: pack::JsonValue = pack::parse_json(&std::fs::read_to_string(owner.join("🧬️.schema.json")).expect("direct payload schema")).expect("valid direct payload schema");
+            let payload: pack::JsonValue = pack::parse_json(&std::fs::read_to_string(owner.join("🧬️schema/🔣️.json")).expect("direct payload schema")).expect("valid direct payload schema");
             assert_eq!(payload["title"], variant);
             {
                 let surface_source = std::fs::read_to_string(owner.join("🟦️.ts")).expect("direct language surface");
@@ -158,12 +158,12 @@ mod structural_correspondence_tests {
             assert!(!source.contains(concat!("::", "mutation::")));
             assert_eq!(descriptor["semanticKind"], kind);
             assert_eq!(descriptor["aggregateVariant"], variant);
-            assert_eq!(descriptor["payloadSchema"], "🧬️.schema.json");
+            assert_eq!(descriptor["payloadSchema"], "🧬️schema/🔣️.json");
             assert_eq!(descriptor["textOpcode"], kind);
             assert_eq!(descriptor["binaryTag"], tag);
             assert_eq!(descriptor["outcomeClasses"], outcome_classes(outcomes));
             assert_eq!(descriptor["requiredLanguageSurfaces"], pack::json!(["rust", "typescript", "json-schema", "text", "binary"]));
-            let payload: pack::JsonValue = pack::parse_json(&std::fs::read_to_string(owner.join("🧬️.schema.json")).expect("direct payload schema")).expect("valid direct payload schema");
+            let payload: pack::JsonValue = pack::parse_json(&std::fs::read_to_string(owner.join("🧬️schema/🔣️.json")).expect("direct payload schema")).expect("valid direct payload schema");
             assert_eq!(payload["title"], variant);
             {
                 let surface_source = std::fs::read_to_string(owner.join("🟦️.ts")).expect("direct language surface");

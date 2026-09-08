@@ -5,7 +5,7 @@
 //! caching needed for a single BFS pass (same ruling trinity's own `jack` topology facet reaches
 //! for its own node/edge graph).
 
-use crate::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot;
+use crate::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot;
 use std::collections::{BTreeMap, VecDeque};
 
 //#region 🔖️Topology
@@ -88,7 +88,7 @@ pub fn compute_semio_flow_topology(snapshot: &SemioFlowSnapshot) -> SemioFlowTop
 //#region 🧪️Tests
 mod tests {
     use super::*;
-    use crate::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::{FlowEdge, FlowNode, PortRef, STDIO_SEMIOFLOW_DOCUMENT_SCHEMA};
+    use crate::standards::v1::subsets::flow::schema::snapshot::{FlowEdge, FlowNode, PortRef, STDIO_SEMIOFLOW_DOCUMENT_SCHEMA};
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn node(id: &str) -> FlowNode {

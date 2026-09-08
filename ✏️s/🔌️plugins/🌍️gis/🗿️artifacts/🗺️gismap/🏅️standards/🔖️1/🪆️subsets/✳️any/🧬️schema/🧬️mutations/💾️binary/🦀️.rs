@@ -951,7 +951,7 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<GisMapSnapshot
                     }
                     1 => self.phase = GisMapStoreInitializationPhase::SeedHistory { edit, lane: 2, index: 0 },
                     2 if index < entry.mutation_meta.len() => {
-                        runtime.observe_timestamp(entry.mutation_meta[index].timestamp.clone());
+                        runtime.observe_timestamp(entry.mutation_meta[index].timestamp);
                         self.phase = GisMapStoreInitializationPhase::SeedHistory { edit, lane, index: index + 1 };
                     }
                     _ => self.phase = GisMapStoreInitializationPhase::SeedHistory { edit: edit + 1, lane: 0, index: 0 },
@@ -1135,8 +1135,8 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<GisMapSnapshot
             GisMapStoreInitializationPhase::RetireCancelled | GisMapStoreInitializationPhase::RetireFault => match self.pump_terminal_retirement() {
                 Ok(false) => semio_framework_job::StepOutcome::Yield,
                 Ok(true) => {
-                    drop(self.initial_digest.take());
-                    drop(self.edit_digest.take());
+                    self.initial_digest = None;
+                    self.edit_digest = None;
                     self.terminal_handoff = true;
                     if self.phase == GisMapStoreInitializationPhase::RetireCancelled {
                         self.phase = GisMapStoreInitializationPhase::Cancelled;
@@ -1189,8 +1189,8 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<GisMapSnapshot
         match self.pump_terminal_retirement() {
             Ok(false) => Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 1, released_bytes: 0 }),
             Ok(true) => {
-                drop(self.initial_digest.take());
-                drop(self.edit_digest.take());
+                self.initial_digest = None;
+                self.edit_digest = None;
                 self.terminal_handoff = true;
                 Ok(semio_framework_plugin::PluginCloseStep::Complete)
             }
@@ -1203,8 +1203,8 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<GisMapSnapshot
             return None;
         }
         let candidate = self.candidate.take()?;
-        drop(self.initial_digest.take());
-        drop(self.edit_digest.take());
+        self.initial_digest = None;
+        self.edit_digest = None;
         self.terminal_handoff = true;
         Some(candidate)
     }

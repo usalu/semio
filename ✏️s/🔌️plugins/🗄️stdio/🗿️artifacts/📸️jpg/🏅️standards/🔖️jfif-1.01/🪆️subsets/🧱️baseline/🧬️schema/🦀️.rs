@@ -6,7 +6,7 @@
 //! `🪆️subsets/🧱️baseline/🧬️schema/` is present per `🔣️taxonomy.json`'s `subsetChildDirs`, without
 //! duplicating the schema definition.
 
-pub use crate::artifacts::jpg::standards::v_jfif_1_01::subsets::document::schema::*;
+pub use crate::standards::v_jfif_1_01::subsets::document::schema::*;
 //#region 🧬️Mutations
 // 🧬️ This subset's OWN conformance-class vocabulary, mounted here rather than in the crate's shared
 // `🦀️.rs` — the same placement, and the same rationale, the ✳️strict/✳️transitional OOXML
@@ -21,9 +21,9 @@ pub mod mutations;
 //#endregion 🧬️Mutations
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use crate::artifacts::jpg::standards::v_jfif_1_01::subsets::document::schema::JpgBuilder as JpgAnyBuilder;
-    use crate::artifacts::jpg::standards::v_jfif_1_01::subsets::baseline::schema::check_baseline_conformance;
-    use crate::artifacts::jpg::{JpgDiff, JpgMutation, JpgSnapshot};
+    use crate::standards::v_jfif_1_01::subsets::document::schema::JpgBuilder as JpgAnyBuilder;
+    use crate::standards::v_jfif_1_01::subsets::baseline::schema::check_baseline_conformance;
+    use crate::{JpgDiff, JpgMutation, JpgSnapshot};
     use semio_framework_plugin::ArtifactBuilder;
 
     //#region 🔖️Builder
@@ -94,8 +94,8 @@ pub mod derived_construction {
         async fn real_encoded_jpeg_builds_clean_via_from_binary() {
             let (w, h) = (24u32, 24u32);
             let snap = JpgSnapshot { width: w, height: h, pixels: gradient_image(w, h), ..JpgSnapshot::default() };
-            let bytes = crate::artifacts::jpg::standards::v_jfif_1_01::engine::encode_jpg(&snap).expect("encode");
-            let decoded = crate::artifacts::jpg::standards::v_jfif_1_01::engine::decode_jpg(&bytes).expect("decode");
+            let bytes = crate::standards::v_jfif_1_01::engine::encode_jpg(&snap).expect("encode");
+            let decoded = crate::standards::v_jfif_1_01::engine::decode_jpg(&bytes).expect("decode");
             let packed = <JpgSnapshot as store::ArtifactPack>::encode_pack(&decoded);
             let built = JpgBaselineBuilderConstruction::from_binary(&packed).expect("from_binary").build().expect("real baseline JPEG must build clean");
             assert!(built.frame.is_some());
@@ -104,7 +104,7 @@ pub mod derived_construction {
         #[semio_framework_async_macros::async_test]
         async fn empty_snapshot_fails_build_with_no_frame() {
             let err = JpgBaselineBuilderConstruction::empty().build().expect_err("an empty snapshot has no SOF0 frame -- must fail build()");
-            assert!(err.iter().any(|d| d.code.0 == crate::artifacts::jpg::standards::v_jfif_1_01::subsets::baseline::schema::CODE_NO_FRAME));
+            assert!(err.iter().any(|d| d.code.0 == crate::standards::v_jfif_1_01::subsets::baseline::schema::CODE_NO_FRAME));
         }
     }
 }
@@ -113,10 +113,10 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use crate::artifacts::jpg::schema::snapshot::JpgHuffmanClass;
-    use crate::artifacts::jpg::standards::v_jfif_1_01::subsets::document::schema::JpgAnalyzer as JpgAnyAnalyzer;
-    pub use crate::artifacts::jpg::standards::v_jfif_1_01::subsets::document::schema::JpgParts;
-    use crate::artifacts::jpg::JpgSnapshot;
+    use crate::schema::snapshot::JpgHuffmanClass;
+    use crate::standards::v_jfif_1_01::subsets::document::schema::JpgAnalyzer as JpgAnyAnalyzer;
+    pub use crate::standards::v_jfif_1_01::subsets::document::schema::JpgParts;
+    use crate::JpgSnapshot;
     use dsl::{Diagnostic, FaultCode, FaultScope, Severity, TextSpan};
     use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
@@ -220,7 +220,7 @@ pub mod derived_analysis {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use crate::artifacts::jpg::schema::snapshot::{JpgFrameComponent, JpgFrameHeader, JpgHuffmanTable};
+        use crate::schema::snapshot::{JpgFrameComponent, JpgFrameHeader, JpgHuffmanTable};
 
         // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         fn conforming_snapshot() -> JpgSnapshot {

@@ -18,12 +18,12 @@
 //! per this ticket's explicit instruction ("hand-roll all diff/op codecs — do not fight the
 //! derive").
 
-use crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioPoint2;
-use crate::artifacts::semio::standards::v1::subsets::base::schema::triples::{dec_named_triple, enc_named_triple, split_top_level, strip_brackets, NamedModified, NamedTripleDiff};
-use crate::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::{FlowEdge, FlowNode, FlowParam, PortRef, SemioFlowSnapshot};
+use crate::standards::v1::subsets::base::schema::geometry::SemioPoint2;
+use crate::standards::v1::subsets::base::schema::triples::{dec_named_triple, enc_named_triple, split_top_level, strip_brackets, NamedModified, NamedTripleDiff};
+use crate::standards::v1::subsets::flow::schema::snapshot::{FlowEdge, FlowNode, FlowParam, PortRef, SemioFlowSnapshot};
 use protocol::command::DiffAlgebra;
 use protocol::MutationDiff;
-use schema::ArtifactSchema;
+use framework_schema::ArtifactSchema;
 
 //#region 🔖️CollectionDiffTypes
 pub type FlowParamsDiff = NamedTripleDiff<String, FlowParamDiff, FlowParam>;
@@ -391,11 +391,11 @@ impl MutationDiff<SemioFlowSnapshot> for SemioFlowDiff {
     fn apply(&self, base: &SemioFlowSnapshot) -> protocol::MutationApplyResult<SemioFlowSnapshot> {
         let mut next = base.clone();
         if let Some(d) = &self.nodes {
-            crate::artifacts::semio::standards::v1::subsets::base::schema::triples::validate_named_triple(&next.nodes, d, |item| item.id.clone(), |item| item.id.clone(), ["nodes"])?;
+            crate::standards::v1::subsets::base::schema::triples::validate_named_triple(&next.nodes, d, |item| item.id.clone(), |item| item.id.clone(), ["nodes"])?;
             apply_named(&mut next.nodes, d, |n| n.id.clone(), apply_node);
         }
         if let Some(d) = &self.edges {
-            crate::artifacts::semio::standards::v1::subsets::base::schema::triples::validate_named_triple(&next.edges, d, |item| item.id.clone(), |item| item.id.clone(), ["edges"])?;
+            crate::standards::v1::subsets::base::schema::triples::validate_named_triple(&next.edges, d, |item| item.id.clone(), |item| item.id.clone(), ["edges"])?;
             apply_named(&mut next.edges, d, |e| e.id.clone(), apply_edge);
         }
         Ok(next)
@@ -802,7 +802,7 @@ pub(crate) fn demo_diff_cases() -> Vec<SemioFlowDiff> {
     fn edge(id: &str, from_node: &str, from_port: &str, to_node: &str, to_port: &str, kind: &str) -> FlowEdge {
         FlowEdge { id: id.into(), from: PortRef { node: from_node.into(), port: from_port.into() }, to: PortRef { node: to_node.into(), port: to_port.into() }, kind: kind.into() }
     }
-    let schema = crate::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::STDIO_SEMIOFLOW_DOCUMENT_SCHEMA;
+    let schema = crate::standards::v1::subsets::flow::schema::snapshot::STDIO_SEMIOFLOW_DOCUMENT_SCHEMA;
     let a = SemioFlowSnapshot { schema: schema.into(), nodes: vec![node("keep", "old", "Old", vec![("p", "1")], 0.0, 0.0), node("gone", "x", "Gone", vec![], 1.0, 1.0)], edges: vec![edge("e1", "keep", "out", "gone", "in", "old")] };
     let b = SemioFlowSnapshot { schema: schema.into(), nodes: vec![node("keep", "new", "New", vec![("p", "2")], 5.0, 5.0), node("added", "y", "Added", vec![], 2.0, 2.0)], edges: vec![edge("e1", "keep", "out2", "added", "in", "new")] };
     vec![
@@ -833,7 +833,7 @@ mod tests {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn base_snapshot() -> SemioFlowSnapshot {
         SemioFlowSnapshot {
-            schema: crate::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::STDIO_SEMIOFLOW_DOCUMENT_SCHEMA.into(),
+            schema: crate::standards::v1::subsets::flow::schema::snapshot::STDIO_SEMIOFLOW_DOCUMENT_SCHEMA.into(),
             nodes: vec![node("n1", "source", "Source", vec![("count", "1")], 0.0, 0.0), node("n2", "sink", "Sink", vec![], 10.0, 10.0)],
             edges: vec![edge("e1", "n1", "out", "n2", "in", "data")],
         }
@@ -855,7 +855,7 @@ mod tests {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn sweep_a() -> SemioFlowSnapshot {
         SemioFlowSnapshot {
-            schema: crate::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::STDIO_SEMIOFLOW_DOCUMENT_SCHEMA.into(),
+            schema: crate::standards::v1::subsets::flow::schema::snapshot::STDIO_SEMIOFLOW_DOCUMENT_SCHEMA.into(),
             nodes: vec![node("keep", "old-kind", "Old Label", vec![("toModify", "old"), ("stay", "same"), ("toRemove", "gone")], 0.0, 0.0), node("toRemoveNode", "sink", "Gone", vec![], 5.0, 5.0)],
             edges: vec![edge("keepEdge", "keep", "out", "toRemoveNode", "in", "old-kind"), edge("toRemoveEdge", "toRemoveNode", "out", "keep", "in", "data")],
         }
@@ -863,7 +863,7 @@ mod tests {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn sweep_b() -> SemioFlowSnapshot {
         SemioFlowSnapshot {
-            schema: crate::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::STDIO_SEMIOFLOW_DOCUMENT_SCHEMA.into(),
+            schema: crate::standards::v1::subsets::flow::schema::snapshot::STDIO_SEMIOFLOW_DOCUMENT_SCHEMA.into(),
             nodes: vec![node("keep", "new-kind", "New Label", vec![("toModify", "new"), ("stay", "same"), ("added", "fresh")], 42.0, 7.0), node("addedNode", "source", "Added", vec![], 9.0, 9.0)],
             edges: vec![edge("keepEdge", "keep", "renamed-out", "addedNode", "in", "new-kind"), edge("addedEdge", "addedNode", "out", "keep", "in", "data")],
         }

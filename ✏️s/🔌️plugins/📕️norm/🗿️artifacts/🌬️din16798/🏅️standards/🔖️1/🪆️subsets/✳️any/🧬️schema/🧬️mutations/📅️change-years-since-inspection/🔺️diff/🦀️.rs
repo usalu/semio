@@ -9,6 +9,6 @@ pub fn diff(payload: &ChangeYearsSinceInspection, base: &Din16798Snapshot) -> pr
     if base.years_since_inspection == payload.new_years_since_inspection {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Years since last inspection is already {}.", payload.new_years_since_inspection));
     }
-    protocol::MutationOutcome::new(Din16798Diff { years_since_inspection: Some(payload.new_years_since_inspection.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(Din16798Diff { years_since_inspection: Some(payload.new_years_since_inspection), ..Default::default() })
 }
 //#endregion 🔖️Diff

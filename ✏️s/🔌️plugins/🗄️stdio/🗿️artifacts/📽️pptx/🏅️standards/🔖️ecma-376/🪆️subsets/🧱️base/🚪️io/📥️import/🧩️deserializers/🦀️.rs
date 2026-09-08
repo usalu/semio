@@ -1,7 +1,7 @@
 //! 🧩️ PresentationML (pptx) import — `ppt/presentation.xml`/`ppt/slides/slideN.xml` XML parse
 //! into a `PptxPresentation`, real OPC package decode, and magic-shape sniff. Zip/OPC/XML
 //! byte-level work is never reimplemented here: it is reused from the shared
-//! `crate::artifacts::zip::opc` layer.
+//! `semio_s_artifact_stdio_zip::opc` layer.
 //!
 //! `p:spTree`'s DIRECT children (`p:sp`/`p:pic`/anything else) become one `PptxShape` each --
 //! per ticket 26/08/11's W0 finding, the shape tree used to be flattened away entirely (every
@@ -10,12 +10,12 @@
 //! unrecognized fall back to `PptxShape::Other{node}` as logical XML.
 
 use super::super::super::{attr_val, element_children, find_child, resolve_office_document_relationship, PptxError};
-use crate::artifacts::pptx::{
+use crate::{
     schema::snapshot::{pptx_part_is_xml, PptxParagraph, PptxPresentation, PptxRun, PptxShape, PptxSlide, PptxXmlPart},
     PptxSnapshot,
 };
-use crate::artifacts::xml::schema::snapshot::{xml_document_from_text, XmlDocument, XmlNode};
-use crate::artifacts::zip::opc;
+use semio_s_artifact_stdio_xml::schema::snapshot::{xml_document_from_text, XmlDocument, XmlNode};
+use semio_s_artifact_stdio_zip::opc;
 
 //#region 🔖️TextXml
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -78,8 +78,8 @@ fn text_frame_from_xml(tx_body: &XmlNode) -> Vec<PptxParagraph> {
 /// 🔎️ Reads `p:spPr/a:xfrm`'s `a:off`/`a:ext` (defaulting each missing field to `0`, same
 /// convention this codec pair uses for "not present in the XML").
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn position_from_xml(shape_children: &[XmlNode]) -> crate::artifacts::pptx::schema::snapshot::PptxTransform {
-    use crate::artifacts::pptx::schema::snapshot::PptxTransform;
+fn position_from_xml(shape_children: &[XmlNode]) -> crate::schema::snapshot::PptxTransform {
+    use crate::schema::snapshot::PptxTransform;
     let Some(sp_pr) = find_child(shape_children, "p:spPr") else { return PptxTransform::default() };
     let Some(xfrm) = find_child(element_children(sp_pr), "a:xfrm") else { return PptxTransform::default() };
     let xfrm_children = element_children(xfrm);

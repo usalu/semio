@@ -1,17 +1,61 @@
 //! 🎪 `stdio.mp4` artifact — new-format artifact (master plan "New format artifacts" table).
 
+#![allow(async_fn_in_trait)]
+#![allow(long_running_const_eval)]
+
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_schema as framework_schema;
+extern crate semio_framework_value_derive as value_derive;
+
 use semio_framework_plugin::{ArtifactKindSpec, Dialect, MediaClass, MediaForm, MediaType, OsMediaCapability, StandardId, SubsetId};
 
-pub use crate::artifacts::mp4::standards::isobmff::subsets::any::schema::diff::Mp4Diff;
-pub use crate::artifacts::mp4::standards::isobmff::subsets::any::schema::mutations::Mp4Mutation;
-pub use crate::artifacts::mp4::standards::isobmff::subsets::any::schema::snapshot::Mp4Snapshot;
-pub use crate::artifacts::mp4::standards::isobmff::subsets::any::schema::Mp4Artifact;
+pub use standards::isobmff::subsets::any::schema::diff::Mp4Diff;
+pub use standards::isobmff::subsets::any::schema::mutations::Mp4Mutation;
+pub use standards::isobmff::subsets::any::schema::snapshot::Mp4Snapshot;
+pub use standards::isobmff::subsets::any::schema::Mp4Artifact;
 
 /// 🏷️ Document schema / DSL envelope id.
 pub const STDIO_MP4_DOCUMENT_SCHEMA: &str = "stdio.mp4";
 
 /// 🧬️ Artifact schema descriptor id.
 pub const MP4_ARTIFACT_SCHEMA_ID: &str = "s.stdio.mp4";
+
+/// 📜 Schema-owned package definition.
+pub const ARTIFACT_DEFINITION_SCHEMA: &str = include_str!("🧬️schema/📜️artifact-definition.json");
+
+pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::PluginAssemblyError> {
+    let factories = native_codecs();
+    let executables = semio_s_artifact_stdio_contract::native_codec_executables(ARTIFACT_DEFINITION_SCHEMA, &factories)?;
+    semio_s_artifact_stdio_contract::definition_from_schema_with_executables(ARTIFACT_DEFINITION_SCHEMA, executables)
+}
+
+pub fn formats() -> Result<Vec<semio_framework_plugin::io::FormatDescriptor>, semio_framework_plugin::ArtifactDefinitionError> {
+    semio_s_artifact_stdio_contract::format_descriptors(ARTIFACT_DEFINITION_SCHEMA)
+}
+
+fn native_codec() -> store::ArtifactCodec {
+    let mut codec = store::ArtifactCodec::of::<Mp4Snapshot, Mp4Mutation>(STDIO_MP4_DOCUMENT_SCHEMA);
+    codec.extension = "semio";
+    codec.pack_schema_hash = semio_framework_hash::Sha256::digest(include_bytes!("🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio"));
+    codec
+}
+
+pub fn native_codecs() -> Vec<semio_s_artifact_stdio_contract::NativeCodecFactory> {
+    vec![semio_s_artifact_stdio_contract::NativeCodecFactory { id: "stdio.native.mp4.v1", artifact: "mp4", kind: artifact_kind, codec: native_codec }]
+}
+
+pub fn contribution() -> semio_s_artifact_stdio_contract::ArtifactContribution {
+    semio_s_artifact_stdio_contract::ArtifactContribution {
+        identity: "mp4",
+        schema: ARTIFACT_DEFINITION_SCHEMA,
+        definition,
+        assembly,
+        formats,
+        native_codecs,
+    }
+}
 
 //#region 🔖️Dialect
 /// 🪪️ Surface coordinate(s) for this artifact — `artifact_kind` matches the schema descriptor
@@ -44,7 +88,7 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 //#endregion 🔖️ArtifactKind
 //#region 🔖️Declaration
 /// 🔖️ This artifact's declaration (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE g5) — replaces
-/// the side-effecting `crate::artifacts::mp4::standards::isobmff::engine::register()` call the plugin
+/// the side-effecting `crate::standards::isobmff::engine::register()` call the plugin
 /// root used to make imperatively. `.composers(...)` reaches this standard's ENGINE-level
 /// `io_registry` (below `⚙️engine`, distinct from this file's own `🚪️DerivedIoRegistry` shadow, whose
 /// `entries()` returns `&[&ComposerEntry]` — the wrong type for `.composers()`, which wants
@@ -55,25 +99,25 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 /// to.
 /// 🧩️ Binds this executable root to its sole schema-owned definition.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn assembly(definition: semio_framework_plugin::ArtifactDefinition) -> Result<crate::registry::ArtifactAssembly, semio_framework_plugin::PluginAssemblyError> {
-    crate::registry::runtime_assembly("mp4", definition, declaration)
+pub fn assembly() -> Result<semio_s_artifact_stdio_contract::ArtifactAssembly, semio_framework_plugin::PluginAssemblyError> {
+    semio_s_artifact_stdio_contract::runtime_assembly("mp4", definition()?, declaration)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
-    let formats = crate::registry::format_descriptors_for("mp4")?;
+    let formats = formats()?;
     semio_framework_plugin::ArtifactDeclaration::builder(definition)
-        .schema(crate::artifacts::mp4::standards::isobmff::subsets::any::schema::mp4_artifact_schema_descriptor())
+        .schema(standards::isobmff::subsets::any::schema::mp4_artifact_schema_descriptor())
         .formats(formats)
-        .inferences([crate::artifacts::mp4::standards::isobmff::subsets::any::schema::inferences::mp4_artifact_inference_descriptor()])
-        .composers(crate::artifacts::mp4::standards::isobmff::subsets::any::io::io_registry::entries())
+        .inferences([standards::isobmff::subsets::any::schema::inferences::mp4_artifact_inference_descriptor()])
+        .composers(standards::isobmff::subsets::any::io::io_registry::entries())
         .document_codec_bare::<Mp4Snapshot, Mp4Mutation>(STDIO_MP4_DOCUMENT_SCHEMA)
         .try_build()
 }
 //#endregion 🔖️Declaration
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
-    use crate::artifacts::mp4::standards::isobmff::subsets::any::io::io_registry as std_composer;
+    use crate::standards::isobmff::subsets::any::io::io_registry as std_composer;
     use semio_framework_plugin::{register_composer_entries, ComposeError, ComposedArtifact, ComposerEntry, Dialect, ErasedComposeSource};
     use std::sync::OnceLock;
 
@@ -96,3 +140,133 @@ pub mod io_registry {
     }
 }
 //#endregion 🚪️DerivedIoRegistry
+
+#[path = "."]
+pub mod standards {
+    #[path = "."]
+    pub mod isobmff {
+        #[path = "."]
+        pub mod subsets {
+            #[path = "."]
+            pub mod any {
+                #[path = "🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🚪️io/🦀️.rs"]
+                pub mod io;
+                #[path = "."]
+                pub mod schema {
+                    #[path = "🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🧬️schema/🦀️.rs"]
+                    mod component;
+                    pub use component::*;
+                    #[path = "."]
+                    pub mod snapshot {
+                        #[path = "🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                        #[path = "🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/🦀️.rs"]
+                        pub mod binary;
+                        #[path = "🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🦀️.rs"]
+                        pub mod text;
+                    }
+                    #[path = "."]
+                    pub mod inferences {
+                        #[path = "🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                        #[path = "🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🧬️schema/💡️inferences/💾️binary/🦀️.rs"]
+                        pub mod binary;
+                        #[path = "🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🧬️schema/💡️inferences/📝️text/🦀️.rs"]
+                        pub mod text;
+                        #[path = "."]
+                        pub mod duration {
+                            #[path = "🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🧬️schema/💡️inferences/⏱️duration/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                    }
+                    #[path = "."]
+                    pub mod diff {
+                        #[path = "🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                        #[path = "🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🧬️schema/🔺️diff/💾️binary/🦀️.rs"]
+                        pub mod binary;
+                        #[path = "🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🧬️schema/🔺️diff/📝️text/🦀️.rs"]
+                        pub mod text;
+                    }
+                    #[path = "."]
+                    pub mod mutations {
+                        #[path = "🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                        #[path = "🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️.rs"]
+                        pub mod binary;
+                        #[path = "🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️.rs"]
+                        pub mod text;
+                    }
+                }
+            }
+        }
+    }
+}
+#[path = "."]
+pub mod examples {
+    #[path = "🏅️standards/🔖️isobmff/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️.rs"]
+    pub mod demo;
+}
+
+#[cfg(feature = "component-app-assembly")]
+#[path = "."]
+pub mod editor {
+    #[path = "."]
+    pub mod mp4 {
+        #[path = "🏅️standards/🔖️isobmff/🪆️subsets/✳️any/✏️editor/🦀️.rs"]
+        mod component;
+        pub use component::*;
+        #[path = "."]
+        pub mod modes {
+            #[path = "."]
+            pub mod edit {
+                #[path = "🏅️standards/🔖️isobmff/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🦀️.rs"]
+                mod component;
+                pub use component::*;
+                #[path = "."]
+                pub mod windows {
+                    #[path = "."]
+                    pub mod main {
+                        #[path = "🏅️standards/🔖️isobmff/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+        }
+    }
+}
+
+#[cfg(feature = "component-app-assembly")]
+#[path = "."]
+pub mod viewer {
+    #[path = "."]
+    pub mod mp4 {
+        #[path = "🏅️standards/🔖️isobmff/🪆️subsets/✳️any/👁️viewer/🦀️.rs"]
+        mod component;
+        pub use component::*;
+        #[path = "."]
+        pub mod modes {
+            #[path = "."]
+            pub mod view {
+                #[path = "🏅️standards/🔖️isobmff/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🦀️.rs"]
+                mod component;
+                pub use component::*;
+                #[path = "."]
+                pub mod windows {
+                    #[path = "."]
+                    pub mod main {
+                        #[path = "🏅️standards/🔖️isobmff/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+        }
+    }
+}

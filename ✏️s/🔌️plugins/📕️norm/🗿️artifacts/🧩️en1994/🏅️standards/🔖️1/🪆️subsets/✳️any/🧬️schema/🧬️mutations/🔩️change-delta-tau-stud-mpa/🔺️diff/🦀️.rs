@@ -11,6 +11,6 @@ pub fn diff(payload: &ChangeDeltaTauStudMpa, base: &En1994Snapshot) -> protocol:
     if base.delta_tau_stud_mpa == payload.new_delta_tau_stud_mpa {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "Delta tau stud mpa already has this value.");
     }
-    protocol::MutationOutcome::new(En1994Diff { delta_tau_stud_mpa: Some(payload.new_delta_tau_stud_mpa.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1994Diff { delta_tau_stud_mpa: Some(payload.new_delta_tau_stud_mpa), ..Default::default() })
 }
 //#endregion 🔖️Diff

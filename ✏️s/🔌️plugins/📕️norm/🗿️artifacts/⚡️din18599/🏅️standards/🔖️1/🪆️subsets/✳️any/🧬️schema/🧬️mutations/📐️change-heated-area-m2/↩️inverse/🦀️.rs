@@ -7,6 +7,6 @@ use crate::artifacts::din18599::Din18599Snapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(_payload: &ChangeHeatedAreaM2, base: &Din18599Snapshot) -> Vec<Din18599Mutation> {
-    vec![Din18599Mutation::ChangeHeatedAreaM2(ChangeHeatedAreaM2 { new_heated_area_m2: base.heated_area_m2.clone() })]
+    vec![Din18599Mutation::ChangeHeatedAreaM2(ChangeHeatedAreaM2 { new_heated_area_m2: base.heated_area_m2 })]
 }
 //#endregion 🔖️Inverse

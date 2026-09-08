@@ -12,23 +12,23 @@
 //! Mounted as a submodule of `➡️sweep` in ticket 26/09/03/BREP-KERNEL-DEPENDENCY-FREE-RUNTIME wave
 //! W2-C via `#[path]` from `➡️sweep/🦀️.rs`.
 /// 🌀 Lateral surface, four parameter curves with ranges, and orientation.
-pub type LateralSurfaceCurves = (crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::SurfaceId, [(crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::Curve2Id, (f64, f64)); 4], bool);
+pub type LateralSurfaceCurves = (crate::standards::v1::subsets::brep::schema::snapshot::arena::SurfaceId, [(crate::standards::v1::subsets::brep::schema::snapshot::arena::Curve2Id, (f64, f64)); 4], bool);
 
 
 use std::collections::HashMap;
 use std::f64::consts::TAU;
 
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::euler::make_edge;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::transform::transform_face;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::{EdgeId, FaceId, SolidId, VertexId};
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::{Curve2, Curve3};
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::error::KernelError;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::surface::Surface;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::tolerance::Tol;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::history::OpRecorder;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::Body;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::matrix::{Affine3, Frame3};
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::{Pnt2, Pnt3, Vec2, Vec3};
+use crate::standards::v1::subsets::brep::schema::diff::euler::make_edge;
+use crate::standards::v1::subsets::brep::schema::diff::transform::transform_face;
+use crate::standards::v1::subsets::brep::schema::snapshot::arena::{EdgeId, FaceId, SolidId, VertexId};
+use crate::standards::v1::subsets::brep::schema::snapshot::curve::{Curve2, Curve3};
+use crate::standards::v1::subsets::brep::schema::snapshot::error::KernelError;
+use crate::standards::v1::subsets::brep::schema::snapshot::surface::Surface;
+use crate::standards::v1::subsets::brep::schema::snapshot::tolerance::Tol;
+use crate::standards::v1::subsets::brep::schema::snapshot::topology::history::OpRecorder;
+use crate::standards::v1::subsets::brep::schema::snapshot::topology::Body;
+use crate::standards::v1::subsets::brep::schema::snapshot::vector::matrix::{Affine3, Frame3};
+use crate::standards::v1::subsets::brep::schema::snapshot::vector::{Pnt2, Pnt3, Vec2, Vec3};
 
 use super::core::{build_face, finish_solid, LoopSpec};
 

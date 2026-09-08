@@ -9,6 +9,6 @@ pub fn diff(payload: &ChangeUseFem, base: &En1992Snapshot) -> protocol::Mutation
     if base.use_fem == payload.new_use_fem {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "Use fem already has this value.");
     }
-    protocol::MutationOutcome::new(En1992Diff { use_fem: Some(payload.new_use_fem.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1992Diff { use_fem: Some(payload.new_use_fem), ..Default::default() })
 }
 //#endregion 🔖️Diff

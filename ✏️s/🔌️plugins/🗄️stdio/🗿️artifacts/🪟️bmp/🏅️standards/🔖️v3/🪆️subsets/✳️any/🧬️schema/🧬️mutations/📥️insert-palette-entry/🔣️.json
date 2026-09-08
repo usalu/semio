@@ -5,7 +5,7 @@
   "displayName": "Insert Palette Entry",
   "emoji": "📥️",
   "aggregateVariant": "InsertPaletteEntry",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "insert-palette-entry",
   "binaryTag": 3,
   "invertibility": "explicit-mutation",

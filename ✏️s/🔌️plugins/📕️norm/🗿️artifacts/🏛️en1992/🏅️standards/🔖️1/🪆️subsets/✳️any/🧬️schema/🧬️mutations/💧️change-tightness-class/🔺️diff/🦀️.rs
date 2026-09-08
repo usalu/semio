@@ -9,6 +9,6 @@ pub fn diff(payload: &ChangeTightnessClass, base: &En1992Snapshot) -> protocol::
     if base.tightness_class == payload.new_tightness_class {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "Tightness class already has this value.");
     }
-    protocol::MutationOutcome::new(En1992Diff { tightness_class: Some(payload.new_tightness_class.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1992Diff { tightness_class: Some(payload.new_tightness_class), ..Default::default() })
 }
 //#endregion 🔖️Diff

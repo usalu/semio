@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeDFM, base: &En1997Snapshot) -> protocol::MutationOut
     if base.d_f_m == payload.new_d_f_m {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Founding depth D_f [m] is already {}.", payload.new_d_f_m));
     }
-    protocol::MutationOutcome::new(En1997Diff { d_f_m: Some(payload.new_d_f_m.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1997Diff { d_f_m: Some(payload.new_d_f_m), ..Default::default() })
 }
 //#endregion 🔖️Diff

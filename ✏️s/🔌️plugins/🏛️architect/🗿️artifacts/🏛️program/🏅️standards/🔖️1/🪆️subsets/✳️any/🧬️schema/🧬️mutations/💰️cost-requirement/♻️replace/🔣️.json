@@ -5,7 +5,7 @@
   "displayName": "Replace Cost Requirement",
   "emoji": "♻️",
   "aggregateVariant": "ReplaceCostRequirement",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

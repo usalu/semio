@@ -1,0 +1,8 @@
+{
+  "schema": "semio.shell.serial-tutorial-drive-fixture.v1",
+  "cases": [
+    { "id": "seek-awaits-admitted-director", "close": false, "replace": false, "writes": ["M", "inverse-M"], "cursor": 0 },
+    { "id": "close-drains-admitted-director", "close": true, "replace": false, "writes": ["M"], "cursor": 0 },
+    { "id": "latest-pending-seek-replaces-older", "close": false, "replace": true, "writes": ["M", "inverse-M"], "cursor": 0 }
+  ]
+}

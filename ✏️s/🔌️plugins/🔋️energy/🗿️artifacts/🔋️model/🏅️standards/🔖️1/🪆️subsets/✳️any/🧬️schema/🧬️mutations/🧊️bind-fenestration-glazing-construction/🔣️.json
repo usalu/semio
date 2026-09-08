@@ -5,7 +5,7 @@
   "displayName": "Bind Fenestration Glazing Construction",
   "emoji": "🧊️",
   "aggregateVariant": "BindFenestrationGlazingConstruction",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "bind-fenestration-glazing-construction",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

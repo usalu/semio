@@ -1,0 +1,35 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/gif/89a/base/mutation/set-frame-disposal.json",
+  "title": "SetFrameDisposal",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "index",
+    "disposal"
+  ],
+  "properties": {
+    "index": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "disposal": {
+      "$ref": "#/$defs/GifDisposal"
+    },
+    "mutation": {
+      "const": "setFrameDisposal",
+      "description": "Aggregate discriminator spliced in by GifMutation; absent when the payload stands alone."
+    }
+  },
+  "$defs": {
+    "GifDisposal": {
+      "type": "string",
+      "enum": [
+        "unspecified",
+        "doNotDispose",
+        "restoreToBackground",
+        "restoreToPrevious"
+      ]
+    }
+  }
+}

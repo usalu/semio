@@ -5,7 +5,7 @@
 //! reasoning). `data` (the opaque compressed payload) is never read — pts/rate alone are enough,
 //! honoring this subset's own opaque-payload boundary.
 
-use crate::artifacts::semio::standards::v1::subsets::video::schema::snapshot::{SemioVideoSnapshot, SemioVideoStream};
+use crate::standards::v1::subsets::video::schema::snapshot::{SemioVideoSnapshot, SemioVideoStream};
 
 //#region 🔖️Duration
 /// ⏱️ Semio video container duration.
@@ -43,7 +43,7 @@ pub fn compute_semio_video_duration(snapshot: &SemioVideoSnapshot) -> SemioVideo
 //#region 🧪️Tests
 mod tests {
     use super::*;
-    use crate::artifacts::semio::standards::v1::subsets::video::schema::snapshot::{SemioRational, SemioVideoSample, SemioVideoStreamKind, STDIO_SEMIOVIDEO_DOCUMENT_SCHEMA};
+    use crate::standards::v1::subsets::video::schema::snapshot::{SemioRational, SemioVideoSample, SemioVideoStreamKind, STDIO_SEMIOVIDEO_DOCUMENT_SCHEMA};
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn populated() -> SemioVideoSnapshot {

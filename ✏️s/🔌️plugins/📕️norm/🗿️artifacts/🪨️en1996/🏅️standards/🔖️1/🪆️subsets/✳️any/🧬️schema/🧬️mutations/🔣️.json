@@ -1,134 +1,97 @@
 {
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://semio.tech/schema/s/norm/en1996/mutation.json",
   "title": "En1996Mutation",
-  "type": "object",
-  "additionalProperties": false,
-  "required": [
-    "mEdKnm",
-    "nEdKn",
-    "vEdKn",
-    "hEdKn",
-    "zMm3",
-    "areaMm2",
-    "shearAreaMm2",
-    "fKMpa",
-    "fVkMpa",
-    "annex",
-    "masonryClass",
-    "designSituation",
-    "mu",
-    "wallThicknessMm",
-    "fireResistanceMin",
-    "unit",
-    "exposure",
-    "mortar",
-    "bedJointThicknessMm",
-    "storeys",
-    "hEfMm",
-    "tEfMm"
-  ],
-  "properties": {
-    "mEdKnm": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+  "oneOf": [
+    {
+      "$ref": "./🌍️change-annex/🧬️schema/🔣️.json"
     },
-    "nEdKn": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./📐️change-area-mm2/🧬️schema/🔣️.json"
     },
-    "vEdKn": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🥪️change-bed-joint-thickness-mm/🧬️schema/🔣️.json"
     },
-    "hEdKn": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🎭️change-design-situation/🧬️schema/🔣️.json"
     },
-    "zMm3": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./💧️change-exposure/🧬️schema/🔣️.json"
     },
-    "areaMm2": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./✂️change-f-vk-mpa/🧬️schema/🔣️.json"
     },
-    "shearAreaMm2": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🔥️change-fire-resistance-min/🧬️schema/🔣️.json"
     },
-    "fKMpa": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🗜️change-fk-mpa/🧬️schema/🔣️.json"
     },
-    "fVkMpa": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./↔️change-h-ed-kn/🧬️schema/🔣️.json"
     },
-    "annex": {
-      "type": "string",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./↕️change-h-ef-mm/🧬️schema/🔣️.json"
     },
-    "masonryClass": {
-      "type": "string",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./⤴️change-m-ed-knm/🧬️schema/🔣️.json"
     },
-    "designSituation": {
-      "type": "string",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🏭️change-masonry-class/🧬️schema/🔣️.json"
     },
-    "mu": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🪣️change-mortar/🧬️schema/🔣️.json"
     },
-    "wallThicknessMm": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🧲️change-mu/🧬️schema/🔣️.json"
     },
-    "fireResistanceMin": {
-      "type": "integer",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🏋️change-n-ed-kn/🧬️schema/🔣️.json"
     },
-    "unit": {
-      "type": "string",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🧩️change-shear-area-mm2/🧬️schema/🔣️.json"
     },
-    "exposure": {
-      "type": "string",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🏢️change-storeys/🧬️schema/🔣️.json"
     },
-    "mortar": {
-      "type": "string",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./📏️change-t-ef-mm/🧬️schema/🔣️.json"
     },
-    "bedJointThicknessMm": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🧊️change-unit/🧬️schema/🔣️.json"
     },
-    "storeys": {
-      "type": "integer",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🪚️change-v-ed-kn/🧬️schema/🔣️.json"
     },
-    "hEfMm": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🧱️change-wall-thickness-mm/🧬️schema/🔣️.json"
     },
-    "tEfMm": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./📊️change-z-mm3/🧬️schema/🔣️.json"
     }
-  }
+  ],
+  "x-semio-mutationKinds": [
+    "change-annex",
+    "change-area-mm2",
+    "change-bed-joint-thickness-mm",
+    "change-design-situation",
+    "change-exposure",
+    "change-f-vk-mpa",
+    "change-fire-resistance-min",
+    "change-fk-mpa",
+    "change-h-ed-kn",
+    "change-h-ef-mm",
+    "change-m-ed-knm",
+    "change-masonry-class",
+    "change-mortar",
+    "change-mu",
+    "change-n-ed-kn",
+    "change-shear-area-mm2",
+    "change-storeys",
+    "change-t-ef-mm",
+    "change-unit",
+    "change-v-ed-kn",
+    "change-wall-thickness-mm",
+    "change-z-mm3"
+  ]
 }

@@ -1,7 +1,7 @@
 //! Deserialize stdio.xlsx from stdio.binary (parse ZIP bytes).
 
-use crate::artifacts::binary::BinarySnapshot;
-use crate::artifacts::xlsx::{XlsxSnapshot, STDIO_XLSX_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_binary::BinarySnapshot;
+use crate::{XlsxSnapshot, STDIO_XLSX_DOCUMENT_SCHEMA};
 
 //#region Codec
 /// Register deserializer hooks.
@@ -11,7 +11,7 @@ pub fn register() {}
 /// 🎒️ Parse ZIP container bytes into a XlsxSnapshot.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn deserialize(from: &BinarySnapshot) -> Result<XlsxSnapshot, store::PackError> {
-    let mut snap = crate::artifacts::xlsx::standards::v_ecma_376::subsets::base::io::import::deserializers::decode_xlsx(&from.bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
+    let mut snap = crate::standards::v_ecma_376::subsets::base::io::import::deserializers::decode_xlsx(&from.bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
     snap.schema = STDIO_XLSX_DOCUMENT_SCHEMA.into();
     Ok(snap)
 }

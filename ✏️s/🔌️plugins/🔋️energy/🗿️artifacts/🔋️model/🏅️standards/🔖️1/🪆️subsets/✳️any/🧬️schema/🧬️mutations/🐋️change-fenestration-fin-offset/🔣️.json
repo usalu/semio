@@ -5,7 +5,7 @@
   "displayName": "Change Fenestration Fin Offset",
   "emoji": "🐋️",
   "aggregateVariant": "ChangeFenestrationFinOffset",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-fenestration-fin-offset",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

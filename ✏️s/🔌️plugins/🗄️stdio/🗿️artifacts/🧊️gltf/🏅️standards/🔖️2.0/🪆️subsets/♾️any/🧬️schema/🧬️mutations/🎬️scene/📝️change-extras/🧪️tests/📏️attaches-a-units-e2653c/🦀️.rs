@@ -9,10 +9,10 @@
 //! leaf's own oracle. The derived `.op.semio`/`.spr.semio`/`.dsl.semio`/`.pack.semio`/
 //! `.patch.semio` encodings come from `fixtures generate`, not from here.
 
-use crate::artifacts::gltf::schema::mutations::change_scene_extra_data::diff::GltfChangeSceneExtraDataDiff;
-use crate::artifacts::gltf::schema::mutations::change_scene_extra_data::GltfChangeSceneExtraDataPayload;
-use crate::artifacts::gltf::schema::mutations::change_scene_extra_data::{diff, inverse, mutation};
-use crate::artifacts::gltf::GltfSnapshot;
+use crate::schema::mutations::change_scene_extra_data::diff::GltfChangeSceneExtraDataDiff;
+use crate::schema::mutations::change_scene_extra_data::GltfChangeSceneExtraDataPayload;
+use crate::schema::mutations::change_scene_extra_data::{diff, inverse, mutation};
+use crate::GltfSnapshot;
 
 const CASE: &str = "change-scene-extra-data/attaches-a-units-extras-object-to-the-main-scene";
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");

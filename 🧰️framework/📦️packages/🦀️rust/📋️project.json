@@ -2,6 +2,13 @@
   "name": "@semio-tech/framework-rs",
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "targets": {
+    "test-action-choices": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-action-choices"
+      }
+    },
     "test-core-modules": {
       "executor": "nx:run-commands",
       "options": {

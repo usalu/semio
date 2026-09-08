@@ -5,7 +5,7 @@
   "displayName": "Replace Change Record",
   "emoji": "♻️",
   "aggregateVariant": "ReplaceChangeRecord",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

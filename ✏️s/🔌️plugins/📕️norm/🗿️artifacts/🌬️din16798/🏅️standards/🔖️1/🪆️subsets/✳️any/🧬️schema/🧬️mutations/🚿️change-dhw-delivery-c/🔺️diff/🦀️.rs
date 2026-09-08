@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeDhwDeliveryC, base: &Din16798Snapshot) -> protocol::
     if base.dhw_delivery_c == payload.new_dhw_delivery_c {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("DHW delivery temperature is already {}.", payload.new_dhw_delivery_c));
     }
-    protocol::MutationOutcome::new(Din16798Diff { dhw_delivery_c: Some(payload.new_dhw_delivery_c.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(Din16798Diff { dhw_delivery_c: Some(payload.new_dhw_delivery_c), ..Default::default() })
 }
 //#endregion 🔖️Diff

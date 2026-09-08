@@ -17,7 +17,7 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 
 /// 🔌️ Builds the plugin surface for host registration. `.declare_artifact(…)` (ticket
 /// 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM design.md §2) replaces `.artifact(declaration())`
-/// + `.editor::<>()` + `.viewer::<>()` outright — a second parallel registration channel is the
+/// together with `.editor::<>()` + `.viewer::<>()` outright — a second parallel registration channel is the
 /// compatibility layer this ticket forbids, so the old calls are gone rather than kept alongside.
 /// That cutover is also what finally reaches ShellHost's example picker: `manifest.apps[].examples`
 /// is fed from `SubsetDeclaration.examples`, a field the bare `AppDefinition` the old `.editor::<>()`

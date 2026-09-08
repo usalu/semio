@@ -6,10 +6,10 @@ use crate::artifacts::gismap::op::GisMapMutation;
 use crate::artifacts::gismap::{gis_map_snapshot_with_derived_children, GisMapImageChild, GisMapSnapshot, MapFeature};
 use schema::ArtifactSchema;
 use semio_framework_plugin::{io_dispatch, resolve_ready, ArtifactSerializer, ErasedComposeSource, IoDirection, IoKey, IoPayload};
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioRgba, SemioTransform};
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::drawing::io::export::serializers::artifacts::svg::v1_1::any::SemioDrawingToSvg;
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{DrawCanvas, DrawLayer, DrawNode, DrawStyle, PathSegment, SemioDrawingSnapshot};
-use semio_s_plugin_stdio::artifacts::svg::SvgSnapshot;
+use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioRgba, SemioTransform};
+use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::io::export::serializers::artifacts::svg::v1_1::any::SemioDrawingToSvg;
+use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::{DrawCanvas, DrawLayer, DrawNode, DrawStyle, PathSegment, SemioDrawingSnapshot};
+use semio_s_artifact_stdio_svg::SvgSnapshot;
 use serde_json::Value;
 use std::collections::{BTreeMap, HashSet};
 use dsl::{FromValue, ToValue};
@@ -532,7 +532,7 @@ mod relocated_engine_tests {
     fn ensure_stdio_semio_registered_for_tests() {
         static ONCE: std::sync::Once = std::sync::Once::new();
         ONCE.call_once(|| {
-            semio_s_plugin_stdio::artifacts::semio::register();
+            semio_s_artifact_stdio_semio::register();
         });
     }
 

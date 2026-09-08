@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeMCritKnm, base: &En1995Snapshot) -> protocol::Mutati
     if base.m_crit_knm == payload.new_m_crit_knm {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "M crit knm already has this value.");
     }
-    protocol::MutationOutcome::new(En1995Diff { m_crit_knm: Some(payload.new_m_crit_knm.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1995Diff { m_crit_knm: Some(payload.new_m_crit_knm), ..Default::default() })
 }
 //#endregion 🔖️Diff

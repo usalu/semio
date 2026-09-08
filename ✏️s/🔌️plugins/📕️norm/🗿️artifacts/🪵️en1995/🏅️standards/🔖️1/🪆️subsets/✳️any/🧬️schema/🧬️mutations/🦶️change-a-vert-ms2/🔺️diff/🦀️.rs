@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeAVertMS2, base: &En1995Snapshot) -> protocol::Mutati
     if base.a_vert_m_s2 == payload.new_a_vert_m_s2 {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "A vert ms2 already has this value.");
     }
-    protocol::MutationOutcome::new(En1995Diff { a_vert_m_s2: Some(payload.new_a_vert_m_s2.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1995Diff { a_vert_m_s2: Some(payload.new_a_vert_m_s2), ..Default::default() })
 }
 //#endregion 🔖️Diff

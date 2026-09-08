@@ -3,7 +3,7 @@
 //! doc comment for the shared reasoning). Exports `subset() -> SubsetDeclaration`.
 
 #[cfg(feature = "component-app-assembly")]
-use crate::artifacts::txt::standards::v_utf_8::subsets::any::{io, schema};
+use crate::standards::v_utf_8::subsets::any::{io, schema};
 #[cfg(feature = "component-app-assembly")]
 use crate::editor::txt as editor;
 #[cfg(feature = "component-app-assembly")]
@@ -23,13 +23,13 @@ pub const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.txt", standard: S
 #[cfg(feature = "component-app-assembly")]
 fn examples() -> &'static [ExampleSource] {
     static EXAMPLES: OnceLock<Vec<ExampleSource>> = OnceLock::new();
-    EXAMPLES.get_or_init(|| vec![crate::artifacts::txt::examples::demo::source()]).as_slice()
+    EXAMPLES.get_or_init(|| vec![crate::examples::demo::source()]).as_slice()
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 #[cfg(feature = "component-app-assembly")]
-fn inference_descriptors() -> &'static [::schema::ArtifactInferenceDescriptor] {
-    static DESCRIPTORS: OnceLock<Vec<::schema::ArtifactInferenceDescriptor>> = OnceLock::new();
+fn inference_descriptors() -> &'static [::framework_schema::ArtifactInferenceDescriptor] {
+    static DESCRIPTORS: OnceLock<Vec<::framework_schema::ArtifactInferenceDescriptor>> = OnceLock::new();
     DESCRIPTORS.get_or_init(|| vec![schema::inferences::txt_artifact_inference_descriptor()]).as_slice()
 }
 
@@ -37,13 +37,13 @@ fn inference_descriptors() -> &'static [::schema::ArtifactInferenceDescriptor] {
 /// empty by the carrier law (see `🚪️io/🦀️.rs`'s `io()` doc comment).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 #[cfg(feature = "component-app-assembly")]
-pub fn subset() -> SubsetDeclaration<crate::plugin::StdioApps> {
+pub fn subset() -> SubsetDeclaration<crate::TxtApps> {
     SubsetDeclaration {
         dialect: DIALECT,
         schema: SchemaDeclaration { descriptor: schema::txt_artifact_schema_descriptor(), inferences: inference_descriptors(), inference_services: Vec::new() },
         io: io::io(),
-        viewer: viewer_surface::<viewer::TxtViewer, crate::plugin::StdioApps>(viewer::create_txt_viewer()),
-        editor: editor_surface::<editor::TxtEditor, crate::plugin::StdioApps>(editor::create_txt_editor()),
+        viewer: viewer_surface::<viewer::TxtViewer, crate::TxtApps>(viewer::create_txt_viewer()),
+        editor: editor_surface::<editor::TxtEditor, crate::TxtApps>(editor::create_txt_editor()),
         examples: examples(),
     }
 }

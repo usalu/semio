@@ -11,6 +11,6 @@ pub fn diff(payload: &ChangeFireResistanceMin, base: &En1991Snapshot) -> protoco
     if base.fire_resistance_min == payload.new_fire_resistance_min {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "Fire resistance min already has this value.");
     }
-    protocol::MutationOutcome::new(En1991Diff { fire_resistance_min: Some(payload.new_fire_resistance_min.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1991Diff { fire_resistance_min: Some(payload.new_fire_resistance_min), ..Default::default() })
 }
 //#endregion 🔖️Diff

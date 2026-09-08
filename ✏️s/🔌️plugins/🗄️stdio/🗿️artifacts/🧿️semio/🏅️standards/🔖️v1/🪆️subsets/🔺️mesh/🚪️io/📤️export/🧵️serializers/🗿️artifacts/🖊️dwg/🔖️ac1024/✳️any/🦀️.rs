@@ -10,11 +10,11 @@
 //! polyface-mesh field to round-trip through and are dropped (DWG entities carry vertex
 //! positions + face indices only).
 
-use crate::artifacts::dwg::schema::snapshot::DwgLogicalDrawing;
-use crate::artifacts::dwg::{DwgColor, DwgDrawing, DwgEntity, DwgGeometry, DwgSnapshot};
+use semio_s_artifact_stdio_dwg::schema::snapshot::DwgLogicalDrawing;
+use semio_s_artifact_stdio_dwg::{DwgColor, DwgDrawing, DwgEntity, DwgGeometry, DwgSnapshot};
 #[cfg(test)]
-use crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioPoint3;
-use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::{SemioMeshSnapshot, SemioTopology};
+use crate::standards::v1::subsets::base::schema::geometry::SemioPoint3;
+use crate::standards::v1::subsets::mesh::schema::snapshot::{SemioMeshSnapshot, SemioTopology};
 use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
 
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("mesh") };
@@ -78,8 +78,8 @@ impl ArtifactSerializer for SemioMeshToDwg {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::semio::standards::v1::subsets::mesh::io::import::deserializers::artifacts::dwg::v_ac1024::any::SemioMeshFromDwg;
-    use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::{SemioMesh, SemioPrimitive};
+    use crate::standards::v1::subsets::mesh::io::import::deserializers::artifacts::dwg::v_ac1024::any::SemioMeshFromDwg;
+    use crate::standards::v1::subsets::mesh::schema::snapshot::{SemioMesh, SemioPrimitive};
     use semio_framework_plugin::ArtifactDeserializer;
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9

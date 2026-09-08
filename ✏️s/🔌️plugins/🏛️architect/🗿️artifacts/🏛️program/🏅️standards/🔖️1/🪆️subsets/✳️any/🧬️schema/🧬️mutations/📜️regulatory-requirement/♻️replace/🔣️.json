@@ -5,7 +5,7 @@
   "displayName": "Replace Regulatory Requirement",
   "emoji": "♻️",
   "aggregateVariant": "ReplaceRegulatoryRequirement",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

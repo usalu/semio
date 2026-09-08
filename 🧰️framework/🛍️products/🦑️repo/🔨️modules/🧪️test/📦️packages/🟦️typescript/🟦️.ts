@@ -976,11 +976,11 @@ export function oracleHostPackagesFor(registry: OracleRegistry, owner: string, i
 
 //#region 🧫️Fixtures
 /** 🧫️ One resolved fixture — explicit scheme, never shadow-based, digest pinned at plan time. */
-export type ResolvedFixture = Readonly<{ uri: string; scope: "shared" | "local" | "asset"; name: string; path: string; digest: string }>;
+export type ResolvedFixture = Readonly<{ uri: string; scope: "shared" | "local" | "asset" | "schema"; name: string; path: string; digest: string }>;
 
-const FIXTURE_URI_RE = /\b(shared|local|asset):\/\/([^\s"'`,;)\]]+)/g;
+const FIXTURE_URI_RE = /\b(shared|local|asset|schema):\/\/([^\s"'`,;)\]]+)/g;
 
-/** 🧫️ Extracts every `shared://` / `local://` / `asset://` reference appearing anywhere in a feature's text. */
+/** 🧫️ Extracts every `shared://` / `local://` / `asset://` / `schema://` reference appearing anywhere in a feature's text. */
 export function fixtureUrisIn(feature: ParsedFeature): string[] {
   const haystack = [feature.description, ...feature.background.flatMap((step) => [step.text, step.docString ?? "", ...(step.dataTable ?? []).flat()]), ...feature.scenarios.flatMap((scenario) => scenario.steps.flatMap((step) => [step.text, step.docString ?? "", ...(step.dataTable ?? []).flat()]))].join("\n");
   const uris = new Set<string>();
@@ -998,11 +998,22 @@ export function fixtureUrisIn(feature: ParsedFeature): string[] {
  * a multi-megabyte document into a fixtures directory would duplicate history for no gain. The path
  * escape guard and the plan-time digest pin are identical for all three schemes.
  */
-export function resolveFixtures(repoRoot: string, discovered: DiscoveredCase, uris: readonly string[]): { fixtures: ResolvedFixture[]; missing: string[] } {
+export function resolveFixtures(repoRoot: string, discovered: DiscoveredCase, uris: readonly string[]): { fixtures: ResolvedFixture[]; missing: string[]; diagnostics: SchemaDiagnostic[] } {
   const fixtures: ResolvedFixture[] = [];
   const missing: string[] = [];
+  const diagnostics: SchemaDiagnostic[] = [];
   for (const uri of uris) {
-    const [scheme, name] = uri.split("://") as ["shared" | "local" | "asset", string];
+    const [scheme, name] = uri.split("://") as ["shared" | "local" | "asset" | "schema", string];
+    // 🧬️A `schema://` reference is a CONTRACT reference, not a file in this case's fixture directory:
+    // it resolves through the derived catalog, so a fixture names the export it is an example of and
+    // can never acquire a contract by having one placed next to it.
+    if (scheme === "schema") {
+      const { resolved, diagnostics: found } = resolveSchemaExport(repoRoot, uri);
+      diagnostics.push(...found);
+      if (resolved === null) missing.push(uri);
+      else fixtures.push({ uri, scope: "schema", name, path: resolved.path, digest: resolved.digest });
+      continue;
+    }
     const baseRel = scheme === "shared" ? discovered.sharedFixtureDir : scheme === "asset" ? discovered.owner : discovered.localFixtureDir;
     if (baseRel === null) {
       missing.push(uri);
@@ -1016,7 +1027,7 @@ export function resolveFixtures(repoRoot: string, discovered: DiscoveredCase, ur
     }
     fixtures.push({ uri, scope: scheme, name, path: `${baseRel}/${name}`, digest: fileDigest(abs) });
   }
-  return { fixtures, missing };
+  return { fixtures, missing, diagnostics };
 }
 
 /** 🧫️ Every file under a fixture directory, repo-relative, for orphan detection and immutability proofs. */
@@ -3576,23 +3587,21 @@ export function scaffoldLeafDescriptor(repoRoot: string, ownerRel: string, leafD
   const hasPlan = existsSync(join(leafAbs, "🧩️plan"));
   const hasText = existsSync(join(vocabulary, "📝️text"));
   const hasBinary = binaryProtocol !== null;
-  // 🧬️Two payload-schema conventions are in the tree and both are legitimate: the descriptor-linked
-  // `🧬️schema/<json>` beside the leaf, and the flat `🔣️.schema.json` the projection names as its
-  // source filename. Whichever the leaf actually has is the one the descriptor points at.
-  const schemaCandidates: readonly [string, string][] = [
-    [`🧬️schema/${testFilenameForKind(taxonomy, taxonomy.testContributionFileKindId)}`, join(leafAbs, "🧬️schema", testFilenameForKind(taxonomy, taxonomy.testContributionFileKindId))],
-    ["🔣️.schema.json", join(leafAbs, "🔣️.schema.json")],
-  ];
-  const payloadSchema = schemaCandidates.find(([, abs]) => existsSync(abs))?.[0] ?? "";
-  const hasSchema = payloadSchema.length > 0;
+  // 🧬️ONE payload-schema convention, and it is the taxonomy's: `mutationPayloadSchemaLocation` puts a
+  // leaf's payload contract at `🧬️schema/<json>` beside the leaf, and the descriptor points at exactly
+  // that path. A second accepted spelling made "which file is the contract" depend on which one
+  // happened to exist, which is the same as having no owner at all.
+  const canonicalPayloadSchema = payloadSchemaRelativePath(repoRoot);
+  const hasSchema = existsSync(join(leafAbs, canonicalPayloadSchema));
+  const payloadSchema = hasSchema ? canonicalPayloadSchema : "";
   if (hasSchema) evidence.payloadSchema = `${payloadSchema} exists beside the leaf`;
   evidence.invertibility = hasPlan ? "🧩️plan facet present" : hasInverse ? "↩️inverse facet present" : "neither ↩️inverse nor 🧩️plan is present";
   evidence.diffParticipation = diffSource === null ? "no 🔺️diff facet" : "🔺️diff facet present";
   evidence.requiredLanguageSurfaces = `facets present: rust${hasSchema ? `, ${payloadSchema}` : ""}${hasText ? ", 📝️text" : ""}${hasBinary ? ", 💾️binary" : ""}`;
 
-  // 🧬️The payload schema is a taxonomy LOCATION, not a guess: `mutationPayloadSchemaLocation` puts it
-  // at `🧬️schema/<json>` beside the leaf. A leaf without one has no payload contract to point at.
-  if (!hasSchema) refused.push(`payloadSchema: the leaf carries neither 🧬️schema/${testFilenameForKind(taxonomy, taxonomy.testContributionFileKindId)} nor 🔣️.schema.json, so there is no payload contract to reference`);
+  // 🧬️The payload schema is a taxonomy LOCATION, not a guess. A leaf without one has no payload
+  // contract to point at, and that absence is reported rather than filled in from somewhere else.
+  if (!hasSchema) refused.push(`payloadSchema: the leaf carries no ${canonicalPayloadSchema}, so there is no payload contract to reference`);
   if (refused.length > 0) return { leaf: leafRel, kind, descriptor: null, evidence, refused };
 
   const surfaces = ["rust", ...(hasSchema ? ["json-schema"] : []), ...(hasText ? ["text"] : []), ...(hasBinary ? ["binary"] : [])];
@@ -3670,550 +3679,944 @@ export function scaffoldOwnerDescriptors(repoRoot: string, ownerRel: string): Le
 }
 //#endregion 🏗️LeafScaffold
 
-//#region 🧬️PayloadSchema
-/** 🧬️ A derived payload schema, or the exact Rust type that defeated the derivation. */
-export type PayloadSchemaDerivation = Readonly<{ leaf: string; kind: string; schema: Record<string, unknown> | null; struct: string; refused: readonly string[] }>;
+//#region 🧬️SchemaContracts
+/**
+ * 🧬️ The scope-owned schema contract layer: exactly one eligible owner per contract, named exports
+ * resolved by `(scope id, export id, format id)` through the DERIVED CATALOG, and fixtures that bind
+ * to an export instead of defining one.
+ *
+ * Every lookup here is explicit. There is no nearest-parent walk, no glob, no fixture-local fallback
+ * and no repo-wide type scan: a name either resolves through the declared catalog or produces a
+ * NAMED diagnostic. That is the whole discipline — a contract found by proximity is a contract
+ * nobody declared, and it validates the wrong shape exactly as confidently as the right one.
+ *
+ * @see .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️08/SCOPE-OWNED-SCHEMA-CONTRACTS/📋️execution-contract.md
+ */
+export const SCHEMA_MODULE_DIR_NAME = "🧬️schema";
 
-const RUST_SCALARS: Readonly<Record<string, Record<string, unknown>>> = {
-  String: { type: "string" },
-  str: { type: "string" },
-  bool: { type: "boolean" },
-  u8: { type: "integer", minimum: 0 },
-  u16: { type: "integer", minimum: 0 },
-  u32: { type: "integer", minimum: 0 },
-  u64: { type: "integer", minimum: 0 },
-  usize: { type: "integer", minimum: 0 },
-  i8: { type: "integer" },
-  i16: { type: "integer" },
-  i32: { type: "integer" },
-  i64: { type: "integer" },
-  isize: { type: "integer" },
-  f32: { type: "number" },
-  f64: { type: "number" },
-};
+/** 🚫️ The per-contract directory the contract abolishes — a contract is never its own scope. */
+export const SCHEMA_CONTRACTS_DIR_NAME = "🧬️contracts";
 
-/** 🐍️ serde's `rename_all = "camelCase"` applied to one snake_case field name. */
-function camelCase(field: string): string {
-  return field.replace(/_([a-z0-9])/g, (_, character: string) => character.toUpperCase());
+/** 🧬️ The one JSON Schema dialect this repository speaks. */
+export const SCHEMA_JSON_DIALECT = "http://json-schema.org/draft-07/schema#";
+
+/** 🧬️ Filenames that stop existing once every contract lives in its owner's `🧬️schema/` module. */
+export function isForbiddenSchemaFilename(name: string): boolean {
+  return name.endsWith(".schema.json") || name === "🧬️schema.json";
+}
+
+/** 🔠️ Every diagnostic this layer can emit. A distinct code per distinguishable failure, by design. */
+export const SCHEMA_DIAGNOSTIC_CODES = [
+  "schema-export-resolution-undeclared",
+  "schema-catalog-missing",
+  "schema-catalog-malformed",
+  "schema-uri-malformed",
+  "schema-scope-unknown",
+  "schema-scope-ambiguous",
+  "schema-export-unknown",
+  "schema-format-unavailable",
+  "schema-file-missing",
+  "schema-ref-unresolved",
+  "schema-cross-scope-dependency-forbidden",
+  "schema-placement-forbidden-filename",
+  "schema-placement-outside-module",
+  "schema-contracts-directory-forbidden",
+  "schema-owner-ineligible",
+  "schema-export-incomplete",
+  "schema-dialect-not-draft-07",
+  "schema-module-id-missing",
+  "schema-fixture-defines-schema",
+  "schema-fixture-local-schema-fallback",
+  "schema-fixture-metadata-invalid",
+  "schema-fixture-parse-failed",
+  "schema-instance-invalid",
+] as const;
+export type SchemaDiagnosticCode = (typeof SCHEMA_DIAGNOSTIC_CODES)[number];
+
+/** 🩺️ One finding, with everything needed to act on it and nothing inferred. */
+export type SchemaDiagnostic = Readonly<{ code: SchemaDiagnosticCode; scope: string | null; export: string | null; format: string | null; path: string | null; detail: string }>;
+
+function schemaDiagnostic(code: SchemaDiagnosticCode, detail: string, where: Partial<Omit<SchemaDiagnostic, "code" | "detail">> = {}): SchemaDiagnostic {
+  return { code, detail, scope: where.scope ?? null, export: where.export ?? null, format: where.format ?? null, path: where.path ?? null };
+}
+
+/** 🔣️ The `schema://` scheme and the catalog it resolves through, as the taxonomy declares them. */
+export type SchemaExportResolution = Readonly<{ scheme: string; catalogPath: string }>;
+
+/** 📚️ One scope's row in the derived catalog. `formats` values are repository-relative file paths. */
+export type SchemaCatalogScope = Readonly<{ path: string; formats: Readonly<Record<string, string>>; exports: readonly string[]; dependsOn: readonly string[]; hashes: Readonly<Record<string, string>> }>;
+
+/** 📚️ The derived catalog: the single place `(scope id, export id, format id)` is answered from. */
+export type SchemaCatalog = Readonly<{ scopes: Readonly<Record<string, SchemaCatalogScope>> }>;
+
+/** 🎯️ One resolved export — the file a consumer actually reads, pinned by digest. */
+export type ResolvedSchemaExport = Readonly<{ uri: string; scope: string; export: string; format: string; path: string; digest: string }>;
+
+const rawTaxonomyCache = new Map<string, Record<string, unknown>>();
+const schemaCatalogCache = new Map<string, { catalog: SchemaCatalog | null; diagnostics: readonly SchemaDiagnostic[] }>();
+
+/** ♻️ Drops the taxonomy/catalog memoisation. Synthetic-tree tests build a new repository per case. */
+export function clearSchemaContractCache(): void {
+  rawTaxonomyCache.clear();
+  schemaCatalogCache.clear();
+}
+
+function rawTaxonomy(repoRoot: string): Record<string, unknown> {
+  const cached = rawTaxonomyCache.get(repoRoot);
+  if (cached !== undefined) return cached;
+  const parsed = JSON.parse(readFileSync(join(repoRoot, TAXONOMY_REL_PATH), "utf8")) as Record<string, unknown>;
+  rawTaxonomyCache.set(repoRoot, parsed);
+  return parsed;
 }
 
 /**
- * 🧬️ Maps ONE Rust type onto JSON Schema, or returns null when it is not a shape this can decide.
+ * 🔣️ Reads the `schema://` resolution declaration out of the taxonomy.
  *
- * Refusing an unknown type is the whole discipline. Emitting a permissive `{"type": "object"}` for a
- * type it does not understand would produce a payload contract that accepts anything — which is
- * indistinguishable, to every downstream gate, from a contract that was carefully written to accept
- * exactly the right thing.
+ * The catalog's location is VOCABULARY, not a constant restated here: two places that both know
+ * where the catalog lives are two places that can disagree about it. When the taxonomy declares
+ * nothing, this refuses with a named diagnostic rather than defaulting to a path — a default would
+ * make an undeclared mechanism look configured.
  */
-
-/** 🌱️ True when a named type is the JSON value model — the six variants, whatever it is called. */
-function jsonValueShaped(name: string, resolve?: (candidate: string) => Record<string, unknown> | null): boolean {
-  if (resolve === undefined || !/^[A-Z][A-Za-z0-9_]*$/.test(name)) return false;
-  const body = jsonValueBodies.get(name);
-  if (body === undefined) return false;
-  const variants = new Set(body);
-  return ["Null", "Bool", "Number", "String", "Array", "Object"].every((required) => variants.has(required));
+export function schemaExportResolution(repoRoot: string): { resolution: SchemaExportResolution | null; diagnostics: SchemaDiagnostic[] } {
+  const declared = rawTaxonomy(repoRoot).schemaExportResolution;
+  if (declared === undefined || declared === null || typeof declared !== "object" || Array.isArray(declared)) {
+    return { resolution: null, diagnostics: [schemaDiagnostic("schema-export-resolution-undeclared", `${TAXONOMY_REL_PATH} declares no \`schemaExportResolution\`; the \`schema://\` scheme has no catalog to resolve through`, { path: TAXONOMY_REL_PATH })] };
+  }
+  const { scheme, catalogPath } = declared as { scheme?: unknown; catalogPath?: unknown };
+  if (scheme !== "schema://" || typeof catalogPath !== "string" || catalogPath.length === 0) {
+    return { resolution: null, diagnostics: [schemaDiagnostic("schema-export-resolution-undeclared", `${TAXONOMY_REL_PATH} \`schemaExportResolution\` must declare \`scheme\` "schema://" and a non-empty repository-relative \`catalogPath\``, { path: TAXONOMY_REL_PATH })] };
+  }
+  return { resolution: { scheme, catalogPath }, diagnostics: [] };
 }
 
-const jsonValueBodies = new Map<string, string[]>();
+/** 🔣️ The normative format of the `🧬️data` facet — the one a bare `schema://` URI resolves to. */
+export function normativeSchemaFormat(repoRoot: string): string {
+  const kinds = rawTaxonomy(repoRoot).schemaFacetKinds as Record<string, { normativeFormat?: string }> | undefined;
+  const normative = kinds?.["🧬️data"]?.normativeFormat;
+  if (typeof normative !== "string" || normative.length === 0) throw new Error(`${TAXONOMY_REL_PATH} declares no normative format for the 🧬️data schema facet`);
+  return normative;
+}
 
-export function rustTypeToJsonSchema(rustType: string, resolve?: (name: string) => Record<string, unknown> | null, seen: ReadonlySet<string> = new Set()): Record<string, unknown> | null {
-  const type = rustType.trim();
-  const scalar = RUST_SCALARS[type];
-  if (scalar !== undefined) return { ...scalar };
-  // 🌱️OPEN-ENDED VALUE TYPES. `DslValue` is literally the JSON value model — `Null | Bool | Number |
-  // String | Array | Object` — and `serde_json::Value` is the same thing. Their honest schema is "any
-  // JSON value", which is what `{}` means; refusing them was over-strict, not principled, and it
-  // blocked whole owners because the scaffolder needs EVERY leaf of an owner described before it will
-  // emit any of them.
-  if (/^(?:[a-z_]+::)*(?:DslValue|JsonValue|Value)$/.test(type)) return { description: "any JSON value" };
-  // 🌱️STRUCTURAL detection of the same thing under another name. `GltfJson` is `Null | Bool(bool) |
-  // Number(f64) | String(String) | Array(Vec<Self>) | Object(Vec<(String, Self)>)` — the JSON value
-  // model exactly, so its schema is "any JSON value" whatever the enum is called. Matching on the SHAPE
-  // rather than on a list of names is what makes this a rule instead of a special case.
-  if (jsonValueShaped(type, resolve)) return { description: "any JSON value" };
-  const option = type.match(/^Option\s*<\s*(.+)\s*>$/s);
-  if (option !== null) return rustTypeToJsonSchema(option[1]!, resolve, seen);
-  const vector = type.match(/^Vec\s*<\s*(.+)\s*>$/s);
-  if (vector !== null) {
-    const items = rustTypeToJsonSchema(vector[1]!, resolve, seen);
-    return items === null ? null : { type: "array", items };
+/** 🔣️ The canonical filename one schema format is written under inside a `🧬️schema/` module. */
+export function schemaFormatFilename(repoRoot: string, format: string): string | null {
+  const formats = rawTaxonomy(repoRoot).schemaFormats as Record<string, { fileKindId?: string }> | undefined;
+  const kindId = formats?.[format]?.fileKindId;
+  if (typeof kindId !== "string") return null;
+  return testFilenameForKind(testTaxonomy(repoRoot), kindId);
+}
+
+/**
+ * 📚️ Reads the derived catalog from the declared path.
+ *
+ * It is READ, never searched for: an absent catalog is reported as absent. Walking the tree to find
+ * "a file that looks like the catalog" would reintroduce, one layer up, exactly the discovery
+ * heuristic this whole layer exists to remove.
+ */
+export function readSchemaCatalog(repoRoot: string): { catalog: SchemaCatalog | null; diagnostics: readonly SchemaDiagnostic[] } {
+  const cached = schemaCatalogCache.get(repoRoot);
+  if (cached !== undefined) return cached;
+  const result = loadSchemaCatalog(repoRoot);
+  schemaCatalogCache.set(repoRoot, result);
+  return result;
+}
+
+function loadSchemaCatalog(repoRoot: string): { catalog: SchemaCatalog | null; diagnostics: readonly SchemaDiagnostic[] } {
+  const { resolution, diagnostics } = schemaExportResolution(repoRoot);
+  if (resolution === null) return { catalog: null, diagnostics };
+  const abs = join(repoRoot, resolution.catalogPath);
+  if (!existsSync(abs)) return { catalog: null, diagnostics: [schemaDiagnostic("schema-catalog-missing", `the declared schema catalog ${resolution.catalogPath} does not exist; generate it with \`schema generate\` before resolving any schema:// reference`, { path: resolution.catalogPath })] };
+  let text: string;
+  try {
+    text = readFileSync(abs, "utf8");
+  } catch (error) {
+    return { catalog: null, diagnostics: [schemaDiagnostic("schema-catalog-malformed", `the schema catalog could not be read: ${error instanceof Error ? error.message : String(error)}`, { path: resolution.catalogPath })] };
   }
-  // 🎚️A tuple is a positional array; serde writes it with one schema per position.
-  const tuple = type.match(/^\(\s*(.+)\s*\)$/s);
-  if (tuple !== null && tuple[1]!.includes(",")) {
-    const parts: string[] = [];
-    let level = 0;
-    let current = "";
-    for (const character of tuple[1]!) {
-      if (character === "<" || character === "(" || character === "[") level += 1;
-      if (character === ">" || character === ")" || character === "]") level -= 1;
-      if (character === "," && level === 0) {
-        parts.push(current);
-        current = "";
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(text);
+  } catch (error) {
+    return { catalog: null, diagnostics: [schemaDiagnostic("schema-catalog-malformed", `the schema catalog is not JSON: ${error instanceof Error ? error.message : String(error)}`, { path: resolution.catalogPath })] };
+  }
+  const scopes = (parsed as { scopes?: unknown }).scopes;
+  if (scopes === undefined || scopes === null || typeof scopes !== "object" || Array.isArray(scopes)) {
+    return { catalog: null, diagnostics: [schemaDiagnostic("schema-catalog-malformed", "the schema catalog carries no `scopes` object", { path: resolution.catalogPath })] };
+  }
+  const found: SchemaDiagnostic[] = [];
+  const byPath = new Map<string, string>();
+  for (const [id, row] of Object.entries(scopes as Record<string, unknown>)) {
+    const scope = row as Partial<SchemaCatalogScope>;
+    if (typeof scope.path !== "string" || typeof scope.formats !== "object" || scope.formats === null || !Array.isArray(scope.exports) || !Array.isArray(scope.dependsOn)) {
+      found.push(schemaDiagnostic("schema-catalog-malformed", `catalog scope ${JSON.stringify(id)} must carry \`path\`, \`formats\`, \`exports\` and \`dependsOn\``, { scope: id, path: resolution.catalogPath }));
+      continue;
+    }
+    // 🪞️A scope id declared twice in the catalog TEXT collapses on parse, so it is counted in the raw
+    // bytes: two owners claiming one id is an ambiguity nothing downstream could otherwise see.
+    const declarations = text.split(`${JSON.stringify(id)}:`).length - 1 + (text.split(`${JSON.stringify(id)} :`).length - 1);
+    if (declarations > 1) found.push(schemaDiagnostic("schema-scope-ambiguous", `the catalog declares the scope id ${JSON.stringify(id)} ${declarations} times`, { scope: id, path: resolution.catalogPath }));
+    const priorId = byPath.get(scope.path);
+    if (priorId !== undefined) found.push(schemaDiagnostic("schema-scope-ambiguous", `scope ids ${JSON.stringify(priorId)} and ${JSON.stringify(id)} both own ${scope.path}`, { scope: id, path: scope.path }));
+    else byPath.set(scope.path, id);
+    for (const [format, file] of Object.entries(scope.formats)) {
+      if (typeof file !== "string" || !file.startsWith(`${scope.path}/`)) found.push(schemaDiagnostic("schema-catalog-malformed", `scope ${JSON.stringify(id)} format ${format} must name a repository-relative file under ${scope.path}/`, { scope: id, format, path: resolution.catalogPath }));
+    }
+  }
+  return { catalog: { scopes: scopes as Record<string, SchemaCatalogScope> }, diagnostics: found };
+}
+
+const SCHEMA_URI_RE = /^schema:\/\/([a-z0-9]+(?:[.-][a-z0-9]+)*)\/([A-Z][A-Za-z0-9]*)$/;
+
+/** 🔗️ Splits a `schema://<scope id>/<ExportId>` URI, or refuses it. Nothing else is a schema URI. */
+export function parseSchemaUri(uri: string): { scope: string; export: string } | null {
+  const match = uri.match(SCHEMA_URI_RE);
+  return match === null ? null : { scope: match[1]!, export: match[2]! };
+}
+
+/**
+ * 🎯️ Resolves `schema://<scope>/<Export>` to the file one format of that export is written in.
+ *
+ * Each failure gets its OWN code — malformed URI, unknown scope, unknown export, unavailable format,
+ * missing file — because "it did not resolve" is not actionable and every one of those five is.
+ */
+export function resolveSchemaExport(repoRoot: string, uri: string, format?: string): { resolved: ResolvedSchemaExport | null; diagnostics: readonly SchemaDiagnostic[] } {
+  const parsed = parseSchemaUri(uri);
+  if (parsed === null) return { resolved: null, diagnostics: [schemaDiagnostic("schema-uri-malformed", `${JSON.stringify(uri)} is not a schema://<scope id>/<ExportId> reference`, { path: null })] };
+  const { catalog, diagnostics } = readSchemaCatalog(repoRoot);
+  if (catalog === null) return { resolved: null, diagnostics };
+  const scope = catalog.scopes[parsed.scope];
+  if (scope === undefined) return { resolved: null, diagnostics: [...diagnostics, schemaDiagnostic("schema-scope-unknown", `the catalog declares no scope ${JSON.stringify(parsed.scope)}`, { scope: parsed.scope, export: parsed.export })] };
+  if (!scope.exports.includes(parsed.export)) return { resolved: null, diagnostics: [...diagnostics, schemaDiagnostic("schema-export-unknown", `scope ${JSON.stringify(parsed.scope)} exports ${scope.exports.length === 0 ? "nothing" : scope.exports.join(", ")} — not ${JSON.stringify(parsed.export)}`, { scope: parsed.scope, export: parsed.export })] };
+  const chosen = format ?? normativeSchemaFormat(repoRoot);
+  const file = scope.formats[chosen];
+  if (typeof file !== "string") return { resolved: null, diagnostics: [...diagnostics, schemaDiagnostic("schema-format-unavailable", `scope ${JSON.stringify(parsed.scope)} declares no ${chosen} implementation`, { scope: parsed.scope, export: parsed.export, format: chosen })] };
+  if (!existsSync(join(repoRoot, file))) return { resolved: null, diagnostics: [...diagnostics, schemaDiagnostic("schema-file-missing", `the catalog names ${file} for ${chosen}, and that file does not exist`, { scope: parsed.scope, export: parsed.export, format: chosen, path: file })] };
+  // 🧫️A contract may never be answered out of a fixture or test tree. Resolution reaching one means
+  // the catalog itself was built over an ineligible owner, and every consumer of it is reading an
+  // example as if it were the contract.
+  if (isFixtureOwnedPath(file)) return { resolved: null, diagnostics: [...diagnostics, schemaDiagnostic("schema-fixture-local-schema-fallback", `${file} lies under a fixture or test directory, so it cannot answer ${uri}`, { scope: parsed.scope, export: parsed.export, format: chosen, path: file })] };
+  return { resolved: { uri, scope: parsed.scope, export: parsed.export, format: chosen, path: file, digest: fileDigest(join(repoRoot, file)) }, diagnostics };
+}
+
+/** 🧫️ Whether a repository-relative path lives inside a test or fixture collection. */
+export function isFixtureOwnedPath(rel: string): boolean {
+  const segments = rel.split("/");
+  return segments.some((name, index) => isTestOrFixtureSegment(name) && !isModuleMemberSegment(segments, index));
+}
+
+function isTestOrFixtureSegment(name: string): boolean {
+  return name.startsWith("🧪️") || name.startsWith("🧫️");
+}
+
+/**
+ * 🔨️ Whether the segment at `index` is a `🔨️modules/<m>` member.
+ *
+ * The repository test platform IS a product module named `🧪️test`, and it owns a real schema module.
+ * Reading the leading emoji alone would make the platform that enforces this contract the contract's
+ * largest violator, so the MODULE POSITION decides, not the emoji.
+ */
+function isModuleMemberSegment(segments: readonly string[], index: number): boolean {
+  return index > 0 && segments[index - 1] === "🔨️modules";
+}
+
+/** 🏛️ One eligibility verdict for a candidate scope owner directory. */
+export type SchemaScopeEligibility = Readonly<{ path: string; eligible: boolean; level: string | null; reason: string }>;
+
+const SCHEMA_SCOPE_LEVELS: readonly (readonly [string, RegExp])[] = [
+  ["plugin-root", /^✏️s\/🔌️plugins\/[^/]+$/u],
+  ["artifact-subset", /\/🏅️standards\/[^/]+\/🪆️subsets\/[^/]+$/u],
+  ["surface", /\/(?:🎚️config|👥️presence|🫧️transient)$/u],
+  ["mutation-leaf", /\/🧬️schema\/🧬️mutations\/[^/]+$/u],
+  ["framework-module", /^🧰️framework\/🔨️modules\/[^/]+(?:\/.+)?$/u],
+  ["product-module", /^🧰️framework\/🛍️products\/[^/]+\/🔨️modules\/[^/]+(?:\/.+)?$/u],
+  ["hub-area", /^🌎️hub\/[^/]+$/u],
+];
+
+const SCHEMA_INELIGIBLE_SEGMENTS: readonly (readonly [string, string])[] = [
+  ["🧱️elements", "a `🧱️elements` member is a UI element, and a UI element consumes contracts rather than owning them"],
+  ["🎯️targets", "a `🎯️targets` member is a build target of an owner, not an owner"],
+  ["📦️packages", "a `📦️packages` member is a publication of an owner's contract, not its authority"],
+  [SCHEMA_CONTRACTS_DIR_NAME, "a per-contract directory makes every contract its own scope, which is the arrangement this contract abolishes"],
+];
+
+/**
+ * 🏛️ Whether a directory may own a `🧬️schema/` module.
+ *
+ * Eligibility is POSITIONAL. It is decided by where a directory sits in the taxonomy, never by what a
+ * file inside it happens to be called, so an owner cannot acquire authority by having a schema put
+ * next to it.
+ */
+export function schemaScopeEligibility(ownerPath: string): SchemaScopeEligibility {
+  const path = ownerPath.replace(/\/+$/u, "");
+  const segments = path.split("/");
+  for (const [segment, why] of SCHEMA_INELIGIBLE_SEGMENTS) {
+    if (segments.includes(segment)) return { path, eligible: false, level: null, reason: `${segment}: ${why}` };
+  }
+  const fixtureAt = segments.findIndex((name, index) => isTestOrFixtureSegment(name) && !isModuleMemberSegment(segments, index));
+  if (fixtureAt >= 0) return { path, eligible: false, level: null, reason: `${segments[fixtureAt]}: a test or fixture collection holds examples, and an example never defines the contract it is an example of` };
+  for (const [level, pattern] of SCHEMA_SCOPE_LEVELS) {
+    if (pattern.test(path)) return { path, eligible: true, level, reason: `${level}: a declared scope owner level` };
+  }
+  return { path, eligible: false, level: null, reason: "no declared scope owner level matches this path" };
+}
+
+/** 🧬️ Whether a parsed JSON document DEFINES a schema, as opposed to being validated by one. */
+export function isJsonSchemaDefinition(document: unknown): boolean {
+  if (document === null || typeof document !== "object" || Array.isArray(document)) return false;
+  const dialect = (document as { $schema?: unknown }).$schema;
+  // 🧭️An INSTANCE names the schema that validates it — a relative path to a `🧬️schema/` module. A
+  // DEFINITION names a meta-schema on json-schema.org. That one distinction is what keeps every
+  // `$schema`-carrying config file out of these findings.
+  return typeof dialect === "string" && /^https?:\/\/json-schema\.org\//u.test(dialect);
+}
+
+/** 🧬️ Whether a schema definition declares the one dialect this repository speaks. */
+export function isDraft07Definition(document: unknown): boolean {
+  return isJsonSchemaDefinition(document) && (document as { $schema: string }).$schema === SCHEMA_JSON_DIALECT;
+}
+
+function readJson(abs: string): unknown | undefined {
+  try {
+    return JSON.parse(readFileSync(abs, "utf8"));
+  } catch {
+    return undefined;
+  }
+}
+
+/**
+ * 🧬️ Reads a file only far enough to decide whether it DEFINES a schema.
+ *
+ * A definition necessarily names a json-schema.org meta-schema, so the substring test settles the
+ * overwhelming majority of a monorepo's JSON without parsing it. The parse still decides — the
+ * prefilter can only produce candidates, never verdicts.
+ */
+function readSchemaDefinition(abs: string): unknown | undefined {
+  let text: string;
+  try {
+    text = readFileSync(abs, "utf8");
+  } catch {
+    return undefined;
+  }
+  if (!text.includes("json-schema.org")) return undefined;
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(text);
+  } catch {
+    return undefined;
+  }
+  return isJsonSchemaDefinition(parsed) ? parsed : undefined;
+}
+
+/** 🗂️ Every file under a subtree, repository-relative, skipping the taxonomy's exclusions. */
+export function schemaTreeFiles(repoRoot: string, under = ""): string[] {
+  const files: string[] = [];
+  const walk = (absDir: string, relDir: string): void => {
+    let entries: import("node:fs").Dirent[];
+    try {
+      entries = readdirSync(absDir, { withFileTypes: true });
+    } catch {
+      return;
+    }
+    for (const entry of entries) {
+      if (entry.isSymbolicLink()) continue;
+      const rel = relDir.length === 0 ? entry.name : `${relDir}/${entry.name}`;
+      if (entry.isDirectory()) {
+        // 🗑️A dot-directory is tooling state — `.nx/cache` alone carries six generated copies of one
+        // manifest schema. Generated output is never an authority, and counting it as one reports the
+        // same violation once per cache entry.
+        if (entry.name.startsWith(".") || SKIP_DIR_NAMES.has(entry.name) || isExcludedTestPath(repoRoot, rel)) continue;
+        walk(join(absDir, entry.name), rel);
         continue;
       }
-      current += character;
+      if (entry.isFile()) files.push(rel);
     }
-    parts.push(current);
-    const items = parts.map((part) => rustTypeToJsonSchema(part.trim(), resolve, seen));
-    if (items.some((item) => item === null)) return null;
-    return { type: "array", prefixItems: items, minItems: items.length, maxItems: items.length };
+  };
+  walk(join(repoRoot, under), under);
+  return files.sort();
+}
+
+/**
+ * 📍️ Placement: a schema definition lives in its owner's `🧬️schema/` module, under the canonical
+ * filename of its format, and nowhere else.
+ */
+export function schemaPlacementDiagnostics(repoRoot: string, files: readonly string[] = schemaTreeFiles(repoRoot), inert: ReadonlySet<string> = inertSchemaDataPaths(repoRoot, files)): SchemaDiagnostic[] {
+  const found: SchemaDiagnostic[] = [];
+  const seenContractDirs = new Set<string>();
+  for (const rel of files) {
+    const segments = rel.split("/");
+    const name = segments[segments.length - 1]!;
+    const dirSegments = segments.slice(0, -1);
+    const contractsAt = dirSegments.indexOf(SCHEMA_CONTRACTS_DIR_NAME);
+    if (contractsAt >= 0) {
+      const dir = dirSegments.slice(0, contractsAt + 1).join("/");
+      if (!seenContractDirs.has(dir)) {
+        seenContractDirs.add(dir);
+        found.push(schemaDiagnostic("schema-contracts-directory-forbidden", `${dir} is a per-contract directory; the contract belongs in the owning scope's ${SCHEMA_MODULE_DIR_NAME}/ module as a named export`, { path: dir }));
+      }
+    }
+    if (!name.endsWith(".json") || inert.has(rel)) continue;
+    if (isForbiddenSchemaFilename(name)) {
+      found.push(schemaDiagnostic("schema-placement-forbidden-filename", `${rel} uses a retired schema filename; a schema module writes JSON Schema as ${SCHEMA_MODULE_DIR_NAME}/🔣️.json`, { path: rel }));
+      continue;
+    }
+    const document = readSchemaDefinition(join(repoRoot, rel));
+    if (document === undefined) continue;
+    const moduleDir = schemaModuleDirOf(dirSegments);
+    if (moduleDir === null) {
+      found.push(schemaDiagnostic("schema-placement-outside-module", `${rel} defines a schema outside any ${SCHEMA_MODULE_DIR_NAME}/ module`, { path: rel }));
+      continue;
+    }
+    if (!isDraft07Definition(document)) found.push(schemaDiagnostic("schema-dialect-not-draft-07", `${rel} declares ${JSON.stringify((document as { $schema: string }).$schema)}; this repository speaks ${SCHEMA_JSON_DIALECT}`, { path: rel }));
   }
-  // 🔗️`ArtifactChild<S>` is the framework's CHILD HANDLE, and its wire shape does not depend on `S`:
-  // the phantom marker and the local owner are both `#[serde(skip)]`, leaving `child_id` and `target`
-  // (an `ArtifactRef` of `artifact_id` + `dialect`). Read from the struct, not guessed — and it is what
-  // every composite artifact uses to point at its children, so refusing it refused them all.
-  const child = type.match(/^(?:[a-z_]+::)*ArtifactChild\s*<.*>$/s);
-  if (child !== null) {
+  return found;
+}
+
+/** 🧬️ The `🧬️schema/` module a directory belongs to, or null when it is outside every module. */
+function schemaModuleDirOf(dirSegments: readonly string[]): string | null {
+  const at = dirSegments.lastIndexOf(SCHEMA_MODULE_DIR_NAME);
+  return at < 0 ? null : dirSegments.slice(0, at + 1).join("/");
+}
+
+/** 🏛️ Owner eligibility: every `🧬️schema/` module on disk sits on a declared scope owner level. */
+export function schemaOwnerEligibilityDiagnostics(repoRoot: string, files: readonly string[] = schemaTreeFiles(repoRoot)): SchemaDiagnostic[] {
+  const found: SchemaDiagnostic[] = [];
+  const owners = new Set<string>();
+  for (const rel of files) {
+    const dirSegments = rel.split("/").slice(0, -1);
+    const moduleDir = schemaModuleDirOf(dirSegments);
+    if (moduleDir === null) continue;
+    owners.add(moduleDir.slice(0, moduleDir.length - SCHEMA_MODULE_DIR_NAME.length - 1));
+  }
+  for (const owner of [...owners].sort()) {
+    // 🧬️A mutation leaf's own `🧬️schema/` sits INSIDE its owner's `🧬️schema/🧬️mutations/` — the leaf
+    // is the declared authority for its payload, so the leaf path is what is judged, not its ancestor.
+    const verdict = schemaScopeEligibility(owner);
+    if (!verdict.eligible) found.push(schemaDiagnostic("schema-owner-ineligible", `${owner} carries a ${SCHEMA_MODULE_DIR_NAME}/ module and is not an eligible scope owner — ${verdict.reason}`, { path: owner }));
+  }
+  return found;
+}
+
+/** 🧫️ Fixture isolation: an example never defines the contract it is an example of. */
+export function schemaFixtureIsolationDiagnostics(repoRoot: string, files: readonly string[] = schemaTreeFiles(repoRoot), inert: ReadonlySet<string> = inertSchemaDataPaths(repoRoot, files)): SchemaDiagnostic[] {
+  const found: SchemaDiagnostic[] = [];
+  for (const rel of files) {
+    if (!rel.endsWith(".json") || !isFixtureOwnedPath(rel) || inert.has(rel)) continue;
+    if (readSchemaDefinition(join(repoRoot, rel)) === undefined) continue;
+    found.push(schemaDiagnostic("schema-fixture-defines-schema", `${rel} defines a schema inside a fixture or test collection; move the contract into the owning scope and bind the example to it with a schema:// target`, { path: rel }));
+  }
+  return found;
+}
+
+/**
+ * 🧾️ Schema-shaped documents a case DECLARES as inert data — a parser test's own corpus.
+ *
+ * The declaration is explicit and lives in the case's own data file, so "this JSON is a subject, not
+ * a contract" is a statement someone made rather than a shape something happened to have.
+ */
+function inertSchemaDataPaths(repoRoot: string, files: readonly string[]): Set<string> {
+  const declared = new Set<string>();
+  const caseFile = testFilenameForKind(testTaxonomy(repoRoot), testTaxonomy(repoRoot).testContributionFileKindId);
+  for (const rel of files) {
+    if (!rel.endsWith(`/${caseFile}`) || !isFixtureOwnedPath(rel)) continue;
+    const document = readJson(join(repoRoot, rel));
+    const names = (document as { inertSchemaData?: unknown } | undefined)?.inertSchemaData;
+    if (!Array.isArray(names)) continue;
+    const dir = rel.slice(0, rel.lastIndexOf("/"));
+    for (const name of names) if (typeof name === "string") declared.add(`${dir}/${name}`);
+  }
+  return declared;
+}
+
+/**
+ * ✅️ Completeness: every export the JSON Schema module declares exists, under the same name, in
+ * every format the module actually implements.
+ *
+ * A format file that declares four of five exports is worse than an absent one: consumers of the
+ * fifth get a link error at build time in one language and silence in another.
+ */
+export function schemaExportCompletenessDiagnostics(repoRoot: string, scopeId: string, scope: SchemaCatalogScope): SchemaDiagnostic[] {
+  const found: SchemaDiagnostic[] = [];
+  const jsonFile = scope.formats["🔣️jsonschema"];
+  if (typeof jsonFile !== "string") return [schemaDiagnostic("schema-format-unavailable", `scope ${JSON.stringify(scopeId)} declares no 🔣️jsonschema implementation, so its exports have no normative definition`, { scope: scopeId })];
+  const document = readJson(join(repoRoot, jsonFile));
+  if (document === undefined) return [schemaDiagnostic("schema-catalog-malformed", `${jsonFile} is not readable JSON`, { scope: scopeId, path: jsonFile })];
+  if (typeof (document as { $id?: unknown }).$id !== "string") found.push(schemaDiagnostic("schema-module-id-missing", `${jsonFile} declares no $id, so nothing can $ref it across scopes`, { scope: scopeId, path: jsonFile }));
+  if (!isDraft07Definition(document)) found.push(schemaDiagnostic("schema-dialect-not-draft-07", `${jsonFile} does not declare ${SCHEMA_JSON_DIALECT}`, { scope: scopeId, path: jsonFile }));
+  const defs = ((document as { $defs?: unknown }).$defs ?? {}) as Record<string, unknown>;
+  for (const exported of scope.exports) {
+    if (!Object.hasOwn(defs, exported)) found.push(schemaDiagnostic("schema-export-unknown", `the catalog lists export ${JSON.stringify(exported)} that ${jsonFile} does not declare in $defs`, { scope: scopeId, export: exported, path: jsonFile }));
+  }
+  for (const exported of Object.keys(defs)) {
+    if (!/^[A-Z][A-Za-z0-9]*$/u.test(exported) || !scope.exports.includes(exported)) continue;
+    for (const [format, file] of Object.entries(scope.formats)) {
+      if (format === "🔣️jsonschema") continue;
+      const abs = join(repoRoot, file);
+      if (!existsSync(abs)) {
+        found.push(schemaDiagnostic("schema-file-missing", `the catalog names ${file} for ${format}, and that file does not exist`, { scope: scopeId, format, path: file }));
+        continue;
+      }
+      if (declaresSchemaExport(format, readFileSync(abs, "utf8"), exported)) continue;
+      found.push(schemaDiagnostic("schema-export-incomplete", `${file} declares no ${format} entity named ${exported}`, { scope: scopeId, export: exported, format, path: file }));
+    }
+  }
+  return found;
+}
+
+/** 🔎️ Whether one format's source declares a same-named entity for an export. */
+export function declaresSchemaExport(format: string, source: string, exported: string): boolean {
+  const name = exported.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&");
+  switch (format) {
+    case "🛰️protobuf":
+      return new RegExp(`^\\s*message\\s+${name}\\b`, "mu").test(source);
+    case "🔗️graphql":
+      return new RegExp(`^\\s*(?:type|input|interface|union|enum|scalar)\\s+${name}\\b`, "mu").test(source);
+    case "🦀️rust":
+      return new RegExp(`^\\s*pub\\s+(?:struct|enum|type)\\s+${name}\\b`, "mu").test(source);
+    case "🟦️typescript":
+      return new RegExp(`^\\s*export\\s+(?:interface|type|const|class)\\s+${name}\\b`, "mu").test(source);
+    default:
+      return false;
+  }
+}
+
+/**
+ * 🔗️ Export resolution over the whole catalog: every `$ref` lands on a declared export, and a
+ * cross-scope reference is only legal when the referring scope DECLARED that dependency.
+ *
+ * A recursive `$ref` inside one module is ordinary and stays legal; what is refused is a reference
+ * that reaches into another scope without saying so, which is how a private shape becomes a public
+ * contract without anyone deciding it should.
+ */
+export function schemaResolutionDiagnostics(repoRoot: string): SchemaDiagnostic[] {
+  const { catalog, diagnostics } = readSchemaCatalog(repoRoot);
+  if (catalog === null) return [...diagnostics];
+  const found: SchemaDiagnostic[] = [...diagnostics];
+  const scopeOfId = new Map<string, string>();
+  for (const [id, scope] of Object.entries(catalog.scopes)) {
+    const file = scope.formats["🔣️jsonschema"];
+    if (typeof file !== "string") continue;
+    const document = readJson(join(repoRoot, file));
+    const declaredId = (document as { $id?: unknown } | undefined)?.$id;
+    if (typeof declaredId === "string") scopeOfId.set(declaredId, id);
+  }
+  for (const [id, scope] of Object.entries(catalog.scopes)) {
+    found.push(...schemaExportCompletenessDiagnostics(repoRoot, id, scope));
+    const file = scope.formats["🔣️jsonschema"];
+    if (typeof file !== "string") continue;
+    const document = readJson(join(repoRoot, file));
+    if (document === undefined) continue;
+    const defs = ((document as { $defs?: unknown }).$defs ?? {}) as Record<string, unknown>;
+    for (const ref of jsonRefsIn(document)) {
+      const local = ref.match(/^#\/\$defs\/([A-Za-z0-9_]+)$/u);
+      if (local !== null) {
+        if (!Object.hasOwn(defs, local[1]!)) found.push(schemaDiagnostic("schema-ref-unresolved", `${file} references ${ref}, and this module declares no such $def`, { scope: id, export: local[1]!, path: file }));
+        continue;
+      }
+      const remote = ref.match(/^(https?:\/\/[^#]+)#\/\$defs\/([A-Za-z0-9_]+)$/u);
+      if (remote === null) {
+        found.push(schemaDiagnostic("schema-ref-unresolved", `${file} references ${JSON.stringify(ref)}; a cross-scope reference names the target module's $id plus #/$defs/<ExportId>, never a file path`, { scope: id, path: file }));
+        continue;
+      }
+      const targetScope = scopeOfId.get(remote[1]!);
+      if (targetScope === undefined) {
+        found.push(schemaDiagnostic("schema-ref-unresolved", `${file} references ${remote[1]!}, and no catalog scope declares that $id`, { scope: id, export: remote[2]!, path: file }));
+        continue;
+      }
+      if (targetScope === id) continue;
+      if (!catalog.scopes[targetScope]!.exports.includes(remote[2]!)) {
+        found.push(schemaDiagnostic("schema-export-unknown", `${file} references ${remote[2]!} from scope ${targetScope}, which does not export it`, { scope: id, export: remote[2]!, path: file }));
+        continue;
+      }
+      if (!scope.dependsOn.includes(targetScope)) found.push(schemaDiagnostic("schema-cross-scope-dependency-forbidden", `scope ${id} references ${targetScope}/${remote[2]!} without declaring ${targetScope} in dependsOn`, { scope: id, export: remote[2]!, path: file }));
+    }
+  }
+  return found;
+}
+
+/** 🔗️ Every `$ref` string anywhere in a JSON document. */
+function jsonRefsIn(document: unknown): string[] {
+  const refs: string[] = [];
+  const visit = (node: unknown): void => {
+    if (Array.isArray(node)) {
+      for (const item of node) visit(item);
+      return;
+    }
+    if (node === null || typeof node !== "object") return;
+    for (const [key, value] of Object.entries(node)) {
+      if (key === "$ref" && typeof value === "string") refs.push(value);
+      else visit(value);
+    }
+  };
+  visit(document);
+  return refs;
+}
+
+/** 🩺️ Every schema-contract invariant, over the whole tree. One walk, one ordered finding list. */
+export function schemaContractDiagnostics(repoRoot: string, under = ""): SchemaDiagnostic[] {
+  const files = schemaTreeFiles(repoRoot, under);
+  const inert = inertSchemaDataPaths(repoRoot, files);
+  return [...schemaPlacementDiagnostics(repoRoot, files, inert), ...schemaOwnerEligibilityDiagnostics(repoRoot, files), ...schemaFixtureIsolationDiagnostics(repoRoot, files, inert), ...(under.length === 0 ? schemaResolutionDiagnostics(repoRoot) : [])];
+}
+//#endregion 🧬️SchemaContracts
+
+//#region 🧬️SchemaValidation
+/** ❌️ One structural validation failure, located in the instance. */
+export type SchemaValidationError = Readonly<{ instancePath: string; keyword: string; detail: string }>;
+
+/**
+ * 🧬️ Validates an instance against a draft-07 schema.
+ *
+ * This is OUR implementation, on purpose: the harness may not take a runtime dependency on a
+ * validator, and a validator nobody can read is a contract nobody can audit. Its verdicts are held
+ * against ajv case by case in `🧬️invariants.test.ts`, so "our own" never means "unverified".
+ */
+export function validateAgainstJsonSchema(schema: unknown, instance: unknown, root: unknown = schema): SchemaValidationError[] {
+  return validateNode(schema, instance, "", root, 0);
+}
+
+function validateNode(schema: unknown, instance: unknown, path: string, root: unknown, depth: number): SchemaValidationError[] {
+  if (schema === true || schema === undefined) return [];
+  if (schema === false) return [{ instancePath: path, keyword: "false", detail: "the schema accepts nothing" }];
+  if (schema === null || typeof schema !== "object" || Array.isArray(schema)) return [];
+  if (depth > 64) return [{ instancePath: path, keyword: "$ref", detail: "reference chain exceeded 64 levels" }];
+  const node = schema as Record<string, unknown>;
+  if (typeof node.$ref === "string") {
+    const target = resolveLocalPointer(root, node.$ref);
+    if (target === undefined) return [{ instancePath: path, keyword: "$ref", detail: `${node.$ref} does not resolve inside this document` }];
+    return validateNode(target, instance, path, root, depth + 1);
+  }
+  const errors: SchemaValidationError[] = [];
+  const type = node.type;
+  const types = typeof type === "string" ? [type] : Array.isArray(type) ? (type as string[]) : [];
+  if (types.length > 0 && !types.some((candidate) => matchesJsonType(candidate, instance))) errors.push({ instancePath: path, keyword: "type", detail: `expected ${types.join(" or ")}` });
+  if (Array.isArray(node.enum) && !node.enum.some((candidate) => deepEqualJson(candidate, instance))) errors.push({ instancePath: path, keyword: "enum", detail: "value is not one of the enumerated values" });
+  if (Object.hasOwn(node, "const") && !deepEqualJson(node.const, instance)) errors.push({ instancePath: path, keyword: "const", detail: `expected ${JSON.stringify(node.const)}` });
+  if (Array.isArray(node.allOf)) for (const branch of node.allOf) errors.push(...validateNode(branch, instance, path, root, depth + 1));
+  if (Array.isArray(node.anyOf) && !node.anyOf.some((branch) => validateNode(branch, instance, path, root, depth + 1).length === 0)) errors.push({ instancePath: path, keyword: "anyOf", detail: "no branch accepts the value" });
+  if (Array.isArray(node.oneOf)) {
+    const accepted = node.oneOf.filter((branch) => validateNode(branch, instance, path, root, depth + 1).length === 0).length;
+    if (accepted !== 1) errors.push({ instancePath: path, keyword: "oneOf", detail: `${accepted} branches accept the value, exactly one must` });
+  }
+  if (Object.hasOwn(node, "not") && validateNode(node.not, instance, path, root, depth + 1).length === 0) errors.push({ instancePath: path, keyword: "not", detail: "the value matches a forbidden schema" });
+  if (typeof instance === "string") errors.push(...validateString(node, instance, path));
+  if (typeof instance === "number") errors.push(...validateNumber(node, instance, path));
+  if (Array.isArray(instance)) errors.push(...validateArray(node, instance, path, root, depth));
+  else if (instance !== null && typeof instance === "object") errors.push(...validateObject(node, instance as Record<string, unknown>, path, root, depth));
+  return errors;
+}
+
+function validateString(node: Record<string, unknown>, instance: string, path: string): SchemaValidationError[] {
+  const errors: SchemaValidationError[] = [];
+  const length = [...instance].length;
+  if (typeof node.minLength === "number" && length < node.minLength) errors.push({ instancePath: path, keyword: "minLength", detail: `shorter than ${node.minLength}` });
+  if (typeof node.maxLength === "number" && length > node.maxLength) errors.push({ instancePath: path, keyword: "maxLength", detail: `longer than ${node.maxLength}` });
+  if (typeof node.pattern === "string" && !new RegExp(node.pattern, "u").test(instance)) errors.push({ instancePath: path, keyword: "pattern", detail: `does not match ${node.pattern}` });
+  return errors;
+}
+
+function validateNumber(node: Record<string, unknown>, instance: number, path: string): SchemaValidationError[] {
+  const errors: SchemaValidationError[] = [];
+  if (typeof node.minimum === "number" && instance < node.minimum) errors.push({ instancePath: path, keyword: "minimum", detail: `below ${node.minimum}` });
+  if (typeof node.maximum === "number" && instance > node.maximum) errors.push({ instancePath: path, keyword: "maximum", detail: `above ${node.maximum}` });
+  if (typeof node.exclusiveMinimum === "number" && instance <= node.exclusiveMinimum) errors.push({ instancePath: path, keyword: "exclusiveMinimum", detail: `not above ${node.exclusiveMinimum}` });
+  if (typeof node.exclusiveMaximum === "number" && instance >= node.exclusiveMaximum) errors.push({ instancePath: path, keyword: "exclusiveMaximum", detail: `not below ${node.exclusiveMaximum}` });
+  if (typeof node.multipleOf === "number" && node.multipleOf > 0 && Math.abs(instance / node.multipleOf - Math.round(instance / node.multipleOf)) > 1e-9) errors.push({ instancePath: path, keyword: "multipleOf", detail: `not a multiple of ${node.multipleOf}` });
+  return errors;
+}
+
+function validateArray(node: Record<string, unknown>, instance: readonly unknown[], path: string, root: unknown, depth: number): SchemaValidationError[] {
+  const errors: SchemaValidationError[] = [];
+  if (typeof node.minItems === "number" && instance.length < node.minItems) errors.push({ instancePath: path, keyword: "minItems", detail: `fewer than ${node.minItems} items` });
+  if (typeof node.maxItems === "number" && instance.length > node.maxItems) errors.push({ instancePath: path, keyword: "maxItems", detail: `more than ${node.maxItems} items` });
+  if (node.uniqueItems === true && instance.some((item, index) => instance.findIndex((candidate) => deepEqualJson(candidate, item)) !== index)) errors.push({ instancePath: path, keyword: "uniqueItems", detail: "items are not unique" });
+  if (Array.isArray(node.items)) {
+    for (const [index, item] of instance.entries()) {
+      const positional = node.items[index];
+      if (positional !== undefined) errors.push(...validateNode(positional, item, `${path}/${index}`, root, depth + 1));
+      else if (node.additionalItems === false) errors.push({ instancePath: `${path}/${index}`, keyword: "additionalItems", detail: "the tuple declares no schema for this position" });
+      else if (node.additionalItems !== undefined) errors.push(...validateNode(node.additionalItems, item, `${path}/${index}`, root, depth + 1));
+    }
+    return errors;
+  }
+  if (node.items !== undefined) for (const [index, item] of instance.entries()) errors.push(...validateNode(node.items, item, `${path}/${index}`, root, depth + 1));
+  return errors;
+}
+
+function validateObject(node: Record<string, unknown>, instance: Record<string, unknown>, path: string, root: unknown, depth: number): SchemaValidationError[] {
+  const errors: SchemaValidationError[] = [];
+  const keys = Object.keys(instance);
+  if (Array.isArray(node.required)) for (const key of node.required) if (typeof key === "string" && !Object.hasOwn(instance, key)) errors.push({ instancePath: path, keyword: "required", detail: `missing property ${JSON.stringify(key)}` });
+  if (typeof node.minProperties === "number" && keys.length < node.minProperties) errors.push({ instancePath: path, keyword: "minProperties", detail: `fewer than ${node.minProperties} properties` });
+  if (typeof node.maxProperties === "number" && keys.length > node.maxProperties) errors.push({ instancePath: path, keyword: "maxProperties", detail: `more than ${node.maxProperties} properties` });
+  const properties = (node.properties ?? {}) as Record<string, unknown>;
+  const patterns = Object.entries((node.patternProperties ?? {}) as Record<string, unknown>);
+  for (const key of keys) {
+    let matched = false;
+    if (Object.hasOwn(properties, key)) {
+      matched = true;
+      errors.push(...validateNode(properties[key], instance[key], `${path}/${key}`, root, depth + 1));
+    }
+    for (const [pattern, sub] of patterns) {
+      if (!new RegExp(pattern, "u").test(key)) continue;
+      matched = true;
+      errors.push(...validateNode(sub, instance[key], `${path}/${key}`, root, depth + 1));
+    }
+    if (matched) continue;
+    if (node.additionalProperties === false) errors.push({ instancePath: `${path}/${key}`, keyword: "additionalProperties", detail: `property ${JSON.stringify(key)} is not declared` });
+    else if (node.additionalProperties !== undefined) errors.push(...validateNode(node.additionalProperties, instance[key], `${path}/${key}`, root, depth + 1));
+  }
+  if (node.propertyNames !== undefined) for (const key of keys) errors.push(...validateNode(node.propertyNames, key, `${path}/${key}`, root, depth + 1));
+  return errors;
+}
+
+function matchesJsonType(type: string, instance: unknown): boolean {
+  switch (type) {
+    case "object":
+      return instance !== null && typeof instance === "object" && !Array.isArray(instance);
+    case "array":
+      return Array.isArray(instance);
+    case "string":
+      return typeof instance === "string";
+    case "number":
+      return typeof instance === "number";
+    case "integer":
+      return typeof instance === "number" && Number.isInteger(instance);
+    case "boolean":
+      return typeof instance === "boolean";
+    case "null":
+      return instance === null;
+    default:
+      return true;
+  }
+}
+
+function deepEqualJson(a: unknown, b: unknown): boolean {
+  if (a === b) return true;
+  if (Array.isArray(a) && Array.isArray(b)) return a.length === b.length && a.every((item, index) => deepEqualJson(item, b[index]));
+  if (a === null || b === null || typeof a !== "object" || typeof b !== "object") return false;
+  const left = a as Record<string, unknown>;
+  const right = b as Record<string, unknown>;
+  const keys = Object.keys(left);
+  return keys.length === Object.keys(right).length && keys.every((key) => Object.hasOwn(right, key) && deepEqualJson(left[key], right[key]));
+}
+
+function resolveLocalPointer(root: unknown, ref: string): unknown {
+  if (!ref.startsWith("#")) return undefined;
+  const pointer = ref.slice(1);
+  if (pointer.length === 0) return root;
+  let node: unknown = root;
+  for (const raw of pointer.split("/").slice(1)) {
+    const key = decodeURIComponent(raw).replace(/~1/gu, "/").replace(/~0/gu, "~");
+    if (node === null || typeof node !== "object") return undefined;
+    node = (node as Record<string, unknown>)[key];
+    if (node === undefined) return undefined;
+  }
+  return node;
+}
+//#endregion 🧬️SchemaValidation
+
+//#region 🧫️SchemaFixtures
+/**
+ * 🪜️ The stages every schema-bound fixture runs through, in order.
+ *
+ * They are NAMED and REPORTED because "the fixture failed" answers nothing: a fixture that fails at
+ * `contract-resolution` says the catalog is wrong, one that fails at `structural-validation` says the
+ * example is wrong, and one that fails at `domain` says the implementation is. A negative fixture
+ * declares the stage it is supposed to fail at, so a case that starts failing EARLIER — for an
+ * entirely different reason — stops counting as the proof it was written to be.
+ */
+export const SCHEMA_FIXTURE_STAGES = ["metadata", "contract-resolution", "parse", "structural-validation", "domain", "assertions"] as const;
+export type SchemaFixtureStage = (typeof SCHEMA_FIXTURE_STAGES)[number];
+
+/** 🎯️ What a fixture binds to: a named export of a scope, in one format. Never a file path. */
+export type SchemaFixtureTarget = Readonly<{ scope: string; export: string; format: string }>;
+
+/** 🎯️ The stage, verdict and code a negative fixture asserts. */
+export type SchemaStageExpectation = Readonly<{ stage: SchemaFixtureStage; result: "passed" | "failed"; code: string | null }>;
+
+/** 🧫️ One schema-bound fixture: an example that BINDS to an export and never defines one. */
+export type SchemaBoundFixture = Readonly<{
+  id: string;
+  uri: string;
+  target: SchemaFixtureTarget;
+  /** 📄️ Case-relative data file. Mutually exclusive with `inline`. */
+  data?: string;
+  /** 📄️ Inline example, for a case whose subject is small enough to read beside its expectation. */
+  inline?: unknown;
+  expect: SchemaStageExpectation;
+}>;
+
+/** 🪜️ What one stage did. `skipped` means an earlier stage already decided the outcome. */
+export type SchemaStageOutcome = Readonly<{ stage: SchemaFixtureStage; result: "passed" | "failed" | "skipped"; code: string | null; detail: string }>;
+
+/** 📤️ One fixture's staged report — the shape `test schema` prints and a gate reads. */
+export type SchemaFixtureReport = Readonly<{ fixture: string; uri: string; target: SchemaFixtureTarget; stages: readonly SchemaStageOutcome[]; outcome: "passed" | "failed"; expected: SchemaStageExpectation; detail: string }>;
+
+const SCHEMA_FIXTURE_COLLECTION_KEY = "schemaFixtures";
+
+function stage(name: SchemaFixtureStage, result: "passed" | "failed" | "skipped", code: string | null, detail: string): SchemaStageOutcome {
+  return { stage: name, result, code, detail };
+}
+
+/**
+ * 🪜️ Runs one schema-bound fixture through the six stages and reports every one of them.
+ *
+ * Execution STOPS at the first failing stage and the rest are reported as `skipped` rather than
+ * silently omitted: a report that lists four stages when six exist reads as four passes.
+ */
+export function runSchemaFixture(repoRoot: string, fixture: SchemaBoundFixture, caseDirRel: string): SchemaFixtureReport {
+  const stages: SchemaStageOutcome[] = [];
+  const expected: SchemaStageExpectation = fixture.expect;
+  const finish = (): SchemaFixtureReport => {
+    for (const name of SCHEMA_FIXTURE_STAGES) if (!stages.some((entry) => entry.stage === name)) stages.push(stage(name, "skipped", null, "an earlier stage decided the outcome"));
+    const ordered = SCHEMA_FIXTURE_STAGES.map((name) => stages.find((entry) => entry.stage === name)!);
+    const failed = ordered.find((entry) => entry.result === "failed") ?? null;
+    const matches = failed === null ? expected.result === "passed" : expected.result === "failed" && expected.stage === failed.stage && (expected.code === null || expected.code === failed.code);
     return {
-      type: "object",
-      properties: { childId: { type: "string" }, target: { type: "object", properties: { artifactId: { type: "string" }, dialect: { type: "string" } }, required: ["artifactId", "dialect"] } },
-      required: ["childId", "target"],
+      fixture: `${caseDirRel}::${fixture.id}`,
+      uri: fixture.uri,
+      target: fixture.target,
+      stages: ordered,
+      outcome: matches ? "passed" : "failed",
+      expected,
+      detail: matches ? (failed === null ? "every stage passed, as declared" : `failed at ${failed.stage} with ${failed.code}, as declared`) : failed === null ? `declared a ${expected.result} at ${expected.stage}, and every stage passed` : `declared ${expected.result} at ${expected.stage}${expected.code === null ? "" : ` with ${expected.code}`}, and it failed at ${failed.stage} with ${failed.code}`,
     };
+  };
+
+  const metadata = schemaFixtureMetadataProblems(fixture);
+  if (metadata !== null) {
+    stages.push(stage("metadata", "failed", "schema-fixture-metadata-invalid", metadata));
+    return finish();
   }
-  const boxed = type.match(/^Box\s*<\s*(.+)\s*>$/s);
-  if (boxed !== null) return rustTypeToJsonSchema(boxed[1]!, resolve, seen);
-  // 🧭️A field may name its type by full path — `crate::artifacts::puzzle3d::Puzzle3dScale`. The
-  // definition is indexed under the bare name, and the qualifier says where to look, which the
-  // caller's own proximity resolution already handles.
-  const qualified = type.match(/^(?:crate|super|self)(?:::[A-Za-z0-9_]+)*::([A-Z][A-Za-z0-9_]*)$/);
-  if (qualified !== null) return rustTypeToJsonSchema(qualified[1]!, resolve, seen);
-  // 📏️The element may itself be a qualified path or a generic — `[SemioPoint3; 4]`,
-  // `[crate::…::Scale; 3]` — not only a bare identifier.
-  const array = type.match(/^\[\s*(.+?)\s*;\s*(\d+)\s*\]$/s);
-  if (array !== null) {
-    const items = rustTypeToJsonSchema(array[1]!, resolve, seen);
-    return items === null ? null : { type: "array", items, minItems: Number(array[2]), maxItems: Number(array[2]) };
+  stages.push(stage("metadata", "passed", null, "the descriptor names a scope, an export, a format and one subject"));
+
+  const { resolved, diagnostics } = resolveSchemaExport(repoRoot, fixture.uri, fixture.target.format);
+  if (resolved === null) {
+    const first = diagnostics[0];
+    stages.push(stage("contract-resolution", "failed", first?.code ?? "schema-scope-unknown", first?.detail ?? `${fixture.uri} does not resolve`));
+    return finish();
   }
-  const map = type.match(/^(?:HashMap|BTreeMap)\s*<\s*String\s*,\s*(.+)\s*>$/s);
-  if (map !== null) {
-    const values = rustTypeToJsonSchema(map[1]!, resolve, seen);
-    return values === null ? null : { type: "object", additionalProperties: values };
+  stages.push(stage("contract-resolution", "passed", null, `${fixture.uri} → ${resolved.path} (${resolved.digest})`));
+
+  let subject: unknown;
+  if (fixture.data === undefined) subject = fixture.inline;
+  else {
+    const abs = join(repoRoot, caseDirRel, fixture.data);
+    if (!existsSync(abs)) {
+      stages.push(stage("parse", "failed", "schema-fixture-parse-failed", `${caseDirRel}/${fixture.data} does not exist`));
+      return finish();
+    }
+    try {
+      subject = JSON.parse(readFileSync(abs, "utf8"));
+    } catch (error) {
+      stages.push(stage("parse", "failed", "schema-fixture-parse-failed", error instanceof Error ? error.message : String(error)));
+      return finish();
+    }
   }
-  // 🔁️A NEWTYPE or ALIAS is transparent on the wire — `EntityId(pub u64)` serialises as a number, and
-  // 130 leaves were refused for it alone. Resolving one level and recursing is not a guess about the
-  // domain type; it is reading the declaration serde reads. The `seen` set stops a cyclic alias from
-  // recursing forever rather than being caught by a stack overflow.
-  const bare = type.match(/^([A-Za-z_][A-Za-z0-9_]*(?:::[A-Za-z_][A-Za-z0-9_]*)*)$/);
-  if (bare !== null && resolve !== undefined && !seen.has(bare[1]!)) {
-    const inner = resolve(bare[1]!.split("::").pop()!);
-    if (inner !== null) return inner;
+  stages.push(stage("parse", "passed", null, "the subject decoded"));
+
+  const module = readJson(join(repoRoot, resolved.path));
+  const defs = ((module as { $defs?: unknown } | undefined)?.$defs ?? {}) as Record<string, unknown>;
+  const exportSchema = defs[resolved.export];
+  if (exportSchema === undefined) {
+    stages.push(stage("structural-validation", "failed", "schema-export-unknown", `${resolved.path} declares no $defs.${resolved.export}`));
+    return finish();
   }
+  const errors = validateAgainstJsonSchema(exportSchema, subject, module);
+  if (errors.length > 0) {
+    stages.push(stage("structural-validation", "failed", "schema-instance-invalid", errors.map((error) => `${error.instancePath || "/"} ${error.keyword}: ${error.detail}`).join("; ")));
+    return finish();
+  }
+  stages.push(stage("structural-validation", "passed", null, `the subject satisfies $defs.${resolved.export}`));
+
+  const { catalog } = readSchemaCatalog(repoRoot);
+  const domain = catalog === null ? [] : schemaExportCompletenessDiagnostics(repoRoot, resolved.scope, catalog.scopes[resolved.scope]!).filter((entry) => entry.export === null || entry.export === resolved.export);
+  if (domain.length > 0) {
+    stages.push(stage("domain", "failed", domain[0]!.code, domain[0]!.detail));
+    return finish();
+  }
+  stages.push(stage("domain", "passed", null, `every declared format of ${resolved.scope} implements ${resolved.export}`));
+  stages.push(stage("assertions", "passed", null, "the outcome is compared against the declared expectation"));
+  return finish();
+}
+
+function schemaFixtureMetadataProblems(fixture: SchemaBoundFixture): string | null {
+  if (typeof fixture.id !== "string" || fixture.id.length === 0) return "the fixture declares no id";
+  const parsed = parseSchemaUri(fixture.uri ?? "");
+  if (parsed === null) return `${JSON.stringify(fixture.uri)} is not a schema://<scope id>/<ExportId> reference`;
+  const target = fixture.target;
+  if (target === undefined || target === null || typeof target !== "object") return "the fixture declares no target";
+  if (target.scope !== parsed.scope || target.export !== parsed.export) return `target ${target.scope}/${target.export} disagrees with the uri ${fixture.uri}`;
+  if (typeof target.format !== "string" || target.format.length === 0) return "the target names no format";
+  if ((fixture.data === undefined) === (fixture.inline === undefined)) return "a fixture declares exactly one of `data` and `inline`";
+  const expectation = fixture.expect;
+  if (expectation === undefined || !(SCHEMA_FIXTURE_STAGES as readonly string[]).includes(expectation.stage) || (expectation.result !== "passed" && expectation.result !== "failed")) return "the fixture declares no {stage, result} expectation";
+  if (expectation.result === "passed" && expectation.code !== null) return "a passing expectation carries no code";
   return null;
 }
 
-/**
- * 🔁️ Indexes every transparent Rust type in the repository — `pub struct X(pub Inner);` newtypes and
- * `pub type X = Inner;` aliases — so a payload field declared with one can still be projected onto the
- * shape it actually serialises as.
- */
-export function transparentRustTypes(repoRoot: string): ReadonlyMap<string, string> {
-  return rustTypeIndex(repoRoot).transparent;
-}
-
-/**
- * 🗂️ One pass over every Rust file, indexing the two shapes a payload field can legitimately name:
- * TRANSPARENT types (newtypes and aliases, which serialise as their inner type) and COMPOSITE structs
- * (which serialise as an object of their own fields).
- *
- * A composite is only recorded when its name is UNAMBIGUOUS across the repository. Two different
- * `ObjRef` structs in two plugins are two different contracts, and picking either would put one
- * plugin's field list into the other's payload schema — a contract that validates the wrong shape is
- * worse than an absent one, which is why an ambiguous name is dropped rather than resolved.
- */
-export function rustTypeIndex(repoRoot: string): { transparent: ReadonlyMap<string, string>; composite: ReadonlyMap<string, string>; enums: ReadonlyMap<string, string>; tagged: ReadonlyMap<string, string>; placed: ReadonlyMap<string, { path: string; body: string }[]>; placedEnums: ReadonlyMap<string, { path: string; body: string }[]> } {
-  const cached = rustIndexCache.get(repoRoot);
-  if (cached !== undefined) return cached;
-  const found = new Map<string, string>();
-  const composites = new Map<string, string>();
-  const enums = new Map<string, string>();
-  const tagged = new Map<string, string>();
-  const placed = new Map<string, { path: string; body: string }[]>();
-  const placedEnums = new Map<string, { path: string; body: string }[]>();
-  const ambiguous = new Set<string>();
-  walkDirectories(repoRoot, (abs, rel) => {
-    if (isExcludedTestPath(repoRoot, rel)) return "skip";
-    for (const entry of readdirSync(abs, { withFileTypes: true })) {
-      if (!entry.isFile() || !entry.name.endsWith(".rs")) continue;
-      let text: string;
-      try {
-        text = withoutTestModules(readFileSync(join(abs, entry.name), "utf8"));
-      } catch {
-        continue;
-      }
-      for (const match of text.matchAll(/^pub struct ([A-Za-z0-9_]+)\s*\(\s*(?:pub\s+)?([^),]+)\s*\)\s*;/gm)) if (!found.has(match[1]!)) found.set(match[1]!, match[2]!.trim());
-      for (const match of text.matchAll(/^pub type ([A-Za-z0-9_]+)\s*=\s*([^;]+);/gm)) if (!found.has(match[1]!)) found.set(match[1]!, match[2]!.trim());
-      // 🧱️BRACE-MATCH the struct body. The old terminator was `\n}`, which a SINGLE-LINE struct —
-      // `pub struct GltfBindNodeMeshPayload { pub node: usize, pub mesh: usize }` — never satisfies, so
-      // the body ran on past the closing brace and swallowed the next `pub fn validate(...)`. Every
-      // field parsed out of that run-on was garbage, and the leaf was refused for a type that does not
-      // exist. It gated all 120 of `gltf`'s leaves.
-      for (const match of text.matchAll(/^ {0,4}pub struct ([A-Za-z0-9_]+)\s*\{/gm)) {
-        const name = match[1]!;
-        const open = match.index! + match[0].length - 1;
-        let depth = 0;
-        let close = -1;
-        for (let at = open; at < text.length; at += 1) {
-          if (text[at] === "{") depth += 1;
-          else if (text[at] === "}") {
-            depth -= 1;
-            if (depth === 0) {
-              close = at;
-              break;
-            }
-          }
-        }
-        if (close === -1) continue;
-        const body = text.slice(open + 1, close);
-        const existing = composites.get(name);
-        if (existing !== undefined && existing !== body) ambiguous.add(name);
-        else composites.set(name, body);
-        // 📍️A name is not unique in this repository, and it is not supposed to be: `FemMaterial` is one
-        // struct in `fem/◻️2d` and a different one in `fem/🧊3d`, exactly as the taxonomy intends. Keying
-        // the index by bare name made those AMBIGUOUS and dropped them, which refused every leaf that
-        // mentioned them. Rust resolves by module path; so does this, by remembering where each
-        // definition lives and letting the caller's own owner path pick the nearest one.
-        const located = placed.get(name) ?? [];
-        if (!located.some((entry) => entry.body === body)) located.push({ path: rel, body });
-        placed.set(name, located);
-      }
-      // 🏷️TAGGED ENUMS — struct variants under `#[serde(tag = "…")]`. These serialise to an object
-      // carrying the tag plus that variant's own fields, so the schema is a `oneOf` over those shapes.
-      // They defeated `semio@v1/brep` entirely: `BrepCurve` and `BrepSurface` are the vocabulary of the
-      // whole subset (line/circle/ellipse/nurbs, plane/cylinder/cone/…), so 4 of its 13 leaves could not
-      // be described and the owner could not be scaffolded at all.
-      for (const match of text.matchAll(/#\[serde\(([^)]*tag\s*=[^)]*)\)\]\s*\n(?:#\[[^\]]*\]\s*\n)*pub enum ([A-Za-z0-9_]+)\s*\{([\s\S]*?)\n\}/gm)) {
-        const attrs = match[1]!;
-        const name = match[2]!;
-        const body = match[3]!;
-        const tag = attrs.match(/tag\s*=\s*"([^"]+)"/)?.[1];
-        if (tag === undefined) continue;
-        const renameVariants = attrs.match(/rename_all\s*=\s*"([^"]+)"/)?.[1];
-        const renameFields = attrs.match(/rename_all_fields\s*=\s*"([^"]+)"/)?.[1];
-        const variants: { name: string; body: string }[] = [];
-        const re = /([A-Za-z][A-Za-z0-9_]*)\s*\{([^{}]*)\}/g;
-        for (let v = re.exec(body); v !== null; v = re.exec(body)) variants.push({ name: v[1]!, body: v[2]! });
-        if (variants.length === 0) continue;
-        const encoded = `tagged:${JSON.stringify({ tag, renameVariants, renameFields, variants })}`;
-        const prior = tagged.get(name);
-        if (prior !== undefined && prior !== encoded) ambiguous.add(name);
-        else tagged.set(name, encoded);
-        const locatedTagged = placedEnums.get(name) ?? [];
-        if (!locatedTagged.some((entry) => entry.body === encoded)) locatedTagged.push({ path: rel, body: encoded });
-        placedEnums.set(name, locatedTagged);
-      }
-      // 🌱️Record every enum's variant NAMES so the JSON-value shape can be recognised structurally.
-      for (const match of text.matchAll(/^ {0,4}pub enum ([A-Za-z0-9_]+)\s*\{([\s\S]*?)\n {0,4}\}/gm)) {
-        const variants = (match[2] ?? "")
-          .replace(/\/\/.*$/gm, "")
-          .replace(/#\[[^\]]*\]/g, "")
-          .split(/[,\n]/)
-          .map((entry) => entry.trim().match(/^([A-Za-z][A-Za-z0-9_]*)/)?.[1] ?? "")
-          .filter((entry) => entry.length > 0);
-        if (variants.length > 0) jsonValueBodies.set(match[1]!, variants);
-      }
-      // 🔤️FIELDLESS ENUMS. A unit-variant enum serialises to a plain string, so it has a perfectly
-      // derivable JSON Schema — `{ type: "string", enum: [...] }` — and refusing it blocked far more
-      // than itself: `SemioTopology` defeated `SemioPrimitive` and `SemioMesh` transitively, and with
-      // them the whole `semio@v1/mesh` owner, whose 17 leaves could not be scaffolded because 3 of them
-      // mentioned it. `rename_all` is honoured because it decides the wire strings.
-      for (const match of text.matchAll(/(#\[serde\(([^)]*)\)\]\s*)?^ {0,4}pub enum ([A-Za-z0-9_]+)\s*\{([\s\S]*?)\n {0,4}\}/gm)) {
-        const attrs = match[2] ?? "";
-        const name = match[3]!;
-        const body = match[4]!;
-        if (/[(:{]/.test(body.replace(/\/\/.*$/gm, "").replace(/#\[[^\]]*\]/g, ""))) continue;
-        const variants = body
-          .replace(/\/\/.*$/gm, "")
-          .replace(/#\[[^\]]*\]/g, "")
-          .split(",")
-          .map((v) => v.trim())
-          .filter((v) => /^[A-Za-z][A-Za-z0-9_]*$/.test(v));
-        if (variants.length === 0) continue;
-        const rename = attrs.match(/rename_all\s*=\s*"([^"]+)"/)?.[1];
-        const wire = variants.map((v) => (rename === "camelCase" ? camelCase(v) : rename === "kebab-case" ? v.replace(/([a-z0-9])([A-Z])/g, "$1-$2").toLowerCase() : rename === "snake_case" ? v.replace(/([a-z0-9])([A-Z])/g, "$1_$2").toLowerCase() : rename === "lowercase" ? v.toLowerCase() : v));
-        const encoded = `enum:${JSON.stringify(wire)}`;
-        const prior = enums.get(name);
-        if (prior !== undefined && prior !== encoded) ambiguous.add(name);
-        else enums.set(name, encoded);
-        const locatedEnum = placedEnums.get(name) ?? [];
-        if (!locatedEnum.some((entry) => entry.body === encoded)) locatedEnum.push({ path: rel, body: encoded });
-        placedEnums.set(name, locatedEnum);
-      }
-    }
-    return "enter";
-  });
-  for (const name of ambiguous) {
-    composites.delete(name);
-    enums.delete(name);
-    tagged.delete(name);
-  }
-  const index = { transparent: found, composite: composites, enums, tagged, placed, placedEnums };
-  rustIndexCache.set(repoRoot, index);
-  return index;
-}
-
-const rustIndexCache = new Map<string, { transparent: ReadonlyMap<string, string>; composite: ReadonlyMap<string, string>; enums: ReadonlyMap<string, string>; tagged: ReadonlyMap<string, string>; placed: ReadonlyMap<string, { path: string; body: string }[]>; placedEnums: ReadonlyMap<string, { path: string; body: string }[]> }>();
-
-/** 🧬️ Splits a struct body into `(fieldName, rustType)` pairs, ignoring attributes and comments. */
-function structFields(body: string): { name: string; type: string; flatten: boolean }[] {
-  const fields: { name: string; type: string; flatten: boolean }[] = [];
-  // 🧭️Depth-aware split: a field type may itself contain commas (`HashMap<String, Vec<T>>`), so the
-  // naive `body.split(",")` produced half-types and refused schemas that were perfectly derivable.
-  let depth = 0;
-  let current = "";
-  const parts: string[] = [];
-  for (const character of body) {
-    if (character === "<" || character === "(" || character === "[") depth += 1;
-    if (character === ">" || character === ")" || character === "]") depth -= 1;
-    if (character === "," && depth === 0) {
-      parts.push(current);
-      current = "";
-      continue;
-    }
-    current += character;
-  }
-  parts.push(current);
-  for (const raw of parts) {
-    const line = raw
-      .split("\n")
-      .map((candidate) => candidate.trim())
-      .filter((candidate) => candidate.length > 0 && !candidate.startsWith("//") && !candidate.startsWith("#["))
-      .join(" ")
-      .trim();
-    const declaration = line.match(/^pub\s+([a-z_][a-z0-9_]*)\s*:\s*(.+)$/s);
-    // 🫓️`#[serde(flatten)]` inlines the nested type's OWN properties into this object — there is no
-    // property under this field's name at all. The attribute is stripped above with every other, so it
-    // is read off the raw fragment before that happens.
-    if (declaration !== null) fields.push({ name: declaration[1]!, type: declaration[2]!.trim(), flatten: /#\[serde\([^)]*\bflatten\b[^)]*\)\]/.test(raw) });
-  }
-  return fields;
-}
-
-/**
- * 🧬️ Derives one mutation leaf's payload schema from the Rust payload struct it declares.
- *
- * A payload schema is the deepest blocker in the chain: you cannot author a fixture for a mutation
- * whose payload has no contract, so 1 394 leaves were unreachable by any amount of testing effort. The
- * struct IS the contract — it is what serde serialises on the wire — so the schema is a projection of
- * it, not a second declaration to keep in sync.
- */
-export function derivePayloadSchema(repoRoot: string, ownerRel: string, leafDirName: string): PayloadSchemaDerivation {
+/** 🧫️ Every schema-bound fixture in the tree, found by the DECLARATION key, never by shape. */
+export function discoverSchemaFixtures(repoRoot: string, under = ""): { caseDir: string; fixtures: readonly SchemaBoundFixture[] }[] {
   const taxonomy = testTaxonomy(repoRoot);
-  const vocabulary = join(repoRoot, ownerRel, "🧬️schema", taxonomy.testMutationVocabularyDirName);
-  const leafAbs = join(vocabulary, leafDirName);
-  const leafRel = `${ownerRel}/🧬️schema/${taxonomy.testMutationVocabularyDirName}/${leafDirName}`;
+  const caseFile = testFilenameForKind(taxonomy, taxonomy.testContributionFileKindId);
+  const found: { caseDir: string; fixtures: readonly SchemaBoundFixture[] }[] = [];
+  for (const rel of schemaTreeFiles(repoRoot, under)) {
+    if (!rel.endsWith(`/${caseFile}`)) continue;
+    const document = readJson(join(repoRoot, rel));
+    const declared = (document as Record<string, unknown> | undefined)?.[SCHEMA_FIXTURE_COLLECTION_KEY];
+    if (!Array.isArray(declared) || declared.length === 0) continue;
+    found.push({ caseDir: rel.slice(0, rel.lastIndexOf("/")), fixtures: declared as SchemaBoundFixture[] });
+  }
+  return found;
+}
+//#endregion 🧫️SchemaFixtures
+
+//#region 🧬️PayloadSchema
+/** 🧬️ One mutation leaf's payload contract as the leaf DECLARES it, or the reason there is none. */
+export type PayloadSchemaResolution = Readonly<{ leaf: string; kind: string; declared: string; path: string | null; schema: Record<string, unknown> | null; refused: readonly string[] }>;
+
+/** 🧬️ The one place a mutation leaf's payload schema may live, straight out of the taxonomy. */
+export function payloadSchemaRelativePath(repoRoot: string): string {
+  const taxonomy = testTaxonomy(repoRoot);
+  const location = rawTaxonomy(repoRoot).mutationPayloadSchemaLocation as { directoryName?: unknown; fileKindId?: unknown } | undefined;
+  if (typeof location?.directoryName !== "string" || typeof location.fileKindId !== "string") throw new Error(`${TAXONOMY_REL_PATH} declares no mutationPayloadSchemaLocation`);
+  return `${location.directoryName}/${testFilenameForKind(taxonomy, location.fileKindId)}`;
+}
+
+/**
+ * 🧬️ Resolves one mutation leaf's payload schema THROUGH ITS DESCRIPTOR.
+ *
+ * The leaf is the declared authority for its payload (`mutationPayloadSchemaAuthority`), so the
+ * descriptor's `payloadSchema` field is the whole resolution: one declared owner-relative path, read
+ * or refused. Nothing is searched for, nothing is inferred from a same-named Rust type somewhere else
+ * in the tree, and there is no second accepted convention — a payload contract that two files could
+ * satisfy is a payload contract nobody owns.
+ */
+export function resolvePayloadSchema(repoRoot: string, ownerRel: string, leafDirName: string): PayloadSchemaResolution {
+  const taxonomy = testTaxonomy(repoRoot);
+  const canonical = payloadSchemaRelativePath(repoRoot);
+  const descriptorFile = testFilenameForKind(taxonomy, taxonomy.testContributionFileKindId);
+  const leafRel = `${ownerRel}/${SCHEMA_MODULE_DIR_NAME}/${taxonomy.testMutationVocabularyDirName}/${leafDirName}`;
   const kind = leafDirName.match(/[a-z][a-z0-9]*(?:-[a-z0-9]+)+$/)?.[0] ?? "";
-  const source = readFirst([join(leafAbs, "🦠️mutation", "🦀️.rs"), join(leafAbs, "🦠️mutation", "🦀️.rs"), join(leafAbs, "🧬️operation", "🦀️.rs"), join(leafAbs, "🧬️operation", "🦀️.rs"), join(leafAbs, "🦀️.rs"), join(leafAbs, "🦀️.rs")]);
-  if (source === null) return { leaf: leafRel, kind, schema: null, struct: "", refused: ["no Rust source in the leaf"] };
-
-  // 🧱️Same brace-matching the index needed: `\n}` never terminates a SINGLE-LINE struct, so the body
-  // ran past its closing brace into the following `pub fn validate(..)` and every field parsed out of
-  // it was fiction. This is the leaf-level twin of that bug and it gated all 120 of `gltf`'s leaves.
-  const declaration = source.text.match(/pub struct ([A-Za-z0-9_]+)\s*(\{)?/);
-  // 📄️`set-snapshot` carries no payload struct because its payload IS the artifact's snapshot, and the
-  // type is stated in the leaf's own apply signature — `apply(projection: &mut DwgSnapshot, ..)`. Read
-  // from there, never assumed. It is by far the commonest refusal left: ~35 single-leaf owners, each
-  // blocking itself entirely for a struct that was never supposed to exist.
-  if (declaration === null || (declaration[2] === undefined && kind === "set-snapshot")) {
-    const applied = source.text.match(/fn apply\s*\(\s*[a-z_]+\s*:\s*&mut\s+([A-Za-z0-9_]+)/)?.[1];
-    if (kind === "set-snapshot" && applied !== undefined) {
-      const index = rustTypeIndex(repoRoot);
-      const resolveSnapshot = (name: string, depth = 0, chain: ReadonlySet<string> = new Set()): Record<string, unknown> | null => {
-        if (depth > 5 || chain.has(name)) return null;
-        const transparent = index.transparent.get(name);
-        if (transparent !== undefined) return rustTypeToJsonSchema(transparent, (next) => resolveSnapshot(next, depth + 1, new Set([...chain, name])), new Set([name]));
-        const enumerated = index.enums.get(name);
-        if (enumerated !== undefined) return { type: "string", enum: JSON.parse(enumerated.slice("enum:".length)) as string[] };
-        // 📍️Nearest-definition fallback, exactly as the field resolver does. Snapshot type names repeat
-        // across subsets by design — `DwgSnapshot`, `GifSnapshot`, `PptxSnapshot` — so the bare-name
-        // index drops them as ambiguous, and this resolver had no fallback. That single omission refused
-        // ~25 single-leaf `set-snapshot` owners, each of which is its whole owner.
-        let composite = index.composite.get(name);
-        if (composite === undefined) {
-          const located = index.placed.get(name) ?? [];
-          const segments = ownerRel.split("/");
-          let best: { path: string; body: string } | undefined;
-          let bestScore = 0;
-          for (const entry of located) {
-            const parts = entry.path.split("/");
-            let score = 0;
-            while (score < parts.length && score < segments.length && parts[score] === segments[score]) score += 1;
-            if (score > bestScore) {
-              bestScore = score;
-              best = entry;
-            }
-          }
-          if (best === undefined) return null;
-          composite = best.body;
-        }
-        const properties: Record<string, unknown> = {};
-        const required: string[] = [];
-        for (const field of structFields(composite)) {
-          const schema = rustTypeToJsonSchema(field.type, (next) => resolveSnapshot(next, depth + 1, new Set([...chain, name])), new Set([name]));
-          if (schema === null) return null;
-          properties[camelCase(field.name)] = schema;
-          if (!/^Option\s*</.test(field.type)) required.push(camelCase(field.name));
-        }
-        return { type: "object", properties, required, additionalProperties: false };
-      };
-      const schema = resolveSnapshot(applied);
-      if (schema !== null) return { leaf: leafRel, kind, schema, struct: applied, refused: [] };
-      return { leaf: leafRel, kind, schema: null, struct: applied, refused: [`field snapshot: ${applied} is not a shape this derivation decides`] };
-    }
-    if (declaration === null) return { leaf: leafRel, kind, schema: null, struct: "", refused: [`no \`pub struct\` in ${relative(repoRoot, source.path).split(sep).join("/")}`] };
-  }
-  const struct = declaration[1]!;
-  // 🧬️A unit struct (`pub struct DeleteShapeModel;`) is a payload with no fields, and its schema is the
-  // empty object — that is a real contract, not a missing one.
-  let body = "";
-  if (declaration[2] !== undefined) {
-    const open = declaration.index! + declaration[0].length - 1;
-    let depth = 0;
-    for (let at = open; at < source.text.length; at += 1) {
-      if (source.text[at] === "{") depth += 1;
-      else if (source.text[at] === "}") {
-        depth -= 1;
-        if (depth === 0) {
-          body = source.text.slice(open + 1, at);
-          break;
-        }
-      }
-    }
-  }
-  const fields = structFields(body);
-
-  const properties: Record<string, unknown> = {};
-  const required: string[] = [];
-  const refused: string[] = [];
-  const index = rustTypeIndex(repoRoot);
-  const resolve = (name: string, depth = 0, chain: ReadonlySet<string> = new Set()): Record<string, unknown> | null => {
-    // 🔁️Depth and cycle limits are both needed: depth bounds how far a payload contract may reach into
-    // the domain before it stops being a payload contract, and the chain stops a struct that contains
-    // itself from recursing forever.
-    if (depth > 5 || chain.has(name)) return null;
-    const transparent = index.transparent.get(name);
-    if (transparent !== undefined) return rustTypeToJsonSchema(transparent, (next) => resolve(next, depth + 1, new Set([...chain, name])), new Set([name]));
-    // 🔤️A fieldless enum is a closed set of wire strings — the most precise schema of all, and cheap.
-    // 📍️Nearest definition wins for enums exactly as for structs: `Priority` is one enum in
-    // architect's kernel and a different one in the OS db policy, and dropping it as "ambiguous" took
-    // `EntityHeader` with it, and with that every register type in `architect/program` — 128 leaves
-    // refused for a name collision two directories apart.
-    const nearest = (buckets: ReadonlyMap<string, { path: string; body: string }[]>): string | undefined => {
-      const located = buckets.get(name) ?? [];
-      if (located.length === 0) return undefined;
-      const segments = ownerRel.split("/");
-      let best: { path: string; body: string } | undefined;
-      let bestScore = 0;
-      for (const entry of located) {
-        const parts = entry.path.split("/");
-        let score = 0;
-        while (score < parts.length && score < segments.length && parts[score] === segments[score]) score += 1;
-        if (score > bestScore) {
-          bestScore = score;
-          best = entry;
-        }
-      }
-      return best?.body;
-    };
-    const enumerated = index.enums.get(name) ?? nearest(index.placedEnums);
-    if (enumerated !== undefined && enumerated.startsWith("enum:")) return { type: "string", enum: JSON.parse(enumerated.slice("enum:".length)) as string[] };
-    // 🏷️A tagged enum is a `oneOf` over its variants, each an object carrying the tag plus its own
-    // fields. Every variant must resolve — a partial union would silently accept shapes the Rust type
-    // rejects, which is worse than refusing the schema outright.
-    const taggedRaw = index.tagged.get(name) ?? (enumerated !== undefined && enumerated.startsWith("tagged:") ? enumerated : undefined);
-    if (taggedRaw !== undefined) {
-      const spec = JSON.parse(taggedRaw.slice("tagged:".length)) as { tag: string; renameVariants?: string; renameFields?: string; variants: { name: string; body: string }[] };
-      const rename = (value: string, style: string | undefined): string => (style === "camelCase" ? camelCase(value) : style === "kebab-case" ? value.replace(/([a-z0-9])([A-Z])/g, "$1-$2").toLowerCase() : style === "snake_case" ? value.replace(/([a-z0-9])([A-Z])/g, "$1_$2").toLowerCase() : style === "lowercase" ? value.toLowerCase() : value);
-      const branches: Record<string, unknown>[] = [];
-      for (const variant of spec.variants) {
-        const properties: Record<string, unknown> = { [spec.tag]: { const: rename(variant.name, spec.renameVariants) } };
-        const required: string[] = [spec.tag];
-        for (const field of structFields(variant.body)) {
-          const schema = rustTypeToJsonSchema(field.type, (next) => resolve(next, depth + 1, new Set([...chain, name])), new Set([name]));
-          if (schema === null) return null;
-          const key = rename(field.name, spec.renameFields);
-          properties[key] = schema;
-          if (!/^Option\s*</.test(field.type)) required.push(key);
-        }
-        branches.push({ type: "object", properties, required, additionalProperties: false });
-      }
-      return branches.length === 0 ? null : { oneOf: branches };
-    }
-    let composite = index.composite.get(name);
-    if (composite === undefined) {
-      // 📍️Same name, several real definitions. Pick the one whose file shares the longest path prefix
-      // with the owner we are deriving for — the nearest definition in the taxonomy, which is the one
-      // Rust itself would resolve to from that module.
-      const located = index.placed.get(name) ?? [];
-      if (located.length === 0) return null;
-      const segments = ownerRel.split("/");
-      let best = located[0]!;
-      let bestScore = -1;
-      for (const entry of located) {
-        const parts = entry.path.split("/");
-        let score = 0;
-        while (score < parts.length && score < segments.length && parts[score] === segments[score]) score += 1;
-        if (score > bestScore) {
-          bestScore = score;
-          best = entry;
-        }
-      }
-      if (bestScore <= 0) return null;
-      composite = best.body;
-    }
-    const properties: Record<string, unknown> = {};
-    const required: string[] = [];
-    for (const field of structFields(composite)) {
-      const schema = rustTypeToJsonSchema(field.type, (next) => resolve(next, depth + 1, new Set([...chain, name])), new Set([name]));
-      if (schema === null) return null;
-      if (field.flatten) {
-        // 🫓️Merge the flattened type's own members up into this object, exactly as serde does on the wire.
-        const inner = schema as { properties?: Record<string, unknown>; required?: string[] };
-        if (inner.properties === undefined) return null;
-        for (const [key, value] of Object.entries(inner.properties)) properties[key] = value;
-        for (const key of inner.required ?? []) required.push(key);
-        continue;
-      }
-      properties[camelCase(field.name)] = schema;
-      if (!/^Option\s*</.test(field.type)) required.push(camelCase(field.name));
-    }
-    return { title: name, type: "object", additionalProperties: false, ...(required.length > 0 ? { required: required.sort() } : {}), properties };
-  };
-  for (const field of fields) {
-    const schema = rustTypeToJsonSchema(field.type, resolve);
-    if (schema === null) {
-      refused.push(`field ${field.name}: ${field.type} is not a shape this derivation decides`);
-      continue;
-    }
-    properties[camelCase(field.name)] = schema;
-    if (!/^Option\s*</.test(field.type)) required.push(camelCase(field.name));
-  }
-  if (refused.length > 0) return { leaf: leafRel, kind, schema: null, struct, refused };
-  return {
-    leaf: leafRel,
-    kind,
-    struct,
-    refused,
-    schema: {
-      $schema: "http://json-schema.org/draft-07/schema#",
-      title: struct,
-      type: "object",
-      additionalProperties: false,
-      ...(required.length > 0 ? { required: required.sort() } : {}),
-      properties,
-    },
-  };
+  const descriptor = readJson(join(repoRoot, leafRel, descriptorFile)) as MutationLeafDescriptor | undefined;
+  if (descriptor === undefined) return { leaf: leafRel, kind, declared: "", path: null, schema: null, refused: [`the leaf carries no ${descriptorFile} descriptor, so nothing declares its payload contract`] };
+  const declared = typeof descriptor.payloadSchema === "string" ? descriptor.payloadSchema : "";
+  if (declared.length === 0) return { leaf: leafRel, kind, declared, path: null, schema: null, refused: ["the descriptor declares no `payloadSchema`"] };
+  if (declared !== canonical) return { leaf: leafRel, kind, declared, path: null, schema: null, refused: [`the descriptor declares ${JSON.stringify(declared)}; a leaf payload schema lives at ${canonical}`] };
+  const rel = `${leafRel}/${declared}`;
+  if (!existsSync(join(repoRoot, rel))) return { leaf: leafRel, kind, declared, path: rel, schema: null, refused: [`the declared payload schema ${rel} does not exist`] };
+  const document = readJson(join(repoRoot, rel));
+  if (document === undefined) return { leaf: leafRel, kind, declared, path: rel, schema: null, refused: [`${rel} is not readable JSON`] };
+  if (!isDraft07Definition(document)) return { leaf: leafRel, kind, declared, path: rel, schema: null, refused: [`${rel} does not declare ${SCHEMA_JSON_DIALECT}`] };
+  return { leaf: leafRel, kind, declared, path: rel, schema: document as Record<string, unknown>, refused: [] };
 }
 
-/** 🧬️ Derives every leaf's payload schema for one owner. */
-export function derivePayloadSchemas(repoRoot: string, ownerRel: string): PayloadSchemaDerivation[] {
+/** 🧬️ Resolves every leaf's declared payload schema for one owner. */
+export function resolvePayloadSchemas(repoRoot: string, ownerRel: string): PayloadSchemaResolution[] {
   const taxonomy = testTaxonomy(repoRoot);
-  const vocabulary = join(repoRoot, ownerRel, "🧬️schema", taxonomy.testMutationVocabularyDirName);
+  const vocabulary = join(repoRoot, ownerRel, SCHEMA_MODULE_DIR_NAME, taxonomy.testMutationVocabularyDirName);
   if (!existsSync(vocabulary)) return [];
   return readdirSync(vocabulary, { withFileTypes: true })
     .filter((entry) => entry.isDirectory() && !entry.isSymbolicLink() && isMutationLeafDirectory(repoRoot, entry.name))
-    .map((entry) => derivePayloadSchema(repoRoot, ownerRel, entry.name))
+    .map((entry) => resolvePayloadSchema(repoRoot, ownerRel, entry.name))
     .sort((a, b) => a.kind.localeCompare(b.kind));
 }
 //#endregion 🧬️PayloadSchema

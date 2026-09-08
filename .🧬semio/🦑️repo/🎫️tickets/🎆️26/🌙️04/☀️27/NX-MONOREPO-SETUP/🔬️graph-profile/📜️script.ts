@@ -24,6 +24,7 @@ if (process.env.SEMIO_GRAPH_PROFILE_HELPERS === "1") {
   }
   source += "export { helperTimings };\n";
   modulePath = join(ticket, "🗑️generated/graph-helpers/📜️script.ts"); mkdirSync(dirname(modulePath), {recursive:true}); writeFileSync(modulePath,source);
+  const helper = "🕸️dependencies/🧩️runtime/🟨️.mjs", destination = join(dirname(modulePath), helper); mkdirSync(dirname(destination), { recursive: true }); writeFileSync(destination, readFileSync(join(root, library, helper)));
 }
 const module = await import(pathToFileURL(modulePath).href), plugin = module.default;
 const timings: number[] = [];

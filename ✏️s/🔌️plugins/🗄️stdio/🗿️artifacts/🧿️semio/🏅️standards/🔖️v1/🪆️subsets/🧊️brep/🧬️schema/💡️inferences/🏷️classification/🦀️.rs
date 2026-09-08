@@ -9,19 +9,19 @@
 //! queries (named as a future co-tenant of this facet) have not moved yet — still batch2 "queries"
 //! in the peel plan — so this file is classify-only for now.
 
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::intersect::intersect_curve_surface;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::inferences::bounding_volume::{build_face_bvh, FaceBvh};
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::inferences::mass_properties::closest_point_on_solid;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::{FaceId, LoopId, SolidId};
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::Curve3;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::error::{IntersectError, KernelError};
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::surface::{surface_ops, Surface};
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::tolerance::Iv;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::{Body, Coedge};
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Frame3;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::predicates::{orient2d, Orient};
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::{Pnt2, Pnt3, Vec3};
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::engine::PointClassification;
+use crate::standards::v1::subsets::brep::schema::diff::intersect::intersect_curve_surface;
+use crate::standards::v1::subsets::brep::schema::inferences::bounding_volume::{build_face_bvh, FaceBvh};
+use crate::standards::v1::subsets::brep::schema::inferences::mass_properties::closest_point_on_solid;
+use crate::standards::v1::subsets::brep::schema::snapshot::arena::{FaceId, LoopId, SolidId};
+use crate::standards::v1::subsets::brep::schema::snapshot::curve::Curve3;
+use crate::standards::v1::subsets::brep::schema::snapshot::error::{IntersectError, KernelError};
+use crate::standards::v1::subsets::brep::schema::snapshot::surface::{surface_ops, Surface};
+use crate::standards::v1::subsets::brep::schema::snapshot::tolerance::Iv;
+use crate::standards::v1::subsets::brep::schema::snapshot::topology::{Body, Coedge};
+use crate::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Frame3;
+use crate::standards::v1::subsets::brep::schema::snapshot::vector::predicates::{orient2d, Orient};
+use crate::standards::v1::subsets::brep::schema::snapshot::vector::{Pnt2, Pnt3, Vec3};
+use crate::standards::v1::subsets::brep::schema::engine::PointClassification;
 
 // #region 🔖️Api
 
@@ -536,11 +536,11 @@ fn point_in_polygon_3d(hit: Pnt3, verts: &[Pnt3], normal: Vec3, tol: f64) -> boo
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::primitives::{make_box, make_cylinder, make_sphere};
-    use crate::artifacts::semio::standards::v1::subsets::brep::schema::inferences::mass_properties::oracle::{ClosedFormMass, Sdf};
-    use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::tolerance::Tol;
-    use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::history::OpRecorder;
-    use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Trsf;
+    use crate::standards::v1::subsets::brep::schema::diff::primitives::{make_box, make_cylinder, make_sphere};
+    use crate::standards::v1::subsets::brep::schema::inferences::mass_properties::oracle::{ClosedFormMass, Sdf};
+    use crate::standards::v1::subsets::brep::schema::snapshot::tolerance::Tol;
+    use crate::standards::v1::subsets::brep::schema::snapshot::topology::history::OpRecorder;
+    use crate::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Trsf;
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn assert_classify(body: &Body, solid: SolidId, p: Pnt3, expected: PointClassification) {

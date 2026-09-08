@@ -13,9 +13,9 @@
 //! `SEMIO_BREP_VIEW_FALLBACK_MESH_KIND` is gone: an empty/invalid document now renders an empty
 //! mesh (zero triangles), not a fabricated stand-in shape.
 
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::inferences::{tessellate_document, BREP_INFERENCE_DEFAULT_DEFLECTION};
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::Body;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
+use crate::standards::v1::subsets::brep::schema::inferences::{tessellate_document, BREP_INFERENCE_DEFAULT_DEFLECTION};
+use crate::standards::v1::subsets::brep::schema::snapshot::topology::Body;
+use crate::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
 use semio_framework_plugin::{mesh_from_indexed_with_face_groups, world3d_camera_json, world3d_selection_json, BuiltNode, MeshData, MeshView, MeshWindowKit, WindowKindDefinition, WindowKit};
 
 //#region 🔖️Constants
@@ -112,8 +112,8 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn a_real_box_solid_renders_a_non_empty_mesh() {
         let mut body = Body::new();
-        let mut rec = crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::history::OpRecorder::new();
-        crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::primitives::make_box(&mut body, 1.0, 1.0, 1.0, &mut rec).unwrap();
+        let mut rec = crate::standards::v1::subsets::brep::schema::snapshot::topology::history::OpRecorder::new();
+        crate::standards::v1::subsets::brep::schema::diff::primitives::make_box(&mut body, 1.0, 1.0, 1.0, &mut rec).unwrap();
         let document = body.to_snapshot();
         let mesh = document_mesh_data(&document);
         assert!(!mesh.positions.is_empty());

@@ -2,6 +2,8 @@
 /** @emoji 🏷️ Entwerfen mit Bestand demonstrator brands — shared landing introduction plus per-app shell brands. */
 // #endregion 🧲️Header
 
+import { DEMONSTRATOR_HOST, DEMONSTRATOR_ASSETS_DIR, demonstratorPaneRuntimeVariant } from "./🔨️modules/🧩️runtime/🟦️.ts";
+export { DEMONSTRATOR_HOST, DEMONSTRATOR_ASSETS_DIR, demonstratorPaneRuntimeVariant };
 import {
   panelTabElementId,
   panelTabFirstDraggableElementId,
@@ -19,12 +21,6 @@ import type { IconName } from "@semio-tech/ui-react";
  * single source the landing page's boot-time `initUiLocaleSync` call reads, so it can never drift
  * from the per-app brands. */
 export const DEMONSTRATOR_LOCALE: ShellLocale = "de";
-
-/** @emoji 🌐️ Production host for the merged demonstrator static site. */
-export const DEMONSTRATOR_HOST = "demonstrator.entwerfen.mit-bestand.de";
-
-/** @emoji 🗂️ Repo-root-relative static assets for all demonstrator brands and the landing page. */
-export const DEMONSTRATOR_ASSETS_DIR = "♻️mit-bestand/🧺️demonstrator/🖼️asset";
 
 /** @emoji 🏷️ Shell brand ids that receive Entwerfen-mit-Bestand partner chrome in the react renderer. */
 export const ENTWERFEN_MIT_BESTAND_BRAND_IDS = [
@@ -774,11 +770,6 @@ export type DemonstratorPaneSpec = {
   readonly tagline: string;
   readonly icon: IconName;
 };
-
-/** @emoji 🔌️ Resolves the runtime playground variant behind a branded demonstrator pane. */
-export function demonstratorPaneRuntimeVariant(variant: string): string {
-  return variant === "generator" ? "generation3d" : variant;
-}
 
 /** @emoji 🧭️ Separates the module-owning runtime variant from the branded pane's manifest row.
  * Generator executes the standalone procedural module, but its branded `generator` row carries the

@@ -4,9 +4,9 @@
 //! the sole runtime adapter, so this file can never structurally emit an artifact or draft mutation.
 //! MUST NOT import anything from the sibling `editor` module (`policyViewerPurityBreaches`).
 
-use crate::artifacts::bmp::standards::v_v3::subsets::any::schema::mutations::BmpMutation;
-use crate::artifacts::bmp::standards::v_v3::subsets::any::schema::snapshot::BmpSnapshot;
-use crate::artifacts::bmp::{BMP_DIALECT, STDIO_BMP_DOCUMENT_SCHEMA};
+use crate::standards::v_v3::subsets::any::schema::mutations::BmpMutation;
+use crate::standards::v_v3::subsets::any::schema::snapshot::BmpSnapshot;
+use crate::{BMP_DIALECT, STDIO_BMP_DOCUMENT_SCHEMA};
 use crate::viewer::bmp::modes::view;
 use crate::viewer::bmp::modes::view::windows::main;
 use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, ViewEmit, Viewer};

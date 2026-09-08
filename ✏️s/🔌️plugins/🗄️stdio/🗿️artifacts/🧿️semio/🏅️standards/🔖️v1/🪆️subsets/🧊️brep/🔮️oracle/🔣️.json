@@ -787,14 +787,14 @@
     {
       "id": "geometry-tessellated",
       "description": "📏️ Curve-replacement edits (arc→spline and line→arc) that legitimately re-tessellate: the new curve is geometrically different by construction, so the gate is the DEVIATION of the tessellated approximation from the analytic curve it replaces, not bit-identity with a previous tessellation. Wider than `mechanical-standard` because a spline approximating an arc carries real, expected chord error at the segment's own scale.",
-      "absoluteLength": 0.000001,
-      "relativeLength": 0.00001,
-      "absoluteArea": 0.000001,
-      "relativeArea": 0.00001,
-      "absoluteVolume": 0.000001,
-      "relativeVolume": 0.00001,
+      "absoluteLength": 1e-06,
+      "relativeLength": 1e-05,
+      "absoluteArea": 1e-06,
+      "relativeArea": 1e-05,
+      "absoluteVolume": 1e-06,
+      "relativeVolume": 1e-05,
       "normalizedHausdorffMax": 0.0001,
-      "normalizedCentroidDistanceMax": 0.000001,
+      "normalizedCentroidDistanceMax": 1e-06,
       "maxOverrideFactor": 5
     }
   ],
@@ -835,10 +835,10 @@
             "actual-step"
           ],
           "assertions": {
-            "relativeVolumeErrorMax": 1e-8,
-            "relativeAreaErrorMax": 1e-7,
-            "normalizedCentroidDistanceMax": 1e-8,
-            "normalizedBoundingBoxDiagonalErrorMax": 1e-8,
+            "relativeVolumeErrorMax": 1e-08,
+            "relativeAreaErrorMax": 1e-07,
+            "normalizedCentroidDistanceMax": 1e-08,
+            "normalizedBoundingBoxDiagonalErrorMax": 1e-08,
             "connectedComponentsEqual": true
           }
         },
@@ -891,7 +891,7 @@
         {
           "id": "create-edge",
           "capability": "semio-v1-brep-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -920,7 +920,7 @@
         {
           "id": "create-face",
           "capability": "semio-v1-brep-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -949,7 +949,7 @@
         {
           "id": "create-shell",
           "capability": "semio-v1-brep-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -978,7 +978,7 @@
         {
           "id": "create-solid",
           "capability": "semio-v1-brep-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -1007,7 +1007,7 @@
         {
           "id": "create-vertex",
           "capability": "semio-v1-brep-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -1036,7 +1036,7 @@
         {
           "id": "delete-edge",
           "capability": "semio-v1-brep-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "rejected",
             "applied"
@@ -1066,7 +1066,7 @@
         {
           "id": "delete-face",
           "capability": "semio-v1-brep-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "rejected",
             "applied"
@@ -1096,7 +1096,7 @@
         {
           "id": "delete-shell",
           "capability": "semio-v1-brep-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "rejected",
             "applied"
@@ -1126,7 +1126,7 @@
         {
           "id": "delete-solid",
           "capability": "semio-v1-brep-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "rejected",
             "applied"
@@ -1156,7 +1156,7 @@
         {
           "id": "delete-vertex",
           "capability": "semio-v1-brep-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "rejected",
             "applied"
@@ -1186,7 +1186,7 @@
         {
           "id": "move-vertex",
           "capability": "semio-v1-brep-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "rejected",
             "applied"
@@ -1216,7 +1216,7 @@
         {
           "id": "replace-curve",
           "capability": "semio-v1-brep-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "rejected",
             "applied"
@@ -1246,7 +1246,7 @@
         {
           "id": "replace-surface",
           "capability": "semio-v1-brep-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "rejected",
             "applied"

@@ -4,7 +4,7 @@
 //! container level, not per-stream, unlike mp4's per-track `stts` tables). A pure whole-snapshot
 //! scalar read — no `InferredField` needed.
 
-use crate::artifacts::avi::standards::v1_0::subsets::any::schema::snapshot::AviSnapshot;
+use crate::standards::v1_0::subsets::any::schema::snapshot::AviSnapshot;
 
 //#region 🔖️Duration
 /// ⏱️ avi's `avih` MainAVIHeader-derived playback duration.
@@ -32,7 +32,7 @@ pub fn compute_avi_duration(snapshot: &AviSnapshot) -> AviDuration {
 //#region 🧪️Tests
 mod tests {
     use super::*;
-    use crate::artifacts::avi::standards::v1_0::subsets::any::schema::snapshot::{AviMainHeader, AviStream};
+    use crate::standards::v1_0::subsets::any::schema::snapshot::{AviMainHeader, AviStream};
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn snapshot(total_frames: u32, micro_sec_per_frame: u32, stream_count: usize) -> AviSnapshot {

@@ -1,378 +1,174 @@
 {
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://semio.tech/schema/s/block/block5d/mutation.json",
   "title": "Block5dMutation",
   "description": "One of 41 semantic mutation kinds — see x-mutation-kind on each $def.",
   "oneOf": [
     {
-      "$ref": "#/$defs/RenamePartKind"
+      "$ref": "./🔩add-attribute/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/ChangePartKindLabel"
+      "$ref": "./👤add-author/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/ChangePartKindVariant"
+      "$ref": "./➕add-compatibility-rule/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/ChangePartKindDescription"
+      "$ref": "./🧩add-representation-attribute/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/ChangePartKindIcon"
+      "$ref": "./🔖add-representation-tag/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/ChangePartKindUnit"
+      "$ref": "./🧷change-grip-grip-kind/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/UpdatePart2d"
+      "$ref": "./🎨change-grip-kind-color/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/UpdatePart3d"
+      "$ref": "./🪢change-grip-kind-default-rope-kind/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/CreateRepresentation"
+      "$ref": "./🎫change-grip-kind-label/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/DeleteRepresentation"
+      "$ref": "./💬change-meta-description/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/RenameRepresentation"
+      "$ref": "./📃️change-part-kind-description/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/ChangeRepresentationMeshUrl"
+      "$ref": "./🖼️change-part-kind-icon/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/ChangeRepresentationLod"
+      "$ref": "./🏷️change-part-kind-label/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/ChangeRepresentationDescription"
+      "$ref": "./📐change-part-kind-unit/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/AddRepresentationTag"
+      "$ref": "./🔀️change-part-kind-variant/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/RemoveRepresentationTag"
+      "$ref": "./📜change-representation-description/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/AddRepresentationAttribute"
+      "$ref": "./🏔️change-representation-lod/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/RemoveRepresentationAttribute"
+      "$ref": "./🌐change-representation-mesh-url/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/CreateGripKind"
+      "$ref": "./🌿create-grip/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/DeleteGripKind"
+      "$ref": "./🌱create-grip-kind/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/RenameGripKind"
+      "$ref": "./🧱create-representation/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/ChangeGripKindLabel"
+      "$ref": "./🕳️delete-grip/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/ChangeGripKindColor"
+      "$ref": "./❌delete-grip-kind/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/ChangeGripKindDefaultRopeKind"
+      "$ref": "./🗑️delete-representation/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/CreateGrip"
+      "$ref": "./🎥move-camera2d/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/DeleteGrip"
+      "$ref": "./🎬move-camera3d/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/MoveGrip2d"
+      "$ref": "./📍move-grip-2d/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/MoveGrip3d"
+      "$ref": "./🧭move-grip-3d/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/ResizeGrip3d"
+      "$ref": "./🚷remove-attribute/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/ChangeGripGripKind"
+      "$ref": "./🙅remove-author/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/AddCompatibilityRule"
+      "$ref": "./✂️remove-compatibility-rule/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/RemoveCompatibilityRule"
+      "$ref": "./➖remove-representation-attribute/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/AddAttribute"
+      "$ref": "./🚫remove-representation-tag/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/RemoveAttribute"
+      "$ref": "./🖋️rename-grip-kind/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/AddAuthor"
+      "$ref": "./✏️rename-part-kind/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/RemoveAuthor"
+      "$ref": "./✒️rename-representation/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/MoveCamera2d"
+      "$ref": "./📏resize-grip-3d/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/ScaleCamera2d"
+      "$ref": "./🔍scale-camera2d/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/MoveCamera3d"
+      "$ref": "./🔎scale-camera3d/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/ScaleCamera3d"
+      "$ref": "./🖌️update-part-2d/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/ChangeMetaDescription"
+      "$ref": "./🧊update-part-3d/🧬️schema/🔣️.json"
     }
   ],
-  "$defs": {
-    "RenamePartKind": {
-      "title": "RenamePartKind",
-      "type": "object",
-      "x-mutation-kind": "rename-part-kind",
-      "additionalProperties": true
-    },
-    "ChangePartKindLabel": {
-      "title": "ChangePartKindLabel",
-      "type": "object",
-      "x-mutation-kind": "change-part-kind-label",
-      "additionalProperties": true
-    },
-    "ChangePartKindVariant": {
-      "title": "ChangePartKindVariant",
-      "type": "object",
-      "x-mutation-kind": "change-part-kind-variant",
-      "additionalProperties": true
-    },
-    "ChangePartKindDescription": {
-      "title": "ChangePartKindDescription",
-      "type": "object",
-      "x-mutation-kind": "change-part-kind-description",
-      "additionalProperties": true
-    },
-    "ChangePartKindIcon": {
-      "title": "ChangePartKindIcon",
-      "type": "object",
-      "x-mutation-kind": "change-part-kind-icon",
-      "additionalProperties": true
-    },
-    "ChangePartKindUnit": {
-      "title": "ChangePartKindUnit",
-      "type": "object",
-      "x-mutation-kind": "change-part-kind-unit",
-      "additionalProperties": true
-    },
-    "UpdatePart2d": {
-      "title": "UpdatePart2d",
-      "type": "object",
-      "x-mutation-kind": "update-part-2d",
-      "additionalProperties": true
-    },
-    "UpdatePart3d": {
-      "title": "UpdatePart3d",
-      "type": "object",
-      "x-mutation-kind": "update-part-3d",
-      "additionalProperties": true
-    },
-    "CreateRepresentation": {
-      "title": "CreateRepresentation",
-      "type": "object",
-      "x-mutation-kind": "create-representation",
-      "additionalProperties": true
-    },
-    "DeleteRepresentation": {
-      "title": "DeleteRepresentation",
-      "type": "object",
-      "x-mutation-kind": "delete-representation",
-      "additionalProperties": true
-    },
-    "RenameRepresentation": {
-      "title": "RenameRepresentation",
-      "type": "object",
-      "x-mutation-kind": "rename-representation",
-      "additionalProperties": true
-    },
-    "ChangeRepresentationMeshUrl": {
-      "title": "ChangeRepresentationMeshUrl",
-      "type": "object",
-      "x-mutation-kind": "change-representation-mesh-url",
-      "additionalProperties": true
-    },
-    "ChangeRepresentationLod": {
-      "title": "ChangeRepresentationLod",
-      "type": "object",
-      "x-mutation-kind": "change-representation-lod",
-      "additionalProperties": true
-    },
-    "ChangeRepresentationDescription": {
-      "title": "ChangeRepresentationDescription",
-      "type": "object",
-      "x-mutation-kind": "change-representation-description",
-      "additionalProperties": true
-    },
-    "AddRepresentationTag": {
-      "title": "AddRepresentationTag",
-      "type": "object",
-      "x-mutation-kind": "add-representation-tag",
-      "additionalProperties": true
-    },
-    "RemoveRepresentationTag": {
-      "title": "RemoveRepresentationTag",
-      "type": "object",
-      "x-mutation-kind": "remove-representation-tag",
-      "additionalProperties": true
-    },
-    "AddRepresentationAttribute": {
-      "title": "AddRepresentationAttribute",
-      "type": "object",
-      "x-mutation-kind": "add-representation-attribute",
-      "additionalProperties": true
-    },
-    "RemoveRepresentationAttribute": {
-      "title": "RemoveRepresentationAttribute",
-      "type": "object",
-      "x-mutation-kind": "remove-representation-attribute",
-      "additionalProperties": true
-    },
-    "CreateGripKind": {
-      "title": "CreateGripKind",
-      "type": "object",
-      "x-mutation-kind": "create-grip-kind",
-      "additionalProperties": true
-    },
-    "DeleteGripKind": {
-      "title": "DeleteGripKind",
-      "type": "object",
-      "x-mutation-kind": "delete-grip-kind",
-      "additionalProperties": true
-    },
-    "RenameGripKind": {
-      "title": "RenameGripKind",
-      "type": "object",
-      "x-mutation-kind": "rename-grip-kind",
-      "additionalProperties": true
-    },
-    "ChangeGripKindLabel": {
-      "title": "ChangeGripKindLabel",
-      "type": "object",
-      "x-mutation-kind": "change-grip-kind-label",
-      "additionalProperties": true
-    },
-    "ChangeGripKindColor": {
-      "title": "ChangeGripKindColor",
-      "type": "object",
-      "x-mutation-kind": "change-grip-kind-color",
-      "additionalProperties": true
-    },
-    "ChangeGripKindDefaultRopeKind": {
-      "title": "ChangeGripKindDefaultRopeKind",
-      "type": "object",
-      "x-mutation-kind": "change-grip-kind-default-rope-kind",
-      "additionalProperties": true
-    },
-    "CreateGrip": {
-      "title": "CreateGrip",
-      "type": "object",
-      "x-mutation-kind": "create-grip",
-      "additionalProperties": true
-    },
-    "DeleteGrip": {
-      "title": "DeleteGrip",
-      "type": "object",
-      "x-mutation-kind": "delete-grip",
-      "additionalProperties": true
-    },
-    "MoveGrip2d": {
-      "title": "MoveGrip2d",
-      "type": "object",
-      "x-mutation-kind": "move-grip-2d",
-      "additionalProperties": true
-    },
-    "MoveGrip3d": {
-      "title": "MoveGrip3d",
-      "type": "object",
-      "x-mutation-kind": "move-grip-3d",
-      "additionalProperties": true
-    },
-    "ResizeGrip3d": {
-      "title": "ResizeGrip3d",
-      "type": "object",
-      "x-mutation-kind": "resize-grip-3d",
-      "additionalProperties": true
-    },
-    "ChangeGripGripKind": {
-      "title": "ChangeGripGripKind",
-      "type": "object",
-      "x-mutation-kind": "change-grip-grip-kind",
-      "additionalProperties": true
-    },
-    "AddCompatibilityRule": {
-      "title": "AddCompatibilityRule",
-      "type": "object",
-      "x-mutation-kind": "add-compatibility-rule",
-      "additionalProperties": true
-    },
-    "RemoveCompatibilityRule": {
-      "title": "RemoveCompatibilityRule",
-      "type": "object",
-      "x-mutation-kind": "remove-compatibility-rule",
-      "additionalProperties": true
-    },
-    "AddAttribute": {
-      "title": "AddAttribute",
-      "type": "object",
-      "x-mutation-kind": "add-attribute",
-      "additionalProperties": true
-    },
-    "RemoveAttribute": {
-      "title": "RemoveAttribute",
-      "type": "object",
-      "x-mutation-kind": "remove-attribute",
-      "additionalProperties": true
-    },
-    "AddAuthor": {
-      "title": "AddAuthor",
-      "type": "object",
-      "x-mutation-kind": "add-author",
-      "additionalProperties": true
-    },
-    "RemoveAuthor": {
-      "title": "RemoveAuthor",
-      "type": "object",
-      "x-mutation-kind": "remove-author",
-      "additionalProperties": true
-    },
-    "MoveCamera2d": {
-      "title": "MoveCamera2d",
-      "type": "object",
-      "x-mutation-kind": "move-camera2d",
-      "additionalProperties": true
-    },
-    "ScaleCamera2d": {
-      "title": "ScaleCamera2d",
-      "type": "object",
-      "x-mutation-kind": "scale-camera2d",
-      "additionalProperties": true
-    },
-    "MoveCamera3d": {
-      "title": "MoveCamera3d",
-      "type": "object",
-      "x-mutation-kind": "move-camera3d",
-      "additionalProperties": true
-    },
-    "ScaleCamera3d": {
-      "title": "ScaleCamera3d",
-      "type": "object",
-      "x-mutation-kind": "scale-camera3d",
-      "additionalProperties": true
-    },
-    "ChangeMetaDescription": {
-      "title": "ChangeMetaDescription",
-      "type": "object",
-      "x-mutation-kind": "change-meta-description",
-      "additionalProperties": true
-    }
-  }
+  "x-semio-mutationKinds": [
+    "add-attribute",
+    "add-author",
+    "add-compatibility-rule",
+    "add-representation-attribute",
+    "add-representation-tag",
+    "change-grip-grip-kind",
+    "change-grip-kind-color",
+    "change-grip-kind-default-rope-kind",
+    "change-grip-kind-label",
+    "change-meta-description",
+    "change-part-kind-description",
+    "change-part-kind-icon",
+    "change-part-kind-label",
+    "change-part-kind-unit",
+    "change-part-kind-variant",
+    "change-representation-description",
+    "change-representation-lod",
+    "change-representation-mesh-url",
+    "create-grip",
+    "create-grip-kind",
+    "create-representation",
+    "delete-grip",
+    "delete-grip-kind",
+    "delete-representation",
+    "move-camera2d",
+    "move-camera3d",
+    "move-grip2d",
+    "move-grip3d",
+    "remove-attribute",
+    "remove-author",
+    "remove-compatibility-rule",
+    "remove-representation-attribute",
+    "remove-representation-tag",
+    "rename-grip-kind",
+    "rename-part-kind",
+    "rename-representation",
+    "resize-grip3d",
+    "scale-camera2d",
+    "scale-camera3d",
+    "update-part2d",
+    "update-part3d"
+  ]
 }

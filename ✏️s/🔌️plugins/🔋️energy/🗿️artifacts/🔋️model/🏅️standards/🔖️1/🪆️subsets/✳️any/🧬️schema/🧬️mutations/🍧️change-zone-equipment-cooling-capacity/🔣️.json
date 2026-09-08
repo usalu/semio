@@ -5,7 +5,7 @@
   "displayName": "Change Zone Equipment Cooling Capacity",
   "emoji": "🍧️",
   "aggregateVariant": "ChangeZoneEquipmentCoolingCapacity",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-zone-equipment-cooling-capacity",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

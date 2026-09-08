@@ -1,0 +1,174 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/epw/energyplus/any/mutation/insert-record.json",
+  "title": "InsertRecord",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "index",
+    "record"
+  ],
+  "properties": {
+    "index": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "record": {
+      "$ref": "#/$defs/EpwRecord"
+    },
+    "mutation": {
+      "const": "insertRecord",
+      "description": "Aggregate discriminator spliced in by EpwMutation; absent when the payload stands alone."
+    }
+  },
+  "$defs": {
+    "EpwRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "year",
+        "month",
+        "day",
+        "hour",
+        "minute",
+        "dataSourceUncertainty",
+        "dryBulbTemp",
+        "dewPointTemp",
+        "relativeHumidity",
+        "atmosphericPressure",
+        "extraterrestrialHorizontalRadiation",
+        "extraterrestrialDirectNormalRadiation",
+        "horizontalInfraredRadiation",
+        "globalHorizontalRadiation",
+        "directNormalRadiation",
+        "diffuseHorizontalRadiation",
+        "globalHorizontalIlluminance",
+        "directNormalIlluminance",
+        "diffuseHorizontalIlluminance",
+        "zenithLuminance",
+        "windDirection",
+        "windSpeed",
+        "totalSkyCover",
+        "opaqueSkyCover",
+        "visibility",
+        "ceilingHeight",
+        "presentWeatherObservation",
+        "presentWeatherCodes",
+        "precipitableWater",
+        "aerosolOpticalDepth",
+        "snowDepth",
+        "daysSinceLastSnowfall",
+        "albedo",
+        "liquidPrecipDepth",
+        "liquidPrecipQuantity"
+      ],
+      "properties": {
+        "year": {
+          "type": "string"
+        },
+        "month": {
+          "type": "string"
+        },
+        "day": {
+          "type": "string"
+        },
+        "hour": {
+          "type": "string"
+        },
+        "minute": {
+          "type": "string"
+        },
+        "dataSourceUncertainty": {
+          "type": "string"
+        },
+        "dryBulbTemp": {
+          "type": "string"
+        },
+        "dewPointTemp": {
+          "type": "string"
+        },
+        "relativeHumidity": {
+          "type": "string"
+        },
+        "atmosphericPressure": {
+          "type": "string"
+        },
+        "extraterrestrialHorizontalRadiation": {
+          "type": "string"
+        },
+        "extraterrestrialDirectNormalRadiation": {
+          "type": "string"
+        },
+        "horizontalInfraredRadiation": {
+          "type": "string"
+        },
+        "globalHorizontalRadiation": {
+          "type": "string"
+        },
+        "directNormalRadiation": {
+          "type": "string"
+        },
+        "diffuseHorizontalRadiation": {
+          "type": "string"
+        },
+        "globalHorizontalIlluminance": {
+          "type": "string"
+        },
+        "directNormalIlluminance": {
+          "type": "string"
+        },
+        "diffuseHorizontalIlluminance": {
+          "type": "string"
+        },
+        "zenithLuminance": {
+          "type": "string"
+        },
+        "windDirection": {
+          "type": "string"
+        },
+        "windSpeed": {
+          "type": "string"
+        },
+        "totalSkyCover": {
+          "type": "string"
+        },
+        "opaqueSkyCover": {
+          "type": "string"
+        },
+        "visibility": {
+          "type": "string"
+        },
+        "ceilingHeight": {
+          "type": "string"
+        },
+        "presentWeatherObservation": {
+          "type": "string"
+        },
+        "presentWeatherCodes": {
+          "type": "string"
+        },
+        "precipitableWater": {
+          "type": "string"
+        },
+        "aerosolOpticalDepth": {
+          "type": "string"
+        },
+        "snowDepth": {
+          "type": "string"
+        },
+        "daysSinceLastSnowfall": {
+          "type": "string"
+        },
+        "albedo": {
+          "type": "string"
+        },
+        "liquidPrecipDepth": {
+          "type": "string"
+        },
+        "liquidPrecipQuantity": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

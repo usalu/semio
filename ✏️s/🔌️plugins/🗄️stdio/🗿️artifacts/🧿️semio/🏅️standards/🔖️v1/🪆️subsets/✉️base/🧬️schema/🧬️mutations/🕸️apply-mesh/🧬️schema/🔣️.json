@@ -1,0 +1,728 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/base/mutation/apply-mesh.json",
+  "title": "ApplyMesh",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation"
+  ],
+  "properties": {
+    "mutation": {
+      "$ref": "#/$defs/SemioMeshMutation"
+    }
+  },
+  "$defs": {
+    "SemioMeshMutation": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "CreateMesh"
+          ],
+          "properties": {
+            "CreateMesh": {
+              "$ref": "#/$defs/CreateMesh"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "DeleteMesh"
+          ],
+          "properties": {
+            "DeleteMesh": {
+              "$ref": "#/$defs/DeleteMesh"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "CreatePrimitive"
+          ],
+          "properties": {
+            "CreatePrimitive": {
+              "$ref": "#/$defs/CreatePrimitive"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "DeletePrimitive"
+          ],
+          "properties": {
+            "DeletePrimitive": {
+              "$ref": "#/$defs/DeletePrimitive"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "SetPrimitiveTopology"
+          ],
+          "properties": {
+            "SetPrimitiveTopology": {
+              "$ref": "#/$defs/SetPrimitiveTopology"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "ReplacePrimitiveGeometry"
+          ],
+          "properties": {
+            "ReplacePrimitiveGeometry": {
+              "$ref": "#/$defs/ReplacePrimitiveGeometry"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "SetPrimitiveMaterial"
+          ],
+          "properties": {
+            "SetPrimitiveMaterial": {
+              "$ref": "#/$defs/SetPrimitiveMaterial"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "CreateMaterial"
+          ],
+          "properties": {
+            "CreateMaterial": {
+              "$ref": "#/$defs/CreateMaterial"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "DeleteMaterial"
+          ],
+          "properties": {
+            "DeleteMaterial": {
+              "$ref": "#/$defs/DeleteMaterial"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "ChangeMaterialBaseColor"
+          ],
+          "properties": {
+            "ChangeMaterialBaseColor": {
+              "$ref": "#/$defs/ChangeMaterialBaseColor"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "ChangeMaterialMetallic"
+          ],
+          "properties": {
+            "ChangeMaterialMetallic": {
+              "$ref": "#/$defs/ChangeMaterialMetallic"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "ChangeMaterialRoughness"
+          ],
+          "properties": {
+            "ChangeMaterialRoughness": {
+              "$ref": "#/$defs/ChangeMaterialRoughness"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "CreateTexture"
+          ],
+          "properties": {
+            "CreateTexture": {
+              "$ref": "#/$defs/CreateTexture"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "DeleteTexture"
+          ],
+          "properties": {
+            "DeleteTexture": {
+              "$ref": "#/$defs/DeleteTexture"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "ChangeTextureMime"
+          ],
+          "properties": {
+            "ChangeTextureMime": {
+              "$ref": "#/$defs/ChangeTextureMime"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "ReplaceTextureBytes"
+          ],
+          "properties": {
+            "ReplaceTextureBytes": {
+              "$ref": "#/$defs/ReplaceTextureBytes"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "MoveVertex"
+          ],
+          "properties": {
+            "MoveVertex": {
+              "$ref": "#/$defs/MoveVertex"
+            }
+          }
+        }
+      ]
+    },
+    "CreateMesh": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mesh"
+      ],
+      "properties": {
+        "mesh": {
+          "$ref": "#/$defs/SemioMesh"
+        }
+      }
+    },
+    "SemioMesh": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "primitives": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SemioPrimitive"
+          }
+        }
+      }
+    },
+    "SemioPrimitive": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "topology": {
+          "$ref": "#/$defs/SemioTopology"
+        },
+        "positions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SemioPoint3"
+          }
+        },
+        "normals": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SemioPoint3"
+          }
+        },
+        "uvs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SemioUv"
+          }
+        },
+        "colors": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SemioRgba"
+          }
+        },
+        "indices": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4294967295
+          }
+        },
+        "materialId": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "SemioTopology": {
+      "type": "string",
+      "enum": [
+        "points",
+        "lines",
+        "lineStrip",
+        "triangles",
+        "triangleStrip",
+        "triangleFan"
+      ]
+    },
+    "SemioPoint3": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y",
+        "z"
+      ],
+      "properties": {
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "z": {
+          "type": "number"
+        }
+      }
+    },
+    "SemioUv": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "u",
+        "v"
+      ],
+      "properties": {
+        "u": {
+          "type": "number"
+        },
+        "v": {
+          "type": "number"
+        }
+      }
+    },
+    "SemioRgba": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "r",
+        "g",
+        "b",
+        "a"
+      ],
+      "properties": {
+        "r": {
+          "type": "number"
+        },
+        "g": {
+          "type": "number"
+        },
+        "b": {
+          "type": "number"
+        },
+        "a": {
+          "type": "number"
+        }
+      }
+    },
+    "DeleteMesh": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        }
+      }
+    },
+    "CreatePrimitive": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mesh_id",
+        "primitive"
+      ],
+      "properties": {
+        "mesh_id": {
+          "type": "string"
+        },
+        "primitive": {
+          "$ref": "#/$defs/SemioPrimitive"
+        }
+      }
+    },
+    "DeletePrimitive": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mesh_id",
+        "primitive_id"
+      ],
+      "properties": {
+        "mesh_id": {
+          "type": "string"
+        },
+        "primitive_id": {
+          "type": "string"
+        }
+      }
+    },
+    "SetPrimitiveTopology": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mesh_id",
+        "primitive_id",
+        "topology"
+      ],
+      "properties": {
+        "mesh_id": {
+          "type": "string"
+        },
+        "primitive_id": {
+          "type": "string"
+        },
+        "topology": {
+          "$ref": "#/$defs/SemioTopology"
+        }
+      }
+    },
+    "ReplacePrimitiveGeometry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mesh_id",
+        "primitive_id",
+        "positions",
+        "normals",
+        "uvs",
+        "colors",
+        "indices"
+      ],
+      "properties": {
+        "mesh_id": {
+          "type": "string"
+        },
+        "primitive_id": {
+          "type": "string"
+        },
+        "positions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SemioPoint3"
+          }
+        },
+        "normals": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SemioPoint3"
+          }
+        },
+        "uvs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SemioUv"
+          }
+        },
+        "colors": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SemioRgba"
+          }
+        },
+        "indices": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4294967295
+          }
+        }
+      }
+    },
+    "SetPrimitiveMaterial": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mesh_id",
+        "primitive_id"
+      ],
+      "properties": {
+        "mesh_id": {
+          "type": "string"
+        },
+        "primitive_id": {
+          "type": "string"
+        },
+        "material_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "CreateMaterial": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "material"
+      ],
+      "properties": {
+        "material": {
+          "$ref": "#/$defs/SemioMaterial"
+        }
+      }
+    },
+    "SemioMaterial": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "baseColor": {
+          "$ref": "#/$defs/SemioRgba"
+        },
+        "metallic": {
+          "type": "number"
+        },
+        "roughness": {
+          "type": "number"
+        }
+      }
+    },
+    "DeleteMaterial": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        }
+      }
+    },
+    "ChangeMaterialBaseColor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "new_base_color"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "new_base_color": {
+          "$ref": "#/$defs/SemioRgba"
+        }
+      }
+    },
+    "ChangeMaterialMetallic": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "new_metallic"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "new_metallic": {
+          "type": "number"
+        }
+      }
+    },
+    "ChangeMaterialRoughness": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "new_roughness"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "new_roughness": {
+          "type": "number"
+        }
+      }
+    },
+    "CreateTexture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "texture"
+      ],
+      "properties": {
+        "texture": {
+          "$ref": "#/$defs/SemioTexture"
+        }
+      }
+    },
+    "SemioTexture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "mime": {
+          "type": "string"
+        },
+        "bytes": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          }
+        }
+      }
+    },
+    "DeleteTexture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        }
+      }
+    },
+    "ChangeTextureMime": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "new_mime"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "new_mime": {
+          "type": "string"
+        }
+      }
+    },
+    "ReplaceTextureBytes": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "new_bytes"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "new_bytes": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          }
+        }
+      }
+    },
+    "MoveVertex": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mesh_id",
+        "primitive_id",
+        "vertex_index",
+        "new_point"
+      ],
+      "properties": {
+        "mesh_id": {
+          "type": "string"
+        },
+        "primitive_id": {
+          "type": "string"
+        },
+        "vertex_index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "new_point": {
+          "$ref": "#/$defs/SemioPoint3"
+        }
+      }
+    }
+  }
+}

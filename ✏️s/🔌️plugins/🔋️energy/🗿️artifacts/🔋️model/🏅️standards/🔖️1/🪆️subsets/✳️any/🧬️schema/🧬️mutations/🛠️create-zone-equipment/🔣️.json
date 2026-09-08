@@ -5,7 +5,7 @@
   "displayName": "Create Zone Equipment",
   "emoji": "🛠️",
   "aggregateVariant": "CreateZoneEquipment",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "create-zone-equipment",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

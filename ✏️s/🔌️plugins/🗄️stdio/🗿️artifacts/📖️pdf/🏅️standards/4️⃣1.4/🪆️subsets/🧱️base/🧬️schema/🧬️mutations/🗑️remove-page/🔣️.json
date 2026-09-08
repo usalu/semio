@@ -5,7 +5,7 @@
   "displayName": "Remove Page",
   "emoji": "🗑️",
   "aggregateVariant": "RemovePage",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "remove-page",
   "binaryTag": 1,
   "invertibility": "explicit-mutation",

@@ -5,7 +5,7 @@
   "displayName": "Set Output Intent",
   "emoji": "🏳️",
   "aggregateVariant": "SetOutputIntent",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "set-output-intent",
   "binaryTag": 8,
   "invertibility": "explicit-mutation",

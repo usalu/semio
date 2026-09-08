@@ -5,7 +5,7 @@
   "displayName": "Create Setpoint Manager",
   "emoji": "📌️",
   "aggregateVariant": "CreateSetpointManager",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "create-setpoint-manager",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

@@ -1,7 +1,7 @@
 //! ✏️ `avi` edit (any) — Main window: real `MediaWindowKit`
 //! render of the current document (editable variant).
 
-use crate::artifacts::avi::standards::v1_0::subsets::any::schema::snapshot::AviSnapshot;
+use crate::standards::v1_0::subsets::any::schema::snapshot::AviSnapshot;
 use semio_framework_plugin::app::{MediaKind, MediaView, MediaWindowKit};
 use semio_framework_plugin::{BuiltNode, WindowKindDefinition, WindowKit};
 

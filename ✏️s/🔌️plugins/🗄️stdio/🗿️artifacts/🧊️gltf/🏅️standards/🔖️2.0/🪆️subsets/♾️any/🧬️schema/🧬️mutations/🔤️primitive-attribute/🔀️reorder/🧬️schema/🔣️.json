@@ -1,0 +1,39 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/primitive-attribute/reorder.json",
+  "title": "GltfReorderPrimitiveAttributesMutation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mesh",
+    "primitive",
+    "order"
+  ],
+  "properties": {
+    "mesh": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "primitive": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "order": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "x-semio": {
+    "id": "s.stdio.gltf.mutation.reorder-primitive-attributes.v1",
+    "version": 1,
+    "phase": "mutation",
+    "kind": "reorder",
+    "touchedPaths": [
+      "document/meshes/*/primitives/*/attributes"
+    ],
+    "referencePolicy": "accepts only the complete semantic-key permutation"
+  },
+  "x-semio-mutation": "reorder-primitive-attributes"
+}

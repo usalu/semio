@@ -108,7 +108,7 @@
         {
           "id": "remove-instance",
           "capability": "ifc-2x3-base-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -127,7 +127,7 @@
         {
           "id": "set-header",
           "capability": "ifc-2x3-base-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -146,7 +146,7 @@
         {
           "id": "set-snapshot",
           "capability": "ifc-2x3-base-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -165,7 +165,7 @@
         {
           "id": "upsert-instance",
           "capability": "ifc-2x3-base-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],

@@ -1,0 +1,300 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/cad/mutation/add-block-entity.json",
+  "title": "AddBlockEntity",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "blockName",
+    "entity"
+  ],
+  "properties": {
+    "blockName": {
+      "type": "string"
+    },
+    "entity": {
+      "$ref": "#/$defs/CadEntityRecord"
+    },
+    "mutation": {
+      "const": "addBlockEntity",
+      "description": "Aggregate discriminator spliced in by SemioCadMutation; absent when the payload stands alone."
+    }
+  },
+  "$defs": {
+    "CadEntityRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "handle",
+        "layer",
+        "entity"
+      ],
+      "properties": {
+        "handle": {
+          "type": "string"
+        },
+        "layer": {
+          "type": "string"
+        },
+        "entity": {
+          "$ref": "#/$defs/CadEntity"
+        }
+      }
+    },
+    "CadEntity": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "a",
+            "b"
+          ],
+          "properties": {
+            "kind": {
+              "const": "line"
+            },
+            "a": {
+              "$ref": "#/$defs/SemioPoint2"
+            },
+            "b": {
+              "$ref": "#/$defs/SemioPoint2"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "center",
+            "radius",
+            "startAngle",
+            "endAngle"
+          ],
+          "properties": {
+            "kind": {
+              "const": "arc"
+            },
+            "center": {
+              "$ref": "#/$defs/SemioPoint2"
+            },
+            "radius": {
+              "type": "number"
+            },
+            "startAngle": {
+              "type": "number"
+            },
+            "endAngle": {
+              "type": "number"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "center",
+            "radius"
+          ],
+          "properties": {
+            "kind": {
+              "const": "circle"
+            },
+            "center": {
+              "$ref": "#/$defs/SemioPoint2"
+            },
+            "radius": {
+              "type": "number"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "center",
+            "majorAxisEnd",
+            "ratio",
+            "startParam",
+            "endParam"
+          ],
+          "properties": {
+            "kind": {
+              "const": "ellipse"
+            },
+            "center": {
+              "$ref": "#/$defs/SemioPoint2"
+            },
+            "majorAxisEnd": {
+              "$ref": "#/$defs/SemioPoint2"
+            },
+            "ratio": {
+              "type": "number"
+            },
+            "startParam": {
+              "type": "number"
+            },
+            "endParam": {
+              "type": "number"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "vertices",
+            "closed"
+          ],
+          "properties": {
+            "kind": {
+              "const": "polyline"
+            },
+            "vertices": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/SemioPoint2"
+              }
+            },
+            "closed": {
+              "type": "boolean"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "position",
+            "height",
+            "rotation",
+            "content"
+          ],
+          "properties": {
+            "kind": {
+              "const": "text"
+            },
+            "position": {
+              "$ref": "#/$defs/SemioPoint2"
+            },
+            "height": {
+              "type": "number"
+            },
+            "rotation": {
+              "type": "number"
+            },
+            "content": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "blockName",
+            "insertionPoint",
+            "scale",
+            "rotation"
+          ],
+          "properties": {
+            "kind": {
+              "const": "insert"
+            },
+            "blockName": {
+              "type": "string"
+            },
+            "insertionPoint": {
+              "$ref": "#/$defs/SemioPoint2"
+            },
+            "scale": {
+              "$ref": "#/$defs/SemioPoint2"
+            },
+            "rotation": {
+              "type": "number"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "p1",
+            "p2",
+            "p3",
+            "p4"
+          ],
+          "properties": {
+            "kind": {
+              "const": "solid"
+            },
+            "p1": {
+              "$ref": "#/$defs/SemioPoint2"
+            },
+            "p2": {
+              "$ref": "#/$defs/SemioPoint2"
+            },
+            "p3": {
+              "$ref": "#/$defs/SemioPoint2"
+            },
+            "p4": {
+              "$ref": "#/$defs/SemioPoint2"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "defPoint",
+            "textPosition",
+            "measurement",
+            "text"
+          ],
+          "properties": {
+            "kind": {
+              "const": "dimension"
+            },
+            "defPoint": {
+              "$ref": "#/$defs/SemioPoint2"
+            },
+            "textPosition": {
+              "$ref": "#/$defs/SemioPoint2"
+            },
+            "measurement": {
+              "type": "number"
+            },
+            "text": {
+              "type": "string"
+            }
+          }
+        }
+      ]
+    },
+    "SemioPoint2": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y"
+      ],
+      "properties": {
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        }
+      }
+    }
+  }
+}

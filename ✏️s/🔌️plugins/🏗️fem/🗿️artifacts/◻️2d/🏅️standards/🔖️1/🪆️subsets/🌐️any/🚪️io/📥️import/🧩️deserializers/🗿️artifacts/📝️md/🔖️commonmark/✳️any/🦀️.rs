@@ -8,8 +8,8 @@ use crate::artifacts::fem2d::Fem2dSnapshot;
 use semio_framework::io::io_mechanism::Deserializer;
 use semio_framework::io_schema::{Confidence, Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};
-use semio_s_plugin_stdio::artifacts::md::schema::snapshot::MdBlock;
-use semio_s_plugin_stdio::artifacts::md::MdSnapshot;
+use semio_s_artifact_stdio_md::schema::snapshot::MdBlock;
+use semio_s_artifact_stdio_md::MdSnapshot;
 
 /// 🎯️ The foreign dialect this leaf reads.
 pub const MD_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.md", standard: StandardId("commonmark"), subset: SubsetId::ANY };

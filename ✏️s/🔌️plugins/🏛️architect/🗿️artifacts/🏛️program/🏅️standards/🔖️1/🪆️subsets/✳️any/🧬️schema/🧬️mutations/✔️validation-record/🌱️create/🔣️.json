@@ -5,7 +5,7 @@
   "displayName": "Create Validation Record",
   "emoji": "🌱️",
   "aggregateVariant": "CreateValidationRecord",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

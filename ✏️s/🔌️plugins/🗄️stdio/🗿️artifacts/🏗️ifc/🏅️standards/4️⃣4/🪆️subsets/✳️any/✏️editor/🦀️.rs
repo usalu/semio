@@ -2,8 +2,8 @@
 //! 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §2.1). `Ifc4AnyEditor`
 //! implements `ArtifactEditor`, wiring the shared `MeshWindowKit` to a single Main window.
 
-use crate::artifacts::ifc::standards::v4::subsets::any::schema::mutations::IfcMutation;
-use crate::artifacts::ifc::standards::v4::subsets::any::schema::snapshot::IfcSnapshot;
+use crate::standards::v4::subsets::any::schema::mutations::IfcMutation;
+use crate::standards::v4::subsets::any::schema::snapshot::IfcSnapshot;
 use crate::editor::ifc4_any::modes::edit;
 use crate::editor::ifc4_any::modes::edit::windows::main;
 use semio_framework_plugin::app::InteractionView;

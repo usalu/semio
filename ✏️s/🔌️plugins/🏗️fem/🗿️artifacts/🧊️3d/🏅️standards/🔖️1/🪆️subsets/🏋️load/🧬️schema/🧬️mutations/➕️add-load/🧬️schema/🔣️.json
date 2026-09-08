@@ -1,0 +1,113 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/fem/3d/1/load/mutation/add-load.json",
+  "title": "AddLoad",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "caseId",
+    "load"
+  ],
+  "properties": {
+    "caseId": {
+      "type": "string"
+    },
+    "load": {
+      "title": "FemLoad",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "dof",
+            "id",
+            "kind",
+            "nodeId",
+            "value"
+          ],
+          "properties": {
+            "kind": {
+              "const": "nodal"
+            },
+            "id": {
+              "type": "string"
+            },
+            "nodeId": {
+              "type": "string"
+            },
+            "dof": {
+              "type": "string",
+              "enum": [
+                "Tx",
+                "Ty",
+                "Tz",
+                "Rx",
+                "Ry",
+                "Rz"
+              ]
+            },
+            "value": {
+              "type": "number"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "elementId",
+            "id",
+            "kind",
+            "wx",
+            "wy",
+            "wz"
+          ],
+          "properties": {
+            "kind": {
+              "const": "memberUdl"
+            },
+            "id": {
+              "type": "string"
+            },
+            "elementId": {
+              "type": "string"
+            },
+            "wx": {
+              "type": "number"
+            },
+            "wy": {
+              "type": "number"
+            },
+            "wz": {
+              "type": "number"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "kind",
+            "pressure",
+            "solidId"
+          ],
+          "properties": {
+            "kind": {
+              "const": "area"
+            },
+            "id": {
+              "type": "string"
+            },
+            "solidId": {
+              "type": "string"
+            },
+            "pressure": {
+              "type": "number"
+            }
+          }
+        }
+      ]
+    }
+  }
+}

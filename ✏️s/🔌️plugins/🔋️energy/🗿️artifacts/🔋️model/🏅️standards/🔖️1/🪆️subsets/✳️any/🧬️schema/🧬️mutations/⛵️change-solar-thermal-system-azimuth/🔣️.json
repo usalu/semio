@@ -5,7 +5,7 @@
   "displayName": "Change Solar Thermal System Azimuth",
   "emoji": "⛵️",
   "aggregateVariant": "ChangeSolarThermalSystemAzimuth",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-solar-thermal-system-azimuth",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

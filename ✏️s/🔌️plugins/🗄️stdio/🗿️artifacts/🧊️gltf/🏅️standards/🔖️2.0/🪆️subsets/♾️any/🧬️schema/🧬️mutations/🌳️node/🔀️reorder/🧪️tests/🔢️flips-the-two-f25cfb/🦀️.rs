@@ -9,10 +9,10 @@
 //! leaf's own oracle. The derived `.op.semio`/`.spr.semio`/`.dsl.semio`/`.pack.semio`/
 //! `.patch.semio` encodings come from `fixtures generate`, not from here.
 
-use crate::artifacts::gltf::schema::mutations::reorder_nodes::diff::GltfReorderNodesDiff;
-use crate::artifacts::gltf::schema::mutations::reorder_nodes::GltfReorderNodesPayload;
-use crate::artifacts::gltf::schema::mutations::reorder_nodes::{diff, inverse, mutation};
-use crate::artifacts::gltf::GltfSnapshot;
+use crate::schema::mutations::reorder_nodes::diff::GltfReorderNodesDiff;
+use crate::schema::mutations::reorder_nodes::GltfReorderNodesPayload;
+use crate::schema::mutations::reorder_nodes::{diff, inverse, mutation};
+use crate::GltfSnapshot;
 
 const CASE: &str = "reorder-nodes/flips-the-two-nodes-and-renumbers-the-scene-roots";
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
@@ -103,7 +103,7 @@ async fn committed_diff_is_canonical() {
     let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "{CASE}: committed diff JSON is not canonical");
-    assert!(matches!(&decoded.operation, crate::artifacts::gltf::schema::mutations::reorder_nodes::diff::GltfReorderNodesOperation::Reorder { order } if order == &vec![1usize, 0]), "{CASE}: the committed operation must be a reorder carrying the permutation");
+    assert!(matches!(&decoded.operation, crate::schema::mutations::reorder_nodes::diff::GltfReorderNodesOperation::Reorder { order } if order == &vec![1usize, 0]), "{CASE}: the committed operation must be a reorder carrying the permutation");
 }
 
 /// 🩹 Applying the committed diff directly to `before` yields the committed `after` — the diff is

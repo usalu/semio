@@ -1,0 +1,35 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/fem/3d/1/analysis/mutation/update-analysis-settings.json",
+  "title": "UpdateAnalysisSettings",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "settings"
+  ],
+  "properties": {
+    "settings": {
+      "title": "FemAnalysisSettings",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "bucklingCount",
+        "deformationScale",
+        "modalCount"
+      ],
+      "properties": {
+        "modalCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "bucklingCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "deformationScale": {
+          "type": "number"
+        }
+      }
+    }
+  }
+}

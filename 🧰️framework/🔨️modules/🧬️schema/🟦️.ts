@@ -161,3 +161,58 @@ export class AppSchemaRegistry {
   }
 }
 //#endregion 🔖️AppSchemaRegistry
+
+//#region 🔖️SchemaExportResolution
+/** 🗂️ The five schema formats a scope publishes — TS twin of Rust `SchemaFormat`, keyed by the ascii
+ * id the derived catalog and the `schema://` resolver use. */
+export const SCHEMA_FORMATS = ["rust", "typescript", "graphql", "jsonschema", "protobuf"] as const;
+export type SchemaFormat = (typeof SCHEMA_FORMATS)[number];
+
+/** 🧩 Taxonomy `schemaFormats` key each format is the twin of. */
+export const SCHEMA_FORMAT_TAXONOMY_KEYS: Readonly<Record<SchemaFormat, string>> = {
+  rust: "🦀️rust",
+  typescript: "🟦️typescript",
+  graphql: "🔗️graphql",
+  jsonschema: "🔣️jsonschema",
+  protobuf: "🛰️protobuf",
+};
+
+/** 🍃 Leaf field each format occupies inside a {@link FacetLeaves}. */
+export const SCHEMA_FORMAT_LEAVES: Readonly<Record<SchemaFormat, keyof FacetLeaves>> = {
+  rust: "rust",
+  typescript: "typescript",
+  graphql: "graphql",
+  jsonschema: "jsonSchema",
+  protobuf: "proto",
+};
+
+/** 🔒️ Export ids reserved by the four fixed facets of {@link ArtifactSchemaDescriptor}. */
+export const RESERVED_FACET_EXPORT_IDS = ["artifact", "snapshot", "diff", "mutations"] as const;
+
+/** 🏷️ One named export of a scope — TS twin of Rust `SchemaExport`. */
+export type SchemaExport = {
+  readonly id: string;
+  readonly leaves: FacetLeaves;
+};
+
+/** 🧬️ A scope's named exports — TS twin of Rust `ScopeSchemaExports`, a SIBLING to
+ * {@link ArtifactSchemaDescriptor}'s four fixed facets rather than a field on it. */
+export type ScopeSchemaExports = {
+  readonly scope: string;
+  readonly exports: readonly SchemaExport[];
+};
+
+/** 📇️ One resolvable `(scope id, export id, format id)` triple — TS twin of Rust `SchemaExportEntry`. */
+export type SchemaExportEntry = {
+  readonly scope: string;
+  readonly export: string;
+  readonly format: SchemaFormat;
+};
+
+/** ⚠️ Why `(scope id, export id, format id)` did not resolve — TS twin of Rust `SchemaResolveError`. */
+export type SchemaResolveError =
+  | { readonly kind: "unknown-scope"; readonly scope: string }
+  | { readonly kind: "unknown-export"; readonly scope: string; readonly export: string }
+  | { readonly kind: "format-absent"; readonly scope: string; readonly export: string; readonly format: SchemaFormat }
+  | { readonly kind: "ambiguous-scope"; readonly scope: string; readonly export: string };
+//#endregion 🔖️SchemaExportResolution

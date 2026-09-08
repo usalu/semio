@@ -5,7 +5,7 @@
   "displayName": "Change Pv System Inverter Efficiency",
   "emoji": "♌️",
   "aggregateVariant": "ChangePvSystemInverterEfficiency",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-pv-system-inverter-efficiency",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

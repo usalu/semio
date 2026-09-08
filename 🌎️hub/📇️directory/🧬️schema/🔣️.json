@@ -1,0 +1,586 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/hub/directory/schema.json",
+  "$defs": {
+    "id": { "type": "string", "minLength": 1, "maxLength": 256 },
+    "identifier": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[A-Za-z0-9._:-]+$" },
+    "text": { "type": "string", "minLength": 1, "maxLength": 256 },
+    "hash": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "nonzeroHash": { "type": "string", "pattern": "^(?!0{64}$)[0-9a-f]{64}$" },
+    "requestId": { "type": "string", "pattern": "^(?!0{32}$)[0-9a-f]{32}$" },
+    "safeInteger": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
+    "positiveSafeInteger": { "type": "integer", "minimum": 1, "maximum": 9007199254740991 },
+    "spaceKind": { "enum": ["atelier", "studio", "archive"] },
+    "spaceVisibility": { "enum": ["private", "public"] },
+    "spaceRole": { "enum": ["author", "spectator"] },
+
+    "documentOwner": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["pluginId", "packageId", "version", "packageHash"],
+      "properties": {
+        "pluginId": { "$ref": "#/$defs/id" },
+        "packageId": { "$ref": "#/$defs/id" },
+        "version": { "$ref": "#/$defs/id" },
+        "packageHash": { "$ref": "#/$defs/nonzeroHash" }
+      }
+    },
+
+    "documentFrontier": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["headSeq", "commitSeq", "epoch"],
+      "properties": {
+        "headSeq": { "$ref": "#/$defs/safeInteger" },
+        "commitSeq": { "$ref": "#/$defs/safeInteger" },
+        "epoch": { "$ref": "#/$defs/safeInteger" }
+      }
+    },
+
+    "publicSpace": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "kind", "visibility", "memberCount", "documentCount", "createdAtMs", "updatedAtMs"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "name": { "type": "string" },
+        "kind": { "$ref": "#/$defs/spaceKind" },
+        "visibility": { "const": "public" },
+        "memberCount": { "$ref": "#/$defs/safeInteger" },
+        "documentCount": { "$ref": "#/$defs/safeInteger" },
+        "createdAtMs": { "$ref": "#/$defs/safeInteger" },
+        "updatedAtMs": { "$ref": "#/$defs/safeInteger" }
+      }
+    },
+
+    "memberSpace": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "kind", "visibility", "ownerUserId", "role", "memberCount", "documentCount", "activeConnections", "createdAtMs", "updatedAtMs"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "name": { "type": "string" },
+        "kind": { "$ref": "#/$defs/spaceKind" },
+        "visibility": { "$ref": "#/$defs/spaceVisibility" },
+        "ownerUserId": { "$ref": "#/$defs/id" },
+        "role": { "$ref": "#/$defs/spaceRole" },
+        "memberCount": { "$ref": "#/$defs/safeInteger" },
+        "documentCount": { "$ref": "#/$defs/safeInteger" },
+        "activeConnections": { "$ref": "#/$defs/safeInteger" },
+        "createdAtMs": { "$ref": "#/$defs/safeInteger" },
+        "updatedAtMs": { "$ref": "#/$defs/safeInteger" }
+      }
+    },
+
+    "publicDocument": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["documentId", "artifactKind", "artifactSchema", "owner", "packSchemaHash"],
+      "properties": {
+        "documentId": { "$ref": "#/$defs/id" },
+        "artifactKind": { "$ref": "#/$defs/id" },
+        "artifactSchema": { "$ref": "#/$defs/id" },
+        "owner": { "$ref": "#/$defs/documentOwner" },
+        "packSchemaHash": { "$ref": "#/$defs/nonzeroHash" }
+      }
+    },
+
+    "scopedDocumentDescriptor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["spaceId", "documentId", "artifactKind", "artifactSchema", "owner", "packSchemaHash", "bootstrapVersion", "bootstrapFrontier", "bootstrapSnapshotHash"],
+      "properties": {
+        "spaceId": { "$ref": "#/$defs/id" },
+        "documentId": { "$ref": "#/$defs/id" },
+        "artifactKind": { "$ref": "#/$defs/id" },
+        "artifactSchema": { "$ref": "#/$defs/id" },
+        "owner": { "$ref": "#/$defs/documentOwner" },
+        "packSchemaHash": { "$ref": "#/$defs/nonzeroHash" },
+        "bootstrapVersion": { "$ref": "#/$defs/positiveSafeInteger" },
+        "bootstrapFrontier": { "$ref": "#/$defs/documentFrontier" },
+        "bootstrapSnapshotHash": { "$ref": "#/$defs/nonzeroHash" }
+      }
+    },
+
+    "spaceDocumentView": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["descriptor", "headSeq", "commitSeq", "epoch"],
+      "properties": {
+        "descriptor": { "$ref": "#/$defs/scopedDocumentDescriptor" },
+        "headSeq": { "$ref": "#/$defs/safeInteger" },
+        "commitSeq": { "$ref": "#/$defs/safeInteger" },
+        "epoch": { "$ref": "#/$defs/safeInteger" }
+      }
+    },
+
+    "spaceMember": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["userId", "email", "displayName", "role"],
+      "properties": {
+        "userId": { "$ref": "#/$defs/id" },
+        "email": { "type": "string" },
+        "displayName": { "type": "string" },
+        "role": { "$ref": "#/$defs/spaceRole" }
+      }
+    },
+
+    "spaceInvite": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "spaceId", "role", "createdAtMs", "expiresAtMs", "revoked"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "spaceId": { "$ref": "#/$defs/id" },
+        "role": { "$ref": "#/$defs/spaceRole" },
+        "createdAtMs": { "$ref": "#/$defs/safeInteger" },
+        "expiresAtMs": { "$ref": "#/$defs/safeInteger" },
+        "revoked": { "type": "boolean" }
+      }
+    },
+
+    "directoryEventHlc": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["physicalMs", "logical"],
+      "properties": { "physicalMs": { "$ref": "#/$defs/safeInteger" }, "logical": { "$ref": "#/$defs/safeInteger" } }
+    },
+
+    "directoryEventActor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "id"],
+      "properties": { "kind": { "enum": ["user", "system"] }, "id": { "$ref": "#/$defs/id" } }
+    },
+
+    "directoryEvent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["seq", "id", "hlc", "actor", "body", "recordedAtMs"],
+      "properties": {
+        "seq": { "$ref": "#/$defs/positiveSafeInteger" },
+        "id": { "$ref": "#/$defs/id" },
+        "hlc": { "$ref": "#/$defs/directoryEventHlc" },
+        "actor": { "$ref": "#/$defs/directoryEventActor" },
+        "spaceId": { "$ref": "#/$defs/id" },
+        "userId": { "$ref": "#/$defs/id" },
+        "body": { "type": "object", "required": ["kind"], "properties": { "kind": { "$ref": "#/$defs/id" } } },
+        "recordedAtMs": { "$ref": "#/$defs/safeInteger" }
+      }
+    },
+
+    "directoryCommandResult": {
+      "oneOf": [
+        { "type": "object", "additionalProperties": false, "required": ["kind"], "properties": { "kind": { "const": "none" } } },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "inviteToken"],
+          "properties": { "kind": { "const": "invite" }, "inviteToken": { "type": "string", "minLength": 1, "maxLength": 256 } }
+        }
+      ]
+    },
+
+    "presenceBoundedText": { "type": "string", "minLength": 1, "maxLength": 128 },
+
+    "DirectoryDocumentScopeV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["spaceId", "documentId"],
+      "properties": { "spaceId": { "$ref": "#/$defs/id" }, "documentId": { "$ref": "#/$defs/id" } }
+    },
+
+    "DirectorySocketScopeV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["spaceId", "documentId"],
+      "properties": { "spaceId": { "$ref": "#/$defs/identifier" }, "documentId": { "$ref": "#/$defs/identifier" } }
+    },
+
+    "DirectorySocketMessageRoutingV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["class", "scope"],
+      "properties": {
+        "class": { "enum": ["document-announced", "checkpoint", "retention", "rebootstrap", "member-removed", "heartbeat", "presence", "connection", "user-created", "unknown"] },
+        "scope": { "anyOf": [{ "$ref": "#/$defs/DirectorySocketScopeV1" }, { "type": "null" }] }
+      }
+    },
+
+    "DocumentOpenIntentV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "version", "scope", "requestedSurfaceId", "clientInstanceId"],
+      "properties": {
+        "schema": { "const": "semio.hub.document-open-intent/v1" },
+        "version": { "const": 1 },
+        "scope": { "$ref": "#/$defs/DirectoryDocumentScopeV1" },
+        "requestedSurfaceId": { "$ref": "#/$defs/id" },
+        "clientInstanceId": { "$ref": "#/$defs/id" }
+      }
+    },
+
+    "ExecutionTargetAssetRouteV1": {
+      "type": "object",
+      "required": ["method", "path"],
+      "properties": {
+        "method": { "const": "POST" },
+        "path": {
+          "type": "string",
+          "pattern": "^/_semio/hub/spaces/(?:[A-Za-z0-9_.!~*'()-]|%[0-9A-F]{2})+/documents/(?:[A-Za-z0-9_.!~*'()-]|%[0-9A-F]{2})+/execution-target/(manifest|component|descriptor|browser-actor)$",
+          "not": { "pattern": "%(?:[01][0-9A-F]|2[0135789ADEF]|3[0-9F]|4[1-9A-F]|5[0-9ACF]|6[1-9A-F]|7[0-9AEF])" }
+        }
+      }
+    },
+
+    "SocketGrantReceiptV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "protocol", "grant", "actorId", "expiresAtMs"],
+      "properties": {
+        "schema": { "const": "semio.hub.socket-grant/v1" },
+        "protocol": { "const": "semio.socket.v1" },
+        "grant": { "type": "string", "pattern": "^socket\\.v1\\.[0-9a-f]{32}\\.[0-9a-f]{64}$" },
+        "actorId": { "type": "string", "pattern": "^hub\\.v1\\.[0-9a-f]{64}$" },
+        "expiresAtMs": { "$ref": "#/$defs/positiveSafeInteger" }
+      }
+    },
+
+    "DirectoryCommandReceiptV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "requestId", "commandSha256", "outcome", "events", "result", "receiptSha256"],
+      "properties": {
+        "schema": { "const": "semio.directory.command-receipt.v1" },
+        "requestId": { "$ref": "#/$defs/requestId" },
+        "commandSha256": { "$ref": "#/$defs/hash" },
+        "outcome": { "enum": ["accepted", "previously-accepted", "secret-undeliverable"] },
+        "events": { "type": "array", "maxItems": 4, "items": { "$ref": "#/$defs/directoryEvent" } },
+        "result": { "$ref": "#/$defs/directoryCommandResult" },
+        "receiptSha256": { "$ref": "#/$defs/hash" }
+      }
+    },
+
+    "DirectorySessionBindingV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sessionId", "userId", "authorizationGeneration", "expiresAt", "bindingSha256"],
+      "properties": {
+        "sessionId": { "$ref": "#/$defs/id" },
+        "userId": { "$ref": "#/$defs/id" },
+        "authorizationGeneration": { "$ref": "#/$defs/positiveSafeInteger" },
+        "expiresAt": { "$ref": "#/$defs/safeInteger" },
+        "bindingSha256": { "$ref": "#/$defs/hash" }
+      }
+    },
+
+    "DirectorySpaceSessionBindingV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sessionId", "userId", "authorizationGeneration", "expiresAt", "spaceId", "bindingSha256"],
+      "properties": {
+        "sessionId": { "$ref": "#/$defs/id" },
+        "userId": { "$ref": "#/$defs/id" },
+        "authorizationGeneration": { "$ref": "#/$defs/positiveSafeInteger" },
+        "expiresAt": { "$ref": "#/$defs/safeInteger" },
+        "spaceId": { "$ref": "#/$defs/id" },
+        "bindingSha256": { "$ref": "#/$defs/hash" }
+      }
+    },
+
+    "SpaceAdministrationSpaceV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "kind", "visibility", "ownerUserId", "memberCount", "documentCount", "activeConnections", "createdAtMs", "updatedAtMs"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "name": { "type": "string" },
+        "kind": { "$ref": "#/$defs/spaceKind" },
+        "visibility": { "$ref": "#/$defs/spaceVisibility" },
+        "ownerUserId": { "$ref": "#/$defs/id" },
+        "memberCount": { "$ref": "#/$defs/safeInteger" },
+        "documentCount": { "$ref": "#/$defs/safeInteger" },
+        "activeConnections": { "$ref": "#/$defs/safeInteger" },
+        "createdAtMs": { "$ref": "#/$defs/safeInteger" },
+        "updatedAtMs": { "$ref": "#/$defs/safeInteger" }
+      }
+    },
+
+    "SpaceAdministrationMemberRowV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["userId", "email", "displayName", "role", "owner"],
+      "properties": {
+        "userId": { "$ref": "#/$defs/id" },
+        "email": { "type": "string" },
+        "displayName": { "type": "string" },
+        "role": { "$ref": "#/$defs/spaceRole" },
+        "owner": { "type": "boolean" }
+      }
+    },
+
+    "SpaceAdministrationInviteRowV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["inviteId", "role", "createdAtMs", "expiresAtMs", "revoked", "accepted"],
+      "properties": {
+        "inviteId": { "$ref": "#/$defs/id" },
+        "role": { "$ref": "#/$defs/spaceRole" },
+        "createdAtMs": { "$ref": "#/$defs/safeInteger" },
+        "expiresAtMs": { "$ref": "#/$defs/safeInteger" },
+        "revoked": { "type": "boolean" },
+        "accepted": { "type": "boolean" }
+      }
+    },
+
+    "PublicSpaceDetailV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["access", "space", "documents"],
+      "properties": {
+        "access": { "const": "public" },
+        "space": { "$ref": "#/$defs/publicSpace" },
+        "documents": { "type": "array", "items": { "$ref": "#/$defs/publicDocument" } }
+      }
+    },
+
+    "MemberSpaceDetailV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["access", "space", "members", "documents"],
+      "properties": {
+        "access": { "const": "member" },
+        "space": { "allOf": [{ "$ref": "#/$defs/memberSpace" }, { "type": "object", "properties": { "role": { "const": "spectator" } } }] },
+        "members": { "type": "array", "items": { "$ref": "#/$defs/spaceMember" } },
+        "documents": { "type": "array", "items": { "$ref": "#/$defs/spaceDocumentView" } }
+      }
+    },
+
+    "AuthorSpaceDetailV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["access", "space", "members", "documents", "invites"],
+      "properties": {
+        "access": { "const": "author" },
+        "space": { "allOf": [{ "$ref": "#/$defs/memberSpace" }, { "type": "object", "properties": { "role": { "const": "author" } } }] },
+        "members": { "type": "array", "items": { "$ref": "#/$defs/spaceMember" } },
+        "documents": { "type": "array", "items": { "$ref": "#/$defs/spaceDocumentView" } },
+        "invites": { "type": "array", "items": { "$ref": "#/$defs/spaceInvite" } }
+      }
+    },
+
+    "DirectoryDocumentDescriptorV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["documentId", "artifactKind", "artifactSchema", "owner", "packSchemaHash", "bootstrapVersion", "bootstrapFrontier", "bootstrapSnapshotHash"],
+      "properties": {
+        "documentId": { "$ref": "#/$defs/id" },
+        "artifactKind": { "$ref": "#/$defs/id" },
+        "artifactSchema": { "$ref": "#/$defs/id" },
+        "owner": { "$ref": "#/$defs/documentOwner" },
+        "packSchemaHash": { "$ref": "#/$defs/nonzeroHash" },
+        "bootstrapVersion": { "$ref": "#/$defs/positiveSafeInteger" },
+        "bootstrapFrontier": { "$ref": "#/$defs/documentFrontier" },
+        "bootstrapSnapshotHash": { "$ref": "#/$defs/nonzeroHash" }
+      }
+    },
+
+    "DirectoryEventPageCursorV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["epoch", "binding", "generation", "after", "through", "hasMore", "receipt", "eventIds"],
+      "properties": {
+        "epoch": { "$ref": "#/$defs/positiveSafeInteger" },
+        "binding": { "$ref": "#/$defs/hash" },
+        "generation": { "$ref": "#/$defs/positiveSafeInteger" },
+        "after": { "$ref": "#/$defs/safeInteger" },
+        "through": { "$ref": "#/$defs/safeInteger" },
+        "hasMore": { "type": "boolean" },
+        "receipt": { "$ref": "#/$defs/hash" },
+        "eventIds": { "type": "array", "maxItems": 64, "uniqueItems": true, "items": { "$ref": "#/$defs/text" } }
+      }
+    },
+
+    "DirectoryProfileV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["profileId", "subject", "displayName"],
+      "properties": { "profileId": { "$ref": "#/$defs/text" }, "subject": { "$ref": "#/$defs/text" }, "displayName": { "$ref": "#/$defs/text" } }
+    },
+
+    "LocalizedTextV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["en", "de"],
+      "properties": { "en": { "type": "string", "minLength": 1, "maxLength": 200 }, "de": { "type": "string", "minLength": 1, "maxLength": 200 } }
+    },
+
+    "AdminPrincipalV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["userId", "sessionId", "authorizationGeneration", "identityProvider", "identitySubjectDigestHex", "expiresAtMs", "correlationId", "peerClass"],
+      "properties": {
+        "userId": { "$ref": "#/$defs/text" },
+        "sessionId": { "$ref": "#/$defs/text" },
+        "authorizationGeneration": { "$ref": "#/$defs/positiveSafeInteger" },
+        "identityProvider": { "$ref": "#/$defs/text" },
+        "identitySubjectDigestHex": { "$ref": "#/$defs/hash" },
+        "expiresAtMs": { "$ref": "#/$defs/safeInteger" },
+        "correlationId": { "$ref": "#/$defs/text" },
+        "peerClass": { "const": "admin-rest" }
+      }
+    },
+
+    "AdminCreateSpaceIntentV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "requestId", "name", "spaceKind", "visibility"],
+      "properties": {
+        "kind": { "const": "create-space" },
+        "requestId": { "$ref": "#/$defs/text" },
+        "name": { "$ref": "#/$defs/text" },
+        "spaceKind": { "$ref": "#/$defs/spaceKind" },
+        "visibility": { "$ref": "#/$defs/spaceVisibility" }
+      }
+    },
+
+    "AdminOperationIntentV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "requestId"],
+      "properties": { "kind": { "const": "rebuild-directory-projections" }, "requestId": { "$ref": "#/$defs/text" } }
+    },
+
+    "AdminActorV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "id", "ownerUserId"],
+      "properties": { "kind": { "const": "user" }, "id": { "$ref": "#/$defs/text" }, "ownerUserId": { "$ref": "#/$defs/text" } }
+    },
+
+    "AdminRecordedConnectionV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["syncSessionId", "spaceId", "documentId", "authenticatedUserId", "email", "role", "connectedAtMs", "actorId", "clientLabel", "surface", "presenceKnown"],
+      "properties": {
+        "syncSessionId": { "$ref": "#/$defs/text" },
+        "spaceId": { "$ref": "#/$defs/text" },
+        "documentId": { "$ref": "#/$defs/text" },
+        "authenticatedUserId": { "$ref": "#/$defs/text" },
+        "email": { "$ref": "#/$defs/text" },
+        "role": { "$ref": "#/$defs/spaceRole" },
+        "connectedAtMs": { "$ref": "#/$defs/safeInteger" },
+        "actorId": { "$ref": "#/$defs/text" },
+        "clientLabel": { "$ref": "#/$defs/text" },
+        "surface": { "$ref": "#/$defs/text" },
+        "presenceKnown": { "type": "boolean" }
+      }
+    },
+
+    "AdminIntentOutcomeV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["code", "durable", "kickAttempted", "kickSignalled"],
+      "properties": {
+        "code": { "$ref": "#/$defs/text" },
+        "durable": { "type": "boolean" },
+        "kickAttempted": { "$ref": "#/$defs/safeInteger" },
+        "kickSignalled": { "$ref": "#/$defs/safeInteger" }
+      }
+    },
+
+    "InviteAcceptanceMarkerV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["acceptedAt", "acceptedEventId"],
+      "properties": {
+        "acceptedAt": { "type": ["integer", "null"], "minimum": 0 },
+        "acceptedEventId": { "type": ["string", "null"], "minLength": 1, "maxLength": 4096 }
+      }
+    },
+
+    "PresenceAdmissionV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["actor", "connectedAtMs", "userId", "label", "role", "color", "surface"],
+      "properties": {
+        "actor": { "type": "string", "maxLength": 1025 },
+        "connectedAtMs": { "$ref": "#/$defs/safeInteger" },
+        "userId": { "type": ["string", "null"], "maxLength": 1025 },
+        "label": { "type": ["string", "null"], "maxLength": 1025 },
+        "role": { "enum": ["author", "spectator", null] },
+        "color": { "type": "integer", "minimum": 0, "maximum": 255 },
+        "surface": { "type": ["string", "null"], "maxLength": 1025 }
+      }
+    },
+
+    "PresenceLeaseOperationV1": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "scope", "actor", "liveId", "nowMs"],
+          "properties": {
+            "kind": { "const": "install" },
+            "scope": { "$ref": "#/$defs/presenceBoundedText" },
+            "actor": { "$ref": "#/$defs/presenceBoundedText" },
+            "liveId": { "$ref": "#/$defs/presenceBoundedText" },
+            "nowMs": { "type": "integer", "minimum": 0, "maximum": 1000000 }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "scope", "actor", "liveId", "nowMs", "peerTag", "peerBytes"],
+          "properties": {
+            "kind": { "const": "refresh" },
+            "scope": { "$ref": "#/$defs/presenceBoundedText" },
+            "actor": { "$ref": "#/$defs/presenceBoundedText" },
+            "liveId": { "$ref": "#/$defs/presenceBoundedText" },
+            "nowMs": { "type": "integer", "minimum": 0, "maximum": 1000000 },
+            "peerTag": { "type": "string", "maxLength": 64 },
+            "peerBytes": { "type": "integer", "minimum": 0, "maximum": 8192 }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "scope", "actor", "liveId", "nowMs"],
+          "properties": {
+            "kind": { "enum": ["tick", "close"] },
+            "scope": { "$ref": "#/$defs/presenceBoundedText" },
+            "actor": { "$ref": "#/$defs/presenceBoundedText" },
+            "liveId": { "$ref": "#/$defs/presenceBoundedText" },
+            "nowMs": { "type": "integer", "minimum": 0, "maximum": 1000000 }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "scope", "count", "peerBytes", "nowMs"],
+          "properties": {
+            "kind": { "const": "fill" },
+            "scope": { "$ref": "#/$defs/presenceBoundedText" },
+            "count": { "type": "integer", "minimum": 1, "maximum": 64 },
+            "peerBytes": { "type": "integer", "minimum": 0, "maximum": 4096 },
+            "nowMs": { "type": "integer", "minimum": 0, "maximum": 1000000 }
+          }
+        },
+        { "type": "object", "additionalProperties": false, "required": ["kind"], "properties": { "kind": { "const": "restart" } } }
+      ]
+    },
+
+    "PresenceScopeSummaryV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["scope", "count", "bytes", "actors"],
+      "properties": {
+        "scope": { "$ref": "#/$defs/presenceBoundedText" },
+        "count": { "type": "integer", "minimum": 0, "maximum": 64 },
+        "bytes": { "type": "integer", "minimum": 0, "maximum": 262144 },
+        "actors": { "type": "array", "maxItems": 64, "items": { "$ref": "#/$defs/presenceBoundedText" } }
+      }
+    }
+  }
+}

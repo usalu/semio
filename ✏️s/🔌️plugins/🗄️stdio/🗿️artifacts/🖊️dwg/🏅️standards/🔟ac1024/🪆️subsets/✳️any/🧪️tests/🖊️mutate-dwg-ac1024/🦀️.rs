@@ -155,8 +155,8 @@ fn identity_round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::{conforms, mutable_input, no_mutation, params_of, predicted, NATIVE_VERSION};
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_plugin_stdio::artifacts::dwg::standards::v_ac1024::subsets::any::schema::mutations::{apply_dwg_mutation_checked, inverse_dwg_mutation, set_snapshot, set_version_info, DwgMutation};
-    use semio_s_plugin_stdio::artifacts::dwg::standards::v_ac1024::subsets::any::schema::snapshot::{decode_dwg, encode_dwg, DwgSnapshot};
+    use crate::standards::v_ac1024::subsets::any::schema::mutations::{apply_dwg_mutation_checked, inverse_dwg_mutation, set_snapshot, set_version_info, DwgMutation};
+    use crate::standards::v_ac1024::subsets::any::schema::snapshot::{decode_dwg, encode_dwg, DwgSnapshot};
     use semio_s_plugin_stdio_test_oracle::artifacts::dwg::standards::v_ac1024::subsets::any::project_dwg;
     use semio_s_plugin_stdio_test_oracle::law::{carrier_is_exact, inverse_restores, round_trip_preserves};
 

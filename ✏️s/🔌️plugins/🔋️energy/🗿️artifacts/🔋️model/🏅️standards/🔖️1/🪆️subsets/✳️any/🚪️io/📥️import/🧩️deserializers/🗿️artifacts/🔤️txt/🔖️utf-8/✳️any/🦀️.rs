@@ -6,7 +6,7 @@
 //! snapshot type, pending a real txt import/export implementation.
 use crate::artifacts::model::EnergyModelSnapshot;
 pub async fn register() {}
-pub async fn deserialize(_from: &semio_s_plugin_stdio::artifacts::txt::TxtSnapshot) -> Result<EnergyModelSnapshot, String> {
+pub async fn deserialize(_from: &semio_s_artifact_stdio_txt::TxtSnapshot) -> Result<EnergyModelSnapshot, String> {
     Err("txt import not yet implemented".into())
 }
 pub fn deserialize_bytes(_bytes: &[u8]) -> Result<EnergyModelSnapshot, String> {

@@ -1280,7 +1280,7 @@ impl FlowChildGroupWork {
         command: &'a FlowCommand,
         snapshot: &'a FlowSnapshot,
         context: Option<&'a semio_framework_plugin::app::ArtifactOwnedToolJobContext<semio_framework_plugin::EditorApp<FlowPlayApp>>>,
-    ) -> Option<(&'a add_widget::AddWidget, store::SnapshotReadRef<'a, semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot>)> {
+    ) -> Option<(&'a add_widget::AddWidget, store::SnapshotReadRef<'a, semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot>)> {
         let FlowCommand::AddWidget(payload) = command else { return None };
         let context = context?;
         let child_id = &snapshot.content.child_id;
@@ -1288,7 +1288,7 @@ impl FlowChildGroupWork {
         if dialect.artifact_kind != "s.stdio.semio" || dialect.standard != "v1" || dialect.subset != "flow" {
             return None;
         }
-        let child = context.children.typed_read::<semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot>("content", child_id).ok()?;
+        let child = context.children.typed_read::<semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot>("content", child_id).ok()?;
         Some((payload, child))
     }
 }
@@ -2240,7 +2240,7 @@ pub(crate) mod testkit {
     use super::*;
     use semio_framework_plugin::testkit::meta;
     use semio_framework_plugin::{EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
-    use semio_s_plugin_stdio::artifacts::semio::{create_semio_member, SemioMembers};
+    use semio_s_artifact_stdio_semio::{create_semio_member, SemioMembers};
     use store::ArtifactPack;
 
     pub type FlowApp = VcsArtifactApp<EditorApp<FlowPlayApp>, SemioMembers>;
@@ -2440,7 +2440,7 @@ mod tests {
         PluginApp::bind_instance_id(&mut app, 1).await;
         let parent_before = app.snapshot().expect("Flow parent before retained addWidget");
         let child_id = parent_before.content.child_id.clone();
-        let child_before = semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot::decode_pack(
+        let child_before = semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot::decode_pack(
             &app.child_store("content", &child_id).await.expect("Flow child before retained addWidget").document_pack_bytes().await.expect("Flow child pack before retained addWidget"),
         )
         .expect("decode Flow child before retained addWidget");
@@ -2476,7 +2476,7 @@ mod tests {
         assert!(!PluginApp::has_pending_typed_operations(&app));
         let parent_after = app.snapshot().expect("Flow parent after retained addWidget");
         assert_eq!(parent_after.content, parent_before.content, "retained addWidget must preserve the exact parent content coordinate");
-        let child_after = semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot::decode_pack(
+        let child_after = semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot::decode_pack(
             &app.child_store("content", &child_id).await.expect("Flow child after retained addWidget").document_pack_bytes().await.expect("Flow child pack after retained addWidget"),
         )
         .expect("decode Flow child after retained addWidget");

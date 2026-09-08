@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/obj/3.0/geometry/mutation/set-smoothing-groups.json",
+  "title": "SetSmoothingGroups",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "smoothing_groups"
+  ],
+  "properties": {
+    "smoothing_groups": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/ObjSmoothingRange"
+      }
+    },
+    "mutation": {
+      "const": "setSmoothingGroups",
+      "description": "Aggregate discriminator spliced in by ObjMutation; absent when the payload stands alone."
+    }
+  },
+  "$defs": {
+    "ObjSmoothingRange": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "faceIndexFrom"
+      ],
+      "properties": {
+        "faceIndexFrom": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "group": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4294967295
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    }
+  }
+}

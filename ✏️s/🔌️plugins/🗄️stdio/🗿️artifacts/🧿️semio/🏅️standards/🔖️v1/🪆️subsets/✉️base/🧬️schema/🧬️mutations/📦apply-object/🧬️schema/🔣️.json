@@ -1,0 +1,437 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/base/mutation/apply-object.json",
+  "title": "ApplyObject",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation"
+  ],
+  "properties": {
+    "mutation": {
+      "$ref": "#/$defs/SemioObjectMutation"
+    }
+  },
+  "$defs": {
+    "SemioObjectMutation": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "MoveObject"
+          ],
+          "properties": {
+            "MoveObject": {
+              "$ref": "#/$defs/MoveObject"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "RotateObject"
+          ],
+          "properties": {
+            "RotateObject": {
+              "$ref": "#/$defs/RotateObject"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "ScaleObject"
+          ],
+          "properties": {
+            "ScaleObject": {
+              "$ref": "#/$defs/ScaleObject"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "CreateBrep"
+          ],
+          "properties": {
+            "CreateBrep": {
+              "$ref": "#/$defs/CreateBrep"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "DeleteBrep"
+          ],
+          "properties": {
+            "DeleteBrep": {
+              "$ref": "#/$defs/DeleteBrep"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "CreateMesh"
+          ],
+          "properties": {
+            "CreateMesh": {
+              "$ref": "#/$defs/CreateMesh"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "DeleteMesh"
+          ],
+          "properties": {
+            "DeleteMesh": {
+              "$ref": "#/$defs/DeleteMesh"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "CreateProperties"
+          ],
+          "properties": {
+            "CreateProperties": {
+              "$ref": "#/$defs/CreateProperties"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "DeleteProperties"
+          ],
+          "properties": {
+            "DeleteProperties": {
+              "$ref": "#/$defs/DeleteProperties"
+            }
+          }
+        }
+      ]
+    },
+    "MoveObject": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "translation"
+      ],
+      "properties": {
+        "translation": {
+          "$ref": "#/$defs/SemioPoint3"
+        }
+      }
+    },
+    "SemioPoint3": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y",
+        "z"
+      ],
+      "properties": {
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "z": {
+          "type": "number"
+        }
+      }
+    },
+    "RotateObject": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "rotation"
+      ],
+      "properties": {
+        "rotation": {
+          "$ref": "#/$defs/SemioQuaternion"
+        }
+      }
+    },
+    "SemioQuaternion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y",
+        "z",
+        "w"
+      ],
+      "properties": {
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "z": {
+          "type": "number"
+        },
+        "w": {
+          "type": "number"
+        }
+      }
+    },
+    "ScaleObject": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "scale"
+      ],
+      "properties": {
+        "scale": {
+          "$ref": "#/$defs/SemioPoint3"
+        }
+      }
+    },
+    "CreateBrep": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "child_id",
+        "target"
+      ],
+      "properties": {
+        "child_id": {
+          "type": "string"
+        },
+        "target": {
+          "$ref": "#/$defs/ArtifactRef"
+        }
+      }
+    },
+    "ArtifactRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "artifactId",
+        "dialect"
+      ],
+      "properties": {
+        "artifactId": {
+          "type": "string"
+        },
+        "dialect": {
+          "$ref": "#/$defs/ArtifactDialect"
+        }
+      }
+    },
+    "ArtifactDialect": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "artifactKind",
+        "standard",
+        "subset"
+      ],
+      "properties": {
+        "artifactKind": {
+          "type": "string"
+        },
+        "standard": {
+          "type": "string"
+        },
+        "subset": {
+          "type": "string"
+        }
+      }
+    },
+    "DeleteBrep": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {}
+    },
+    "CreateMesh": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mesh"
+      ],
+      "properties": {
+        "mesh": {
+          "$ref": "#/$defs/SemioMesh"
+        }
+      }
+    },
+    "SemioMesh": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "primitives": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SemioPrimitive"
+          }
+        }
+      }
+    },
+    "SemioPrimitive": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "topology": {
+          "$ref": "#/$defs/SemioTopology"
+        },
+        "positions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SemioPoint3"
+          }
+        },
+        "normals": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SemioPoint3"
+          }
+        },
+        "uvs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SemioUv"
+          }
+        },
+        "colors": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SemioRgba"
+          }
+        },
+        "indices": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4294967295
+          }
+        },
+        "materialId": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "SemioTopology": {
+      "type": "string",
+      "enum": [
+        "points",
+        "lines",
+        "lineStrip",
+        "triangles",
+        "triangleStrip",
+        "triangleFan"
+      ]
+    },
+    "SemioUv": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "u",
+        "v"
+      ],
+      "properties": {
+        "u": {
+          "type": "number"
+        },
+        "v": {
+          "type": "number"
+        }
+      }
+    },
+    "SemioRgba": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "r",
+        "g",
+        "b",
+        "a"
+      ],
+      "properties": {
+        "r": {
+          "type": "number"
+        },
+        "g": {
+          "type": "number"
+        },
+        "b": {
+          "type": "number"
+        },
+        "a": {
+          "type": "number"
+        }
+      }
+    },
+    "DeleteMesh": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        }
+      }
+    },
+    "CreateProperties": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "child_id",
+        "target"
+      ],
+      "properties": {
+        "child_id": {
+          "type": "string"
+        },
+        "target": {
+          "$ref": "#/$defs/ArtifactRef"
+        }
+      }
+    },
+    "DeleteProperties": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {}
+    }
+  }
+}

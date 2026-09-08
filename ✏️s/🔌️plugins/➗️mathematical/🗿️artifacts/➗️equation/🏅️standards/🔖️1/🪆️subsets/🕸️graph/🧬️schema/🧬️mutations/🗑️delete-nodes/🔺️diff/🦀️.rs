@@ -16,7 +16,7 @@ pub fn diff(payload: &super::DeleteNodes, base: &EquationSnapshot) -> protocol::
     let (notation, results, computed) = equation_children_from_state(&graph, &equation_geometry(base));
     let mut outcome = protocol::MutationOutcome::new(EquationDiff { notation: Some(notation), results: Some(results), computed: Some(computed), ..Default::default() });
     if !missing.is_empty() {
-        outcome = outcome.absorb_messages([protocol::MutationMessage::warn("mutation.partial", format!("{} of {} requested node(s) did not exist and were skipped.", missing.len(), payload.ids.len())).at(missing.clone())]);
+        outcome = outcome.absorb_messages([protocol::MutationMessage::warn("mutation.partial", format!("{} of {} requested node(s) did not exist and were skipped.", missing.len(), payload.ids.len())).at(missing)]);
     }
     if !cascaded_edge_ids.is_empty() {
         outcome = outcome.info("mutation.cascade", format!("Deleting {} node(s) also removed {} connected edge(s): {}.", existing.len(), cascaded_edge_ids.len(), cascaded_edge_ids.join(", ")));

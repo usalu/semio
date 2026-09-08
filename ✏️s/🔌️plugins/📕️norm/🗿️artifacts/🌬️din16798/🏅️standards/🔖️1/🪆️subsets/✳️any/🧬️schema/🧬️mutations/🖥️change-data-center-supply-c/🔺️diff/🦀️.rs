@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeDataCenterSupplyC, base: &Din16798Snapshot) -> proto
     if base.data_center_supply_c == payload.new_data_center_supply_c {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Data center supply temperature is already {}.", payload.new_data_center_supply_c));
     }
-    protocol::MutationOutcome::new(Din16798Diff { data_center_supply_c: Some(payload.new_data_center_supply_c.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(Din16798Diff { data_center_supply_c: Some(payload.new_data_center_supply_c), ..Default::default() })
 }
 //#endregion 🔖️Diff

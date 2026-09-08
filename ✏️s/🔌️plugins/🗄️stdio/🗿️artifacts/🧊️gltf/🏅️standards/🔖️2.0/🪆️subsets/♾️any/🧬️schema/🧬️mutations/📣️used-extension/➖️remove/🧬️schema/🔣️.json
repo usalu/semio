@@ -1,0 +1,16 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/used-extension/remove.json",
+  "title": "GltfWithdrawUsedExtensionMutation",
+  "type": "object",
+  "x-semio": {
+    "id": "s.stdio.gltf.mutation.remove-used-extension.v1",
+    "version": 1,
+    "phase": "mutation",
+    "touchedPaths": [
+      "document/extensionsUsed"
+    ],
+    "referencePolicy": "withdraw rejects an active requirement"
+  },
+  "x-semio-mutation": "remove-used-extension"
+}

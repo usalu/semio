@@ -11,6 +11,6 @@ pub fn diff(payload: &ChangeEnvelopeAreaM2, base: &Din4108Snapshot) -> protocol:
     if base.envelope_area_m2 == payload.new_envelope_area_m2 {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "Envelope area m2 already has this value.");
     }
-    protocol::MutationOutcome::new(Din4108Diff { envelope_area_m2: Some(payload.new_envelope_area_m2.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(Din4108Diff { envelope_area_m2: Some(payload.new_envelope_area_m2), ..Default::default() })
 }
 //#endregion 🔖️Diff

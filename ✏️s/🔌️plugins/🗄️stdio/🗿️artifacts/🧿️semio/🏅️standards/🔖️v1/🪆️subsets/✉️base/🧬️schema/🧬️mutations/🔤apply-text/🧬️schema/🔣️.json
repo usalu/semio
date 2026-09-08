@@ -1,0 +1,269 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/base/mutation/apply-text.json",
+  "title": "ApplyText",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation"
+  ],
+  "properties": {
+    "mutation": {
+      "$ref": "#/$defs/SemioTextMutation"
+    }
+  },
+  "$defs": {
+    "SemioTextMutation": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "InsertRun"
+          ],
+          "properties": {
+            "InsertRun": {
+              "$ref": "#/$defs/InsertRun"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "RemoveRun"
+          ],
+          "properties": {
+            "RemoveRun": {
+              "$ref": "#/$defs/RemoveRun"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "EditRun"
+          ],
+          "properties": {
+            "EditRun": {
+              "$ref": "#/$defs/EditRun"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "ChangeRunLanguage"
+          ],
+          "properties": {
+            "ChangeRunLanguage": {
+              "$ref": "#/$defs/ChangeRunLanguage"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "ReorderRuns"
+          ],
+          "properties": {
+            "ReorderRuns": {
+              "$ref": "#/$defs/ReorderRuns"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "AddMark"
+          ],
+          "properties": {
+            "AddMark": {
+              "$ref": "#/$defs/AddMark"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "RemoveMark"
+          ],
+          "properties": {
+            "RemoveMark": {
+              "$ref": "#/$defs/RemoveMark"
+            }
+          }
+        }
+      ]
+    },
+    "InsertRun": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "run"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "run": {
+          "$ref": "#/$defs/SemioTextRun"
+        }
+      }
+    },
+    "SemioTextRun": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "language": {
+          "type": "string"
+        },
+        "content": {
+          "type": "string"
+        },
+        "marks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SemioTextMark"
+          }
+        }
+      }
+    },
+    "SemioTextMark": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind"
+      ],
+      "properties": {
+        "kind": {
+          "$ref": "#/$defs/SemioTextMarkKind"
+        },
+        "href": {
+          "type": "string"
+        }
+      }
+    },
+    "SemioTextMarkKind": {
+      "type": "string",
+      "enum": [
+        "bold",
+        "italic",
+        "code",
+        "link"
+      ]
+    },
+    "RemoveRun": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "EditRun": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "new_content"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "new_content": {
+          "type": "string"
+        }
+      }
+    },
+    "ChangeRunLanguage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "new_language"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "new_language": {
+          "type": "string"
+        }
+      }
+    },
+    "ReorderRuns": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "from",
+        "to"
+      ],
+      "properties": {
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "AddMark": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "run_index",
+        "index",
+        "mark"
+      ],
+      "properties": {
+        "run_index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "mark": {
+          "$ref": "#/$defs/SemioTextMark"
+        }
+      }
+    },
+    "RemoveMark": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "run_index",
+        "index"
+      ],
+      "properties": {
+        "run_index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    }
+  }
+}

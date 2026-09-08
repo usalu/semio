@@ -2050,7 +2050,7 @@ pub use semio_framework_mesh_engine::{
 // 🚪️ DWG codec (`dwg_to_bytes`/`dwg_from_bytes`/`mesh_to_dwg_drawing`/…) DELETED (ticket 26/08/12/
 // DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS wave DEDUP): `🔺️mesh/🦀️.rs`
 // was a misplaced, fully-duplicated copy of stdio's real DWG artifact
-// (`semio_s_plugin_stdio::artifacts::dwg::{dwg_to_bytes, dwg_from_bytes, mesh_to_dwg_drawing, …}`,
+// (`semio_s_artifact_stdio_dwg::{dwg_to_bytes, dwg_from_bytes, mesh_to_dwg_drawing, …}`,
 // `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/…`). Its sole framework-tier caller
 // (`🧊️3d/📐️brep/📦️mesh-io`) moved into stdio's own brep engine this same wave, so this re-export
 // has zero remaining callers. `🔺️mesh/🟦️.ts` (unrelated scene-protocol payload types,

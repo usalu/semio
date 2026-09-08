@@ -12,7 +12,7 @@
 use crate::artifacts::gismap::{gis_map_drawing_child_handle, gis_map_value_child_handle, GisMapDrawingChild, GisMapImageChild, GisMapValueChild, MapFeature};
 use dsl::{FromValue, ToValue};
 use schema::ArtifactSchema;
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::base::schema::triples::{split_top_level, strip_brackets};
+use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::triples::{split_top_level, strip_brackets};
 
 //#region 🔹Snapshot
 /// 📸️ Persisted GIS map document snapshot (persistent fields of the artifact).
@@ -64,7 +64,7 @@ fn hex_encode(bytes: &[u8]) -> String {
     bytes.iter().map(|b| format!("{b:02x}")).collect()
 }
 fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
-    if s.len() % 2 != 0 {
+    if !s.len().is_multiple_of(2) {
         return Err(format!("odd hex length: {s:?}"));
     }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()

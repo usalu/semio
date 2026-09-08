@@ -99,13 +99,14 @@ type Ticket struct {
 	ID        string     `json:"id"`
 	Status    string     `json:"status"`
 	Title     string     `json:"title"`
-	Emoji     string     `json:"emoji"`
 	Prompt    string     `json:"prompt"`
 	Summary   string     `json:"summary"`
 	LLM       string     `json:"llm"`
 	Client    string     `json:"client"`
 	Author    string     `json:"author"`
 	GitHub    string     `json:"github_issue"`
+	Goal      string     `json:"goal"`
+	Parent    *string    `json:"parent"`
 	CreatedAt time.Time  `json:"created_at"`
 	ClosedAt  *time.Time `json:"closed_at"`
 }
@@ -143,7 +144,7 @@ type Breach struct {
 	ScopeID    string     `json:"scope_id"`
 	FilePath   string     `json:"file_path"`
 	Line       *int       `json:"line"`
-	Column     *int       `json:"column"`
+	Col        *int       `json:"col"`
 	Summary    string     `json:"summary"`
 	Excerpt    string     `json:"excerpt"`
 	Autofix    bool       `json:"autofixable"`
@@ -155,7 +156,7 @@ type Breach struct {
 // 📡️Event represents a system event persisted to the event log.
 type Event struct {
 	ID        string    `json:"id"`
-	Type      string    `json:"type"`
+	Kind      string    `json:"kind"`
 	Source    string    `json:"source"`
 	Payload   string    `json:"payload_json"`
 	CreatedAt time.Time `json:"created_at"`
@@ -194,17 +195,21 @@ type FileSnapshot struct {
 
 // 📦️TicketOpenRequest is the JSON payload for opening a new ticket.
 type TicketOpenRequest struct {
-	TicketID    string `json:"ticket_id"`
-	Title       string `json:"title"`
-	Prompt      string `json:"prompt"`
-	LLM         string `json:"llm"`
-	Client      string `json:"client"`
-	Author      string `json:"author"`
-	GitHubIssue string `json:"github_issue"`
+	Action      string  `json:"action"`
+	TicketID    string  `json:"ticket_id"`
+	Title       string  `json:"title"`
+	Prompt      string  `json:"prompt"`
+	LLM         string  `json:"llm"`
+	Client      string  `json:"client"`
+	Author      string  `json:"author"`
+	GitHubIssue string  `json:"github_issue"`
+	Goal        string  `json:"goal"`
+	Parent      *string `json:"parent"`
 }
 
 // 📨️TicketCloseRequest is the JSON payload for closing a ticket.
 type TicketCloseRequest struct {
+	Action   string   `json:"action"`
 	TicketID string   `json:"ticket_id"`
 	Summary  string   `json:"summary"`
 	Files    []string `json:"files"`
@@ -212,10 +217,12 @@ type TicketCloseRequest struct {
 
 // 🔓️TicketReopenRequest is the JSON payload for reopening a closed ticket.
 type TicketReopenRequest struct {
+	Action   string `json:"action"`
 	TicketID string `json:"ticket_id"`
 	Prompt   string `json:"prompt"`
 	LLM      string `json:"llm"`
 	Title    string `json:"title"`
+	Client   string `json:"client"`
 }
 
 // 📋️DiffIngestRequest is the JSON payload for ingesting a diff patch.
@@ -237,6 +244,7 @@ type DiffIngestResponse struct {
 
 // 📄️IndexFileRequest is the JSON payload for indexing a single file.
 type IndexFileRequest struct {
+	Action   string `json:"action"`
 	FilePath string `json:"file_path"`
 	Content  string `json:"content"`
 }
@@ -293,7 +301,7 @@ func (b *EventBus) Publish(ctx context.Context, eventType string, source string,
 	}
 	event := Event{
 		ID:        newID(),
-		Type:      eventType,
+		Kind:      eventType,
 		Source:    source,
 		Payload:   string(payloadBytes),
 		CreatedAt: time.Now().UTC(),
@@ -329,7 +337,7 @@ func (b *EventBus) Start() {
 			select {
 			case dispatch := <-b.ch:
 				var handlerErr error
-				if handlers := b.handlers[dispatch.event.Type]; len(handlers) > 0 {
+				if handlers := b.handlers[dispatch.event.Kind]; len(handlers) > 0 {
 					for _, handler := range handlers {
 						handlerErr = errors.Join(handlerErr, handler(dispatch.ctx, dispatch.event))
 					}
@@ -691,6 +699,8 @@ func (s *Server) handleTicketOpen(w http.ResponseWriter, r *http.Request) {
 		Client:    payload.Client,
 		Author:    payload.Author,
 		GitHub:    payload.GitHubIssue,
+		Goal:      payload.Goal,
+		Parent:    payload.Parent,
 		CreatedAt: now,
 	}
 	if err := s.db.recordTicket(ctx, ticket); err != nil {
@@ -776,6 +786,9 @@ func (s *Server) handleTicketReopen(w http.ResponseWriter, r *http.Request) {
 	ticket.LLM = payload.LLM
 	if payload.Title != "" {
 		ticket.Title = payload.Title
+	}
+	if payload.Client != "" {
+		ticket.Client = payload.Client
 	}
 	ticket.ClosedAt = nil
 	if err := s.db.recordTicket(ctx, *ticket); err != nil {

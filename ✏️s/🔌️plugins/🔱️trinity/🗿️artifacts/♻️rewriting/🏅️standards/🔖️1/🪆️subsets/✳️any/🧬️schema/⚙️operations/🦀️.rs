@@ -42,7 +42,7 @@ pub fn rewriting_snapshot_mutations(before: &RewritingSnapshot, after: &Rewritin
     }
     for (key, value) in &after.rule_layout {
         if before.rule_layout.get(key) != Some(value) {
-            mutations.push(change_rule_layout_point(key.clone(), value.clone()));
+            mutations.push(change_rule_layout_point(key.clone(), *value));
         }
     }
     for key in before.rule_layout.keys() {

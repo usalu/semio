@@ -2,10 +2,10 @@
 //! variant's `diff()` is handcrafted (constructs the sparse `Mp4Diff` directly — apply-and-capture
 //! is banned); `inverse()` is handcrafted per variant, index-aware.
 
-use crate::artifacts::mp4::standards::isobmff::subsets::any::schema::diff::{IndexedAdded, IndexedDiff, IndexedModified, Mp4Diff, Mp4SampleDiff, Mp4TrackDiff};
-use crate::artifacts::mp4::standards::isobmff::subsets::any::schema::snapshot::{Mp4Codec, Mp4Ftyp, Mp4Sample, Mp4Snapshot, Mp4Track};
+use crate::standards::isobmff::subsets::any::schema::diff::{IndexedAdded, IndexedDiff, IndexedModified, Mp4Diff, Mp4SampleDiff, Mp4TrackDiff};
+use crate::standards::isobmff::subsets::any::schema::snapshot::{Mp4Codec, Mp4Ftyp, Mp4Sample, Mp4Snapshot, Mp4Track};
 #[cfg(test)]
-use crate::artifacts::mp4::standards::isobmff::subsets::any::schema::snapshot::{Mp4Movie, Mp4TrackMetadata};
+use crate::standards::isobmff::subsets::any::schema::snapshot::{Mp4Movie, Mp4TrackMetadata};
 use protocol::Mutation;
 use protocol::{OpBinary, OpText};
 
@@ -165,7 +165,7 @@ pub(crate) fn agg_inverse(this: &Mp4Mutation, base: &Mp4Snapshot) -> Vec<Mp4Muta
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::mp4::standards::isobmff::subsets::any::schema::snapshot::STDIO_MP4_DOCUMENT_SCHEMA;
+    use crate::standards::isobmff::subsets::any::schema::snapshot::STDIO_MP4_DOCUMENT_SCHEMA;
     use protocol::MutationDiff;
 
     async fn base_snapshot() -> Mp4Snapshot {
@@ -308,25 +308,25 @@ mod tests {
     async fn exact_fixture_no_mutation_inverse_and_set_snapshot_binary_codec_preserve_source() {
         let path = concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../temp/bauen-mit-bestand.mp4");
         let bytes = std::fs::read(path).expect("read exact MP4 fixture");
-        let base = crate::artifacts::mp4::standards::isobmff::subsets::any::io::decode_mp4(&bytes).expect("decode exact MP4 fixture");
+        let base = crate::standards::isobmff::subsets::any::io::decode_mp4(&bytes).expect("decode exact MP4 fixture");
 
         let mut unchanged = base.clone();
         let snapshot = unchanged.clone();
         apply_mp4_mutation(&mut unchanged, &Mp4Mutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }));
-        assert_eq!(crate::artifacts::mp4::standards::isobmff::subsets::any::io::encode_mp4(&unchanged), bytes);
+        assert_eq!(crate::standards::isobmff::subsets::any::io::encode_mp4(&unchanged), bytes);
 
         let mutation = Mp4Mutation::SetSampleSync(set_sample_sync::SetSampleSync { track_index: 0, index: 0, sync: !base.tracks[0].samples[0].sync });
         let inverse = mutation.inverse(&base);
         let mut round_trip = base.clone();
         apply_mp4_mutation(&mut round_trip, &mutation);
         apply_mp4_mutation(&mut round_trip, &inverse[0]);
-        assert_eq!(crate::artifacts::mp4::standards::isobmff::subsets::any::io::encode_mp4(&round_trip), bytes);
+        assert_eq!(crate::standards::isobmff::subsets::any::io::encode_mp4(&round_trip), bytes);
 
         let set_snapshot = Mp4Mutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base });
         let encoded = set_snapshot.encode_op().expect("encode exact source set-snapshot");
         let decoded = Mp4Mutation::decode_op(&encoded).expect("decode exact source set-snapshot");
         let Mp4Mutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) = decoded else { panic!("expected set-snapshot") };
-        assert_eq!(crate::artifacts::mp4::standards::isobmff::subsets::any::io::encode_mp4(&snapshot), bytes);
+        assert_eq!(crate::standards::isobmff::subsets::any::io::encode_mp4(&snapshot), bytes);
     }
 }
 //#endregion 🔖️Tests

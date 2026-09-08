@@ -299,9 +299,9 @@ fn bridge_step(snapshot: &DrawingSnapshot, mutation: &DrawingMutation) -> Result
 /// 📤️ The bridge's answer shape: the resulting document beside the codes it raised, so a caller
 /// that cannot name `protocol::MutationOutcome` can still tell an application from a refusal.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn bridge_render(snapshot: &DrawingSnapshot, messages: Vec<String>) -> Result<String, String> {
-    let report = dsl::DslValue::object([("snapshot".to_string(), dsl::ToValue::to_value(snapshot)), ("messages".to_string(), dsl::ToValue::to_value(&messages))]);
-    Ok(dsl::json::to_json_string(&report))
+fn bridge_render(snapshot: &DrawingSnapshot, messages: &[String]) -> String {
+    let report = dsl::DslValue::object([("snapshot".to_string(), dsl::ToValue::to_value(snapshot)), ("messages".to_string(), dsl::ToValue::to_value(messages))]);
+    dsl::json::to_json_string(&report)
 }
 
 /// 🌉️ Applies one committed mutation payload to one committed before-document and answers
@@ -315,7 +315,7 @@ fn bridge_render(snapshot: &DrawingSnapshot, messages: Vec<String>) -> Result<St
 pub fn apply_drawing_mutation_json(snapshot_json: &str, mutation_json: &str) -> Result<String, String> {
     let (snapshot, mutation) = bridge_decode_pair(snapshot_json, mutation_json)?;
     let (applied, messages) = bridge_step(&snapshot, &mutation)?;
-    bridge_render(&applied, messages)
+    Ok(bridge_render(&applied, &messages))
 }
 
 /// ↩️ Applies one committed mutation payload and then EVERY step of its own computed inverse,
@@ -332,7 +332,7 @@ pub fn undo_drawing_mutation_json(snapshot_json: &str, mutation_json: &str) -> R
         current = next;
         messages.extend(raised);
     }
-    bridge_render(&current, messages)
+    Ok(bridge_render(&current, &messages))
 }
 
 /// 🔁️ Parses the committed `.dsl.semio` example, prints it back and parses that, answering

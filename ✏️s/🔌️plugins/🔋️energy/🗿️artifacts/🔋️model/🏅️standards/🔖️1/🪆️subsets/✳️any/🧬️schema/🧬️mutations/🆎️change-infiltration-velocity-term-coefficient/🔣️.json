@@ -5,7 +5,7 @@
   "displayName": "Change Infiltration Velocity Term Coefficient",
   "emoji": "🆎️",
   "aggregateVariant": "ChangeInfiltrationVelocityTermCoefficient",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-infiltration-velocity-term-coefficient",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

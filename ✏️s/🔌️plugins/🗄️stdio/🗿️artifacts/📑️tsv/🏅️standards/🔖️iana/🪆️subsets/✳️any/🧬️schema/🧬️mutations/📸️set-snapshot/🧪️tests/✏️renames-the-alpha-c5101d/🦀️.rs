@@ -14,10 +14,10 @@
 //! `.pack.semio`/`.patch.semio` encodings are derived from it by `fixtures generate` and are
 //! asserted by the shared codec-matrix harness, not here.
 
-use crate::artifacts::tsv::standards::iana::subsets::any::schema::diff::TsvDiff;
-use crate::artifacts::tsv::standards::iana::subsets::any::schema::mutations::{apply_tsv_mutation, TsvMutation};
-use crate::artifacts::tsv::standards::iana::subsets::any::schema::snapshot::LineEnding;
-use crate::artifacts::tsv::standards::iana::subsets::any::schema::snapshot::TsvSnapshot;
+use crate::standards::iana::subsets::any::schema::diff::TsvDiff;
+use crate::standards::iana::subsets::any::schema::mutations::{apply_tsv_mutation, TsvMutation};
+use crate::standards::iana::subsets::any::schema::snapshot::LineEnding;
+use crate::standards::iana::subsets::any::schema::snapshot::TsvSnapshot;
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");

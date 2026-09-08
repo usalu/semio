@@ -5,7 +5,7 @@
   "displayName": "Change Exaggeration",
   "emoji": "🎚",
   "aggregateVariant": "ChangeExaggeration",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-exaggeration",
   "binaryTag": 0,
   "invertibility": "explicit-mutation",

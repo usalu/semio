@@ -10,15 +10,20 @@
  * 2. the **hub's registered axum routes**, read as text out of `🌎️hub/📦️packages/🦀️rust/🚀️bin.rs`,
  *    so the MCP client's four path builders are checked against the server that serves them.
  *
- * The wire-shape half is a real third-party oracle: AJV 2020-12 compiles schemas declared HERE, not
- * exported from Rust, for the four closed request/response bodies and the two-field error body —
- * the TypeScript twin of `deny_unknown_fields` plus each DTO's own `validate`.
+ * The wire-shape half is a real third-party oracle: AJV compiles the five hub-owned request/response
+ * bodies and the two-field error body declared HERE, not exported from Rust — the TypeScript twin of
+ * `deny_unknown_fields` plus each DTO's own `validate`. The ONE exception is the approval intent,
+ * whose contract the `os.mcp` scope owns as an explicit mirror of hub's authority: that body is read
+ * from `🌉️mcp/🧬️schema/🔣️.json` and cross-checked against hub's own document by
+ * [`proveOsMirrorsHubApprovalAuthority`], so the two cannot drift silently.
  *
  * Nonclaims: no external model provider, no WGPU or browser rendering, no live hub, no two-user
  * process journey. This module proves shapes, vocabulary and paths — never that a job ran. */
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
+import Ajv from "ajv";
 import Ajv2020 from "ajv/dist/2020.js";
+import { osMcpSchema } from "../../🧬️schema/🟦️.ts";
 
 //#region 🔖️Surface
 /** 🎯️ The four tool names `🦀️.rs`'s `GATEWAY_TOOL_NAMES` gains. Duplicated on purpose: this file is
@@ -55,13 +60,12 @@ export const submitRequestSchema = {
   additionalProperties: false,
 };
 
-export const approvalRequestSchema = {
-  $schema: "https://json-schema.org/draft/2020-12/schema",
-  type: "object",
-  properties: { schema: { const: "semio.hub.inference-approval/v1" }, version: { const: 1 }, jobId: { type: "string", pattern: HEX32 }, proposalHash: { type: "string", pattern: HEX64 } },
-  required: ["schema", "version", "jobId", "proposalHash"],
-  additionalProperties: false,
-};
+/** ✅️ NOT declared here: the approval intent is the ONE body in this file whose contract the
+ * `os.mcp` scope already owns (`🌉️mcp/🧬️schema/🦀️.rs`'s `GisMapInferenceApprovalRequestV1`, itself
+ * an explicit mirror of hub's authority). Taking it from the registry rather than restating it is
+ * what makes `theOsMirrorMatchesHubsApprovalAuthority` below a real conformance check instead of two
+ * copies agreeing with each other. */
+export const approvalRequestSchema = { $schema: "http://json-schema.org/draft-07/schema#", ...(osMcpSchema("GisMapInferenceApprovalRequestV1") as object) };
 
 export const jobReceiptSchema = {
   $schema: "https://json-schema.org/draft/2020-12/schema",
@@ -185,6 +189,32 @@ export type InferenceBridgeReport = {
 };
 
 const compile = (schema: object) => new Ajv2020({ strict: true }).compile(schema);
+const compileDraft07 = (schema: object) => new Ajv({ strict: true }).compile(schema);
+
+/** 🔤️ Key-order-independent JSON — the os mirror is emitted by `serde_json` (whose maps sort keys)
+ * while hub's document is hand-ordered, so only the key SET and the values may be compared. */
+const canonicalJson = (value: unknown): string =>
+  JSON.stringify(value, (_key, member) => (member !== null && typeof member === "object" && !Array.isArray(member) ? Object.fromEntries(Object.entries(member as object).sort(([left], [right]) => (left < right ? -1 : 1))) : member));
+
+/** 🪞️ Reads hub's own approval contract and asserts the `os.mcp` mirror is value-space identical.
+ *
+ * 🚧️ hub's module document `🌎️hub/💡️inference/🧬️schema/🔣️.json` publishes no approval export today
+ * (its `$defs` cover the job-submission side only), so the authority read here is the document that
+ * DOES carry it — `🌎️hub/🧪️fixtures/✅️inference-approval-v1/🧬️.schema.json#/$defs/request`, the same
+ * one hub's own `InferenceApprovalRequestV1::decode` law reads. Nothing under `🌎️hub/` is written. */
+export function proveOsMirrorsHubApprovalAuthority(repoRoot: string): { readonly authority: string; readonly compared: number } {
+  const hubModule = JSON.parse(readFileSync(resolve(repoRoot, "🌎️hub/💡️inference/🧬️schema/🔣️.json"), "utf8")) as { $defs: Record<string, unknown> };
+  must(!("approval" in hubModule.$defs) && !("InferenceApprovalRequestV1" in hubModule.$defs), "hub's module schema grew an approval export — point this mirror at it instead of the fixture document");
+  const authorityPath = "🌎️hub/🧪️fixtures/✅️inference-approval-v1/🧬️.schema.json";
+  const authority = (JSON.parse(readFileSync(resolve(repoRoot, authorityPath), "utf8")) as { $defs: { request: Record<string, unknown> } }).$defs.request;
+  const mirror = osMcpSchema("GisMapInferenceApprovalRequestV1") as Record<string, unknown>;
+  let compared = 0;
+  for (const keyword of ["type", "additionalProperties", "required", "properties"] as const) {
+    must(canonicalJson(mirror[keyword]) === canonicalJson(authority[keyword]), `the os.mcp approval mirror drifted from hub on \`${keyword}\`: ${canonicalJson(mirror[keyword])} vs ${canonicalJson(authority[keyword])}`);
+    compared += 1;
+  }
+  return { authority: authorityPath, compared };
+}
 
 function must(condition: unknown, message: string): void {
   if (!condition) throw new Error(`inference-bridge-oracle: ${message}`);
@@ -254,7 +284,8 @@ export function proveMcpInferenceBridgeFixture(repoRoot: string): InferenceBridg
   reject(submit, { ...submitBody, lifetimeMs: fixture.limits.jobMaxLifetimeMs + 1 }, "over-lifetime");
   reject(submit, { ...submitBody, mapPack: "client-supplied" }, "smuggled-map-pack");
 
-  const approvalRequest = compile(approvalRequestSchema);
+  proveOsMirrorsHubApprovalAuthority(repoRoot);
+  const approvalRequest = compileDraft07(approvalRequestSchema);
   ajv += 1;
   const approvalBody = { schema: "semio.hub.inference-approval/v1", version: 1, jobId, proposalHash };
   must(approvalRequest(approvalBody), `a well-formed approval was rejected: ${JSON.stringify(approvalRequest.errors)}`);

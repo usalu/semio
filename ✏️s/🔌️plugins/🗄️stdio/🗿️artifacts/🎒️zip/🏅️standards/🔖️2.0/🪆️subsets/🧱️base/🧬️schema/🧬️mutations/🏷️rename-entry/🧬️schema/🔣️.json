@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/zip/2.0/base/mutation/rename-entry.json",
+  "title": "RenameEntry",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "name",
+    "new_name"
+  ],
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "new_name": {
+      "type": "string"
+    },
+    "mutation": {
+      "const": "renameEntry",
+      "description": "Aggregate discriminator spliced in by ZipMutation; absent when the payload stands alone."
+    }
+  }
+}

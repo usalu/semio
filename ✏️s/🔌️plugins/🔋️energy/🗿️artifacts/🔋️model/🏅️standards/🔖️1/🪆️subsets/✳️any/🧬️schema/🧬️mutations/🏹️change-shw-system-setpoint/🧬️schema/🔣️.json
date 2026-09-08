@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/energy/model/1/any/mutation/change-shw-system-setpoint.json",
+  "title": "ChangeShwSystemSetpoint",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newSetpointC"
+  ],
+  "properties": {
+    "id": {
+      "type": "integer"
+    },
+    "newSetpointC": {
+      "type": "number"
+    }
+  }
+}

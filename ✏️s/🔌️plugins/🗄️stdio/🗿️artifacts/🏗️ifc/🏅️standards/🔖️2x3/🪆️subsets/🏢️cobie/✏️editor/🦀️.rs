@@ -2,8 +2,8 @@
 //! 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §2.1). `Ifc2x3CobieEditor`
 //! implements `ArtifactEditor`, wiring the shared `MeshWindowKit` to a single Main window.
 
-use crate::artifacts::ifc::standards::v2x3::subsets::cobie::schema::mutations::Ifc2x3Mutation;
-use crate::artifacts::ifc::standards::v2x3::subsets::cobie::schema::snapshot::Ifc2x3Snapshot;
+use crate::standards::v2x3::subsets::cobie::schema::mutations::Ifc2x3Mutation;
+use crate::standards::v2x3::subsets::cobie::schema::snapshot::Ifc2x3Snapshot;
 use crate::editor::ifc2x3_cobie::modes::edit;
 use crate::editor::ifc2x3_cobie::modes::edit::windows::main;
 use semio_framework_plugin::app::InteractionView;

@@ -1,14 +1,14 @@
 //! 📥️ Deserialize `stdio.dwg` from stdio.binary.
 
-use crate::artifacts::binary::BinarySnapshot;
-use crate::artifacts::dwg::DwgSnapshot;
+use semio_s_artifact_stdio_binary::BinarySnapshot;
+use crate::DwgSnapshot;
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn register() {}
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn deserialize(from: &BinarySnapshot) -> Result<DwgSnapshot, store::PackError> {
-    crate::artifacts::dwg::schema::snapshot::decode_dwg(&from.bytes).map_err(store::PackError::Schema)
+    crate::schema::snapshot::decode_dwg(&from.bytes).map_err(store::PackError::Schema)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

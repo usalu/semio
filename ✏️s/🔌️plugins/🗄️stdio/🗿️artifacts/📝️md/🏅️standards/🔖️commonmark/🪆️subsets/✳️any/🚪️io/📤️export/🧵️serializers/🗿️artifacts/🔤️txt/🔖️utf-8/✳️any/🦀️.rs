@@ -1,7 +1,7 @@
 //! 📤️ Serialize `stdio.md` to stdio.txt.
 
-use crate::artifacts::md::MdSnapshot;
-use crate::artifacts::txt::TxtSnapshot;
+use crate::MdSnapshot;
+use semio_s_artifact_stdio_txt::TxtSnapshot;
 
 //#region 🔖️Codec
 /// 🗂️ Register serializer hooks.
@@ -12,7 +12,7 @@ pub fn register() {}
 /// doc comment for the documented normal form this renders to).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn serialize(from: &MdSnapshot) -> Result<TxtSnapshot, store::PackError> {
-    Ok(TxtSnapshot::from_body(&crate::artifacts::md::standards::v_commonmark::subsets::any::io::export::serializers::render_markdown_blocks(&from.blocks)))
+    Ok(TxtSnapshot::from_body(&crate::standards::v_commonmark::subsets::any::io::export::serializers::render_markdown_blocks(&from.blocks)))
 }
 
 /// 📤️ Encode as txt DSL.

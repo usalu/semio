@@ -5,7 +5,7 @@
   "displayName": "Set Fit Revision",
   "emoji": "🔢️",
   "aggregateVariant": "SetFitRevision",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "set-fit-revision",
   "binaryTag": 3,
   "invertibility": "explicit-mutation",

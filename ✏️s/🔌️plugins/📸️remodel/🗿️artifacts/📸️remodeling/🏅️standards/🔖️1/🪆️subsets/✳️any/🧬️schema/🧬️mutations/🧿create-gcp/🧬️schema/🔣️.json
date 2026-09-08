@@ -1,0 +1,72 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/remodel/remodeling/1/any/mutation/create-gcp.json",
+  "title": "CreateGcp",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "gcp"
+  ],
+  "properties": {
+    "gcp": {
+      "type": "object",
+      "title": "GroundControlPoint",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "worldPosition",
+        "observations"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "worldPosition": {
+          "type": "array",
+          "items": {
+            "type": "number",
+            "format": "double"
+          },
+          "minItems": 3,
+          "maxItems": 3
+        },
+        "observations": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "title": "GcpObservation",
+            "additionalProperties": false,
+            "required": [
+              "streamId",
+              "frameIndex",
+              "pixel"
+            ],
+            "properties": {
+              "streamId": {
+                "type": "string"
+              },
+              "frameIndex": {
+                "type": "integer",
+                "format": "uint32",
+                "minimum": 0
+              },
+              "pixel": {
+                "type": "array",
+                "items": {
+                  "type": "number",
+                  "format": "float"
+                },
+                "minItems": 2,
+                "maxItems": 2
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

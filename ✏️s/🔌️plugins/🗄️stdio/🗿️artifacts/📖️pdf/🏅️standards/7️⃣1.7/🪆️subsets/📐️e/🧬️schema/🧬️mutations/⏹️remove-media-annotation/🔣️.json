@@ -5,7 +5,7 @@
   "displayName": "Remove Media Annotation",
   "emoji": "⏹️",
   "aggregateVariant": "RemoveMediaAnnotation",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "remove-media-annotation",
   "binaryTag": 7,
   "invertibility": "explicit-mutation",

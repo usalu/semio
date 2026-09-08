@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/epw/energyplus/any/mutation/set-ground-temperatures.json",
+  "title": "SetGroundTemperatures",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "value"
+  ],
+  "properties": {
+    "value": {
+      "type": "string"
+    },
+    "mutation": {
+      "const": "setGroundTemperatures",
+      "description": "Aggregate discriminator spliced in by EpwMutation; absent when the payload stands alone."
+    }
+  }
+}

@@ -1,8 +1,8 @@
 //! 🧬️ DeflateMutation — document mutation dispatch over the typed RFC1950 container fields.
 
-use crate::artifacts::deflate::schema::diff::{diff_set_compression_params, diff_set_payload, diff_set_preset_dictionary, diff_set_snapshot, DeflateDiff};
-use crate::artifacts::deflate::schema::snapshot::DeflateLevelHint;
-use crate::artifacts::deflate::DeflateSnapshot;
+use crate::schema::diff::{diff_set_compression_params, diff_set_payload, diff_set_preset_dictionary, diff_set_snapshot, DeflateDiff};
+use crate::schema::snapshot::DeflateLevelHint;
+use crate::DeflateSnapshot;
 use protocol::Mutation;
 use protocol::{OpBinary, OpText};
 
@@ -136,7 +136,7 @@ impl OpBinary for DeflateMutation {
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_mutation_cases() -> Vec<DeflateMutation> {
-    use crate::artifacts::deflate::STDIO_DEFLATE_DOCUMENT_SCHEMA;
+    use crate::STDIO_DEFLATE_DOCUMENT_SCHEMA;
 
     let snapshot =
         DeflateSnapshot { schema: STDIO_DEFLATE_DOCUMENT_SCHEMA.into(), compression_method: 8, window_bits: 7, compression_level_hint: DeflateLevelHint::Default, dict_id: Some(0x1234_5678), payload: b"demo-mutation-snapshot-payload".to_vec() };
@@ -156,7 +156,7 @@ pub(crate) fn demo_mutation_cases() -> Vec<DeflateMutation> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::deflate::STDIO_DEFLATE_DOCUMENT_SCHEMA;
+    use crate::STDIO_DEFLATE_DOCUMENT_SCHEMA;
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn base_snapshot() -> DeflateSnapshot {

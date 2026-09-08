@@ -2185,7 +2185,7 @@ impl Puzzle2dForceLayoutWork {
             return Ok(());
         }
         let id = object.get("id").and_then(Value::as_str).ok_or_else(|| Fault::from("puzzle2d-force-node-id-missing"))?;
-        if self.node_ids.len() >= PUZZLE2D_FORCE_MAX_NODES || self.retained_bytes.checked_add(id.len()).map_or(true, |bytes| bytes > crate::retained_command::PUZZLE_COMMAND_OUTPUT_BYTES) {
+        if self.node_ids.len() >= PUZZLE2D_FORCE_MAX_NODES || self.retained_bytes.checked_add(id.len()).is_none_or(|bytes| bytes > crate::retained_command::PUZZLE_COMMAND_OUTPUT_BYTES) {
             return Err(Fault::from("puzzle2d-force-node-capacity"));
         }
         let x = object.get("x").and_then(Value::as_f64);
@@ -2230,7 +2230,7 @@ impl Puzzle2dForceLayoutWork {
         let Some(handle_id) = handle_object.get("id").and_then(Value::as_str) else { return Ok(()) };
         let node_id = object.get("id").and_then(Value::as_str).ok_or_else(|| Fault::from("puzzle2d-force-node-id-owner-lost"))?;
         let added_bytes = handle_id.len().saturating_add(node_id.len());
-        if self.handle_to_node.len() >= PUZZLE2D_FORCE_MAX_HANDLES || self.retained_bytes.checked_add(added_bytes).map_or(true, |bytes| bytes > crate::retained_command::PUZZLE_COMMAND_OUTPUT_BYTES) {
+        if self.handle_to_node.len() >= PUZZLE2D_FORCE_MAX_HANDLES || self.retained_bytes.checked_add(added_bytes).is_none_or(|bytes| bytes > crate::retained_command::PUZZLE_COMMAND_OUTPUT_BYTES) {
             return Err(Fault::from("puzzle2d-force-handle-capacity"));
         }
         self.retained_bytes += added_bytes;
@@ -3095,7 +3095,7 @@ fn puzzle2d_import_wire_kind(row: &Value) -> Option<crate::artifacts::puzzle2d::
 /// in several catalog producers converges on the same bundle whatever order they arrive in. Reports
 /// whether the bundle actually changed, so an idempotent re-delivery emits no operation at all.
 fn puzzle2d_upsert_catalog_row<T: PartialEq>(rows: &mut Vec<T>, incoming: T, matches: impl Fn(&T) -> bool) -> bool {
-    match rows.iter().position(|row| matches(row)) {
+    match rows.iter().position(matches) {
         Some(index) if rows[index] == incoming => false,
         Some(index) => {
             rows[index] = incoming;

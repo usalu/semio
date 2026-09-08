@@ -5,7 +5,7 @@
   "displayName": "Replace Layer Fill",
   "emoji": "🎨️",
   "aggregateVariant": "ReplaceLayerFill",
-  "payloadSchema": "🦠️mutation/🦀️.rs#ReplaceLayerFill",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "replace-layer-fill",
   "binaryTag": 6,
   "invertibility": "explicit-mutation",
@@ -19,6 +19,7 @@
   "requiredLanguageSurfaces": [
     "rust",
     "text",
-    "binary"
+    "binary",
+    "json-schema"
   ]
 }

@@ -1,7 +1,7 @@
 //! ➖️ `remove-row` — takes one row out of the sequence, addressed by BASE-state index.
 
-use crate::artifacts::semio::standards::v1::subsets::table::schema::mutations::SemioTableMutation;
-use crate::artifacts::semio::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot;
+use crate::standards::v1::subsets::table::schema::mutations::SemioTableMutation;
+use crate::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot;
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]

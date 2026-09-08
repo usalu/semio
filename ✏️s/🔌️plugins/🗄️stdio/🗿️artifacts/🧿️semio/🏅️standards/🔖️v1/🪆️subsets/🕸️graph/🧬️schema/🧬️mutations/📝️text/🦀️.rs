@@ -4,17 +4,17 @@
 //! (`🔤️text`'s own hex/bracket-encoded value convention, reused so this facet's grammar can lean on
 //! the shared `hex` macro instead of a quoted-string production).
 
-pub use crate::artifacts::semio::standards::v1::subsets::graph::schema::mutations::SemioGraphMutation;
+pub use crate::standards::v1::subsets::graph::schema::mutations::SemioGraphMutation;
 
-use crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioPoint2;
-use crate::artifacts::semio::standards::v1::subsets::base::schema::triples::{split_top_level, strip_brackets};
-use crate::artifacts::semio::standards::v1::subsets::graph::schema::mutations::{
+use crate::standards::v1::subsets::base::schema::geometry::SemioPoint2;
+use crate::standards::v1::subsets::base::schema::triples::{split_top_level, strip_brackets};
+use crate::standards::v1::subsets::graph::schema::mutations::{
     add_node_port::AddNodePort, add_node_property::AddNodeProperty, change_node_kind::ChangeNodeKind, change_node_label::ChangeNodeLabel, create_edge::CreateEdge, create_node::CreateNode,
     delete_edge::DeleteEdge, delete_node::DeleteNode, move_node::MoveNode, remove_node_port::RemoveNodePort, remove_node_property::RemoveNodeProperty,
 };
-use crate::artifacts::semio::standards::v1::subsets::graph::schema::snapshot::{GraphEdgeId, GraphNodeId, SemioGraphPort, SemioGraphPortKind};
-use crate::artifacts::semio::standards::v1::subsets::value::schema::diff::{dec_semio_value_entry, enc_semio_value_entry};
-use crate::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValueEntry;
+use crate::standards::v1::subsets::graph::schema::snapshot::{GraphEdgeId, GraphNodeId, SemioGraphPort, SemioGraphPortKind};
+use crate::standards::v1::subsets::value::schema::diff::{dec_semio_value_entry, enc_semio_value_entry};
+use crate::standards::v1::subsets::value::schema::snapshot::SemioValueEntry;
 
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
@@ -75,11 +75,11 @@ fn dec_f64_hex(s: &str) -> Result<f64, String> {
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn enc_port_kind(k: SemioGraphPortKind) -> char {
-    crate::artifacts::semio::standards::v1::subsets::graph::schema::snapshot::enc_port_kind(k)
+    crate::standards::v1::subsets::graph::schema::snapshot::enc_port_kind(k)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_port_kind(s: &str) -> Result<SemioGraphPortKind, String> {
-    crate::artifacts::semio::standards::v1::subsets::graph::schema::snapshot::dec_port_kind(s)
+    crate::standards::v1::subsets::graph::schema::snapshot::dec_port_kind(s)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn enc_port(p: &SemioGraphPort) -> String {
@@ -230,7 +230,7 @@ pub(crate) fn demo_mutation_cases() -> Vec<SemioGraphMutation> {
         SemioGraphMutation::AddNodeProperty(AddNodeProperty {
             node_id: GraphNodeId::new("n1"),
             index: 0,
-            property: SemioValueEntry { key: "weight".into(), value: crate::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValue::Int { lexeme: "7".into() } },
+            property: SemioValueEntry { key: "weight".into(), value: crate::standards::v1::subsets::value::schema::snapshot::SemioValue::Int { lexeme: "7".into() } },
         }),
         SemioGraphMutation::RemoveNodeProperty(RemoveNodeProperty { node_id: GraphNodeId::new("n1"), index: 0 }),
         SemioGraphMutation::CreateEdge(CreateEdge { id: GraphEdgeId::new("e1"), source: GraphNodeId::new("n1"), target: GraphNodeId::new("n2"), kind: "flow".into(), label: "Main".into() }),

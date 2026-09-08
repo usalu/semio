@@ -5,7 +5,7 @@
   "displayName": "Create Option Evaluation",
   "emoji": "🌱️",
   "aggregateVariant": "CreateOptionEvaluation",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

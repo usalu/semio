@@ -29,4 +29,23 @@ export function missingRequiredArgs(defs: readonly ActionArgDef[], effective: Re
     })
     .map((def) => def.id);
 }
+/** 🔽️ Closed choices must be selected from their current host-resolved option set. */
+export function actionArgRequiresChoice(def: ActionArgDef): boolean {
+  return def.schema.kind === "string" && ((def.schema.options?.length ?? 0) > 0 || def.schema.format?.kind === "artifactKind" || def.schema.format?.kind === "surfaceApp");
+}
+
+/** 🚫️ Identifies supplied choices absent from the current catalog, including an unavailable catalog. */
+export function invalidActionChoiceArgs(defs: readonly ActionArgDef[], effective: Readonly<Record<string, unknown>>): string[] {
+  return defs.filter(def => {
+    const value = effective[def.id];
+    return value !== undefined && value !== null && value !== "" && actionArgRequiresChoice(def)
+      && def.schema.kind === "string" && !def.schema.options?.some(option => option.value === value);
+  }).map(def => def.id);
+}
+
+/** 🛑️ Gates every staged submission on required presence and exact current choice membership. */
+export function unresolvedActionArgs(defs: readonly ActionArgDef[], effective: Readonly<Record<string, unknown>>): string[] {
+  const unresolved = new Set([...missingRequiredArgs(defs, effective), ...invalidActionChoiceArgs(defs, effective)]);
+  return defs.filter(def => unresolved.has(def.id)).map(def => def.id);
+}
 // #endregion 🧮️ActionArgumentResolution

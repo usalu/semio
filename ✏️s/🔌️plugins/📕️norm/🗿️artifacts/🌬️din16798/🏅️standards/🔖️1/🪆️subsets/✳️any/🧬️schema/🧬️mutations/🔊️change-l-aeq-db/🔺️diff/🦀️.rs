@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeLAeqDb, base: &Din16798Snapshot) -> protocol::Mutati
     if base.l_aeq_db == payload.new_l_aeq_db {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Equivalent sound pressure level is already {}.", payload.new_l_aeq_db));
     }
-    protocol::MutationOutcome::new(Din16798Diff { l_aeq_db: Some(payload.new_l_aeq_db.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(Din16798Diff { l_aeq_db: Some(payload.new_l_aeq_db), ..Default::default() })
 }
 //#endregion 🔖️Diff

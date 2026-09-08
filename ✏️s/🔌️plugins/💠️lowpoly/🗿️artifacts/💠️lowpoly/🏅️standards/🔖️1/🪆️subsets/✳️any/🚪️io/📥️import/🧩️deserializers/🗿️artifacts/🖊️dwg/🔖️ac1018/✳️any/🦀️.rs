@@ -5,7 +5,7 @@
 //! parsed CAD entities -- an out-of-scope architecture change, not a pure `&DwgSnapshot -> …`
 //! mapping.
 use crate::artifacts::lowpoly::schema::snapshot::LowpolySnapshot;
-use semio_s_plugin_stdio::artifacts::dwg::DwgSnapshot;
+use semio_s_artifact_stdio_dwg::DwgSnapshot;
 
 pub fn register() {}
 

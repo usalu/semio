@@ -5,7 +5,7 @@
   "displayName": "Set Layer Visibility",
   "emoji": "👓️",
   "aggregateVariant": "SetLayerVisibility",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "set-layer-visibility",
   "binaryTag": 2,
   "invertibility": "explicit-mutation",

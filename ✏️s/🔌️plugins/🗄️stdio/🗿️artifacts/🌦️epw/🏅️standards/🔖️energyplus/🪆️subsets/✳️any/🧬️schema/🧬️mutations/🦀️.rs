@@ -2,10 +2,10 @@
 //! (constructs the sparse `EpwDiff` directly — apply-and-capture is banned); `inverse()` is
 //! handcrafted per variant, index/field-aware, reading the pre-state it needs from `base`.
 
-use crate::artifacts::epw::standards::energyplus::subsets::any::schema::diff::{
+use crate::standards::energyplus::subsets::any::schema::diff::{
     dec_data_periods, dec_location, dec_record, dec_str, diff_set_snapshot, enc_data_periods, enc_location, enc_record, enc_str, split_top_level, strip_brackets, EpwDiff, EpwRecordAdded, EpwRecordDiff, EpwRecordModified, EpwRecordsDiff,
 };
-use crate::artifacts::epw::standards::energyplus::subsets::any::schema::snapshot::{EpwDataPeriods, EpwLocation, EpwRecord, EpwSnapshot};
+use crate::standards::energyplus::subsets::any::schema::snapshot::{EpwDataPeriods, EpwLocation, EpwRecord, EpwSnapshot};
 use protocol::OpBinary;
 use protocol::{Mutation, OpText};
 
@@ -287,7 +287,7 @@ mod tests {
     fn data_periods() -> EpwDataPeriods {
         EpwDataPeriods {
             records_per_hour: 1,
-            periods: vec![crate::artifacts::epw::standards::energyplus::subsets::any::schema::snapshot::EpwDataPeriod { name: "Data".into(), start_day_of_week: "Sunday".into(), start_date: " 1/ 1".into(), end_date: " 1/ 1".into() }],
+            periods: vec![crate::standards::energyplus::subsets::any::schema::snapshot::EpwDataPeriod { name: "Data".into(), start_day_of_week: "Sunday".into(), start_date: " 1/ 1".into(), end_date: " 1/ 1".into() }],
         }
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -322,7 +322,7 @@ mod tests {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn sweep_b() -> EpwSnapshot {
         let mut modified = EpwRecord::default();
-        for i in 0..crate::artifacts::epw::standards::energyplus::subsets::any::schema::snapshot::EPW_RECORD_FIELD_COUNT {
+        for i in 0..crate::standards::energyplus::subsets::any::schema::snapshot::EPW_RECORD_FIELD_COUNT {
             modified.set_field_at(i, format!("swept-{i}"));
         }
         EpwSnapshot {
@@ -335,7 +335,7 @@ mod tests {
             comments_2: "COMMENTS 2,swept".into(),
             data_periods: EpwDataPeriods {
                 records_per_hour: 2,
-                periods: vec![crate::artifacts::epw::standards::energyplus::subsets::any::schema::snapshot::EpwDataPeriod { name: "Swept".into(), start_day_of_week: "Monday".into(), start_date: "1/ 2".into(), end_date: "1/ 2".into() }],
+                periods: vec![crate::standards::energyplus::subsets::any::schema::snapshot::EpwDataPeriod { name: "Swept".into(), start_day_of_week: "Monday".into(), start_date: "1/ 2".into(), end_date: "1/ 2".into() }],
             },
             records: vec![modified, record("3", "-6.2"), record("99", "swept-new")],
             ..EpwSnapshot::default()
@@ -502,7 +502,7 @@ mod tests {
         assert!(records.added.is_empty(), "equal-length record lists: no positional addition");
         assert_eq!(records.modified.len(), 3, "all three positions differ between sweep_a and sweep_b");
         let modified = &records.modified[0];
-        for i in 0..crate::artifacts::epw::standards::energyplus::subsets::any::schema::snapshot::EPW_RECORD_FIELD_COUNT {
+        for i in 0..crate::standards::energyplus::subsets::any::schema::snapshot::EPW_RECORD_FIELD_COUNT {
             assert!(modified.diff.get_at(i).unwrap().is_some(), "column {i} of the modified record must be patched");
         }
 

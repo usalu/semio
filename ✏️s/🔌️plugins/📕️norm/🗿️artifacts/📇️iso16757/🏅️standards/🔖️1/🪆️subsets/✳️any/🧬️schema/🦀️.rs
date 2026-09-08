@@ -45,8 +45,8 @@ impl Iso16757Artifact {
             selection: self.selection.clone(),
             part_number_rule: self.part_number_rule.clone(),
             part_number_inputs: self.part_number_inputs.clone(),
-            script_limits: self.script_limits.clone(),
-            exchange_process: self.exchange_process.clone(),
+            script_limits: self.script_limits,
+            exchange_process: self.exchange_process,
         }
     }
 

@@ -5,7 +5,7 @@
   "displayName": "Change Daily Schedule Limits",
   "emoji": "🕟️",
   "aggregateVariant": "ChangeDailyScheduleLimits",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-daily-schedule-limits",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

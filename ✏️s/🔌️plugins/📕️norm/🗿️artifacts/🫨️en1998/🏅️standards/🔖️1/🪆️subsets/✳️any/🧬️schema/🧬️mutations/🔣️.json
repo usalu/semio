@@ -1,293 +1,205 @@
 {
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://semio.tech/schema/s/norm/en1998/mutation.json",
   "title": "En1998Mutation",
-  "type": "object",
-  "additionalProperties": false,
-  "required": [
-    "seismicZone",
-    "groundType",
-    "importanceClass",
-    "structuralSystem",
-    "t1S",
-    "massT",
-    "vRdKn",
-    "driftMm",
-    "heightM",
-    "multipleResistingSystems",
-    "annex",
-    "enAGr",
-    "enGroundType",
-    "enSpectrumType",
-    "periodRatio",
-    "bridgeVRdKn",
-    "bearingDEdMm",
-    "bearingDRdMm",
-    "retrofitKnowledgeLevel",
-    "retrofitLimitState",
-    "retrofitEDKn",
-    "retrofitRKKn",
-    "retrofitGammaEl",
-    "siloHeightM",
-    "siloRadiusM",
-    "siloNRdKn",
-    "siloVEdKn",
-    "siloVRdKn",
-    "siloQNominal",
-    "tankHeightM",
-    "tankRadiusM",
-    "tankMassT",
-    "tankVRdKn",
-    "towerMEdKnm",
-    "towerMRdKnm",
-    "towerIsChimney",
-    "towerQNominal",
-    "towerMassT",
-    "foundationAreaM2",
-    "foundationPRdKpa",
-    "foundationHEdKn",
-    "foundationHRdKn",
-    "kFoundation",
-    "kSoil",
-    "wallHeightM",
-    "wallPhiDeg",
-    "wallSoilGammaKnM3",
-    "wallR",
-    "wallHRdKn"
-  ],
-  "properties": {
-    "seismicZone": {
-      "type": "integer",
-      "x-semio-state": "artifact"
+  "oneOf": [
+    {
+      "$ref": "./🌍️change-annex/🧬️schema/🔣️.json"
     },
-    "groundType": {
-      "type": "string",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🎯️change-bearing-d-ed-mm/🧬️schema/🔣️.json"
     },
-    "importanceClass": {
-      "type": "string",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🛑️change-bearing-d-rd-mm/🧬️schema/🔣️.json"
     },
-    "structuralSystem": {
-      "type": "string",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🌉️change-bridge-v-rd-kn/🧬️schema/🔣️.json"
     },
-    "t1S": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./↔️change-drift-mm/🧬️schema/🔣️.json"
     },
-    "massT": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🏎️change-en-a-gr/🧬️schema/🔣️.json"
     },
-    "vRdKn": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🗺️change-en-ground-type/🧬️schema/🔣️.json"
     },
-    "driftMm": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🌈️change-en-spectrum-type/🧬️schema/🔣️.json"
     },
-    "heightM": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🔲️change-foundation-area-m2/🧬️schema/🔣️.json"
     },
-    "multipleResistingSystems": {
-      "type": "boolean",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./➡️change-foundation-h-ed-kn/🧬️schema/🔣️.json"
     },
-    "annex": {
-      "type": "string",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🧲️change-foundation-h-rd-kn/🧬️schema/🔣️.json"
     },
-    "enAGr": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./👇️change-foundation-p-rd-kpa/🧬️schema/🔣️.json"
     },
-    "enGroundType": {
-      "type": "string",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🪨️change-ground-type/🧬️schema/🔣️.json"
     },
-    "enSpectrumType": {
-      "type": "string",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./↕️change-height-m/🧬️schema/🔣️.json"
     },
-    "periodRatio": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🏛️change-importance-class/🧬️schema/🔣️.json"
     },
-    "bridgeVRdKn": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🌀️change-k-foundation/🧬️schema/🔣️.json"
     },
-    "bearingDEdMm": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🌱️change-k-soil/🧬️schema/🔣️.json"
     },
-    "bearingDRdMm": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./⚖️change-mass-t/🧬️schema/🔣️.json"
     },
-    "retrofitKnowledgeLevel": {
-      "type": "string",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🕸️change-multiple-resisting-systems/🧬️schema/🔣️.json"
     },
-    "retrofitLimitState": {
-      "type": "string",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./⏱️change-period-ratio/🧬️schema/🔣️.json"
     },
-    "retrofitEDKn": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./📥️change-retrofit-ed-kn/🧬️schema/🔣️.json"
     },
-    "retrofitRKKn": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./✖️change-retrofit-gamma-el/🧬️schema/🔣️.json"
     },
-    "retrofitGammaEl": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🎓️change-retrofit-knowledge-level/🧬️schema/🔣️.json"
     },
-    "siloHeightM": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🚦️change-retrofit-limit-state/🧬️schema/🔣️.json"
     },
-    "siloRadiusM": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./💪️change-retrofit-rk-kn/🧬️schema/🔣️.json"
     },
-    "siloNRdKn": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🫨️change-seismic-zone/🧬️schema/🔣️.json"
     },
-    "siloVEdKn": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🌾️change-silo-height-m/🧬️schema/🔣️.json"
     },
-    "siloVRdKn": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🗜️change-silo-n-rd-kn/🧬️schema/🔣️.json"
     },
-    "siloQNominal": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./📊️change-silo-q-nominal/🧬️schema/🔣️.json"
     },
-    "tankHeightM": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./⭕️change-silo-radius-m/🧬️schema/🔣️.json"
     },
-    "tankRadiusM": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./📉️change-silo-v-ed-kn/🧬️schema/🔣️.json"
     },
-    "tankMassT": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🚧️change-silo-v-rd-kn/🧬️schema/🔣️.json"
     },
-    "tankVRdKn": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🏗️change-structural-system/🧬️schema/🔣️.json"
     },
-    "towerMEdKnm": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🕐️change-t1-s/🧬️schema/🔣️.json"
     },
-    "towerMRdKnm": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🛢️change-tank-height-m/🧬️schema/🔣️.json"
     },
-    "towerIsChimney": {
-      "type": "boolean",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./⚓️change-tank-mass-t/🧬️schema/🔣️.json"
     },
-    "towerQNominal": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🥁️change-tank-radius-m/🧬️schema/🔣️.json"
     },
-    "towerMassT": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🔰️change-tank-v-rd-kn/🧬️schema/🔣️.json"
     },
-    "foundationAreaM2": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🏭️change-tower-is-chimney/🧬️schema/🔣️.json"
     },
-    "foundationPRdKpa": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./↪️change-tower-m-ed-knm/🧬️schema/🔣️.json"
     },
-    "foundationHEdKn": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🦾️change-tower-m-rd-knm/🧬️schema/🔣️.json"
     },
-    "foundationHRdKn": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🗼️change-tower-mass-t/🧬️schema/🔣️.json"
     },
-    "kFoundation": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./💨️change-tower-q-nominal/🧬️schema/🔣️.json"
     },
-    "kSoil": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🛡️change-v-rd-kn/🧬️schema/🔣️.json"
     },
-    "wallHeightM": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🏋️change-wall-h-rd-kn/🧬️schema/🔣️.json"
     },
-    "wallPhiDeg": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🧱️change-wall-height-m/🧬️schema/🔣️.json"
     },
-    "wallSoilGammaKnM3": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./📐️change-wall-phi-deg/🧬️schema/🔣️.json"
     },
-    "wallR": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🔢️change-wall-r/🧬️schema/🔣️.json"
     },
-    "wallHRdKn": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🧂️change-wall-soil-gamma-kn-m3/🧬️schema/🔣️.json"
     }
-  }
+  ],
+  "x-semio-mutationKinds": [
+    "change-annex",
+    "change-bearing-d-ed-mm",
+    "change-bearing-d-rd-mm",
+    "change-bridge-v-rd-kn",
+    "change-drift-mm",
+    "change-en-a-gr",
+    "change-en-ground-type",
+    "change-en-spectrum-type",
+    "change-foundation-area-m2",
+    "change-foundation-h-ed-kn",
+    "change-foundation-h-rd-kn",
+    "change-foundation-p-rd-kpa",
+    "change-ground-type",
+    "change-height-m",
+    "change-importance-class",
+    "change-k-foundation",
+    "change-k-soil",
+    "change-mass-t",
+    "change-multiple-resisting-systems",
+    "change-period-ratio",
+    "change-retrofit-ed-kn",
+    "change-retrofit-gamma-el",
+    "change-retrofit-knowledge-level",
+    "change-retrofit-limit-state",
+    "change-retrofit-rk-kn",
+    "change-seismic-zone",
+    "change-silo-height-m",
+    "change-silo-n-rd-kn",
+    "change-silo-q-nominal",
+    "change-silo-radius-m",
+    "change-silo-v-ed-kn",
+    "change-silo-v-rd-kn",
+    "change-structural-system",
+    "change-t1-s",
+    "change-tank-height-m",
+    "change-tank-mass-t",
+    "change-tank-radius-m",
+    "change-tank-v-rd-kn",
+    "change-tower-is-chimney",
+    "change-tower-m-ed-knm",
+    "change-tower-m-rd-knm",
+    "change-tower-mass-t",
+    "change-tower-q-nominal",
+    "change-v-rd-kn",
+    "change-wall-h-rd-kn",
+    "change-wall-height-m",
+    "change-wall-phi-deg",
+    "change-wall-r",
+    "change-wall-soil-gamma-kn-m3"
+  ]
 }

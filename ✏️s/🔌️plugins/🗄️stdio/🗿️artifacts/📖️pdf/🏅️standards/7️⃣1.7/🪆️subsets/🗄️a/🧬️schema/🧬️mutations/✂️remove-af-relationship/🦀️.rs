@@ -2,7 +2,7 @@
 
 use super::set_af_relationship::SetAfRelationship;
 use super::PdfAMutation;
-use crate::artifacts::pdf::standards::v1_7::subsets::base::schema::{conformance_support as support, diff::PdfDiff, snapshot::PdfSnapshot};
+use crate::standards::v1_7::subsets::base::schema::{conformance_support as support, diff::PdfDiff, snapshot::PdfSnapshot};
 use protocol::command::DiffAlgebra;
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
 
@@ -48,7 +48,7 @@ impl MutationKind<PdfSnapshot, PdfAMutation> for RemoveAfRelationship {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::pdf::standards::v1_7::subsets::base::schema::snapshot::PdfObject;
+    use crate::standards::v1_7::subsets::base::schema::snapshot::PdfObject;
     use protocol::MutationDiff;
 
     #[test]

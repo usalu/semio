@@ -11,6 +11,6 @@ pub fn diff(payload: &ChangeDeltaSigmaMpa, base: &En1994Snapshot) -> protocol::M
     if base.delta_sigma_mpa == payload.new_delta_sigma_mpa {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "Delta sigma mpa already has this value.");
     }
-    protocol::MutationOutcome::new(En1994Diff { delta_sigma_mpa: Some(payload.new_delta_sigma_mpa.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1994Diff { delta_sigma_mpa: Some(payload.new_delta_sigma_mpa), ..Default::default() })
 }
 //#endregion 🔖️Diff

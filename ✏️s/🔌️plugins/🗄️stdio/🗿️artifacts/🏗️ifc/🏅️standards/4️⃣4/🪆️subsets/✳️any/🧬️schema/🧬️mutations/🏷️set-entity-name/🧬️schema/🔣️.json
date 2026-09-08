@@ -1,0 +1,24 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/ifc/4/any/mutation/set-entity-name.json",
+  "title": "SetEntityName",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "name"
+  ],
+  "properties": {
+    "id": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "name": {
+      "type": "string"
+    },
+    "mutation": {
+      "const": "setEntityName",
+      "description": "Aggregate discriminator spliced in by IfcMutation; absent when the payload stands alone."
+    }
+  }
+}

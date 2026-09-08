@@ -11,11 +11,11 @@ pub(crate) type IndexedDiffParts<D, T> = (Vec<usize>, Vec<(usize, D)>, Vec<(usiz
 
 use std::collections::{BTreeMap, BTreeSet, HashSet};
 
-use crate::artifacts::ifc::schema::snapshot::{IfcComplexType, IfcEntity, IfcValue};
-use crate::artifacts::ifc::IfcSnapshot;
+use crate::schema::snapshot::{IfcComplexType, IfcEntity, IfcValue};
+use crate::IfcSnapshot;
 use protocol::command::DiffAlgebra;
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
-use schema::ArtifactSchema;
+use framework_schema::ArtifactSchema;
 
 //#region 🔖️IndexTransport
 /// 📐️ Own local copy (per the recipe's "hand-duplicated, macro-free" convention — never shared
@@ -1366,7 +1366,7 @@ impl protocol::DiffCodec for IfcDiff {
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_diff_cases() -> Vec<IfcDiff> {
-    let a = crate::artifacts::ifc::engine::demo_ifc_snapshot();
+    let a = crate::engine::demo_ifc_snapshot();
     let mut b = a.clone();
     b.header.file_name = vec![IfcValue::String("changed.ifc".into())];
     if let Some(first) = b.entities.first_mut() {
@@ -1394,7 +1394,7 @@ mod handcrafted_diff_codec_tests {
     fn base() -> IfcSnapshot {
         IfcSnapshot {
             schema: "stdio.ifc".into(),
-            header: crate::artifacts::ifc::schema::snapshot::IfcHeader {
+            header: crate::schema::snapshot::IfcHeader {
                 file_description: vec![IfcValue::String("d".into())],
                 file_name: vec![IfcValue::String("n".into())],
                 file_schema: vec![IfcValue::Aggregate(vec![IfcValue::String("IFC4".into())])],

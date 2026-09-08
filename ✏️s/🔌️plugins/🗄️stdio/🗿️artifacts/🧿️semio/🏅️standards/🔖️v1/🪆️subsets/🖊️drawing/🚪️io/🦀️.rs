@@ -4,14 +4,14 @@
 //! 📤️export/🧵️serializers.
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use crate::artifacts::semio::standards::v1::subsets::drawing::io::export::serializers::artifacts::dxf::v_r12::any::SemioDrawingToDxf;
-    use crate::artifacts::semio::standards::v1::subsets::drawing::io::export::serializers::artifacts::pdf::v1_7::any::SemioDrawingToPdf;
-    use crate::artifacts::semio::standards::v1::subsets::drawing::io::export::serializers::artifacts::svg::v1_1::any::SemioDrawingToSvg;
-    use crate::artifacts::semio::standards::v1::subsets::drawing::io::import::deserializers::artifacts::dxf::v_r12::any::SemioDrawingFromDxf;
-    use crate::artifacts::semio::standards::v1::subsets::drawing::io::import::deserializers::artifacts::pdf::v1_7::any::SemioDrawingFromPdf;
-    use crate::artifacts::semio::standards::v1::subsets::drawing::io::import::deserializers::artifacts::svg::v1_1::any::SemioDrawingFromSvg;
-    use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{DrawNode, SemioDrawingSnapshot};
-    use crate::artifacts::semio::standards::v1::subsets::drawing::schema::SemioDrawingAnalyzer;
+    use crate::standards::v1::subsets::drawing::io::export::serializers::artifacts::dxf::v_r12::any::SemioDrawingToDxf;
+    use crate::standards::v1::subsets::drawing::io::export::serializers::artifacts::pdf::v1_7::any::SemioDrawingToPdf;
+    use crate::standards::v1::subsets::drawing::io::export::serializers::artifacts::svg::v1_1::any::SemioDrawingToSvg;
+    use crate::standards::v1::subsets::drawing::io::import::deserializers::artifacts::dxf::v_r12::any::SemioDrawingFromDxf;
+    use crate::standards::v1::subsets::drawing::io::import::deserializers::artifacts::pdf::v1_7::any::SemioDrawingFromPdf;
+    use crate::standards::v1::subsets::drawing::io::import::deserializers::artifacts::svg::v1_1::any::SemioDrawingFromSvg;
+    use crate::standards::v1::subsets::drawing::schema::snapshot::{DrawNode, SemioDrawingSnapshot};
+    use crate::standards::v1::subsets::drawing::schema::SemioDrawingAnalyzer;
     use semio_framework_plugin::{
         deserializer_entry_of, register_composer_entries, register_subset_validator, serializer_entry_of, subset_validator_entry_of, AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, ComposerEntry, Composition, Dialect, IoPayload,
         StandardId, SubsetId, SubsetValidator, SubsetValidatorEntry,
@@ -143,9 +143,9 @@ pub mod derived_composition {
     /// semio↔format io bridges. Called from this artifact's standard-level `engine::register()`.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn register() {
-        ::schema::register_artifact_schema_descriptor(crate::artifacts::semio::standards::v1::subsets::drawing::schema::semio_drawing_artifact_schema_descriptor());
-        store::register_document_codec(store::ArtifactCodec::of::<SemioDrawingSnapshot, crate::artifacts::semio::standards::v1::subsets::drawing::schema::mutations::SemioDrawingMutation>(
-            crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::STDIO_SEMIODRAWING_DOCUMENT_SCHEMA,
+        ::framework_schema::register_artifact_schema_descriptor(crate::standards::v1::subsets::drawing::schema::semio_drawing_artifact_schema_descriptor());
+        store::register_document_codec(store::ArtifactCodec::of::<SemioDrawingSnapshot, crate::standards::v1::subsets::drawing::schema::mutations::SemioDrawingMutation>(
+            crate::standards::v1::subsets::drawing::schema::snapshot::STDIO_SEMIODRAWING_DOCUMENT_SCHEMA,
         )).expect("static Stdio registration must be available and conflict-free");
         register_subset_validator(validator_entry()).expect("static Stdio registration must be available and conflict-free");
         register_composer_entries(io_entries()).expect("static Stdio registration must be available and conflict-free");
@@ -157,7 +157,7 @@ pub mod derived_composition {
     /// ticket 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn register_artifact_inferences() {
-        ::schema::register_artifact_inference_descriptor(crate::artifacts::semio::standards::v1::subsets::drawing::schema::inferences::semio_drawing_artifact_inference_descriptor());
+        ::framework_schema::register_artifact_inference_descriptor(crate::standards::v1::subsets::drawing::schema::inferences::semio_drawing_artifact_inference_descriptor());
     }
     //#endregion 🔖️Register
 
@@ -165,8 +165,8 @@ pub mod derived_composition {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioTransform};
-        use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{DrawLayer, DrawStyle};
+        use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioTransform};
+        use crate::standards::v1::subsets::drawing::schema::snapshot::{DrawLayer, DrawStyle};
 
         #[semio_framework_async_macros::async_test]
         async fn dangling_style_ref_and_duplicate_layer_id_are_both_reported() {
@@ -202,7 +202,7 @@ pub mod derived_composition {
         /// (no test module of its own, and out of this ticket's `🖊️drawing/`-only edit scope anyway).
         mod conformance_laws {
 
-            use crate::artifacts::semio::standards::v1::subsets::drawing::schema::{diff, mutations, snapshot};
+            use crate::standards::v1::subsets::drawing::schema::{diff, mutations, snapshot};
             use protocol::{DiffCodec, OpBinary, OpText};
 
             /// ✅️ "committed files parse": all 6 handcrafted `.grammar.semio`/`.protocol.semio` files

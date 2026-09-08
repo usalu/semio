@@ -5,7 +5,7 @@
   "displayName": "Change Lighting Gain Return Air Fraction",
   "emoji": "🎐️",
   "aggregateVariant": "ChangeLightingGainReturnAirFraction",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-lighting-gain-return-air-fraction",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

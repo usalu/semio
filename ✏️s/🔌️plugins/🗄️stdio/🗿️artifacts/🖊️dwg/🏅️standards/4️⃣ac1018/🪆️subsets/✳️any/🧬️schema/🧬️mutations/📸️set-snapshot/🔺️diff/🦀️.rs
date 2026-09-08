@@ -1,8 +1,8 @@
-//! 🧩 set_snapshot diff leaf (ac1018 — NOT the canonical `crate::artifacts::dwg` re-export, which
+//! 🧩 set_snapshot diff leaf (ac1018 — NOT the canonical `crate` re-export, which
 //! is aliased to ac1024 per S-6; see `🔺️diff/🦀️.rs`'s own doc comment).
 
-use crate::artifacts::dwg::standards::v_ac1018::subsets::any::schema::diff::{diff_set_snapshot, DwgDiff};
-use crate::artifacts::dwg::standards::v_ac1018::subsets::any::schema::snapshot::DwgSnapshot;
+use crate::standards::v_ac1018::subsets::any::schema::diff::{diff_set_snapshot, DwgDiff};
+use crate::standards::v_ac1018::subsets::any::schema::snapshot::DwgSnapshot;
 
 /// 🔺️ Diff helper for set-snapshot — sparse field-by-field `between(base, next)`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

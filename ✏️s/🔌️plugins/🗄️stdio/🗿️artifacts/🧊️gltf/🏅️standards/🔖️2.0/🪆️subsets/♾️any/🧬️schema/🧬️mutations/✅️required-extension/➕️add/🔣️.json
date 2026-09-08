@@ -5,7 +5,7 @@
   "displayName": "Add Required Extension",
   "emoji": "➕️",
   "aggregateVariant": "AddRequiredExtension",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

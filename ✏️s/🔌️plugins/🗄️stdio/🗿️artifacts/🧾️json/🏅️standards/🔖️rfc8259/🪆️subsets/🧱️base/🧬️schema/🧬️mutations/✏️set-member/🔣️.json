@@ -5,7 +5,7 @@
   "displayName": "Set Member",
   "emoji": "✏️",
   "aggregateVariant": "SetMember",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "set-member",
   "binaryTag": 1,
   "invertibility": "explicit-mutation",

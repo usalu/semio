@@ -144,8 +144,10 @@ pub struct ProgramDiff {
     pub audit_events: Option<ProgramAuditEventsDelta>,
     #[state(artifact)]
     pub templates: Option<ProgramTemplatesDelta>,
+    /// 🧩️ Replacement handle for the composed knowledge table.
     #[state(artifact)]
     pub knowledge: Option<crate::artifacts::program::ProgramKnowledgeChild>,
+    /// 🧩️ Replacement handle for the composed benchmarks table.
     #[state(artifact)]
     pub benchmarks: Option<crate::artifacts::program::ProgramBenchmarksChild>,
     #[state(artifact)]
@@ -1572,20 +1574,6 @@ pub struct ProgramTemplatesPatchEntry {
     pub id: String,
     pub patch: TemplateRecordPatch,
 }
-
-/// 🧩️ `knowledge` composes stdio's `table` subset (ticket UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM W4
-/// batch Db) — the former `ProgramKnowledgeDelta`/`ProgramKnowledgePatchEntry` identified-
-/// collection delta is gone; `ProgramDiff.knowledge` is now `Option<ProgramKnowledgeChild>`
-/// (single-Option, always-present-slot shape per `📓️migration-recipe.md` §9), re-minted whole by
-/// every triad's `🔺️diff` via the working-scene cache in `🗿️artifacts/🏛️program/🦀️.rs`'s
-/// `🔖️Composition` region.
-
-/// 🧩️ `benchmarks` composes stdio's `table` subset (ticket UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM W4
-/// batch Db) — the former `ProgramBenchmarksDelta`/`ProgramBenchmarksPatchEntry` identified-
-/// collection delta is gone; `ProgramDiff.benchmarks` is now `Option<ProgramBenchmarksChild>`
-/// (single-Option, always-present-slot shape per `📓️migration-recipe.md` §9), re-minted whole by
-/// every triad's `🔺️diff` via the working-scene cache in `🗿️artifacts/🏛️program/🦀️.rs`'s
-/// `🔖️Composition` region.
 
 /// 🧩 Identified-collection delta for `traces`.
 #[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]

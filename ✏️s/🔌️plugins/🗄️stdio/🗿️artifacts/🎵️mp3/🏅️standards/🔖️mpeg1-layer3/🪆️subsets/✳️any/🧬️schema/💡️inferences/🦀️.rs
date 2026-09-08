@@ -5,8 +5,8 @@
 //! inference gets its own `<emoji><slug>/` child (currently: `⏱️duration/`, derived from the real
 //! MPEG-1/2/2.5 Layer III frame header fields — bitrate/sample-rate table lookups, not a guess).
 
-use crate::artifacts::mp3::standards::mpeg1_layer3::subsets::any::schema::snapshot::Mp3Snapshot;
-use schema::ArtifactSchema;
+use crate::standards::mpeg1_layer3::subsets::any::schema::snapshot::Mp3Snapshot;
+use framework_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 
 use super::duration::{compute_mp3_duration, Mp3Duration};
@@ -54,7 +54,7 @@ impl protocol::InferenceSpec<Mp3Snapshot> for Mp3Inference {
 /// O(n) in frame count with no honest per-entity incremental decomposition (a merkle dep-chain
 /// over one flat `Vec<Mp3Frame>` costs more than the fold it would cache) — the default
 /// `infer_cached` passthrough is exact.
-impl ArtifactInferrer for crate::artifacts::mp3::standards::mpeg1_layer3::subsets::any::schema::Mp3Builder {
+impl ArtifactInferrer for crate::standards::mpeg1_layer3::subsets::any::schema::Mp3Builder {
     type Snapshot = Mp3Snapshot;
     type Inference = Mp3Inference;
 }
@@ -64,10 +64,10 @@ impl ArtifactInferrer for crate::artifacts::mp3::standards::mpeg1_layer3::subset
 /// 💡️ Registers `s.stdio.mp3.inference`'s facet leaves into the OS-wide inference catalog — call
 /// once at plugin init, alongside `mp3_artifact_schema_descriptor`'s registration.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn mp3_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
-    schema::ArtifactInferenceDescriptor {
+pub fn mp3_artifact_inference_descriptor() -> framework_schema::ArtifactInferenceDescriptor {
+    framework_schema::ArtifactInferenceDescriptor {
         id: "s.stdio.mp3.inference",
-        inference: schema::FacetLeaves {
+        inference: framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),

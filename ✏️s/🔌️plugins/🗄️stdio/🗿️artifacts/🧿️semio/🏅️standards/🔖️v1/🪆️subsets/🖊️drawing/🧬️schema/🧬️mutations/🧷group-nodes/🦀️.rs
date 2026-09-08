@@ -5,10 +5,10 @@
 //! EXACT original membership/positions losslessly (a non-contiguous grouping would interleave
 //! with untouched siblings in a way `ungroup` could not reconstruct from `base` alone).
 
-use crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioTransform;
-use crate::artifacts::semio::standards::v1::subsets::drawing::schema::diff::NodePath;
-use crate::artifacts::semio::standards::v1::subsets::drawing::schema::mutations::SemioDrawingMutation;
-use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot;
+use crate::standards::v1::subsets::base::schema::geometry::SemioTransform;
+use crate::standards::v1::subsets::drawing::schema::diff::NodePath;
+use crate::standards::v1::subsets::drawing::schema::mutations::SemioDrawingMutation;
+use crate::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot;
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]

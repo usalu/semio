@@ -46,6 +46,7 @@ impl<T, const CAPACITY: usize> BoundedCompletionQueue<T, CAPACITY> {
         true
     }
 
+    #[cfg(any(not(target_arch = "wasm32"), test))]
     pub(crate) fn reserve(&mut self, key: Option<&'static str>) -> bool {
         if !self.make_room_for(key, CAPACITY - 1) {
             return false;
@@ -62,6 +63,7 @@ impl<T, const CAPACITY: usize> BoundedCompletionQueue<T, CAPACITY> {
         true
     }
 
+    #[cfg(any(not(target_arch = "wasm32"), test))]
     pub(crate) fn cancel_interaction_reservation(&mut self) -> bool {
         let Some(next) = self.in_flight.checked_sub(1) else { return false };
         self.in_flight = next;

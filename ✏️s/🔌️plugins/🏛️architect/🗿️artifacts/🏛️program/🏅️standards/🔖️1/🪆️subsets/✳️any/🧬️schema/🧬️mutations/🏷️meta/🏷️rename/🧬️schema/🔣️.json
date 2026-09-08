@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/architect/program/1/any/mutation/rename-meta.json",
+  "title": "RenameMeta",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newTitle"
+  ],
+  "properties": {
+    "newTitle": {
+      "type": "string"
+    }
+  }
+}

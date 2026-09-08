@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "profiles": ["dev", "release"],
+  "variants": ["aggregator", "aussuchen", "bearbeiten", "generation3d", "generator", "koordinator", "verfolgen"],
+  "preparationProject": "@semio-tech/framework-os-dev",
+  "primaryVariant": "generator",
+  "command": "🔨️modules/🧩️runtime/📜️script.ts",
+  "forbiddenCommandImports": ["🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts"],
+  "forbiddenOrchestration": ["buildPlugins", "buildEngineWasm", "ensurePluginRegistry", "SKIP_PLUGIN_BUILD", "spawnDaemon"]
+}

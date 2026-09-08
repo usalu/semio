@@ -1,0 +1,64 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/ifc/2x3/cobie/mutation/set-type-assignment.json",
+  "title": "SetTypeAssignment",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id"
+  ],
+  "properties": {
+    "id": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "assignment": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/CobieTypeAssignment"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "$defs": {
+    "CobieTypeAssignment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "globalId",
+        "relatedObjects",
+        "relatingType"
+      ],
+      "properties": {
+        "globalId": {
+          "type": "string"
+        },
+        "ownerHistory": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "relatedObjects": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "relatingType": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    }
+  }
+}

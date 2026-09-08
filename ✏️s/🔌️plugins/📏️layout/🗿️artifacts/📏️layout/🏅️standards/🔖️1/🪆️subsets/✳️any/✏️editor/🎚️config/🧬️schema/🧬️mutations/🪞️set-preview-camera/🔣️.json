@@ -5,7 +5,7 @@
   "displayName": "Set Preview Camera",
   "emoji": "🪞️",
   "aggregateVariant": "SetPreviewCamera",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "set-preview-camera",
   "binaryTag": 4,
   "invertibility": "explicit-mutation",

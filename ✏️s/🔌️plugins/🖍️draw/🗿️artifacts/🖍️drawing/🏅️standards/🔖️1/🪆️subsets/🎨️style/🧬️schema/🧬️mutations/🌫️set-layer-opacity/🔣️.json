@@ -5,7 +5,7 @@
   "displayName": "Set Layer Opacity",
   "emoji": "🌫️",
   "aggregateVariant": "SetLayerOpacity",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "set-layer-opacity",
   "binaryTag": 2,
   "invertibility": "explicit-mutation",

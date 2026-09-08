@@ -1135,7 +1135,7 @@ impl EnergyNumericalCensus {
     fn observe(model: &Model, config: &SimulationConfig) -> Option<Self> {
         let timesteps = SimulationKernel::run_period(config).total_hours() as usize;
         let weather_records = observed_weather_records(config);
-        let airflow_nodes = model.airflow_network.as_ref().map_or(0, |network| network.zone_node_ids.capacity().checked_add(1).unwrap_or(usize::MAX));
+        let airflow_nodes = model.airflow_network.as_ref().map_or(0, |network| network.zone_node_ids.capacity().saturating_add(1));
         let airflow_links = model.airflow_network.as_ref().map_or(0, |network| network.link_ids.capacity());
         let plant_equipment = checked_sum(model.plant_loops.iter().map(|plant| plant.equipment_ids.capacity()))?;
         let meters = model.zones.capacity().checked_mul(3)?.checked_add(2)?;
@@ -1175,7 +1175,7 @@ impl EnergyNumericalCensus {
             history_values,
             summary_rows,
         ];
-        let observed_items = checked_sum(dimensions.into_iter())?;
+        let observed_items = checked_sum(dimensions)?;
         let observed_bytes =
             observed_model_bytes(model, config)?.checked_add(weather_records.checked_mul(size_of::<Option<(usize, WeatherRecord)>>())?)?.checked_add(samples.checked_mul(size_of::<f64>() * 3)?)?.checked_add(identifier_bytes)?;
         let pages = observed_bytes.checked_add(16_383)?.checked_div(16_384)?;

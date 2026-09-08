@@ -1,0 +1,48 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/remodel/remodeling/1/any/mutation/update-feature-params.json",
+  "title": "UpdateFeatureParams",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "params"
+  ],
+  "properties": {
+    "params": {
+      "type": "object",
+      "title": "FeatureParams",
+      "additionalProperties": false,
+      "required": [
+        "detector",
+        "targetCount",
+        "octaves",
+        "edgeThreshold"
+      ],
+      "properties": {
+        "detector": {
+          "type": "string",
+          "title": "FeatureDetector",
+          "enum": [
+            "orb",
+            "akaze",
+            "harris"
+          ]
+        },
+        "targetCount": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "octaves": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "edgeThreshold": {
+          "type": "number",
+          "format": "float"
+        }
+      }
+    }
+  }
+}

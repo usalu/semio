@@ -1412,7 +1412,6 @@ struct StackCapTabLayout {
 }
 
 struct StackCapGroupLayout {
-    corner: WindowStackCorner,
     tabs: Vec<StackCapTabLayout>,
 }
 
@@ -1458,7 +1457,7 @@ fn layout_stack_cap(windows: &[DockStackTab], labels: &HashMap<String, String>, 
             WindowStackCorner::TopLeft | WindowStackCorner::TopRight => top_spans.push(span),
             WindowStackCorner::BottomLeft | WindowStackCorner::BottomRight => bottom_spans.push(span),
         }
-        groups.push(StackCapGroupLayout { corner, tabs: painted });
+        groups.push(StackCapGroupLayout { tabs: painted });
     }
     StackCapLayout { groups, top_spans, bottom_spans }
 }

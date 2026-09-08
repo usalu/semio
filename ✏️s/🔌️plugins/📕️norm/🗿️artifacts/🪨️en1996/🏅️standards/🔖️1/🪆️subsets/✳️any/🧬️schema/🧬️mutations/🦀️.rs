@@ -116,28 +116,28 @@ impl En1996Mutation {
     /// command to bundle a bulk document replacement into a single atomic `Emit::commit`.
     pub fn from_snapshot(snapshot: &En1996Snapshot) -> Vec<En1996Mutation> {
         let mut mutations = Vec::with_capacity(22);
-        mutations.push(En1996Mutation::ChangeMEdKnm(change_m_ed_knm::ChangeMEdKnm { new_m_ed_knm: snapshot.m_ed_knm.clone() }));
-        mutations.push(En1996Mutation::ChangeNEdKn(change_n_ed_kn::ChangeNEdKn { new_n_ed_kn: snapshot.n_ed_kn.clone() }));
-        mutations.push(En1996Mutation::ChangeVEdKn(change_v_ed_kn::ChangeVEdKn { new_v_ed_kn: snapshot.v_ed_kn.clone() }));
-        mutations.push(En1996Mutation::ChangeHEdKn(change_h_ed_kn::ChangeHEdKn { new_h_ed_kn: snapshot.h_ed_kn.clone() }));
-        mutations.push(En1996Mutation::ChangeZMm3(change_z_mm3::ChangeZMm3 { new_z_mm3: snapshot.z_mm3.clone() }));
-        mutations.push(En1996Mutation::ChangeAreaMm2(change_area_mm2::ChangeAreaMm2 { new_area_mm2: snapshot.area_mm2.clone() }));
-        mutations.push(En1996Mutation::ChangeShearAreaMm2(change_shear_area_mm2::ChangeShearAreaMm2 { new_shear_area_mm2: snapshot.shear_area_mm2.clone() }));
-        mutations.push(En1996Mutation::ChangeFKMpa(change_f_k_mpa::ChangeFKMpa { new_f_k_mpa: snapshot.f_k_mpa.clone() }));
-        mutations.push(En1996Mutation::ChangeFVkMpa(change_f_vk_mpa::ChangeFVkMpa { new_f_vk_mpa: snapshot.f_vk_mpa.clone() }));
-        mutations.push(En1996Mutation::ChangeAnnex(change_annex::ChangeAnnex { new_annex: snapshot.annex.clone() }));
-        mutations.push(En1996Mutation::ChangeMasonryClass(change_masonry_class::ChangeMasonryClass { new_masonry_class: snapshot.masonry_class.clone() }));
-        mutations.push(En1996Mutation::ChangeDesignSituation(change_design_situation::ChangeDesignSituation { new_design_situation: snapshot.design_situation.clone() }));
-        mutations.push(En1996Mutation::ChangeMu(change_mu::ChangeMu { new_mu: snapshot.mu.clone() }));
-        mutations.push(En1996Mutation::ChangeWallThicknessMm(change_wall_thickness_mm::ChangeWallThicknessMm { new_wall_thickness_mm: snapshot.wall_thickness_mm.clone() }));
-        mutations.push(En1996Mutation::ChangeFireResistanceMin(change_fire_resistance_min::ChangeFireResistanceMin { new_fire_resistance_min: snapshot.fire_resistance_min.clone() }));
+        mutations.push(En1996Mutation::ChangeMEdKnm(change_m_ed_knm::ChangeMEdKnm { new_m_ed_knm: snapshot.m_ed_knm }));
+        mutations.push(En1996Mutation::ChangeNEdKn(change_n_ed_kn::ChangeNEdKn { new_n_ed_kn: snapshot.n_ed_kn }));
+        mutations.push(En1996Mutation::ChangeVEdKn(change_v_ed_kn::ChangeVEdKn { new_v_ed_kn: snapshot.v_ed_kn }));
+        mutations.push(En1996Mutation::ChangeHEdKn(change_h_ed_kn::ChangeHEdKn { new_h_ed_kn: snapshot.h_ed_kn }));
+        mutations.push(En1996Mutation::ChangeZMm3(change_z_mm3::ChangeZMm3 { new_z_mm3: snapshot.z_mm3 }));
+        mutations.push(En1996Mutation::ChangeAreaMm2(change_area_mm2::ChangeAreaMm2 { new_area_mm2: snapshot.area_mm2 }));
+        mutations.push(En1996Mutation::ChangeShearAreaMm2(change_shear_area_mm2::ChangeShearAreaMm2 { new_shear_area_mm2: snapshot.shear_area_mm2 }));
+        mutations.push(En1996Mutation::ChangeFKMpa(change_f_k_mpa::ChangeFKMpa { new_f_k_mpa: snapshot.f_k_mpa }));
+        mutations.push(En1996Mutation::ChangeFVkMpa(change_f_vk_mpa::ChangeFVkMpa { new_f_vk_mpa: snapshot.f_vk_mpa }));
+        mutations.push(En1996Mutation::ChangeAnnex(change_annex::ChangeAnnex { new_annex: snapshot.annex }));
+        mutations.push(En1996Mutation::ChangeMasonryClass(change_masonry_class::ChangeMasonryClass { new_masonry_class: snapshot.masonry_class }));
+        mutations.push(En1996Mutation::ChangeDesignSituation(change_design_situation::ChangeDesignSituation { new_design_situation: snapshot.design_situation }));
+        mutations.push(En1996Mutation::ChangeMu(change_mu::ChangeMu { new_mu: snapshot.mu }));
+        mutations.push(En1996Mutation::ChangeWallThicknessMm(change_wall_thickness_mm::ChangeWallThicknessMm { new_wall_thickness_mm: snapshot.wall_thickness_mm }));
+        mutations.push(En1996Mutation::ChangeFireResistanceMin(change_fire_resistance_min::ChangeFireResistanceMin { new_fire_resistance_min: snapshot.fire_resistance_min }));
         mutations.push(En1996Mutation::ChangeUnit(change_unit::ChangeUnit { new_unit: snapshot.unit.clone() }));
-        mutations.push(En1996Mutation::ChangeExposure(change_exposure::ChangeExposure { new_exposure: snapshot.exposure.clone() }));
-        mutations.push(En1996Mutation::ChangeMortar(change_mortar::ChangeMortar { new_mortar: snapshot.mortar.clone() }));
-        mutations.push(En1996Mutation::ChangeBedJointThicknessMm(change_bed_joint_thickness_mm::ChangeBedJointThicknessMm { new_bed_joint_thickness_mm: snapshot.bed_joint_thickness_mm.clone() }));
-        mutations.push(En1996Mutation::ChangeStoreys(change_storeys::ChangeStoreys { new_storeys: snapshot.storeys.clone() }));
-        mutations.push(En1996Mutation::ChangeHEfMm(change_h_ef_mm::ChangeHEfMm { new_h_ef_mm: snapshot.h_ef_mm.clone() }));
-        mutations.push(En1996Mutation::ChangeTEfMm(change_t_ef_mm::ChangeTEfMm { new_t_ef_mm: snapshot.t_ef_mm.clone() }));
+        mutations.push(En1996Mutation::ChangeExposure(change_exposure::ChangeExposure { new_exposure: snapshot.exposure }));
+        mutations.push(En1996Mutation::ChangeMortar(change_mortar::ChangeMortar { new_mortar: snapshot.mortar }));
+        mutations.push(En1996Mutation::ChangeBedJointThicknessMm(change_bed_joint_thickness_mm::ChangeBedJointThicknessMm { new_bed_joint_thickness_mm: snapshot.bed_joint_thickness_mm }));
+        mutations.push(En1996Mutation::ChangeStoreys(change_storeys::ChangeStoreys { new_storeys: snapshot.storeys }));
+        mutations.push(En1996Mutation::ChangeHEfMm(change_h_ef_mm::ChangeHEfMm { new_h_ef_mm: snapshot.h_ef_mm }));
+        mutations.push(En1996Mutation::ChangeTEfMm(change_t_ef_mm::ChangeTEfMm { new_t_ef_mm: snapshot.t_ef_mm }));
         mutations
     }
 }

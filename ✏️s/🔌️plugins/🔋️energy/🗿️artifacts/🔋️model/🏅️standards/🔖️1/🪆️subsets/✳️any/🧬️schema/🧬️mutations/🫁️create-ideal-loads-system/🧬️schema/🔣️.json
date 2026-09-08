@@ -1,0 +1,51 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/energy/model/1/any/mutation/create-ideal-loads-system.json",
+  "title": "CreateIdealLoadsSystem",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "zoneId",
+    "maxHeatingSupplyAirTempC",
+    "minCoolingSupplyAirTempC",
+    "maxHeatingCapacityPresent",
+    "maxHeatingCapacityW",
+    "maxCoolingCapacityPresent",
+    "maxCoolingCapacityW",
+    "outdoorAirPerPersonM3S",
+    "outdoorAirPerAreaM3SM2"
+  ],
+  "properties": {
+    "id": {
+      "type": "integer"
+    },
+    "zoneId": {
+      "type": "integer"
+    },
+    "maxHeatingSupplyAirTempC": {
+      "type": "number"
+    },
+    "minCoolingSupplyAirTempC": {
+      "type": "number"
+    },
+    "maxHeatingCapacityPresent": {
+      "type": "boolean"
+    },
+    "maxHeatingCapacityW": {
+      "type": "number"
+    },
+    "maxCoolingCapacityPresent": {
+      "type": "boolean"
+    },
+    "maxCoolingCapacityW": {
+      "type": "number"
+    },
+    "outdoorAirPerPersonM3S": {
+      "type": "number"
+    },
+    "outdoorAirPerAreaM3SM2": {
+      "type": "number"
+    }
+  }
+}

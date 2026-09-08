@@ -7791,3 +7791,61 @@ describe("mutation metadata facts", () => {
   });
 });
 //#endregion 🧬️MutationMetadataFacts
+
+//#region 🧬️SchemaScopeCatalog
+describe("schema scope catalog", () => {
+  test("catalogues declared scopes and reports every retired placement and unresolved binding", async () => {
+    const library = await import("../../🔍️discovery/🟦️.ts");
+    const taxonomy = library.loadCatalogTaxonomy();
+    const casesPath = join(import.meta.dir, "../../🧪️tests/🧬️schema-scope-catalog/🧫️fixtures/🔣️.json");
+    const cases = JSON.parse(readFileSync(casesPath, "utf8")) as { contract: string; cases: { id: string; files: Record<string, unknown>; expected: { scopes: Record<string, { path: string; level: string; exports: string[]; dependsOn: string[] }>; diagnosticCodes: string[]; placementPaths: string[] } }[] };
+    const authority = JSON.parse(readFileSync(join(import.meta.dir, "../../🧪️tests/🧬️schema-scope-catalog/🛂️schema/🔣️.json"), "utf8"));
+    const ajv = new Ajv({ strict: true });
+    expect(ajv.compile(authority)(cases)).toBe(true);
+    for (const row of cases.cases) {
+      const root = mkdtempSync(join(tmpdir(), "semio-schema-scope-"));
+      try {
+        for (const [rel, body] of Object.entries(row.files)) {
+          const abs = join(root, rel);
+          mkdirSync(dirname(abs), { recursive: true });
+          writeFileSync(abs, typeof body === "string" ? body : `${JSON.stringify(body, null, 2)}\n`);
+        }
+        const inventory = library.inventorySchemaScopes(root, taxonomy);
+        const scopes = Object.fromEntries(Object.entries(inventory.catalog.scopes).map(([id, scope]) => [id, { path: scope.path, level: scope.level, exports: [...scope.exports], dependsOn: [...scope.dependsOn] }]));
+        expect({ case: row.id, scopes }).toEqual({ case: row.id, scopes: row.expected.scopes });
+        expect({ case: row.id, codes: inventory.diagnostics.map(({ code }) => code).sort() }).toEqual({ case: row.id, codes: [...row.expected.diagnosticCodes].sort() });
+        expect({ case: row.id, paths: inventory.placement.map(({ path }) => path).sort() }).toEqual({ case: row.id, paths: [...row.expected.placementPaths].sort() });
+        expect(library.renderSchemaCatalog(inventory.catalog)).toBe(library.renderSchemaCatalog(library.inventorySchemaScopes(root, taxonomy).catalog));
+      } finally {
+        rmSync(root, { recursive: true, force: true });
+      }
+    }
+  });
+
+  test("resolves scope ids and export bindings only from declared identity", async () => {
+    const library = await import("../../🔍️discovery/🟦️.ts");
+    const taxonomy = library.loadCatalogTaxonomy();
+    expect(library.schemaScopeIdFromDocumentId("https://semio.tech/schema/s/trinity/jack/artifact.json", taxonomy)).toBe("s.trinity.jack");
+    expect(library.schemaScopeIdFromDocumentId("https://semio.tech/schema/hub/inference/contract.json", taxonomy)).toBe("hub.inference");
+    expect(library.schemaScopeIdFromDocumentId("urn:semio:hub:inference", taxonomy)).toBe(null);
+    expect(library.schemaScopeIdFromDocumentId("https://semio.tech/schema/contract.json", taxonomy)).toBe(null);
+    expect(library.parseSchemaExportUri("schema://hub.inference/InferenceApproval", taxonomy)).toEqual({ scopeId: "hub.inference", exportId: "InferenceApproval" });
+    expect(library.parseSchemaExportUri("schema://hub.inference/inferenceApproval", taxonomy)).toBe(null);
+    expect(library.parseSchemaExportUri("local://hub.inference/InferenceApproval", taxonomy)).toBe(null);
+    expect(library.schemaScopeOwnerLevel("✏️s/🔌️plugins/🔱️trinity", taxonomy)).toBe("plugin-root");
+    expect(library.schemaScopeOwnerLevel("🌎️hub/📦️packages/🦀️rust/🧪️fixtures/👥️presence-lease-v1", taxonomy)).toBe(null);
+    expect(library.resolveSchemaFacetKind("🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️schema", taxonomy)).toBe("📜️interface");
+    expect(library.resolveSchemaFacetKind("🌎️hub/💡️inference/🧬️schema", taxonomy)).toBe(taxonomy.schemaDefaultFacetKind);
+  });
+
+  test("declares one draft-07 dialect that an independent validator accepts", async () => {
+    const library = await import("../../🔍️discovery/🟦️.ts");
+    const taxonomy = library.loadCatalogTaxonomy();
+    expect(taxonomy.schemaJsonDialect).toBe(taxonomy.mutationPayloadSchemaAuthority.jsonSchemaDialect);
+    const document = { $schema: taxonomy.schemaJsonDialect, $id: "https://semio.tech/schema/repo/library/probe.json", title: "Probe", type: "object", additionalProperties: false, properties: { id: { type: "string" } }, required: ["id"] };
+    const validate = new Ajv({ strict: true }).compile(document);
+    expect(validate({ id: "a" })).toBe(true);
+    expect(validate({ id: 1 })).toBe(false);
+  });
+});
+//#endregion 🧬️SchemaScopeCatalog

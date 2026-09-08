@@ -7,7 +7,7 @@
 // #region 🔌️Adapters
 import { NextRequest, NextResponse } from "next/server";
 import { randomBytes } from "crypto";
-import { ownedSchema as z } from "../../../../✅️validation.ts";
+import { parseCommandAction, parseCreateDeveloperRequest, parseCreateKeyRequest, parseRevokeKeyRequest } from "../../../../../../🧬️schema/🟦️.ts";
 // #endregion 🔌️Adapters
 
 import { createApiKey, revokeApiKey, createDeveloper, getDeveloperByEmail, insertAuditLog } from "@/lib";
@@ -27,26 +27,6 @@ export async function GET(request: NextRequest) {
   });
 }
 
-const CreateKeySchema = z.object({
-  action: z.literal("create-key"),
-  developer_email: z.string().email(),
-  label: z.string().default("cli"),
-});
-
-const CreateDeveloperSchema = z.object({
-  action: z.literal("create-developer"),
-  email: z.string().email(),
-  github_login: z.string().default(""),
-  display_name: z.string().min(1),
-  trusted: z.boolean().default(false),
-  role: z.enum(["developer", "admin", "owner"]).default("developer"),
-});
-
-const RevokeKeySchema = z.object({
-  action: z.literal("revoke-key"),
-  key_id: z.string().min(1),
-});
-
 export async function POST(request: NextRequest) {
   const auth = await requireAdmin(request);
   if (isAuthError(auth)) return auth;
@@ -58,14 +38,14 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "invalid JSON" }, { status: 400 });
   }
 
-  const actionCheck = z.object({ action: z.string() }).safeParse(body);
+  const actionCheck = parseCommandAction(body);
   if (!actionCheck.success) {
-    return NextResponse.json({ error: "action required" }, { status: 400 });
+    return NextResponse.json({ error: actionCheck.error.message }, { status: 400 });
   }
 
-  switch (actionCheck.data.action) {
+  switch (actionCheck.data) {
     case "create-developer": {
-      const parsed = CreateDeveloperSchema.safeParse(body);
+      const parsed = parseCreateDeveloperRequest(body);
       if (!parsed.success) {
         return NextResponse.json({ error: parsed.error.message }, { status: 400 });
       }
@@ -83,7 +63,7 @@ export async function POST(request: NextRequest) {
     }
 
     case "create-key": {
-      const parsed = CreateKeySchema.safeParse(body);
+      const parsed = parseCreateKeyRequest(body);
       if (!parsed.success) {
         return NextResponse.json({ error: parsed.error.message }, { status: 400 });
       }
@@ -103,7 +83,7 @@ export async function POST(request: NextRequest) {
     }
 
     case "revoke-key": {
-      const parsed = RevokeKeySchema.safeParse(body);
+      const parsed = parseRevokeKeyRequest(body);
       if (!parsed.success) {
         return NextResponse.json({ error: parsed.error.message }, { status: 400 });
       }

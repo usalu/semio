@@ -5,7 +5,7 @@
   "displayName": "Change Ac Mm2",
   "emoji": "📐️",
   "aggregateVariant": "ChangeACMm2",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

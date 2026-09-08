@@ -5,7 +5,7 @@
   "displayName": "Delete Option Evaluation",
   "emoji": "🗑️",
   "aggregateVariant": "DeleteOptionEvaluation",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

@@ -9,10 +9,10 @@
 //! leaf's own oracle. The derived `.op.semio`/`.spr.semio`/`.dsl.semio`/`.pack.semio`/
 //! `.patch.semio` encodings come from `fixtures generate`, not from here.
 
-use crate::artifacts::gltf::schema::mutations::reorder_textures::diff::GltfReorderTexturesDiff;
-use crate::artifacts::gltf::schema::mutations::reorder_textures::GltfReorderTexturesPayload;
-use crate::artifacts::gltf::schema::mutations::reorder_textures::{diff, inverse, mutation};
-use crate::artifacts::gltf::GltfSnapshot;
+use crate::schema::mutations::reorder_textures::diff::GltfReorderTexturesDiff;
+use crate::schema::mutations::reorder_textures::GltfReorderTexturesPayload;
+use crate::schema::mutations::reorder_textures::{diff, inverse, mutation};
+use crate::GltfSnapshot;
 
 const CASE: &str = "reorder-textures/flips-the-albedo-and-normal-textures";
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");

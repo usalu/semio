@@ -16,14 +16,14 @@
 //! flagged in `glue_followup` for hoisting to `zip::opc` once xlsx/bcf need the identical shape
 //! too (docx already flagged the same hoist).
 
-use crate::artifacts::pptx::schema::snapshot::{PptxParagraph, PptxPresentation, PptxRun, PptxShape, PptxSlide, PptxTransform, PptxXmlPart};
-use crate::artifacts::pptx::PptxSnapshot;
+use crate::schema::snapshot::{PptxParagraph, PptxPresentation, PptxRun, PptxShape, PptxSlide, PptxTransform, PptxXmlPart};
+use crate::PptxSnapshot;
 #[cfg(test)]
-use crate::artifacts::xml::schema::snapshot::XmlNode;
-use crate::artifacts::zip::opc::{OpcContentTypes, OpcPackage, OpcPart, OpcRelationship, OpcTargetMode};
+use semio_s_artifact_stdio_xml::schema::snapshot::XmlNode;
+use semio_s_artifact_stdio_zip::opc::{OpcContentTypes, OpcPackage, OpcPart, OpcRelationship, OpcTargetMode};
 use protocol::command::DiffAlgebra;
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
-use schema::ArtifactSchema;
+use framework_schema::ArtifactSchema;
 use std::collections::HashMap;
 
 //#region 🔖️GenericCollectionTriples
@@ -1562,11 +1562,11 @@ impl protocol::DiffCodec for PptxDiff {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_snapshot_a() -> PptxSnapshot {
     let mut opc = OpcPackage::empty();
-    opc.content_types.set_default("rels", crate::artifacts::zip::opc::RELS_CONTENT_TYPE);
+    opc.content_types.set_default("rels", semio_s_artifact_stdio_zip::opc::RELS_CONTENT_TYPE);
     opc.content_types.set_default("xml", "application/xml");
     opc.set_part("ppt/presentation.xml", "application/vnd.openxmlformats-officedocument.presentationml.presentation.main+xml", b"<p:presentation/>".to_vec());
     opc.set_part("ppt/toRemove.xml", "application/xml", b"gone".to_vec());
-    opc.add_relationship("", "rId1", crate::artifacts::zip::opc::REL_TYPE_OFFICE_DOCUMENT, "ppt/presentation.xml");
+    opc.add_relationship("", "rId1", semio_s_artifact_stdio_zip::opc::REL_TYPE_OFFICE_DOCUMENT, "ppt/presentation.xml");
     opc.relationships.insert("ppt/toRemove.xml".into(), vec![OpcRelationship { id: "rId8".into(), rel_type: "http://example/gone".into(), target: "media/gone.png".into(), target_mode: OpcTargetMode::Internal }]);
 
     PptxSnapshot::from_parts(
@@ -1590,12 +1590,12 @@ pub(crate) fn demo_snapshot_a() -> PptxSnapshot {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_snapshot_b() -> PptxSnapshot {
     let mut opc = OpcPackage::empty();
-    opc.content_types.set_default("rels", crate::artifacts::zip::opc::RELS_CONTENT_TYPE);
+    opc.content_types.set_default("rels", semio_s_artifact_stdio_zip::opc::RELS_CONTENT_TYPE);
     opc.content_types.set_default("xml", "application/xml");
     opc.content_types.set_default("added", "application/octet-stream");
     opc.set_part("ppt/presentation.xml", "application/vnd.openxmlformats-officedocument.presentationml.presentation.main+xml", b"<p:presentation/>changed".to_vec());
     opc.set_part("ppt/added.xml", "application/xml", b"fresh".to_vec());
-    opc.add_relationship("", "rId1", crate::artifacts::zip::opc::REL_TYPE_OFFICE_DOCUMENT, "ppt/presentation.xml");
+    opc.add_relationship("", "rId1", semio_s_artifact_stdio_zip::opc::REL_TYPE_OFFICE_DOCUMENT, "ppt/presentation.xml");
     opc.relationships.insert("ppt/added.xml".into(), vec![OpcRelationship { id: "rId3".into(), rel_type: "http://example/added".into(), target: "media/added.png".into(), target_mode: OpcTargetMode::External }]);
 
     PptxSnapshot::from_parts(
@@ -1627,7 +1627,7 @@ pub(crate) fn demo_diff_cases() -> Vec<PptxDiff> {
 #[cfg(test)]
 mod handcrafted_diff_codec_tests {
     use super::*;
-    use crate::artifacts::zip::opc::{OpcPackage, RELS_CONTENT_TYPE, REL_TYPE_OFFICE_DOCUMENT};
+    use semio_s_artifact_stdio_zip::opc::{OpcPackage, RELS_CONTENT_TYPE, REL_TYPE_OFFICE_DOCUMENT};
     use protocol::DiffCodec;
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -1682,7 +1682,7 @@ mod handcrafted_diff_codec_tests {
     async fn logical_xml_parts_diff_apply_inverse_absorb_between_and_codecs() {
         let base = elem_snapshot(Vec::new());
         let mut sourced = base.clone();
-        sourced.xml_parts = vec![PptxXmlPart { path: "docProps/core.xml".into(), content_type: "application/vnd.openxmlformats-package.core-properties+xml".into(), document: crate::artifacts::xml::schema::snapshot::XmlDocument::default() }];
+        sourced.xml_parts = vec![PptxXmlPart { path: "docProps/core.xml".into(), content_type: "application/vnd.openxmlformats-package.core-properties+xml".into(), document: semio_s_artifact_stdio_xml::schema::snapshot::XmlDocument::default() }];
         let diff = PptxDiff::between(&base, &sourced);
         assert_eq!(diff.xml_parts, Some(sourced.xml_parts.clone()));
         assert_eq!(diff.apply(&base).unwrap(), sourced);

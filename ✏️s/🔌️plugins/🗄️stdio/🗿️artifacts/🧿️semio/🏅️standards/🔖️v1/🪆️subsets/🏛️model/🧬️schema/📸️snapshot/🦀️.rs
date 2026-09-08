@@ -12,9 +12,9 @@
 //!   subset's own collections (spatial parent pointers, element→spatial containment, relation
 //!   endpoints) is checked by the composer's `SemioModelValidator`.
 
-use crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::{SemioPoint3, SemioQuaternion, SemioTransform};
-use crate::artifacts::semio::standards::v1::subsets::base::schema::triples::{split_top_level, strip_brackets};
-use schema::ArtifactSchema;
+use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint3, SemioQuaternion, SemioTransform};
+use crate::standards::v1::subsets::base::schema::triples::{split_top_level, strip_brackets};
+use framework_schema::ArtifactSchema;
 
 //#region 🔖️Ids
 pub const STDIO_SEMIOMODEL_DOCUMENT_SCHEMA: &str = "stdio.semio.model";

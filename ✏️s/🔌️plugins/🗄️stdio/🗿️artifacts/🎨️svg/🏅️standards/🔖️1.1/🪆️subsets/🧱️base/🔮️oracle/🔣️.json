@@ -271,7 +271,7 @@
         {
           "id": "insert-element",
           "capability": "svg-1-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -291,7 +291,7 @@
         {
           "id": "remove-element",
           "capability": "svg-1-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -311,7 +311,7 @@
         {
           "id": "set-attribute",
           "capability": "svg-1-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -331,7 +331,7 @@
         {
           "id": "set-declaration",
           "capability": "svg-1-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -351,7 +351,7 @@
         {
           "id": "set-doctype",
           "capability": "svg-1-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -371,7 +371,7 @@
         {
           "id": "set-element-name",
           "capability": "svg-1-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -391,7 +391,7 @@
         {
           "id": "set-text",
           "capability": "svg-1-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -411,7 +411,7 @@
         {
           "id": "set-transform",
           "capability": "svg-1-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -431,7 +431,7 @@
         {
           "id": "set-view-box",
           "capability": "svg-1-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],

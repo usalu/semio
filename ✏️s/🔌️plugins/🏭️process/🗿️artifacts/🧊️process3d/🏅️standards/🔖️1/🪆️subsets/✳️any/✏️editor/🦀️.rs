@@ -326,9 +326,7 @@ fn process3d_resumable_contract() -> ToolExecutionContract {
     ToolExecutionContract::resumable(PROCESS3D_RETAINED_RAW_BYTES, 64, 1, 16_384, 7_500, 1, 1)
 }
 
-fn process3d_bounded_extent(_command: &Process3dCommand, _snapshot: &Process3dSnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
-    Some(1)
-}
+
 
 fn process3d_string_units(value: &str) -> usize {
     value.len().div_ceil(PROCESS3D_SCAN_BYTES).max(1)
@@ -701,7 +699,7 @@ fn admit_process3d_config_mutation(mutation: &Process3dConfigMutation) -> Result
 
 fn prepare_process3d_config(base: &Process3dConfig, mutation: Process3dConfigMutation) -> Result<(Process3dConfig, Vec<Process3dConfigMutation>, Process3dConfigMutation), String> {
     admit_process3d_config_mutation(&mutation)?;
-    if process3d_config_retained_bytes(base).map_or(true, |bytes| bytes > PROCESS3D_CONFIG_STORE_MAXIMUM_BYTES) {
+    if process3d_config_retained_bytes(base).is_none_or(|bytes| bytes > PROCESS3D_CONFIG_STORE_MAXIMUM_BYTES) {
         return Err("Process3d config base exceeds its fixed retained preparation envelope".into());
     }
     let inverse = match &mutation {
@@ -731,7 +729,7 @@ fn prepare_process3d_config(base: &Process3dConfig, mutation: Process3dConfigMut
         Process3dConfigMutation::SetLocale { value } => post.locale = value.clone(),
         Process3dConfigMutation::SetContributions { json } => post.contributions_json = json.clone(),
     }
-    if process3d_config_retained_bytes(&post).map_or(true, |bytes| bytes > PROCESS3D_CONFIG_STORE_MAXIMUM_BYTES) {
+    if process3d_config_retained_bytes(&post).is_none_or(|bytes| bytes > PROCESS3D_CONFIG_STORE_MAXIMUM_BYTES) {
         return Err("Process3d config post-state exceeds its fixed retained preparation envelope".into());
     }
     Ok((post, vec![inverse], mutation))
@@ -1360,7 +1358,7 @@ impl ArtifactEditor for Process3dPlayApp {
         }
         let tool_id = request.command.command_id();
         let work: Box<dyn ArtifactCommandWork<EditorApp<Self>>> = match disposition {
-            Process3dCommandDisposition::Bounded => Box::new(BoundedArtifactCommandWork::new(tool_id, process3d_retained_reduce, process3d_bounded_extent)),
+            Process3dCommandDisposition::Bounded => Box::new(BoundedArtifactCommandWork::new(tool_id, process3d_retained_reduce, |_, _, _| Some(1))),
             Process3dCommandDisposition::Config => {
                 let extent = process3d_resumable_extent(&request.command, &request.snapshot, &request.config, &request.interaction_state).ok_or_else(|| Fault::from("process3d-retained-work-extent-overflow"))?;
                 Box::new(Process3dResumableCommandWork::new(tool_id, extent))
@@ -1460,7 +1458,7 @@ impl ArtifactEditor for Process3dPlayApp {
     /// document replace has no in-history mutation at all (there is no import mutation by locked
     /// decision — every whole-document gesture below routes through `reset_process3d_document_effect`
     /// instead, a `Effect::LoadDocument`).
-
+    ///
     /// 📥️ `geometry:in` (best-effort STEP-text import) replaces the whole document via a
     /// `Effect::LoadDocument` (whole-document replace has no in-history mutation); the inherited
     /// `document:in` default (which would decode a base64 pack via `whole_document_operation`) is
@@ -1538,7 +1536,7 @@ impl ArtifactEditor for Process3dPlayApp {
                 machine: args
                     .and_then(|value| value.get("machine"))
                     .cloned()
-                    .map(|value| <WorkshopMachine as semio_framework_os_kernel::FromValue>::from_value(value))
+                    .map(<WorkshopMachine as semio_framework_os_kernel::FromValue>::from_value)
                     .transpose()
                     .map_err(|error| process3d_action_fault(action, format!("invalid 'machine': {error}")))?
                     .unwrap_or(WorkshopMachine { id: String::new(), label: String::new(), icon_id: String::new(), catalog_id: None, capabilities: Vec::new() }),
@@ -3055,7 +3053,7 @@ mod tests {
     //#region 🔖️MediaTests
     #[semio_framework_async_macros::async_test]
     async fn export_brep_out_returns_step_text_structured_payload() {
-        semio_framework::register_format_descriptors(semio_s_plugin_stdio::manifest::stdio_format_descriptors().expect("stdio format descriptors")).await.expect("register stdio format descriptors");
+        semio_framework::register_format_descriptors(semio_s_artifact_stdio_step::formats().expect("STEP format descriptors")).await.expect("register stdio format descriptors");
         let document = crate::artifacts::process3d::schema::default_document();
         let history = HistoryView::empty();
         let doc = ArtifactView::new(&document, &history);

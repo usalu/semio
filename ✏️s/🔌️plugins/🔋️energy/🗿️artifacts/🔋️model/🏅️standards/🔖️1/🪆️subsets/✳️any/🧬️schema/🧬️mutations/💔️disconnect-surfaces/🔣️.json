@@ -5,7 +5,7 @@
   "displayName": "Disconnect Surfaces",
   "emoji": "💔️",
   "aggregateVariant": "DisconnectSurfaces",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "disconnect-surfaces",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

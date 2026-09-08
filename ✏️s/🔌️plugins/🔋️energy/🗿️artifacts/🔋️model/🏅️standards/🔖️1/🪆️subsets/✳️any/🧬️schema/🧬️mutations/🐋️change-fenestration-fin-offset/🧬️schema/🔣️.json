@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/energy/model/1/any/mutation/change-fenestration-fin-offset.json",
+  "title": "ChangeFenestrationFinOffset",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newFinOffsetM"
+  ],
+  "properties": {
+    "id": {
+      "type": "integer"
+    },
+    "newFinOffsetM": {
+      "type": "number"
+    }
+  }
+}

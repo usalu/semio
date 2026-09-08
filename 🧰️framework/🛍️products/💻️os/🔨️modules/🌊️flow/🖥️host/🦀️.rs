@@ -1811,7 +1811,7 @@ impl FlowHost {
             let to_selected = selected.contains(&synapse.to);
             if to_selected && !from_selected {
                 let inner_target = if boundary_variables.contains(&synapse.to) {
-                    self.fixture.synapses.iter().find(|entry| entry.from == synapse.to && selected.contains(&entry.to)).map(|entry| (entry.to.clone(), entry.to_port.clone())).unwrap_or_else(|| (synapse.to.clone(), synapse.to_port.clone()))
+                    self.fixture.synapses.iter().find(|entry| entry.from == synapse.to && selected.contains(&entry.to)).map_or_else(|| (synapse.to.clone(), synapse.to_port.clone()), |entry| (entry.to.clone(), entry.to_port.clone()))
                 } else {
                     (synapse.to.clone(), synapse.to_port.clone())
                 };
@@ -1831,7 +1831,7 @@ impl FlowHost {
                 cluster_external.push(SynapseSpec { id: synapse.id.clone(), from: synapse.from.clone(), to: String::new(), from_port: synapse.from_port.clone(), to_port: channel });
             } else if from_selected && !to_selected {
                 let inner_source = if boundary_variables.contains(&synapse.from) {
-                    self.fixture.synapses.iter().find(|entry| entry.to == synapse.from && selected.contains(&entry.from)).map(|entry| (entry.from.clone(), entry.from_port.clone())).unwrap_or_else(|| (synapse.from.clone(), synapse.from_port.clone()))
+                    self.fixture.synapses.iter().find(|entry| entry.to == synapse.from && selected.contains(&entry.from)).map_or_else(|| (synapse.from.clone(), synapse.from_port.clone()), |entry| (entry.from.clone(), entry.from_port.clone()))
                 } else {
                     (synapse.from.clone(), synapse.from_port.clone())
                 };
@@ -1909,7 +1909,7 @@ impl FlowHost {
                     Widget::Variable { name, schema, .. } => Widget::Variable { id: namespaced_id.clone(), name, schema },
                     other => other,
                 };
-                let layout = flow.nodes.get(&neuron.id).map(|node| node.layout.clone()).unwrap_or(WidgetLayout { x: 0.0, y: 0.0 });
+                let layout = flow.nodes.get(&neuron.id).map_or(WidgetLayout { x: 0.0, y: 0.0 }, |node| node.layout.clone());
                 self.fixture.layout.insert(namespaced_id.clone(), WidgetLayout { x: cluster_layout.x + layout.x, y: cluster_layout.y + layout.y });
                 restored_widgets.push((namespaced_id, neuron.id.clone(), widget));
                 continue;
@@ -1919,7 +1919,7 @@ impl FlowHost {
                 Widget::Neuron { id, .. } | Widget::InputSlider { id, .. } | Widget::InputNote { id, .. } | Widget::InputImage { id, .. } | Widget::Variable { id, .. } => *id = namespaced_id.clone(),
                 _ => {}
             }
-            let layout = flow.nodes.get(&neuron.id).map(|node| node.layout.clone()).unwrap_or(WidgetLayout { x: 0.0, y: 0.0 });
+            let layout = flow.nodes.get(&neuron.id).map_or(WidgetLayout { x: 0.0, y: 0.0 }, |node| node.layout.clone());
             self.fixture.layout.insert(namespaced_id.clone(), WidgetLayout { x: cluster_layout.x + layout.x, y: cluster_layout.y + layout.y });
             restored_widgets.push((namespaced_id, neuron.id.clone(), widget));
         }
@@ -1952,16 +1952,12 @@ impl FlowHost {
                 .neurons
                 .iter()
                 .find(|neuron| neuron.id == synapse.from && neuron.kind == INPUT_KIND)
-                .and_then(|neuron| neuron.params.get("channel").and_then(|value| value.as_atom()).and_then(|atom| atom.as_str()))
-                .map(str::to_string)
-                .unwrap_or_else(|| synapse.from_port.clone());
+                .and_then(|neuron| neuron.params.get("channel").and_then(|value| value.as_atom()).and_then(|atom| atom.as_str())).map_or_else(|| synapse.from_port.clone(), str::to_string);
             let to_port = tree
                 .neurons
                 .iter()
                 .find(|neuron| neuron.id == synapse.to && neuron.kind == OUTPUT_KIND)
-                .and_then(|neuron| neuron.params.get("channel").and_then(|value| value.as_atom()).and_then(|atom| atom.as_str()))
-                .map(str::to_string)
-                .unwrap_or_else(|| synapse.to_port.clone());
+                .and_then(|neuron| neuron.params.get("channel").and_then(|value| value.as_atom()).and_then(|atom| atom.as_str())).map_or_else(|| synapse.to_port.clone(), str::to_string);
             self.next_synapse_serial += 1;
             next_synapses.push(SynapseSpec { id: format!("s{}", self.next_synapse_serial), from: from.clone(), to: to.clone(), from_port, to_port });
         }
@@ -2679,9 +2675,9 @@ fn preview_mesh_json_has_geometry(output_json: &str) -> bool {
     if value.get("error").is_some() {
         return false;
     }
-    let positions = value.get("positions").and_then(|v| v.as_array()).map(|a| a.len()).unwrap_or(0);
-    let indices = value.get("indices").and_then(|v| v.as_array()).map(|a| a.len()).unwrap_or(0);
-    let edges = value.get("edgePositions").or_else(|| value.get("edge_positions")).and_then(|v| v.as_array()).map(|a| a.len()).unwrap_or(0);
+    let positions = value.get("positions").and_then(|v| v.as_array()).map_or(0, |a| a.len());
+    let indices = value.get("indices").and_then(|v| v.as_array()).map_or(0, |a| a.len());
+    let edges = value.get("edgePositions").or_else(|| value.get("edge_positions")).and_then(|v| v.as_array()).map_or(0, |a| a.len());
     (indices > 0 && positions >= 9) || edges >= 6 || (positions >= 3 && indices == 0)
 }
 

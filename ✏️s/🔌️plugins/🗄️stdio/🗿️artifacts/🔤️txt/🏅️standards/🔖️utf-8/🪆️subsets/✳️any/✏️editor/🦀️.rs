@@ -5,9 +5,9 @@
 //! reachable through this window (documented, not silently dropped: a future line-addressable editor
 //! could target those directly).
 
-use crate::artifacts::txt::schema::mutation_support::txt_usize_to_u32;
-use crate::artifacts::txt::schema::mutations::{InsertLineMutation, RemoveLineMutation, SetTrailingNewlineMutation};
-use crate::artifacts::txt::{STDIO_TXT_DOCUMENT_SCHEMA, TxtMutation, TxtSnapshot};
+use crate::schema::mutation_support::txt_usize_to_u32;
+use crate::schema::mutations::{InsertLineMutation, RemoveLineMutation, SetTrailingNewlineMutation};
+use crate::{STDIO_TXT_DOCUMENT_SCHEMA, TxtMutation, TxtSnapshot};
 use crate::editor::txt::modes::edit;
 use crate::editor::txt::modes::edit::windows::main;
 use semio_framework_plugin::{

@@ -12,11 +12,11 @@
 use protocol::{Identified, Patchable};
 use semio_framework_dispatch_macros::dyn_enum;
 use semio_framework_plugin::{ArtifactKindSpec, Dialect, MediaClass, MediaForm, MediaType, OsMediaCapability, StandardId, SubsetId};
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioPoint2;
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::{
+use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::SemioPoint2;
+use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::snapshot::{
     BrepCurve, BrepEdge, BrepFace, BrepLoop, BrepLoopEdge, BrepShell, BrepShellFace, BrepSolid, BrepSolidShell, BrepSurface, BrepVertex, SemioBrepSnapshot, STDIO_SEMIOBREP_DOCUMENT_SCHEMA,
 };
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::{FlowEdge, FlowNode, FlowParam, PortRef, SemioFlowSnapshot, STDIO_SEMIOFLOW_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::{FlowEdge, FlowNode, FlowParam, PortRef, SemioFlowSnapshot, STDIO_SEMIOFLOW_DOCUMENT_SCHEMA};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 pub use crate::artifacts::process3d::schema::mutations::Process3dMutation;
@@ -590,8 +590,8 @@ fn empty_brep_snapshot() -> SemioBrepSnapshot {
     SemioBrepSnapshot { schema: STDIO_SEMIOBREP_DOCUMENT_SCHEMA.into(), vertices: Vec::new(), edges: Vec::new(), loops: Vec::new(), faces: Vec::new(), shells: Vec::new(), solids: Vec::new(), coedges: Vec::new(), next_label: 0 }
 }
 
-fn point3(p: [f64; 3]) -> semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioPoint3 {
-    semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioPoint3 { x: p[0], y: p[1], z: p[2] }
+fn point3(p: [f64; 3]) -> semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::SemioPoint3 {
+    semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::SemioPoint3 { x: p[0], y: p[1], z: p[2] }
 }
 
 /// 📦️ Corner-at-local-origin box, spanning `[0,w]×[0,d]×[0,h]` — 8 vertices, 12 straight edges, 6
@@ -751,7 +751,7 @@ pub fn flow_node_from_process_step(step: &ProcessStep, index: usize, tool_child_
 pub fn process_step_from_flow_node(node: &FlowNode) -> ProcessStep {
     let param = |key: &str| node.params.iter().find(|p| p.key == key).map(|p| p.value.as_str());
     let f = |key: &str| -> f64 { param(key).and_then(|v| v.parse().ok()).unwrap_or(0.0) };
-    let enabled = param("enabled").map(|v| v == "true").unwrap_or(true);
+    let enabled = param("enabled").map_or(true, |v| v == "true");
     let origin = match (param("originMachineId"), param("originCapabilityId")) {
         (Some(machine_id), Some(capability_id)) => Some(StepOrigin { machine_id: machine_id.into(), capability_id: capability_id.into() }),
         _ => None,

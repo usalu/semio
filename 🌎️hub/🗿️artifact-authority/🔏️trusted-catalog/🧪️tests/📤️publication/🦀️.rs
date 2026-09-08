@@ -93,7 +93,7 @@ async fn trusted_publication_cas_races_and_aba_use_real_catalog_loader() {
     assert_eq!(winner["publicationRevision"], "4");
     let provider = if winner["generationId"] == command_a["generationId"] { &provider_a } else { &provider_b };
     assert_eq!(TrustedCatalogLoader::load_current(&data, provider, &context).await.unwrap().unwrap().generation_id(), winner["generationId"].as_str().unwrap());
-    let mut maximum = TrustedCatalogCurrentPointer::decode(&std::fs::read(&pointer_path).unwrap()).unwrap();
+    let mut maximum = TrustedCatalogCurrentPointerV1::decode(&std::fs::read(&pointer_path).unwrap()).unwrap();
     maximum.publication_revision = u64::MAX.to_string();
     let maximum_bytes = maximum.encode().unwrap();
     std::fs::write(&pointer_path, &maximum_bytes).unwrap();

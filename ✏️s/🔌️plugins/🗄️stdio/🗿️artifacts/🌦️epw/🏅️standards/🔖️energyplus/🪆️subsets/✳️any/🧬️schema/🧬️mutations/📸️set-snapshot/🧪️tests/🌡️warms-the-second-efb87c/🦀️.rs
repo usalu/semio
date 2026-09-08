@@ -16,9 +16,9 @@
 //! `.pack.semio`/`.patch.semio` encodings are derived from it by `fixtures generate` and are
 //! asserted by the shared codec-matrix harness, not here.
 
-use crate::artifacts::epw::standards::energyplus::subsets::any::schema::diff::EpwDiff;
-use crate::artifacts::epw::standards::energyplus::subsets::any::schema::mutations::{apply_epw_mutation, EpwMutation};
-use crate::artifacts::epw::standards::energyplus::subsets::any::schema::snapshot::EpwSnapshot;
+use crate::standards::energyplus::subsets::any::schema::diff::EpwDiff;
+use crate::standards::energyplus::subsets::any::schema::mutations::{apply_epw_mutation, EpwMutation};
+use crate::standards::energyplus::subsets::any::schema::snapshot::EpwSnapshot;
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");

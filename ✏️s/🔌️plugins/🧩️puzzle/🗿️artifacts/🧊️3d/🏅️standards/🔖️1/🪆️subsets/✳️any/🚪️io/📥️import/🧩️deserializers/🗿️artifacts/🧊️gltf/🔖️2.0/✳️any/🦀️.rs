@@ -1,6 +1,6 @@
 //! puzzle3d <- gltf
 use crate::artifacts::puzzle3d::Puzzle3dSnapshot;
-use semio_s_plugin_stdio::artifacts::gltf::{GltfSnapshot, STDIO_GLTF_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_gltf::{GltfSnapshot, STDIO_GLTF_DOCUMENT_SCHEMA};
 
 pub fn register() {}
 

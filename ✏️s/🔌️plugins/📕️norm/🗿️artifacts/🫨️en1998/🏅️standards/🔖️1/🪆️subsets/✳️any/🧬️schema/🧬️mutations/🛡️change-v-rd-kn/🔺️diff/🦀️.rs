@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeVRdKn, base: &En1998Snapshot) -> protocol::MutationO
     if base.v_rd_kn == payload.new_v_rd_kn {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Design shear resistance V_Rd [kN] is already {}.", payload.new_v_rd_kn));
     }
-    protocol::MutationOutcome::new(En1998Diff { v_rd_kn: Some(payload.new_v_rd_kn.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1998Diff { v_rd_kn: Some(payload.new_v_rd_kn), ..Default::default() })
 }
 //#endregion 🔖️Diff

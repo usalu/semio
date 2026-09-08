@@ -135,9 +135,9 @@ fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::{inverse_spec, mutable_input};
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_plugin_stdio::artifacts::gltf::standards::v2_0::subsets::any::io::{parse_gltf_document, serialize_gltf_document};
-    use semio_s_plugin_stdio::artifacts::gltf::standards::v2_0::subsets::any::schema::mutations::{add_required_extension, add_used_extension, change_asset_descriptive_metadata, change_asset_extension_data, change_asset_extra_data, change_asset_version, change_document_extension_data, change_document_extra_data, move_required_extension, move_used_extension, remove_required_extension, remove_used_extension, reorder_required_extensions, reorder_used_extensions};
-    use semio_s_plugin_stdio::artifacts::gltf::standards::v2_0::subsets::any::schema::snapshot::{GltfJson, GltfSnapshot};
+    use crate::standards::v2_0::subsets::any::io::{parse_gltf_document, serialize_gltf_document};
+    use crate::standards::v2_0::subsets::any::schema::mutations::{add_required_extension, add_used_extension, change_asset_descriptive_metadata, change_asset_extension_data, change_asset_extra_data, change_asset_version, change_document_extension_data, change_document_extra_data, move_required_extension, move_used_extension, remove_required_extension, remove_used_extension, reorder_required_extensions, reorder_used_extensions};
+    use crate::standards::v2_0::subsets::any::schema::snapshot::{GltfJson, GltfSnapshot};
     use semio_s_plugin_stdio_test_oracle::artifacts::gltf::standards::v2_0::subsets::any::project_gltf;
 
     //#region 🔖️Params

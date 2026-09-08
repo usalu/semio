@@ -5,7 +5,7 @@ use crate::artifacts::rewriting::rewriting_snapshot_mutations;
 use crate::artifacts::rewriting::op::RewriteRuleMutation;
 use crate::artifacts::rewriting::RewritingSnapshot;
 use crate::editor::rewriting::config::RewritingConfigMutation;
-use semio_framework_plugin::{Emit, Fault};
+use semio_framework_plugin::Emit;
 
 fn patch_fixture_nodes(fixture_json: &str, node_ids: &[String], field: &str, value: &str) -> Option<String> {
     let fixture = JackSnapshot::from_json(fixture_json).ok()?;
@@ -20,21 +20,21 @@ fn patch_fixture_nodes(fixture_json: &str, node_ids: &[String], field: &str, val
             _ => {}
         }
     }
-    let fixture = JackSnapshot::with_content(fixture.schema.clone(), fixture.name.clone(), fixture.manifest_id.clone(), fixture.manifest.clone(), fixture.camera.clone(), nodes, fixture.edges(), fixture.root_node_id.clone());
+    let fixture = JackSnapshot::with_content(fixture.schema.clone(), fixture.name.clone(), fixture.manifest_id.clone(), fixture.manifest.clone(), fixture.camera.clone(), nodes, fixture.edges(), fixture.root_node_id);
     Graph::from_fixture(fixture).ok()?.fixture_json().ok()
 }
 
-pub(crate) fn patch_nodes(state: &RewritingSnapshot, node_ids: &[String], field: &str, value: &str) -> Result<Emit<RewriteRuleMutation, RewritingConfigMutation>, Fault> {
+pub(crate) fn patch_nodes(state: &RewritingSnapshot, node_ids: &[String], field: &str, value: &str) -> Emit<RewriteRuleMutation, RewritingConfigMutation> {
     let trimmed = value.trim();
     if node_ids.is_empty() || field.is_empty() || trimmed.is_empty() {
-        return Ok(Emit::default());
+        return Emit::default();
     }
     match patch_fixture_nodes(&state.before_fixture_json, node_ids, field, trimmed) {
         Some(patched) => {
             let mut next = state.clone();
             next.before_fixture_json = patched;
-            Ok(Emit::mutations(rewriting_snapshot_mutations(state, &next)))
+            Emit::mutations(rewriting_snapshot_mutations(state, &next))
         }
-        None => Ok(Emit::default()),
+        None => Emit::default(),
     }
 }

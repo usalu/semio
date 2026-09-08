@@ -1,7 +1,7 @@
 //! 🧬️ Authoritative replace-huffman-table mutation.
-use crate::artifacts::jpg::schema::diff::*;
-use crate::artifacts::jpg::schema::mutations::JpgMutation;
-use crate::artifacts::jpg::schema::snapshot::*;
+use crate::schema::diff::*;
+use crate::schema::mutations::JpgMutation;
+use crate::schema::snapshot::*;
 
 //#region Payload
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
@@ -36,7 +36,7 @@ impl protocol::MutationKind<JpgSnapshot, JpgMutation> for ReplaceHuffmanTableMut
             let key = JpgHuffmanTableKey { class: table.class, id: table.id };
             match base.huffman_tables.iter().find(|t| t.class == key.class && t.id == key.id) {
                 Some(existing) => vec![JpgMutation::ReplaceHuffmanTable(ReplaceHuffmanTableMutation { table: existing.clone() })],
-                None => vec![JpgMutation::RemoveHuffmanTable(crate::artifacts::jpg::schema::mutations::RemoveHuffmanTableMutation { key })],
+                None => vec![JpgMutation::RemoveHuffmanTable(crate::schema::mutations::RemoveHuffmanTableMutation { key })],
             }
         }
     }

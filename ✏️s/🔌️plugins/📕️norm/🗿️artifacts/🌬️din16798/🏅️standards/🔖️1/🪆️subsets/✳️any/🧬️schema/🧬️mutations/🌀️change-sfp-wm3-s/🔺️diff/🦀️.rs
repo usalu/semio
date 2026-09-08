@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeSfpWM3S, base: &Din16798Snapshot) -> protocol::Mutat
     if base.sfp_w_m3_s == payload.new_sfp_w_m3_s {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Specific fan power is already {}.", payload.new_sfp_w_m3_s));
     }
-    protocol::MutationOutcome::new(Din16798Diff { sfp_w_m3_s: Some(payload.new_sfp_w_m3_s.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(Din16798Diff { sfp_w_m3_s: Some(payload.new_sfp_w_m3_s), ..Default::default() })
 }
 //#endregion 🔖️Diff

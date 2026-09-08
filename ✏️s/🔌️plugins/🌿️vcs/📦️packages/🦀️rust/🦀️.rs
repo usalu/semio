@@ -518,8 +518,6 @@ semio_framework_plugin::plugin_exports!(plugin, VcsApps);
 pub mod examples {
     #[path = "../../🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🦀️.rs"]
     pub mod app_vcs_demo_session;
-    #[path = "../../🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️.rs"]
-    pub mod art_vcs_demo;
 }
 //#endregion 📚️Examples
 

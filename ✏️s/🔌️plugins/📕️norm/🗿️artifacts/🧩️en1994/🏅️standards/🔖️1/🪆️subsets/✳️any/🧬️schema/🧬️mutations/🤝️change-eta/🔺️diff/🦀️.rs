@@ -11,6 +11,6 @@ pub fn diff(payload: &ChangeEta, base: &En1994Snapshot) -> protocol::MutationOut
     if base.eta == payload.new_eta {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "Eta already has this value.");
     }
-    protocol::MutationOutcome::new(En1994Diff { eta: Some(payload.new_eta.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1994Diff { eta: Some(payload.new_eta), ..Default::default() })
 }
 //#endregion 🔖️Diff

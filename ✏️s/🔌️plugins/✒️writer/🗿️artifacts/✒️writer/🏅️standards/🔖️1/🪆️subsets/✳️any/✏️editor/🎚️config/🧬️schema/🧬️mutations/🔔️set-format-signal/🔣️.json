@@ -5,7 +5,7 @@
   "displayName": "Set Format Signal",
   "emoji": "🔔️",
   "aggregateVariant": "SetFormatSignal",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "set-format-signal",
   "binaryTag": 2,
   "invertibility": "explicit-mutation",

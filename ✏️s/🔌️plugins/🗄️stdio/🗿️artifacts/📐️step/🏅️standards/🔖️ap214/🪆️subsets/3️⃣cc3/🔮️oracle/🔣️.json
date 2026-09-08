@@ -83,7 +83,7 @@
         {
           "id": "demote-shape-representation",
           "capability": "step-ap214-cc3-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -102,7 +102,7 @@
         {
           "id": "set-file-schema",
           "capability": "step-ap214-cc3-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -121,7 +121,7 @@
         {
           "id": "set-product-identity",
           "capability": "step-ap214-cc3-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -140,7 +140,7 @@
         {
           "id": "set-shape-representation",
           "capability": "step-ap214-cc3-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -159,7 +159,7 @@
         {
           "id": "set-snapshot",
           "capability": "step-ap214-cc3-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],

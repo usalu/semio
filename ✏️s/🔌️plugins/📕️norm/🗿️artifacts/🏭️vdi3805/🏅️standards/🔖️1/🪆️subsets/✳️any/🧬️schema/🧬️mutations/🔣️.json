@@ -1,64 +1,85 @@
 {
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://semio.tech/schema/s/norm/vdi3805/mutation.json",
   "title": "Vdi3805Mutation",
-  "type": "object",
-  "additionalProperties": false,
-  "required": [
-    "manufacturerFile",
-    "catalog",
-    "editionProfile",
-    "correctionAsOf",
-    "strictMode",
-    "index",
-    "geometry",
-    "curves",
-    "limits"
-  ],
-  "properties": {
-    "manufacturerFile": {
-      "type": "string",
-      "x-semio-state": "artifact"
+  "oneOf": [
+    {
+      "$ref": "./🔌️add-geometry-connection/🧬️schema/🔣️.json"
     },
-    "catalog": {
-      "type": "string",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./📅️change-correction-as-of/🧬️schema/🔣️.json"
     },
-    "editionProfile": {
-      "type": "object",
-      "additionalProperties": {
-        "type": "string"
-      },
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🔖️change-edition-profile/🧬️schema/🔣️.json"
     },
-    "correctionAsOf": {
-      "type": "string",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🔒️change-strict-mode/🧬️schema/🔣️.json"
     },
-    "strictMode": {
-      "type": "boolean",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./📈️create-curve/🧬️schema/🔣️.json"
     },
-    "index": {
-      "type": "string",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🧊️create-geometry/🧬️schema/🔣️.json"
     },
-    "geometry": {
-      "type": "object",
-      "additionalProperties": {
-        "type": "string"
-      },
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./📦️create-product/🧬️schema/🔣️.json"
     },
-    "curves": {
-      "type": "object",
-      "additionalProperties": {
-        "type": "string"
-      },
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./📉️delete-curve/🧬️schema/🔣️.json"
     },
-    "limits": {
-      "type": "string",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🚮️delete-geometry/🧬️schema/🔣️.json"
+    },
+    {
+      "$ref": "./🗑️delete-product/🧬️schema/🔣️.json"
+    },
+    {
+      "$ref": "./🧹️remove-edition-profile/🧬️schema/🔣️.json"
+    },
+    {
+      "$ref": "./✂️remove-geometry-connection/🧬️schema/🔣️.json"
+    },
+    {
+      "$ref": "./🏷️rename-product/🧬️schema/🔣️.json"
+    },
+    {
+      "$ref": "./📍️replace-curve-points/🧬️schema/🔣️.json"
+    },
+    {
+      "$ref": "./🧮️replace-geometry-parameters/🧬️schema/🔣️.json"
+    },
+    {
+      "$ref": "./🎛️replace-product-configuration/🧬️schema/🔣️.json"
+    },
+    {
+      "$ref": "./📐️resize-geometry/🧬️schema/🔣️.json"
+    },
+    {
+      "$ref": "./🚧️update-limits/🧬️schema/🔣️.json"
+    },
+    {
+      "$ref": "./🏭️update-manufacturer-file/🧬️schema/🔣️.json"
     }
-  }
+  ],
+  "x-semio-mutationKinds": [
+    "add-geometry-connection",
+    "change-correction-as-of",
+    "change-edition-profile",
+    "change-strict-mode",
+    "create-curve",
+    "create-geometry",
+    "create-product",
+    "delete-curve",
+    "delete-geometry",
+    "delete-product",
+    "remove-edition-profile",
+    "remove-geometry-connection",
+    "rename-product",
+    "replace-curve-points",
+    "replace-geometry-parameters",
+    "replace-product-configuration",
+    "resize-geometry",
+    "update-limits",
+    "update-manufacturer-file"
+  ]
 }

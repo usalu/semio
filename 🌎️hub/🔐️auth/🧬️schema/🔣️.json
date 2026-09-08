@@ -1,76 +1,99 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://semio.tech/schema/hub/auth/capability-v1.json",
-  "title": "Hub Auth Capability V1",
-  "type": "object",
-  "additionalProperties": false,
-  "required": ["session", "share", "invite", "socket", "identity", "revocation", "audit", "limits"],
-  "properties": {
-    "session": { "$ref": "#/$defs/CapabilityVector" },
-    "share": { "$ref": "#/$defs/CapabilityVector" },
-    "invite": { "$ref": "#/$defs/CapabilityVector" },
-    "socket": { "$ref": "#/$defs/SocketGrantVector" },
-    "identity": { "$ref": "#/$defs/IdentityVector" },
-    "revocation": { "$ref": "#/$defs/RevocationVector" },
-    "audit": { "$ref": "#/$defs/AuditVector" },
-    "limits": { "$ref": "#/$defs/Limits" }
-  },
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/hub/auth/schema.json",
+  "$ref": "#/$defs/AuthCapabilityVectorsV1",
   "$defs": {
-    "LowerHex32": { "type": "string", "pattern": "^[0-9a-f]{32}$" },
-    "LowerHex64": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
-    "SessionCapability": { "type": "string", "pattern": "^session\\.v1\\.[0-9a-f]{32}\\.[0-9a-f]{64}$" },
-    "ShareCapability": { "type": "string", "pattern": "^share\\.v1\\.[0-9a-f]{32}\\.[0-9a-f]{64}$" },
-    "InviteCapability": { "type": "string", "pattern": "^invite\\.v1\\.[0-9a-f]{32}\\.[0-9a-f]{64}$" },
-    "SocketGrantCapability": { "type": "string", "minLength": 107, "maxLength": 107, "pattern": "^socket\\.v1\\.[0-9a-f]{32}\\.[0-9a-f]{64}$" },
-    "CapabilityVector": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["kind", "capability", "selector", "secretHex", "digestHex"],
-      "properties": {
-        "kind": { "type": "string", "enum": ["session", "share", "invite"] },
-        "capability": { "type": "string", "minLength": 106, "maxLength": 108 },
-        "selector": { "$ref": "#/$defs/LowerHex32" },
-        "secretHex": { "$ref": "#/$defs/LowerHex64" },
-        "digestHex": { "$ref": "#/$defs/LowerHex64" }
-      }
-    },
-    "SocketGrantReceipt": {
+    "lowerHex32": { "type": "string", "pattern": "^[0-9a-f]{32}$" },
+    "lowerHex64": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "boundedText": { "type": "string", "minLength": 1, "maxLength": 256 },
+
+    "InviteCapabilityV1": { "type": "string", "minLength": 107, "maxLength": 107, "pattern": "^invite\\.v1\\.[0-9a-f]{32}\\.[0-9a-f]{64}$" },
+    "SessionCapabilityV1": { "type": "string", "minLength": 108, "maxLength": 108, "pattern": "^session\\.v1\\.[0-9a-f]{32}\\.[0-9a-f]{64}$" },
+    "ShareCapabilityV1": { "type": "string", "minLength": 106, "maxLength": 106, "pattern": "^share\\.v1\\.[0-9a-f]{32}\\.[0-9a-f]{64}$" },
+    "SocketGrantCapabilityV1": { "type": "string", "minLength": 107, "maxLength": 107, "pattern": "^socket\\.v1\\.[0-9a-f]{32}\\.[0-9a-f]{64}$" },
+
+    "SocketGrantReceiptV1": {
       "type": "object",
       "additionalProperties": false,
       "required": ["schema", "protocol", "grant", "actorId", "expiresAtMs"],
       "properties": {
         "schema": { "const": "semio.hub.socket-grant/v1" },
         "protocol": { "const": "semio.socket.v1" },
-        "grant": { "$ref": "#/$defs/SocketGrantCapability" },
+        "grant": { "$ref": "#/$defs/SocketGrantCapabilityV1" },
         "actorId": { "type": "string", "pattern": "^hub\\.v1\\.[0-9a-f]{64}$" },
-        "expiresAtMs": { "type": "integer" }
+        "expiresAtMs": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 }
       }
     },
-    "SocketGrantVector": {
+
+    "capabilityVector": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "capability", "selector", "secretHex", "digestHex"],
+      "properties": {
+        "kind": { "enum": ["session", "share", "invite"] },
+        "capability": { "type": "string", "minLength": 106, "maxLength": 108 },
+        "selector": { "$ref": "#/$defs/lowerHex32" },
+        "secretHex": { "$ref": "#/$defs/lowerHex64" },
+        "digestHex": { "$ref": "#/$defs/lowerHex64" }
+      }
+    },
+
+    "socketGrantVector": {
       "type": "object",
       "additionalProperties": false,
       "required": ["kind", "capability", "selector", "secretHex", "digestHex", "receipt", "rejectedCapabilities"],
       "properties": {
         "kind": { "const": "socket" },
-        "capability": { "$ref": "#/$defs/SocketGrantCapability" },
-        "selector": { "$ref": "#/$defs/LowerHex32" },
-        "secretHex": { "$ref": "#/$defs/LowerHex64" },
-        "digestHex": { "$ref": "#/$defs/LowerHex64" },
-        "receipt": { "$ref": "#/$defs/SocketGrantReceipt" },
-        "rejectedCapabilities": { "type": "array", "minItems": 5, "maxItems": 5, "items": { "type": "string", "maxLength": 256 } }
+        "capability": { "$ref": "#/$defs/SocketGrantCapabilityV1" },
+        "selector": { "$ref": "#/$defs/lowerHex32" },
+        "secretHex": { "$ref": "#/$defs/lowerHex64" },
+        "digestHex": { "$ref": "#/$defs/lowerHex64" },
+        "receipt": { "$ref": "#/$defs/SocketGrantReceiptV1" },
+        "rejectedCapabilities": { "type": "array", "minItems": 5, "maxItems": 5, "uniqueItems": true, "items": { "type": "string", "maxLength": 256 } }
       }
     },
-    "IdentityVector": {
+
+    "identityVector": {
       "type": "object",
       "additionalProperties": false,
       "required": ["provider", "subject", "digestHex"],
       "properties": {
-        "provider": { "type": "string", "minLength": 1, "maxLength": 256 },
-        "subject": { "type": "string", "minLength": 1, "maxLength": 256 },
-        "digestHex": { "$ref": "#/$defs/LowerHex64" }
+        "provider": { "$ref": "#/$defs/boundedText" },
+        "subject": { "$ref": "#/$defs/boundedText" },
+        "digestHex": { "$ref": "#/$defs/lowerHex64" }
       }
     },
-    "Limits": {
+
+    "revocationVector": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sessionId", "previousGeneration", "nextGeneration", "revokedAt", "reason"],
+      "properties": {
+        "sessionId": { "$ref": "#/$defs/boundedText" },
+        "previousGeneration": { "const": 1 },
+        "nextGeneration": { "const": 2 },
+        "revokedAt": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
+        "reason": { "$ref": "#/$defs/boundedText" }
+      }
+    },
+
+    "auditVector": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["eventKind", "authSessionId", "targetUserId", "provider", "outcomeCode", "reasonCode", "correlationId", "peerClass"],
+      "properties": {
+        "eventKind": { "const": "session-revoked" },
+        "authSessionId": { "$ref": "#/$defs/boundedText" },
+        "targetUserId": { "$ref": "#/$defs/boundedText" },
+        "provider": { "$ref": "#/$defs/boundedText" },
+        "outcomeCode": { "const": "success" },
+        "reasonCode": { "$ref": "#/$defs/boundedText" },
+        "correlationId": { "$ref": "#/$defs/boundedText" },
+        "peerClass": { "$ref": "#/$defs/boundedText" }
+      }
+    },
+
+    "AuthLimitsV1": {
       "type": "object",
       "additionalProperties": false,
       "required": ["selectorBytes", "secretBytes", "ttlSecondsMax", "deviceIdentityBytesMax", "assertionBytesMax"],
@@ -82,38 +105,26 @@
         "assertionBytesMax": { "const": 16384 }
       }
     },
-    "RevocationVector": {
+
+    "AuthCapabilityVectorsV1": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["sessionId", "previousGeneration", "nextGeneration", "revokedAt", "reason"],
+      "required": ["session", "share", "invite", "socket", "identity", "revocation", "audit", "limits"],
       "properties": {
-        "sessionId": { "type": "string", "minLength": 1, "maxLength": 256 },
-        "previousGeneration": { "const": 1 },
-        "nextGeneration": { "const": 2 },
-        "revokedAt": { "type": "integer" },
-        "reason": { "type": "string", "minLength": 1, "maxLength": 256 }
-      }
-    },
-    "AuditVector": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["eventKind", "authSessionId", "targetUserId", "provider", "outcomeCode", "reasonCode", "correlationId", "peerClass"],
-      "properties": {
-        "eventKind": { "const": "session-revoked" },
-        "authSessionId": { "type": "string", "minLength": 1, "maxLength": 256 },
-        "targetUserId": { "type": "string", "minLength": 1, "maxLength": 256 },
-        "provider": { "type": "string", "minLength": 1, "maxLength": 256 },
-        "outcomeCode": { "const": "success" },
-        "reasonCode": { "type": "string", "minLength": 1, "maxLength": 256 },
-        "correlationId": { "type": "string", "minLength": 1, "maxLength": 256 },
-        "peerClass": { "type": "string", "minLength": 1, "maxLength": 256 }
-      }
+        "session": { "$ref": "#/$defs/capabilityVector" },
+        "share": { "$ref": "#/$defs/capabilityVector" },
+        "invite": { "$ref": "#/$defs/capabilityVector" },
+        "socket": { "$ref": "#/$defs/socketGrantVector" },
+        "identity": { "$ref": "#/$defs/identityVector" },
+        "revocation": { "$ref": "#/$defs/revocationVector" },
+        "audit": { "$ref": "#/$defs/auditVector" },
+        "limits": { "$ref": "#/$defs/AuthLimitsV1" }
+      },
+      "allOf": [
+        { "type": "object", "properties": { "session": { "type": "object", "properties": { "kind": { "const": "session" }, "capability": { "$ref": "#/$defs/SessionCapabilityV1" } } } } },
+        { "type": "object", "properties": { "share": { "type": "object", "properties": { "kind": { "const": "share" }, "capability": { "$ref": "#/$defs/ShareCapabilityV1" } } } } },
+        { "type": "object", "properties": { "invite": { "type": "object", "properties": { "kind": { "const": "invite" }, "capability": { "$ref": "#/$defs/InviteCapabilityV1" } } } } }
+      ]
     }
-  },
-  "allOf": [
-    { "type": "object", "properties": { "session": { "type": "object", "properties": { "kind": { "const": "session" }, "capability": { "$ref": "#/$defs/SessionCapability" } } } } },
-    { "type": "object", "properties": { "share": { "type": "object", "properties": { "kind": { "const": "share" }, "capability": { "$ref": "#/$defs/ShareCapability" } } } } },
-    { "type": "object", "properties": { "invite": { "type": "object", "properties": { "kind": { "const": "invite" }, "capability": { "$ref": "#/$defs/InviteCapability" } } } } },
-    { "type": "object", "properties": { "socket": { "$ref": "#/$defs/SocketGrantVector" } } }
-  ]
+  }
 }

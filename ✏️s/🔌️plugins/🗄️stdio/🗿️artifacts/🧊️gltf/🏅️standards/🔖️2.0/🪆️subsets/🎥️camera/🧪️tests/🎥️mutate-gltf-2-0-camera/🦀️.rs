@@ -111,10 +111,10 @@ fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::{inverse_spec, mutable_input};
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_plugin_stdio::artifacts::gltf::standards::v2_0::subsets::any::io::{parse_gltf_document, serialize_gltf_document};
-    use semio_s_plugin_stdio::artifacts::gltf::standards::v2_0::subsets::any::schema::mutations::{create_camera, delete_camera, move_camera, reorder_cameras};
-    use semio_s_plugin_stdio::artifacts::gltf::standards::v2_0::subsets::any::schema::snapshot::{GltfCameraProjection, GltfOrthographic, GltfPerspective};
-    use semio_s_plugin_stdio::artifacts::gltf::standards::v2_0::subsets::any::schema::snapshot::GltfSnapshot;
+    use crate::standards::v2_0::subsets::any::io::{parse_gltf_document, serialize_gltf_document};
+    use crate::standards::v2_0::subsets::any::schema::mutations::{create_camera, delete_camera, move_camera, reorder_cameras};
+    use crate::standards::v2_0::subsets::any::schema::snapshot::{GltfCameraProjection, GltfOrthographic, GltfPerspective};
+    use crate::standards::v2_0::subsets::any::schema::snapshot::GltfSnapshot;
     use semio_s_plugin_stdio_test_oracle::artifacts::gltf::standards::v2_0::subsets::any::project_gltf;
 
     //#region 🔖️Params

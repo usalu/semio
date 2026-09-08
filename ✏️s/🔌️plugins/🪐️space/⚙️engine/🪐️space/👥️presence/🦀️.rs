@@ -15,6 +15,7 @@ use store::ArtifactPack;
 #[value(rename_all = "camelCase", default)]
 #[dsl(extension = "space.presence")]
 #[dsl(layout = "lines")]
+#[derive(Default)]
 pub struct SpacePresence {
     pub camera: BTreeMap<String, SpaceWindowCamera>,
     pub active_node_id: Option<String>,
@@ -23,11 +24,6 @@ pub struct SpacePresence {
     pub preview_off_node_ids: Vec<String>,
 }
 
-impl Default for SpacePresence {
-    fn default() -> Self {
-        Self { camera: BTreeMap::new(), active_node_id: None, focused_node_id: None, collapsed_node_ids: Vec::new(), preview_off_node_ids: Vec::new() }
-    }
-}
 
 impl protocol::MutationDiff<SpacePresence> for SpacePresence {
     fn apply(&self, _base: &SpacePresence) -> protocol::MutationApplyResult<SpacePresence> {

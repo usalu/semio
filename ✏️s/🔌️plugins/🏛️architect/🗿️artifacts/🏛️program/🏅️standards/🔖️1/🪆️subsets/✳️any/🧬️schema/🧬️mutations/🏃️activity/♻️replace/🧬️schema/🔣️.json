@@ -1,0 +1,21 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/architect/program/1/any/mutation/replace-activity.json",
+  "title": "ReplaceActivity",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "activity"
+  ],
+  "properties": {
+    "activity": {
+      "type": "string",
+      "enum": [
+        "Waiting",
+        "Loading",
+        "Idle",
+        "Finished"
+      ]
+    }
+  }
+}

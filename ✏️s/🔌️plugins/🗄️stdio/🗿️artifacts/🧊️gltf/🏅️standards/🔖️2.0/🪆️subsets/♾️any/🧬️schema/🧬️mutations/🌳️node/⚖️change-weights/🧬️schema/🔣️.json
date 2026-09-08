@@ -1,0 +1,34 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/node/change-weights.json",
+  "title": "GltfChangeNodeMorphWeightsMutation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "node",
+    "weights"
+  ],
+  "properties": {
+    "node": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "weights": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      }
+    }
+  },
+  "x-semio": {
+    "id": "s.stdio.gltf.mutation.change-node-morph-weights.v1",
+    "version": 1,
+    "phase": "mutation",
+    "kind": "change",
+    "touchedPaths": [
+      "document/nodes/*/weights"
+    ],
+    "referencePolicy": "requires finite weights and verifies the bound mesh target arity"
+  },
+  "x-semio-mutation": "change-node-morph-weights"
+}

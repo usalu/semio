@@ -12,9 +12,9 @@
 //!   (`compression` for `vids`, `"pcm"`/`format_tag` for `auds`) -- the rest is dropped.
 //! - `AviChunk.fourcc` (e.g. `"00dc"`) is dropped -- `SemioVideoSample` has no per-sample tag slot.
 
-use crate::artifacts::avi::standards::v1_0::subsets::any::schema::snapshot::AviStreamFormat;
-use crate::artifacts::avi::AviSnapshot;
-use crate::artifacts::semio::standards::v1::subsets::video::schema::snapshot::{SemioRational, SemioVideoSample, SemioVideoSnapshot, SemioVideoStream, SemioVideoStreamKind, STDIO_SEMIOVIDEO_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_avi::standards::v1_0::subsets::any::schema::snapshot::AviStreamFormat;
+use semio_s_artifact_stdio_avi::AviSnapshot;
+use crate::standards::v1::subsets::video::schema::snapshot::{SemioRational, SemioVideoSample, SemioVideoSnapshot, SemioVideoStream, SemioVideoStreamKind, STDIO_SEMIOVIDEO_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId};
 
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.avi", standard: StandardId("1.0"), subset: SubsetId("*") };
@@ -57,7 +57,7 @@ impl ArtifactDeserializer for SemioVideoFromAvi {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::avi::standards::v1_0::subsets::any::schema::snapshot::{AviChunk, AviMainHeader, AviStream, AviStreamHeader};
+    use semio_s_artifact_stdio_avi::standards::v1_0::subsets::any::schema::snapshot::{AviChunk, AviMainHeader, AviStream, AviStreamHeader};
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn real_world_avi() -> AviSnapshot {

@@ -5,7 +5,7 @@
   "displayName": "Delete Zone",
   "emoji": "🏚️",
   "aggregateVariant": "DeleteZone",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "delete-zone",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

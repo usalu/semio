@@ -5,7 +5,7 @@
   "displayName": "Delete Annual Schedule",
   "emoji": "📕️",
   "aggregateVariant": "DeleteAnnualSchedule",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "delete-annual-schedule",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

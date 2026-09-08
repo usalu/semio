@@ -11,8 +11,8 @@
 //! `subsets::any::schema::snapshot`, unmoved).
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use crate::artifacts::xml::standards::v1_0::subsets::base::schema::XmlAnalyzer;
-    use crate::artifacts::xml::XmlSnapshot;
+    use crate::standards::v1_0::subsets::base::schema::XmlAnalyzer;
+    use crate::XmlSnapshot;
     use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.xml", standard: StandardId("1.0"), subset: SubsetId("*") };
@@ -55,8 +55,8 @@ pub use derived_composition::*;
 
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
-    use crate::artifacts::xml::standards::v1_0::subsets::base::schema::XmlComposer as XmlRawAnyComposer;
-    use crate::artifacts::xml::standards::v1_0::subsets::valid::schema::XmlValidComposer;
+    use crate::standards::v1_0::subsets::base::schema::XmlComposer as XmlRawAnyComposer;
+    use crate::standards::v1_0::subsets::valid::schema::XmlValidComposer;
     use semio_framework_plugin::{composer_entry_of, ComposerEntry};
     use std::sync::OnceLock;
 

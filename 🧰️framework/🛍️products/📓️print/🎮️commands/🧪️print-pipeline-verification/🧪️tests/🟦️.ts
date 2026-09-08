@@ -18,11 +18,32 @@ const packageRoot = join(productRoot, "📦️packages", "🟦️typescript");
 const latexRoot = join(productRoot, "🖋️latex");
 const outputRoot = process.env.SEMIO_PRINT_OUTPUT_DIR ?? join(packageRoot, "dist");
 
+/** 🧬️ Loads one print scope's owned schema module and asserts its canonical identity. */
+function printSchemaModule(modulePath: string, schemaId: string): Record<string, unknown> {
+  const schema = JSON.parse(readFileSync(join(modulePath, "🧬️schema/🔣️.json"), "utf8"));
+  assert.equal(schema.$schema, "http://json-schema.org/draft-07/schema#", modulePath);
+  assert.equal(schema.$id, schemaId, modulePath);
+  return schema;
+}
+
+/** 🔧️ Verifies the pinned tectonic toolchain manifest against its owner module. */
+export function verifyPrintToolchainManifest(): void {
+  const require = createRequire(import.meta.url), modulePath = join(productRoot, "🔨️modules/🖨️tectonic-template-compilation/🔧️toolchain");
+  const schema = printSchemaModule(modulePath, "https://semio.tech/schema/print/tectonic-template-compilation/toolchain/schema.json");
+  const manifest = JSON.parse(readFileSync(join(modulePath, "🔣️.json"), "utf8"));
+  const validate = new (require("ajv").default)({ strict: false }).compile(schema);
+  assert.ok(validate(manifest), JSON.stringify(validate.errors));
+  assert.equal(new Set(manifest.platforms.map((row: { platform: string; architecture: string }) => `${row.platform}/${row.architecture}`)).size, manifest.platforms.length);
+  console.log("[DEBUG] Print toolchain manifest schema and exclusive platform targets PASS");
+}
+
+
 /** 🧪️ Runs pure deterministic print-pipeline verification. */
 export async function verifyPrintPipelineQuick(): Promise<void> {
   await verifyPrintCommandBoundaries();
   await verifyPrintDocumentCatalog();
   await verifyPrintBundleContract();
+  verifyPrintToolchainManifest();
   verifyPrintFontStaging();
   const galleryIdentities = JSON.parse(readFileSync(join(import.meta.dir, "🗺️gallery-identities.json"), "utf8")) as Record<string, string>;
   assert.deepEqual(Object.fromEntries(visualizationTemplates().map(({ id, texPath }) => [id, basename(texPath)])), galleryIdentities);
@@ -55,7 +76,8 @@ export async function verifyPrintPipelineQuick(): Promise<void> {
   }
   assert.deepEqual(templates.map((template) => template.id), contract.templates);
   for (const vector of contract.markdownCases) assert.deepEqual(parseVizTaxonomyLeaves(vector.source), vector.leaves);
-  const stagingRoot = join(outputRoot, ".staging-test");
+  mkdirSync(outputRoot, { recursive: true });
+  const stagingRoot = mkdtempSync(join(outputRoot, ".staging-test-"));
   try {
     const input = join(stagingRoot, "input"), output = join(stagingRoot, "output");
     for (const [path, content] of Object.entries(contract.staging.inputs)) {
@@ -164,7 +186,7 @@ export async function verifyPrintVisualizationBuild(): Promise<void> {
 export function verifyPrintFontStaging(output = outputRoot): void {
   const require = createRequire(import.meta.url), modulePath = join(productRoot, "🔨️modules/🔤print-font-catalog");
   const catalog = JSON.parse(readFileSync(join(modulePath, "🔣️.json"), "utf8"));
-  assert.equal(new (require("ajv/dist/2020").default)().validate(JSON.parse(readFileSync(join(modulePath, "🧬️schema.json"), "utf8")), catalog), true);
+  assert.equal(new (require("ajv").default)({ strict: false }).validate(printSchemaModule(modulePath, "https://semio.tech/schema/print/print-font-catalog/schema.json"), catalog), true);
   assert.deepEqual(printFontDescriptors(), catalog);
   mkdirSync(output, { recursive: true });
   const root = mkdtempSync(join(output, "print-fonts-")), product = "🧰️framework/🛍️products/📓️print";
@@ -215,7 +237,7 @@ export async function verifyPrintDocumentCatalog(): Promise<void> {
   const root = workspaceRoot, product = "🧰️framework/🛍️products/📓️print";
   const modulePath = join(product, "🔨️modules/🖨️tectonic-template-compilation/📇️catalog");
   const require = createRequire(import.meta.url), catalog = JSON.parse(readFileSync(join(root, modulePath, "🔣️.json"), "utf8"));
-  const validate = new (require("ajv/dist/2020").default)().compile(JSON.parse(readFileSync(join(root, modulePath, "🧬️schema.json"), "utf8")));
+  const validate = new (require("ajv").default)({ strict: false }).compile(printSchemaModule(join(root, modulePath), "https://semio.tech/schema/print/tectonic-template-compilation/catalog/schema.json"));
   assert.ok(validate(catalog), JSON.stringify(validate.errors));
   const api = await import(join(root, modulePath, "🟦️.ts"));
   const plugin = await import(join(root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs"));
@@ -246,7 +268,7 @@ export async function verifyPrintDocumentCatalog(): Promise<void> {
 export async function verifyPrintBundleContract(output = outputRoot): Promise<void> {
   const modulePath = join(productRoot, "🔨️modules/🖨️tectonic-template-compilation/📚️bundle");
   const require = createRequire(import.meta.url), manifest = JSON.parse(readFileSync(join(modulePath, "🔒️dependencies.json"), "utf8"));
-  assert.equal(new (require("ajv/dist/2020").default)().validate(JSON.parse(readFileSync(join(modulePath, "🧬️schema.json"), "utf8")), manifest), true);
+  assert.equal(new (require("ajv").default)({ strict: false }).validate(printSchemaModule(modulePath, "https://semio.tech/schema/print/tectonic-template-compilation/bundle/schema.json"), manifest), true);
   const vectors = JSON.parse(readFileSync(join(modulePath, "🧫️cases.json"), "utf8"));
   const api = await import("../../../🔨️modules/🖨️tectonic-template-compilation/📚️bundle/📜️script.ts");
   mkdirSync(output, { recursive: true });

@@ -17,9 +17,9 @@
 //! - Every OTHER unmodeled `DxfEntity::Other` kind (3DFACE, POINT, DIMENSION, …) is dropped — no
 //!   raw-retention path node kind exists on `DrawNode`.
 
-use crate::artifacts::dxf::{schema::snapshot::DxfEntity, DxfSnapshot};
-use crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioTransform};
-use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{DrawCanvas, DrawLayer, DrawNode, PathSegment, SemioDrawingSnapshot, STDIO_SEMIODRAWING_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_dxf::{schema::snapshot::DxfEntity, DxfSnapshot};
+use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioTransform};
+use crate::standards::v1::subsets::drawing::schema::snapshot::{DrawCanvas, DrawLayer, DrawNode, PathSegment, SemioDrawingSnapshot, STDIO_SEMIODRAWING_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId};
 
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.dxf", standard: StandardId("r12"), subset: SubsetId::ANY };

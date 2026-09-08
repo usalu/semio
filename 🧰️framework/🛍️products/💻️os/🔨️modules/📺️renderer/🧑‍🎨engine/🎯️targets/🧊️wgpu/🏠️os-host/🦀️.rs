@@ -1,24 +1,7 @@
-//! 🏠️ The composition root — ticket `26/08/20/SEMANTIC-UI-CONTRACT-AND-RENDERER-FAMILY`, packet
-//! `os-host`, master plan §5. It composes; it does not implement half an operating system. Product
-//! behaviour (dock, tutorial playback, world3d/node-graph/board input, chrome painting) stays exactly
-//! where it already lives — `AppRuntime` (`🦀️.rs`) and the `🧱️elements/` co-location dirs — this
-//! file only OWNS what wires them to the new scheduling/kernel seams.
-//!
-//! **Deviation from the master plan's literal `OsHost { engine, backend, scheduler, surfaces, … }`
-//! sketch — recorded here, and in `📓️terra-os-host-report.md`'s own deviations section.** That shape
-//! names `ui_render::FrameEngine`/`ui_host::ActiveBackend`, i.e. the NEW `Element`-tree pipeline. This
-//! crate's actual rendering is still the old immediate-mode `DrawList` pipeline living inside
-//! `AppRuntime` (`self.draw`/`self.overlay`/`self.gpu`) — migrating that onto `Element`/`FrameEngine`
-//! is the `render-elements`/`runtime-*` packets' job (master plan §2/§4), not this one's. Instantiating
-//! `FrameEngine`/`ActiveBackend` fields here today, with nothing yet producing real `Element`s to feed
-//! them, would be dead scaffolding wired to nothing — worse than the honest alternative below: `OsHost`
-//! owns the scheduling/kernel seam this packet is actually chartered to build (`FrameScheduler`,
-//! `KernelSeam`, the deadline sources), composed **around** the existing, still-`DrawList`-based
-//! `AppRuntime`, so the headline claim — idle windows render zero frames — is true today, without
-//! waiting on the Element migration to land first.
+//! 🏠️ Composition and retirement of the renderer runtime, presenter, scheduler and deadline sources.
+//! RuntimeMailbox owns worker dispatch; the host presents completed frames and schedules wakeups.
 
 use crate::deadlines::{CaretBlink, HotSwapPoll};
-use crate::kernel_seam::{default_intent_exchange, AppKernelSeam};
 use crate::render_snapshot::{RenderSnapshot, RenderSnapshotSink};
 use crate::{AppPresenter, RuntimeMailbox};
 use std::sync::atomic::{AtomicBool, AtomicPtr, AtomicU64, AtomicUsize, Ordering};
@@ -85,25 +68,11 @@ fn performance_now_ms() -> f64 {
 
 //#region 🏠️OsHost
 
-/// 🏠️ Owns lifecycle/composition: the product runtime, the `FrameScheduler` that ends continuous
-/// redraw, the `KernelSeam` that ends the renderer owning the actor kernel, and every deadline
-/// source's bookkeeping. `window`/`kernel` naming mirrors the master plan's
-/// `OsHost { engine, backend, scheduler, surfaces, shell_model, kernel, theme, window, … }` sketch as
-/// closely as this crate's still-`DrawList` reality allows — see this file's own module docstring for
-/// the named deviation.
-///
-/// **Why `scheduler` lives here and not on `AppRuntime`.** `ui_host::WindowDelegate::scheduler_mut`
-/// returns a plain `&mut FrameScheduler` — a real, exclusively-owned reference. `AppRuntime` is
-/// addressed by worker jobs through `RuntimeMailbox`, which deliberately exposes no borrow that can
-/// cross a suspension. `OsHost`, by contrast, is owned exclusively by the event loop, so
-/// `&mut self.scheduler`
-/// is trivially sound. This is a real, load-bearing reason the composition root is a *separate* type
-/// from the product runtime, not just an organizational preference.
+/// 🏠️ Owns presentation, scheduling and host lifecycle around the worker-owned runtime.
 pub struct OsHost {
     pub(crate) runtime: RuntimeMailbox,
     pub(crate) presenter: AppPresenter,
     pub scheduler: FrameScheduler,
-    pub kernel: AppKernelSeam,
     pub clock: OsClock,
     pub caret: CaretBlink,
     pub hot_swap: HotSwapPoll,
@@ -140,7 +109,6 @@ struct OsHostRetirementState {
     runtime: Option<RuntimeMailbox>,
     presenter: Option<AppPresenter>,
     scheduler: Option<FrameScheduler>,
-    kernel: Option<AppKernelSeam>,
     clock: Option<OsClock>,
     caret: Option<CaretBlink>,
     hot_swap: Option<HotSwapPoll>,
@@ -388,7 +356,6 @@ impl OsHost {
             runtime,
             presenter,
             scheduler: FrameScheduler::new(),
-            kernel: AppKernelSeam::new(default_intent_exchange),
             clock: OsClock::new(),
             caret: CaretBlink::new(),
             hot_swap: HotSwapPoll::new(),
@@ -399,7 +366,7 @@ impl OsHost {
             present_fault: None,
             events: ui_host::EventQueue::new(),
             ui_token: ui_host::UiThreadToken::mint_for_host(),
-            snapshot_sink: RenderSnapshotSink::new(RenderSnapshot::new(0, semio_framework_trace::Generation(0), 0, CursorRequest::Default, None)),
+            snapshot_sink: RenderSnapshotSink::new(RenderSnapshot::new(0, CursorRequest::Default, None)),
             frame_build: crate::frame_job::FrameBuildHandle::new(),
             surface_resize: crate::surface_lane::SurfaceResizeAuthority::new(semio_framework_trace::allocate_operation_id()),
         }
@@ -415,13 +382,12 @@ impl OsHost {
         let Some(abandonment) = reserve_os_host_retirement_abandonment() else {
             return Err(self);
         };
-        let Self { runtime, presenter, scheduler, kernel, clock, caret, hot_swap, frame_generation: _, frame_ready: _, cursor_wake_requested, platform_fullscreen: _, present_fault: _, events, ui_token, snapshot_sink, frame_build, surface_resize } =
+        let Self { runtime, presenter, scheduler, clock, caret, hot_swap, frame_generation: _, frame_ready: _, cursor_wake_requested, platform_fullscreen: _, present_fault: _, events, ui_token, snapshot_sink, frame_build, surface_resize } =
             self;
         let state = OsHostRetirementState {
             runtime: Some(runtime),
             presenter: Some(presenter),
             scheduler: Some(scheduler),
-            kernel: Some(kernel),
             clock: Some(clock),
             caret: Some(caret),
             hot_swap: Some(hot_swap),
@@ -546,7 +512,7 @@ impl OsHostRetirementState {
                 crate::kernel_runtime::KernelCloseStatus::Fault => return false,
             }
         }
-        for owner in [&mut self.snapshot_sink as &mut dyn RetirementOwner, &mut self.ui_token, &mut self.hot_swap, &mut self.caret, &mut self.clock, &mut self.kernel, &mut self.scheduler, &mut self.runtime, &mut self.presenter] {
+        for owner in [&mut self.snapshot_sink as &mut dyn RetirementOwner, &mut self.ui_token, &mut self.hot_swap, &mut self.caret, &mut self.clock, &mut self.scheduler, &mut self.runtime, &mut self.presenter] {
             if owner.retire() {
                 return false;
             }
@@ -558,7 +524,6 @@ impl OsHostRetirementState {
         self.runtime.is_none()
             && self.presenter.is_none()
             && self.scheduler.is_none()
-            && self.kernel.is_none()
             && self.clock.is_none()
             && self.caret.is_none()
             && self.hot_swap.is_none()
@@ -679,7 +644,6 @@ fn terminal_os_host_retirement_state() -> OsHostRetirementState {
         runtime: None,
         presenter: None,
         scheduler: None,
-        kernel: None,
         clock: None,
         caret: None,
         hot_swap: None,

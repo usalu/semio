@@ -1,0 +1,35 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/norm/en1993/1/any/mutation/update-silo-shell-inputs.json",
+  "title": "UpdateSiloShellInputs",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newShellSigmaXEdMpa",
+    "newSiloDepthM",
+    "newSiloGammaKnM3",
+    "newSiloK",
+    "newSiloRMm",
+    "newSiloTMm"
+  ],
+  "properties": {
+    "newSiloTMm": {
+      "type": "number"
+    },
+    "newSiloRMm": {
+      "type": "number"
+    },
+    "newShellSigmaXEdMpa": {
+      "type": "number"
+    },
+    "newSiloK": {
+      "type": "number"
+    },
+    "newSiloGammaKnM3": {
+      "type": "number"
+    },
+    "newSiloDepthM": {
+      "type": "number"
+    }
+  }
+}

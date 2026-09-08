@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeLiquidRhoPEff, base: &En1992Snapshot) -> protocol::M
     if base.liquid_rho_p_eff == payload.new_liquid_rho_p_eff {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "Liquid rho p eff already has this value.");
     }
-    protocol::MutationOutcome::new(En1992Diff { liquid_rho_p_eff: Some(payload.new_liquid_rho_p_eff.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1992Diff { liquid_rho_p_eff: Some(payload.new_liquid_rho_p_eff), ..Default::default() })
 }
 //#endregion 🔖️Diff

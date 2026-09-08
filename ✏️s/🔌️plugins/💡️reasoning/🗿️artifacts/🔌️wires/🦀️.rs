@@ -77,9 +77,9 @@ pub fn empty_wires_snapshot() -> WiresSnapshot {
 /// nodes/edges now live in this composed child rather than inline on `WiresSnapshot`.
 pub type WiresContentChild = store::ArtifactChild<SemioGraphSnapshot>;
 
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioPoint2;
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::graph::schema::snapshot::{GraphEdgeId as SemioGraphEdgeId, GraphNodeId as SemioGraphNodeId, SemioGraphEdge, SemioGraphNode, SemioGraphSnapshot, STDIO_SEMIOGRAPH_DOCUMENT_SCHEMA};
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::value::schema::snapshot::{SemioValue, SemioValueEntry};
+use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::SemioPoint2;
+use semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::snapshot::{GraphEdgeId as SemioGraphEdgeId, GraphNodeId as SemioGraphNodeId, SemioGraphEdge, SemioGraphNode, SemioGraphSnapshot, STDIO_SEMIOGRAPH_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_semio::standards::v1::subsets::value::schema::snapshot::{SemioValue, SemioValueEntry};
 
 /// 🏷️ `wires.node` is the honest string boundary carrying the FULL raw board node `DslValue` (every
 /// key a board node can dynamically carry — `nodeKind`/`shape`/`radius`/`width`/`height`/`text`/

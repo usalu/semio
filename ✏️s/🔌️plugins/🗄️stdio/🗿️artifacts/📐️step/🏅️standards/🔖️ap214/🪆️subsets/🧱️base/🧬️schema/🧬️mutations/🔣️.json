@@ -1,77 +1,188 @@
 {
-  "$id": "https://semio.tech/schema/s.stdio.step/mutations.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/step/ap214/base/mutations.json",
   "title": "StepMutation",
-  "$defs": {
-    "StepValue": { "$ref": "../📸️snapshot/🔣️.json#/$defs/StepValue" },
-    "StepEntity": { "$ref": "../📸️snapshot/🔣️.json#/$defs/StepEntity" },
-    "StepFileDescription": { "$ref": "../📸️snapshot/🔣️.json#/$defs/StepFileDescription" },
-    "StepFileName": { "$ref": "../📸️snapshot/🔣️.json#/$defs/StepFileName" },
-    "StepFileSchema": { "$ref": "../📸️snapshot/🔣️.json#/$defs/StepFileSchema" }
-  },
+  "description": "Discriminated union over this module's mutation leaves (internally tagged); every payload is the leaf's own schema, referenced, never restated.",
   "oneOf": [
     {
-      "type": "object",
-      "required": ["mutation", "snapshot"],
-      "properties": { "mutation": { "const": "setSnapshot" }, "snapshot": { "$ref": "../📸️snapshot/🔣️.json" } }
+      "allOf": [
+        {
+          "$ref": "./🧩insert-entity/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "insertEntity"
+            }
+          }
+        }
+      ]
     },
     {
-      "type": "object",
-      "required": ["mutation", "fileDescription"],
-      "properties": { "mutation": { "const": "setFileDescription" }, "fileDescription": { "$ref": "#/$defs/StepFileDescription" } }
+      "allOf": [
+        {
+          "$ref": "./➕insert-entity-arg/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "insertEntityArg"
+            }
+          }
+        }
+      ]
     },
     {
-      "type": "object",
-      "required": ["mutation", "fileName"],
-      "properties": { "mutation": { "const": "setFileName" }, "fileName": { "$ref": "#/$defs/StepFileName" } }
+      "allOf": [
+        {
+          "$ref": "./🗑️remove-entity/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "removeEntity"
+            }
+          }
+        }
+      ]
     },
     {
-      "type": "object",
-      "required": ["mutation", "fileSchema"],
-      "properties": { "mutation": { "const": "setFileSchema" }, "fileSchema": { "$ref": "#/$defs/StepFileSchema" } }
+      "allOf": [
+        {
+          "$ref": "./➖remove-entity-arg/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "removeEntityArg"
+            }
+          }
+        }
+      ]
     },
     {
-      "type": "object",
-      "required": ["mutation", "index", "entity"],
-      "properties": { "mutation": { "const": "insertEntity" }, "index": { "type": "integer", "minimum": 0 }, "entity": { "$ref": "#/$defs/StepEntity" } }
+      "allOf": [
+        {
+          "$ref": "./🔧set-entity-arg/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setEntityArg"
+            }
+          }
+        }
+      ]
     },
     {
-      "type": "object",
-      "required": ["mutation", "id"],
-      "properties": { "mutation": { "const": "removeEntity" }, "id": { "type": "integer", "minimum": 0 } }
+      "allOf": [
+        {
+          "$ref": "./✏️set-entity-name/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setEntityName"
+            }
+          }
+        }
+      ]
     },
     {
-      "type": "object",
-      "required": ["mutation", "id", "name"],
-      "properties": { "mutation": { "const": "setEntityName" }, "id": { "type": "integer", "minimum": 0 }, "name": { "type": "string" } }
+      "allOf": [
+        {
+          "$ref": "./📋️set-file-description/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setFileDescription"
+            }
+          }
+        }
+      ]
     },
     {
-      "type": "object",
-      "required": ["mutation", "id", "argIndex", "value"],
-      "properties": {
-        "mutation": { "const": "setEntityArg" },
-        "id": { "type": "integer", "minimum": 0 },
-        "argIndex": { "type": "integer", "minimum": 0 },
-        "value": { "$ref": "#/$defs/StepValue" }
-      }
+      "allOf": [
+        {
+          "$ref": "./📛set-file-name/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setFileName"
+            }
+          }
+        }
+      ]
     },
     {
-      "type": "object",
-      "required": ["mutation", "id", "argIndex", "value"],
-      "properties": {
-        "mutation": { "const": "insertEntityArg" },
-        "id": { "type": "integer", "minimum": 0 },
-        "argIndex": { "type": "integer", "minimum": 0 },
-        "value": { "$ref": "#/$defs/StepValue" }
-      }
+      "allOf": [
+        {
+          "$ref": "./🏷️set-file-schema/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setFileSchema"
+            }
+          }
+        }
+      ]
     },
     {
-      "type": "object",
-      "required": ["mutation", "id", "argIndex"],
-      "properties": {
-        "mutation": { "const": "removeEntityArg" },
-        "id": { "type": "integer", "minimum": 0 },
-        "argIndex": { "type": "integer", "minimum": 0 }
-      }
+      "allOf": [
+        {
+          "$ref": "./📸️set-snapshot/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setSnapshot"
+            }
+          }
+        }
+      ]
     }
   ]
 }

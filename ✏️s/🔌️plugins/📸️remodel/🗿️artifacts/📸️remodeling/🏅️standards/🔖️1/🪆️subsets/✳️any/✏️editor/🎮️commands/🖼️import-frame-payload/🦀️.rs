@@ -110,7 +110,7 @@ pub fn handle(payload: &ImportFramePayload, doc: &ArtifactView<'_, RemodelingSna
     match scene.streams.iter().find(|stream| stream.id == stream_id) {
         Some(stream) => {
             let frame_index = stream.frames.len() as u32;
-            mutations.push(add_stream_frame(stream_id.clone(), FrameRef { index: frame_index, timestamp_ms: f64::from(frame_index) * 1000.0 / 30.0, asset_id: asset_key.clone() }, MediaKind::ImageSequence));
+            mutations.push(add_stream_frame(stream_id.clone(), FrameRef { index: frame_index, timestamp_ms: f64::from(frame_index) * 1000.0 / 30.0, asset_id: asset_key }, MediaKind::ImageSequence));
         }
         None => {
             mutations.push(create_stream(MediaStream {
@@ -120,7 +120,7 @@ pub fn handle(payload: &ImportFramePayload, doc: &ArtifactView<'_, RemodelingSna
                 camera_id: None,
                 sync_offset_ms: 0.0,
                 fps_hint: 30.0,
-                frames: vec![FrameRef { index: 0, timestamp_ms: 0.0, asset_id: asset_key.clone() }],
+                frames: vec![FrameRef { index: 0, timestamp_ms: 0.0, asset_id: asset_key }],
                 source: None,
             }));
         }

@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeInfiltrationAllowanceM3H, base: &Din16798Snapshot) -
     if base.infiltration_allowance_m3_h == payload.new_infiltration_allowance_m3_h {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Infiltration allowance is already {}.", payload.new_infiltration_allowance_m3_h));
     }
-    protocol::MutationOutcome::new(Din16798Diff { infiltration_allowance_m3_h: Some(payload.new_infiltration_allowance_m3_h.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(Din16798Diff { infiltration_allowance_m3_h: Some(payload.new_infiltration_allowance_m3_h), ..Default::default() })
 }
 //#endregion 🔖️Diff

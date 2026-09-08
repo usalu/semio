@@ -4,9 +4,9 @@
 //! the sole runtime adapter, so this file can never structurally emit an artifact or draft mutation.
 //! MUST NOT import anything from the sibling `editor` module (`policyViewerPurityBreaches`).
 
-use crate::artifacts::svg::standards::v1_1::subsets::basic::schema::mutations::SvgBasicMutation;
-use crate::artifacts::svg::standards::v1_1::subsets::basic::schema::snapshot::SvgSnapshot;
-use crate::artifacts::svg::{STDIO_SVG_DOCUMENT_SCHEMA, SVG_BASIC_DIALECT};
+use crate::standards::v1_1::subsets::basic::schema::mutations::SvgBasicMutation;
+use crate::standards::v1_1::subsets::basic::schema::snapshot::SvgSnapshot;
+use crate::{STDIO_SVG_DOCUMENT_SCHEMA, SVG_BASIC_DIALECT};
 use crate::viewer::svg_basic::modes::view;
 use crate::viewer::svg_basic::modes::view::windows::main;
 use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, ViewEmit, Viewer};

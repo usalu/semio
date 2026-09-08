@@ -253,7 +253,7 @@
         {
           "id": "add-design",
           "capability": "semio-v1-kit-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -272,7 +272,7 @@
         {
           "id": "add-type",
           "capability": "semio-v1-kit-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -291,7 +291,7 @@
         {
           "id": "bind-representation",
           "capability": "semio-v1-kit-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "rejected",
             "applied"
@@ -311,7 +311,7 @@
         {
           "id": "change-representation-pin",
           "capability": "semio-v1-kit-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "rejected",
             "applied"
@@ -331,7 +331,7 @@
         {
           "id": "create-model",
           "capability": "semio-v1-kit-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -350,7 +350,7 @@
         {
           "id": "create-object",
           "capability": "semio-v1-kit-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -369,7 +369,7 @@
         {
           "id": "create-properties",
           "capability": "semio-v1-kit-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -388,7 +388,7 @@
         {
           "id": "delete-model",
           "capability": "semio-v1-kit-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "rejected",
             "applied"
@@ -408,7 +408,7 @@
         {
           "id": "delete-object",
           "capability": "semio-v1-kit-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "rejected",
             "applied"
@@ -428,7 +428,7 @@
         {
           "id": "delete-properties",
           "capability": "semio-v1-kit-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "rejected",
             "applied"
@@ -448,7 +448,7 @@
         {
           "id": "edit-design",
           "capability": "semio-v1-kit-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "rejected",
             "applied"
@@ -468,7 +468,7 @@
         {
           "id": "remove-design",
           "capability": "semio-v1-kit-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "rejected",
             "applied"
@@ -488,7 +488,7 @@
         {
           "id": "remove-type",
           "capability": "semio-v1-kit-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "rejected",
             "applied"
@@ -508,7 +508,7 @@
         {
           "id": "rename-type",
           "capability": "semio-v1-kit-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "rejected",
             "applied"
@@ -528,7 +528,7 @@
         {
           "id": "unbind-representation",
           "capability": "semio-v1-kit-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "rejected",
             "applied"

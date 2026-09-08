@@ -1,10 +1,10 @@
 //! 📏️ `scale` — sets a `Group` node's `transform.scale` (SMO-approved domain spatial transform).
 //! Only `Group` carries a scale field -- every other node kind is honestly a no-op.
 
-use crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioPoint3;
-use crate::artifacts::semio::standards::v1::subsets::drawing::schema::diff::NodePath;
-use crate::artifacts::semio::standards::v1::subsets::drawing::schema::mutations::SemioDrawingMutation;
-use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot;
+use crate::standards::v1::subsets::base::schema::geometry::SemioPoint3;
+use crate::standards::v1::subsets::drawing::schema::diff::NodePath;
+use crate::standards::v1::subsets::drawing::schema::mutations::SemioDrawingMutation;
+use crate::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot;
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]

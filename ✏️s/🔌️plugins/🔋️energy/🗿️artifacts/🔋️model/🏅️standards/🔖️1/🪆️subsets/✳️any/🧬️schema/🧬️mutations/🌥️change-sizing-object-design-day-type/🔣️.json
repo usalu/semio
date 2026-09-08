@@ -5,7 +5,7 @@
   "displayName": "Change Sizing Object Design Day Type",
   "emoji": "🌥️",
   "aggregateVariant": "ChangeSizingObjectDesignDayType",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-sizing-object-design-day-type",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

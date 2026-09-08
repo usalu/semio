@@ -5,7 +5,7 @@
   "displayName": "Change Air Loop Return Node",
   "emoji": "↘️",
   "aggregateVariant": "ChangeAirLoopReturnNode",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-air-loop-return-node",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

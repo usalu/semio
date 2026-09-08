@@ -8,11 +8,11 @@
 //! 🧬️schema-design.md`) but declares its OWN diff types (per the spec-mandated-reuse rule: svg
 //! embeds xml's *node* model, never xml's *diff* model).
 
-use crate::artifacts::svg::SvgSnapshot;
-use crate::artifacts::xml::schema::snapshot::{XmlAttr, XmlDeclaration, XmlDoctype, XmlDtdDeclaration, XmlExternalId, XmlNode};
+use crate::SvgSnapshot;
+use semio_s_artifact_stdio_xml::schema::snapshot::{XmlAttr, XmlDeclaration, XmlDoctype, XmlDtdDeclaration, XmlExternalId, XmlNode};
 use protocol::command::DiffAlgebra;
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
-use schema::ArtifactSchema;
+use framework_schema::ArtifactSchema;
 
 //#region 🔖️Diff
 /// 🔺️ Diff for `stdio.svg`. No `snapshot: Option<SvgSnapshot>` full-replace slot -- even
@@ -138,7 +138,7 @@ pub struct SvgChildAdded {
 
 //#region 🔖️DiffAtPath
 /// 🧭️ Lowers a `leaf` diff targeting the node addressed by `path` (a chain of child indices from
-/// the document root -- mirrors `crate::artifacts::svg::schema::mutations::NodePath`, kept as a
+/// the document root -- mirrors `crate::schema::mutations::NodePath`, kept as a
 /// bare `&[usize]` here so this module never needs to depend on the mutations module) into a full
 /// `SvgDiff` by nesting it through `SvgChildModified` entries from the root down to that depth.
 /// `path == []` addresses the root itself, so `leaf` becomes `SvgDiff.root` directly.
@@ -1501,7 +1501,7 @@ impl protocol::DiffCodec for SvgDiff {
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_diff_cases() -> Vec<SvgDiff> {
-    use crate::artifacts::xml::schema::snapshot::XmlDocument;
+    use semio_s_artifact_stdio_xml::schema::snapshot::XmlDocument;
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn elem(name: &str, attrs: Vec<(&str, &str)>, children: Vec<XmlNode>) -> XmlNode {

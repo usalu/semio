@@ -12,10 +12,10 @@
 //! leaf's own oracle. The derived `.op.semio`/`.spr.semio`/`.dsl.semio`/`.pack.semio`/
 //! `.patch.semio` encodings come from `fixtures generate`, not from here.
 
-use crate::artifacts::gltf::schema::mutations::create_buffer::diff::GltfCreateBufferDiff;
-use crate::artifacts::gltf::schema::mutations::create_buffer::GltfCreateBufferPayload;
-use crate::artifacts::gltf::schema::mutations::create_buffer::{diff, inverse, mutation};
-use crate::artifacts::gltf::GltfSnapshot;
+use crate::schema::mutations::create_buffer::diff::GltfCreateBufferDiff;
+use crate::schema::mutations::create_buffer::GltfCreateBufferPayload;
+use crate::schema::mutations::create_buffer::{diff, inverse, mutation};
+use crate::GltfSnapshot;
 
 const CASE: &str = "create-buffer/inserts-a-two-byte-buffer-ahead-of-the-four-byte-buffer";
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");

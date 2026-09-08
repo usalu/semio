@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeAnchorNEdKn, base: &En1992Snapshot) -> protocol::Mut
     if base.anchor_n_ed_kn == payload.new_anchor_n_ed_kn {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "Anchor n ed kn already has this value.");
     }
-    protocol::MutationOutcome::new(En1992Diff { anchor_n_ed_kn: Some(payload.new_anchor_n_ed_kn.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1992Diff { anchor_n_ed_kn: Some(payload.new_anchor_n_ed_kn), ..Default::default() })
 }
 //#endregion 🔖️Diff

@@ -2491,6 +2491,9 @@ pub mod app {
         }
     }
 
+    /// 🗂️ Borrowed capability identity, kind, descriptor, claims and optional localization.
+    pub type ArtifactCapabilityRow<'a> = (&'a str, &'a str, &'a str, &'a [(&'a str, &'a str)], Option<(&'a str, &'a str)>);
+
     /// 🧩️ One extension-owned capability and its conflict-checked external identities.
     #[derive(Clone, Debug, PartialEq, Eq)]
     pub struct ArtifactCapability {
@@ -39356,6 +39359,7 @@ pub use app::{
     ArtifactBuilder,
     ArtifactCapability,
     ArtifactCapabilityKind,
+    ArtifactCapabilityRow,
     ArtifactChildren,
     ArtifactComposer,
     ArtifactComposition,

@@ -617,12 +617,13 @@ export async function testCacheContracts(): Promise<void> {
   const route = ts.transpileModule(invocation.getText(source).replace(/^export /, ""), { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText;
   const resolveInvocation = new Function("process", `${route}; return resolveNxInvocation;`)({ env: {} });
   const resolvePrint = new Function("process", "readFileSync", "join", "WORKSPACE_ROOT", `${route}; return resolveNxInvocation;`)({ env: {} }, readFileSync, join, root);
-  for (const path of ["🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/📇️catalog/🧫️invocations.json", "♻️mit-bestand/📋️bericht/🔨️modules/📄️documents/🧫️invocations.json"]) {
+  for (const path of ["🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/📇️catalog/🧫️invocations.json", "♻️mit-bestand/📋️bericht/🔨️modules/📄️documents/🧫️invocations.json", "♻️mit-bestand/🧺️demonstrator/🔨️modules/🧩️runtime/🧫️invocations.json"]) {
     const invocations = JSON.parse(readFileSync(join(root, path), "utf8"));
     for (const vector of invocations.valid) {
       const result = resolvePrint(vector.input);
       assert.deepEqual(result.args, vector.args);
       assert.equal(result.watch, vector.watch);
+      if (vector.env) assert.deepEqual(result.env, vector.env);
     }
     for (const vector of invocations.invalid) assert.throws(() => resolvePrint(vector));
   }

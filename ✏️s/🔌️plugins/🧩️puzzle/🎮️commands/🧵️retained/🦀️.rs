@@ -569,7 +569,7 @@ impl<A: ArtifactApp> RetainedPuzzleCommandJob<A> {
                         self.phase = PuzzleCommandPhase::Publish;
                         self.preview(cx, "Publishing result", "Ergebnis wird veröffentlicht")
                     }
-                    Err(_) => return self.fault(cx, b"puzzle command reducer rejected the admitted operation"),
+                    Err(_) => self.fault(cx, b"puzzle command reducer rejected the admitted operation"),
                 }
             }
             PuzzleCommandPhase::WorkProgress => {

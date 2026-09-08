@@ -10,10 +10,10 @@
 //! leaf's own oracle. The derived `.op.semio`/`.spr.semio`/`.dsl.semio`/`.pack.semio`/
 //! `.patch.semio` encodings come from `fixtures generate`, not from here.
 
-use crate::artifacts::gltf::schema::mutations::change_node_extension_data::diff::GltfChangeNodeExtensionDataDiff;
-use crate::artifacts::gltf::schema::mutations::change_node_extension_data::GltfChangeNodeExtensionDataPayload;
-use crate::artifacts::gltf::schema::mutations::change_node_extension_data::{diff, inverse, mutation};
-use crate::artifacts::gltf::GltfSnapshot;
+use crate::schema::mutations::change_node_extension_data::diff::GltfChangeNodeExtensionDataDiff;
+use crate::schema::mutations::change_node_extension_data::GltfChangeNodeExtensionDataPayload;
+use crate::schema::mutations::change_node_extension_data::{diff, inverse, mutation};
+use crate::GltfSnapshot;
 
 const CASE: &str = "change-node-extension-data/attaches-a-punctual-light-extension-to-the-root-node";
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");

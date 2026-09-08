@@ -92,10 +92,10 @@ fn round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::{arranged_input, mutable_input};
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_plugin_stdio::artifacts::pptx::standards::v_ecma_376::subsets::base::io::export::serializers::encode_pptx;
-    use semio_s_plugin_stdio::artifacts::pptx::standards::v_ecma_376::subsets::base::io::import::deserializers::decode_pptx;
-    use semio_s_plugin_stdio::artifacts::pptx::standards::v_ecma_376::subsets::strict::schema::mutations::{apply_pptx_strict_mutation, stamp_conformance_class, vml_markup, PptxStrictMutation};
-    use semio_s_plugin_stdio::artifacts::pptx::PptxSnapshot;
+    use crate::standards::v_ecma_376::subsets::base::io::export::serializers::encode_pptx;
+    use crate::standards::v_ecma_376::subsets::base::io::import::deserializers::decode_pptx;
+    use crate::standards::v_ecma_376::subsets::strict::schema::mutations::{apply_pptx_strict_mutation, stamp_conformance_class, vml_markup, PptxStrictMutation};
+    use crate::PptxSnapshot;
     use semio_s_plugin_stdio_test_oracle::artifacts::pptx::standards::v_ecma_376::subsets::strict::{oracle_inverse_spec, project_package};
 
     fn decode(bytes: &[u8]) -> Result<PptxSnapshot, String> {
@@ -117,16 +117,16 @@ mod subject {
     fn mutation_from_spec(ctx: &Context, spec: &Json) -> Result<PptxStrictMutation, String> {
         let params = spec.get("params").cloned().unwrap_or(Json::Null);
         Ok(match spec.str("kind").as_str() {
-            "set-snapshot" => PptxStrictMutation::SetSnapshot(semio_s_plugin_stdio::artifacts::pptx::standards::v_ecma_376::subsets::strict::schema::mutations::set_snapshot::SetSnapshot { snapshot: stamped(&decode(&mutable_input(ctx)?)?, params.str("conformanceClass") == "strict")? }),
-            "set-main-namespace" => PptxStrictMutation::SetMainNamespace(semio_s_plugin_stdio::artifacts::pptx::standards::v_ecma_376::subsets::strict::schema::mutations::set_main_namespace::SetMainNamespace { namespace: params.str("namespace") }),
-            "set-drawing-namespace" => PptxStrictMutation::SetDrawingNamespace(semio_s_plugin_stdio::artifacts::pptx::standards::v_ecma_376::subsets::strict::schema::mutations::set_drawing_namespace::SetDrawingNamespace { namespace: params.str("namespace") }),
-            "set-relationship-base" => PptxStrictMutation::SetRelationshipBase(semio_s_plugin_stdio::artifacts::pptx::standards::v_ecma_376::subsets::strict::schema::mutations::set_relationship_base::SetRelationshipBase { base: params.str("base") }),
-            "set-conformance-attribute" => PptxStrictMutation::SetConformanceAttribute(semio_s_plugin_stdio::artifacts::pptx::standards::v_ecma_376::subsets::strict::schema::mutations::set_conformance_attribute::SetConformanceAttribute { value: params.str("value") }),
+            "set-snapshot" => PptxStrictMutation::SetSnapshot(crate::standards::v_ecma_376::subsets::strict::schema::mutations::set_snapshot::SetSnapshot { snapshot: stamped(&decode(&mutable_input(ctx)?)?, params.str("conformanceClass") == "strict")? }),
+            "set-main-namespace" => PptxStrictMutation::SetMainNamespace(crate::standards::v_ecma_376::subsets::strict::schema::mutations::set_main_namespace::SetMainNamespace { namespace: params.str("namespace") }),
+            "set-drawing-namespace" => PptxStrictMutation::SetDrawingNamespace(crate::standards::v_ecma_376::subsets::strict::schema::mutations::set_drawing_namespace::SetDrawingNamespace { namespace: params.str("namespace") }),
+            "set-relationship-base" => PptxStrictMutation::SetRelationshipBase(crate::standards::v_ecma_376::subsets::strict::schema::mutations::set_relationship_base::SetRelationshipBase { base: params.str("base") }),
+            "set-conformance-attribute" => PptxStrictMutation::SetConformanceAttribute(crate::standards::v_ecma_376::subsets::strict::schema::mutations::set_conformance_attribute::SetConformanceAttribute { value: params.str("value") }),
             "remove-conformance-attribute" => PptxStrictMutation::RemoveConformanceAttribute(remove_conformance_attribute::RemoveConformanceAttribute {}),
-            "insert-vml-part" => PptxStrictMutation::InsertVmlPart(semio_s_plugin_stdio::artifacts::pptx::standards::v_ecma_376::subsets::strict::schema::mutations::insert_vml_part::InsertVmlPart { path: params.str("path"), markup: vml_markup() }),
-            "remove-vml-part" => PptxStrictMutation::RemoveVmlPart(semio_s_plugin_stdio::artifacts::pptx::standards::v_ecma_376::subsets::strict::schema::mutations::remove_vml_part::RemoveVmlPart { path: params.str("path") }),
-            "insert-alternate-content" => PptxStrictMutation::InsertAlternateContent(semio_s_plugin_stdio::artifacts::pptx::standards::v_ecma_376::subsets::strict::schema::mutations::insert_alternate_content::InsertAlternateContent { path: params.str("path") }),
-            "remove-alternate-content" => PptxStrictMutation::RemoveAlternateContent(semio_s_plugin_stdio::artifacts::pptx::standards::v_ecma_376::subsets::strict::schema::mutations::remove_alternate_content::RemoveAlternateContent { path: params.str("path") }),
+            "insert-vml-part" => PptxStrictMutation::InsertVmlPart(crate::standards::v_ecma_376::subsets::strict::schema::mutations::insert_vml_part::InsertVmlPart { path: params.str("path"), markup: vml_markup() }),
+            "remove-vml-part" => PptxStrictMutation::RemoveVmlPart(crate::standards::v_ecma_376::subsets::strict::schema::mutations::remove_vml_part::RemoveVmlPart { path: params.str("path") }),
+            "insert-alternate-content" => PptxStrictMutation::InsertAlternateContent(crate::standards::v_ecma_376::subsets::strict::schema::mutations::insert_alternate_content::InsertAlternateContent { path: params.str("path") }),
+            "remove-alternate-content" => PptxStrictMutation::RemoveAlternateContent(crate::standards::v_ecma_376::subsets::strict::schema::mutations::remove_alternate_content::RemoveAlternateContent { path: params.str("path") }),
             other => return Err(format!("no subject rule for kind {other:?}")),
         })
     }

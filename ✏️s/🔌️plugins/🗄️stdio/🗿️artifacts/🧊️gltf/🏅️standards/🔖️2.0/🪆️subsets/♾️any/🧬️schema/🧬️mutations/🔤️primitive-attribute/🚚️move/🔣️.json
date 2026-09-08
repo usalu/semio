@@ -5,7 +5,7 @@
   "displayName": "Move Primitive Attribute",
   "emoji": "🚚️",
   "aggregateVariant": "MovePrimitiveAttribute",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

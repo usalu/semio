@@ -10,8 +10,8 @@
 //! - Only `metadata` entries with `key == "comment"` round-trip (as a `COM` segment); any other
 //!   key has no textual home on `JpgSnapshot` and is dropped.
 
-use crate::artifacts::jpg::{schema::snapshot::JpgSegment, JpgSnapshot};
-use crate::artifacts::semio::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
+use semio_s_artifact_stdio_jpg::{schema::snapshot::JpgSegment, JpgSnapshot};
+use crate::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
 use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
 
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("image") };
@@ -34,7 +34,7 @@ impl ArtifactSerializer for SemioImageToJpg {
             return Err(store::PackError::Schema("semio/image→jpg: frame pixel length does not match width*height*4".into()));
         }
         let other_segments = from.metadata.iter().filter(|m| m.key == "comment").map(|m| JpgSegment { marker: COM_MARKER, data: m.value.clone().into_bytes() }).collect();
-        Ok(JpgSnapshot { schema: crate::artifacts::jpg::STDIO_JPG_DOCUMENT_SCHEMA.into(), width: from.width, height: from.height, pixels: frame.rgba8.clone(), other_segments, ..JpgSnapshot::default() })
+        Ok(JpgSnapshot { schema: semio_s_artifact_stdio_jpg::STDIO_JPG_DOCUMENT_SCHEMA.into(), width: from.width, height: from.height, pixels: frame.rgba8.clone(), other_segments, ..JpgSnapshot::default() })
     }
 }
 //#endregion 🔖️Serializer
@@ -43,7 +43,7 @@ impl ArtifactSerializer for SemioImageToJpg {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::semio::standards::v1::subsets::image::schema::snapshot::{SemioColorspace, SemioImageFrame, SemioImageMetadataEntry};
+    use crate::standards::v1::subsets::image::schema::snapshot::{SemioColorspace, SemioImageFrame, SemioImageMetadataEntry};
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn sample_semio() -> SemioImageSnapshot {
@@ -66,8 +66,8 @@ mod tests {
         assert_eq!(jpg.width, 2);
         assert_eq!(jpg.height, 1);
         assert_eq!(jpg.other_segments.len(), 1);
-        let bytes = crate::artifacts::jpg::engine::encode_jpg(&jpg).expect("encode real jpg bytes");
-        let decoded = crate::artifacts::jpg::engine::decode_jpg(&bytes).expect("decode real jpg bytes");
+        let bytes = semio_s_artifact_stdio_jpg::engine::encode_jpg(&jpg).expect("encode real jpg bytes");
+        let decoded = semio_s_artifact_stdio_jpg::engine::decode_jpg(&bytes).expect("decode real jpg bytes");
         assert_eq!(decoded.width, semio.width);
         assert_eq!(decoded.height, semio.height);
         assert_eq!(decoded.pixels.len(), semio.frames[0].rgba8.len(), "lossy DCT — length matches, exact bytes need not");

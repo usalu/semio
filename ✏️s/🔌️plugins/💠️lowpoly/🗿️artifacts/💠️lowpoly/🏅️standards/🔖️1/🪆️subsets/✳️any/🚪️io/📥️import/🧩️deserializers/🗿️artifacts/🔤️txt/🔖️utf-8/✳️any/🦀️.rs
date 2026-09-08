@@ -5,7 +5,7 @@
 //! `store::ArtifactDsl::parse_dsl` on the body -- no second bespoke grammar to maintain.
 use crate::artifacts::lowpoly::schema::snapshot::text::parse_dsl;
 use crate::artifacts::lowpoly::schema::snapshot::LowpolySnapshot;
-use semio_s_plugin_stdio::artifacts::txt::TxtSnapshot;
+use semio_s_artifact_stdio_txt::TxtSnapshot;
 
 pub fn register() {}
 

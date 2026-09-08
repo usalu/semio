@@ -1,6 +1,6 @@
 //! puzzle2d <- dxf
 use crate::artifacts::puzzle2d::Puzzle2dSnapshot;
-use semio_s_plugin_stdio::artifacts::dxf::{DxfSnapshot, STDIO_DXF_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_dxf::{DxfSnapshot, STDIO_DXF_DOCUMENT_SCHEMA};
 
 pub fn register() {}
 

@@ -17,8 +17,8 @@
 //!   non-ASCII typed values (e.g. `Rational`) fall back to a `Debug`-formatted string (documented
 //!   as a readable-but-not-machine-parseable representation).
 
-use crate::artifacts::semio::standards::v1::subsets::image::schema::snapshot::{SemioColorspace, SemioImageFrame, SemioImageMetadataEntry, SemioImageSnapshot, STDIO_SEMIOIMAGE_DOCUMENT_SCHEMA};
-use crate::artifacts::tiff::{
+use crate::standards::v1::subsets::image::schema::snapshot::{SemioColorspace, SemioImageFrame, SemioImageMetadataEntry, SemioImageSnapshot, STDIO_SEMIOIMAGE_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_tiff::{
     schema::snapshot::{TiffValues, TAG_BITS_PER_SAMPLE, TAG_COMPRESSION, TAG_IMAGE_LENGTH, TAG_IMAGE_WIDTH, TAG_PHOTOMETRIC, TAG_ROWS_PER_STRIP, TAG_SAMPLES_PER_PIXEL, TAG_STRIP_BYTE_COUNTS, TAG_STRIP_OFFSETS},
     TiffSnapshot,
 };
@@ -72,7 +72,7 @@ impl ArtifactDeserializer for SemioImageFromTiff {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::tiff::schema::snapshot::{TiffFieldType, TiffIfd, TiffTag};
+    use semio_s_artifact_stdio_tiff::schema::snapshot::{TiffFieldType, TiffIfd, TiffTag};
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn sample_tiff() -> TiffSnapshot {

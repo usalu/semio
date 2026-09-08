@@ -88,17 +88,17 @@ fn round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::mutable_input;
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_plugin_stdio::artifacts::zip::standards::v2_0::subsets::base::io::{decode_zip, encode_zip};
-    use semio_s_plugin_stdio::artifacts::zip::standards::v2_0::subsets::base::schema::snapshot::ZipEntry;
-    use semio_s_plugin_stdio::artifacts::zip::standards::v2_0::subsets::iso21320::schema::mutations::add_deflated_entry::AddDeflatedEntry;
-    use semio_s_plugin_stdio::artifacts::zip::standards::v2_0::subsets::iso21320::schema::mutations::add_stored_entry::AddStoredEntry;
-    use semio_s_plugin_stdio::artifacts::zip::standards::v2_0::subsets::iso21320::schema::mutations::remove_entry::RemoveEntry;
-    use semio_s_plugin_stdio::artifacts::zip::standards::v2_0::subsets::iso21320::schema::mutations::rename_entry::RenameEntry;
-    use semio_s_plugin_stdio::artifacts::zip::standards::v2_0::subsets::iso21320::schema::mutations::set_archive_comment::SetArchiveComment;
-    use semio_s_plugin_stdio::artifacts::zip::standards::v2_0::subsets::iso21320::schema::mutations::set_entry_data::SetEntryData;
-    use semio_s_plugin_stdio::artifacts::zip::standards::v2_0::subsets::iso21320::schema::mutations::set_snapshot::SetSnapshot;
-    use semio_s_plugin_stdio::artifacts::zip::standards::v2_0::subsets::iso21320::schema::mutations::{apply_zip_iso21320_mutation, inverse_zip_iso21320_mutation, ZipIso21320Mutation};
-    use semio_s_plugin_stdio::artifacts::zip::{ZipSnapshot, STDIO_ZIP_DOCUMENT_SCHEMA};
+    use crate::standards::v2_0::subsets::base::io::{decode_zip, encode_zip};
+    use crate::standards::v2_0::subsets::base::schema::snapshot::ZipEntry;
+    use crate::standards::v2_0::subsets::iso21320::schema::mutations::add_deflated_entry::AddDeflatedEntry;
+    use crate::standards::v2_0::subsets::iso21320::schema::mutations::add_stored_entry::AddStoredEntry;
+    use crate::standards::v2_0::subsets::iso21320::schema::mutations::remove_entry::RemoveEntry;
+    use crate::standards::v2_0::subsets::iso21320::schema::mutations::rename_entry::RenameEntry;
+    use crate::standards::v2_0::subsets::iso21320::schema::mutations::set_archive_comment::SetArchiveComment;
+    use crate::standards::v2_0::subsets::iso21320::schema::mutations::set_entry_data::SetEntryData;
+    use crate::standards::v2_0::subsets::iso21320::schema::mutations::set_snapshot::SetSnapshot;
+    use crate::standards::v2_0::subsets::iso21320::schema::mutations::{apply_zip_iso21320_mutation, inverse_zip_iso21320_mutation, ZipIso21320Mutation};
+    use crate::{ZipSnapshot, STDIO_ZIP_DOCUMENT_SCHEMA};
     use semio_s_plugin_stdio_test_oracle::artifacts::zip::standards::v2_0::subsets::iso21320::project_zip_iso21320;
 
     //#region 🔖️Spec

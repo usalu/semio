@@ -6,7 +6,7 @@
 //! topics), so uniform columns are the honest fit, not a recursive node shape. Reads
 //! `BcfSnapshot.topics` directly — this file imports nothing from the sibling editor module.
 
-use crate::artifacts::bcf::standards::v2_1::subsets::any::schema::snapshot::BcfSnapshot;
+use crate::standards::v2_1::subsets::any::schema::snapshot::BcfSnapshot;
 use semio_framework_plugin::app::{TableView, TableWindowKit};
 use semio_framework_plugin::{BuiltNode, WindowKindDefinition, WindowKit};
 
@@ -53,7 +53,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn render_lists_one_row_per_topic() {
         let mut document = BcfSnapshot::default();
-        document.topics.push(crate::artifacts::bcf::schema::snapshot::BcfTopic {
+        document.topics.push(crate::schema::snapshot::BcfTopic {
             guid: "g1".into(),
             title: "Clash".into(),
             description: String::new(),

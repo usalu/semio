@@ -5,7 +5,7 @@
   "displayName": "Replace Region",
   "emoji": "🔄️",
   "aggregateVariant": "ReplaceRegion",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "replace-region",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

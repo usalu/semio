@@ -148,9 +148,9 @@ fn round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::{inverse_spec, mutable_input, BASELINE_HAS_HEADER};
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_plugin_stdio::artifacts::csv::standards::v_rfc4180::subsets::any::schema::mutations::apply_csv_mutation;
-    use semio_s_plugin_stdio::artifacts::csv::standards::v_rfc4180::subsets::any::schema::snapshot::{decode_csv, encode_csv};
-    use semio_s_plugin_stdio::artifacts::csv::{CsvField, CsvMutation, CsvRecord, CsvSnapshot, STDIO_CSV_DOCUMENT_SCHEMA};
+    use crate::standards::v_rfc4180::subsets::any::schema::mutations::apply_csv_mutation;
+    use crate::standards::v_rfc4180::subsets::any::schema::snapshot::{decode_csv, encode_csv};
+    use crate::{CsvField, CsvMutation, CsvRecord, CsvSnapshot, STDIO_CSV_DOCUMENT_SCHEMA};
     use semio_s_plugin_stdio_test_oracle::artifacts::csv::standards::v_rfc4180::subsets::any::project_csv_grid;
 
     /// 🔀️ The same JSON mutation spec the oracle reads, turned into this repository's own typed
@@ -176,7 +176,7 @@ mod subject {
                 .collect()
         };
         Ok(match spec.str("kind").as_str() {
-            "set-has-header" => CsvMutation::SetHasHeader(crate::artifacts::csv::schema::mutations::set_has_header::SetHasHeader { has_header: boolean("hasHeader").ok_or("set-has-header: missing `hasHeader`")? }),
+            "set-has-header" => CsvMutation::SetHasHeader(crate::schema::mutations::set_has_header::SetHasHeader { has_header: boolean("hasHeader").ok_or("set-has-header: missing `hasHeader`")? }),
             "set-snapshot" => {
                 let records = params
                     .array("rows")
@@ -197,11 +197,11 @@ mod subject {
                         _ => CsvRecord::default(),
                     })
                     .collect();
-                CsvMutation::SetSnapshot(crate::artifacts::csv::schema::mutations::set_snapshot::SetSnapshot { snapshot: CsvSnapshot { schema: STDIO_CSV_DOCUMENT_SCHEMA.into(), has_header: boolean("hasHeader").unwrap_or(BASELINE_HAS_HEADER), records } })
+                CsvMutation::SetSnapshot(crate::schema::mutations::set_snapshot::SetSnapshot { snapshot: CsvSnapshot { schema: STDIO_CSV_DOCUMENT_SCHEMA.into(), has_header: boolean("hasHeader").unwrap_or(BASELINE_HAS_HEADER), records } })
             }
-            "insert-record" => CsvMutation::InsertRecord(crate::artifacts::csv::schema::mutations::insert_record::InsertRecord { index: number("index").ok_or("insert-record: missing `index`")? as usize, record: CsvRecord { fields: strings("fields").into_iter().map(|value| CsvField { value, quoted: false }).collect() } }),
-            "remove-record" => CsvMutation::RemoveRecord(crate::artifacts::csv::schema::mutations::remove_record::RemoveRecord { index: number("index").ok_or("remove-record: missing `index`")? as usize }),
-            "set-field" => CsvMutation::SetField(crate::artifacts::csv::schema::mutations::set_field::SetField { record_index: number("recordIndex").ok_or("set-field: missing `recordIndex`")? as usize, field_index: number("fieldIndex").ok_or("set-field: missing `fieldIndex`")? as usize, value: params.str("value"), quoted: false }),
+            "insert-record" => CsvMutation::InsertRecord(crate::schema::mutations::insert_record::InsertRecord { index: number("index").ok_or("insert-record: missing `index`")? as usize, record: CsvRecord { fields: strings("fields").into_iter().map(|value| CsvField { value, quoted: false }).collect() } }),
+            "remove-record" => CsvMutation::RemoveRecord(crate::schema::mutations::remove_record::RemoveRecord { index: number("index").ok_or("remove-record: missing `index`")? as usize }),
+            "set-field" => CsvMutation::SetField(crate::schema::mutations::set_field::SetField { record_index: number("recordIndex").ok_or("set-field: missing `recordIndex`")? as usize, field_index: number("fieldIndex").ok_or("set-field: missing `fieldIndex`")? as usize, value: params.str("value"), quoted: false }),
             other => return Err(format!("no subject rule for kind {other:?}")),
         })
     }

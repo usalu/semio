@@ -6,18 +6,12 @@
 
 // #region 🔌️Adapters
 import { NextRequest, NextResponse } from "next/server";
-import { ownedSchema as z } from "../../../../✅️validation.ts";
+import { parseEventPublishRequest } from "../../../../../../🧬️schema/🟦️.ts";
 // #endregion 🔌️Adapters
 
 import { listEvents } from "@/lib";
 import { requireAuth, isAuthError } from "@/lib";
 import { publishEvent } from "@/lib";
-
-const EventSchema = z.object({
-  kind: z.string().min(1),
-  source: z.string().default(""),
-  payload: z.unknown().default({}),
-});
 
 export async function GET(request: NextRequest) {
   const auth = await requireAuth(request);
@@ -40,7 +34,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "invalid JSON" }, { status: 400 });
   }
 
-  const parsed = EventSchema.safeParse(body);
+  const parsed = parseEventPublishRequest(body);
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.message }, { status: 400 });
   }

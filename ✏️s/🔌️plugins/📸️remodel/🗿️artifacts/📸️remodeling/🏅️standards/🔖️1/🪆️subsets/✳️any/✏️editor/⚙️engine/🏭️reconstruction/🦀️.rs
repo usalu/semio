@@ -789,7 +789,7 @@ impl ReconstructionEngine {
                         let gx = preparation.gray[index + 1] - preparation.gray[index - 1];
                         let gy = preparation.gray[index + width] - preparation.gray[index - width];
                         let response = gx * gx + gy * gy;
-                        if response > 0.001 && (x + y) % 3 == 0 {
+                        if response > 0.001 && (x + y).is_multiple_of(3) {
                             preparation.keypoints.push(remodeling_feature::Keypoint { x: x as f32, y: y as f32, octave: 0, angle: gy.atan2(gx), response });
                         }
                     }

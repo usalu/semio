@@ -5,9 +5,9 @@
 //! `edges.modified` entry whose `BrepEdgeDiff` sets `curve` and leaves `start_vertex`/`end_vertex`
 //! at `None` — the geometry is replaced while the topology (which vertices the edge runs between)
 //! is explicitly left alone.
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::decode_semio_brep_diff_json;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::mutations::{decode_semio_brep_mutation_json, SemioBrepMutation};
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::{decode_semio_brep_snapshot_json, SemioBrepSnapshot};
+use crate::standards::v1::subsets::brep::schema::diff::decode_semio_brep_diff_json;
+use crate::standards::v1::subsets::brep::schema::mutations::{decode_semio_brep_mutation_json, SemioBrepMutation};
+use crate::standards::v1::subsets::brep::schema::snapshot::{decode_semio_brep_snapshot_json, SemioBrepSnapshot};
 use pack::value::ToValue;
 use protocol::{Mutation, MutationDiff};
 

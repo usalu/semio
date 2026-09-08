@@ -11,6 +11,6 @@ pub fn diff(payload: &ChangeSiloHydraulicRadiusM, base: &En1991Snapshot) -> prot
     if base.silo_hydraulic_radius_m == payload.new_silo_hydraulic_radius_m {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "Silo hydraulic radius m already has this value.");
     }
-    protocol::MutationOutcome::new(En1991Diff { silo_hydraulic_radius_m: Some(payload.new_silo_hydraulic_radius_m.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1991Diff { silo_hydraulic_radius_m: Some(payload.new_silo_hydraulic_radius_m), ..Default::default() })
 }
 //#endregion 🔖️Diff

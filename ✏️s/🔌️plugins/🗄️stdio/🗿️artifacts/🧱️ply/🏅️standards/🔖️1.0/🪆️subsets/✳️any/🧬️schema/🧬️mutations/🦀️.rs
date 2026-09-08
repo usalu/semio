@@ -22,12 +22,12 @@
 //! reusing the diff file's `pub(crate)` grammar primitives (`hex_encode`/`enc_element`/
 //! `split_top_level`/`encode_option`/...) rather than duplicating them a second time in this file.
 
-use crate::artifacts::ply::schema::diff::{
+use crate::schema::diff::{
     dec_element, dec_format, dec_row, dec_str, dec_value, diff_add_element, diff_insert_row, diff_remove_element, diff_remove_row, diff_set_comments, diff_set_format, diff_set_row_property, diff_set_snapshot, enc_element, enc_format, enc_row,
     enc_str, enc_value, read_bin_element, read_bin_row, read_bin_snapshot, read_bin_str, read_bin_value, split_top_level, strip_brackets, write_bin_element, write_bin_row, write_bin_snapshot, write_bin_str, write_bin_value, PlyDiff,
 };
-use crate::artifacts::ply::schema::snapshot::{PlyElement, PlyFormat, PlyRow, PlyValue};
-use crate::artifacts::ply::PlySnapshot;
+use crate::schema::snapshot::{PlyElement, PlyFormat, PlyRow, PlyValue};
+use crate::PlySnapshot;
 use protocol::Mutation;
 use protocol::OpBinary;
 use protocol::OpText;
@@ -275,7 +275,7 @@ impl OpBinary for PlyMutation {
         match self {
             PlyMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => write_bin_snapshot(&mut w, snapshot),
             PlyMutation::SetFormat(set_format::SetFormat { format }) => {
-                crate::artifacts::ply::schema::diff::write_bin_format(&mut w, *format);
+                crate::schema::diff::write_bin_format(&mut w, *format);
             }
             PlyMutation::InsertComment(insert_comment::InsertComment { index, comment }) => {
                 w.write_varint_u64(*index as u64);
@@ -312,7 +312,7 @@ impl OpBinary for PlyMutation {
         let tag = r.read_u8().map_err(|error| op_pack_err(&error))?;
         match tag {
             0 => Ok(PlyMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: read_bin_snapshot(&mut r).map_err(|error| op_pack_err(&error))? })),
-            1 => Ok(PlyMutation::SetFormat(set_format::SetFormat { format: crate::artifacts::ply::schema::diff::read_bin_format(&mut r).map_err(|error| op_pack_err(&error))? })),
+            1 => Ok(PlyMutation::SetFormat(set_format::SetFormat { format: crate::schema::diff::read_bin_format(&mut r).map_err(|error| op_pack_err(&error))? })),
             2 => {
                 let index = r.read_varint_u64().map_err(|error| op_pack_err(&error))? as usize;
                 let comment = read_bin_str(&mut r).map_err(|error| op_pack_err(&error))?;
@@ -360,9 +360,9 @@ impl OpBinary for PlyMutation {
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn demo_base_snapshot() -> PlySnapshot {
-    use crate::artifacts::ply::schema::snapshot::{PlyProperty, PlyScalarType};
+    use crate::schema::snapshot::{PlyProperty, PlyScalarType};
     PlySnapshot {
-        schema: crate::artifacts::ply::STDIO_PLY_DOCUMENT_SCHEMA.into(),
+        schema: crate::STDIO_PLY_DOCUMENT_SCHEMA.into(),
         format: PlyFormat::Ascii,
         comments: vec!["hi".into()],
         elements: vec![PlyElement { name: "vertex".into(), count: 1, properties: vec![PlyProperty::Scalar { name: "x".into(), kind: PlyScalarType::Float }], rows: vec![PlyRow { values: vec![PlyValue::Float(1.5)] }] }],
@@ -372,7 +372,7 @@ fn demo_base_snapshot() -> PlySnapshot {
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_mutation_cases() -> Vec<PlyMutation> {
-    use crate::artifacts::ply::schema::snapshot::{PlyProperty, PlyScalarType};
+    use crate::schema::snapshot::{PlyProperty, PlyScalarType};
     let snapshot = demo_base_snapshot();
     vec![
         PlyMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: snapshot.clone() }),

@@ -1,15 +1,15 @@
 //! 🧩️ SpreadsheetML (xlsx) import — `xl/workbook.xml`/`xl/worksheets/sheetN.xml`/
 //! `xl/sharedStrings.xml` XML parse into an `XlsxWorkbook`, real OPC package decode, and
 //! magic-shape sniff. Zip/OPC/XML byte-level work is never reimplemented here: it is reused from
-//! the shared `crate::artifacts::zip::opc` layer.
+//! the shared `semio_s_artifact_stdio_zip::opc` layer.
 
 use super::super::super::{attr_val, column_index, column_letters_of, XlsxError, REL_TYPE_OFFICE_DOCUMENT_STRICT, REL_TYPE_SHARED_STRINGS, REL_TYPE_SHARED_STRINGS_STRICT};
-use crate::artifacts::xlsx::{
+use crate::{
     schema::snapshot::{XlsxCell, XlsxCellValue, XlsxSheet, XlsxWorkbook},
     XlsxSnapshot,
 };
-use crate::artifacts::xml::schema::snapshot::{xml_document_from_text, XmlDocument, XmlNode};
-use crate::artifacts::zip::opc::{self, REL_TYPE_OFFICE_DOCUMENT};
+use semio_s_artifact_stdio_xml::schema::snapshot::{xml_document_from_text, XmlDocument, XmlNode};
+use semio_s_artifact_stdio_zip::opc::{self, REL_TYPE_OFFICE_DOCUMENT};
 
 //#region 🔖️SharedStringsXml
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

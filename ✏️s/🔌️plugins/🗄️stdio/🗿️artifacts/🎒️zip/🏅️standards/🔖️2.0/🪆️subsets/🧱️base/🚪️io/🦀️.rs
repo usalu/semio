@@ -2,8 +2,8 @@
 //! (called once from 🔌️plugin/🔧️setup via ⚙️engine::register), not per-leaf register().
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use crate::artifacts::zip::standards::v2_0::subsets::base::schema::ZipAnalyzer;
-    use crate::artifacts::zip::ZipSnapshot;
+    use crate::standards::v2_0::subsets::base::schema::ZipAnalyzer;
+    use crate::ZipSnapshot;
     use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.zip", standard: StandardId("2.0"), subset: SubsetId("*") };
@@ -52,10 +52,10 @@ pub use derived_composition::*;
 // `ZipSnapshot` dependency of its own, kept with its only caller per rule 6 — also reused
 // byte-for-byte by `📷️png`'s own `png_crc32`, since PNG's CRC is the identical ISO-HDLC
 // polynomial); real compression is reused from the deflate artifact's own codec
-// (`crate::artifacts::deflate::standards::v_rfc1950::subsets::any::io::{deflate_raw,
+// (`semio_s_artifact_stdio_deflate::standards::v_rfc1950::subsets::any::io::{deflate_raw,
 // inflate_raw}`) — never reimplemented here.
-use crate::artifacts::zip::schema::snapshot::ZipEntry;
-use crate::artifacts::zip::{ZipSnapshot, STDIO_ZIP_DOCUMENT_SCHEMA};
+use crate::schema::snapshot::ZipEntry;
+use crate::{ZipSnapshot, STDIO_ZIP_DOCUMENT_SCHEMA};
 
 #[derive(Clone, Copy)]
 enum NativeCompressionMethod {
@@ -524,7 +524,7 @@ pub fn decode_zip(data: &[u8]) -> Result<ZipSnapshot, ZipError> {
 
         let raw = match method {
             NativeCompressionMethod::Stored => payload.to_vec(),
-            NativeCompressionMethod::Deflate => crate::artifacts::deflate::standards::v_rfc1950::subsets::any::io::inflate_raw(payload).map_err(ZipError::Malformed)?,
+            NativeCompressionMethod::Deflate => semio_s_artifact_stdio_deflate::standards::v_rfc1950::subsets::any::io::inflate_raw(payload).map_err(ZipError::Malformed)?,
         };
         if raw.len() != uncomp_size {
             return Err(ZipError::Malformed(format!("{name}: decompressed size {} != declared uncompressed size {uncomp_size}", raw.len())));
@@ -590,11 +590,11 @@ fn encode_zip_ordered(snapshot: &ZipSnapshot, ordered: Vec<&ZipEntry>) -> Result
                 8u16,
                 6u16,
                 if entry.name.to_ascii_lowercase().ends_with(".bin") {
-                    crate::artifacts::deflate::standards::v_rfc1950::subsets::any::io::deflate_raw_deterministic_compact_high_search(&entry.data)
+                    semio_s_artifact_stdio_deflate::standards::v_rfc1950::subsets::any::io::deflate_raw_deterministic_compact_high_search(&entry.data)
                 } else if entry.name.to_ascii_lowercase().ends_with(".emf") {
-                    crate::artifacts::deflate::standards::v_rfc1950::subsets::any::io::deflate_raw_deterministic_high_search(&entry.data)
+                    semio_s_artifact_stdio_deflate::standards::v_rfc1950::subsets::any::io::deflate_raw_deterministic_high_search(&entry.data)
                 } else {
-                    crate::artifacts::deflate::standards::v_rfc1950::subsets::any::io::deflate_raw_deterministic(&entry.data)
+                    semio_s_artifact_stdio_deflate::standards::v_rfc1950::subsets::any::io::deflate_raw_deterministic(&entry.data)
                 }
                 .map_err(ZipError::Malformed)?,
             ),
@@ -743,7 +743,7 @@ mod codec_tests {
         let mut central = Vec::new();
         for e in &entries {
             let payload = match e.method {
-                8 => crate::artifacts::deflate::standards::v_rfc1950::subsets::any::io::deflate_raw(&e.data),
+                8 => semio_s_artifact_stdio_deflate::standards::v_rfc1950::subsets::any::io::deflate_raw(&e.data),
                 // Unsupported-method fixtures (e.g. 12/BZIP2) never reach decompression —
                 // `decode_zip` rejects them by method code before touching payload bytes.
                 _ => e.data.clone(),
@@ -1004,8 +1004,8 @@ mod codec_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn deterministic_logical_round_trip() {
-        use crate::artifacts::zip::schema::mutations::set_snapshot;
-        use crate::artifacts::zip::{ZipDiff, ZipMutation};
+        use crate::schema::mutations::set_snapshot;
+        use crate::{ZipDiff, ZipMutation};
         use protocol::{DiffAlgebra, DiffCodec, MutationDiff, OpBinary, OpText};
         use semio_framework_plugin::{AnalyzeSource, ArtifactAnalysis, ArtifactComposition, ComposeSource};
 
@@ -1039,16 +1039,16 @@ mod codec_tests {
         let set_snapshot = ZipMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: logical.clone() });
         let text_op = ZipMutation::parse_op(&set_snapshot.print_op()).expect("parse logical ZIP operation");
         let mut from_text_op = ZipSnapshot::default();
-        crate::artifacts::zip::schema::mutations::apply_zip_mutation(&mut from_text_op, &text_op);
+        crate::schema::mutations::apply_zip_mutation(&mut from_text_op, &text_op);
         assert_eq!(from_text_op, logical);
         let binary_op = ZipMutation::decode_op(&set_snapshot.encode_op().expect("encode logical ZIP operation")).expect("decode logical ZIP operation");
         let mut from_binary_op = ZipSnapshot::default();
-        crate::artifacts::zip::schema::mutations::apply_zip_mutation(&mut from_binary_op, &binary_op);
+        crate::schema::mutations::apply_zip_mutation(&mut from_binary_op, &binary_op);
         assert_eq!(from_binary_op, logical);
 
-        let analysis = crate::artifacts::zip::standards::v2_0::subsets::base::schema::ZipAnalyzerAnalysis::analyze(&[AnalyzeSource::Binary(&pptx_bytes)]);
+        let analysis = crate::standards::v2_0::subsets::base::schema::ZipAnalyzerAnalysis::analyze(&[AnalyzeSource::Binary(&pptx_bytes)]);
         assert_eq!(analysis.parts.snapshot.as_ref(), Some(&logical));
-        let dialect = <crate::artifacts::zip::standards::v2_0::subsets::base::schema::ZipAnalyzerAnalysis as ArtifactAnalysis>::DIALECT;
+        let dialect = <crate::standards::v2_0::subsets::base::schema::ZipAnalyzerAnalysis as ArtifactAnalysis>::DIALECT;
         let composition = ZipComposerComposition::compose(&[ComposeSource { dialect, payload: AnalyzeSource::Binary(&pptx_bytes) }]).expect("compose native OPC ZIP");
         assert_eq!(composition.snapshot, logical);
 
@@ -1056,9 +1056,9 @@ mod codec_tests {
             assert_eq!(decode_zip(&encode_zip(routed).expect("materialize canonical logical ZIP")).expect("redecode canonical logical ZIP"), logical);
         }
 
-        let opc = crate::artifacts::zip::opc::decode_opc(&pptx_bytes).expect("decode logical OPC package");
-        let canonical_opc = crate::artifacts::zip::opc::encode_opc(&opc).expect("materialize deterministic OPC package");
-        assert_eq!(crate::artifacts::zip::opc::decode_opc(&canonical_opc).expect("redecode deterministic OPC package"), opc);
+        let opc = crate::opc::decode_opc(&pptx_bytes).expect("decode logical OPC package");
+        let canonical_opc = crate::opc::encode_opc(&opc).expect("materialize deterministic OPC package");
+        assert_eq!(crate::opc::decode_opc(&canonical_opc).expect("redecode deterministic OPC package"), opc);
     }
 
     #[test]
@@ -1103,8 +1103,8 @@ mod codec_tests {
 /// DIFFERENT return type (`&'static [&'static ComposerEntry]` vs this module's
 /// `&'static [ComposerEntry]`); a bare `io_registry::entries()` silently rebinds to the wrong one.
 pub mod io_registry {
-    use crate::artifacts::zip::standards::v2_0::subsets::base::schema::ZipComposer as ZipRawAnyComposer;
-    use crate::artifacts::zip::standards::v2_0::subsets::iso21320::schema::ZipIso21320Composer;
+    use crate::standards::v2_0::subsets::base::schema::ZipComposer as ZipRawAnyComposer;
+    use crate::standards::v2_0::subsets::iso21320::schema::ZipIso21320Composer;
     use semio_framework_plugin::{composer_entry_of, ComposerEntry};
     use std::sync::OnceLock;
 

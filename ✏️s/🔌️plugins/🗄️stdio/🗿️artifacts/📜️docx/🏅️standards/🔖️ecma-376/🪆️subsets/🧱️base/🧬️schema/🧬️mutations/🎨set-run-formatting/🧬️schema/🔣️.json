@@ -1,0 +1,80 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/docx/ecma-376/base/mutation/set-run-formatting.json",
+  "title": "SetRunFormatting",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "path",
+    "run_index",
+    "bold",
+    "italic",
+    "underline"
+  ],
+  "properties": {
+    "path": {
+      "$ref": "#/$defs/DocxBlockPath"
+    },
+    "run_index": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "bold": {
+      "type": "boolean"
+    },
+    "italic": {
+      "type": "boolean"
+    },
+    "underline": {
+      "type": "boolean"
+    },
+    "mutation": {
+      "const": "setRunFormatting",
+      "description": "Aggregate discriminator spliced in by DocxMutation; absent when the payload stands alone."
+    }
+  },
+  "$defs": {
+    "DocxBlockPath": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index"
+      ],
+      "properties": {
+        "segments": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/DocxPathSegment"
+          }
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "DocxPathSegment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "blockIndex",
+        "row",
+        "cell"
+      ],
+      "properties": {
+        "blockIndex": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "row": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "cell": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    }
+  }
+}

@@ -4,50 +4,19 @@
 // Ticket lifecycle API: open, close, reopen, list, detail.
 
 // Specs:
-// - POST /api/v1/tickets with action field dispatches open/close/reopen.
-// - GET /api/v1/tickets lists tickets, optionally filtered by status.
+// - POST /api/v1/ticket with action field dispatches open/close/reopen.
+// - GET /api/v1/ticket lists tickets, optionally filtered by status.
 // - All mutating operations require authenticated trusted developer.
 // - Events are published for all lifecycle transitions.
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
 import { NextRequest, NextResponse } from "next/server";
-import { ownedSchema as z } from "../../../../✅️validation.ts";
+import { parseCommandAction, parseTicketCloseRequest, parseTicketOpenRequest, parseTicketReopenRequest } from "../../../../../../🧬️schema/🟦️.ts";
 import { upsertTicket, getTicket, listTickets, insertTicketFiles, listClaimsByTicket, type Ticket } from "@/lib";
 import { requireAuth, isAuthError } from "@/lib";
 import { publishEvent } from "@/lib";
 // #endregion 🔌️Adapters
-
-// 🎫️#region 🎄️Schemas
-const TicketOpenSchema = z.object({
-  action: z.literal("open"),
-  ticket_id: z.string().min(1),
-  title: z.string().min(1),
-  prompt: z.string().default(""),
-  llm: z.string().default(""),
-  client: z.string().default(""),
-  author: z.string().default(""),
-  github_issue: z.string().default(""),
-  goal: z.string().default(""),
-  parent: z.string().nullable().default(null),
-});
-
-const TicketCloseSchema = z.object({
-  action: z.literal("close"),
-  ticket_id: z.string().min(1),
-  summary: z.string().min(1),
-  files: z.array(z.string()).default([]),
-});
-
-const TicketReopenSchema = z.object({
-  action: z.literal("reopen"),
-  ticket_id: z.string().min(1),
-  prompt: z.string().min(1),
-  llm: z.string().default(""),
-  title: z.string().default(""),
-  client: z.string().default(""),
-});
-// #endregion 🎄️Schemas
 
 // 🎯️#region 🪄️Handlers
 export async function GET(request: NextRequest) {
@@ -70,14 +39,14 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "invalid JSON" }, { status: 400 });
   }
 
-  const actionCheck = z.object({ action: z.string() }).safeParse(body);
+  const actionCheck = parseCommandAction(body);
   if (!actionCheck.success) {
-    return NextResponse.json({ error: "action required" }, { status: 400 });
+    return NextResponse.json({ error: actionCheck.error.message }, { status: 400 });
   }
 
-  switch (actionCheck.data.action) {
+  switch (actionCheck.data) {
     case "open": {
-      const parsed = TicketOpenSchema.safeParse(body);
+      const parsed = parseTicketOpenRequest(body);
       if (!parsed.success) {
         return NextResponse.json({ error: parsed.error.message }, { status: 400 });
       }
@@ -104,7 +73,7 @@ export async function POST(request: NextRequest) {
     }
 
     case "close": {
-      const parsed = TicketCloseSchema.safeParse(body);
+      const parsed = parseTicketCloseRequest(body);
       if (!parsed.success) {
         return NextResponse.json({ error: parsed.error.message }, { status: 400 });
       }
@@ -126,7 +95,7 @@ export async function POST(request: NextRequest) {
     }
 
     case "reopen": {
-      const parsed = TicketReopenSchema.safeParse(body);
+      const parsed = parseTicketReopenRequest(body);
       if (!parsed.success) {
         return NextResponse.json({ error: parsed.error.message }, { status: 400 });
       }

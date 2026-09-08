@@ -12,9 +12,9 @@
 //! component build) — see its own doc comment. `extras`/`extensions` are typed via this module's
 //! own [`GltfJson`] value enum, never `serde_json::Value`.
 
-use crate::artifacts::gltf::engine::{GltfAccessorType, GltfComponentType};
-use crate::artifacts::gltf::STDIO_GLTF_DOCUMENT_SCHEMA;
-use schema::ArtifactSchema;
+use crate::engine::{GltfAccessorType, GltfComponentType};
+use crate::STDIO_GLTF_DOCUMENT_SCHEMA;
+use framework_schema::ArtifactSchema;
 use serde::de::{MapAccess, SeqAccess, Visitor};
 use serde::ser::{SerializeMap, SerializeSeq};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
@@ -1333,10 +1333,10 @@ impl store::ArtifactDsl for GltfSnapshot {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
-        crate::artifacts::gltf::engine::parse_gltf_document(body.trim().as_bytes()).map_err(|e| store::TextError::new(format!("gltf json: {e}"), dsl::TextSpan::at(1, 1)))
+        crate::engine::parse_gltf_document(body.trim().as_bytes()).map_err(|e| store::TextError::new(format!("gltf json: {e}"), dsl::TextSpan::at(1, 1)))
     }
     fn print_dsl(&self) -> String {
-        let body_bytes = crate::artifacts::gltf::engine::serialize_gltf_document(self);
+        let body_bytes = crate::engine::serialize_gltf_document(self);
         let body = String::from_utf8(body_bytes).unwrap_or_else(|_| "{}".into());
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
@@ -1350,11 +1350,11 @@ impl store::ArtifactPack for GltfSnapshot {
     /// framing exactly (this is what that protocol file's `walk_protocol` is built to walk; per
     /// the recipe's own instruction, the protocol description must match what `encode_pack`
     /// actually produces). A raw `.glb` file byte-for-byte (unwrapped) still decodes directly via
-    /// `crate::artifacts::gltf::engine::decode_glb` (🧐️analyzer's own fast path) — this impl only
+    /// `crate::engine::decode_glb` (🧐️analyzer's own fast path) — this impl only
     /// adds the SEMIO envelope around the SAME real container, it does not invent a second shape.
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
-        let raw = crate::artifacts::gltf::engine::encode_glb(self).map_err(store::PackError::Schema)?;
+        let raw = crate::engine::encode_glb(self).map_err(store::PackError::Schema)?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
@@ -1364,7 +1364,7 @@ impl store::ArtifactPack for GltfSnapshot {
             return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
         }
         let _ = options;
-        crate::artifacts::gltf::engine::decode_glb(&inner).map_err(store::PackError::Schema)
+        crate::engine::decode_glb(&inner).map_err(store::PackError::Schema)
     }
 }
 //#endregion 🔖️HandcraftedArtifactCodecs

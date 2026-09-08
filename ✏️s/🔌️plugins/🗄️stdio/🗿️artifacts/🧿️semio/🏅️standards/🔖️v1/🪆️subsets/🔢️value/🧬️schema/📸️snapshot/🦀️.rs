@@ -4,7 +4,7 @@
 //! this subset needs to make `SemioValue::Ref` genuinely referential rather than a dangling-by-
 //! construction stub.
 
-use schema::ArtifactSchema;
+use framework_schema::ArtifactSchema;
 
 //#region 🔖️Ids
 pub const STDIO_SEMIOVALUE_DOCUMENT_SCHEMA: &str = "stdio.semio.value";
@@ -125,13 +125,13 @@ impl Default for SemioValueSnapshot {
 /// functions directly rather than keeping its own second copy.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn enc_semio_value_snapshot(s: &SemioValueSnapshot) -> String {
-    let nodes = s.nodes.iter().map(crate::artifacts::semio::standards::v1::subsets::value::schema::diff::enc_semio_value_node).collect::<Vec<_>>().join(",");
-    format!("[{},{},[{}]]", crate::artifacts::semio::standards::v1::subsets::value::schema::diff::enc_str(&s.schema), crate::artifacts::semio::standards::v1::subsets::value::schema::diff::enc_semio_value(&s.root), nodes)
+    let nodes = s.nodes.iter().map(crate::standards::v1::subsets::value::schema::diff::enc_semio_value_node).collect::<Vec<_>>().join(",");
+    format!("[{},{},[{}]]", crate::standards::v1::subsets::value::schema::diff::enc_str(&s.schema), crate::standards::v1::subsets::value::schema::diff::enc_semio_value(&s.root), nodes)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_semio_value_snapshot(s: &str) -> Result<SemioValueSnapshot, String> {
-    use crate::artifacts::semio::standards::v1::subsets::base::schema::triples::{split_top_level, strip_brackets};
-    use crate::artifacts::semio::standards::v1::subsets::value::schema::diff::{dec_semio_value, dec_semio_value_node, dec_str};
+    use crate::standards::v1::subsets::base::schema::triples::{split_top_level, strip_brackets};
+    use crate::standards::v1::subsets::value::schema::diff::{dec_semio_value, dec_semio_value_node, dec_str};
     let inner = strip_brackets(s)?;
     let parts = split_top_level(inner, ',');
     let [schema_s, root_s, nodes_s] = parts.as_slice() else {

@@ -2,6 +2,44 @@
   "name": "@semio-tech/mit-bestand-demonstrator",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "targets": {
+    "prepare-dev": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [
+        "@semio-tech/framework-os-dev:prepare-aggregator-react-dev",
+        "@semio-tech/framework-os-dev:prepare-aussuchen-react-dev",
+        "@semio-tech/framework-os-dev:prepare-bearbeiten-react-dev",
+        "@semio-tech/framework-os-dev:prepare-generation3d-react-dev",
+        "@semio-tech/framework-os-dev:prepare-generator-react-dev",
+        "@semio-tech/framework-os-dev:prepare-koordinator-react-dev",
+        "@semio-tech/framework-os-dev:prepare-verfolgen-react-dev"
+      ],
+      "options": {
+        "cwd": "♻️mit-bestand/🧺️demonstrator",
+        "command": "bun ./🔨️modules/🧩️runtime/📜️script.ts prepare dev",
+        "forwardAllArgs": false
+      }
+    },
+    "prepare-release": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [
+        "@semio-tech/framework-os-dev:prepare-aggregator-react-release",
+        "@semio-tech/framework-os-dev:prepare-aussuchen-react-release",
+        "@semio-tech/framework-os-dev:prepare-bearbeiten-react-release",
+        "@semio-tech/framework-os-dev:prepare-generation3d-react-release",
+        "@semio-tech/framework-os-dev:prepare-generator-react-release",
+        "@semio-tech/framework-os-dev:prepare-koordinator-react-release",
+        "@semio-tech/framework-os-dev:prepare-verfolgen-react-release"
+      ],
+      "options": {
+        "cwd": "♻️mit-bestand/🧺️demonstrator",
+        "command": "bun ./🔨️modules/🧩️runtime/📜️script.ts prepare release",
+        "forwardAllArgs": false
+      }
+    },
     "dev": {
       "executor": "nx:run-commands",
       "dependsOn": [],

@@ -1,5 +1,5 @@
 {
-  "schema": "semio.framework.async.worker-deferred-wake/v1",
+  "schema": "https://semio.tech/schema/framework/async/deferred-wake/schema.json#/$defs/DeferredWakeFixture",
   "capacity": {
     "maintenanceHooks": 64,
     "backendControls": 64,

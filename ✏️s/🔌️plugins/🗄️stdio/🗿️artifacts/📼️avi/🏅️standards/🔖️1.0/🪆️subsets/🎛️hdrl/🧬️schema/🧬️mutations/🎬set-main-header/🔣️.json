@@ -5,12 +5,19 @@
   "displayName": "Set Main Header",
   "emoji": "🎬",
   "aggregateVariant": "SetMainHeader",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
-  "outcomeClasses": ["applied"],
+  "outcomeClasses": [
+    "applied"
+  ],
   "composition": "atomic",
-  "requiredLanguageSurfaces": ["rust", "json-schema", "text", "binary"]
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
 }

@@ -26,12 +26,12 @@ pub type SurfacePatchBounds = (f64, f64, f64, f64, (Pnt3, Pnt3));
 pub type SurfaceIntersectionSample = (Pnt3, f64, f64, f64, f64);
 
 
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::engine::contract::ParamDomain;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::{Curve2, Curve3};
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::error::IntersectError;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::surface::Surface;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Frame3;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::{Pnt2, Pnt3, Vec2, Vec3};
+use crate::standards::v1::subsets::brep::schema::engine::contract::ParamDomain;
+use crate::standards::v1::subsets::brep::schema::snapshot::curve::{Curve2, Curve3};
+use crate::standards::v1::subsets::brep::schema::snapshot::error::IntersectError;
+use crate::standards::v1::subsets::brep::schema::snapshot::surface::Surface;
+use crate::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Frame3;
+use crate::standards::v1::subsets::brep::schema::snapshot::vector::{Pnt2, Pnt3, Vec2, Vec3};
 
 // #region 🔖️Api
 
@@ -69,8 +69,8 @@ pub fn intersect_surface_surface(a: &Surface, b: &Surface, tol: f64) -> Result<V
         (Surface::Cone { frame: cf, half_angle }, Surface::Plane { frame }) => plane_cone(frame, cf, *half_angle, tol).map(swap_ab),
         (Surface::Plane { frame }, Surface::Sphere { frame: sf, radius }) => plane_sphere(frame, sf, *radius, tol),
         (Surface::Sphere { frame: sf, radius }, Surface::Plane { frame }) => plane_sphere(frame, sf, *radius, tol).map(swap_ab),
-        (Surface::Plane { frame }, Surface::Torus { frame: tf, major_radius, minor_radius }) => plane_torus(frame, tf, *major_radius, *minor_radius, tol),
-        (Surface::Torus { frame: tf, major_radius, minor_radius }, Surface::Plane { frame }) => plane_torus(frame, tf, *major_radius, *minor_radius, tol).map(swap_ab),
+        (Surface::Plane { frame }, Surface::Torus { frame: tf, major_radius, minor_radius }) => Ok(plane_torus(frame, tf, *major_radius, *minor_radius, tol)),
+        (Surface::Torus { frame: tf, major_radius, minor_radius }, Surface::Plane { frame }) => Ok(swap_ab(plane_torus(frame, tf, *major_radius, *minor_radius, tol))),
         (Surface::Sphere { frame: fa, radius: ra }, Surface::Sphere { frame: fb, radius: rb }) => sphere_sphere(fa, *ra, fb, *rb, tol),
         (Surface::Cylinder { .. }, Surface::Cylinder { .. }) => cylinder_cylinder(a, b, tol),
         (Surface::Cylinder { .. } | Surface::Cone { .. } | Surface::Sphere { .. } | Surface::Torus { .. }, Surface::Cylinder { .. } | Surface::Cone { .. } | Surface::Sphere { .. } | Surface::Torus { .. }) => {
@@ -454,21 +454,21 @@ fn plane_sphere(plane: &Frame3, sphere: &Frame3, radius: f64, tol: f64) -> Resul
 /// axis-containing (exactly two tube circles) are exact; oblique sections (Villarceau included)
 /// fall to [`general_marching`] (documented gap).
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-fn plane_torus(plane: &Frame3, torus: &Frame3, major_radius: f64, minor_radius: f64, tol: f64) -> Result<Vec<IntCurve>, IntersectError> {
+fn plane_torus(plane: &Frame3, torus: &Frame3, major_radius: f64, minor_radius: f64, tol: f64) -> Vec<IntCurve> {
     let axis = torus.z.normalized().unwrap_or(Vec3::Z);
     let n = plane.z.normalized().unwrap_or(Vec3::Z);
     let cos_theta = n.dot(axis).abs();
     let torus_surf = Surface::Torus { frame: *torus, major_radius, minor_radius };
     let plane_surf = Surface::Plane { frame: *plane };
     if (1.0 - cos_theta) <= tol {
-        return Ok(plane_level_case(plane, &torus_surf, torus.origin, axis, tol));
+        return plane_level_case(plane, &torus_surf, torus.origin, axis, tol);
     }
     if cos_theta <= tol {
         let offset = n.dot(torus.origin - plane.origin);
         if offset.abs() > tol {
-            return Ok(general_marching(&plane_surf, &torus_surf, tol));
+            return general_marching(&plane_surf, &torus_surf, tol);
         }
-        let Some(radial) = axis.cross(n).normalized() else { return Ok(general_marching(&plane_surf, &torus_surf, tol)) };
+        let Some(radial) = axis.cross(n).normalized() else { return general_marching(&plane_surf, &torus_surf, tol) };
         let mut out = Vec::new();
         for sign in [1.0, -1.0] {
             let center = torus.origin + radial * (major_radius * sign);
@@ -476,9 +476,9 @@ fn plane_torus(plane: &Frame3, torus: &Frame3, major_radius: f64, minor_radius: 
             let curve3 = Curve3::Circle { frame, radius: minor_radius };
             out.push(finish_intcurve(curve3, &plane_surf, &torus_surf, tol));
         }
-        return Ok(out);
+        return out;
     }
-    Ok(general_marching(&plane_surf, &torus_surf, tol))
+    general_marching(&plane_surf, &torus_surf, tol)
 }
 
 /// 🏄 Solves a plane ⊥ an axisymmetric surface's axis against that surface's meridian profile —

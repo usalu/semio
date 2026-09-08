@@ -124,3 +124,86 @@ diff --git a/dist/src/daemon/logger.js b/dist/src/daemon/logger.js
          }
          catch {
              // Ignore write errors
+diff --git a/dist/src/daemon/server/project-graph-incremental-recomputation.js b/dist/src/daemon/server/project-graph-incremental-recomputation.js
+--- a/dist/src/daemon/server/project-graph-incremental-recomputation.js
++++ b/dist/src/daemon/server/project-graph-incremental-recomputation.js
+@@ -28,6 +28,7 @@
+ const watcher_1 = require("./watcher");
+ const logger_1 = require("../logger");
+ let cachedSerializedProjectGraphPromise;
++let activeRecomputePromise;
+ // Maps file path to a version counter that increments on each modification.
+ // This lets us detect mid-flight re-modifications when clearing processed files.
+ const collectedUpdatedFiles = new Map();
+@@ -61,12 +62,16 @@
+  * return a graph built against a stale plugin set
+  * (see spread.test.ts "middle plugin" flake).
+  */
+-function kickOffRecompute() {
++function kickOffRecompute(predecessor) {
++    if (activeRecomputePromise && activeRecomputePromise !== predecessor) {
++        cachedSerializedProjectGraphPromise = activeRecomputePromise;
++        return;
++    }
+     // The cached pointer is about to hold an unsettled promise, so whatever the
+     // previous state described is no longer what the cache serves.
+     servedGraphState = null;
+     let myPromise;
+-    myPromise = (async () => {
++    myPromise = Promise.resolve().then(async () => {
+         // Must resolve, never reject: kickOffRecompute() runs fire-and-forget, so
+         // a rejected myPromise crashes the daemon (unhandled rejection). A throwing
+         // prologue (e.g. plugin load fails) becomes an errorResult the next requester surfaces.
+@@ -81,7 +86,7 @@
+             // Plugin set we just loaded may already be stale vs disk.
+             if (isStale(myPluginsHash))
+                 return chainToSuccessor(myPromise);
+-            const result = await processFilesAndCreateAndSerializeProjectGraph(plugins);
++            const result = await processFilesAndCreateAndSerializeProjectGraph(plugins, myPromise);
+             // Compute may have run against plugins that are now stale.
+             if (isStale(myPluginsHash))
+                 return chainToSuccessor(myPromise);
+@@ -101,7 +106,11 @@
+         catch (e) {
+             return errorResult(e);
+         }
+-    })();
++        finally {
++            if (activeRecomputePromise === myPromise) activeRecomputePromise = undefined;
++        }
++    });
++    activeRecomputePromise = myPromise;
+     cachedSerializedProjectGraphPromise = myPromise;
+ }
+ function isStale(expectedHash) {
+@@ -115,8 +124,8 @@
+  */
+ function chainToSuccessor(myPromise) {
+     logger_1.serverLogger.log('Discarding stale recompute result (nx.json plugins changed mid-compute).');
+-    if (cachedSerializedProjectGraphPromise === myPromise)
+-        kickOffRecompute();
++    if (!cachedSerializedProjectGraphPromise || cachedSerializedProjectGraphPromise === myPromise)
++        kickOffRecompute(myPromise);
+     return cachedSerializedProjectGraphPromise;
+ }
+ function readNxJsonPluginsHash() {
+@@ -367,7 +376,7 @@
+     }
+     return knownWorkspaceFiles.has(path);
+ }
+-async function processFilesAndCreateAndSerializeProjectGraph(separatedPlugins) {
++async function processFilesAndCreateAndSerializeProjectGraph(separatedPlugins, myPromise) {
+     const plugins = [
+         ...separatedPlugins.specifiedPlugins,
+         ...separatedPlugins.defaultPlugins,
+@@ -394,8 +403,8 @@
+         // there is nothing to chain to. Returning undefined lets `if (stale)
+         // return stale` fall through and the compute commits stale data.
+         // Kick off a successor so we always have a real promise to chain to.
+-        if (!cachedSerializedProjectGraphPromise) {
+-            kickOffRecompute();
++        if (!cachedSerializedProjectGraphPromise || cachedSerializedProjectGraphPromise === myPromise) {
++            kickOffRecompute(myPromise);
+         }
+         return cachedSerializedProjectGraphPromise;
+     };

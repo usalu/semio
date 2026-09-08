@@ -2,8 +2,8 @@
 //! the framework `TreeWindowKit` (contract §2.6). Same node-id path encoding as the sibling
 //! mutation-capable window (documentation only — this file never imports the editor module).
 
-use crate::artifacts::xml::schema::snapshot::XmlNode;
-use crate::artifacts::xml::XmlSnapshot;
+use crate::schema::snapshot::XmlNode;
+use crate::XmlSnapshot;
 use semio_framework_plugin::app::{TreeNodeView, TreeView, TreeWindowKit, WindowKit};
 use semio_framework_plugin::{BuiltNode, LocalizedLabel, WindowKindDefinition};
 
@@ -71,7 +71,7 @@ mod tests {
     async fn render_walks_element_children() {
         let document = XmlSnapshot {
             schema: "stdio.xml".into(),
-            doc: crate::artifacts::xml::schema::snapshot::XmlDocument { root: Some(XmlNode::Element { name: "root".into(), attrs: Vec::new(), children: Vec::new() }), doctype: None, declaration: None, prolog: Vec::new() },
+            doc: crate::schema::snapshot::XmlDocument { root: Some(XmlNode::Element { name: "root".into(), attrs: Vec::new(), children: Vec::new() }), doctype: None, declaration: None, prolog: Vec::new() },
         };
         let node = render(&document).expect("render");
         let section = node.children.get(0).expect("tree section");

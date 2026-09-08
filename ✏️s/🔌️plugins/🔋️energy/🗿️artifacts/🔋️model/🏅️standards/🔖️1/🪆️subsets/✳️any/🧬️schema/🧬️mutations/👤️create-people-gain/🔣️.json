@@ -5,7 +5,7 @@
   "displayName": "Create People Gain",
   "emoji": "👤️",
   "aggregateVariant": "CreatePeopleGain",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "create-people-gain",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

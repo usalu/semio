@@ -816,7 +816,7 @@
         {
           "id": "change-jfif-header",
           "capability": "jpg-jfif-1-01-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -836,7 +836,7 @@
         {
           "id": "change-re-encode-quality",
           "capability": "jpg-jfif-1-01-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -856,7 +856,7 @@
         {
           "id": "change-restart-interval",
           "capability": "jpg-jfif-1-01-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -876,7 +876,7 @@
         {
           "id": "insert-other-segment",
           "capability": "jpg-jfif-1-01-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -896,7 +896,7 @@
         {
           "id": "remove-huffman-table",
           "capability": "jpg-jfif-1-01-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -916,7 +916,7 @@
         {
           "id": "remove-other-segment",
           "capability": "jpg-jfif-1-01-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -936,7 +936,7 @@
         {
           "id": "remove-quant-table",
           "capability": "jpg-jfif-1-01-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -956,7 +956,7 @@
         {
           "id": "replace-huffman-table",
           "capability": "jpg-jfif-1-01-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -976,7 +976,7 @@
         {
           "id": "replace-pixels",
           "capability": "jpg-jfif-1-01-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -996,7 +996,7 @@
         {
           "id": "replace-quant-table",
           "capability": "jpg-jfif-1-01-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],

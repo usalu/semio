@@ -11,10 +11,10 @@
 //! leaf's own oracle. The derived `.op.semio`/`.spr.semio`/`.dsl.semio`/`.pack.semio`/
 //! `.patch.semio` encodings come from `fixtures generate`, not from here.
 
-use crate::artifacts::gltf::schema::mutations::delete_buffer::diff::GltfDeleteBufferDiff;
-use crate::artifacts::gltf::schema::mutations::delete_buffer::GltfDeleteBufferPayload;
-use crate::artifacts::gltf::schema::mutations::delete_buffer::{diff, inverse, mutation};
-use crate::artifacts::gltf::GltfSnapshot;
+use crate::schema::mutations::delete_buffer::diff::GltfDeleteBufferDiff;
+use crate::schema::mutations::delete_buffer::GltfDeleteBufferPayload;
+use crate::schema::mutations::delete_buffer::{diff, inverse, mutation};
+use crate::GltfSnapshot;
 
 const CASE: &str = "delete-buffer/removes-the-two-byte-buffer-and-retargets-the-buffer-view";
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
@@ -105,7 +105,7 @@ async fn committed_diff_is_canonical() {
     let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "{CASE}: committed diff JSON is not canonical");
-    assert!(matches!(&decoded.operation, crate::artifacts::gltf::schema::mutations::delete_buffer::diff::GltfDeleteBufferOperation::Delete { bytes, .. } if bytes == &vec![10u8, 20]), "{CASE}: the committed delete operation must carry the removed bytes");
+    assert!(matches!(&decoded.operation, crate::schema::mutations::delete_buffer::diff::GltfDeleteBufferOperation::Delete { bytes, .. } if bytes == &vec![10u8, 20]), "{CASE}: the committed delete operation must carry the removed bytes");
 }
 
 /// 🩹 Applying the committed diff directly to `before` yields the committed `after` — the diff is

@@ -347,6 +347,11 @@ pub extern "C" fn sequence_bridge_create() -> *mut SequenceBridgeOwner {
     Box::into_raw(Box::new(SequenceBridgeOwner::new()))
 }
 
+/// 🗑️ Frees a terminal bridge owner; returns zero while it still retains work.
+///
+/// # Safety
+/// A non-null owner must come from `sequence_bridge_create`, remain allocated, and
+/// have no concurrent access or outstanding references. A return value of one consumes it.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn sequence_bridge_destroy(owner: *mut SequenceBridgeOwner) -> i32 {
     let Some(owner_ref) = (unsafe { owner.as_ref() }) else {
@@ -370,6 +375,11 @@ pub extern "C" fn sequence_bridge_allocate(length: usize) -> *mut u8 {
     pointer
 }
 
+/// ♻️ Releases a buffer allocated by the bridge.
+///
+/// # Safety
+/// A non-null pointer with nonzero capacity must identify an unreleased allocation from
+/// `sequence_bridge_allocate` with that capacity. No references may remain to its storage.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn sequence_bridge_release(pointer: *mut u8, capacity: usize) {
     if !pointer.is_null() && capacity != 0 {
@@ -377,6 +387,12 @@ pub unsafe extern "C" fn sequence_bridge_release(pointer: *mut u8, capacity: usi
     }
 }
 
+/// 📨️ Decodes and submits one request to the bridge owner.
+///
+/// # Safety
+/// A non-null owner must be a live bridge allocation with exclusive access for this call.
+/// The input must remain readable for `length` initialized bytes and must not alias
+/// memory mutated through the owner.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn sequence_bridge_send(owner: *mut SequenceBridgeOwner, pointer: *const u8, length: usize, byte_credit: usize) -> i32 {
     let Some(owner) = (unsafe { sequence_bridge_owner(owner) }) else {
@@ -389,9 +405,15 @@ pub unsafe extern "C" fn sequence_bridge_send(owner: *mut SequenceBridgeOwner, p
     let Ok(message) = decode_abi_message(bytes) else {
         return -1;
     };
-    owner.bridge.try_send(message, AbiWorkBudget::credits(byte_credit)).map(|_| 1).unwrap_or(-1)
+    owner.bridge.try_send(message, AbiWorkBudget::credits(byte_credit)).map_or(-1, |_| 1)
 }
 
+/// 📬️ Copies the next bridge message into caller-owned storage when it fits.
+///
+/// # Safety
+/// A non-null owner must be a live bridge allocation with exclusive access for this call.
+/// The output must be writable for `capacity` bytes and must not overlap owner storage
+/// or any retained message. No other references may access the written bytes during the call.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn sequence_bridge_poll(owner: *mut SequenceBridgeOwner, pointer: *mut u8, capacity: usize, byte_credit: usize) -> i32 {
     let Some(owner) = (unsafe { sequence_bridge_owner(owner) }) else {
@@ -420,6 +442,10 @@ pub unsafe extern "C" fn sequence_bridge_poll(owner: *mut SequenceBridgeOwner, p
     i32::try_from(length).unwrap_or(-1)
 }
 
+/// 🔒️ Starts closing the bridge and releases its pending delivery.
+///
+/// # Safety
+/// A non-null owner must be a live bridge allocation with exclusive access for this call.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn sequence_bridge_begin_close(owner: *mut SequenceBridgeOwner) {
     if let Some(owner) = unsafe { sequence_bridge_owner(owner) } {
@@ -428,6 +454,10 @@ pub unsafe extern "C" fn sequence_bridge_begin_close(owner: *mut SequenceBridgeO
     }
 }
 
+/// 🔎️ Reports whether the bridge retains any pending work.
+///
+/// # Safety
+/// A non-null owner must be a live bridge allocation with exclusive access for this call.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn sequence_bridge_terminal_is_empty(owner: *mut SequenceBridgeOwner) -> i32 {
     unsafe { sequence_bridge_owner(owner) }.map_or(0, |owner| i32::from(owner.terminal_is_empty()))

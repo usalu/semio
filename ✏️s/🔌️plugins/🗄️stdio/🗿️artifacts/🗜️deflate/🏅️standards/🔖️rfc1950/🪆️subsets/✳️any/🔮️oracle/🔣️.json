@@ -69,7 +69,7 @@
         {
           "id": "set-compression-params",
           "capability": "deflate-rfc1950-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -88,7 +88,7 @@
         {
           "id": "set-payload",
           "capability": "deflate-rfc1950-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -107,7 +107,7 @@
         {
           "id": "set-preset-dictionary",
           "capability": "deflate-rfc1950-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -126,7 +126,7 @@
         {
           "id": "set-snapshot",
           "capability": "deflate-rfc1950-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],

@@ -1,0 +1,37 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/framework/os/config/mutation/clear-default-app.json",
+  "title": "ClearDefaultApp",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "dialect",
+    "role"
+  ],
+  "properties": {
+    "dialect": {
+      "title": "ArtifactDialect",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "artifactKind",
+        "standard",
+        "subset"
+      ],
+      "properties": {
+        "artifactKind": {
+          "type": "string"
+        },
+        "standard": {
+          "type": "string"
+        },
+        "subset": {
+          "type": "string"
+        }
+      }
+    },
+    "role": {
+      "type": "string"
+    }
+  }
+}

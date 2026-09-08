@@ -5,7 +5,7 @@
   "displayName": "Set Layer Blend Mode",
   "emoji": "🌓️",
   "aggregateVariant": "SetLayerBlendMode",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "set-layer-blend-mode",
   "binaryTag": 3,
   "invertibility": "explicit-mutation",

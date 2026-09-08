@@ -5,7 +5,7 @@
   "displayName": "Change Infiltration Effective Leakage Area",
   "emoji": "🕳️",
   "aggregateVariant": "ChangeInfiltrationEffectiveLeakageArea",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-infiltration-effective-leakage-area",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

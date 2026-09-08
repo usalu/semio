@@ -1,0 +1,1963 @@
+[
+ {
+  "path": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🧪️fixtures/🧬️writer-child-local-text.schema.json",
+  "blob": "41d87716d2f063ea068f3a9af24a8b6d2de90887",
+  "family": "scene-owner",
+  "role": "fixture-owned application contract",
+  "classification": "violation",
+  "owner": "none (sits in 🧪️fixtures at artifact root, no 🧬️schema module owns it)",
+  "intendedOwner": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema (or a new editor-law schema location)",
+  "exports": [
+   "writer-child-local-text-law"
+  ],
+  "consumers": [
+   {
+    "path": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🦀️.rs",
+    "kind": "grep-hit (writer-child-local-text reference)"
+   }
+  ],
+  "decision": "move schema to writer's owned 🧬️schema (or editor-law) module; keep only example instances under fixtures",
+  "evidence": "$id=https://semio.tech/schema/writer-child-local-text-law.json; writer artifact already has 🧬️schema, ✏️editor/🎚️config/🧬️schema, ✏️editor/👥️presence/🧬️schema but no editor-law home",
+  "open": "confirm exact consumer call site and whether an Ajv-style oracle validates this fixture the way flow's script.ts does"
+ },
+ {
+  "path": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🧪️fixtures/🎬️equation-scene-owner.schema.json",
+  "blob": "265c233bb617bc3152edf81d854540db512a7dc0",
+  "family": "scene-owner",
+  "role": "fixture-owned application contract",
+  "classification": "violation",
+  "owner": "none",
+  "intendedOwner": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema (or editor-law location)",
+  "exports": [
+   "equation-scene-owner-law"
+  ],
+  "consumers": [
+   {
+    "path": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🦀️.rs",
+    "kind": "grep-hit"
+   },
+   {
+    "path": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+    "kind": "grep-hit"
+   }
+  ],
+  "decision": "move to equation's owned schema/editor-law module",
+  "evidence": "$id=https://semio.tech/schema/equation-scene-owner-law.json; sibling of equation-retained-command.schema.json in same 🧪️fixtures dir",
+  "open": "verify exact loader (include_str! vs Ajv) and whether scene-owner is a cross-plugin shared shape"
+ },
+ {
+  "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🧪️fixtures/🏠️flow-scene-owner.schema.json",
+  "blob": "a13e944a8cef5ff5bfb467cc2cf6700559a6a36b",
+  "family": "scene-owner",
+  "role": "fixture-owned application contract",
+  "classification": "violation",
+  "owner": "none",
+  "intendedOwner": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema (or editor-law location)",
+  "exports": [
+   "flow-scene-owner-law"
+  ],
+  "consumers": [
+   {
+    "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🦀️.rs",
+    "kind": "grep-hit include_str!-style reference"
+   }
+  ],
+  "decision": "move to flow's owned schema/editor-law module; note flow already owns a full multi-format 🧬️schema (json/rs/ts/graphql/proto) one level down at the subset — this plugin-root fixture is a SEPARATE, still-unowned contract",
+  "evidence": "$id=https://semio.tech/schema/flow-scene-owner-law.json; sibling data file ⚖️flow-scene-owner-law.json in same ✏️s/🔌️plugins/🌊️flow/🧪️fixtures dir",
+  "open": "confirm whether flow-scene-owner and the artifact's real 🧬️schema/🔣️.json overlap or are disjoint concerns"
+ },
+ {
+  "path": "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🧪️fixtures/🎚️playbook-view-command-limits.schema.json",
+  "blob": "0641f21235e86d12278621a07a2c79a786e55408",
+  "family": "scene-owner",
+  "role": "fixture-owned application contract",
+  "classification": "violation",
+  "owner": "none",
+  "intendedOwner": "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema (or editor-law location)",
+  "exports": [
+   "playbook-view-command-limits"
+  ],
+  "consumers": [
+   {
+    "path": "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🦀️.rs",
+    "kind": "grep-hit"
+   }
+  ],
+  "decision": "move to playbook's owned schema/editor-law module",
+  "evidence": "$id=https://semio.tech/schema/playbook-view-command-limits.json",
+  "open": "verify loader"
+ },
+ {
+  "path": "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🧪️fixtures/🎬️playbook-scene-owner.schema.json",
+  "blob": "e254c70a7357940d835f1d4d4492b5435d5258f8",
+  "family": "scene-owner",
+  "role": "fixture-owned application contract",
+  "classification": "violation",
+  "owner": "none",
+  "intendedOwner": "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema (or editor-law location)",
+  "exports": [
+   "playbook-scene-owner-law"
+  ],
+  "consumers": [
+   {
+    "path": "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🦀️.rs",
+    "kind": "grep-hit"
+   }
+  ],
+  "decision": "move to playbook's owned schema/editor-law module",
+  "evidence": "$id=https://semio.tech/schema/playbook-scene-owner-law.json; sibling of playbook-view-command-limits.schema.json",
+  "open": "verify loader"
+ },
+ {
+  "path": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🧪️fixtures/🧬️equation-retained-command.schema.json",
+  "blob": "f85ba55dbd8ab6e9aab80bfb673e6ebc895b4db3",
+  "family": "equation-retained-command",
+  "role": "fixture-owned application contract",
+  "classification": "violation",
+  "owner": "none",
+  "intendedOwner": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema (or editor-law location)",
+  "exports": [
+   "equation-retained-command-law"
+  ],
+  "consumers": [
+   {
+    "path": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+    "kind": "grep-hit"
+   }
+  ],
+  "decision": "fold into the retained-command family destination for equation's editor",
+  "evidence": "$id=https://semio.tech/schema/equation-retained-command-law.json; belongs to the repo-wide retained-command-* family (limits/routes) even though filename differs",
+  "open": "none"
+ },
+ {
+  "path": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️fixtures/🧫️retained-command-limits/🧬️.schema.json",
+  "blob": "347801dd2e6142af4f3cda0ab3ca7fe7cf9a6f81",
+  "family": "retained-command-limits",
+  "role": "fixture-owned editor-law contract (retained-command-limits)",
+  "classification": "violation",
+  "owner": "none — sibling 🔣️.json data fixture is include_str!'d by the editor's own 🦀️.rs test; the 🧬️.schema.json itself has no taxonomy-recognized home",
+  "intendedOwner": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation — its own 🧬️schema module (subset-level), or a new ✏️editor-law schema location once the taxonomy grows one",
+  "exports": [
+   "retained-command-limits"
+  ],
+  "consumers": [
+   {
+    "path": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️fixtures/../..",
+    "kind": "sibling 🦀️.rs include_str!(\"🧪️fixtures/🧫️retained-command-limits/🔣️.json\") — loads only the DATA file, not the schema"
+   }
+  ],
+  "decision": "move contract to the plugin's owned 🧬️schema (or a new editor-law schema kind); fixtures keep only the example instance",
+  "evidence": "title/$id=urn:semio:animate-presentation:retained-command-limits:v1; dir contains exactly two files: 🔣️.json (loaded) + 🧬️.schema.json (unreferenced by any include_str!/Ajv found)",
+  "open": "confirm whether every retained-command-limits contract across plugins is genuinely per-artifact (urns differ: animate-presentation, fem3d, home) or whether a shared shape could be factored to one framework schema"
+ },
+ {
+  "path": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️fixtures/🧫️retained-command-limits/🧬️.schema.json",
+  "blob": "e84c0337220ed655255ae27a52bc1b643fc23e02",
+  "family": "retained-command-limits",
+  "role": "fixture-owned editor-law contract (retained-command-limits)",
+  "classification": "violation",
+  "owner": "none — sibling 🔣️.json data fixture is include_str!'d by the editor's own 🦀️.rs test; the 🧬️.schema.json itself has no taxonomy-recognized home",
+  "intendedOwner": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting — its own 🧬️schema module (subset-level), or a new ✏️editor-law schema location once the taxonomy grows one",
+  "exports": [
+   "retained-command-limits"
+  ],
+  "consumers": [
+   {
+    "path": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️fixtures/../..",
+    "kind": "sibling 🦀️.rs include_str!(\"🧪️fixtures/🧫️retained-command-limits/🔣️.json\") — loads only the DATA file, not the schema"
+   }
+  ],
+  "decision": "move contract to the plugin's owned 🧬️schema (or a new editor-law schema kind); fixtures keep only the example instance",
+  "evidence": "title/$id=None; dir contains exactly two files: 🔣️.json (loaded) + 🧬️.schema.json (unreferenced by any include_str!/Ajv found)",
+  "open": "confirm whether every retained-command-limits contract across plugins is genuinely per-artifact (urns differ: animate-presentation, fem3d, home) or whether a shared shape could be factored to one framework schema"
+ },
+ {
+  "path": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🧪️fixtures/🚧️retained-command-limits/🧬️.schema.json",
+  "blob": "066e03c0a2eaa36c80b8f85029967af263814b28",
+  "family": "retained-command-limits",
+  "role": "fixture-owned editor-law contract (retained-command-limits)",
+  "classification": "violation",
+  "owner": "none — sibling 🔣️.json data fixture is include_str!'d by the editor's own 🦀️.rs test; the 🧬️.schema.json itself has no taxonomy-recognized home",
+  "intendedOwner": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d — its own 🧬️schema module (subset-level), or a new ✏️editor-law schema location once the taxonomy grows one",
+  "exports": [
+   "retained-command-limits"
+  ],
+  "consumers": [
+   {
+    "path": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🧪️fixtures/../..",
+    "kind": "sibling 🦀️.rs include_str!(\"🧪️fixtures/🚧️retained-command-limits/🔣️.json\") — loads only the DATA file, not the schema"
+   }
+  ],
+  "decision": "move contract to the plugin's owned 🧬️schema (or a new editor-law schema kind); fixtures keep only the example instance",
+  "evidence": "title/$id=urn:semio:fem3d:retained-command-limits:v1; dir contains exactly two files: 🔣️.json (loaded) + 🧬️.schema.json (unreferenced by any include_str!/Ajv found)",
+  "open": "confirm whether every retained-command-limits contract across plugins is genuinely per-artifact (urns differ: animate-presentation, fem3d, home) or whether a shared shape could be factored to one framework schema"
+ },
+ {
+  "path": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️fixtures/🚧️retained-command-limits/🧬️.schema.json",
+  "blob": "53de734b541de09ccf4a62a148a9fb8cca448828",
+  "family": "retained-command-limits",
+  "role": "fixture-owned editor-law contract (retained-command-limits)",
+  "classification": "violation",
+  "owner": "none — sibling 🔣️.json data fixture is include_str!'d by the editor's own 🦀️.rs test; the 🧬️.schema.json itself has no taxonomy-recognized home",
+  "intendedOwner": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling — its own 🧬️schema module (subset-level), or a new ✏️editor-law schema location once the taxonomy grows one",
+  "exports": [
+   "retained-command-limits"
+  ],
+  "consumers": [
+   {
+    "path": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️fixtures/../..",
+    "kind": "sibling 🦀️.rs include_str!(\"🧪️fixtures/🚧️retained-command-limits/🔣️.json\") — loads only the DATA file, not the schema"
+   }
+  ],
+  "decision": "move contract to the plugin's owned 🧬️schema (or a new editor-law schema kind); fixtures keep only the example instance",
+  "evidence": "title/$id=None; dir contains exactly two files: 🔣️.json (loaded) + 🧬️.schema.json (unreferenced by any include_str!/Ajv found)",
+  "open": "confirm whether every retained-command-limits contract across plugins is genuinely per-artifact (urns differ: animate-presentation, fem3d, home) or whether a shared shape could be factored to one framework schema"
+ },
+ {
+  "path": "✏️s/🔌️plugins/🪐️space/⚙️engine/🪐️space/🧪️fixtures/🧫️retained-command-limits/🧬️.schema.json",
+  "blob": "3009f6fe5ec0047f1569d6020ec0eaf28311bd43",
+  "family": "retained-command-limits",
+  "role": "fixture-owned editor-law contract (retained-command-limits)",
+  "classification": "violation",
+  "owner": "none — sibling 🔣️.json data fixture is include_str!'d by the editor's own 🦀️.rs test; the 🧬️.schema.json itself has no taxonomy-recognized home",
+  "intendedOwner": "✏️s/🔌️plugins/🪐️space — its own 🧬️schema module (subset-level), or a new ✏️editor-law schema location once the taxonomy grows one",
+  "exports": [
+   "retained-command-limits"
+  ],
+  "consumers": [
+   {
+    "path": "✏️s/🔌️plugins/🪐️space/⚙️engine/🪐️space/🧪️fixtures/../..",
+    "kind": "sibling 🦀️.rs include_str!(\"🧪️fixtures/🧫️retained-command-limits/🔣️.json\") — loads only the DATA file, not the schema"
+   }
+  ],
+  "decision": "move contract to the plugin's owned 🧬️schema (or a new editor-law schema kind); fixtures keep only the example instance",
+  "evidence": "title/$id=None; dir contains exactly two files: 🔣️.json (loaded) + 🧬️.schema.json (unreferenced by any include_str!/Ajv found)",
+  "open": "confirm whether every retained-command-limits contract across plugins is genuinely per-artifact (urns differ: animate-presentation, fem3d, home) or whether a shared shape could be factored to one framework schema"
+ },
+ {
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️fixtures/🧫️retained-command-limits/🧬️.schema.json",
+  "blob": "d2511eb4bae420d0a9f286abc2446718bd92e393",
+  "family": "retained-command-limits",
+  "role": "fixture-owned editor-law contract (retained-command-limits)",
+  "classification": "violation",
+  "owner": "none — sibling 🔣️.json data fixture is include_str!'d by the editor's own 🦀️.rs test; the 🧬️.schema.json itself has no taxonomy-recognized home",
+  "intendedOwner": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home — its own 🧬️schema module (subset-level), or a new ✏️editor-law schema location once the taxonomy grows one",
+  "exports": [
+   "retained-command-limits"
+  ],
+  "consumers": [
+   {
+    "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️fixtures/../..",
+    "kind": "sibling 🦀️.rs include_str!(\"🧪️fixtures/🧫️retained-command-limits/🔣️.json\") — loads only the DATA file, not the schema"
+   }
+  ],
+  "decision": "move contract to the plugin's owned 🧬️schema (or a new editor-law schema kind); fixtures keep only the example instance",
+  "evidence": "title/$id=urn:semio:home:retained-command-limits:v1; dir contains exactly two files: 🔣️.json (loaded) + 🧬️.schema.json (unreferenced by any include_str!/Ajv found)",
+  "open": "confirm whether every retained-command-limits contract across plugins is genuinely per-artifact (urns differ: animate-presentation, fem3d, home) or whether a shared shape could be factored to one framework schema"
+ },
+ {
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️fixtures/🧫️retained-command-limits/🧬️.schema.json",
+  "blob": "f0ac9357d48d8e9f7931c0400ddc53ab0db1877a",
+  "family": "retained-command-limits",
+  "role": "fixture-owned editor-law contract (retained-command-limits)",
+  "classification": "violation",
+  "owner": "none — sibling 🔣️.json data fixture is include_str!'d by the editor's own 🦀️.rs test; the 🧬️.schema.json itself has no taxonomy-recognized home",
+  "intendedOwner": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space — its own 🧬️schema module (subset-level), or a new ✏️editor-law schema location once the taxonomy grows one",
+  "exports": [
+   "retained-command-limits"
+  ],
+  "consumers": [
+   {
+    "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️fixtures/../..",
+    "kind": "sibling 🦀️.rs include_str!(\"🧪️fixtures/🧫️retained-command-limits/🔣️.json\") — loads only the DATA file, not the schema"
+   }
+  ],
+  "decision": "move contract to the plugin's owned 🧬️schema (or a new editor-law schema kind); fixtures keep only the example instance",
+  "evidence": "title/$id=None; dir contains exactly two files: 🔣️.json (loaded) + 🧬️.schema.json (unreferenced by any include_str!/Ajv found)",
+  "open": "confirm whether every retained-command-limits contract across plugins is genuinely per-artifact (urns differ: animate-presentation, fem3d, home) or whether a shared shape could be factored to one framework schema"
+ },
+ {
+  "path": "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️fixtures/🧬️retained-command-routes.schema.json",
+  "blob": "e3082ff791187e2e770e3c20838fe7e13d70db2f",
+  "family": "retained-command-routes",
+  "role": "fixture-owned editor-law contract (retained-command-routes)",
+  "classification": "violation",
+  "owner": "none — sibling 🛣️retained-command-routes.json data fixture is the only file include_str!'d by the editor's 🦀️.rs (const RETAINED_ROUTES)",
+  "intendedOwner": "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs — its own 🧬️schema module (subset-level) or a new editor-law schema location",
+  "exports": [
+   "retained-command-routes"
+  ],
+  "consumers": [
+   {
+    "path": "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+    "kind": "const RETAINED_ROUTES: &str = include_str!(\"🧪️fixtures/🛣️retained-command-routes.json\") — DATA only, schema.json unreferenced"
+   }
+  ],
+  "decision": "move contract to the plugin's owned 🧬️schema module; fixtures keep only the example instance (🛣️retained-command-routes.json)",
+  "evidence": "title/$id=https://semio.dev/schema/vcs/retained-command-routes.v1.json",
+  "open": "confirm whether routes shape is identical across vcs/reasoning/imperative (candidate for one shared framework schema) or genuinely per-plugin"
+ },
+ {
+  "path": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️fixtures/🧬️retained-command-routes.schema.json",
+  "blob": "b4ebe8f5e7e1e605a74799c9f8d796ed78131aa9",
+  "family": "retained-command-routes",
+  "role": "fixture-owned editor-law contract (retained-command-routes)",
+  "classification": "violation",
+  "owner": "none — sibling 🛣️retained-command-routes.json data fixture is the only file include_str!'d by the editor's 🦀️.rs (const RETAINED_ROUTES)",
+  "intendedOwner": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires — its own 🧬️schema module (subset-level) or a new editor-law schema location",
+  "exports": [
+   "retained-command-routes"
+  ],
+  "consumers": [
+   {
+    "path": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+    "kind": "const RETAINED_ROUTES: &str = include_str!(\"🧪️fixtures/🛣️retained-command-routes.json\") — DATA only, schema.json unreferenced"
+   }
+  ],
+  "decision": "move contract to the plugin's owned 🧬️schema module; fixtures keep only the example instance (🛣️retained-command-routes.json)",
+  "evidence": "title/$id=https://semio.dev/schema/reasoning/wires/retained-command-routes.v1.json",
+  "open": "confirm whether routes shape is identical across vcs/reasoning/imperative (candidate for one shared framework schema) or genuinely per-plugin"
+ },
+ {
+  "path": "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️fixtures/🧬️retained-command-routes.schema.json",
+  "blob": "3d9027f97e444940974a917c6a89ed347b9d0ac3",
+  "family": "retained-command-routes",
+  "role": "fixture-owned editor-law contract (retained-command-routes)",
+  "classification": "violation",
+  "owner": "none — sibling 🛣️retained-command-routes.json data fixture is the only file include_str!'d by the editor's 🦀️.rs (const RETAINED_ROUTES)",
+  "intendedOwner": "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure — its own 🧬️schema module (subset-level) or a new editor-law schema location",
+  "exports": [
+   "retained-command-routes"
+  ],
+  "consumers": [
+   {
+    "path": "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+    "kind": "const RETAINED_ROUTES: &str = include_str!(\"🧪️fixtures/🛣️retained-command-routes.json\") — DATA only, schema.json unreferenced"
+   }
+  ],
+  "decision": "move contract to the plugin's owned 🧬️schema module; fixtures keep only the example instance (🛣️retained-command-routes.json)",
+  "evidence": "title/$id=https://semio.dev/schema/imperative/retained-command-routes.v1.json",
+  "open": "confirm whether routes shape is identical across vcs/reasoning/imperative (candidate for one shared framework schema) or genuinely per-plugin"
+ },
+ {
+  "path": "✏️s/🔌️plugins/💡️reasoning/🧪️fixtures/🧫️plugin-identity/🧬️.schema.json",
+  "blob": "6b40468fc4cd500a132348e77d300750a793a2e1",
+  "family": "plugin-identity",
+  "role": "fixture-owned plugin-level identity contract",
+  "classification": "violation",
+  "owner": "none — 🔣️.json sibling loaded by ✏️s/🔌️plugins/💡️reasoning/🦀️.rs; no plugin-level 🧬️schema module exists (only artifact/subset-level 🧬️schema exists in this repo's taxonomy)",
+  "intendedOwner": "✏️s/🔌️plugins/💡️reasoning plugin root — needs a plugin-level schema location (taxonomy currently only blesses artifact/subset/surface-level 🧬️schema, not plugin root)",
+  "exports": [
+   "plugin-identity"
+  ],
+  "consumers": [
+   {
+    "path": "✏️s/🔌️plugins/💡️reasoning/🦀️.rs",
+    "kind": "grep-hit (🧫️plugin-identity reference)"
+   }
+  ],
+  "decision": "move to a plugin-root schema location once the taxonomy defines one; until then this is a structural gap, not just a misplaced file",
+  "evidence": "title='Reasoning plugin identity tuple'; $schema draft-07, has title+description (well-formed authored contract, not throwaway test data)",
+  "open": "taxonomy has no 🧬️schema slot at plugin root (only at artifact/subset/surface level) — flag to taxonomy owners as a possible missing contract location, shared across every plugin that needs a plugin-identity tuple"
+ },
+ {
+  "path": "✏️s/🔌️plugins/🪐️space/🧪️fixtures/🧫️plugin-identity/🧬️.schema.json",
+  "blob": "7ccd6c78831f194f215a181c29bdd1380142ab0f",
+  "family": "plugin-identity",
+  "role": "fixture-owned plugin-level identity contract",
+  "classification": "violation",
+  "owner": "none — 🔣️.json sibling loaded by ✏️s/🔌️plugins/🪐️space/🦀️.rs; no plugin-level 🧬️schema module exists (only artifact/subset-level 🧬️schema exists in this repo's taxonomy)",
+  "intendedOwner": "✏️s/🔌️plugins/🪐️space plugin root — needs a plugin-level schema location (taxonomy currently only blesses artifact/subset/surface-level 🧬️schema, not plugin root)",
+  "exports": [
+   "plugin-identity"
+  ],
+  "consumers": [
+   {
+    "path": "✏️s/🔌️plugins/🪐️space/🦀️.rs",
+    "kind": "grep-hit (🧫️plugin-identity reference)"
+   }
+  ],
+  "decision": "move to a plugin-root schema location once the taxonomy defines one; until then this is a structural gap, not just a misplaced file",
+  "evidence": "title='Space plugin identity tuple'; $schema draft-07, has title+description (well-formed authored contract, not throwaway test data)",
+  "open": "taxonomy has no 🧬️schema slot at plugin root (only at artifact/subset/surface level) — flag to taxonomy owners as a possible missing contract location, shared across every plugin that needs a plugin-identity tuple"
+ },
+ {
+  "path": "✏️s/🔌️plugins/🌍️gis/🧪️fixtures/🪪️artifact-identity/🧬️.schema.json",
+  "blob": "a628eac3bd78ba8926972114aa068e0f5a291f53",
+  "family": "artifact-identity",
+  "role": "fixture-owned artifact-identity contract",
+  "classification": "violation",
+  "owner": "none — loaded only by ✏️s/🔌️plugins/🌍️gis/🦀️.rs test (include_str!(\"🧪️fixtures/🪪️artifact-identity/🔣️.json\"))",
+  "intendedOwner": "✏️s/🔌️plugins/🌍️gis plugin root or the gismap/gisterrain subset-level 🧬️schema — gis has no plugin-root schema location",
+  "exports": [
+   "artifact-identity"
+  ],
+  "consumers": [
+   {
+    "path": "✏️s/🔌️plugins/🌍️gis/🦀️.rs:89",
+    "kind": "include_str!(\"🧪️fixtures/🪪️artifact-identity/🔣️.json\") — DATA only"
+   }
+  ],
+  "decision": "move to a gis plugin-root or shared-identity schema location",
+  "evidence": "$id=urn:semio:gis:artifact-identity:v1",
+  "open": "compare shape against vcs native-openable-identity and stdio dwg-artifact-ownership below — same family name, different plugins, likely NOT literally shared (different property sets), so per-plugin ownership is probably correct once relocated"
+ },
+ {
+  "path": "✏️s/🔌️plugins/🌿️vcs/🧪️fixtures/🪪️native-openable-identity/🧬️v1/🧬️.schema.json",
+  "blob": "cd1d122f1fd2212e02f1b6678c9c464aa06090a2",
+  "family": "artifact-identity",
+  "role": "fixture-owned artifact-identity contract (versioned v1)",
+  "classification": "violation",
+  "owner": "none",
+  "intendedOwner": "✏️s/🔌️plugins/🌿️vcs plugin root (no plugin-root schema location exists)",
+  "exports": [
+   "native-openable-identity-v1"
+  ],
+  "consumers": [
+   {
+    "path": "✏️s/🔌️plugins/🌿️vcs — grep for native-openable-identity",
+    "kind": "not directly confirmed by include_str! in this pass; dir sits at plugin-root 🧪️fixtures, versioned 🧬️v1 subdir"
+   }
+  ],
+  "decision": "move to a vcs plugin-root schema location, keep version segmentation",
+  "evidence": "draft-07, has $defs, no $id — anonymous schema",
+  "open": "confirm the concrete Rust/TS consumer (not found via native-openable-identity string search in the earlier pass; only native-openable-provider rust test package referenced a DIFFERENT stdio fixture) — needs a follow-up grep pass scoped to vcs only"
+ },
+ {
+  "path": "✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/🧫️fixtures/🖊️dwg-artifact-ownership/🧬️.schema.json",
+  "blob": "b7331739f310802f552ee666495582f6851d1734",
+  "family": "artifact-identity",
+  "role": "fixture-owned pattern-only micro-schema (dwg artifact ownership marker)",
+  "classification": "violation (minor) — 182-byte schema is just {$schema,type,pattern}, essentially a regex contract",
+  "owner": "none",
+  "intendedOwner": "✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust — package has no 🧬️schema module; candidate destination is stdio's dwg-related io schema under an artifact's 🚪️io/🧬️mutations or a package-level schema dir",
+  "exports": [
+   "dwg-artifact-ownership-pattern"
+  ],
+  "consumers": [
+   {
+    "path": "✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust — 🧫️fixtures sibling dir, consumer not isolated in this pass",
+    "kind": "inferred (package-level 🧫️fixtures, same shape as catalog-root/home-io-surface siblings)"
+   }
+  ],
+  "decision": "fold into a package-level schema module alongside catalog-root/home-io-surface (family stdio-rust-fixtures) rather than relocate alone",
+  "evidence": "keys=['$schema','type','pattern'] only — smallest schema found in the whole partition",
+  "open": "confirm exact Rust consumer of this specific file"
+ },
+ {
+  "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️fixtures/🏪️store-owners/🧬️.schema.json",
+  "blob": "c1b55e74377cfb573e0a7d94a975d2554c440db7",
+  "family": "flow-editor-laws",
+  "role": "fixture-owned editor-behavior-law contract, actively Ajv-validated",
+  "classification": "violation",
+  "owner": "none — the module 📜️script.ts (485 lines, imports Ajv) reads BOTH the data 🔣️.json and the sibling 🧬️.schema.json, compiles the schema, and asserts the fixture validates before asserting other behavior — the schema is a live, enforced test oracle but lives outside any 🧬️schema module",
+  "intendedOwner": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema (flow already owns a full multi-format schema module one level up: 🔣️.json/🦀️.rs/🟦️.ts/🔗️.graphql/🛰️.proto) — each editor-law schema should be exported from there, or from a new ✏️editor-law schema kind",
+  "exports": [
+   "store-owners"
+  ],
+  "consumers": [
+   {
+    "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️fixtures/📜️script.ts",
+    "kind": "new Ajv({strict:true}).compile(...Schema) — line 381-382"
+   }
+  ],
+  "decision": "move each editor-law schema into flow's owned 🧬️schema module (or a new editor-law kind); script.ts should import the schema by name instead of reading a co-located file",
+  "evidence": "flow/✏️editor/🧪️fixtures/📜️script.ts imports Ajv (`import Ajv from \"ajv\"`) and validates every fixture pair listed in this family — the strongest evidence in the whole audit that a fixture directory is acting as live contract authority, not just examples",
+  "open": "12 (add-widget-retained) needs a direct grep to confirm its exact consumer line; also confirm whether Ajv here counts as a 'runtime dependency on an external library' under CLAUDE.md (it's test-only via package.json test script, likely acceptable, but worth flagging)"
+ },
+ {
+  "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️fixtures/👥️presence-owners/🧬️.schema.json",
+  "blob": "68e99a5cd096a48b50377c4fefc743dee53fcf06",
+  "family": "flow-editor-laws",
+  "role": "fixture-owned editor-behavior-law contract, actively Ajv-validated",
+  "classification": "violation",
+  "owner": "none — the module 📜️script.ts (485 lines, imports Ajv) reads BOTH the data 🔣️.json and the sibling 🧬️.schema.json, compiles the schema, and asserts the fixture validates before asserting other behavior — the schema is a live, enforced test oracle but lives outside any 🧬️schema module",
+  "intendedOwner": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema (flow already owns a full multi-format schema module one level up: 🔣️.json/🦀️.rs/🟦️.ts/🔗️.graphql/🛰️.proto) — each editor-law schema should be exported from there, or from a new ✏️editor-law schema kind",
+  "exports": [
+   "presence-owners"
+  ],
+  "consumers": [
+   {
+    "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️fixtures/📜️script.ts",
+    "kind": "new Ajv({strict:true}).compile(...Schema) — line 405-406"
+   }
+  ],
+  "decision": "move each editor-law schema into flow's owned 🧬️schema module (or a new editor-law kind); script.ts should import the schema by name instead of reading a co-located file",
+  "evidence": "flow/✏️editor/🧪️fixtures/📜️script.ts imports Ajv (`import Ajv from \"ajv\"`) and validates every fixture pair listed in this family — the strongest evidence in the whole audit that a fixture directory is acting as live contract authority, not just examples",
+  "open": "12 (add-widget-retained) needs a direct grep to confirm its exact consumer line; also confirm whether Ajv here counts as a 'runtime dependency on an external library' under CLAUDE.md (it's test-only via package.json test script, likely acceptable, but worth flagging)"
+ },
+ {
+  "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️fixtures/📐️artifact-canonical.schema.json",
+  "blob": "f313bb8b04ed750b0d4cb511dbe6d384c4b9986f",
+  "family": "flow-editor-laws",
+  "role": "fixture-owned editor-behavior-law contract, actively Ajv-validated",
+  "classification": "violation",
+  "owner": "none — the module 📜️script.ts (485 lines, imports Ajv) reads BOTH the data 🔣️.json and the sibling 🧬️.schema.json, compiles the schema, and asserts the fixture validates before asserting other behavior — the schema is a live, enforced test oracle but lives outside any 🧬️schema module",
+  "intendedOwner": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema (flow already owns a full multi-format schema module one level up: 🔣️.json/🦀️.rs/🟦️.ts/🔗️.graphql/🛰️.proto) — each editor-law schema should be exported from there, or from a new ✏️editor-law schema kind",
+  "exports": [
+   "artifact-canonical"
+  ],
+  "consumers": [
+   {
+    "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️fixtures/📜️script.ts",
+    "kind": "new Ajv({strict:true}).compile(...Schema) — line 252-253; also consumed by 🧵️retained/🧾️canonical/🦀️.rs:175 via a DIFFERENT sibling file 🧾️artifact-canonical.json"
+   }
+  ],
+  "decision": "move each editor-law schema into flow's owned 🧬️schema module (or a new editor-law kind); script.ts should import the schema by name instead of reading a co-located file",
+  "evidence": "flow/✏️editor/🧪️fixtures/📜️script.ts imports Ajv (`import Ajv from \"ajv\"`) and validates every fixture pair listed in this family — the strongest evidence in the whole audit that a fixture directory is acting as live contract authority, not just examples",
+  "open": "12 (add-widget-retained) needs a direct grep to confirm its exact consumer line; also confirm whether Ajv here counts as a 'runtime dependency on an external library' under CLAUDE.md (it's test-only via package.json test script, likely acceptable, but worth flagging)"
+ },
+ {
+  "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️fixtures/📝️slider-labels.schema.json",
+  "blob": "ff6ecb3f381b60f008dd724f180222297f1b296e",
+  "family": "flow-editor-laws",
+  "role": "fixture-owned editor-behavior-law contract, actively Ajv-validated",
+  "classification": "violation",
+  "owner": "none — the module 📜️script.ts (485 lines, imports Ajv) reads BOTH the data 🔣️.json and the sibling 🧬️.schema.json, compiles the schema, and asserts the fixture validates before asserting other behavior — the schema is a live, enforced test oracle but lives outside any 🧬️schema module",
+  "intendedOwner": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema (flow already owns a full multi-format schema module one level up: 🔣️.json/🦀️.rs/🟦️.ts/🔗️.graphql/🛰️.proto) — each editor-law schema should be exported from there, or from a new ✏️editor-law schema kind",
+  "exports": [
+   "slider-labels"
+  ],
+  "consumers": [
+   {
+    "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️fixtures/📜️script.ts",
+    "kind": "new Ajv({strict:true}).compile(...Schema) — line 229-230"
+   }
+  ],
+  "decision": "move each editor-law schema into flow's owned 🧬️schema module (or a new editor-law kind); script.ts should import the schema by name instead of reading a co-located file",
+  "evidence": "flow/✏️editor/🧪️fixtures/📜️script.ts imports Ajv (`import Ajv from \"ajv\"`) and validates every fixture pair listed in this family — the strongest evidence in the whole audit that a fixture directory is acting as live contract authority, not just examples",
+  "open": "12 (add-widget-retained) needs a direct grep to confirm its exact consumer line; also confirm whether Ajv here counts as a 'runtime dependency on an external library' under CLAUDE.md (it's test-only via package.json test script, likely acceptable, but worth flagging)"
+ },
+ {
+  "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️fixtures/📡️host-wire/🧬️.schema.json",
+  "blob": "43fc97b1a1e1cf558e743d2dc074591b73fbe51c",
+  "family": "flow-editor-laws",
+  "role": "fixture-owned editor-behavior-law contract, actively Ajv-validated",
+  "classification": "violation",
+  "owner": "none — the module 📜️script.ts (485 lines, imports Ajv) reads BOTH the data 🔣️.json and the sibling 🧬️.schema.json, compiles the schema, and asserts the fixture validates before asserting other behavior — the schema is a live, enforced test oracle but lives outside any 🧬️schema module",
+  "intendedOwner": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema (flow already owns a full multi-format schema module one level up: 🔣️.json/🦀️.rs/🟦️.ts/🔗️.graphql/🛰️.proto) — each editor-law schema should be exported from there, or from a new ✏️editor-law schema kind",
+  "exports": [
+   "host-wire"
+  ],
+  "consumers": [
+   {
+    "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️fixtures/📜️script.ts",
+    "kind": "new Ajv({strict:true}).compile(...Schema) — line 87-88"
+   }
+  ],
+  "decision": "move each editor-law schema into flow's owned 🧬️schema module (or a new editor-law kind); script.ts should import the schema by name instead of reading a co-located file",
+  "evidence": "flow/✏️editor/🧪️fixtures/📜️script.ts imports Ajv (`import Ajv from \"ajv\"`) and validates every fixture pair listed in this family — the strongest evidence in the whole audit that a fixture directory is acting as live contract authority, not just examples",
+  "open": "12 (add-widget-retained) needs a direct grep to confirm its exact consumer line; also confirm whether Ajv here counts as a 'runtime dependency on an external library' under CLAUDE.md (it's test-only via package.json test script, likely acceptable, but worth flagging)"
+ },
+ {
+  "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️fixtures/🖼️tree-projection/🧬️.schema.json",
+  "blob": "beaab451e99b9a55f934653529719001935dfd0c",
+  "family": "flow-editor-laws",
+  "role": "fixture-owned editor-behavior-law contract, actively Ajv-validated",
+  "classification": "violation",
+  "owner": "none — the module 📜️script.ts (485 lines, imports Ajv) reads BOTH the data 🔣️.json and the sibling 🧬️.schema.json, compiles the schema, and asserts the fixture validates before asserting other behavior — the schema is a live, enforced test oracle but lives outside any 🧬️schema module",
+  "intendedOwner": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema (flow already owns a full multi-format schema module one level up: 🔣️.json/🦀️.rs/🟦️.ts/🔗️.graphql/🛰️.proto) — each editor-law schema should be exported from there, or from a new ✏️editor-law schema kind",
+  "exports": [
+   "tree-projection"
+  ],
+  "consumers": [
+   {
+    "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️fixtures/📜️script.ts",
+    "kind": "new Ajv({strict:true}).compile(...Schema) — line 59-60"
+   }
+  ],
+  "decision": "move each editor-law schema into flow's owned 🧬️schema module (or a new editor-law kind); script.ts should import the schema by name instead of reading a co-located file",
+  "evidence": "flow/✏️editor/🧪️fixtures/📜️script.ts imports Ajv (`import Ajv from \"ajv\"`) and validates every fixture pair listed in this family — the strongest evidence in the whole audit that a fixture directory is acting as live contract authority, not just examples",
+  "open": "12 (add-widget-retained) needs a direct grep to confirm its exact consumer line; also confirm whether Ajv here counts as a 'runtime dependency on an external library' under CLAUDE.md (it's test-only via package.json test script, likely acceptable, but worth flagging)"
+ },
+ {
+  "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️fixtures/🧒️child-add-widget/🧬️.schema.json",
+  "blob": "0052240cc07b4bd4304b9672420122766cbed3cd",
+  "family": "flow-editor-laws",
+  "role": "fixture-owned editor-behavior-law contract, actively Ajv-validated",
+  "classification": "violation",
+  "owner": "none — the module 📜️script.ts (485 lines, imports Ajv) reads BOTH the data 🔣️.json and the sibling 🧬️.schema.json, compiles the schema, and asserts the fixture validates before asserting other behavior — the schema is a live, enforced test oracle but lives outside any 🧬️schema module",
+  "intendedOwner": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema (flow already owns a full multi-format schema module one level up: 🔣️.json/🦀️.rs/🟦️.ts/🔗️.graphql/🛰️.proto) — each editor-law schema should be exported from there, or from a new ✏️editor-law schema kind",
+  "exports": [
+   "child-add-widget"
+  ],
+  "consumers": [
+   {
+    "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️fixtures/📜️script.ts",
+    "kind": "new Ajv({strict:true}).compile(...Schema) — line 16-17"
+   }
+  ],
+  "decision": "move each editor-law schema into flow's owned 🧬️schema module (or a new editor-law kind); script.ts should import the schema by name instead of reading a co-located file",
+  "evidence": "flow/✏️editor/🧪️fixtures/📜️script.ts imports Ajv (`import Ajv from \"ajv\"`) and validates every fixture pair listed in this family — the strongest evidence in the whole audit that a fixture directory is acting as live contract authority, not just examples",
+  "open": "12 (add-widget-retained) needs a direct grep to confirm its exact consumer line; also confirm whether Ajv here counts as a 'runtime dependency on an external library' under CLAUDE.md (it's test-only via package.json test script, likely acceptable, but worth flagging)"
+ },
+ {
+  "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️fixtures/🧩️artifact-recipes.schema.json",
+  "blob": "744ac90e5e32c51690f5d54de458e4e719bbf797",
+  "family": "flow-editor-laws",
+  "role": "fixture-owned editor-behavior-law contract, actively Ajv-validated",
+  "classification": "violation",
+  "owner": "none — the module 📜️script.ts (485 lines, imports Ajv) reads BOTH the data 🔣️.json and the sibling 🧬️.schema.json, compiles the schema, and asserts the fixture validates before asserting other behavior — the schema is a live, enforced test oracle but lives outside any 🧬️schema module",
+  "intendedOwner": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema (flow already owns a full multi-format schema module one level up: 🔣️.json/🦀️.rs/🟦️.ts/🔗️.graphql/🛰️.proto) — each editor-law schema should be exported from there, or from a new ✏️editor-law schema kind",
+  "exports": [
+   "artifact-recipes"
+  ],
+  "consumers": [
+   {
+    "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️fixtures/📜️script.ts",
+    "kind": "new Ajv({strict:true}).compile(...Schema) — line 105-106"
+   }
+  ],
+  "decision": "move each editor-law schema into flow's owned 🧬️schema module (or a new editor-law kind); script.ts should import the schema by name instead of reading a co-located file",
+  "evidence": "flow/✏️editor/🧪️fixtures/📜️script.ts imports Ajv (`import Ajv from \"ajv\"`) and validates every fixture pair listed in this family — the strongest evidence in the whole audit that a fixture directory is acting as live contract authority, not just examples",
+  "open": "12 (add-widget-retained) needs a direct grep to confirm its exact consumer line; also confirm whether Ajv here counts as a 'runtime dependency on an external library' under CLAUDE.md (it's test-only via package.json test script, likely acceptable, but worth flagging)"
+ },
+ {
+  "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️fixtures/🧫️grant-frontier/🧬️.schema.json",
+  "blob": "be41916fdd28c65b22afb07dbf964db343ba93ac",
+  "family": "flow-editor-laws",
+  "role": "fixture-owned editor-behavior-law contract, actively Ajv-validated",
+  "classification": "violation",
+  "owner": "none — the module 📜️script.ts (485 lines, imports Ajv) reads BOTH the data 🔣️.json and the sibling 🧬️.schema.json, compiles the schema, and asserts the fixture validates before asserting other behavior — the schema is a live, enforced test oracle but lives outside any 🧬️schema module",
+  "intendedOwner": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema (flow already owns a full multi-format schema module one level up: 🔣️.json/🦀️.rs/🟦️.ts/🔗️.graphql/🛰️.proto) — each editor-law schema should be exported from there, or from a new ✏️editor-law schema kind",
+  "exports": [
+   "grant-frontier"
+  ],
+  "consumers": [
+   {
+    "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️fixtures/📜️script.ts",
+    "kind": "new Ajv({strict:true}).compile(...Schema) — line 173-174"
+   }
+  ],
+  "decision": "move each editor-law schema into flow's owned 🧬️schema module (or a new editor-law kind); script.ts should import the schema by name instead of reading a co-located file",
+  "evidence": "flow/✏️editor/🧪️fixtures/📜️script.ts imports Ajv (`import Ajv from \"ajv\"`) and validates every fixture pair listed in this family — the strongest evidence in the whole audit that a fixture directory is acting as live contract authority, not just examples",
+  "open": "12 (add-widget-retained) needs a direct grep to confirm its exact consumer line; also confirm whether Ajv here counts as a 'runtime dependency on an external library' under CLAUDE.md (it's test-only via package.json test script, likely acceptable, but worth flagging)"
+ },
+ {
+  "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️fixtures/🧵️add-widget-retained/🧬️.schema.json",
+  "blob": "07c5225dfd03f63725d533dfae33af187821f5f7",
+  "family": "flow-editor-laws",
+  "role": "fixture-owned editor-behavior-law contract, Rust-consumed",
+  "classification": "violation",
+  "owner": "none — the sibling 🔣️.json is include_str!'d directly by the editor's own 🦀️.rs test (line 2438); the 🧬️.schema.json itself has no confirmed loader in this pass",
+  "intendedOwner": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema (flow already owns a full multi-format schema module one level up: 🔣️.json/🦀️.rs/🟦️.ts/🔗️.graphql/🛰️.proto) — each editor-law schema should be exported from there, or from a new ✏️editor-law schema kind",
+  "exports": [
+   "add-widget-retained"
+  ],
+  "consumers": [
+   {
+    "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs:2438",
+    "kind": "include_str!(\"🧪️fixtures/🧵️add-widget-retained/🔣️.json\") — DATA only, unlike its 13 siblings this one is not confirmed Ajv-validated by script.ts"
+   }
+  ],
+  "decision": "move each editor-law schema into flow's owned 🧬️schema module (or a new editor-law kind); script.ts should import the schema by name instead of reading a co-located file",
+  "evidence": "unlike its siblings in this family, add-widget-retained is Rust-consumed (data fixture only); the schema file's consumer is unconfirmed",
+  "open": "confirm whether the 🧬️.schema.json here is validated anywhere (Ajv pass in script.ts did not match this fixture name) — may be a dead/orphaned schema"
+ },
+ {
+  "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️fixtures/🧹️delete-cascade/🧬️.schema.json",
+  "blob": "9a6a1d53aa79a13e774b2db4cd04b50654386ac3",
+  "family": "flow-editor-laws",
+  "role": "fixture-owned editor-behavior-law contract, actively Ajv-validated",
+  "classification": "violation",
+  "owner": "none — the module 📜️script.ts (485 lines, imports Ajv) reads BOTH the data 🔣️.json and the sibling 🧬️.schema.json, compiles the schema, and asserts the fixture validates before asserting other behavior — the schema is a live, enforced test oracle but lives outside any 🧬️schema module",
+  "intendedOwner": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema (flow already owns a full multi-format schema module one level up: 🔣️.json/🦀️.rs/🟦️.ts/🔗️.graphql/🛰️.proto) — each editor-law schema should be exported from there, or from a new ✏️editor-law schema kind",
+  "exports": [
+   "delete-cascade"
+  ],
+  "consumers": [
+   {
+    "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️fixtures/📜️script.ts",
+    "kind": "new Ajv({strict:true}).compile(...Schema) — line 273-274"
+   }
+  ],
+  "decision": "move each editor-law schema into flow's owned 🧬️schema module (or a new editor-law kind); script.ts should import the schema by name instead of reading a co-located file",
+  "evidence": "flow/✏️editor/🧪️fixtures/📜️script.ts imports Ajv (`import Ajv from \"ajv\"`) and validates every fixture pair listed in this family — the strongest evidence in the whole audit that a fixture directory is acting as live contract authority, not just examples",
+  "open": "12 (add-widget-retained) needs a direct grep to confirm its exact consumer line; also confirm whether Ajv here counts as a 'runtime dependency on an external library' under CLAUDE.md (it's test-only via package.json test script, likely acceptable, but worth flagging)"
+ },
+ {
+  "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️fixtures/🪪️content-identity/🧬️.schema.json",
+  "blob": "3290f3a9c3cb8cd9e3624f71fd697374747ef49f",
+  "family": "flow-editor-laws",
+  "role": "fixture-owned editor-behavior-law contract, actively Ajv-validated",
+  "classification": "violation",
+  "owner": "none — the module 📜️script.ts (485 lines, imports Ajv) reads BOTH the data 🔣️.json and the sibling 🧬️.schema.json, compiles the schema, and asserts the fixture validates before asserting other behavior — the schema is a live, enforced test oracle but lives outside any 🧬️schema module",
+  "intendedOwner": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema (flow already owns a full multi-format schema module one level up: 🔣️.json/🦀️.rs/🟦️.ts/🔗️.graphql/🛰️.proto) — each editor-law schema should be exported from there, or from a new ✏️editor-law schema kind",
+  "exports": [
+   "content-identity"
+  ],
+  "consumers": [
+   {
+    "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️fixtures/📜️script.ts",
+    "kind": "new Ajv({strict:true}).compile(...Schema) — line 308-309"
+   }
+  ],
+  "decision": "move each editor-law schema into flow's owned 🧬️schema module (or a new editor-law kind); script.ts should import the schema by name instead of reading a co-located file",
+  "evidence": "flow/✏️editor/🧪️fixtures/📜️script.ts imports Ajv (`import Ajv from \"ajv\"`) and validates every fixture pair listed in this family — the strongest evidence in the whole audit that a fixture directory is acting as live contract authority, not just examples",
+  "open": "12 (add-widget-retained) needs a direct grep to confirm its exact consumer line; also confirm whether Ajv here counts as a 'runtime dependency on an external library' under CLAUDE.md (it's test-only via package.json test script, likely acceptable, but worth flagging)"
+ },
+ {
+  "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️fixtures/🫧️transient-owners/🧬️.schema.json",
+  "blob": "7f73578fea065b4424010b9f8135a4df09cde727",
+  "family": "flow-editor-laws",
+  "role": "fixture-owned editor-behavior-law contract, actively Ajv-validated",
+  "classification": "violation",
+  "owner": "none — the module 📜️script.ts (485 lines, imports Ajv) reads BOTH the data 🔣️.json and the sibling 🧬️.schema.json, compiles the schema, and asserts the fixture validates before asserting other behavior — the schema is a live, enforced test oracle but lives outside any 🧬️schema module",
+  "intendedOwner": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema (flow already owns a full multi-format schema module one level up: 🔣️.json/🦀️.rs/🟦️.ts/🔗️.graphql/🛰️.proto) — each editor-law schema should be exported from there, or from a new ✏️editor-law schema kind",
+  "exports": [
+   "transient-owners"
+  ],
+  "consumers": [
+   {
+    "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️fixtures/📜️script.ts",
+    "kind": "new Ajv({strict:true}).compile(...Schema) — line 425-426"
+   }
+  ],
+  "decision": "move each editor-law schema into flow's owned 🧬️schema module (or a new editor-law kind); script.ts should import the schema by name instead of reading a co-located file",
+  "evidence": "flow/✏️editor/🧪️fixtures/📜️script.ts imports Ajv (`import Ajv from \"ajv\"`) and validates every fixture pair listed in this family — the strongest evidence in the whole audit that a fixture directory is acting as live contract authority, not just examples",
+  "open": "12 (add-widget-retained) needs a direct grep to confirm its exact consumer line; also confirm whether Ajv here counts as a 'runtime dependency on an external library' under CLAUDE.md (it's test-only via package.json test script, likely acceptable, but worth flagging)"
+ },
+ {
+  "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🧪️fixtures/🧹️owners/🧬️.schema.json",
+  "blob": "91db5090fc2480d147a7a228224693d420b79328",
+  "family": "flow-editor-laws",
+  "role": "fixture-owned editor-behavior-law contract, actively Ajv-validated",
+  "classification": "violation",
+  "owner": "none — the module 📜️script.ts (485 lines, imports Ajv) reads BOTH the data 🔣️.json and the sibling 🧬️.schema.json, compiles the schema, and asserts the fixture validates before asserting other behavior — the schema is a live, enforced test oracle but lives outside any 🧬️schema module",
+  "intendedOwner": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema (flow already owns a full multi-format schema module one level up: 🔣️.json/🦀️.rs/🟦️.ts/🔗️.graphql/🛰️.proto) — each editor-law schema should be exported from there, or from a new ✏️editor-law schema kind",
+  "exports": [
+   "owners (viewer)"
+  ],
+  "consumers": [
+   {
+    "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️fixtures/📜️script.ts",
+    "kind": "new Ajv({strict:true}).compile(...Schema) — line 450-451, referenced from the editor's script.ts via a relative ../../👁️viewer/🧪️fixtures/🧹️owners/ path"
+   }
+  ],
+  "decision": "move each editor-law schema into flow's owned 🧬️schema module (or a new editor-law kind); script.ts should import the schema by name instead of reading a co-located file",
+  "evidence": "flow/✏️editor/🧪️fixtures/📜️script.ts imports Ajv (`import Ajv from \"ajv\"`) and validates every fixture pair listed in this family — the strongest evidence in the whole audit that a fixture directory is acting as live contract authority, not just examples",
+  "open": "12 (add-widget-retained) needs a direct grep to confirm its exact consumer line; also confirm whether Ajv here counts as a 'runtime dependency on an external library' under CLAUDE.md (it's test-only via package.json test script, likely acceptable, but worth flagging)"
+ },
+ {
+  "path": "✏️s/🔌️plugins/🌊️flow/🧪️fixtures/🧹️surface-owners/🧬️.schema.json",
+  "blob": "0fa96b80d4e55900824fb01fd8e7188bf766fdca",
+  "family": "flow-editor-laws",
+  "role": "fixture-owned editor-behavior-law contract, actively Ajv-validated",
+  "classification": "violation",
+  "owner": "none — the module 📜️script.ts (485 lines, imports Ajv) reads BOTH the data 🔣️.json and the sibling 🧬️.schema.json, compiles the schema, and asserts the fixture validates before asserting other behavior — the schema is a live, enforced test oracle but lives outside any 🧬️schema module",
+  "intendedOwner": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema (flow already owns a full multi-format schema module one level up: 🔣️.json/🦀️.rs/🟦️.ts/🔗️.graphql/🛰️.proto) — each editor-law schema should be exported from there, or from a new ✏️editor-law schema kind",
+  "exports": [
+   "surface-owners (plugin root)"
+  ],
+  "consumers": [
+   {
+    "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️fixtures/📜️script.ts",
+    "kind": "new Ajv({strict:true}).compile(...Schema) — line 466-467, referenced from the editor's script.ts via a relative ../../../../../../../../🧪️fixtures/🧹️surface-owners/ path"
+   }
+  ],
+  "decision": "move each editor-law schema into flow's owned 🧬️schema module (or a new editor-law kind); script.ts should import the schema by name instead of reading a co-located file",
+  "evidence": "flow/✏️editor/🧪️fixtures/📜️script.ts imports Ajv (`import Ajv from \"ajv\"`) and validates every fixture pair listed in this family — the strongest evidence in the whole audit that a fixture directory is acting as live contract authority, not just examples",
+  "open": "12 (add-widget-retained) needs a direct grep to confirm its exact consumer line; also confirm whether Ajv here counts as a 'runtime dependency on an external library' under CLAUDE.md (it's test-only via package.json test script, likely acceptable, but worth flagging)"
+ },
+ {
+  "path": "✏️s/🔌️plugins/🌍️gis/🧪️fixtures/🌉️component-cold-map-patch/🧬️.schema.json",
+  "blob": "0443e5f8ec01b4e4065cea115c62e918f3b6fecd",
+  "family": "gis-plugin-root-fixtures",
+  "role": "fixture-owned contract with its own co-located Rust module",
+  "classification": "violation",
+  "owner": "none as a taxonomy schema — but unusually this fixture dir HAS its own 🦀️.rs (✏️s/🔌️plugins/🌍️gis/🧪️fixtures/🌉️component-cold-map-patch/🦀️.rs), i.e. real behavior code lives inside the fixtures tree",
+  "intendedOwner": "✏️s/🔌️plugins/🌍️gis plugin root needs a schema home, or this belongs under gismap/gisterrain's 🧬️schema if it's artifact-specific",
+  "exports": [
+   "component-cold-map-patch"
+  ],
+  "consumers": [
+   {
+    "path": "✏️s/🔌️plugins/🌍️gis/🧪️fixtures/🌉️component-cold-map-patch/🦀️.rs",
+    "kind": "co-located module, not just a fixture consumer — code lives inside the fixture dir itself"
+   },
+   {
+    "path": "✏️s/🔌️plugins/🌍️gis/📦️packages/🦀️rust/📜️script.ts",
+    "kind": "build-glue reference (not confirmed as validation)"
+   }
+  ],
+  "decision": "relocate both the schema and the co-located 🦀️.rs logic out of 🧪️fixtures into an owned module — this is the most structurally confused case in the gis family since production-shaped code, not just data, sits under fixtures",
+  "evidence": "$id=https://semio.tech/schemas/gis/component-cold-map-patch-v1.json; is the only fixture directory in the entire audited partition with its own 🦀️.rs file inside it",
+  "open": "read ✏️s/🔌️plugins/🌍️gis/🧪️fixtures/🌉️component-cold-map-patch/🦀️.rs in full to determine if it is test-only or actually wired into the gis plugin's dispatch — highest-priority follow-up in this ticket"
+ },
+ {
+  "path": "✏️s/🔌️plugins/🌍️gis/🧪️fixtures/💡️inference-control/🧬️.schema.json",
+  "blob": "9100b00e768f9df110a9f2217e5369994f361a60",
+  "family": "gis-plugin-root-fixtures",
+  "role": "fixture-owned contract",
+  "classification": "violation",
+  "owner": "none",
+  "intendedOwner": "✏️s/🔌️plugins/🌍️gis plugin root or gismap/gisterrain 🧬️schema/💡️inferences",
+  "exports": [
+   "inference-control"
+  ],
+  "consumers": [
+   {
+    "path": "✏️s/🔌️plugins/🌍️gis/📦️packages/🦀️rust/📜️script.ts",
+    "kind": "grep-hit, likely build-glue path reference only"
+   }
+  ],
+  "decision": "relocate to gismap/gisterrain's 🧬️schema/💡️inferences (taxonomy already blesses this location) since 'inference-control' is conceptually an inference contract",
+  "evidence": "$id=urn:semio:gis:inference-control:v1",
+  "open": "no direct Rust/TS content-consumer confirmed in this pass beyond the script.ts path hit — needs a follow-up grep for the literal fixture directory name inside gismap/gisterrain 🦀️.rs files"
+ },
+ {
+  "path": "✏️s/🔌️plugins/🌍️gis/🧪️fixtures/🗄️durable-three-store-assembly/🧬️.schema.json",
+  "blob": "6b722678d15d084407449c59665e5c63054a6f09",
+  "family": "gis-plugin-root-fixtures",
+  "role": "fixture-owned contract",
+  "classification": "violation",
+  "owner": "none",
+  "intendedOwner": "✏️s/🔌️plugins/🌍️gis plugin root (no natural artifact-level home identified)",
+  "exports": [
+   "durable-three-store-assembly"
+  ],
+  "consumers": [
+   {
+    "path": "✏️s/🔌️plugins/🌍️gis/📦️packages/🦀️rust/📜️script.ts",
+    "kind": "grep-hit, build-glue path reference only"
+   }
+  ],
+  "decision": "relocate to a gis plugin-root schema location once one exists",
+  "evidence": "no $id; keys include $defs — substantial nested contract (3891 bytes)",
+  "open": "no direct consumer beyond script.ts path hit found in this pass — needs follow-up"
+ },
+ {
+  "path": "✏️s/🔌️plugins/🌍️gis/🧪️fixtures/🧩️map-create-region-group/🧬️.schema.json",
+  "blob": "04c0ef37049176eb15eecdc1f6591a345729813d",
+  "family": "gis-plugin-root-fixtures",
+  "role": "fixture-owned contract",
+  "classification": "violation",
+  "owner": "none",
+  "intendedOwner": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap 🧬️schema/🧬️mutations (region-group mutations already live there) or gis plugin root",
+  "exports": [
+   "map-create-region-group"
+  ],
+  "consumers": [
+   {
+    "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️.rs",
+    "kind": "grep-hit"
+   },
+   {
+    "path": "✏️s/🔌️plugins/🌍️gis/📦️packages/🦀️rust/📜️script.ts",
+    "kind": "grep-hit, build-glue"
+   }
+  ],
+  "decision": "relocate into gismap's already-owned 🧬️schema/🧬️mutations/🌐create-region module (gismap already has 15+ real mutation-leaf schemas under 🧬️schema/🧬️mutations — this fixture-owned duplicate should fold in there, out of scope for the mutations auditor but the DESTINATION is their territory)",
+  "evidence": "no $id; substantial (4206 bytes, $defs present)",
+  "open": "clarify boundary with the mutations auditor since the natural destination (🧬️schema/🧬️mutations/🌐create-region) is explicitly their partition"
+ },
+ {
+  "path": "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧪️fixtures/📇️native-catalog-surface/📌️commitment.schema.json",
+  "blob": "f11844172349712eb22620a0a11653dfda2021fe",
+  "family": "stdio-native-catalog-surface",
+  "role": "fixture-owned contract cluster (native catalog surface)",
+  "classification": "violation",
+  "owner": "none as taxonomy schema — registry ALREADY has its own 🧬️schema module (✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️schema/, covering 🧬️native-codec-factories.schema.json) but that is a DIFFERENT contract; this 5-file cluster is entirely separate and has zero taxonomy home",
+  "intendedOwner": "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️schema (extend the existing schema module with a native-catalog-surface export)",
+  "exports": [
+   "native-catalog-surface",
+   "commitment",
+   "budget",
+   "commitment-cases",
+   "imports"
+  ],
+  "consumers": [
+   {
+    "path": "✏️s/🔌️plugins/🗄️stdio/📇️registry/🦀️.rs:1328",
+    "kind": "include_str!(\"🧪️fixtures/📇️native-catalog-surface/🧪️budget.json\") — only the DATA file 🧪️budget.json is loaded; no TS/Ajv consumer found for any of the 5 schema files in this cluster"
+   }
+  ],
+  "decision": "fold all 5 into registry's existing 🧬️schema module as named exports; this is the largest orphaned (zero programmatic consumer) schema cluster found in the audit",
+  "evidence": "dir also contains data files 🧪️budget.json/🧪️commitment.json/🧪️imports.json and 🔣️.json; only 🧪️budget.json is include_str!'d — the 5 .schema.json files have NO confirmed consumer anywhere (grepped registry/🦀️.rs and all *.ts under stdio, zero hits for commitment.schema/budget.schema/imports.schema/commitment-cases.schema)",
+  "open": "confirm across the whole repo (not just stdio) that these 5 schemas are truly dead, or whether some tool reads *.schema.json by directory convention rather than by name"
+ },
+ {
+  "path": "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧪️fixtures/📇️native-catalog-surface/🧬️.schema.json",
+  "blob": "463abce7b68ff7b3d913cbd6326ddd25911d5a14",
+  "family": "stdio-native-catalog-surface",
+  "role": "fixture-owned contract cluster (native catalog surface)",
+  "classification": "violation",
+  "owner": "none as taxonomy schema — registry ALREADY has its own 🧬️schema module (✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️schema/, covering 🧬️native-codec-factories.schema.json) but that is a DIFFERENT contract; this 5-file cluster is entirely separate and has zero taxonomy home",
+  "intendedOwner": "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️schema (extend the existing schema module with a native-catalog-surface export)",
+  "exports": [
+   "native-catalog-surface",
+   "commitment",
+   "budget",
+   "commitment-cases",
+   "imports"
+  ],
+  "consumers": [
+   {
+    "path": "✏️s/🔌️plugins/🗄️stdio/📇️registry/🦀️.rs:1328",
+    "kind": "include_str!(\"🧪️fixtures/📇️native-catalog-surface/🧪️budget.json\") — only the DATA file 🧪️budget.json is loaded; no TS/Ajv consumer found for any of the 5 schema files in this cluster"
+   }
+  ],
+  "decision": "fold all 5 into registry's existing 🧬️schema module as named exports; this is the largest orphaned (zero programmatic consumer) schema cluster found in the audit",
+  "evidence": "dir also contains data files 🧪️budget.json/🧪️commitment.json/🧪️imports.json and 🔣️.json; only 🧪️budget.json is include_str!'d — the 5 .schema.json files have NO confirmed consumer anywhere (grepped registry/🦀️.rs and all *.ts under stdio, zero hits for commitment.schema/budget.schema/imports.schema/commitment-cases.schema)",
+  "open": "confirm across the whole repo (not just stdio) that these 5 schemas are truly dead, or whether some tool reads *.schema.json by directory convention rather than by name"
+ },
+ {
+  "path": "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧪️fixtures/📇️native-catalog-surface/🧬️budget.schema.json",
+  "blob": "30f60cec004e6a3c31d26ffa99a2a8b6c482e8b5",
+  "family": "stdio-native-catalog-surface",
+  "role": "fixture-owned contract cluster (native catalog surface)",
+  "classification": "violation",
+  "owner": "none as taxonomy schema — registry ALREADY has its own 🧬️schema module (✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️schema/, covering 🧬️native-codec-factories.schema.json) but that is a DIFFERENT contract; this 5-file cluster is entirely separate and has zero taxonomy home",
+  "intendedOwner": "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️schema (extend the existing schema module with a native-catalog-surface export)",
+  "exports": [
+   "native-catalog-surface",
+   "commitment",
+   "budget",
+   "commitment-cases",
+   "imports"
+  ],
+  "consumers": [
+   {
+    "path": "✏️s/🔌️plugins/🗄️stdio/📇️registry/🦀️.rs:1328",
+    "kind": "include_str!(\"🧪️fixtures/📇️native-catalog-surface/🧪️budget.json\") — only the DATA file 🧪️budget.json is loaded; no TS/Ajv consumer found for any of the 5 schema files in this cluster"
+   }
+  ],
+  "decision": "fold all 5 into registry's existing 🧬️schema module as named exports; this is the largest orphaned (zero programmatic consumer) schema cluster found in the audit",
+  "evidence": "dir also contains data files 🧪️budget.json/🧪️commitment.json/🧪️imports.json and 🔣️.json; only 🧪️budget.json is include_str!'d — the 5 .schema.json files have NO confirmed consumer anywhere (grepped registry/🦀️.rs and all *.ts under stdio, zero hits for commitment.schema/budget.schema/imports.schema/commitment-cases.schema)",
+  "open": "confirm across the whole repo (not just stdio) that these 5 schemas are truly dead, or whether some tool reads *.schema.json by directory convention rather than by name"
+ },
+ {
+  "path": "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧪️fixtures/📇️native-catalog-surface/🧬️commitment-cases.schema.json",
+  "blob": "ff081d194e2d1cae0b26e56aee1cb73743dd9d38",
+  "family": "stdio-native-catalog-surface",
+  "role": "fixture-owned contract cluster (native catalog surface)",
+  "classification": "violation",
+  "owner": "none as taxonomy schema — registry ALREADY has its own 🧬️schema module (✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️schema/, covering 🧬️native-codec-factories.schema.json) but that is a DIFFERENT contract; this 5-file cluster is entirely separate and has zero taxonomy home",
+  "intendedOwner": "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️schema (extend the existing schema module with a native-catalog-surface export)",
+  "exports": [
+   "native-catalog-surface",
+   "commitment",
+   "budget",
+   "commitment-cases",
+   "imports"
+  ],
+  "consumers": [
+   {
+    "path": "✏️s/🔌️plugins/🗄️stdio/📇️registry/🦀️.rs:1328",
+    "kind": "include_str!(\"🧪️fixtures/📇️native-catalog-surface/🧪️budget.json\") — only the DATA file 🧪️budget.json is loaded; no TS/Ajv consumer found for any of the 5 schema files in this cluster"
+   }
+  ],
+  "decision": "fold all 5 into registry's existing 🧬️schema module as named exports; this is the largest orphaned (zero programmatic consumer) schema cluster found in the audit",
+  "evidence": "dir also contains data files 🧪️budget.json/🧪️commitment.json/🧪️imports.json and 🔣️.json; only 🧪️budget.json is include_str!'d — the 5 .schema.json files have NO confirmed consumer anywhere (grepped registry/🦀️.rs and all *.ts under stdio, zero hits for commitment.schema/budget.schema/imports.schema/commitment-cases.schema)",
+  "open": "confirm across the whole repo (not just stdio) that these 5 schemas are truly dead, or whether some tool reads *.schema.json by directory convention rather than by name"
+ },
+ {
+  "path": "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧪️fixtures/📇️native-catalog-surface/🧬️imports.schema.json",
+  "blob": "1079d418ff45295777879b2e05f30c5487990c13",
+  "family": "stdio-native-catalog-surface",
+  "role": "fixture-owned contract cluster (native catalog surface)",
+  "classification": "violation",
+  "owner": "none as taxonomy schema — registry ALREADY has its own 🧬️schema module (✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️schema/, covering 🧬️native-codec-factories.schema.json) but that is a DIFFERENT contract; this 5-file cluster is entirely separate and has zero taxonomy home",
+  "intendedOwner": "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️schema (extend the existing schema module with a native-catalog-surface export)",
+  "exports": [
+   "native-catalog-surface",
+   "commitment",
+   "budget",
+   "commitment-cases",
+   "imports"
+  ],
+  "consumers": [
+   {
+    "path": "✏️s/🔌️plugins/🗄️stdio/📇️registry/🦀️.rs:1328",
+    "kind": "include_str!(\"🧪️fixtures/📇️native-catalog-surface/🧪️budget.json\") — only the DATA file 🧪️budget.json is loaded; no TS/Ajv consumer found for any of the 5 schema files in this cluster"
+   }
+  ],
+  "decision": "fold all 5 into registry's existing 🧬️schema module as named exports; this is the largest orphaned (zero programmatic consumer) schema cluster found in the audit",
+  "evidence": "dir also contains data files 🧪️budget.json/🧪️commitment.json/🧪️imports.json and 🔣️.json; only 🧪️budget.json is include_str!'d — the 5 .schema.json files have NO confirmed consumer anywhere (grepped registry/🦀️.rs and all *.ts under stdio, zero hits for commitment.schema/budget.schema/imports.schema/commitment-cases.schema)",
+  "open": "confirm across the whole repo (not just stdio) that these 5 schemas are truly dead, or whether some tool reads *.schema.json by directory convention rather than by name"
+ },
+ {
+  "path": "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧪️fixtures/🧾️claim-authority/🧬️.schema.json",
+  "blob": "97201fc914d691baeab32e9db320bf147f786bea",
+  "family": "stdio-claim-authority",
+  "role": "fixture-owned contract",
+  "classification": "violation",
+  "owner": "none",
+  "intendedOwner": "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️schema",
+  "exports": [
+   "claim-authority"
+  ],
+  "consumers": [
+   {
+    "path": "✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/🧪️tests/📇️native-openable-provider/🦀️.rs:44",
+    "kind": "include_str!(concat!(CARGO_MANIFEST_DIR, \"/../../📇️registry/🧪️fixtures/🧾️claim-authority/🔣️.json\")) — cross-package reach-in to load the DATA file; schema.json itself unreferenced"
+   }
+  ],
+  "decision": "fold into registry's 🧬️schema module",
+  "evidence": "no $id; consumed cross-package via CARGO_MANIFEST_DIR path concat, confirming fragile ad-hoc resolution rather than a stable export",
+  "open": "none"
+ },
+ {
+  "path": "✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/🧫️fixtures/🌳️catalog-root/🧬️.schema.json",
+  "blob": "8aa000299b638a7782187aae54b5e50dcfc51835",
+  "family": "stdio-rust-fixtures",
+  "role": "fixture-owned contract",
+  "classification": "violation",
+  "owner": "none",
+  "intendedOwner": "✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust — needs its own 🧬️schema module",
+  "exports": [
+   "catalog-root"
+  ],
+  "consumers": [
+   {
+    "path": "✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust — package test tree",
+    "kind": "inferred sibling of home-io-surface/dwg-artifact-ownership, not individually isolated"
+   }
+  ],
+  "decision": "create a package-level 🧬️schema module for stdio's rust package and fold catalog-root/home-io-surface/dwg-artifact-ownership into it together",
+  "evidence": "no $id; 1757 bytes",
+  "open": "isolate exact consumer"
+ },
+ {
+  "path": "✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/🧫️fixtures/🏠️home-io-surface/🧬️.schema.json",
+  "blob": "d06b16b7bfce95b2d6fb3e58f2fb0f66e7a4ce8a",
+  "family": "stdio-rust-fixtures",
+  "role": "fixture-owned contract",
+  "classification": "violation",
+  "owner": "none",
+  "intendedOwner": "✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust — needs its own 🧬️schema module",
+  "exports": [
+   "home-io-surface"
+  ],
+  "consumers": [
+   {
+    "path": "✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust — package test tree",
+    "kind": "inferred"
+   }
+  ],
+  "decision": "fold into the same new package-level schema module as catalog-root/dwg-artifact-ownership",
+  "evidence": "$id=https://semio.tech/schemas/stdio-home-io-surface-v1.json",
+  "open": "isolate exact consumer"
+ },
+ {
+  "path": "✏️s/🔌️plugins/📕️norm/🎚️config/🧪️tests/🧬️.schema.json",
+  "blob": "30bf97fe2a491892a9ce163ffb66bd44a76a0a00",
+  "family": "norm-test-harness-schema",
+  "role": "test-harness meta-schema (describes test CASE shape, not the app contract)",
+  "classification": "ambiguous — likely inert test-infrastructure schema rather than an application contract violation",
+  "owner": "none formally, but norm's REAL config contract already exists and is unrelated",
+  "intendedOwner": "if kept, belongs under the test module (🧰️framework .../🧪️test/🧬️schema, the repo-wide test-record schema location) rather than under the plugin; if it is truly config-shaped it should merge into norm's existing config schema",
+  "exports": [
+   "norm-config-test-cases"
+  ],
+  "consumers": [
+   {
+    "path": "✏️s/🔌️plugins/📕️norm/🎚️config — 🧪️tests dir sibling",
+    "kind": "not isolated in this pass; property set (contractId, cases, invalid, text, binary) does not match the real NormConfig schema's shape at all"
+   }
+  ],
+  "decision": "classify separately from the 'application contract in a fixture dir' violation pattern — likely fine to leave as test-harness schema PROVIDED it moves to a test-schema location rather than sitting as a bare *.schema.json; flag to ticket owner for a ruling",
+  "evidence": "norm's real config schema (✏️s/🔌️plugins/📕️norm/🎚️config/🧬️schema/🔣️.json) has $id=https://semio.tech/schema/app/norm/norm/config.json, title=NormConfig, props=['selectedCheckIndex'] — completely different shape from this test schema's props=['contractId','cases','invalid','text','binary'], so this is NOT duplicate/drifted config authority, it is a distinct test-case-shape schema",
+  "open": "get a ruling on whether test-case-shape schemas (as opposed to application-data schemas) fall inside this ticket's violation pattern at all"
+ },
+ {
+  "path": "✏️s/🔌️plugins/📕️norm/🖥️app-surface/🧪️tests/🧬️.schema.json",
+  "blob": "1fca6f59573c3362c8449dbecd655f061fc407bf",
+  "family": "norm-test-harness-schema",
+  "role": "test-harness meta-schema (describes test CASE shape, not the app contract)",
+  "classification": "ambiguous — same reasoning as norm/🎚️config's sibling",
+  "owner": "none",
+  "intendedOwner": "same as above — test module schema location, or merge into app-surface's real schema if one exists",
+  "exports": [
+   "norm-app-surface-test-cases"
+  ],
+  "consumers": [
+   {
+    "path": "✏️s/🔌️plugins/📕️norm/🖥️app-surface — 🧪️tests dir sibling",
+    "kind": "not isolated in this pass"
+   }
+  ],
+  "decision": "same disposition as index 39",
+  "evidence": "app-surface has NO existing 🧬️schema module at all (unlike 🎚️config and 👥️presence which do) — so unlike 39 there is no known-real contract to compare shape against",
+  "open": "confirm whether app-surface needs its own real 🧬️schema and whether this test schema is secretly it"
+ },
+ {
+  "path": "✏️s/🔌️plugins/📕️norm/🧪️fixtures/🧫️retained-command-dispositions/🧬️.schema.json",
+  "blob": "21162f0f090fb0792dc40cad6878130bba627f91",
+  "family": "norm-retained-command-dispositions",
+  "role": "fixture-owned contract cluster",
+  "classification": "violation",
+  "owner": "none",
+  "intendedOwner": "✏️s/🔌️plugins/📕️norm plugin root or its check-dispatch module — needs a schema home",
+  "exports": [
+   "retained-command-dispositions"
+  ],
+  "consumers": [
+   {
+    "path": "✏️s/🔌️plugins/📕️norm — 🧪️fixtures sibling",
+    "kind": "not isolated in this pass; 9303 bytes, substantial contract"
+   }
+  ],
+  "decision": "relocate to a norm-owned schema module",
+  "evidence": "$id=https://semio.local/schemas/norm-retained-command-dispositions.schema.json; belongs to the repo-wide retained-command-* family",
+  "open": "isolate exact consumer"
+ },
+ {
+  "path": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🧪️tests/📐️retained-route-schema.json",
+  "blob": "1a45dbe058f8648efcec5bd53ec264b9af9548c4",
+  "family": "process-retained-route",
+  "role": "fixture-owned contract",
+  "classification": "violation",
+  "owner": "none — sibling to editor's 🦀️.rs which references retained-route logic",
+  "intendedOwner": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema (subset already has one)",
+  "exports": [
+   "retained-route-laws"
+  ],
+  "consumers": [
+   {
+    "path": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+    "kind": "grep-hit"
+   },
+   {
+    "path": "✏️s/🔌️plugins/🏭️process/📦️packages/🟦️typescript/📜️script.ts",
+    "kind": "grep-hit"
+   }
+  ],
+  "decision": "move into process3d's already-owned 🧬️schema module",
+  "evidence": "$id=semio.process3d.retained-route-laws.schema.v1.json; filename itself says '...schema.json' inside a 🧪️tests dir, not even a 🧪️fixtures dir — a schema literally named as a test artifact",
+  "open": "confirm TS script.ts role (validation vs build-glue)"
+ },
+ {
+  "path": "✏️s/🔌️plugins/💠️lowpoly/🧪️interactive-job/🧬️.schema.json",
+  "blob": "d2eca3b53d60f0ba4d724125d44da7eec729ef79",
+  "family": "lowpoly-interactive-job",
+  "role": "fixture-owned contract, actively referenced by dispatcher code comments",
+  "classification": "violation",
+  "owner": "none — but the editor's 🦀️.rs explicitly documents itself against this schema ('the coordinator's own schema edit, 🔣️interactive-job.schema.json's 8th oneOf signature')",
+  "intendedOwner": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema",
+  "exports": [
+   "lowpoly-interactive-job-partition"
+  ],
+  "consumers": [
+   {
+    "path": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs:425",
+    "kind": "doc-comment referencing 'the coordinator's own schema edit (interactive-job.schema.json's 8th oneOf signature)' — the schema's oneOf arm count is load-bearing for dispatcher correctness"
+   },
+   {
+    "path": "✏️s/🔌️plugins/💠️lowpoly/📦️packages/🟦️typescript/📜️script.ts",
+    "kind": "grep-hit"
+   }
+  ],
+  "decision": "move into lowpoly's owned 🧬️schema module — this is the interactive-job-classification family the goal doc calls out by name, and it is genuinely load-bearing (dispatcher logic is written to match a specific oneOf arm index)",
+  "evidence": "title='Lowpoly Interactive Job Partition'; $id present; 6700 bytes, largest single-file schema after the flow artifact-canonical and the retained-command-limits family",
+  "open": "cross-check against project-mutation-ownership-is-declared-not-located memory note — interactive-job classification is known to gate dispatch elsewhere in the repo per prior session findings"
+ },
+ {
+  "path": "✏️s/🔌️plugins/🗒️note/🧪️action-cohort/🧬️.schema.json",
+  "blob": "8e042446dd3ed585eba345745e03b6f4981ffdea",
+  "family": "note-action-cohort",
+  "role": "fixture-owned DUPLICATE contract, drifted from an existing (also fixture-owned) shared schema",
+  "classification": "violation — duplicate authority + drift",
+  "owner": "none as taxonomy schema; the DATA sibling (🔣️.json) is cross-plugin include_str!'d by FLOW's own 🦀️.rs test and validated there against FLOW's schema, not this file",
+  "intendedOwner": "a single shared schema, most naturally owned by flow (whose $id/enum already generalizes to both FlowPlayApp and NotePlayApp) — e.g. a framework-level or flow-owned action-cohort schema that note imports as a named export; note should not keep its own narrower copy",
+  "exports": [
+   "action-cohort"
+  ],
+  "consumers": [
+   {
+    "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs:2528-2530",
+    "kind": "fn action_cohort_fixtures_match_the_exact_route_census() reads BOTH ../../🎬️action-cohort/🔣️.json (flow's own) AND ../../../🗒️note/🧪️action-cohort/🔣️.json (cross-plugin reach-in) as plain JSON — neither is schema-validated at this call site"
+   }
+  ],
+  "decision": "eliminate the duplicate: note's copy at 🧪️action-cohort/🧬️.schema.json is a narrower, drifted subset of flow's 🎬️action-cohort/🧬️.schema.json (same 12-ish properties, but note's uses `const` where flow's uses `enum`, and note's required list omits blockedSeams/materialization that flow's includes) — consolidate to one owned schema, most naturally under flow (or a shared framework location) since flow's version already generalizes over both apps",
+  "evidence": "flow/🎬️action-cohort/🧬️.schema.json ($id=semio.flow-note.action-cohort.v1) is NOT under a 🧪️/🧫️ dir so it falls outside this ticket's literal partition, but it is the SAME contract family: its $id property is `enum:[semio.flow-note.action-cohort.v1, semio.note.action-cohort.v1]` and its owner property is `enum:[FlowPlayApp, NotePlayApp]` — i.e. flow's schema was authored to cover note's case too. note/🧪️action-cohort/🧬️.schema.json instead hardcodes `const: semio.note.action-cohort.v1`, `const: NotePlayApp`, `const: 36` for routeCount, and drops blockedSeams/materialization from required — a real drift, not just a relocation issue",
+  "open": "this pair straddles a plugin boundary (flow + note) and a taxonomy gap (no shared cross-plugin schema location) — needs a decision from whoever owns the flow/note action-cohort integration on which schema is authoritative before either fixture copy is deleted"
+ },
+ {
+  "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🧪️fixtures/🧬️.schema.json",
+  "blob": "177d0d34a877be78b0ab3409e2f6a221144ea6dc",
+  "family": "puzzle-fixtures",
+  "role": "fixture-owned contract",
+  "classification": "violation",
+  "owner": "none — no direct consumer found in puzzle 2d's own .rs/.ts in this pass",
+  "intendedOwner": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm — needs a wasm-boundary schema location",
+  "exports": [
+   "puzzle2d-wasm-fixture"
+  ],
+  "consumers": [
+   {
+    "path": "unconfirmed",
+    "kind": "grep for 🌉️wasm/🧪️fixtures returned no .rs/.ts hits in puzzle in this pass"
+   }
+  ],
+  "decision": "relocate once a consumer is confirmed; if truly unreferenced, flag as dead",
+  "evidence": "no $id, generic draft-07 object schema",
+  "open": "isolate consumer — possibly loaded by a wasm-bindgen test harness not matched by the grep patterns used"
+ },
+ {
+  "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⏳️precompute/🪣️fill/🧪️fixtures/🧬️.schema.json",
+  "blob": "e585d4f32fbe5bb692938d05c8db9eeb7d21a0c3",
+  "family": "puzzle-fixtures",
+  "role": "fixture-owned contract",
+  "classification": "violation",
+  "owner": "none",
+  "intendedOwner": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⏳️precompute/🪣️fill — needs a schema location for the fill-preview contract",
+  "exports": [
+   "puzzle3d-fill-preview-json"
+  ],
+  "consumers": [
+   {
+    "path": "✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/🦀️.rs",
+    "kind": "grep-hit for ⏳️precompute/🪣️fill"
+   }
+  ],
+  "decision": "relocate to a precompute/fill schema location owned by the 3d puzzle editor",
+  "evidence": "$id=semio.puzzle3d.fill-preview-json.v1; also has a custom x-semio-maxEncodedUtf8Bytes vendor extension key — a genuine authored contract, not throwaway data",
+  "open": "confirm exact call site in packages/rust/🦀️.rs"
+ },
+ {
+  "path": "✏️s/🔌️plugins/🖍️draw/🧪️publication-authority/🧬️.schema.json",
+  "blob": "b248a0e1e8f55fa72425f004444d68ce0c0b2deb",
+  "family": "publication-authority",
+  "role": "fixture-owned contract, TS-consumed",
+  "classification": "violation",
+  "owner": "none — consumed only by draw's package-level TS script",
+  "intendedOwner": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/... — draw has 5 real subset-level 🧬️schema modules (any/transform/structure/metadata/style) but none of them own publication-authority",
+  "exports": [
+   "publication-authority"
+  ],
+  "consumers": [
+   {
+    "path": "✏️s/🔌️plugins/🖍️draw/📦️packages/🟦️typescript/📜️script.ts",
+    "kind": "grep-hit; block's sibling package (see index 87) shows this is a real oracle pattern (resolve(plugin,\"🧪️publication-authority\") + oracle(fixture, sources) gating a registered nx script), draw's script.ts likely follows the same shape"
+   }
+  ],
+  "decision": "relocate to a plugin-root or shared schema location; the publication-authority pattern recurs across at least block and draw so may deserve one shared framework schema",
+  "evidence": "no $id",
+  "open": "confirm draw's script.ts uses the same ScriptRouter oracle pattern verified for block"
+ },
+ {
+  "path": "✏️s/🔌️plugins/🧱️block/🧪️publication-authority/🧬️.schema.json",
+  "blob": "b50166f8d5db50ad4d2518ba95d07e047a2560ac",
+  "family": "publication-authority",
+  "role": "fixture-owned contract, actively enforced by a registered nx audit script",
+  "classification": "violation",
+  "owner": "none as taxonomy schema — but genuinely live: ✏️s/🔌️plugins/🧱️block/📦️packages/🟦️typescript/📜️script.ts resolves this fixture at runtime and calls oracle(fixture, sources), registered as the 'publication-authority-audit' nx command; the fixture literally gates whether block's own production sources pass an authority check",
+  "intendedOwner": "✏️s/🔌️plugins/🧱️block plugin root — block has 9 real 🧬️schema modules across its 3 artifact kinds (2d/3d/5d) plus their editor config/presence schemas, but none of them own publication-authority (a cross-artifact, plugin-level concern)",
+  "exports": [
+   "publication-authority"
+  ],
+  "consumers": [
+   {
+    "path": "✏️s/🔌️plugins/🧱️block/📦️packages/🟦️typescript/📜️script.ts:46,74,81,96",
+    "kind": "appOracle(app, sources) reads fixture.schema===\"semio.app.publication-authority.v1\"; resolve(plugin,\"🧪️publication-authority\") loads the fixture at test/audit time; router.register(\"publication-authority-audit\", TestScript) wires it to nx"
+   },
+   {
+    "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+    "kind": "file header comment: 'Block source, schema, and publication-authority laws'"
+   }
+  ],
+  "decision": "move to a plugin-root schema location; this is the single most clearly LIVE (registered nx command, gates real source files) violation found in the whole audit, so it should be prioritized first for the fix",
+  "evidence": "fixture.schema literal is 'semio.app.publication-authority.v1' — versioned like a real contract; ScriptRouter registers 'publication-authority-audit' as a first-class command per CLAUDE.md's launch.json convention",
+  "open": "check whether project.json/launch.json expose 'publication-authority-audit' as a devs-facing command (per CLAUDE.md 'All devs are using launch.json') — if so this is a production-facing gate, not a test"
+ },
+ {
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧪️fixtures/📇️projection-persistence-v1/🧬️.schema.json",
+  "blob": "4475fdf41d155a74a87b162c7574ec5c432cc48d",
+  "family": "space-projection-persistence",
+  "role": "fixture-owned contract",
+  "classification": "violation",
+  "owner": "none — sibling to ✏️editor/🎚️config/🦀️.rs which references projection-persistence",
+  "intendedOwner": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema (home's config already has a real schema module one level up — this is the SAME surfaceSchemaSpecFileKinds-blessed slot, so the fix here is trivial: just move the file up one directory)",
+  "exports": [
+   "projection-persistence-v1"
+  ],
+  "consumers": [
+   {
+    "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🦀️.rs",
+    "kind": "grep-hit"
+   },
+   {
+    "path": "✏️s/🔌️plugins/🪐️space/📦️packages/🦀️rust/📜️script.ts",
+    "kind": "grep-hit"
+   }
+  ],
+  "decision": "of all findings in this audit, this is the easiest fix: 🎚️config/🧬️schema already exists as a taxonomy-blessed sibling directory one level up from 🎚️config/🧪️fixtures/📇️projection-persistence-v1 — just relocate the file, no new schema location needs inventing",
+  "evidence": "named after the family the ticket explicitly calls out (📇️projection-persistence-v1); no $id",
+  "open": "confirm the config/🧬️schema module doesn't already cover this shape under a different name (would make it a duplicate rather than a pure relocation)"
+ },
+ {
+  "path": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/📦️packages/🟨️javascript/🧪️tests/🧬️sequence-schema.test.js",
+  "blob": "05786656be517bed43d04500ff0311bd8a00670b",
+  "family": "sequence-test-code",
+  "role": "test code (JS test file), not a schema definition",
+  "classification": "not applicable — matched the search only because its filename contains the substring 'schema'",
+  "owner": "n/a",
+  "intendedOwner": "n/a — this is a test, leave in place",
+  "exports": [],
+  "consumers": [
+   {
+    "path": "self (test runner)",
+    "kind": "js test file"
+   }
+  ],
+  "decision": "no action — excluded from the violation count; filename 🧬️sequence-schema.test.js just documents what it tests",
+  "evidence": "extension .test.js; contains test assertions, not $schema/type/properties",
+  "open": "none"
+ },
+ {
+  "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧪️tests/🧬️direct-leaves/🧬️schema/🔣️.json",
+  "blob": "05528181c5934c966f1b72f39a6040dcff3be8cc",
+  "family": "gis-internal-schema-tests",
+  "role": "test-local schema nested inside the config surface's OWN test area",
+  "classification": "non-violation — sits inside ✏️editor/🎚️config/🧪️tests/🧬️direct-leaves/🧬️schema, i.e. already under the correct surface (config already has a real 🧬️schema module one level up)",
+  "owner": "gis's own ✏️editor/🎚️config surface (test-scoped copy)",
+  "intendedOwner": "already correctly scoped to gisterrain's config surface; at most a naming/dedup cleanup (fold into config's real 🧬️schema module) rather than a cross-scope violation",
+  "exports": [
+   "gisterrain-config-direct-leaves-test"
+  ],
+  "consumers": [
+   {
+    "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧪️tests/🧬️direct-leaves/🦀️.rs",
+    "kind": "sibling test module in the same 🧬️direct-leaves dir"
+   }
+  ],
+  "decision": "leave in place or fold into config's real schema; not a priority relocation",
+  "evidence": "SCHEMA-shaped (has $schema/$defs/properties) but path never leaves the config surface's own subtree",
+  "open": "none"
+ },
+ {
+  "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema/🧪️tests/🔣️.json",
+  "blob": "5aa0f749363afb459d3cbc2441d3bfdb65895b84",
+  "family": "gis-internal-schema-tests",
+  "role": "inert test data (not schema-shaped) inside presence's own schema module",
+  "classification": "non-violation",
+  "owner": "gismap's own ✏️editor/👥️presence surface",
+  "intendedOwner": "already correctly scoped (sits inside 👥️presence/🧬️schema/🧪️tests, and presence already owns a real 🧬️schema module)",
+  "exports": [],
+  "consumers": [
+   {
+    "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧪️tests/🧬️direct-leaves/🦀️.rs",
+    "kind": "sibling test"
+   }
+  ],
+  "decision": "no action",
+  "evidence": "json-obj with keys=['state','payload','aggregate','diff','laws'] — a test FIXTURE, not a schema",
+  "open": "none"
+ },
+ {
+  "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema/🧪️tests/🧬️schema/🔣️.json",
+  "blob": "7d44cf216f08227b234941a8e828b021fc053c89",
+  "family": "gis-internal-schema-tests",
+  "role": "nested test-oracle schema inside presence's own schema module",
+  "classification": "non-violation",
+  "owner": "gismap's own ✏️editor/👥️presence surface (already the taxonomy-blessed owner)",
+  "intendedOwner": "already correctly scoped — sits inside 👥️presence/🧬️schema/🧪️tests/🧬️schema, doubly nested under the real presence schema module",
+  "exports": [
+   "gismap-presence-test-oracle"
+  ],
+  "consumers": [
+   {
+    "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema/🦀️.rs",
+    "kind": "presence's own schema module"
+   }
+  ],
+  "decision": "no action needed; at most a naming cleanup (redundant nested 🧬️schema/🧬️schema path segment)",
+  "evidence": "$id=https://semio.tech/schema/gis/gis2d-presence/tests",
+  "open": "none"
+ },
+ {
+  "path": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🧬️schema/🧪️oracle/🔣️.json",
+  "blob": "c10be56c4c0eea9e9a14e6f1df6d3dddd559f26a",
+  "family": "sequence-internal-schema",
+  "role": "oracle schema nested inside the editor's OWN wasm schema module",
+  "classification": "non-violation — sits inside 🌉️wasm/🧬️schema/🧪️oracle, already under sequence's owned wasm schema",
+  "owner": "sequence's own ✏️editor/🌉️wasm surface",
+  "intendedOwner": "already correctly scoped",
+  "exports": [
+   "sequence-browser-abi-oracle"
+  ],
+  "consumers": [
+   {
+    "path": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/📦️packages/🟨️javascript/🧪️tests/🧬️sequence-schema.test.js",
+    "kind": "the JS test file at index 31 almost certainly validates against this oracle"
+   }
+  ],
+  "decision": "no action",
+  "evidence": "$id=semio://sequence.browser-abi/oracle/v1 — a real oracle contract, but already inside the module it belongs to",
+  "open": "none"
+ },
+ {
+  "path": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/⚙️operations/🧪️tests/🔣️.json",
+  "blob": "908f6486d30ea84e7be3d4d95416843c7287770c",
+  "family": "sequence-internal-schema",
+  "role": "inert test-case data nested inside the subset's own schema module",
+  "classification": "non-violation",
+  "owner": "sequence subset's own 🧬️schema/⚙️operations",
+  "intendedOwner": "already correctly scoped",
+  "exports": [],
+  "consumers": [
+   {
+    "path": "sibling ⚙️operations module",
+    "kind": "inferred"
+   }
+  ],
+  "decision": "no action",
+  "evidence": "json-obj, keys=['cases'] only — test case table, not schema-shaped",
+  "open": "none"
+ },
+ {
+  "path": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🟦️.ts",
+  "blob": "70faadd6952987305936a0e60a6af7d5c2de2603",
+  "family": "remodel-internal-schema-test",
+  "role": "TS test module nested inside the subset's own schema module",
+  "classification": "non-violation",
+  "owner": "remodel's own subset-level 🧬️schema",
+  "intendedOwner": "already correctly scoped (sits inside 🧬️schema/🧪️tests)",
+  "exports": [],
+  "consumers": [
+   {
+    "path": "self (TS test)",
+    "kind": "test code, not a schema definition"
+   }
+  ],
+  "decision": "no action",
+  "evidence": ".ts file, 11496 bytes — test logic exercising remodel's real schema, not a schema itself",
+  "open": "none"
+ },
+ {
+  "path": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/📝️text/🧪️fixtures/🔣️asset-capacity.json",
+  "blob": "af20b2c6f27b7742f108b0081096bc5f212a0138",
+  "family": "raster-internal-data",
+  "role": "inert data table nested inside the subset's own schema/diff/text module",
+  "classification": "non-violation",
+  "owner": "raster's own 🧬️schema/🔺️diff/📝️text",
+  "intendedOwner": "already correctly scoped",
+  "exports": [],
+  "consumers": [
+   {
+    "path": "sibling 🔺️diff/📝️text module",
+    "kind": "inferred"
+   }
+  ],
+  "decision": "no action",
+  "evidence": "json-obj keys=['capacity','cases'] — a small capacity test table, not schema-shaped",
+  "open": "none"
+ },
+ {
+  "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/💡️inferences/📏️proportion/↔️elongation/🧪️contract/🔣️.json",
+  "blob": "9f2e18b9f1f816a7a3121da0c27c39abeedf4621",
+  "family": "gltf-inference-contract",
+  "role": "inert per-inference parameter data, nested inside the subset's own 🧬️schema/💡️inferences module",
+  "classification": "non-violation",
+  "owner": "stdio gltf's own 🧬️schema/💡️inferences (a taxonomy-blessed location: artifactSchemaSpecFileKinds recognizes '🧬️schema/💡️inferences':'json')",
+  "intendedOwner": "already correctly scoped",
+  "exports": [],
+  "consumers": [
+   {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/💡️inferences/📏️proportion/↔️elongation/🧪️contract/🟦️.ts",
+    "kind": "sibling .ts file in the same 🧪️contract dir is the real authored schema/type; this .json is its parameter/vector data"
+   }
+  ],
+  "decision": "no action",
+  "evidence": "json-obj keys=['id','vectors'] — a small lookup table of named vectors, not schema-shaped",
+  "open": "none"
+ },
+ {
+  "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/💡️inferences/📏️proportion/↔️elongation/🧪️contract/🟦️.ts",
+  "blob": "92d330c06c3782e3aafed818730dd792607f3248",
+  "family": "gltf-inference-contract",
+  "role": "TS schema/type definition, nested inside the subset's own 🧬️schema/💡️inferences module",
+  "classification": "non-violation",
+  "owner": "stdio gltf's own 🧬️schema/💡️inferences",
+  "intendedOwner": "already correctly scoped — 🟦️typescript is a taxonomy-recognized normative schema format (schemaFormats.🟦️typescript)",
+  "exports": [
+   "gltf-inference-elongation"
+  ],
+  "consumers": [
+   {
+    "path": "sibling inference module",
+    "kind": "inferred"
+   }
+  ],
+  "decision": "no action",
+  "evidence": "small .ts file (~400-500 bytes) defining the shape/formula for this inference",
+  "open": "none"
+ },
+ {
+  "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/💡️inferences/📏️proportion/📃️flatness/🧪️contract/🔣️.json",
+  "blob": "80ed5358cfba9216c87c51f957ba116aad404858",
+  "family": "gltf-inference-contract",
+  "role": "inert per-inference parameter data, nested inside the subset's own 🧬️schema/💡️inferences module",
+  "classification": "non-violation",
+  "owner": "stdio gltf's own 🧬️schema/💡️inferences (a taxonomy-blessed location: artifactSchemaSpecFileKinds recognizes '🧬️schema/💡️inferences':'json')",
+  "intendedOwner": "already correctly scoped",
+  "exports": [],
+  "consumers": [
+   {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/💡️inferences/📏️proportion/📃️flatness/🧪️contract/🟦️.ts",
+    "kind": "sibling .ts file in the same 🧪️contract dir is the real authored schema/type; this .json is its parameter/vector data"
+   }
+  ],
+  "decision": "no action",
+  "evidence": "json-obj keys=['id','vectors'] — a small lookup table of named vectors, not schema-shaped",
+  "open": "none"
+ },
+ {
+  "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/💡️inferences/📏️proportion/📃️flatness/🧪️contract/🟦️.ts",
+  "blob": "0d3e6ea00e11a1ad9b521ccabb3f2dd70580ddcd",
+  "family": "gltf-inference-contract",
+  "role": "TS schema/type definition, nested inside the subset's own 🧬️schema/💡️inferences module",
+  "classification": "non-violation",
+  "owner": "stdio gltf's own 🧬️schema/💡️inferences",
+  "intendedOwner": "already correctly scoped — 🟦️typescript is a taxonomy-recognized normative schema format (schemaFormats.🟦️typescript)",
+  "exports": [
+   "gltf-inference-flatness"
+  ],
+  "consumers": [
+   {
+    "path": "sibling inference module",
+    "kind": "inferred"
+   }
+  ],
+  "decision": "no action",
+  "evidence": "small .ts file (~400-500 bytes) defining the shape/formula for this inference",
+  "open": "none"
+ },
+ {
+  "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/💡️inferences/📏️proportion/📏️slenderness/🧪️contract/🔣️.json",
+  "blob": "edbe2e905a5ab73b432e971817d0f3ae04734556",
+  "family": "gltf-inference-contract",
+  "role": "inert per-inference parameter data, nested inside the subset's own 🧬️schema/💡️inferences module",
+  "classification": "non-violation",
+  "owner": "stdio gltf's own 🧬️schema/💡️inferences (a taxonomy-blessed location: artifactSchemaSpecFileKinds recognizes '🧬️schema/💡️inferences':'json')",
+  "intendedOwner": "already correctly scoped",
+  "exports": [],
+  "consumers": [
+   {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/💡️inferences/📏️proportion/📏️slenderness/🧪️contract/🟦️.ts",
+    "kind": "sibling .ts file in the same 🧪️contract dir is the real authored schema/type; this .json is its parameter/vector data"
+   }
+  ],
+  "decision": "no action",
+  "evidence": "json-obj keys=['id','vectors'] — a small lookup table of named vectors, not schema-shaped",
+  "open": "none"
+ },
+ {
+  "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/💡️inferences/📏️proportion/📏️slenderness/🧪️contract/🟦️.ts",
+  "blob": "38bd1065d8504d60d4211a1764de79a9cb513c23",
+  "family": "gltf-inference-contract",
+  "role": "TS schema/type definition, nested inside the subset's own 🧬️schema/💡️inferences module",
+  "classification": "non-violation",
+  "owner": "stdio gltf's own 🧬️schema/💡️inferences",
+  "intendedOwner": "already correctly scoped — 🟦️typescript is a taxonomy-recognized normative schema format (schemaFormats.🟦️typescript)",
+  "exports": [
+   "gltf-inference-slenderness"
+  ],
+  "consumers": [
+   {
+    "path": "sibling inference module",
+    "kind": "inferred"
+   }
+  ],
+  "decision": "no action",
+  "evidence": "small .ts file (~400-500 bytes) defining the shape/formula for this inference",
+  "open": "none"
+ },
+ {
+  "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/💡️inferences/📏️proportion/🖼️aspect-ratios/🧪️contract/🔣️.json",
+  "blob": "e00fb813fb2bcd0e9ec97f22d8869915a548f833",
+  "family": "gltf-inference-contract",
+  "role": "inert per-inference parameter data, nested inside the subset's own 🧬️schema/💡️inferences module",
+  "classification": "non-violation",
+  "owner": "stdio gltf's own 🧬️schema/💡️inferences (a taxonomy-blessed location: artifactSchemaSpecFileKinds recognizes '🧬️schema/💡️inferences':'json')",
+  "intendedOwner": "already correctly scoped",
+  "exports": [],
+  "consumers": [
+   {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/💡️inferences/📏️proportion/🖼️aspect-ratios/🧪️contract/🟦️.ts",
+    "kind": "sibling .ts file in the same 🧪️contract dir is the real authored schema/type; this .json is its parameter/vector data"
+   }
+  ],
+  "decision": "no action",
+  "evidence": "json-obj keys=['id','vectors'] — a small lookup table of named vectors, not schema-shaped",
+  "open": "none"
+ },
+ {
+  "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/💡️inferences/📏️proportion/🖼️aspect-ratios/🧪️contract/🟦️.ts",
+  "blob": "f21099738ddc0e34543b31206b4bc4886a23c076",
+  "family": "gltf-inference-contract",
+  "role": "TS schema/type definition, nested inside the subset's own 🧬️schema/💡️inferences module",
+  "classification": "non-violation",
+  "owner": "stdio gltf's own 🧬️schema/💡️inferences",
+  "intendedOwner": "already correctly scoped — 🟦️typescript is a taxonomy-recognized normative schema format (schemaFormats.🟦️typescript)",
+  "exports": [
+   "gltf-inference-aspect-ratios"
+  ],
+  "consumers": [
+   {
+    "path": "sibling inference module",
+    "kind": "inferred"
+   }
+  ],
+  "decision": "no action",
+  "evidence": "small .ts file (~400-500 bytes) defining the shape/formula for this inference",
+  "open": "none"
+ },
+ {
+  "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/💡️inferences/📦️size/↔️axis-aligned-bounds/🧪️contract/🔣️.json",
+  "blob": "2f5e68501cc65ec484dbea9898fca6b7b7b8004a",
+  "family": "gltf-inference-contract",
+  "role": "inert per-inference parameter data, nested inside the subset's own 🧬️schema/💡️inferences module",
+  "classification": "non-violation",
+  "owner": "stdio gltf's own 🧬️schema/💡️inferences (a taxonomy-blessed location: artifactSchemaSpecFileKinds recognizes '🧬️schema/💡️inferences':'json')",
+  "intendedOwner": "already correctly scoped",
+  "exports": [],
+  "consumers": [
+   {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/💡️inferences/📦️size/↔️axis-aligned-bounds/🧪️contract/🟦️.ts",
+    "kind": "sibling .ts file in the same 🧪️contract dir is the real authored schema/type; this .json is its parameter/vector data"
+   }
+  ],
+  "decision": "no action",
+  "evidence": "json-obj keys=['id','vectors'] — a small lookup table of named vectors, not schema-shaped",
+  "open": "none"
+ },
+ {
+  "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/💡️inferences/📦️size/↔️axis-aligned-bounds/🧪️contract/🟦️.ts",
+  "blob": "288d80b7e37c6072381eb10c5a964a7907071ab1",
+  "family": "gltf-inference-contract",
+  "role": "TS schema/type definition, nested inside the subset's own 🧬️schema/💡️inferences module",
+  "classification": "non-violation",
+  "owner": "stdio gltf's own 🧬️schema/💡️inferences",
+  "intendedOwner": "already correctly scoped — 🟦️typescript is a taxonomy-recognized normative schema format (schemaFormats.🟦️typescript)",
+  "exports": [
+   "gltf-inference-axis-aligned-bounds"
+  ],
+  "consumers": [
+   {
+    "path": "sibling inference module",
+    "kind": "inferred"
+   }
+  ],
+  "decision": "no action",
+  "evidence": "small .ts file (~400-500 bytes) defining the shape/formula for this inference",
+  "open": "none"
+ },
+ {
+  "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/💡️inferences/📦️size/📏️overall-size/🧪️contract/🔣️.json",
+  "blob": "bcf646ed80aab307deb9b1f53b78fe7646090e8b",
+  "family": "gltf-inference-contract",
+  "role": "inert per-inference parameter data, nested inside the subset's own 🧬️schema/💡️inferences module",
+  "classification": "non-violation",
+  "owner": "stdio gltf's own 🧬️schema/💡️inferences (a taxonomy-blessed location: artifactSchemaSpecFileKinds recognizes '🧬️schema/💡️inferences':'json')",
+  "intendedOwner": "already correctly scoped",
+  "exports": [],
+  "consumers": [
+   {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/💡️inferences/📦️size/📏️overall-size/🧪️contract/🟦️.ts",
+    "kind": "sibling .ts file in the same 🧪️contract dir is the real authored schema/type; this .json is its parameter/vector data"
+   }
+  ],
+  "decision": "no action",
+  "evidence": "json-obj keys=['id','vectors'] — a small lookup table of named vectors, not schema-shaped",
+  "open": "none"
+ },
+ {
+  "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/💡️inferences/📦️size/📏️overall-size/🧪️contract/🟦️.ts",
+  "blob": "fca3577c4bffd7c04aab542c4e3500a391262bc7",
+  "family": "gltf-inference-contract",
+  "role": "TS schema/type definition, nested inside the subset's own 🧬️schema/💡️inferences module",
+  "classification": "non-violation",
+  "owner": "stdio gltf's own 🧬️schema/💡️inferences",
+  "intendedOwner": "already correctly scoped — 🟦️typescript is a taxonomy-recognized normative schema format (schemaFormats.🟦️typescript)",
+  "exports": [
+   "gltf-inference-overall-size"
+  ],
+  "consumers": [
+   {
+    "path": "sibling inference module",
+    "kind": "inferred"
+   }
+  ],
+  "decision": "no action",
+  "evidence": "small .ts file (~400-500 bytes) defining the shape/formula for this inference",
+  "open": "none"
+ },
+ {
+  "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/💡️inferences/🕸️topology/➰️boundary-loops/🧪️contract/🔣️.json",
+  "blob": "1e953c0c279b65ca93b3bf2ee5df1bd187496ff1",
+  "family": "gltf-inference-contract",
+  "role": "inert per-inference parameter data, nested inside the subset's own 🧬️schema/💡️inferences module",
+  "classification": "non-violation",
+  "owner": "stdio gltf's own 🧬️schema/💡️inferences (a taxonomy-blessed location: artifactSchemaSpecFileKinds recognizes '🧬️schema/💡️inferences':'json')",
+  "intendedOwner": "already correctly scoped",
+  "exports": [],
+  "consumers": [
+   {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/💡️inferences/🕸️topology/➰️boundary-loops/🧪️contract/🟦️.ts",
+    "kind": "sibling .ts file in the same 🧪️contract dir is the real authored schema/type; this .json is its parameter/vector data"
+   }
+  ],
+  "decision": "no action",
+  "evidence": "json-obj keys=['id','vectors'] — a small lookup table of named vectors, not schema-shaped",
+  "open": "none"
+ },
+ {
+  "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/💡️inferences/🕸️topology/➰️boundary-loops/🧪️contract/🟦️.ts",
+  "blob": "a26430cd91163535553706286af218dab62cb600",
+  "family": "gltf-inference-contract",
+  "role": "TS schema/type definition, nested inside the subset's own 🧬️schema/💡️inferences module",
+  "classification": "non-violation",
+  "owner": "stdio gltf's own 🧬️schema/💡️inferences",
+  "intendedOwner": "already correctly scoped — 🟦️typescript is a taxonomy-recognized normative schema format (schemaFormats.🟦️typescript)",
+  "exports": [
+   "gltf-inference-boundary-loops"
+  ],
+  "consumers": [
+   {
+    "path": "sibling inference module",
+    "kind": "inferred"
+   }
+  ],
+  "decision": "no action",
+  "evidence": "small .ts file (~400-500 bytes) defining the shape/formula for this inference",
+  "open": "none"
+ },
+ {
+  "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/💡️inferences/🕸️topology/🔢️genus/🧪️contract/🔣️.json",
+  "blob": "8041682ff672b94db86fcb6b7ed3a38e16c4fa74",
+  "family": "gltf-inference-contract",
+  "role": "inert per-inference parameter data, nested inside the subset's own 🧬️schema/💡️inferences module",
+  "classification": "non-violation",
+  "owner": "stdio gltf's own 🧬️schema/💡️inferences (a taxonomy-blessed location: artifactSchemaSpecFileKinds recognizes '🧬️schema/💡️inferences':'json')",
+  "intendedOwner": "already correctly scoped",
+  "exports": [],
+  "consumers": [
+   {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/💡️inferences/🕸️topology/🔢️genus/🧪️contract/🟦️.ts",
+    "kind": "sibling .ts file in the same 🧪️contract dir is the real authored schema/type; this .json is its parameter/vector data"
+   }
+  ],
+  "decision": "no action",
+  "evidence": "json-obj keys=['id','vectors'] — a small lookup table of named vectors, not schema-shaped",
+  "open": "none"
+ },
+ {
+  "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/💡️inferences/🕸️topology/🔢️genus/🧪️contract/🟦️.ts",
+  "blob": "1306e8ed601a019aae92335800140e16af4fa4ed",
+  "family": "gltf-inference-contract",
+  "role": "TS schema/type definition, nested inside the subset's own 🧬️schema/💡️inferences module",
+  "classification": "non-violation",
+  "owner": "stdio gltf's own 🧬️schema/💡️inferences",
+  "intendedOwner": "already correctly scoped — 🟦️typescript is a taxonomy-recognized normative schema format (schemaFormats.🟦️typescript)",
+  "exports": [
+   "gltf-inference-genus"
+  ],
+  "consumers": [
+   {
+    "path": "sibling inference module",
+    "kind": "inferred"
+   }
+  ],
+  "decision": "no action",
+  "evidence": "small .ts file (~400-500 bytes) defining the shape/formula for this inference",
+  "open": "none"
+ },
+ {
+  "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/💡️inferences/🕸️topology/🕳️holes/🧪️contract/🔣️.json",
+  "blob": "ca9131f45bdc0b9c7475206d8837a34286454f7b",
+  "family": "gltf-inference-contract",
+  "role": "inert per-inference parameter data, nested inside the subset's own 🧬️schema/💡️inferences module",
+  "classification": "non-violation",
+  "owner": "stdio gltf's own 🧬️schema/💡️inferences (a taxonomy-blessed location: artifactSchemaSpecFileKinds recognizes '🧬️schema/💡️inferences':'json')",
+  "intendedOwner": "already correctly scoped",
+  "exports": [],
+  "consumers": [
+   {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/💡️inferences/🕸️topology/🕳️holes/🧪️contract/🟦️.ts",
+    "kind": "sibling .ts file in the same 🧪️contract dir is the real authored schema/type; this .json is its parameter/vector data"
+   }
+  ],
+  "decision": "no action",
+  "evidence": "json-obj keys=['id','vectors'] — a small lookup table of named vectors, not schema-shaped",
+  "open": "none"
+ },
+ {
+  "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/💡️inferences/🕸️topology/🕳️holes/🧪️contract/🟦️.ts",
+  "blob": "adafe42adf0afc025abb53c6523fc930144b38c5",
+  "family": "gltf-inference-contract",
+  "role": "TS schema/type definition, nested inside the subset's own 🧬️schema/💡️inferences module",
+  "classification": "non-violation",
+  "owner": "stdio gltf's own 🧬️schema/💡️inferences",
+  "intendedOwner": "already correctly scoped — 🟦️typescript is a taxonomy-recognized normative schema format (schemaFormats.🟦️typescript)",
+  "exports": [
+   "gltf-inference-holes"
+  ],
+  "consumers": [
+   {
+    "path": "sibling inference module",
+    "kind": "inferred"
+   }
+  ],
+  "decision": "no action",
+  "evidence": "small .ts file (~400-500 bytes) defining the shape/formula for this inference",
+  "open": "none"
+ },
+ {
+  "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/💡️inferences/🕸️topology/🥯️handles/🧪️contract/🔣️.json",
+  "blob": "678f01e79ea52b1ef68ec7e758bac9b11e6e9ac4",
+  "family": "gltf-inference-contract",
+  "role": "inert per-inference parameter data, nested inside the subset's own 🧬️schema/💡️inferences module",
+  "classification": "non-violation",
+  "owner": "stdio gltf's own 🧬️schema/💡️inferences (a taxonomy-blessed location: artifactSchemaSpecFileKinds recognizes '🧬️schema/💡️inferences':'json')",
+  "intendedOwner": "already correctly scoped",
+  "exports": [],
+  "consumers": [
+   {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/💡️inferences/🕸️topology/🥯️handles/🧪️contract/🟦️.ts",
+    "kind": "sibling .ts file in the same 🧪️contract dir is the real authored schema/type; this .json is its parameter/vector data"
+   }
+  ],
+  "decision": "no action",
+  "evidence": "json-obj keys=['id','vectors'] — a small lookup table of named vectors, not schema-shaped",
+  "open": "none"
+ },
+ {
+  "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/💡️inferences/🕸️topology/🥯️handles/🧪️contract/🟦️.ts",
+  "blob": "62d72a4cbe8179bf315626a2e7ab55f139bbcb23",
+  "family": "gltf-inference-contract",
+  "role": "TS schema/type definition, nested inside the subset's own 🧬️schema/💡️inferences module",
+  "classification": "non-violation",
+  "owner": "stdio gltf's own 🧬️schema/💡️inferences",
+  "intendedOwner": "already correctly scoped — 🟦️typescript is a taxonomy-recognized normative schema format (schemaFormats.🟦️typescript)",
+  "exports": [
+   "gltf-inference-handles"
+  ],
+  "consumers": [
+   {
+    "path": "sibling inference module",
+    "kind": "inferred"
+   }
+  ],
+  "decision": "no action",
+  "evidence": "small .ts file (~400-500 bytes) defining the shape/formula for this inference",
+  "open": "none"
+ },
+ {
+  "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/💡️inferences/🕸️topology/🧮️euler-characteristic/🧪️contract/🔣️.json",
+  "blob": "1ca8fdb60e46a10b080f5dcaa4e3618a57a68c9c",
+  "family": "gltf-inference-contract",
+  "role": "inert per-inference parameter data, nested inside the subset's own 🧬️schema/💡️inferences module",
+  "classification": "non-violation",
+  "owner": "stdio gltf's own 🧬️schema/💡️inferences (a taxonomy-blessed location: artifactSchemaSpecFileKinds recognizes '🧬️schema/💡️inferences':'json')",
+  "intendedOwner": "already correctly scoped",
+  "exports": [],
+  "consumers": [
+   {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/💡️inferences/🕸️topology/🧮️euler-characteristic/🧪️contract/🟦️.ts",
+    "kind": "sibling .ts file in the same 🧪️contract dir is the real authored schema/type; this .json is its parameter/vector data"
+   }
+  ],
+  "decision": "no action",
+  "evidence": "json-obj keys=['id','vectors'] — a small lookup table of named vectors, not schema-shaped",
+  "open": "none"
+ },
+ {
+  "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/💡️inferences/🕸️topology/🧮️euler-characteristic/🧪️contract/🟦️.ts",
+  "blob": "6e25b4fe04e46155d5fc4b7f2bbc408ca7cc4575",
+  "family": "gltf-inference-contract",
+  "role": "TS schema/type definition, nested inside the subset's own 🧬️schema/💡️inferences module",
+  "classification": "non-violation",
+  "owner": "stdio gltf's own 🧬️schema/💡️inferences",
+  "intendedOwner": "already correctly scoped — 🟦️typescript is a taxonomy-recognized normative schema format (schemaFormats.🟦️typescript)",
+  "exports": [
+   "gltf-inference-euler-characteristic"
+  ],
+  "consumers": [
+   {
+    "path": "sibling inference module",
+    "kind": "inferred"
+   }
+  ],
+  "decision": "no action",
+  "evidence": "small .ts file (~400-500 bytes) defining the shape/formula for this inference",
+  "open": "none"
+ },
+ {
+  "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🌊️flow/🧬️schema/📸️snapshot/💾️binary/🧪️tests/🦀️.rs",
+  "blob": "24b717376aa1b58e9efe7ca0baee88a4e8a863b8",
+  "family": "stdio-semio-flow-internal",
+  "role": "Rust test module nested inside the subset's own 🧬️schema/📸️snapshot/💾️binary module",
+  "classification": "non-violation",
+  "owner": "stdio semio-standard's own 🧬️schema/📸️snapshot/💾️binary",
+  "intendedOwner": "already correctly scoped",
+  "exports": [],
+  "consumers": [
+   {
+    "path": "self (rust test)",
+    "kind": "test code"
+   }
+  ],
+  "decision": "no action",
+  "evidence": "26084-byte .rs test file exercising the binary snapshot schema, not itself a schema",
+  "open": "none"
+ },
+ {
+  "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🌊️flow/🧬️schema/📸️snapshot/💾️binary/🧫️fixture/♻️lifecycle/🔣️.json",
+  "blob": "7295f5c6ec07556ddc522fbda3f2e3eddacbbcbc",
+  "family": "stdio-semio-flow-internal",
+  "role": "inert lifecycle fixture data nested inside the subset's own schema module",
+  "classification": "non-violation",
+  "owner": "stdio semio-standard's own 🧬️schema/📸️snapshot/💾️binary/🧫️fixture",
+  "intendedOwner": "already correctly scoped (🧫️fixture sits directly under the owning schema module, matching taxonomy's testFixturesDirName convention)",
+  "exports": [],
+  "consumers": [
+   {
+    "path": "sibling 🦀️.rs test at index 80",
+    "kind": "inferred"
+   }
+  ],
+  "decision": "no action",
+  "evidence": "json-obj keys=['schema','request','admission','multiPage','retirementGrants']",
+  "open": "none"
+ },
+ {
+  "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🌊️flow/🧬️schema/📸️snapshot/💾️binary/🧫️fixture/🔣️.json",
+  "blob": "fbe6a1ee055c2972e4aeee61b80bd83535c7125f",
+  "family": "stdio-semio-flow-internal",
+  "role": "inert fixture data (valid/invalid cases) nested inside the subset's own schema module",
+  "classification": "non-violation",
+  "owner": "stdio semio-standard's own 🧬️schema/📸️snapshot/💾️binary/🧫️fixture",
+  "intendedOwner": "already correctly scoped",
+  "exports": [],
+  "consumers": [
+   {
+    "path": "sibling 🦀️.rs test at index 80",
+    "kind": "inferred"
+   }
+  ],
+  "decision": "no action",
+  "evidence": "json-obj keys=['schema','limits','valid','invalid']",
+  "open": "none"
+ },
+ {
+  "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/💡️inferences/✅validation-report/🧪️body/🦀️.rs",
+  "blob": "daa34764ccd9fe1d65e353f21f06c9cb9338f676",
+  "family": "stdio-semio-flow-internal",
+  "role": "Rust test body, not a schema file",
+  "classification": "non-violation — matched only because the path segment 🧪️body sits under 🧬️schema/💡️inferences/✅validation-report",
+  "owner": "stdio semio-standard's own 🧬️schema/💡️inferences/✅validation-report",
+  "intendedOwner": "already correctly scoped",
+  "exports": [],
+  "consumers": [
+   {
+    "path": "self (rust test)",
+    "kind": "test code"
+   }
+  ],
+  "decision": "no action",
+  "evidence": "35506-byte .rs file, test logic for the validation-report inference, not a schema definition",
+  "open": "none"
+ }
+]

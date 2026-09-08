@@ -5,7 +5,7 @@
   "displayName": "Create Edge",
   "emoji": "🌉️",
   "aggregateVariant": "CreateEdge",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "create-edge",
   "binaryTag": 2,
   "invertibility": "explicit-mutation",

@@ -1,361 +1,133 @@
 {
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://semio.tech/schema/s/shooting/shooting/mutation.json",
   "title": "ShootingMutation",
-  "type": "object",
-  "additionalProperties": false,
-  "required": [
-    "schema",
-    "assets",
-    "savedCameras",
-    "scene",
-    "shots",
-    "activeShotId",
-    "activeAssetId"
+  "oneOf": [
+    {
+      "$ref": "./🌐️change-asset-url/🧬️schema/🔣️.json"
+    },
+    {
+      "$ref": "./🔅️change-scene-ambient-intensity/🧬️schema/🔣️.json"
+    },
+    {
+      "$ref": "./🪨️change-scene-material-roughness/🧬️schema/🔣️.json"
+    },
+    {
+      "$ref": "./🌑️change-scene-shadow-enabled/🧬️schema/🔣️.json"
+    },
+    {
+      "$ref": "./🧭️change-scene-sun-azimuth/🧬️schema/🔣️.json"
+    },
+    {
+      "$ref": "./🌅️change-scene-sun-elevation/🧬️schema/🔣️.json"
+    },
+    {
+      "$ref": "./☀️change-scene-sun-enabled/🧬️schema/🔣️.json"
+    },
+    {
+      "$ref": "./💡️change-scene-sun-intensity/🧬️schema/🔣️.json"
+    },
+    {
+      "$ref": "./🖼️change-shot-format/🧬️schema/🔣️.json"
+    },
+    {
+      "$ref": "./📐️change-shot-height/🧬️schema/🔣️.json"
+    },
+    {
+      "$ref": "./✂️change-shot-shape/🧬️schema/🔣️.json"
+    },
+    {
+      "$ref": "./📏️change-shot-width/🧬️schema/🔣️.json"
+    },
+    {
+      "$ref": "./➕️create-asset/🧬️schema/🔣️.json"
+    },
+    {
+      "$ref": "./🎥️create-saved-camera/🧬️schema/🔣️.json"
+    },
+    {
+      "$ref": "./📸️create-shot/🧬️schema/🔣️.json"
+    },
+    {
+      "$ref": "./🗑️delete-asset/🧬️schema/🔣️.json"
+    },
+    {
+      "$ref": "./🧹️delete-saved-camera/🧬️schema/🔣️.json"
+    },
+    {
+      "$ref": "./🚮️delete-shot/🧬️schema/🔣️.json"
+    },
+    {
+      "$ref": "./↔️drag-assets/🧬️schema/🔣️.json"
+    },
+    {
+      "$ref": "./✏️rename-asset/🧬️schema/🔣️.json"
+    },
+    {
+      "$ref": "./🪪️rename-saved-camera/🧬️schema/🔣️.json"
+    },
+    {
+      "$ref": "./🏷️rename-shot/🧬️schema/🔣️.json"
+    },
+    {
+      "$ref": "./🔀️reorder-assets/🧬️schema/🔣️.json"
+    },
+    {
+      "$ref": "./🔁️reorder-saved-cameras/🧬️schema/🔣️.json"
+    },
+    {
+      "$ref": "./🔃️reorder-shots/🧬️schema/🔣️.json"
+    },
+    {
+      "$ref": "./🎞️replace-saved-camera-view/🧬️schema/🔣️.json"
+    },
+    {
+      "$ref": "./📷️replace-shot-camera/🧬️schema/🔣️.json"
+    },
+    {
+      "$ref": "./🔄️rotate-assets/🧬️schema/🔣️.json"
+    },
+    {
+      "$ref": "./↕️scale-assets/🧬️schema/🔣️.json"
+    },
+    {
+      "$ref": "./📌️set-active-asset/🧬️schema/🔣️.json"
+    },
+    {
+      "$ref": "./🎯️set-active-shot/🧬️schema/🔣️.json"
+    }
   ],
-  "properties": {
-    "schema": {
-      "type": "string",
-      "x-semio-state": "artifact"
-    },
-    "assets": {
-      "type": "array",
-      "items": {
-        "$ref": "#/$defs/ShootingAsset"
-      },
-      "x-semio-state": "artifact"
-    },
-    "savedCameras": {
-      "type": "array",
-      "items": {
-        "$ref": "#/$defs/ShootingSavedCamera"
-      },
-      "x-semio-state": "artifact"
-    },
-    "scene": {
-      "$ref": "#/$defs/ShootingSceneLighting",
-      "x-semio-state": "artifact"
-    },
-    "shots": {
-      "type": "array",
-      "items": {
-        "$ref": "#/$defs/ShootingShot"
-      },
-      "x-semio-state": "artifact"
-    },
-    "activeShotId": {
-      "type": "string",
-      "x-semio-state": "artifact"
-    },
-    "activeAssetId": {
-      "type": "string",
-      "x-semio-state": "artifact"
-    }
-  },
-  "$defs": {
-    "ShootingCamera": {
-      "title": "ShootingCamera",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "position",
-        "target",
-        "zoom",
-        "fov"
-      ],
-      "properties": {
-        "position": {
-          "type": "array",
-          "items": {
-            "type": "number",
-            "format": "double"
-          },
-          "minItems": 3,
-          "maxItems": 3
-        },
-        "target": {
-          "type": "array",
-          "items": {
-            "type": "number",
-            "format": "double"
-          },
-          "minItems": 3,
-          "maxItems": 3
-        },
-        "zoom": {
-          "type": "number",
-          "format": "double"
-        },
-        "fov": {
-          "type": "number",
-          "format": "double"
-        },
-        "up": {
-          "type": "array",
-          "items": {
-            "type": "number",
-            "format": "double"
-          },
-          "minItems": 3,
-          "maxItems": 3
-        },
-        "projection": {
-          "type": "string"
-        }
-      }
-    },
-    "ShootingSavedCamera": {
-      "title": "ShootingSavedCamera",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "label",
-        "camera"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "label": {
-          "type": "string"
-        },
-        "camera": {
-          "$ref": "#/$defs/ShootingCamera"
-        }
-      }
-    },
-    "ShootingAsset": {
-      "title": "ShootingAsset",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "name",
-        "url",
-        "format",
-        "origin"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "name": {
-          "type": "string"
-        },
-        "url": {
-          "type": "string"
-        },
-        "format": {
-          "type": "string"
-        },
-        "origin": {
-          "type": "array",
-          "items": {
-            "type": "number",
-            "format": "double"
-          },
-          "minItems": 3,
-          "maxItems": 3
-        },
-        "orientation": {
-          "type": "array",
-          "items": {
-            "type": "number",
-            "format": "double"
-          },
-          "minItems": 4,
-          "maxItems": 4
-        },
-        "scale": {
-          "type": "array",
-          "items": {
-            "type": "number",
-            "format": "double"
-          },
-          "minItems": 3,
-          "maxItems": 3
-        }
-      }
-    },
-    "ShootingShot": {
-      "title": "ShootingShot",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "label",
-        "width",
-        "height",
-        "format",
-        "shape"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "label": {
-          "type": "string"
-        },
-        "width": {
-          "type": "integer",
-          "format": "uint32",
-          "minimum": 0
-        },
-        "height": {
-          "type": "integer",
-          "format": "uint32",
-          "minimum": 0
-        },
-        "format": {
-          "type": "string"
-        },
-        "shape": {
-          "type": "string"
-        },
-        "background": {
-          "type": "string"
-        },
-        "cameraId": {
-          "type": "string"
-        }
-      }
-    },
-    "ShootingSun": {
-      "title": "ShootingSun",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "enabled",
-        "azimuth",
-        "elevation",
-        "intensity",
-        "color"
-      ],
-      "properties": {
-        "enabled": {
-          "type": "boolean"
-        },
-        "azimuth": {
-          "type": "number",
-          "format": "double"
-        },
-        "elevation": {
-          "type": "number",
-          "format": "double"
-        },
-        "intensity": {
-          "type": "number",
-          "format": "double"
-        },
-        "color": {
-          "type": "string"
-        }
-      }
-    },
-    "ShootingAmbient": {
-      "title": "ShootingAmbient",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "intensity",
-        "color"
-      ],
-      "properties": {
-        "intensity": {
-          "type": "number",
-          "format": "double"
-        },
-        "color": {
-          "type": "string"
-        }
-      }
-    },
-    "ShootingShadow": {
-      "title": "ShootingShadow",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "enabled",
-        "opacity",
-        "softness"
-      ],
-      "properties": {
-        "enabled": {
-          "type": "boolean"
-        },
-        "opacity": {
-          "type": "number",
-          "format": "double"
-        },
-        "softness": {
-          "type": "number",
-          "format": "double"
-        }
-      }
-    },
-    "ShootingMaterial": {
-      "title": "ShootingMaterial",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "color",
-        "metalness",
-        "roughness",
-        "emissive",
-        "emissiveIntensity"
-      ],
-      "properties": {
-        "color": {
-          "type": "string"
-        },
-        "metalness": {
-          "type": "number",
-          "format": "double"
-        },
-        "roughness": {
-          "type": "number",
-          "format": "double"
-        },
-        "emissive": {
-          "type": "string"
-        },
-        "emissiveIntensity": {
-          "type": "number",
-          "format": "double"
-        }
-      }
-    },
-    "ShootingSceneLighting": {
-      "title": "ShootingSceneLighting",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "background",
-        "sun",
-        "ambient",
-        "shadow",
-        "material"
-      ],
-      "properties": {
-        "background": {
-          "type": "string"
-        },
-        "sun": {
-          "$ref": "#/$defs/ShootingSun"
-        },
-        "ambient": {
-          "$ref": "#/$defs/ShootingAmbient"
-        },
-        "shadow": {
-          "$ref": "#/$defs/ShootingShadow"
-        },
-        "material": {
-          "$ref": "#/$defs/ShootingMaterial"
-        },
-        "emblemBase64": {
-          "type": "string"
-        }
-      }
-    }
-  }
+  "x-semio-mutationKinds": [
+    "change-asset-url",
+    "change-scene-ambient-intensity",
+    "change-scene-material-roughness",
+    "change-scene-shadow-enabled",
+    "change-scene-sun-azimuth",
+    "change-scene-sun-elevation",
+    "change-scene-sun-enabled",
+    "change-scene-sun-intensity",
+    "change-shot-format",
+    "change-shot-height",
+    "change-shot-shape",
+    "change-shot-width",
+    "create-asset",
+    "create-saved-camera",
+    "create-shot",
+    "delete-asset",
+    "delete-saved-camera",
+    "delete-shot",
+    "drag-assets",
+    "rename-asset",
+    "rename-saved-camera",
+    "rename-shot",
+    "reorder-assets",
+    "reorder-saved-cameras",
+    "reorder-shots",
+    "replace-saved-camera-view",
+    "replace-shot-camera",
+    "rotate-assets",
+    "scale-assets",
+    "set-active-asset",
+    "set-active-shot"
+  ]
 }

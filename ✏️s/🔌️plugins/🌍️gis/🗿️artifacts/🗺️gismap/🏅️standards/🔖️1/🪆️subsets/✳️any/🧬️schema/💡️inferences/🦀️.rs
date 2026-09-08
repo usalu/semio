@@ -6,10 +6,10 @@
 
 use crate::artifacts::gismap::{GisMapDrawingChild, GisMapSnapshot, GisMapValueChild};
 use schema::ArtifactSchema;
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::drawing::schema::diff::NodePath;
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::drawing::schema::mutations::{create_node, inverse_semio_drawing_mutation, SemioDrawingMutation};
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::DrawNode;
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::value::schema::mutations::{inverse_semio_value_mutation, SemioValueMutation};
+use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::diff::NodePath;
+use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::mutations::{create_node, inverse_semio_drawing_mutation, SemioDrawingMutation};
+use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::DrawNode;
+use semio_s_artifact_stdio_semio::standards::v1::subsets::value::schema::mutations::{inverse_semio_value_mutation, SemioValueMutation};
 
 use super::bounds::{all_lon_lat_pairs, lon_lat_bounds, GisMapBounds};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -93,8 +93,8 @@ impl GisMapInference {
         use crate::artifacts::gismap::mutations::{apply_gis_map_mutation, inverse_gis_map_mutation, GisMapMutation};
         use crate::artifacts::gismap::schema::{gis_map_descriptor_json, gis_map_snapshot_to_drawing};
         use dsl::{FromValue, ToValue};
-        use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::drawing::schema::mutations::apply_semio_drawing_mutation;
-        use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::value::schema::mutations::apply_semio_value_mutation;
+        use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::mutations::apply_semio_drawing_mutation;
+        use semio_s_artifact_stdio_semio::standards::v1::subsets::value::schema::mutations::apply_semio_value_mutation;
 
         let parent = self.bounds_proposal(snapshot, job_id)?;
         let GisMapMutation::CreateRegion(created) = &parent else { return Err(GisMapProposalError::Composition) };
@@ -146,7 +146,7 @@ impl GisMapInference {
         ]))
         .map_err(|_| GisMapProposalError::Composition)?;
         let value_inverse = inverse_semio_value_mutation(&value, &before_value);
-        let mut projected_value = before_value.clone();
+        let mut projected_value = before_value;
         apply_semio_value_mutation(&mut projected_value, &value);
         if projected_value != after_value {
             return Err(GisMapProposalError::Composition);
@@ -229,8 +229,8 @@ mod tests {
     async fn map_create_region_group_work_stabilizes_parent_drawing_value_without_image() {
         use crate::artifacts::gismap::mutations::apply_gis_map_mutation;
         use crate::artifacts::gismap::schema::{gis_map_descriptor_json, gis_map_snapshot_to_drawing};
-        use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::drawing::schema::mutations::apply_semio_drawing_mutation;
-        use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::value::schema::mutations::apply_semio_value_mutation;
+        use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::mutations::apply_semio_drawing_mutation;
+        use semio_s_artifact_stdio_semio::standards::v1::subsets::value::schema::mutations::apply_semio_value_mutation;
 
         let feature = |id: &str, data: serde_json::Value| MapFeature { id: id.into(), data: dsl::DslValue::from(data) };
         let snapshot = gis_map_snapshot_with_derived_children(GisMapSnapshot {

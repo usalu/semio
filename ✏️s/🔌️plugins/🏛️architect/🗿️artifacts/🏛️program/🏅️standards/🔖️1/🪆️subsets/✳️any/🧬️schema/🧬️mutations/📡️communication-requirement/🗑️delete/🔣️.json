@@ -5,7 +5,7 @@
   "displayName": "Delete Communication Requirement",
   "emoji": "🗑️",
   "aggregateVariant": "DeleteCommunicationRequirement",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

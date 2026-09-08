@@ -5,7 +5,7 @@
   "displayName": "Delete Image",
   "emoji": "🗑️",
   "aggregateVariant": "DeleteImage",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

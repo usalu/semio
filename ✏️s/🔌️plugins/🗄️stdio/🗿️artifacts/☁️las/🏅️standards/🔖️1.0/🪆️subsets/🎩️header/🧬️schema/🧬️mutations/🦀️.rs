@@ -13,9 +13,9 @@
 //! requires every variant to wrap exactly one leaf payload, a unit variant wraps none, and `no` is
 //! not an `APPROVED_VERBS` entry the derive's own const assertion would accept.
 
-use crate::artifacts::las::schema::diff::{self, LasDiff};
-use crate::artifacts::las::schema::snapshot::{LasHeader, LasPoint, LasVlr};
-use crate::artifacts::las::LasSnapshot;
+use crate::schema::diff::{self, LasDiff};
+use crate::schema::snapshot::{LasHeader, LasPoint, LasVlr};
+use crate::LasSnapshot;
 use protocol::Mutation;
 
 //#region 🔖️Mutations
@@ -283,7 +283,7 @@ fn dec_snapshot(s: &str) -> Result<LasSnapshot, String> {
     let header = dec_header(header_s)?;
     let vlrs = diff::split_top_level(diff::strip_brackets(vlrs_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(diff::dec_vlr).collect::<Result<Vec<_>, String>>()?;
     let points = diff::split_top_level(diff::strip_brackets(points_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(diff::dec_point).collect::<Result<Vec<_>, String>>()?;
-    Ok(LasSnapshot { schema: crate::artifacts::las::STDIO_LAS_DOCUMENT_SCHEMA.into(), header, vlrs, points })
+    Ok(LasSnapshot { schema: crate::STDIO_LAS_DOCUMENT_SCHEMA.into(), header, vlrs, points })
 }
 //#endregion 🔖️SnapshotCodec
 
@@ -598,7 +598,7 @@ pub(crate) fn demo_mutation_cases() -> Vec<LasMutation> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::las::schema::diff::{LasPointsDiff, LasVlrsDiff};
+    use crate::schema::diff::{LasPointsDiff, LasVlrsDiff};
     use protocol::command::DiffAlgebra;
     use protocol::MutationDiff;
     use protocol::{OpBinary, OpText};
@@ -766,14 +766,14 @@ mod tests {
     fn codec_retention_law() {
         let bytes = std::fs::read(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🗿️artifacts/☁️las/📚️examples/🎬️demo/🖼️assets/🧊️.las"));
         let snap = match bytes {
-            Ok(b) => crate::artifacts::las::engine::decode_las(&b).expect("decode fixture"),
+            Ok(b) => crate::engine::decode_las(&b).expect("decode fixture"),
             // Fixture path is relative to this crate's manifest dir under the workspace layout;
             // fall back to a synthetic snapshot so this law still exercises decode -> encode ->
             // decode identity even if the workspace root differs at test time.
             Err(_) => base_snapshot(),
         };
-        let reencoded = crate::artifacts::las::engine::encode_las(&snap).expect("re-encode fixture");
-        let redecoded = crate::artifacts::las::engine::decode_las(&reencoded).expect("re-decode fixture");
+        let reencoded = crate::engine::encode_las(&snap).expect("re-encode fixture");
+        let redecoded = crate::engine::decode_las(&reencoded).expect("re-decode fixture");
         // Structural fields are always recomputed on encode (see `LasHeader`'s doc comment); the
         // retained invariant is real content: points, VLR payloads, and the non-structural header
         // fields (scale/offset/bounds/dates/identifiers/points-by-return).

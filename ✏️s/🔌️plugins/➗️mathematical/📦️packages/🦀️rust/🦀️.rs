@@ -658,8 +658,6 @@ semio_framework_plugin::plugin_exports!(plugin::plugin, MathematicalApps);
 pub mod examples {
     #[path = "../../🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🦀️.rs"]
     pub mod app_equation_demo_session;
-    #[path = "../../🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️.rs"]
-    pub mod art_equation_demo;
     #[cfg(test)]
     #[path = "../../🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🦀️.rs"]
     mod art_equation_demo_tests;

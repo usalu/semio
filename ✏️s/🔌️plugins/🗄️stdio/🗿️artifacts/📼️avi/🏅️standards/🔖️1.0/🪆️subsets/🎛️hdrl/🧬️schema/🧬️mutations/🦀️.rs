@@ -1,8 +1,8 @@
 //! 🧬️ AviMutation — named-variant vocabulary (imperative verbs, gif/svg precedent). Every
 //! variant's `diff()` is handcrafted; `inverse()` is handcrafted per variant, index-aware.
 
-use crate::artifacts::avi::standards::v1_0::subsets::any::schema::diff::{AviChunkDiff, AviDiff, AviStreamDiff, IndexedAdded, IndexedDiff, IndexedModified};
-use crate::artifacts::avi::standards::v1_0::subsets::any::schema::snapshot::{AviChunk, AviMainHeader, AviSnapshot, AviStream, AviStreamFormat, AviStreamHeader, RiffChunk};
+use crate::standards::v1_0::subsets::any::schema::diff::{AviChunkDiff, AviDiff, AviStreamDiff, IndexedAdded, IndexedDiff, IndexedModified};
+use crate::standards::v1_0::subsets::any::schema::snapshot::{AviChunk, AviMainHeader, AviSnapshot, AviStream, AviStreamFormat, AviStreamHeader, RiffChunk};
 use protocol::Mutation;
 use protocol::{OpBinary, OpText};
 
@@ -184,7 +184,7 @@ impl OpBinary for AviMutation {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::avi::standards::v1_0::subsets::any::schema::snapshot::STDIO_AVI_DOCUMENT_SCHEMA;
+    use crate::standards::v1_0::subsets::any::schema::snapshot::STDIO_AVI_DOCUMENT_SCHEMA;
 
     use protocol::MutationDiff;
 

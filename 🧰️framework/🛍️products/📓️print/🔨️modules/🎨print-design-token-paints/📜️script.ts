@@ -13,7 +13,7 @@ class GenerateScript extends BundleScript {
   }
 }
 
-class PreviewScript extends BundleScript {
+export class PrintTokenPreviewScript extends BundleScript {
   run(args: string[]): void {
     if (args.length) throw new Error("Print token preview accepts no arguments");
     const path = join(this.repoRoot, "🧰️framework/🛍️products/📓️print/🖋️latex/semio-tokens.sty");
@@ -22,5 +22,5 @@ class PreviewScript extends BundleScript {
   }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("generate", GenerateScript).register("preview-generated", PreviewScript);
+const router = new ScriptRouter(import.meta.dir).register("generate", GenerateScript).register("preview-generated", PrintTokenPreviewScript);
 if (import.meta.main) await router.run(process.argv.slice(2));

@@ -1,12 +1,116 @@
 {
-  "$id": "https://semio.tech/schema/s.stdio.tsv/mutation.tsv",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/tsv/iana/any/mutations.json",
   "title": "TsvMutation",
+  "description": "Discriminated union over this module's mutation leaves (internally tagged); every payload is the leaf's own schema, referenced, never restated.",
   "oneOf": [
-    { "type": "object", "additionalProperties": false, "required": ["mutation", "snapshot"], "properties": { "mutation": { "const": "setSnapshot" }, "snapshot": { "$ref": "https://semio.tech/schema/s.stdio.tsv/snapshot.tsv" } } },
-    { "type": "object", "additionalProperties": false, "required": ["mutation", "trailingNewline"], "properties": { "mutation": { "const": "setTrailingNewline" }, "trailingNewline": { "type": "boolean" } } },
-    { "type": "object", "additionalProperties": false, "required": ["mutation", "lineEnding"], "properties": { "mutation": { "const": "setLineEnding" }, "lineEnding": { "type": "string", "enum": ["lf", "crlf"] } } },
-    { "type": "object", "additionalProperties": false, "required": ["mutation", "index", "row"], "properties": { "mutation": { "const": "insertRow" }, "index": { "type": "integer", "minimum": 0 }, "row": { "type": "array", "items": { "type": "string" } } } },
-    { "type": "object", "additionalProperties": false, "required": ["mutation", "index"], "properties": { "mutation": { "const": "removeRow" }, "index": { "type": "integer", "minimum": 0 } } },
-    { "type": "object", "additionalProperties": false, "required": ["mutation", "rowIndex", "fieldIndex", "value"], "properties": { "mutation": { "const": "setCell" }, "rowIndex": { "type": "integer", "minimum": 0 }, "fieldIndex": { "type": "integer", "minimum": 0 }, "value": { "type": "string" } } }
+    {
+      "allOf": [
+        {
+          "$ref": "./➕insert-row/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "insertRow"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "./➖remove-row/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "removeRow"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "./🔲set-cell/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setCell"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "./🔀set-line-ending/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setLineEnding"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "./📸️set-snapshot/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setSnapshot"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "./🔚set-trailing-newline/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setTrailingNewline"
+            }
+          }
+        }
+      ]
+    }
   ]
 }

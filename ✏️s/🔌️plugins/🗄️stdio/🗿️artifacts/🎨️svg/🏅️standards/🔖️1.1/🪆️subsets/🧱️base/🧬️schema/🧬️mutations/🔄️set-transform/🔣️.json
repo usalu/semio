@@ -5,7 +5,7 @@
   "displayName": "Set Transform",
   "emoji": "✏️",
   "aggregateVariant": "SetTransform",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "set-transform",
   "binaryTag": 9,
   "invertibility": "explicit-mutation",

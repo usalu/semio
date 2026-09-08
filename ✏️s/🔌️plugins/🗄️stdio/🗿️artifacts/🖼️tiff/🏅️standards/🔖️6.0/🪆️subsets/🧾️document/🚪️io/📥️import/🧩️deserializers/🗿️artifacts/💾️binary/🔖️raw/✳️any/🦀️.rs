@@ -1,14 +1,14 @@
 //! Deserialize stdio.tiff from stdio.binary.
 
-use crate::artifacts::binary::BinarySnapshot;
-use crate::artifacts::tiff::{TiffSnapshot, STDIO_TIFF_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_binary::BinarySnapshot;
+use crate::{TiffSnapshot, STDIO_TIFF_DOCUMENT_SCHEMA};
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn register() {}
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn deserialize(from: &BinarySnapshot) -> Result<TiffSnapshot, store::PackError> {
-    let mut snap = crate::artifacts::tiff::engine::decode_tiff(&from.bytes).map_err(store::PackError::Schema)?;
+    let mut snap = crate::engine::decode_tiff(&from.bytes).map_err(store::PackError::Schema)?;
     snap.schema = STDIO_TIFF_DOCUMENT_SCHEMA.into();
     Ok(snap)
 }

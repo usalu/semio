@@ -70,7 +70,7 @@
         {
           "id": "insert-array-element",
           "capability": "json-rfc8259-i-json-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -89,7 +89,7 @@
         {
           "id": "remove-array-element",
           "capability": "json-rfc8259-i-json-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -108,7 +108,7 @@
         {
           "id": "remove-member",
           "capability": "json-rfc8259-i-json-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -127,7 +127,7 @@
         {
           "id": "rename-member",
           "capability": "json-rfc8259-i-json-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -146,7 +146,7 @@
         {
           "id": "set-safe-number",
           "capability": "json-rfc8259-i-json-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -165,7 +165,7 @@
         {
           "id": "set-snapshot",
           "capability": "json-rfc8259-i-json-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -184,7 +184,7 @@
         {
           "id": "set-string",
           "capability": "json-rfc8259-i-json-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -203,7 +203,7 @@
         {
           "id": "set-top-level",
           "capability": "json-rfc8259-i-json-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -222,7 +222,7 @@
         {
           "id": "upsert-member",
           "capability": "json-rfc8259-i-json-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],

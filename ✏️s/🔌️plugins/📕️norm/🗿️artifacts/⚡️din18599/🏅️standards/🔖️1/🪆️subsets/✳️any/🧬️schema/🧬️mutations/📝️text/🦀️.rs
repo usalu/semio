@@ -99,18 +99,18 @@ impl protocol::OpBinary for Din18599MutationDsl {
 
 fn din18599_mutation_to_dsl(mutation: &Din18599Mutation) -> Din18599MutationDsl {
     match mutation {
-        Din18599Mutation::ChangeUseClass(payload) => Din18599MutationDsl::ChangeUseClass { new_use_class: payload.new_use_class.clone() },
-        Din18599Mutation::ChangeHeatedAreaM2(payload) => Din18599MutationDsl::ChangeHeatedAreaM2 { new_heated_area_m2: payload.new_heated_area_m2.clone() },
-        Din18599Mutation::ChangeOccupants(payload) => Din18599MutationDsl::ChangeOccupants { new_occupants: payload.new_occupants.clone() },
-        Din18599Mutation::ChangeHT(payload) => Din18599MutationDsl::ChangeHT { new_h_t: payload.new_h_t.clone() },
-        Din18599Mutation::ChangeHV(payload) => Din18599MutationDsl::ChangeHV { new_h_v: payload.new_h_v.clone() },
-        Din18599Mutation::ChangeInternalGainsWM2(payload) => Din18599MutationDsl::ChangeInternalGainsWM2 { new_internal_gains_w_m2: payload.new_internal_gains_w_m2.clone() },
-        Din18599Mutation::ChangeSolarGainsKwh(payload) => Din18599MutationDsl::ChangeSolarGainsKwh { new_solar_gains_kwh: payload.new_solar_gains_kwh.clone() },
-        Din18599Mutation::ChangeSystemLossesKwh(payload) => Din18599MutationDsl::ChangeSystemLossesKwh { new_system_losses_kwh: payload.new_system_losses_kwh.clone() },
-        Din18599Mutation::ChangeRenewableKwh(payload) => Din18599MutationDsl::ChangeRenewableKwh { new_renewable_kwh: payload.new_renewable_kwh.clone() },
-        Din18599Mutation::ChangeAnnualLimitKwh(payload) => Din18599MutationDsl::ChangeAnnualLimitKwh { new_annual_limit_kwh: payload.new_annual_limit_kwh.clone() },
+        Din18599Mutation::ChangeUseClass(payload) => Din18599MutationDsl::ChangeUseClass { new_use_class: payload.new_use_class },
+        Din18599Mutation::ChangeHeatedAreaM2(payload) => Din18599MutationDsl::ChangeHeatedAreaM2 { new_heated_area_m2: payload.new_heated_area_m2 },
+        Din18599Mutation::ChangeOccupants(payload) => Din18599MutationDsl::ChangeOccupants { new_occupants: payload.new_occupants },
+        Din18599Mutation::ChangeHT(payload) => Din18599MutationDsl::ChangeHT { new_h_t: payload.new_h_t },
+        Din18599Mutation::ChangeHV(payload) => Din18599MutationDsl::ChangeHV { new_h_v: payload.new_h_v },
+        Din18599Mutation::ChangeInternalGainsWM2(payload) => Din18599MutationDsl::ChangeInternalGainsWM2 { new_internal_gains_w_m2: payload.new_internal_gains_w_m2 },
+        Din18599Mutation::ChangeSolarGainsKwh(payload) => Din18599MutationDsl::ChangeSolarGainsKwh { new_solar_gains_kwh: payload.new_solar_gains_kwh },
+        Din18599Mutation::ChangeSystemLossesKwh(payload) => Din18599MutationDsl::ChangeSystemLossesKwh { new_system_losses_kwh: payload.new_system_losses_kwh },
+        Din18599Mutation::ChangeRenewableKwh(payload) => Din18599MutationDsl::ChangeRenewableKwh { new_renewable_kwh: payload.new_renewable_kwh },
+        Din18599Mutation::ChangeAnnualLimitKwh(payload) => Din18599MutationDsl::ChangeAnnualLimitKwh { new_annual_limit_kwh: payload.new_annual_limit_kwh },
         Din18599Mutation::ChangeEnergyCarrier(payload) => Din18599MutationDsl::ChangeEnergyCarrier { new_energy_carrier: payload.new_energy_carrier.clone() },
-        Din18599Mutation::ChangeReferenceQPKwh(payload) => Din18599MutationDsl::ChangeReferenceQPKwh { new_reference_q_p_kwh: payload.new_reference_q_p_kwh.clone() },
+        Din18599Mutation::ChangeReferenceQPKwh(payload) => Din18599MutationDsl::ChangeReferenceQPKwh { new_reference_q_p_kwh: payload.new_reference_q_p_kwh },
         Din18599Mutation::UpdateClimate(payload) => Din18599MutationDsl::UpdateClimate { new_climate: payload.new_climate.clone() },
     }
 }

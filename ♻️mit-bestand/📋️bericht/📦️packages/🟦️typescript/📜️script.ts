@@ -5,7 +5,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { basename, dirname, join, resolve } from "node:path";
 import { BundleScript, ScriptRouter } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🧭️routing/🟦️.ts";
-import { actorNetworkData, validateActorNetwork, validateActorNetworkAssets, validateActorNetworkRenderSync } from "../../🔨️modules/👥️actor-network/📜️script.ts";
+import { ActorNetworkScript, actorNetworkData, validateActorNetwork, validateActorNetworkAssets, validateActorNetworkRenderSync } from "../../🔨️modules/👥️actor-network/📜️script.ts";
 const packageRoot = import.meta.dir, ownerRoot = join(packageRoot, "../..");
 const reportCatalog = JSON.parse(readFileSync(join(ownerRoot, "🔨️modules/📄️documents/🔣️.json"), "utf8")) as { documents: { id: string; texPath: string; actorNetwork: boolean }[] };
 const DOCUMENTS = Object.fromEntries(reportCatalog.documents.map(document => [document.id, document.texPath]));
@@ -17,8 +17,8 @@ class TestScript extends BundleScript {
     if (!["quick", "long", "exhaustive"].includes(level)) throw new Error(`unknown report test level: ${level}`);
     const fixture = JSON.parse(readFileSync(join(ownerRoot, "🧫️tests/🔣️report-family.json"), "utf8"));
     const require = createRequire(import.meta.url), modulePath = join(ownerRoot, "🔨️modules/📄️documents");
-    const schema = JSON.parse(readFileSync(join(modulePath, "🧬️schema.json"), "utf8"));
-    assert.ok(new (require("ajv/dist/2020").default)().validate(schema, reportCatalog));
+    const schema = JSON.parse(readFileSync(join(modulePath, "🧬️schema/🔣️.json"), "utf8"));
+    assert.ok(new (require("ajv").default)({ strict: false }).validate(schema, reportCatalog));
     assert.deepEqual(reportCatalog.documents.map(document => ({ id: document.id, path: document.texPath })), fixture.documents);
     const project = JSON.parse(readFileSync(join(packageRoot, "📋️project.json"), "utf8"));
     for (const document of reportCatalog.documents) {
@@ -104,5 +104,13 @@ class TestScript extends BundleScript {
   }
 }
 
-const router = new ScriptRouter(packageRoot).register("test", TestScript);
+/** 🖼️ Routes the owned non-writing preview through the package command boundary. */
+class PreviewScript extends ActorNetworkScript {
+  async run(segments: string[]): Promise<void> {
+    if (segments.length !== 0) throw new Error("Report preview accepts no arguments");
+    await super.run(["preview"]);
+  }
+}
+
+const router = new ScriptRouter(packageRoot).register("test", TestScript).register("preview-generated", PreviewScript);
 if (import.meta.main) await router.run(process.argv.length > 2 ? process.argv.slice(2) : ["test"]);

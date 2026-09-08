@@ -10,18 +10,18 @@
 
 use std::collections::HashMap;
 
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::euler::{add_face, add_shell, add_solid, make_loop, make_vertex};
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::primitives::line_edge;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::transform::transform_face;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::{ArenaId, Curve2Id, EdgeId, FaceId, SolidId, SurfaceId, VertexId};
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::{Curve2, Curve3};
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::error::KernelError;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::surface::Surface;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::tolerance::Tol;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::history::OpRecorder;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::Body;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::matrix::{Affine3, Frame3};
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::{Pnt2, Pnt3, Vec2, Vec3};
+use crate::standards::v1::subsets::brep::schema::diff::euler::{add_face, add_shell, add_solid, make_loop, make_vertex};
+use crate::standards::v1::subsets::brep::schema::diff::primitives::line_edge;
+use crate::standards::v1::subsets::brep::schema::diff::transform::transform_face;
+use crate::standards::v1::subsets::brep::schema::snapshot::arena::{ArenaId, Curve2Id, EdgeId, FaceId, SolidId, SurfaceId, VertexId};
+use crate::standards::v1::subsets::brep::schema::snapshot::curve::{Curve2, Curve3};
+use crate::standards::v1::subsets::brep::schema::snapshot::error::KernelError;
+use crate::standards::v1::subsets::brep::schema::snapshot::surface::Surface;
+use crate::standards::v1::subsets::brep::schema::snapshot::tolerance::Tol;
+use crate::standards::v1::subsets::brep::schema::snapshot::topology::history::OpRecorder;
+use crate::standards::v1::subsets::brep::schema::snapshot::topology::Body;
+use crate::standards::v1::subsets::brep::schema::snapshot::vector::matrix::{Affine3, Frame3};
+use crate::standards::v1::subsets::brep::schema::snapshot::vector::{Pnt2, Pnt3, Vec2, Vec3};
 
 // #region 🔖️Face
 
@@ -107,7 +107,7 @@ pub(super) fn planar_outward_normal(body: &Body, face: FaceId) -> Result<Vec3, K
 /// own frame, used to compose consecutive sweep-station placements.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(super) fn frame_to_affine(frame: &Frame3) -> Affine3 {
-    Affine3 { linear: crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Mat3::from_columns(frame.x, frame.y, frame.z), translation: frame.origin.to_vec() }
+    Affine3 { linear: crate::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Mat3::from_columns(frame.x, frame.y, frame.z), translation: frame.origin.to_vec() }
 }
 
 // #endregion 🔖️Placement
@@ -161,7 +161,7 @@ pub(super) fn translate_lateral(curve: &Curve3, range: (f64, f64), offset: Vec3)
         Curve3::Nurbs { .. } => {
             let nc = curve.to_nurbs(range);
             let top: Vec<Pnt3> = nc.controls.iter().map(|&p| p + offset).collect();
-            let surface = Surface::Nurbs { u_knots: nc.knots.clone(), v_knots: crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::bspline::KnotVector::new(vec![0.0, 0.0, 1.0, 1.0], 1, 2).unwrap(), controls: nc.controls.iter().copied().zip(top).map(|(a, b)| vec![a, b]).collect(), weights: nc.weights.iter().map(|&w| vec![w, w]).collect() };
+            let surface = Surface::Nurbs { u_knots: nc.knots.clone(), v_knots: crate::standards::v1::subsets::brep::schema::snapshot::curve::bspline::KnotVector::new(vec![0.0, 0.0, 1.0, 1.0], 1, 2).unwrap(), controls: nc.controls.iter().copied().zip(top).map(|(a, b)| vec![a, b]).collect(), weights: nc.weights.iter().map(|&w| vec![w, w]).collect() };
             Ok(LateralSurface { surface, u_domain: range, v_bottom: 0.0, v_top: 1.0 })
         }
     }
@@ -312,7 +312,7 @@ pub(super) fn general_lateral(curve: &Curve3, range: (f64, f64), map: &Affine3) 
         Curve3::Line { .. } | Curve3::Nurbs { .. } => {
             let nc = curve.to_nurbs(range);
             let top: Vec<Pnt3> = nc.controls.iter().map(|&p| map.apply_point(p)).collect();
-            let surface = Surface::Nurbs { u_knots: nc.knots.clone(), v_knots: crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::bspline::KnotVector::new(vec![0.0, 0.0, 1.0, 1.0], 1, 2).unwrap(), controls: nc.controls.iter().copied().zip(top).map(|(a, b)| vec![a, b]).collect(), weights: nc.weights.iter().map(|&w| vec![w, w]).collect() };
+            let surface = Surface::Nurbs { u_knots: nc.knots.clone(), v_knots: crate::standards::v1::subsets::brep::schema::snapshot::curve::bspline::KnotVector::new(vec![0.0, 0.0, 1.0, 1.0], 1, 2).unwrap(), controls: nc.controls.iter().copied().zip(top).map(|(a, b)| vec![a, b]).collect(), weights: nc.weights.iter().map(|&w| vec![w, w]).collect() };
             Ok(LateralSurface { surface, u_domain: range, v_bottom: 0.0, v_top: 1.0 })
         }
         _ => Err(KernelError::Operation("sweep: only line and free-form (already-NURBS) profile edges have a certified pcurve along a general path station (circle/ellipse profile edges are refused, not mis-parametrized)".into())),

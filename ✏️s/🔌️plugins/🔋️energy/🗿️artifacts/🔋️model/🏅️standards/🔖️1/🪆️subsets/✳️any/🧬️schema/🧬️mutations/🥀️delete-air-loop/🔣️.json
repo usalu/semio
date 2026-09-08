@@ -5,7 +5,7 @@
   "displayName": "Delete Air Loop",
   "emoji": "🥀️",
   "aggregateVariant": "DeleteAirLoop",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "delete-air-loop",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

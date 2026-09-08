@@ -2,8 +2,8 @@
 //! (called once from 🔌️plugin/🔧️setup via ⚙️engine::register), not per-leaf register().
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use crate::artifacts::tiff::standards::v6_0::subsets::document::schema::TiffAnalyzer;
-    use crate::artifacts::tiff::TiffSnapshot;
+    use crate::standards::v6_0::subsets::document::schema::TiffAnalyzer;
+    use crate::TiffSnapshot;
     use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.tiff", standard: StandardId("6.0"), subset: SubsetId("*") };
@@ -83,11 +83,11 @@ pub use derived_composition::*;
 // `register_artifact_inferences` cluster (superseded by `declaration()` in the artifact root,
 // zero real callers) were deleted outright. `empty_tiff_snapshot`/`demo_tiff_snapshot` moved to
 // `../🧬️schema`.
-use crate::artifacts::tiff::schema::snapshot::{
+use crate::schema::snapshot::{
     TiffByteOrder, TiffFieldType, TiffIfd, TiffSnapshot, TiffTag, TiffValues, TAG_BITS_PER_SAMPLE, TAG_COMPRESSION, TAG_IMAGE_LENGTH, TAG_IMAGE_WIDTH, TAG_PHOTOMETRIC, TAG_ROWS_PER_STRIP, TAG_SAMPLES_PER_PIXEL, TAG_STRIP_BYTE_COUNTS,
     TAG_STRIP_OFFSETS,
 };
-use crate::artifacts::tiff::STDIO_TIFF_DOCUMENT_SCHEMA;
+use crate::STDIO_TIFF_DOCUMENT_SCHEMA;
 
 //#region ByteOrder
 #[derive(Clone, Copy)]
@@ -689,8 +689,8 @@ pub fn encode_tiff_packbits(snap: &TiffSnapshot) -> Result<Vec<u8>, String> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::tiff::schema::demo_tiff_snapshot;
-    use crate::artifacts::tiff::schema::snapshot::{TiffFieldType, TiffValues};
+    use crate::schema::demo_tiff_snapshot;
+    use crate::schema::snapshot::{TiffFieldType, TiffValues};
 
     async fn gradient_checkerboard_rgba(w: u32, h: u32) -> Vec<u8> {
         let mut out = Vec::with_capacity((w * h * 4) as usize);
@@ -866,8 +866,8 @@ mod tests {
     /// with the independent `decode_tiff` chain walk, and see the directory actually appear/vanish.
     #[semio_framework_async_macros::async_test]
     async fn insert_ifd_and_remove_ifd_are_observable_through_the_codec() {
-        use crate::artifacts::tiff::schema::mutations::apply_tiff_mutation;
-        use crate::artifacts::tiff::TiffMutation;
+        use crate::schema::mutations::apply_tiff_mutation;
+        use crate::TiffMutation;
 
         let (w, h) = (2u32, 2u32);
         let rgba = vec![3u8; (w * h * 4) as usize];
@@ -876,13 +876,13 @@ mod tests {
         assert_eq!(snapshot.ifds.len(), 1);
 
         let inserted = TiffIfd { pixels: Vec::new(), entries: vec![TiffTag { tag: 270, kind: TiffFieldType::Ascii, values: TiffValues::Ascii("inserted page".into()) }] };
-        apply_tiff_mutation(&mut snapshot, &TiffMutation::InsertIfd(crate::artifacts::tiff::schema::mutations::InsertIfdMutation { index: 1, ifd: inserted }));
+        apply_tiff_mutation(&mut snapshot, &TiffMutation::InsertIfd(crate::schema::mutations::InsertIfdMutation { index: 1, ifd: inserted }));
         let after_insert = decode_tiff(&encode_tiff(&snapshot).expect("encode after insert")).expect("decode after insert");
         assert_eq!(after_insert.ifds.len(), 2, "InsertIfd must add a real, decodable second directory");
         let tag = after_insert.ifds[1].entries.iter().find(|t| t.tag == 270).expect("inserted IFD's tag must survive the codec");
         assert_eq!(tag.values, TiffValues::Ascii("inserted page".into()));
 
-        apply_tiff_mutation(&mut snapshot, &TiffMutation::RemoveIfd(crate::artifacts::tiff::schema::mutations::RemoveIfdMutation { index: 1 }));
+        apply_tiff_mutation(&mut snapshot, &TiffMutation::RemoveIfd(crate::schema::mutations::RemoveIfdMutation { index: 1 }));
         let after_remove = decode_tiff(&encode_tiff(&snapshot).expect("encode after remove")).expect("decode after remove");
         assert_eq!(after_remove.ifds.len(), 1, "RemoveIfd must genuinely drop the directory from the encoded chain");
     }
@@ -936,7 +936,7 @@ mod tests {
     /// `conformance_laws` module shape exactly.
     mod conformance_laws {
         use super::*;
-        use crate::artifacts::tiff::schema::{diff, mutations, snapshot};
+        use crate::schema::{diff, mutations, snapshot};
         use protocol::{DiffCodec, OpBinary, OpText};
 
         /// ✅️ "committed files parse": all 6 handcrafted `.grammar.semio`/`.protocol.semio`
@@ -1066,8 +1066,8 @@ mod tests {
 
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
-    use crate::artifacts::tiff::standards::v6_0::subsets::document::schema::TiffComposer as TiffRawAnyComposer;
-    use crate::artifacts::tiff::standards::v6_0::subsets::baseline::schema::TiffBaselineComposer;
+    use crate::standards::v6_0::subsets::document::schema::TiffComposer as TiffRawAnyComposer;
+    use crate::standards::v6_0::subsets::baseline::schema::TiffBaselineComposer;
     use semio_framework_plugin::{composer_entry_of, ComposerEntry};
     use std::sync::OnceLock;
 

@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeCoolingUtilizationFactor, base: &Din16798Snapshot) -
     if base.cooling_utilization_factor == payload.new_cooling_utilization_factor {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Cooling gain utilization factor is already {}.", payload.new_cooling_utilization_factor));
     }
-    protocol::MutationOutcome::new(Din16798Diff { cooling_utilization_factor: Some(payload.new_cooling_utilization_factor.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(Din16798Diff { cooling_utilization_factor: Some(payload.new_cooling_utilization_factor), ..Default::default() })
 }
 //#endregion 🔖️Diff

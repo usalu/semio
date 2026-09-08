@@ -1,7 +1,7 @@
 //! 🏷️ `change-texture-mime` — sets a texture's mime type. Decomposed from the old bundled `SetTextureBytes{mime,bytes}`: `mime`/`bytes` are two independent top-level fields on `SemioTexture` (derivation-rules.md rule 2: `change-<field>` per remaining scalar, `replace-<payload>` per large structured field).
 
-use crate::artifacts::semio::standards::v1::subsets::mesh::schema::mutations::SemioMeshMutation;
-use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
+use crate::standards::v1::subsets::mesh::schema::mutations::SemioMeshMutation;
+use crate::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]

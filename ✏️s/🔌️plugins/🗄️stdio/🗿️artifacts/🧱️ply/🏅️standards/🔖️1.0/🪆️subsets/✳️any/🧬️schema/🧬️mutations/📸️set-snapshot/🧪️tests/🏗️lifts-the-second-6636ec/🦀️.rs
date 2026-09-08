@@ -15,9 +15,9 @@
 //! `.pack.semio`/`.patch.semio` encodings are derived from it by `fixtures generate` and are
 //! asserted by the shared codec-matrix harness, not here.
 
-use crate::artifacts::ply::standards::v1_0::subsets::any::schema::diff::PlyDiff;
-use crate::artifacts::ply::standards::v1_0::subsets::any::schema::mutations::{apply_ply_mutation, PlyMutation};
-use crate::artifacts::ply::standards::v1_0::subsets::any::schema::snapshot::PlySnapshot;
+use crate::standards::v1_0::subsets::any::schema::diff::PlyDiff;
+use crate::standards::v1_0::subsets::any::schema::mutations::{apply_ply_mutation, PlyMutation};
+use crate::standards::v1_0::subsets::any::schema::snapshot::PlySnapshot;
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");
@@ -44,7 +44,7 @@ async fn applies_to_committed_after() {
     assert_eq!(snapshot, expected_after(), "set-snapshot/lifts-the-second-vertex-and-appends-a-comment: applied state differs from committed after-snapshot");
     assert_eq!(
         snapshot.elements[0].rows[1].values[2],
-        crate::artifacts::ply::standards::v1_0::subsets::any::schema::snapshot::PlyValue::Float(2.0),
+        crate::standards::v1_0::subsets::any::schema::snapshot::PlyValue::Float(2.0),
         "set-snapshot/lifts-the-second-vertex-and-appends-a-comment: the second vertex's z cell must land on 2.0"
     );
     assert_eq!(snapshot.elements[0].rows[0], before().elements[0].rows[0], "set-snapshot/lifts-the-second-vertex-and-appends-a-comment: the first vertex row is identical on both sides and must survive untouched");

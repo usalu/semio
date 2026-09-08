@@ -1,7 +1,7 @@
 //! 🧬️ Authoritative remove-palette-entry mutation.
-use crate::artifacts::bmp::schema::diff::*;
-use crate::artifacts::bmp::schema::mutations::BmpMutation;
-use crate::artifacts::bmp::schema::snapshot::*;
+use crate::schema::diff::*;
+use crate::schema::mutations::BmpMutation;
+use crate::schema::snapshot::*;
 
 //#region Payload
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord, dsl::MutationLeaf)]
@@ -33,7 +33,7 @@ impl protocol::MutationKind<BmpSnapshot, BmpMutation> for RemovePaletteEntryMuta
             return Vec::new();
         }
         match base.palette.get(*index) {
-            Some(entry) => vec![BmpMutation::InsertPaletteEntry(crate::artifacts::bmp::schema::mutations::InsertPaletteEntryMutation { index: *index, entry: entry.clone() })],
+            Some(entry) => vec![BmpMutation::InsertPaletteEntry(crate::schema::mutations::InsertPaletteEntryMutation { index: *index, entry: entry.clone() })],
             None => Vec::new(),
         }
     }

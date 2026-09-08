@@ -78,6 +78,14 @@
         "forwardAllArgs": true
       }
     },
+    "test-schema": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts test schema",
+        "forwardAllArgs": true
+      }
+    },
     "test-fixture-verify": {
       "executor": "nx:run-commands",
       "options": {

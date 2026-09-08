@@ -4,7 +4,7 @@
 //! playback length, matching how a real player would report duration). A pure whole-snapshot
 //! scalar (one max-length fold over `channels`) — no `InferredField` needed.
 
-use crate::artifacts::semio::standards::v1::subsets::audio::schema::snapshot::SemioAudioSnapshot;
+use crate::standards::v1::subsets::audio::schema::snapshot::SemioAudioSnapshot;
 
 //#region 🔖️Duration
 /// ⏱️ Semio audio's sample-count-derived playback duration.
@@ -32,7 +32,7 @@ pub fn compute_semio_audio_duration(snapshot: &SemioAudioSnapshot) -> SemioAudio
 //#region 🧪️Tests
 mod tests {
     use super::*;
-    use crate::artifacts::semio::standards::v1::subsets::audio::schema::snapshot::{SemioAudioChannel, STDIO_SEMIOAUDIO_DOCUMENT_SCHEMA};
+    use crate::standards::v1::subsets::audio::schema::snapshot::{SemioAudioChannel, STDIO_SEMIOAUDIO_DOCUMENT_SCHEMA};
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn snapshot(sample_rate: u32, channel_lengths: &[usize]) -> SemioAudioSnapshot {

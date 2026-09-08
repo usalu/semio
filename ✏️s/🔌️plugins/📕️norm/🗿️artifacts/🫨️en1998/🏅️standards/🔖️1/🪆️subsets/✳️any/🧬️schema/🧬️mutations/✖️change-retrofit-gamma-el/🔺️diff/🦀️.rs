@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeRetrofitGammaEl, base: &En1998Snapshot) -> protocol:
     if base.retrofit_gamma_el == payload.new_retrofit_gamma_el {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Retrofit confidence factor gamma_el is already {}.", payload.new_retrofit_gamma_el));
     }
-    protocol::MutationOutcome::new(En1998Diff { retrofit_gamma_el: Some(payload.new_retrofit_gamma_el.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1998Diff { retrofit_gamma_el: Some(payload.new_retrofit_gamma_el), ..Default::default() })
 }
 //#endregion 🔖️Diff

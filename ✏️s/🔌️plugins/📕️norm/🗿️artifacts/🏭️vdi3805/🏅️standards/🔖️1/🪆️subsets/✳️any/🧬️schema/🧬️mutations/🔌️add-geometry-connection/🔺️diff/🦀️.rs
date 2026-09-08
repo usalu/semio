@@ -10,7 +10,7 @@ pub fn diff(payload: &AddGeometryConnection, base: &Vdi3805Snapshot) -> protocol
     let Some(entry) = base.geometry.get(&payload.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Geometry \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     };
-    if entry.connections.iter().any(|c| *c == payload.connection) {
+    if entry.connections.contains(&payload.connection) {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Connection \"{}\" already exists on geometry \"{}\".", payload.connection.id, payload.id));
     }
     let mut geometry = base.geometry.clone();

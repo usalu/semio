@@ -1,0 +1,21 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/norm/din4108/1/any/mutation/change-climate.json",
+  "title": "ChangeClimate",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newClimate"
+  ],
+  "properties": {
+    "newClimate": {
+      "type": "string",
+      "enum": [
+        "Zone1",
+        "Zone2",
+        "Zone3",
+        "Zone4"
+      ]
+    }
+  }
+}

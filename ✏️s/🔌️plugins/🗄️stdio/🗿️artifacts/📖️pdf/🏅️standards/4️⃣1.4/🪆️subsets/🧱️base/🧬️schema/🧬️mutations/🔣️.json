@@ -1,7 +1,8 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/stdio/pdf/1.4/mutations",
+  "$id": "https://semio.tech/schema/s/stdio/pdf/1.4/base/mutations.json",
   "title": "PdfMutation",
+  "description": "Discriminated union over this module's mutation leaves (adjacently tagged); every payload is the leaf's own schema, referenced, never restated.",
   "oneOf": [
     {
       "type": "object",
@@ -15,23 +16,7 @@
           "const": "insert-page"
         },
         "payload": {
-          "$ref": "📥️insert-page/🧬️.schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "remove-page"
-        },
-        "payload": {
-          "$ref": "🗑️remove-page/🧬️.schema.json"
+          "$ref": "./📥️insert-page/🧬️schema/🔣️.json"
         }
       }
     },
@@ -47,7 +32,7 @@
           "const": "move-page"
         },
         "payload": {
-          "$ref": "🔀️move-page/🧬️.schema.json"
+          "$ref": "./🔀️move-page/🧬️schema/🔣️.json"
         }
       }
     },
@@ -60,10 +45,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "resize-page"
+          "const": "remove-page"
         },
         "payload": {
-          "$ref": "📐️resize-page/🧬️.schema.json"
+          "$ref": "./🗑️remove-page/🧬️schema/🔣️.json"
         }
       }
     },
@@ -79,7 +64,23 @@
           "const": "replace-page-text"
         },
         "payload": {
-          "$ref": "♻️replace-page-text/🧬️.schema.json"
+          "$ref": "./♻️replace-page-text/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "resize-page"
+        },
+        "payload": {
+          "$ref": "./📐️resize-page/🧬️schema/🔣️.json"
         }
       }
     }

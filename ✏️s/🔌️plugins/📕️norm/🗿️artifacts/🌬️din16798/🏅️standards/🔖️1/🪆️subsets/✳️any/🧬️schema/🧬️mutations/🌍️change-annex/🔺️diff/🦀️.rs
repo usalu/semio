@@ -9,6 +9,6 @@ pub fn diff(payload: &ChangeAnnex, base: &Din16798Snapshot) -> protocol::Mutatio
     if base.annex == payload.new_annex {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("National annex is already {:?}.", payload.new_annex));
     }
-    protocol::MutationOutcome::new(Din16798Diff { annex: Some(payload.new_annex.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(Din16798Diff { annex: Some(payload.new_annex), ..Default::default() })
 }
 //#endregion 🔖️Diff

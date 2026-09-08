@@ -4,8 +4,8 @@
 //! `serde_json::Value`, no bare tuples (`PortRef`/`SemioPoint2` are named structs), no nested
 //! fixed arrays.
 
-use crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioPoint2;
-use crate::artifacts::semio::standards::v1::subsets::base::schema::triples::{split_top_level, strip_brackets};
+use crate::standards::v1::subsets::base::schema::geometry::SemioPoint2;
+use crate::standards::v1::subsets::base::schema::triples::{split_top_level, strip_brackets};
 
 //#region 🔖️PortRef
 /// 🔌️ Addresses one named port on one node — the endpoint shape `FlowEdge` connects through.
@@ -60,7 +60,7 @@ pub struct FlowEdge {
 }
 //#endregion 🔖️Edge
 
-use schema::ArtifactSchema;
+use framework_schema::ArtifactSchema;
 
 //#region 🔖️Ids
 pub const STDIO_SEMIOFLOW_DOCUMENT_SCHEMA: &str = "stdio.semio.flow";

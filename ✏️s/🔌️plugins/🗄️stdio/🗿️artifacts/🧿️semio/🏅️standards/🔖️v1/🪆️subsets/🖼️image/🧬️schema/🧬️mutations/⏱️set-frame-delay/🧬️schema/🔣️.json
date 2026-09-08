@@ -1,0 +1,26 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/image/mutation/set-frame-delay.json",
+  "title": "SetFrameDelay",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "index",
+    "delay_ms"
+  ],
+  "properties": {
+    "index": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "delay_ms": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 4294967295
+    },
+    "mutation": {
+      "const": "setFrameDelay",
+      "description": "Aggregate discriminator spliced in by SemioImageMutation; absent when the payload stands alone."
+    }
+  }
+}

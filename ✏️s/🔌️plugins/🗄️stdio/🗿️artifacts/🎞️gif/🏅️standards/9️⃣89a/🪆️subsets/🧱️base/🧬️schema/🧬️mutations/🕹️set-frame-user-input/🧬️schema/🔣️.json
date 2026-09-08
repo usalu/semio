@@ -1,0 +1,24 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/gif/89a/base/mutation/set-frame-user-input.json",
+  "title": "SetFrameUserInput",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "index",
+    "user_input"
+  ],
+  "properties": {
+    "index": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "user_input": {
+      "type": "boolean"
+    },
+    "mutation": {
+      "const": "setFrameUserInput",
+      "description": "Aggregate discriminator spliced in by GifMutation; absent when the payload stands alone."
+    }
+  }
+}

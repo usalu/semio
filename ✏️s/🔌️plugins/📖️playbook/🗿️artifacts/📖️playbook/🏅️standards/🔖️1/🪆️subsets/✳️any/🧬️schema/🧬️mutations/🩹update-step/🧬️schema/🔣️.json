@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/playbook/playbook/1/any/mutation/update-step.json",
+  "title": "UpdateStep",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "stepId",
+    "title"
+  ],
+  "properties": {
+    "stepId": {
+      "type": "string"
+    },
+    "title": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    }
+  }
+}

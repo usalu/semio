@@ -5,7 +5,7 @@
   "displayName": "Set Graph Engagement Input",
   "emoji": "🌐️",
   "aggregateVariant": "SetGraphEngagementInput",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "set-graph-engagement-input",
   "binaryTag": 6,
   "invertibility": "explicit-mutation",

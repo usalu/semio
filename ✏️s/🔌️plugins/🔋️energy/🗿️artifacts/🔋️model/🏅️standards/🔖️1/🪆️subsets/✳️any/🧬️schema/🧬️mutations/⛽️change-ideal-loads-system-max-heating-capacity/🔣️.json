@@ -5,7 +5,7 @@
   "displayName": "Change Ideal Loads System Max Heating Capacity",
   "emoji": "⛽️",
   "aggregateVariant": "ChangeIdealLoadsSystemMaxHeatingCapacity",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-ideal-loads-system-max-heating-capacity",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

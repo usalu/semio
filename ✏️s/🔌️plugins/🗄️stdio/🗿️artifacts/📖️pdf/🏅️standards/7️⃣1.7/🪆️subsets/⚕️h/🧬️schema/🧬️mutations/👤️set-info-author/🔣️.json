@@ -5,7 +5,7 @@
   "displayName": "Set Info Author",
   "emoji": "👤️",
   "aggregateVariant": "SetInfoAuthor",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "set-info-author",
   "binaryTag": 1,
   "invertibility": "explicit-mutation",

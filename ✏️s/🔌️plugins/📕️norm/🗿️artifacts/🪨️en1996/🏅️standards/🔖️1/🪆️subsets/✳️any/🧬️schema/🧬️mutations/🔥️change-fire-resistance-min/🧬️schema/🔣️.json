@@ -1,0 +1,16 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/norm/en1996/1/any/mutation/change-fire-resistance-min.json",
+  "title": "ChangeFireResistanceMin",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newFireResistanceMin"
+  ],
+  "properties": {
+    "newFireResistanceMin": {
+      "type": "integer",
+      "minimum": 0
+    }
+  }
+}

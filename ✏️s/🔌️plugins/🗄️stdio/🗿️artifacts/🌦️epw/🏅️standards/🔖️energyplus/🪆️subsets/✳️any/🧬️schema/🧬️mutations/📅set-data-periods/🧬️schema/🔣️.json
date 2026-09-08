@@ -1,0 +1,66 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/epw/energyplus/any/mutation/set-data-periods.json",
+  "title": "SetDataPeriods",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "dataPeriods"
+  ],
+  "properties": {
+    "dataPeriods": {
+      "$ref": "#/$defs/EpwDataPeriods"
+    },
+    "mutation": {
+      "const": "setDataPeriods",
+      "description": "Aggregate discriminator spliced in by EpwMutation; absent when the payload stands alone."
+    }
+  },
+  "$defs": {
+    "EpwDataPeriods": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "recordsPerHour",
+        "periods"
+      ],
+      "properties": {
+        "recordsPerHour": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "periods": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/EpwDataPeriod"
+          }
+        }
+      }
+    },
+    "EpwDataPeriod": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "startDayOfWeek",
+        "startDate",
+        "endDate"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "startDayOfWeek": {
+          "type": "string"
+        },
+        "startDate": {
+          "type": "string"
+        },
+        "endDate": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

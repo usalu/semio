@@ -1,7 +1,7 @@
 //! 🧬️ Logical DWG document mutations.
 
-use crate::artifacts::dwg::schema::diff::{self, DwgDiff};
-use crate::artifacts::dwg::DwgSnapshot;
+use crate::schema::diff::{self, DwgDiff};
+use crate::DwgSnapshot;
 use protocol::Mutation;
 
 //#region 🔖️Mutations
@@ -108,7 +108,7 @@ pub(crate) fn agg_inverse(this: &DwgMutation, base: &DwgSnapshot) -> Vec<DwgMuta
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_mutation_cases() -> Vec<DwgMutation> {
-    let base = crate::artifacts::dwg::standards::v_ac1024::engine::demo_dwg_snapshot();
+    let base = crate::standards::v_ac1024::engine::demo_dwg_snapshot();
     vec![DwgMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: Box::new(base) }), DwgMutation::SetVersionInfo(set_version_info::SetVersionInfo { version: "AC1024".into(), maintenance_version: 9, codepage: 65001 })]
 }
 

@@ -1,7 +1,7 @@
 //! 🗑️ `delete-shell` — removes an id-keyed shell. Does NOT cascade into `solid.shells` membership, for the same reason `delete-face` does not cascade into `shell.faces` — flagged, not invented. Absent `id` is a no-op.
 
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::mutations::SemioBrepMutation;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
+use crate::standards::v1::subsets::brep::schema::mutations::SemioBrepMutation;
+use crate::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]

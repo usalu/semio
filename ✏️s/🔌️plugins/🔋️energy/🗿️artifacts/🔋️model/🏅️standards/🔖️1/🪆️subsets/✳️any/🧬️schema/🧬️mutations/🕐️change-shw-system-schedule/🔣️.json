@@ -5,7 +5,7 @@
   "displayName": "Change Shw System Schedule",
   "emoji": "🕐️",
   "aggregateVariant": "ChangeShwSystemSchedule",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-shw-system-schedule",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

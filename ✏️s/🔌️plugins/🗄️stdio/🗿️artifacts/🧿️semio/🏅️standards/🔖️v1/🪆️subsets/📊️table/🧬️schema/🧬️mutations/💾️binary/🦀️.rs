@@ -5,7 +5,7 @@
 //! argument tail) rather than re-deriving a second independent encoding, mirroring `🔤️text`'s own
 //! established convention.
 
-use crate::artifacts::semio::standards::v1::subsets::table::schema::mutations::SemioTableMutation;
+use crate::standards::v1::subsets::table::schema::mutations::SemioTableMutation;
 
 //#region 📡️SemioProtocol
 pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio");
@@ -72,7 +72,7 @@ impl protocol::OpBinary for SemioTableMutation {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::semio::standards::v1::subsets::table::schema::mutations::text::demo_mutation_cases;
+    use crate::standards::v1::subsets::table::schema::mutations::text::demo_mutation_cases;
     use protocol::OpBinary;
 
     #[semio_framework_async_macros::async_test]

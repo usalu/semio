@@ -272,7 +272,7 @@ fn layer_container_len(layers: &[DrawingLayerNode], parent_id: Option<&str>) -> 
     }
 }
 
-fn apply_layer_patch_entry(layers: &mut Vec<DrawingLayerNode>, entry: &DrawingLayerPatchEntry) -> protocol::MutationApplyResult<()> {
+fn apply_layer_patch_entry(layers: &mut [DrawingLayerNode], entry: &DrawingLayerPatchEntry) -> protocol::MutationApplyResult<()> {
     let mut result = Ok(());
     if !update_layer_in_tree(layers, &entry.id, &mut |layer| {
         result = apply_layer_patch(layer, &entry.patch);

@@ -10,19 +10,19 @@
 use std::collections::HashMap;
 use std::collections::HashSet;
 
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::euler::{add_face, add_shell, add_solid, make_edge, make_loop, make_vertex};
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::inferences::validation_report::validate_body;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::{ArenaId, Curve3Id, EdgeId, FaceId, SolidId, SurfaceId, VertexId};
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::bspline::KnotVector;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::Curve3;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::error::KernelError;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::surface::Surface;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::tolerance::Tol;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::history::OpRecorder;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::Body;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::Pnt3;
+use crate::standards::v1::subsets::brep::schema::diff::euler::{add_face, add_shell, add_solid, make_edge, make_loop, make_vertex};
+use crate::standards::v1::subsets::brep::schema::inferences::validation_report::validate_body;
+use crate::standards::v1::subsets::brep::schema::snapshot::arena::{ArenaId, Curve3Id, EdgeId, FaceId, SolidId, SurfaceId, VertexId};
+use crate::standards::v1::subsets::brep::schema::snapshot::curve::bspline::KnotVector;
+use crate::standards::v1::subsets::brep::schema::snapshot::curve::Curve3;
+use crate::standards::v1::subsets::brep::schema::snapshot::error::KernelError;
+use crate::standards::v1::subsets::brep::schema::snapshot::surface::Surface;
+use crate::standards::v1::subsets::brep::schema::snapshot::tolerance::Tol;
+use crate::standards::v1::subsets::brep::schema::snapshot::topology::history::OpRecorder;
+use crate::standards::v1::subsets::brep::schema::snapshot::topology::Body;
+use crate::standards::v1::subsets::brep::schema::snapshot::vector::Pnt3;
 #[cfg(test)]
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::Vec3;
+use crate::standards::v1::subsets::brep::schema::snapshot::vector::Vec3;
 
 // #region 🔖️SewApi
 
@@ -125,7 +125,7 @@ impl HealingReport {
 
 /// 🩹 Validates a clean solid (no-op success); dirty solids are rejected until full healing lands.
 /// `rec` records every vertex this merges as modified — repositioning `body.vertices` directly
-/// (not through euler) is a pre-existing exception the docstring on [`crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::euler`] calls
+/// (not through euler) is a pre-existing exception the docstring on [`crate::standards::v1::subsets::brep::schema::diff::euler`] calls
 /// out as the checked editors' exclusive right; `rec` at least keeps the entity's provenance honest.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn heal_solid(body: &mut Body, solid: SolidId, tolerance: f64, rec: &mut OpRecorder) -> Result<HealingReport, KernelError> {
@@ -319,7 +319,7 @@ fn analytic_surface_to_nurbs(surface: &Surface) -> Option<Surface> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Frame3;
+    use crate::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Frame3;
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn make_loose_quad(body: &mut Body, p0: Pnt3, p1: Pnt3, p2: Pnt3, p3: Pnt3, normal: Vec3) -> FaceId {
@@ -400,8 +400,8 @@ mod tests {
 #[cfg(test)]
 mod heal_tests {
     use super::*;
-    use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::primitives::make_box;
-    use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::Curve3;
+    use crate::standards::v1::subsets::brep::schema::diff::primitives::make_box;
+    use crate::standards::v1::subsets::brep::schema::snapshot::curve::Curve3;
 
     #[semio_framework_async_macros::async_test]
     async fn heal_solid_noop_on_valid_box() {

@@ -1300,7 +1300,7 @@ impl ArtifactEditor for EquationPlayApp {
 ///
 /// 🚧️ SDK GAP (contract §2.4): `EditorBuilder` has no `.example(...)`/`.workflow(...)` —
 /// `PluginBuilder::editor::<E>(def: AppDefinition)` only takes the bare definition, so the old
-/// `.example_source(crate::examples::art_equation_demo::source())` and
+/// `.example_source(crate::artifacts::equation::examples::demo::source())` and
 /// `.workflow("equation", "Equation", "graph")` calls are dropped here (not silently: noted
 /// in the migration report). The subset's own `📚️examples/🎬️demo` facet
 /// (`crate::artifacts::equation::examples::...`, real content, pre-existing) is the modern,

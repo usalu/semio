@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/block/5d/1/any/mutation/rename-grip-kind.json",
+  "title": "RenameGripKind",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newName"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "newName": {
+      "type": "string"
+    }
+  }
+}

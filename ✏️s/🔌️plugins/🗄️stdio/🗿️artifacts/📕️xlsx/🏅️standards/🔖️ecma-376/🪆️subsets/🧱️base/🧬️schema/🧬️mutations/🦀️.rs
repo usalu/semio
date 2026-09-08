@@ -1,18 +1,18 @@
 //! 🧬️ XlsxMutation — document mutation dispatch. Every variant's `diff()` is handcrafted (never
 //! apply-and-capture) and every variant's `inverse()` is handcrafted, key/index-aware.
 
-use crate::artifacts::xlsx::schema::diff::{
+use crate::schema::diff::{
     dec_cell_value, dec_cell_value_bin, dec_ct_entry, dec_opc_part_bin, dec_owner_rels, dec_part, dec_rel_bin, dec_sheet, dec_sheet_bin, dec_str, diff_insert_shared_string, diff_insert_sheet, diff_remove_cell, diff_remove_shared_string,
     diff_remove_sheet, diff_rename_sheet, diff_set_cell, diff_set_shared_string, diff_set_snapshot, enc_cell_value, enc_cell_value_bin, enc_ct_entry, enc_opc_part_bin, enc_owner_rels, enc_part, enc_rel_bin, enc_sheet, enc_sheet_bin, enc_str,
     read_str_lp, split_top_level, strip_brackets, write_str_lp, XlsxDiff,
 };
 #[cfg(test)]
-use crate::artifacts::xlsx::schema::snapshot::XlsxCell;
-use crate::artifacts::xlsx::schema::snapshot::{XlsxCellValue, XlsxSheet, XlsxWorkbook};
-use crate::artifacts::xlsx::XlsxSnapshot;
-use crate::artifacts::zip::opc::{OpcContentTypes, OpcPackage, OpcRelationship};
+use crate::schema::snapshot::XlsxCell;
+use crate::schema::snapshot::{XlsxCellValue, XlsxSheet, XlsxWorkbook};
+use crate::XlsxSnapshot;
+use semio_s_artifact_stdio_zip::opc::{OpcContentTypes, OpcPackage, OpcRelationship};
 #[cfg(test)]
-use crate::artifacts::zip::opc::{OpcTargetMode, RELS_CONTENT_TYPE, REL_TYPE_OFFICE_DOCUMENT};
+use semio_s_artifact_stdio_zip::opc::{OpcTargetMode, RELS_CONTENT_TYPE, REL_TYPE_OFFICE_DOCUMENT};
 use protocol::OpBinary;
 use protocol::{Mutation, OpText};
 use std::collections::HashMap;
@@ -530,7 +530,7 @@ impl OpBinary for XlsxMutation {
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn fixture() -> XlsxSnapshot {
-    crate::artifacts::xlsx::standards::v_ecma_376::subsets::base::io::export::serializers::build_minimal_xlsx(XlsxWorkbook {
+    crate::standards::v_ecma_376::subsets::base::io::export::serializers::build_minimal_xlsx(XlsxWorkbook {
         sheets: vec![XlsxSheet { name: "Sheet1".into(), cells: vec![XlsxCell { row: 1, col: 0, value: XlsxCellValue::Number(1.0) }] }, XlsxSheet { name: "Sheet2".into(), cells: vec![] }],
         shared_strings: vec!["hello".into()],
     })
@@ -671,7 +671,7 @@ pub(crate) fn demo_mutation_cases() -> Vec<XlsxMutation> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::xlsx::schema::diff::{XlsxCellDiff, XlsxOpcPartDiff};
+    use crate::schema::diff::{XlsxCellDiff, XlsxOpcPartDiff};
     use protocol::command::DiffAlgebra;
     use protocol::MutationDiff;
 
@@ -841,7 +841,7 @@ mod tests {
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn cells_diff<'a>(diff: &'a XlsxDiff, sheet_name: &str) -> &'a crate::artifacts::xlsx::schema::diff::XlsxCellsDiff {
+    fn cells_diff<'a>(diff: &'a XlsxDiff, sheet_name: &str) -> &'a crate::schema::diff::XlsxCellsDiff {
         let sheets = diff.workbook.as_ref().expect("workbook diff present").sheets.as_ref().expect("sheets diff present");
         sheets.modified.iter().find(|m| m.key == sheet_name).expect("sheet modified").diff.cells.as_ref().expect("cells diff present")
     }
@@ -936,7 +936,7 @@ mod tests {
         assert_eq!(MutationDiff::apply(&<XlsxDiff as DiffAlgebra<XlsxSnapshot>>::between(&sample, &sample), &sample).unwrap(), sample);
 
         // "Real" fixture leg: a realistic multi-sheet workbook diffed against a mutated variant.
-        let real = crate::artifacts::xlsx::standards::v_ecma_376::subsets::base::io::export::serializers::build_minimal_xlsx(XlsxWorkbook {
+        let real = crate::standards::v_ecma_376::subsets::base::io::export::serializers::build_minimal_xlsx(XlsxWorkbook {
             sheets: vec![XlsxSheet { name: "Data".into(), cells: vec![XlsxCell { row: 1, col: 0, value: XlsxCellValue::SharedString(0) }] }],
             shared_strings: vec!["Chapter One".into()],
         });
@@ -951,7 +951,7 @@ mod tests {
     //#region 🔖️CodecRetentionLaw
     #[semio_framework_async_macros::async_test]
     async fn codec_retention_law() {
-        let snap = crate::artifacts::xlsx::standards::v_ecma_376::subsets::base::io::export::serializers::build_minimal_xlsx(XlsxWorkbook {
+        let snap = crate::standards::v_ecma_376::subsets::base::io::export::serializers::build_minimal_xlsx(XlsxWorkbook {
             sheets: vec![XlsxSheet {
                 name: "Sheet1".into(),
                 cells: vec![

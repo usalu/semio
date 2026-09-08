@@ -607,7 +607,7 @@ pub fn create_dag_app() -> semio_framework_plugin::AppDefinition {
             // 🚧️ SDK GAP (contract §2.4): `EditorBuilder`/`.editor::<E>(def: AppDefinition)` take a
             // bare `AppDefinition`, not the old `App { definition, examples }` — there is no
             // `.example_source(...)`/`.workflow(...)` on this builder, so the app-level
-            // `crate::examples::art_dag_demo` example registration and the no-op `.workflow("dag", …)`
+            // `crate::artifacts::dag::examples::demo` example registration and the no-op `.workflow("dag", …)`
             // call are dropped here (reported in the migration report, not silently lost). The
             // subset's own `📚️examples/🎬️demo` facet (`crate::artifacts::dag::examples::demo`,
             // real content, pre-existing) is the modern, role-agnostic replacement surface for this.

@@ -5,7 +5,7 @@
   "displayName": "Delete Fenestration",
   "emoji": "🚪️",
   "aggregateVariant": "DeleteFenestration",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "delete-fenestration",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

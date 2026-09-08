@@ -6993,6 +6993,17 @@
       }
     },
     {
+      "name": "⚖️gate🌱️artifact-creation-progress🌐️renderer",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-renderer-react:artifact-creation-progress-check",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.099848
+      }
+    },
+    {
       "name": "⚖️gate👥️scoped-presence🌐️browser-worker",
       "type": "node-terminal",
       "request": "launch",
@@ -7484,13 +7495,25 @@
       }
     },
     {
+      "name": "⚖️gate🤝️trusted-stdio-gis-two-author-shell🧊️source",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run os-hub:trusted-stdio-gis-bundle-check -- --two-author-source",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/trusted-stdio-gis-two-author-source",
+        "NX_DAEMON": "false"
+      },
+      "presentation": { "group": "4_gate", "order": 411.1096164 }
+    },
+    {
       "name": "⚖️gate🤝️trusted-stdio-gis-two-author-shell🌎️hub",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run os-hub:trusted-stdio-gis-bundle-check -- --two-author-shell",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/trusted-stdio-gis-two-author-shell",
+        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/trusted-stdio-gis-browser",
         "CARGO_BUILD_JOBS": "1",
         "RUSTC_WRAPPER": "",
         "RUSTC_WORKSPACE_WRAPPER": "",
@@ -7985,6 +8008,14 @@
         "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/canonical-bootstrap-folder-mirror"
       },
       "presentation": { "group": "4_gate", "order": 411.1496 }
+    },
+    {
+      "name": "⚖️gate🌐️ticket-browser-host-staging🧊️source",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-dev:browser-host-staging-check",
+      "cwd": "${workspaceFolder}",
+      "presentation": { "group": "4_gate", "order": 411.14965 }
     },
     {
       "name": "⚖️gate🧊️cold-document-pair-ingress📐️source",
@@ -9694,7 +9725,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
-        "order": 305.0
+        "order": 206.075
       }
     },
     {
@@ -9801,6 +9832,28 @@
       "presentation": {
         "group": "4_build",
         "order": 132
+      }
+    },
+    {
+      "name": "🧩️prepare🏚️mitbestand🎪️demonstrator🛠️dev",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/mit-bestand-demonstrator:prepare-dev",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 132.8
+      }
+    },
+    {
+      "name": "🧩️prepare🏚️mitbestand🎪️demonstrator🚢️release",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/mit-bestand-demonstrator:prepare-release",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 132.9
       }
     },
     {
@@ -10190,6 +10243,72 @@
       "presentation": {
         "group": "4_build",
         "order": 208
+      }
+    },
+    {
+      "name": "📦️generate🧬️schema📇️catalog",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:schema-generate",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 208.1
+      }
+    },
+    {
+      "name": "📦️generate🧬️schema📓️docs",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:schema-docs",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 208.2
+      }
+    },
+    {
+      "name": "📦️verify🧬️schema🚦️check",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:schema-check",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 208.3
+      }
+    },
+    {
+      "name": "📦️verify🧬️schema📇️catalog",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:schema-verify",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 208.4
+      }
+    },
+    {
+      "name": "📦️generate🧬️schema📋️audit",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:schema-audit -- --out .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️08/SCOPE-OWNED-SCHEMA-CONTRACTS/🗑️generated",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 208.5
+      }
+    },
+    {
+      "name": "📦️test🧬️schema🧪️harness",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:schema-test",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 208.6
       }
     },
     {
@@ -14711,6 +14830,39 @@
       "presentation": {
         "group": "4_gate",
         "order": 503.782
+      }
+    },
+    {
+      "name": "📦️build🦀️semio-s-artifact-stdio-contract",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run semio-s-artifact-stdio-contract:build",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 503.783
+      }
+    },
+    {
+      "name": "🔎️check🦀️semio-s-artifact-stdio-contract",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run semio-s-artifact-stdio-contract:check",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 503.784
+      }
+    },
+    {
+      "name": "🧪️test🦀️semio-s-artifact-stdio-contract",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run semio-s-artifact-stdio-contract:test",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 503.785
       }
     },
     {

@@ -3,17 +3,127 @@
   "packageVersion": "0.1.0",
   "codecCount": 1,
   "unconsumedProfiles": [
-    { "name": "stdio and GIS without VCS", "selected": ["semio:stdio", "semio:gis"], "previews": ["semio:stdio", "semio:gis"] },
-    { "name": "stdio, GIS and VCS", "selected": ["semio:stdio", "semio:gis", "semio:vcs"], "previews": ["semio:stdio", "semio:gis", "semio:vcs"] }
+    {
+      "name": "stdio and GIS without VCS",
+      "selected": [
+        "semio:stdio",
+        "semio:gis"
+      ],
+      "previews": [
+        "semio:stdio",
+        "semio:gis"
+      ]
+    },
+    {
+      "name": "stdio, GIS and VCS",
+      "selected": [
+        "semio:stdio",
+        "semio:gis",
+        "semio:vcs"
+      ],
+      "previews": [
+        "semio:stdio",
+        "semio:gis",
+        "semio:vcs"
+      ]
+    }
   ],
   "cases": [
-    { "name": "exact VCS package", "pluginId": "vcs", "packageId": "semio:vcs", "version": "0.1.0", "cancelled": false, "nowMs": 0, "deadlineMs": 1000, "accepted": true },
-    { "name": "cross-package owner", "pluginId": "vcs", "packageId": "semio:stdio", "version": "0.1.0", "cancelled": false, "nowMs": 0, "deadlineMs": 1000, "accepted": false },
-    { "name": "cross-plugin owner", "pluginId": "gis", "packageId": "semio:vcs", "version": "0.1.0", "cancelled": false, "nowMs": 0, "deadlineMs": 1000, "accepted": false },
-    { "name": "different compiled version", "pluginId": "vcs", "packageId": "semio:vcs", "version": "0.2.0", "cancelled": false, "nowMs": 0, "deadlineMs": 1000, "accepted": false },
-    { "name": "unknown native provider", "pluginId": "foreign", "packageId": "semio:foreign", "version": "0.1.0", "cancelled": false, "nowMs": 0, "deadlineMs": 1000, "accepted": false },
-    { "name": "cancelled before preview", "pluginId": "vcs", "packageId": "semio:vcs", "version": "0.1.0", "cancelled": true, "nowMs": 0, "deadlineMs": 1000, "accepted": false },
-    { "name": "deadline at preview", "pluginId": "vcs", "packageId": "semio:vcs", "version": "0.1.0", "cancelled": false, "nowMs": 1000, "deadlineMs": 1000, "accepted": false },
-    { "name": "deadline before preview", "pluginId": "vcs", "packageId": "semio:vcs", "version": "0.1.0", "cancelled": false, "nowMs": 1001, "deadlineMs": 1000, "accepted": false }
+    {
+      "name": "exact VCS package",
+      "pluginId": "vcs",
+      "packageId": "semio:vcs",
+      "version": "0.1.0",
+      "cancelled": false,
+      "nowMs": 0,
+      "deadlineMs": 1000,
+      "accepted": true,
+      "stage": "contract",
+      "code": "exact-package"
+    },
+    {
+      "name": "cross-package owner",
+      "pluginId": "vcs",
+      "packageId": "semio:stdio",
+      "version": "0.1.0",
+      "cancelled": false,
+      "nowMs": 0,
+      "deadlineMs": 1000,
+      "accepted": false,
+      "stage": "domain",
+      "code": "cross-package-owner"
+    },
+    {
+      "name": "cross-plugin owner",
+      "pluginId": "gis",
+      "packageId": "semio:vcs",
+      "version": "0.1.0",
+      "cancelled": false,
+      "nowMs": 0,
+      "deadlineMs": 1000,
+      "accepted": false,
+      "stage": "domain",
+      "code": "cross-plugin-owner"
+    },
+    {
+      "name": "different compiled version",
+      "pluginId": "vcs",
+      "packageId": "semio:vcs",
+      "version": "0.2.0",
+      "cancelled": false,
+      "nowMs": 0,
+      "deadlineMs": 1000,
+      "accepted": false,
+      "stage": "domain",
+      "code": "compiled-version-differs"
+    },
+    {
+      "name": "unknown native provider",
+      "pluginId": "foreign",
+      "packageId": "semio:foreign",
+      "version": "0.1.0",
+      "cancelled": false,
+      "nowMs": 0,
+      "deadlineMs": 1000,
+      "accepted": false,
+      "stage": "domain",
+      "code": "unknown-native-provider"
+    },
+    {
+      "name": "cancelled before preview",
+      "pluginId": "vcs",
+      "packageId": "semio:vcs",
+      "version": "0.1.0",
+      "cancelled": true,
+      "nowMs": 0,
+      "deadlineMs": 1000,
+      "accepted": false,
+      "stage": "contract",
+      "code": "cancelled-before-preview"
+    },
+    {
+      "name": "deadline at preview",
+      "pluginId": "vcs",
+      "packageId": "semio:vcs",
+      "version": "0.1.0",
+      "cancelled": false,
+      "nowMs": 1000,
+      "deadlineMs": 1000,
+      "accepted": false,
+      "stage": "bounds",
+      "code": "deadline-reached"
+    },
+    {
+      "name": "deadline before preview",
+      "pluginId": "vcs",
+      "packageId": "semio:vcs",
+      "version": "0.1.0",
+      "cancelled": false,
+      "nowMs": 1001,
+      "deadlineMs": 1000,
+      "accepted": false,
+      "stage": "bounds",
+      "code": "deadline-passed"
+    }
   ]
 }

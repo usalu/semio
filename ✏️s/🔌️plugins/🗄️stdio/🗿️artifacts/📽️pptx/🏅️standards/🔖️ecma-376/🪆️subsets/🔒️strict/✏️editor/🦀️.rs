@@ -3,9 +3,9 @@
 //! real window, `🪟️main` (`DocumentWindowKit`), rendering one page per slide and editing the FIRST
 //! text-bearing shape on that slide through the artifact's own `PptxMutation::SetShapeText`.
 
-use crate::artifacts::pptx::schema::mutations::set_shape_text;
-use crate::artifacts::pptx::schema::snapshot::{PptxParagraph, PptxShape, PptxSlide};
-use crate::artifacts::pptx::{PptxMutation, PptxSnapshot, STDIO_PPTX_DOCUMENT_SCHEMA};
+use crate::schema::mutations::set_shape_text;
+use crate::schema::snapshot::{PptxParagraph, PptxShape, PptxSlide};
+use crate::{PptxMutation, PptxSnapshot, STDIO_PPTX_DOCUMENT_SCHEMA};
 use crate::editor::pptx::standards::v_ecma_376::subsets::strict::modes::edit;
 use crate::editor::pptx::standards::v_ecma_376::subsets::strict::modes::edit::windows::main;
 use semio_framework_plugin::{

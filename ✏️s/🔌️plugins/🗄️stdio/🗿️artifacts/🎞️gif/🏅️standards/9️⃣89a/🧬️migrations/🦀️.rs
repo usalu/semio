@@ -9,10 +9,10 @@
 //! slice scope note); `register()` below wires it into `store`'s dialect-migration registry purely
 //! to prove that registry works end-to-end on a real case.
 
-// 🔀️ S-6: `crate::artifacts::gif::schema`/`GifSnapshot` now shim to 89a (canonical) -- this
+// 🔀️ S-6: `crate::schema`/`GifSnapshot` now shim to 89a (canonical) -- this
 // migration explicitly names both standards' own local snapshot types instead.
-use crate::artifacts::gif::standards::v87a::subsets::any::schema::snapshot::{GifColorTable as Gif87aColorTable, GifImage, GifSnapshot as Gif87aSnapshot};
-use crate::artifacts::gif::standards::v89a::subsets::any::schema::snapshot::{GifColorTable as Gif89aColorTable, GifDisposal, GifFrame, GifRgb as Gif89aRgb, GifSnapshot as Gif89aSnapshot, STDIO_GIF89A_DOCUMENT_SCHEMA};
+use crate::standards::v87a::subsets::any::schema::snapshot::{GifColorTable as Gif87aColorTable, GifImage, GifSnapshot as Gif87aSnapshot};
+use crate::standards::v89a::subsets::any::schema::snapshot::{GifColorTable as Gif89aColorTable, GifDisposal, GifFrame, GifRgb as Gif89aRgb, GifSnapshot as Gif89aSnapshot, STDIO_GIF89A_DOCUMENT_SCHEMA};
 
 //#region ColorTableConv
 /// 🔀️ 87a and 89a deliberately declare distinct `GifColorTable` types (per the recipe's "no
@@ -106,19 +106,19 @@ mod tests {
     /// genuine on-disk GIF87a byte shape.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn real_87a_snapshot() -> Gif87aSnapshot {
-        let (palette, indices, _) = crate::artifacts::gif::standards::v87a::engine::quantize_rgba(&sample_rgba_2x2()).expect("quantize");
+        let (palette, indices, _) = crate::standards::v87a::engine::quantize_rgba(&sample_rgba_2x2()).expect("quantize");
         let source = Gif87aSnapshot {
-            schema: crate::artifacts::gif::STDIO_GIF_DOCUMENT_SCHEMA.into(),
+            schema: crate::STDIO_GIF_DOCUMENT_SCHEMA.into(),
             width: 2,
             height: 2,
             gct: None,
             background_color_index: 0,
             pixel_aspect_ratio: 0,
-            images: vec![GifImage { left: 0, top: 0, width: 2, height: 2, interlace: false, lct: Some(crate::artifacts::gif::standards::v87a::engine::color_table_from_bytes(palette, false)), indices }],
+            images: vec![GifImage { left: 0, top: 0, width: 2, height: 2, interlace: false, lct: Some(crate::standards::v87a::engine::color_table_from_bytes(palette, false)), indices }],
         };
-        let encoded = crate::artifacts::gif::standards::v87a::engine::encode_gif(&source).expect("real 87a encode of a small opaque image must succeed");
+        let encoded = crate::standards::v87a::engine::encode_gif(&source).expect("real 87a encode of a small opaque image must succeed");
         assert_eq!(&encoded[0..6], b"GIF87a", "sanity: this really is a GIF87a byte stream");
-        crate::artifacts::gif::standards::v87a::engine::decode_gif(&encoded).expect("real 87a decode of its own encoded bytes must succeed")
+        crate::standards::v87a::engine::decode_gif(&encoded).expect("real 87a decode of its own encoded bytes must succeed")
     }
 
     /// 🎨️ A real 2x2, 4-distinct-opaque-color RGBA image — small enough to hand-inspect, varied
@@ -165,9 +165,9 @@ mod tests {
         let snapshot_87a = real_87a_snapshot();
         let snapshot_89a = migrate_87a_to_89a(&snapshot_87a);
 
-        let encoded_89a = crate::artifacts::gif::standards::v89a::engine::encode_gif(&snapshot_89a).expect("real 89a encode of the migrated snapshot must succeed");
+        let encoded_89a = crate::standards::v89a::engine::encode_gif(&snapshot_89a).expect("real 89a encode of the migrated snapshot must succeed");
         assert_eq!(&encoded_89a[0..6], b"GIF89a", "sanity: this really is a GIF89a byte stream");
-        let redecoded_89a = crate::artifacts::gif::standards::v89a::engine::decode_gif(&encoded_89a).expect("real 89a decode of its own encoded bytes must succeed");
+        let redecoded_89a = crate::standards::v89a::engine::decode_gif(&encoded_89a).expect("real 89a decode of its own encoded bytes must succeed");
         assert_eq!(redecoded_89a.frames.len(), 1);
         assert_eq!(redecoded_89a.frames[0].indices, snapshot_87a.images[0].indices, "indices must still be identical after a real 89a encode/decode round trip");
     }

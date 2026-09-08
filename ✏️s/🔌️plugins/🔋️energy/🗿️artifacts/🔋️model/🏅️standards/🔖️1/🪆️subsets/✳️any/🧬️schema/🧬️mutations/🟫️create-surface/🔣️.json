@@ -5,7 +5,7 @@
   "displayName": "Create Surface",
   "emoji": "🟫️",
   "aggregateVariant": "CreateSurface",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "create-surface",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

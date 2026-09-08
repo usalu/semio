@@ -9,18 +9,18 @@ import { BundleScript, ScriptRouter, runBundleScriptMain } from "@semio-tech/rep
 import { OwnedResidentLedger } from "./🟦️.ts";
 import * as resident from "./🟦️.ts";
 import fixture from "./🧫️fixture/🔣️.json";
-import fixtureSchema from "./📐️schema/🔣️.json";
-import capacitySchema from "./🧬️schema.json";
+import fixtureSchema from "./🧬️schema/🔣️.json";
+const capacitySchema = fixtureSchema;
 import admissionContract from "./📨️admission/🤝️contract.json";
-import admissionContractSchema from "./📨️admission/🧬️schema.json";
+import admissionContractSchema from "./📨️admission/🧬️schema/🔣️.json";
 import admissionFixture from "./📨️admission/🧫️fixture/🔣️.json";
-import admissionFixtureSchema from "./📨️admission/📐️schema/🔣️.json";
+const admissionFixtureSchema = admissionContractSchema;
 
 class TestScript extends BundleScript {
   async run(): Promise<void> {
-    const ajv = new Ajv({ strict: true, allErrors: true }); ajv.addSchema(capacitySchema);
-    assert(ajv.compile(fixtureSchema)(fixture), JSON.stringify(ajv.errors));
-    assert(ajv.compile(admissionContractSchema)(admissionContract), JSON.stringify(ajv.errors)); assert(ajv.compile(admissionFixtureSchema)(admissionFixture), JSON.stringify(ajv.errors));
+    const ajv = new Ajv({ strict: true, allErrors: true }); ajv.addSchema(fixtureSchema);
+    assert(ajv.getSchema(`${fixtureSchema.$id}#/$defs/ResidentFixture`)!(fixture), JSON.stringify(ajv.errors));
+    assert(ajv.addSchema(admissionContractSchema).getSchema(`${admissionContractSchema.$id}#/$defs/Admission`)!(admissionContract), JSON.stringify(ajv.errors)); assert(ajv.getSchema(`${admissionContractSchema.$id}#/$defs/AdmissionFixture`)!(admissionFixture), JSON.stringify(ajv.errors));
     let nativeModel = { consumer: "cell", shell: "source", consumerDrops: 0, shellDrops: 0, aliases: 2, pages: 2, terminal: false };
     const nativeTrace = admissionFixture.nativeOwnership.releaseTrace.map(({ phase }) => {
       nativeModel = produce(nativeModel, draft => {

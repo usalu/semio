@@ -5,7 +5,7 @@
   "displayName": "Delete Construction",
   "emoji": "🧨️",
   "aggregateVariant": "DeleteConstruction",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "delete-construction",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

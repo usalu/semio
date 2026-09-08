@@ -1,9 +1,9 @@
 //! 📍 `move-vertex` — absolute spatial reposition of a vertex (taxonomy's `move` verb — FINAL-state
 //! absolute position, not a relative offset). SMO approved this verb explicitly.
 
-use crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioPoint3;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::mutations::SemioBrepMutation;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
+use crate::standards::v1::subsets::base::schema::geometry::SemioPoint3;
+use crate::standards::v1::subsets::brep::schema::mutations::SemioBrepMutation;
+use crate::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]

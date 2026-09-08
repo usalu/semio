@@ -1,7 +1,8 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/stdio/gltf/2.0/mutation/buffer",
+  "$id": "https://semio.tech/schema/s/stdio/gltf/2.0/buffer/mutations.json",
   "title": "glTF Buffer Mutation",
+  "description": "View over the any subset's mutation leaves (adjacently tagged); every payload is the owning leaf's own schema, referenced, never restated.",
   "oneOf": [
     {
       "type": "object",
@@ -12,10 +13,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "create-buffer"
+          "const": "createBuffer"
         },
         "payload": {
-          "$ref": "💿️buffer/🌱️create/🧬️.schema.json"
+          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/💿️buffer/🌱️create/🧬️schema/🔣️.json"
         }
       }
     },
@@ -28,10 +29,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "create-buffer-view"
+          "const": "createBufferView"
         },
         "payload": {
-          "$ref": "🪟️buffer-view/🌱️create/🧬️.schema.json"
+          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🪟️buffer-view/🌱️create/🧬️schema/🔣️.json"
         }
       }
     },
@@ -44,10 +45,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "delete-buffer"
+          "const": "deleteBuffer"
         },
         "payload": {
-          "$ref": "💿️buffer/🗑️delete/🧬️.schema.json"
+          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/💿️buffer/🗑️delete/🧬️schema/🔣️.json"
         }
       }
     },
@@ -60,10 +61,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "delete-buffer-view"
+          "const": "deleteBufferView"
         },
         "payload": {
-          "$ref": "🪟️buffer-view/🗑️delete/🧬️.schema.json"
+          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🪟️buffer-view/🗑️delete/🧬️schema/🔣️.json"
         }
       }
     },
@@ -76,10 +77,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "move-buffer"
+          "const": "moveBuffer"
         },
         "payload": {
-          "$ref": "💿️buffer/🚚️move/🧬️.schema.json"
+          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/💿️buffer/🚚️move/🧬️schema/🔣️.json"
         }
       }
     },
@@ -92,10 +93,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "move-buffer-view"
+          "const": "moveBufferView"
         },
         "payload": {
-          "$ref": "🪟️buffer-view/🚚️move/🧬️.schema.json"
+          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🪟️buffer-view/🚚️move/🧬️schema/🔣️.json"
         }
       }
     },
@@ -108,10 +109,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "reorder-buffer-views"
+          "const": "reorderBufferViews"
         },
         "payload": {
-          "$ref": "🪟️buffer-view/🔀️reorder/🧬️.schema.json"
+          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🪟️buffer-view/🔀️reorder/🧬️schema/🔣️.json"
         }
       }
     },
@@ -124,10 +125,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "reorder-buffers"
+          "const": "reorderBuffers"
         },
         "payload": {
-          "$ref": "💿️buffer/🔀️reorder/🧬️.schema.json"
+          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/💿️buffer/🔀️reorder/🧬️schema/🔣️.json"
         }
       }
     }

@@ -9,8 +9,8 @@ pub(crate) type IndexedDiffParts<D, T> = (Vec<usize>, Vec<(usize, D)>, Vec<(usiz
 
 use std::collections::{BTreeSet, HashMap, HashSet};
 
-use crate::artifacts::las::schema::snapshot::{LasHeader, LasPoint, LasVlr};
-use crate::artifacts::las::LasSnapshot;
+use crate::schema::snapshot::{LasHeader, LasPoint, LasVlr};
+use crate::LasSnapshot;
 use protocol::command::DiffAlgebra;
 use protocol::DiffCodec;
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
@@ -40,7 +40,7 @@ fn validate_indexed_targets(base_len: usize, removed_indices: &[usize], modified
     }
     Ok(())
 }
-use schema::ArtifactSchema;
+use framework_schema::ArtifactSchema;
 
 //#region 🔖️IndexedAbsorb
 /// 🏷️ Structural, base-free label used only inside [`absorb_indexed_triple`] to simulate the

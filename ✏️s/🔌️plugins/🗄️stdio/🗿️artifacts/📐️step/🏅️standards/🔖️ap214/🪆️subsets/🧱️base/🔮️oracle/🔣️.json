@@ -114,7 +114,7 @@
         {
           "id": "insert-entity",
           "capability": "step-ap214-base-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -134,7 +134,7 @@
         {
           "id": "insert-entity-arg",
           "capability": "step-ap214-base-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -154,7 +154,7 @@
         {
           "id": "remove-entity",
           "capability": "step-ap214-base-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -174,7 +174,7 @@
         {
           "id": "remove-entity-arg",
           "capability": "step-ap214-base-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -194,7 +194,7 @@
         {
           "id": "set-entity-arg",
           "capability": "step-ap214-base-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -214,7 +214,7 @@
         {
           "id": "set-entity-name",
           "capability": "step-ap214-base-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -234,7 +234,7 @@
         {
           "id": "set-file-description",
           "capability": "step-ap214-base-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -254,7 +254,7 @@
         {
           "id": "set-file-name",
           "capability": "step-ap214-base-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -274,7 +274,7 @@
         {
           "id": "set-file-schema",
           "capability": "step-ap214-base-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -294,7 +294,7 @@
         {
           "id": "set-snapshot",
           "capability": "step-ap214-base-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],

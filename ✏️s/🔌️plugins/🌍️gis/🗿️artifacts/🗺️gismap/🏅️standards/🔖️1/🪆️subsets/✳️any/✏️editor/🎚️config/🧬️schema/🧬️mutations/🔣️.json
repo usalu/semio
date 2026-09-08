@@ -1,56 +1,37 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "type": "object",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/gis/gismap/1/any/editor/config/mutation.json",
+  "title": "SGisGismap1AnyEditorConfigMutation",
   "oneOf": [
     {
-      "allOf": [
-        {"$ref": "👁️set-layer-visibility/🧬️schema/🔣️.json#/$defs/payload"},
-        {"type": "object", "required": ["operation"], "properties": {"operation": {"const": "setLayerVisibility"}}}
-      ],
-      "unevaluatedProperties": false
+      "$ref": "./🎥️set-camera/🧬️schema/🔣️.json"
     },
     {
-      "allOf": [
-        {"$ref": "🎥️set-camera/🧬️schema/🔣️.json#/$defs/payload"},
-        {"type": "object", "required": ["operation"], "properties": {"operation": {"const": "setCamera"}}}
-      ],
-      "unevaluatedProperties": false
+      "$ref": "./📏️set-layer-stroke-scale/🧬️schema/🔣️.json"
     },
     {
-      "allOf": [
-        {"$ref": "🖼️set-render-mode/🧬️schema/🔣️.json#/$defs/payload"},
-        {"type": "object", "required": ["operation"], "properties": {"operation": {"const": "setRenderMode"}}}
-      ],
-      "unevaluatedProperties": false
+      "$ref": "./👁️set-layer-visibility/🧬️schema/🔣️.json"
     },
     {
-      "allOf": [
-        {"$ref": "🎨️set-vector-style/🧬️schema/🔣️.json#/$defs/payload"},
-        {"type": "object", "required": ["operation"], "properties": {"operation": {"const": "setVectorStyle"}}}
-      ],
-      "unevaluatedProperties": false
+      "$ref": "./🗣️set-locale/🧬️schema/🔣️.json"
     },
     {
-      "allOf": [
-        {"$ref": "🔽️set-lod-mode/🧬️schema/🔣️.json#/$defs/payload"},
-        {"type": "object", "required": ["operation"], "properties": {"operation": {"const": "setLodMode"}}}
-      ],
-      "unevaluatedProperties": false
+      "$ref": "./🔽️set-lod-mode/🧬️schema/🔣️.json"
     },
     {
-      "allOf": [
-        {"$ref": "📏️set-layer-stroke-scale/🧬️schema/🔣️.json#/$defs/payload"},
-        {"type": "object", "required": ["operation"], "properties": {"operation": {"const": "setLayerStrokeScale"}}}
-      ],
-      "unevaluatedProperties": false
+      "$ref": "./🖼️set-render-mode/🧬️schema/🔣️.json"
     },
     {
-      "allOf": [
-        {"$ref": "🗣️set-locale/🧬️schema/🔣️.json#/$defs/payload"},
-        {"type": "object", "required": ["operation"], "properties": {"operation": {"const": "setLocale"}}}
-      ],
-      "unevaluatedProperties": false
+      "$ref": "./🎨️set-vector-style/🧬️schema/🔣️.json"
     }
   ],
-  "unevaluatedProperties": false
+  "x-semio-mutationKinds": [
+    "set-camera",
+    "set-layer-stroke-scale",
+    "set-layer-visibility",
+    "set-locale",
+    "set-lod-mode",
+    "set-render-mode",
+    "set-vector-style"
+  ]
 }

@@ -1,7 +1,7 @@
 //! ↩️ Inverse for `set-snapshot`.
 
-use crate::artifacts::obj::ObjSnapshot;
-use crate::artifacts::obj::schema::mutations::{ObjMutation, apply_obj_mutation};
+use crate::ObjSnapshot;
+use crate::schema::mutations::{ObjMutation, apply_obj_mutation};
 use protocol::Mutation;
 
 /// ↩️ Inverse of set-snapshot.

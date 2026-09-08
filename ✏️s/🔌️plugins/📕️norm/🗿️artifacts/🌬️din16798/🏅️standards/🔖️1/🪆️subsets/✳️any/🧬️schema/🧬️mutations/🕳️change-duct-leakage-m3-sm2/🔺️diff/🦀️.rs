@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeDuctLeakageM3SM2, base: &Din16798Snapshot) -> protoc
     if base.duct_leakage_m3_s_m2 == payload.new_duct_leakage_m3_s_m2 {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Duct leakage rate is already {}.", payload.new_duct_leakage_m3_s_m2));
     }
-    protocol::MutationOutcome::new(Din16798Diff { duct_leakage_m3_s_m2: Some(payload.new_duct_leakage_m3_s_m2.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(Din16798Diff { duct_leakage_m3_s_m2: Some(payload.new_duct_leakage_m3_s_m2), ..Default::default() })
 }
 //#endregion 🔖️Diff

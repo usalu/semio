@@ -1,18 +1,18 @@
 //! 🧪️ Preserved raster sparse-diff and codec regression laws.
-use crate::artifacts::jpg::schema::diff::JpgDiff;
-use crate::artifacts::jpg::schema::snapshot::{JfifDensityUnits, JfifThumbnail, JpgHuffmanTable, JpgQuantTable, JpgSegment};
-use crate::artifacts::jpg::JpgSnapshot;
+use crate::schema::diff::JpgDiff;
+use crate::schema::snapshot::{JfifDensityUnits, JfifThumbnail, JpgHuffmanTable, JpgQuantTable, JpgSegment};
+use crate::JpgSnapshot;
 use protocol::OpBinary;
 use protocol::{Mutation, MutationDiff, OpText};
 
-use crate::artifacts::jpg::schema::mutations::*;
+use crate::schema::mutations::*;
 
 //#region Tests
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::jpg::schema::diff::{JpgFrameChange, JpgHuffmanTableKey as HKey};
-    use crate::artifacts::jpg::schema::snapshot::{JpgFrameComponent, JpgFrameHeader, JpgHuffmanClass};
+    use crate::schema::diff::{JpgFrameChange, JpgHuffmanTableKey as HKey};
+    use crate::schema::snapshot::{JpgFrameComponent, JpgFrameHeader, JpgHuffmanClass};
     use protocol::command::DiffAlgebra;
 
     //#region 🔖️Fixtures
@@ -312,12 +312,12 @@ mod tests {
                     px[3] = 255;
                 }
                 let snap = JpgSnapshot { width: w, height: h, pixels, ..JpgSnapshot::default() };
-                crate::artifacts::jpg::engine::encode_jpg(&snap).expect("encode synthetic fallback")
+                crate::engine::encode_jpg(&snap).expect("encode synthetic fallback")
             }
         };
-        let decoded = crate::artifacts::jpg::engine::decode_jpg(&bytes).expect("decode fixture");
-        let reencoded = crate::artifacts::jpg::engine::encode_jpg(&decoded).expect("re-encode fixture");
-        let redecoded = crate::artifacts::jpg::engine::decode_jpg(&reencoded).expect("re-decode fixture");
+        let decoded = crate::engine::decode_jpg(&bytes).expect("decode fixture");
+        let reencoded = crate::engine::encode_jpg(&decoded).expect("re-encode fixture");
+        let redecoded = crate::engine::decode_jpg(&reencoded).expect("re-decode fixture");
         // Engine's own EncodeScopeNote: encode always canonicalizes to Annex K tables at a fixed
         // quality — pixel CONTENT (within a lossy MAE budget) is the retained invariant, not the
         // original file's exact tables/segments (documented normal form).

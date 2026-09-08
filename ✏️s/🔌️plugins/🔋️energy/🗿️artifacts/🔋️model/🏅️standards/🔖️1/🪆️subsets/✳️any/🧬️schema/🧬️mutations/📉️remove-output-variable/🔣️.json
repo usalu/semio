@@ -5,7 +5,7 @@
   "displayName": "Remove Output Variable",
   "emoji": "📉️",
   "aggregateVariant": "RemoveOutputVariable",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "remove-output-variable",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

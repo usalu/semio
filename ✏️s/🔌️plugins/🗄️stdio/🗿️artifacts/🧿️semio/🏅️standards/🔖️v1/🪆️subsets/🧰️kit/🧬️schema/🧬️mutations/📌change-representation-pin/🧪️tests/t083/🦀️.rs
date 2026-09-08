@@ -6,9 +6,9 @@
 //! changes WHICH VERSION of a representation the kit is frozen to, never which document or what
 //! for.
 
-use crate::artifacts::semio::standards::v1::subsets::kit::schema::diff::SemioKitDiff;
-use crate::artifacts::semio::standards::v1::subsets::kit::schema::mutations::SemioKitMutation;
-use crate::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
+use crate::standards::v1::subsets::kit::schema::diff::SemioKitDiff;
+use crate::standards::v1::subsets::kit::schema::mutations::SemioKitMutation;
+use crate::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
 use protocol::{Mutation, MutationDiff};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");

@@ -7,7 +7,7 @@ pub fn diff(payload: &super::DisconnectKindCompatibility, base: &Puzzle5dSnapsho
     if !base.kind_compatibility.iter().any(|row| row.source == payload.source && row.target == payload.target) {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("{} not found", "kind-compatibility"), vec![payload.source.clone(), payload.target.clone()]);
     }
-    let values: Vec<_> = base.kind_compatibility.iter().cloned().filter(|row| !(row.source == payload.source && row.target == payload.target)).collect();
+    let values: Vec<_> = base.kind_compatibility.iter().filter(|&row| !(row.source == payload.source && row.target == payload.target)).cloned().collect();
     protocol::MutationOutcome::new(Puzzle5dDiff { kind_compatibility: Some(Puzzle5dKindCompatibilityList { values }), ..Default::default() })
 }
 //#endregion 🔖️Diff

@@ -6,11 +6,11 @@
 //! full-replace escape hatch, which never appears anywhere in this file); each modified record's
 //! own 35 columns get a genuinely sparse per-field patch via [`EpwRecordDiff`].
 
-use crate::artifacts::epw::standards::energyplus::subsets::any::schema::snapshot::{EpwDataPeriods, EpwLocation, EpwRecord, EpwSnapshot, EPW_RECORD_FIELD_COUNT};
+use crate::standards::energyplus::subsets::any::schema::snapshot::{EpwDataPeriods, EpwLocation, EpwRecord, EpwSnapshot, EPW_RECORD_FIELD_COUNT};
 use protocol::command::DiffAlgebra;
 use protocol::DiffCodec;
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
-use schema::ArtifactSchema;
+use framework_schema::ArtifactSchema;
 use std::collections::{BTreeMap, HashMap};
 
 //#region 🔖️RecordDiff
@@ -623,7 +623,7 @@ pub(crate) fn dec_data_periods(s: &str) -> Result<EpwDataPeriods, String> {
             let [name, start_day_of_week, start_date, end_date] = fields.as_slice() else {
                 return Err(format!("data_period: expected 4 fields, got {}", fields.len()));
             };
-            Ok(crate::artifacts::epw::standards::energyplus::subsets::any::schema::snapshot::EpwDataPeriod { name: dec_str(name)?, start_day_of_week: dec_str(start_day_of_week)?, start_date: dec_str(start_date)?, end_date: dec_str(end_date)? })
+            Ok(crate::standards::energyplus::subsets::any::schema::snapshot::EpwDataPeriod { name: dec_str(name)?, start_day_of_week: dec_str(start_day_of_week)?, start_date: dec_str(start_date)?, end_date: dec_str(end_date)? })
         })
         .collect::<Result<Vec<_>, String>>()?;
     Ok(EpwDataPeriods { records_per_hour: parse_usize(records_per_hour)? as u32, periods })

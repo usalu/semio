@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeWallR, base: &En1998Snapshot) -> protocol::MutationO
     if base.wall_r == payload.new_wall_r {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Wall behaviour factor r is already {}.", payload.new_wall_r));
     }
-    protocol::MutationOutcome::new(En1998Diff { wall_r: Some(payload.new_wall_r.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1998Diff { wall_r: Some(payload.new_wall_r), ..Default::default() })
 }
 //#endregion 🔖️Diff

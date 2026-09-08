@@ -1,8 +1,8 @@
 //! 🧬️ BinaryMutation — document mutation dispatch. Every variant's `diff()`/`inverse()` is
 //! handcrafted directly against `BinaryDiff`/`ByteSplice` -- no apply-and-capture.
 
-use crate::artifacts::binary::schema::diff::{diff_set_snapshot, BinaryDiff, ByteSplice};
-use crate::artifacts::binary::BinarySnapshot;
+use crate::schema::diff::{diff_set_snapshot, BinaryDiff, ByteSplice};
+use crate::BinarySnapshot;
 use protocol::Mutation;
 use protocol::{OpBinary, OpText};
 

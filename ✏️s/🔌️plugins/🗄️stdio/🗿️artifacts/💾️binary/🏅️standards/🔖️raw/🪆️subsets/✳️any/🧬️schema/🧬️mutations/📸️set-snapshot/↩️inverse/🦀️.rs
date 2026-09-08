@@ -1,7 +1,7 @@
 //! ↩️ Inverse for `set-snapshot`.
 
-use crate::artifacts::binary::BinarySnapshot;
-use crate::artifacts::binary::schema::mutations::{BinaryMutation, apply_binary_mutation};
+use crate::BinarySnapshot;
+use crate::schema::mutations::{BinaryMutation, apply_binary_mutation};
 use protocol::Mutation;
 
 /// ↩️ Inverse of set-snapshot.

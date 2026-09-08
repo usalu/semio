@@ -4,7 +4,7 @@ vocabulary.
 `s.reasoning.wires` is a semio-NATIVE argument board: its `.wires.dsl.semio` body is hex-encoded
 `DslValue`, and nothing third-party reads it. The reference is therefore a second IMPLEMENTATION,
 written from this subset's own committed `../../🧬️schema/📸️snapshot/🔣️.json` and each mutation's
-`🧬️.schema.json`, and from
+`🧬️schema/🔣️.json`, and from
 `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-DIRECT-LEAF-OVERHAUL/📓️taxonomy.md`'s
 `create`/`delete`/`move`/`resize`/`change`/`edit`/`set`/`connect`/`disconnect` verb entries. It
 imports nothing from the Rust it judges and transliterates none of it.

@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/energy/model/1/any/mutation/remove-electrical-load-center-pv.json",
+  "title": "RemoveElectricalLoadCenterPv",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "pvId"
+  ],
+  "properties": {
+    "id": {
+      "type": "integer"
+    },
+    "pvId": {
+      "type": "integer"
+    }
+  }
+}

@@ -7,6 +7,7 @@
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/**/*.rs",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🧫️fixtures/🧱️binary-gate.json",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🧫️fixtures/🔣️first-party-codecs.json",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/**/🧬️schema/🔣️.json",
       "{projectRoot}/**/*"
     ]
   },
@@ -132,6 +133,28 @@
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts canonical-checkpoint-resource-native-check"
+      }
+    },
+    "schema-mirror": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [
+        "build"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts schema-mirror"
+      }
+    },
+    "schema-mirror-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [
+        "build"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts schema-mirror --check"
       }
     },
     "dev": {

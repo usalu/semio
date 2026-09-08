@@ -5,7 +5,7 @@
   "displayName": "Change Fenestration Area",
   "emoji": "🟥️",
   "aggregateVariant": "ChangeFenestrationArea",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-fenestration-area",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

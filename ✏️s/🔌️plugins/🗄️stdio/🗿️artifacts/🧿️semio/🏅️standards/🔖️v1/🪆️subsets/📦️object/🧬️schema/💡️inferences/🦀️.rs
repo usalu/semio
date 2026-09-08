@@ -11,8 +11,8 @@
 //! composition census (which children are present) plus the object's own real `transform.
 //! translation`, never a fabricated geometry bounding box.
 
-use crate::artifacts::semio::standards::v1::subsets::object::schema::snapshot::SemioObjectSnapshot;
-use schema::ArtifactSchema;
+use crate::standards::v1::subsets::object::schema::snapshot::SemioObjectSnapshot;
+use framework_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 
 use super::composition::{compute_semio_object_composition, SemioObjectComposition};
@@ -60,7 +60,7 @@ impl protocol::InferenceSpec<SemioObjectSnapshot> for SemioObjectInference {
 //#region 🔖️ArtifactInferrer
 /// 💡️ No `InferredField`s here (a 3-flag child-presence census + one transform-field read is O(1))
 /// — the default `infer_cached` passthrough (`ArtifactInferrer::infer_cached`) is exact.
-impl ArtifactInferrer for crate::artifacts::semio::standards::v1::subsets::object::schema::SemioObjectBuilder {
+impl ArtifactInferrer for crate::standards::v1::subsets::object::schema::SemioObjectBuilder {
     type Snapshot = SemioObjectSnapshot;
     type Inference = SemioObjectInference;
 }
@@ -70,10 +70,10 @@ impl ArtifactInferrer for crate::artifacts::semio::standards::v1::subsets::objec
 /// 💡️ Registers `s.stdio.semio.object.inference`'s facet leaves into the OS-wide inference catalog
 /// — call once at plugin init, alongside `semio_object_artifact_schema_descriptor`'s registration.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn semio_object_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
-    schema::ArtifactInferenceDescriptor {
+pub fn semio_object_artifact_inference_descriptor() -> framework_schema::ArtifactInferenceDescriptor {
+    framework_schema::ArtifactInferenceDescriptor {
         id: "s.stdio.semio.object.inference",
-        inference: schema::FacetLeaves {
+        inference: framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),

@@ -1,6 +1,6 @@
 //! ⚙️ Shared application and inversion of TiffMutation.
-use crate::artifacts::tiff::schema::{diff::TiffDiff, mutations::TiffMutation};
-use crate::artifacts::tiff::TiffSnapshot;
+use crate::schema::{diff::TiffDiff, mutations::TiffMutation};
+use crate::TiffSnapshot;
 
 //#region Operations
 pub fn apply_tiff_mutation(snapshot: &mut TiffSnapshot, mutation: &TiffMutation) -> protocol::MutationOutcome<TiffDiff> {

@@ -5,7 +5,7 @@
   "displayName": "Create Shw System",
   "emoji": "🛀️",
   "aggregateVariant": "CreateShwSystem",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "create-shw-system",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

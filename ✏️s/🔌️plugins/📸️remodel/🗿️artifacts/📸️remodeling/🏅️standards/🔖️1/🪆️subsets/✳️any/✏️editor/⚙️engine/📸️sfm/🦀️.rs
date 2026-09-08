@@ -2353,7 +2353,6 @@ impl IncrementalSfm {
     /// 🧵️ Triangulates every not-yet-triangulated track that (a) has an observation in `frame` and (b) is
     /// observed by at least 2 registered cameras overall and meets [`SfmConfig::min_track_length`], via
     /// [`triangulate_and_validate`].
-
     fn triangulate_track(&mut self, track_id: usize, required_frame: Option<usize>) {
         if self.points.contains_key(&track_id) {
             return;

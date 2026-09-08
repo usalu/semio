@@ -94,7 +94,7 @@
         {
           "id": "insert-alternate-content",
           "capability": "docx-ecma-376-strict-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -114,7 +114,7 @@
         {
           "id": "insert-vml-part",
           "capability": "docx-ecma-376-strict-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -134,7 +134,7 @@
         {
           "id": "remove-alternate-content",
           "capability": "docx-ecma-376-strict-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -154,7 +154,7 @@
         {
           "id": "remove-conformance-attribute",
           "capability": "docx-ecma-376-strict-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -174,7 +174,7 @@
         {
           "id": "remove-vml-part",
           "capability": "docx-ecma-376-strict-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -194,7 +194,7 @@
         {
           "id": "set-conformance-attribute",
           "capability": "docx-ecma-376-strict-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -214,7 +214,7 @@
         {
           "id": "set-main-namespace",
           "capability": "docx-ecma-376-strict-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -234,7 +234,7 @@
         {
           "id": "set-relationship-base",
           "capability": "docx-ecma-376-strict-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -254,7 +254,7 @@
         {
           "id": "set-snapshot",
           "capability": "docx-ecma-376-strict-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],

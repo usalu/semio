@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeTOpC, base: &Din16798Snapshot) -> protocol::Mutation
     if base.t_op_c == payload.new_t_op_c {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Operative temperature is already {}.", payload.new_t_op_c));
     }
-    protocol::MutationOutcome::new(Din16798Diff { t_op_c: Some(payload.new_t_op_c.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(Din16798Diff { t_op_c: Some(payload.new_t_op_c), ..Default::default() })
 }
 //#endregion 🔖️Diff

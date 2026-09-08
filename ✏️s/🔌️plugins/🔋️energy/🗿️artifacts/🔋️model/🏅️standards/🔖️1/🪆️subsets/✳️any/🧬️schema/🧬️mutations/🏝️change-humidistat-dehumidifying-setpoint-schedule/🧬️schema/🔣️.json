@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/energy/model/1/any/mutation/change-humidistat-dehumidifying-setpoint-schedule.json",
+  "title": "ChangeHumidistatDehumidifyingSetpointSchedule",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newDehumidifyingSetpointScheduleId"
+  ],
+  "properties": {
+    "id": {
+      "type": "integer"
+    },
+    "newDehumidifyingSetpointScheduleId": {
+      "type": "integer"
+    }
+  }
+}

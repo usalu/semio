@@ -6,7 +6,7 @@ import Ajv from "ajv";
 export function testBuiltTreeRetirementFixture(): void {
   const read = (path: string) => readFileSync(new URL(path, import.meta.url), "utf8");
   const fixture = JSON.parse(read("./🧫️fixture/🔣️.json"));
-  const validate = new Ajv({ strict: true, allErrors: true }).compile(JSON.parse(read("./🧬️schema.json")));
+  const validate = new Ajv({ strict: true, allErrors: true }).compile(JSON.parse(read("./🧬️schema/🔣️.json")));
   assert(validate(fixture), JSON.stringify(validate.errors));
   const valueBytes = (value: unknown): number => typeof value === "string" ? Buffer.byteLength(value) : Array.isArray(value) ? value.reduce((sum, item) => sum + valueBytes(item), 0) : value && typeof value === "object" ? Object.entries(value).reduce((sum, [key, item]) => sum + Buffer.byteLength(key) + valueBytes(item), 0) : 0;
   const binding = fixture.binding;

@@ -1,7 +1,7 @@
 //! 🧬️ EpwArtifact schema — full artifact state, mirrors `EpwSnapshot` field for field.
 
-use crate::artifacts::epw::standards::energyplus::subsets::any::schema::snapshot::{EpwDataPeriods, EpwLocation, EpwRecord, EpwSnapshot};
-use schema::ArtifactSchema;
+use crate::standards::energyplus::subsets::any::schema::snapshot::{EpwDataPeriods, EpwLocation, EpwRecord, EpwSnapshot};
+use framework_schema::ArtifactSchema;
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
@@ -89,31 +89,31 @@ impl EpwArtifact {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn epw_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
-    schema::ArtifactSchemaDescriptor {
+pub fn epw_artifact_schema_descriptor() -> framework_schema::ArtifactSchemaDescriptor {
+    framework_schema::ArtifactSchemaDescriptor {
         id: "s.stdio.epw",
-        artifact: schema::FacetLeaves {
+        artifact: framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),
             json_schema: include_str!("🔣️.json"),
             proto: include_str!("🛰️.proto"),
         },
-        snapshot: schema::FacetLeaves {
+        snapshot: framework_schema::FacetLeaves {
             rust: include_str!("📸️snapshot/🦀️.rs"),
             typescript: include_str!("📸️snapshot/🟦️.ts"),
             graphql: include_str!("📸️snapshot/🔗️.graphql"),
             json_schema: include_str!("📸️snapshot/🔣️.json"),
             proto: include_str!("📸️snapshot/🛰️.proto"),
         },
-        diff: schema::FacetLeaves {
+        diff: framework_schema::FacetLeaves {
             rust: include_str!("🔺️diff/🦀️.rs"),
             typescript: include_str!("🔺️diff/🟦️.ts"),
             graphql: include_str!("🔺️diff/🔗️.graphql"),
             json_schema: include_str!("🔺️diff/🔣️.json"),
             proto: include_str!("🔺️diff/🛰️.proto"),
         },
-        mutations: schema::FacetLeaves {
+        mutations: framework_schema::FacetLeaves {
             rust: include_str!("🧬️mutations/🦀️.rs"),
             typescript: include_str!("🧬️mutations/🟦️.ts"),
             graphql: include_str!("🧬️mutations/🔗️.graphql"),
@@ -124,9 +124,9 @@ pub fn epw_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
 }
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use crate::artifacts::epw::standards::energyplus::subsets::any::schema::diff::EpwDiff;
-    use crate::artifacts::epw::standards::energyplus::subsets::any::schema::mutations::{apply_epw_mutation, EpwMutation};
-    use crate::artifacts::epw::standards::energyplus::subsets::any::schema::snapshot::EpwSnapshot;
+    use crate::standards::energyplus::subsets::any::schema::diff::EpwDiff;
+    use crate::standards::energyplus::subsets::any::schema::mutations::{apply_epw_mutation, EpwMutation};
+    use crate::standards::energyplus::subsets::any::schema::snapshot::EpwSnapshot;
     use semio_framework_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
@@ -168,8 +168,8 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use crate::artifacts::epw::standards::energyplus::subsets::any::io;
-    use crate::artifacts::epw::standards::energyplus::subsets::any::schema::snapshot::{EpwSnapshot, STDIO_EPW_DOCUMENT_SCHEMA};
+    use crate::standards::energyplus::subsets::any::io;
+    use crate::standards::energyplus::subsets::any::schema::snapshot::{EpwSnapshot, STDIO_EPW_DOCUMENT_SCHEMA};
     use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     #[derive(Clone, Debug, Default)]

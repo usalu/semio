@@ -1,8 +1,8 @@
 //! ✏️ `svg` edit (any) — Main window: real `ImageWindowKit`
 //! render of the current document (editable variant).
 
-use crate::artifacts::svg::standards::v1_1::subsets::base::schema::snapshot::write_svg_xml;
-use crate::artifacts::svg::standards::v1_1::subsets::base::schema::snapshot::SvgSnapshot;
+use crate::standards::v1_1::subsets::base::schema::snapshot::write_svg_xml;
+use crate::standards::v1_1::subsets::base::schema::snapshot::SvgSnapshot;
 use semio_framework_plugin::app::{ImageView, ImageWindowKit};
 use semio_framework_plugin::{BuiltNode, WindowKindDefinition, WindowKit};
 

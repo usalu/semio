@@ -7,6 +7,6 @@ use crate::artifacts::en1992::En1992Snapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(_payload: &ChangeLiquidESMpa, base: &En1992Snapshot) -> Vec<En1992Mutation> {
-    vec![En1992Mutation::ChangeLiquidESMpa(ChangeLiquidESMpa { new_liquid_e_s_mpa: base.liquid_e_s_mpa.clone() })]
+    vec![En1992Mutation::ChangeLiquidESMpa(ChangeLiquidESMpa { new_liquid_e_s_mpa: base.liquid_e_s_mpa })]
 }
 //#endregion 🔖️Inverse

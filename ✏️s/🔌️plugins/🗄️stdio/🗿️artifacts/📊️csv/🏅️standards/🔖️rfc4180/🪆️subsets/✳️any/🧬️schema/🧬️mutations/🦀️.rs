@@ -2,9 +2,9 @@
 //! (constructs the sparse `CsvDiff` directly — apply-and-capture is banned); `inverse()` is
 //! handcrafted per variant, index-aware, reading the pre-state it needs from `base`.
 
-use crate::artifacts::csv::schema::diff::{dec_record, dec_str, diff_set_snapshot, enc_record, enc_str, split_top_level, strip_brackets, CsvDiff, CsvFieldDiff, CsvRecordAdded, CsvRecordDiff, CsvRecordModified, CsvRecordsDiff};
-use crate::artifacts::csv::schema::snapshot::{CsvField, CsvRecord};
-use crate::artifacts::csv::CsvSnapshot;
+use crate::schema::diff::{dec_record, dec_str, diff_set_snapshot, enc_record, enc_str, split_top_level, strip_brackets, CsvDiff, CsvFieldDiff, CsvRecordAdded, CsvRecordDiff, CsvRecordModified, CsvRecordsDiff};
+use crate::schema::snapshot::{CsvField, CsvRecord};
+use crate::CsvSnapshot;
 use protocol::OpBinary;
 use protocol::{Mutation, MutationDiff, OpText};
 
@@ -305,7 +305,7 @@ impl OpBinary for CsvMutation {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::csv::schema::snapshot::CsvField;
+    use crate::schema::snapshot::CsvField;
     use protocol::command::DiffAlgebra;
 
     //#region 🔖️Fixtures
@@ -543,7 +543,7 @@ mod tests {
     /// nested positional-tuple `snapshot-value` production.
     #[semio_framework_async_macros::async_test]
     async fn ops_grammar_conformance_law() {
-        let grammar_text = crate::artifacts::csv::schema::mutations::text::COMPONENT_GRAMMAR_SEMIO;
+        let grammar_text = crate::schema::mutations::text::COMPONENT_GRAMMAR_SEMIO;
         let grammar = dsl::parse_grammar(grammar_text).expect("parse mutations grammar");
         let recognizer = dsl::Recognizer::compile(&grammar);
 

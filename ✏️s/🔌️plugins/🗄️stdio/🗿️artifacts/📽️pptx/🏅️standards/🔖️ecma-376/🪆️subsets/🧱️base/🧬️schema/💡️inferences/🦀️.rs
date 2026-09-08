@@ -4,8 +4,8 @@
 //! slug dirs directly — `🦀️.rs` is the sole mounting mechanism, same as mutations); each named
 //! inference gets its own `<emoji><slug>/` child (currently: `🧾outline/`).
 
-use crate::artifacts::pptx::PptxSnapshot;
-use schema::ArtifactSchema;
+use crate::PptxSnapshot;
+use framework_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 
 use super::outline::PptxOutline;
@@ -41,7 +41,7 @@ impl protocol::InferenceSpec<PptxSnapshot> for PptxInference {
 //#endregion 🔖️Inference
 
 //#region 🔖️ArtifactInferrer
-impl ArtifactInferrer for crate::artifacts::pptx::standards::v_ecma_376::subsets::base::schema::PptxBuilder {
+impl ArtifactInferrer for crate::standards::v_ecma_376::subsets::base::schema::PptxBuilder {
     type Snapshot = PptxSnapshot;
     type Inference = PptxInference;
 }
@@ -51,10 +51,10 @@ impl ArtifactInferrer for crate::artifacts::pptx::standards::v_ecma_376::subsets
 /// 💡️ Registers `s.stdio.pptx.inference`'s facet leaves into the OS-wide inference catalog —
 /// call once at plugin init, alongside `pptx_artifact_schema_descriptor`'s registration.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn pptx_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
-    schema::ArtifactInferenceDescriptor {
+pub fn pptx_artifact_inference_descriptor() -> framework_schema::ArtifactInferenceDescriptor {
+    framework_schema::ArtifactInferenceDescriptor {
         id: "s.stdio.pptx.inference",
-        inference: schema::FacetLeaves {
+        inference: framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),

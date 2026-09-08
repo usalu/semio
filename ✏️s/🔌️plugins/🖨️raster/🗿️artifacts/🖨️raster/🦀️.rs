@@ -526,7 +526,6 @@ pub struct RasterImageAsset {
     pub data: Vec<u8>,
 }
 
-/// 📸️ Persisted raster snapshot — defined in `📸️snapshot/🧬️schema`, re-exported here.
 //#endregion 🔖️Types
 
 //#region 🧩️Composition
@@ -543,7 +542,7 @@ pub struct RasterImageAsset {
 /// `drawing_snapshot_from_dwg`, `🚪️io/🦀️.rs`). That already satisfies "consumes/reads drawing
 /// content but doesn't own it" — no `ArtifactLink` was needed because there was no persisted/duplicated
 /// drawing field to convert.
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
+use semio_s_artifact_stdio_semio::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
 
 pub type RasterAssetChild = store::ArtifactChild<SemioImageSnapshot>;
 
@@ -631,6 +630,7 @@ pub struct RasterLayerPatch {
 
 pub use crate::artifacts::raster::schema::diff::RasterDiff;
 pub use crate::artifacts::raster::schema::mutations::RasterMutation;
+/// 📸️ Persisted raster snapshot — defined in `📸️snapshot/🧬️schema`, re-exported here.
 pub use crate::artifacts::raster::schema::snapshot::RasterSnapshot;
 
 //#region 🔖️Dialect
@@ -693,7 +693,7 @@ pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
 pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
     use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
 
-    let rows: &[(&str, &str, &str, &[(&str, &str)], Option<(&str, &str)>)] = &[
+    let rows: &[semio_framework_plugin::ArtifactCapabilityRow<'_>] = &[
         ("s.raster.raster.standard.v1", "standard", "1", &[], None),
         ("s.raster.raster.standard.v1.profile.any", "profile", "any", &[], None),
         ("s.raster.raster.schema.artifact", "schema", "s.raster.raster", &[("schema", "s.raster.raster")], None),

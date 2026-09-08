@@ -8,9 +8,9 @@
 //! collection. No `snapshot: Option<SemioTextSnapshot>` full-replace slot anywhere — whole-
 //! document replace is `ArtifactStore::reset`, outside history.
 
-use crate::artifacts::semio::standards::v1::subsets::text::schema::snapshot::{SemioTextRun, SemioTextSnapshot};
+use crate::standards::v1::subsets::text::schema::snapshot::{SemioTextRun, SemioTextSnapshot};
 use protocol::MutationDiff;
-use schema::ArtifactSchema;
+use framework_schema::ArtifactSchema;
 
 //#region 🔖️RunList
 /// 📋 Whole-list wrapper for the `runs` field diff — every mutation triad rebuilds the full
@@ -98,16 +98,16 @@ fn dec_str(s: &str) -> Result<String, String> {
     String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
 }
 
-use crate::artifacts::semio::standards::v1::subsets::base::schema::triples::{split_top_level, strip_brackets};
-use crate::artifacts::semio::standards::v1::subsets::text::schema::snapshot::SemioTextMark;
+use crate::standards::v1::subsets::base::schema::triples::{split_top_level, strip_brackets};
+use crate::standards::v1::subsets::text::schema::snapshot::SemioTextMark;
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_mark_kind(k: crate::artifacts::semio::standards::v1::subsets::text::schema::snapshot::SemioTextMarkKind) -> char {
-    crate::artifacts::semio::standards::v1::subsets::text::schema::snapshot::enc_mark_kind(k)
+fn enc_mark_kind(k: crate::standards::v1::subsets::text::schema::snapshot::SemioTextMarkKind) -> char {
+    crate::standards::v1::subsets::text::schema::snapshot::enc_mark_kind(k)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_mark_kind(s: &str) -> Result<crate::artifacts::semio::standards::v1::subsets::text::schema::snapshot::SemioTextMarkKind, String> {
-    crate::artifacts::semio::standards::v1::subsets::text::schema::snapshot::dec_mark_kind(s)
+fn dec_mark_kind(s: &str) -> Result<crate::standards::v1::subsets::text::schema::snapshot::SemioTextMarkKind, String> {
+    crate::standards::v1::subsets::text::schema::snapshot::dec_mark_kind(s)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn enc_mark(m: &SemioTextMark) -> String {
@@ -172,7 +172,7 @@ impl protocol::DiffCodec for SemioTextDiff {
     /// chain is needed.
     fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const DIFF_BINARY_FORMAT: u8 = 1;
-        use crate::artifacts::semio::standards::v1::subsets::text::schema::snapshot::write_run;
+        use crate::standards::v1::subsets::text::schema::snapshot::write_run;
         let presence: u8 = if self.runs.is_some() { 0b0000_0001 } else { 0 };
         let mut out = vec![DIFF_BINARY_FORMAT, presence];
         if let Some(list) = &self.runs {
@@ -185,7 +185,7 @@ impl protocol::DiffCodec for SemioTextDiff {
     }
     fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         const DIFF_BINARY_FORMAT: u8 = 1;
-        use crate::artifacts::semio::standards::v1::subsets::text::schema::snapshot::read_run;
+        use crate::standards::v1::subsets::text::schema::snapshot::read_run;
         if bytes.len() < 2 {
             return Err(protocol::ProtocolError::Malformed { what: "diff header", offset: 0, detail: "truncated (need format+presence)".to_string() });
         }
@@ -215,7 +215,7 @@ impl protocol::DiffCodec for SemioTextDiff {
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_diff_cases() -> Vec<SemioTextDiff> {
-    use crate::artifacts::semio::standards::v1::subsets::text::schema::snapshot::{demo_text_snapshot, SemioTextMarkKind};
+    use crate::standards::v1::subsets::text::schema::snapshot::{demo_text_snapshot, SemioTextMarkKind};
     vec![
         SemioTextDiff::default(),
         SemioTextDiff { runs: Some(SemioTextRunList { values: demo_text_snapshot().runs }) },
@@ -228,7 +228,7 @@ pub(crate) fn demo_diff_cases() -> Vec<SemioTextDiff> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::semio::standards::v1::subsets::text::schema::snapshot::{SemioTextMarkKind, STDIO_SEMIOTEXT_DOCUMENT_SCHEMA};
+    use crate::standards::v1::subsets::text::schema::snapshot::{SemioTextMarkKind, STDIO_SEMIOTEXT_DOCUMENT_SCHEMA};
     use protocol::DiffCodec;
 
     #[semio_framework_async_macros::async_test]

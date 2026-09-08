@@ -1,7 +1,7 @@
 //! 💾️ Direct replace-pixel-data binary codec.
 use super::*;
 use super::text;
-use crate::artifacts::bmp::schema::mutations::binary::Entry;
+use crate::schema::mutations::binary::Entry;
 pub const BINARY_TAG: u8 = 6;
 pub const CODEC: Entry = Entry { tag: BINARY_TAG, encode, decode };
 

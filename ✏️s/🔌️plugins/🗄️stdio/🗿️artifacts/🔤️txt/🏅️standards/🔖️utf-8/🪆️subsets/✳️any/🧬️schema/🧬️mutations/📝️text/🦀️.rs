@@ -1,6 +1,6 @@
 //! 📝️ Generic framing and descriptor roster for the transparent TxtMutation.
 //#region 🔖️Registry
-use crate::artifacts::txt::schema::mutations::{TxtMutation, insert_line, remove_line, set_line, set_line_ending, set_trailing_newline};
+use crate::schema::mutations::{TxtMutation, insert_line, remove_line, set_line, set_line_ending, set_trailing_newline};
 pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 struct TextCodec {

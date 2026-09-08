@@ -5,7 +5,7 @@
   "displayName": "Delete Fault",
   "emoji": "🩹️",
   "aggregateVariant": "DeleteFault",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "delete-fault",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

@@ -7,6 +7,6 @@ use crate::artifacts::en1998::En1998Snapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(_payload: &ChangeRetrofitRKKn, base: &En1998Snapshot) -> Vec<En1998Mutation> {
-    vec![En1998Mutation::ChangeRetrofitRKKn(ChangeRetrofitRKKn { new_retrofit_r_k_kn: base.retrofit_r_k_kn.clone() })]
+    vec![En1998Mutation::ChangeRetrofitRKKn(ChangeRetrofitRKKn { new_retrofit_r_k_kn: base.retrofit_r_k_kn })]
 }
 //#endregion 🔖️Inverse

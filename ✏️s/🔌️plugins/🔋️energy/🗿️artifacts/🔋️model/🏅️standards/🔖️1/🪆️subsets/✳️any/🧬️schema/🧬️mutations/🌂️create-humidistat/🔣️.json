@@ -5,7 +5,7 @@
   "displayName": "Create Humidistat",
   "emoji": "🌂️",
   "aggregateVariant": "CreateHumidistat",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "create-humidistat",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

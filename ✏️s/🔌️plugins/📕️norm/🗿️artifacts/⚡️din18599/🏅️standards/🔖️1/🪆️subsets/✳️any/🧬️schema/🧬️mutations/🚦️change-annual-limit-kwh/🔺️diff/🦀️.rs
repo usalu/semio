@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeAnnualLimitKwh, base: &Din18599Snapshot) -> protocol
     if base.annual_limit_kwh == payload.new_annual_limit_kwh {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "Annual limit kwh already has this value.");
     }
-    protocol::MutationOutcome::new(Din18599Diff { annual_limit_kwh: Some(payload.new_annual_limit_kwh.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(Din18599Diff { annual_limit_kwh: Some(payload.new_annual_limit_kwh), ..Default::default() })
 }
 //#endregion 🔖️Diff

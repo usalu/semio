@@ -1,0 +1,24 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/mathematical/equation/1/geometry/mutation/insert-point.json",
+  "title": "InsertPoint",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "index",
+    "x",
+    "y"
+  ],
+  "properties": {
+    "index": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "x": {
+      "type": "number"
+    },
+    "y": {
+      "type": "number"
+    }
+  }
+}

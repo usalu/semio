@@ -1,0 +1,32 @@
+[package]
+name = "semio-s-artifact-stdio-pdf"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Stdio pdf artifact"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[features]
+default = []
+component-app-assembly = ["dep:semio-framework-ui-contract"]
+
+[dependencies]
+pack = { workspace = true }
+semio-framework-hash = { workspace = true }
+semio-framework-os-kernel = { workspace = true }
+semio-framework-plugin = { workspace = true }
+semio-framework-schema = { workspace = true }
+semio-framework-ui-contract = { workspace = true, optional = true }
+semio-framework-value-derive = { workspace = true }
+semio-s-artifact-stdio-binary = { workspace = true }
+semio-s-artifact-stdio-contract = { workspace = true }
+semio-s-artifact-stdio-deflate = { workspace = true }
+serde_json = { workspace = true }
+
+[dev-dependencies]
+semio-framework-async-macros = { workspace = true }

@@ -2,13 +2,13 @@
 //! (constructs the sparse `StepDiff` directly — apply-and-capture is banned by the recipe) and
 //! `inverse()` is handcrafted per variant, key/index-aware.
 
-use crate::artifacts::step::schema::diff::{
+use crate::schema::diff::{
     dec_entity, dec_entity_bin, dec_file_description, dec_file_description_bin, dec_file_name, dec_file_name_bin, dec_file_schema, dec_file_schema_bin, dec_step_snapshot, dec_step_snapshot_bin, dec_str, dec_value, dec_value_bin, diff_set_snapshot,
     enc_entity, enc_entity_bin, enc_file_description, enc_file_description_bin, enc_file_name, enc_file_name_bin, enc_file_schema, enc_file_schema_bin, enc_step_snapshot, enc_step_snapshot_bin, enc_str, enc_value, enc_value_bin, parse_u64,
     parse_usize, read_str_bin, write_str_bin, StepArgAdded, StepArgModified, StepArgsDiff, StepDiff, StepEntitiesDiff, StepEntityAdded, StepEntityDiff, StepEntityModified,
 };
-use crate::artifacts::step::schema::snapshot::{StepEntity, StepFileDescription, StepFileName, StepFileSchema, StepValue};
-use crate::artifacts::step::StepSnapshot;
+use crate::schema::snapshot::{StepEntity, StepFileDescription, StepFileName, StepFileSchema, StepValue};
+use crate::StepSnapshot;
 use protocol::OpBinary;
 use protocol::{Mutation, MutationDiff, OpText};
 
@@ -372,10 +372,10 @@ impl OpBinary for StepMutation {
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_mutation_cases() -> Vec<StepMutation> {
-    use crate::artifacts::step::schema::snapshot::{StepFileDescription, StepFileName, StepFileSchema, StepValue as SV};
+    use crate::schema::snapshot::{StepFileDescription, StepFileName, StepFileSchema, StepValue as SV};
     let demo_entity = |id: u64, name: &str, args: Vec<StepValue>| StepEntity { id, name: name.into(), args, complex: Vec::new() };
     vec![
-        StepMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: crate::artifacts::step::engine::demo_step_snapshot() }),
+        StepMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: crate::engine::demo_step_snapshot() }),
         StepMutation::SetFileDescription(set_file_description::SetFileDescription { file_description: StepFileDescription { description: vec!["demo".into()], implementation_level: "2;1".into() } }),
         StepMutation::SetFileName(set_file_name::SetFileName {
             file_name: StepFileName {
@@ -420,7 +420,7 @@ pub(crate) fn demo_mutation_cases() -> Vec<StepMutation> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::step::schema::snapshot::{StepHeader, StepValue as SV};
+    use crate::schema::snapshot::{StepHeader, StepValue as SV};
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn entity(id: u64, name: &str, args: Vec<StepValue>) -> StepEntity {
@@ -430,7 +430,7 @@ mod tests {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn base_snapshot() -> StepSnapshot {
         StepSnapshot {
-            schema: crate::artifacts::step::STDIO_STEP_DOCUMENT_SCHEMA.into(),
+            schema: crate::STDIO_STEP_DOCUMENT_SCHEMA.into(),
             header: StepHeader::default(),
             entities: vec![entity(1, "CARTESIAN_POINT", vec![SV::String("".into()), SV::Real(1.0)]), entity(2, "DIRECTION", vec![SV::Unset])],
         }

@@ -1,7 +1,7 @@
 //! 🧬️ ObjArtifact schema — full artifact state, mirrors `ObjSnapshot` field-for-field.
 
-use crate::artifacts::obj::ObjSnapshot;
-use schema::ArtifactSchema;
+use crate::ObjSnapshot;
+use framework_schema::ArtifactSchema;
 
 //#region 🔖️Artifact
 /// 🧬️ Full `stdio.obj` artifact state.
@@ -13,34 +13,34 @@ pub struct ObjArtifact {
     pub schema: String,
     #[state(artifact)]
     #[value(default)]
-    pub vertices: Vec<crate::artifacts::obj::schema::snapshot::ObjVertex>,
+    pub vertices: Vec<crate::schema::snapshot::ObjVertex>,
     #[state(artifact)]
     #[value(default)]
-    pub texcoords: Vec<crate::artifacts::obj::schema::snapshot::ObjTexCoord>,
+    pub texcoords: Vec<crate::schema::snapshot::ObjTexCoord>,
     #[state(artifact)]
     #[value(default)]
-    pub normals: Vec<crate::artifacts::obj::schema::snapshot::ObjNormal>,
+    pub normals: Vec<crate::schema::snapshot::ObjNormal>,
     #[state(artifact)]
     #[value(default)]
-    pub faces: Vec<crate::artifacts::obj::schema::snapshot::ObjFace>,
+    pub faces: Vec<crate::schema::snapshot::ObjFace>,
     #[state(artifact)]
     #[value(default)]
-    pub groups: Vec<crate::artifacts::obj::schema::snapshot::ObjGroup>,
+    pub groups: Vec<crate::schema::snapshot::ObjGroup>,
     #[state(artifact)]
     #[value(default)]
-    pub objects: Vec<crate::artifacts::obj::schema::snapshot::ObjObject>,
+    pub objects: Vec<crate::schema::snapshot::ObjObject>,
     #[state(artifact)]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub mtllib: Option<String>,
     #[state(artifact)]
     #[value(default)]
-    pub usemtl: Vec<crate::artifacts::obj::schema::snapshot::ObjUsemtlRange>,
+    pub usemtl: Vec<crate::schema::snapshot::ObjUsemtlRange>,
     #[state(artifact)]
     #[value(default)]
-    pub smoothing_groups: Vec<crate::artifacts::obj::schema::snapshot::ObjSmoothingRange>,
+    pub smoothing_groups: Vec<crate::schema::snapshot::ObjSmoothingRange>,
     #[state(artifact)]
     #[value(default)]
-    pub unknown_statements: Vec<crate::artifacts::obj::schema::snapshot::ObjUnknownStatement>,
+    pub unknown_statements: Vec<crate::schema::snapshot::ObjUnknownStatement>,
 }
 //#endregion 🔖️Artifact
 
@@ -109,31 +109,31 @@ impl ObjArtifact {
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.stdio.obj`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn obj_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
-    schema::ArtifactSchemaDescriptor {
+pub fn obj_artifact_schema_descriptor() -> framework_schema::ArtifactSchemaDescriptor {
+    framework_schema::ArtifactSchemaDescriptor {
         id: "s.stdio.obj",
-        artifact: schema::FacetLeaves {
+        artifact: framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),
             json_schema: include_str!("🔣️.json"),
             proto: include_str!("🛰️.proto"),
         },
-        snapshot: schema::FacetLeaves {
+        snapshot: framework_schema::FacetLeaves {
             rust: include_str!("📸️snapshot/🦀️.rs"),
             typescript: include_str!("📸️snapshot/🟦️.ts"),
             graphql: include_str!("📸️snapshot/🔗️.graphql"),
             json_schema: include_str!("📸️snapshot/🔣️.json"),
             proto: include_str!("📸️snapshot/🛰️.proto"),
         },
-        diff: schema::FacetLeaves {
+        diff: framework_schema::FacetLeaves {
             rust: include_str!("🔺️diff/🦀️.rs"),
             typescript: include_str!("🔺️diff/🟦️.ts"),
             graphql: include_str!("🔺️diff/🔗️.graphql"),
             json_schema: include_str!("🔺️diff/🔣️.json"),
             proto: include_str!("🔺️diff/🛰️.proto"),
         },
-        mutations: schema::FacetLeaves {
+        mutations: framework_schema::FacetLeaves {
             rust: include_str!("🧬️mutations/🦀️.rs"),
             typescript: include_str!("🧬️mutations/🟦️.ts"),
             graphql: include_str!("🧬️mutations/🔗️.graphql"),
@@ -145,7 +145,7 @@ pub fn obj_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
 //#endregion 🔖️Descriptor
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use crate::artifacts::obj::{ObjDiff, ObjMutation, ObjSnapshot};
+    use crate::{ObjDiff, ObjMutation, ObjSnapshot};
     use semio_framework_plugin::ArtifactBuilder;
 
     //#region 🔖️Builder
@@ -173,7 +173,7 @@ pub mod derived_construction {
             Ok(Self::from_snapshot(<ObjSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
         fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
-            let diff = crate::artifacts::obj::schema::mutations::apply_obj_mutation(&mut self.snapshot, &mutation);
+            let diff = crate::schema::mutations::apply_obj_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
         fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
@@ -195,7 +195,7 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use crate::artifacts::obj::ObjSnapshot;
+    use crate::ObjSnapshot;
     use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     //#region 🔖️Parts
@@ -332,7 +332,7 @@ semio_framework_plugin::derive_artifact_facets!(
 //#region 🔖️DocumentHelpers
 /// 🌱 Empty persisted snapshot. Dissolved out of `⚙️engine`
 /// (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) — reached as
-/// `crate::artifacts::obj::engine::empty_obj_snapshot` through the `engine` barrel shim.
+/// `crate::engine::empty_obj_snapshot` through the `engine` barrel shim.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn empty_obj_snapshot() -> ObjSnapshot {
     ObjSnapshot::default()
@@ -365,9 +365,9 @@ weird_directive foo bar\n";
 /// `demo_txt_snapshot()`/`stdio.csv`'s own `demo_csv_snapshot()` establish.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn demo_obj_snapshot() -> ObjSnapshot {
-    let gen1 = crate::artifacts::obj::engine::decode_obj(DEMO_OBJ_TEXT).unwrap_or_else(|_| empty_obj_snapshot());
-    let gen2_text = crate::artifacts::obj::engine::encode_obj(&gen1);
-    crate::artifacts::obj::engine::decode_obj(&gen2_text).unwrap_or(gen1)
+    let gen1 = crate::engine::decode_obj(DEMO_OBJ_TEXT).unwrap_or_else(|_| empty_obj_snapshot());
+    let gen2_text = crate::engine::encode_obj(&gen1);
+    crate::engine::decode_obj(&gen2_text).unwrap_or(gen1)
 }
 //#endregion 🔖️DocumentHelpers
 
@@ -383,7 +383,7 @@ pub fn demo_obj_snapshot() -> ObjSnapshot {
 /// `#[cfg(not(target_arch = "wasm32"))]`. Dissolved out of `⚙️engine` (ticket 26/08/12/
 /// ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) — one of the ten deliberate imperative
 /// `engine::register()`-family calls left in place at the stdio plugin root's own
-/// `.setup(crate::artifacts::obj::engine::register_schema_specs)`, reached through the `engine`
+/// `.setup(crate::engine::register_schema_specs)`, reached through the `engine`
 /// barrel shim.
 #[cfg(not(target_arch = "wasm32"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

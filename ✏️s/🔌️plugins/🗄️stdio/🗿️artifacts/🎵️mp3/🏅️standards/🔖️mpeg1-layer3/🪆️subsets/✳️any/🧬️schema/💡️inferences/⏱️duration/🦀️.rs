@@ -4,8 +4,8 @@
 //! table, reused — not re-declared — so the two never drift). A pure whole-snapshot fold over
 //! `frames` — no `InferredField` needed.
 
-use crate::artifacts::mp3::standards::mpeg1_layer3::subsets::any::schema::sample_rate_hz;
-use crate::artifacts::mp3::standards::mpeg1_layer3::subsets::any::schema::snapshot::Mp3Snapshot;
+use crate::standards::mpeg1_layer3::subsets::any::schema::sample_rate_hz;
+use crate::standards::mpeg1_layer3::subsets::any::schema::snapshot::Mp3Snapshot;
 
 //#region 🔖️Duration
 /// ⏱️ mp3's frame-header-derived playback duration.
@@ -68,7 +68,7 @@ pub fn compute_mp3_duration(snapshot: &Mp3Snapshot) -> Mp3Duration {
 //#region 🧪️Tests
 mod tests {
     use super::*;
-    use crate::artifacts::mp3::standards::mpeg1_layer3::subsets::any::schema::snapshot::{Mp3Frame, Mp3FrameHeader};
+    use crate::standards::mpeg1_layer3::subsets::any::schema::snapshot::{Mp3Frame, Mp3FrameHeader};
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn frame(mpeg_version_id: u8, layer: u8, sample_rate_index: u8, channel_mode: u8) -> Mp3Frame {

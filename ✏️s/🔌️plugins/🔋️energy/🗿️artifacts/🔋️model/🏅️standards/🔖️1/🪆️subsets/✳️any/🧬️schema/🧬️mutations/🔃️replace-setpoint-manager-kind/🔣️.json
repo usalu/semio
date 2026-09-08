@@ -5,7 +5,7 @@
   "displayName": "Replace Setpoint Manager Kind",
   "emoji": "🔃️",
   "aggregateVariant": "ReplaceSetpointManagerKind",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "replace-setpoint-manager-kind",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

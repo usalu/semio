@@ -12,8 +12,8 @@
 //! `0.0`, same convention `🏗️ifc`'s bounds fold uses for honestly-2D placements. A pure
 //! whole-snapshot scalar (one min/max fold) — no `InferredField` needed.
 
-use crate::artifacts::step::schema::snapshot::StepValue;
-use crate::artifacts::step::StepSnapshot;
+use crate::schema::snapshot::StepValue;
+use crate::StepSnapshot;
 
 //#region 🔖️Bounds
 /// 📦️ STEP AP214's `CARTESIAN_POINT`-derived spatial bounding box.
@@ -95,8 +95,8 @@ pub fn compute_step_bounds(snapshot: &StepSnapshot) -> StepBounds {
 //#region 🧪️Tests
 mod tests {
     use super::*;
-    use crate::artifacts::step::schema::snapshot::StepEntity;
-    use crate::artifacts::step::STDIO_STEP_DOCUMENT_SCHEMA;
+    use crate::schema::snapshot::StepEntity;
+    use crate::STDIO_STEP_DOCUMENT_SCHEMA;
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn point_entity(id: u64, x: f64, y: f64, z: f64) -> StepEntity {

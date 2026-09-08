@@ -15,6 +15,6 @@ pub fn diff(payload: &ChangeDfPercent, base: &Din16798Snapshot) -> protocol::Mut
     if base.df_percent == payload.new_df_percent {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Daylight factor is already {}.", payload.new_df_percent));
     }
-    protocol::MutationOutcome::new(Din16798Diff { df_percent: Some(payload.new_df_percent.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(Din16798Diff { df_percent: Some(payload.new_df_percent), ..Default::default() })
 }
 //#endregion 🔖️Diff

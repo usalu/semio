@@ -5,12 +5,21 @@
   "displayName": "Change Selected Check Index",
   "emoji": "☑️",
   "aggregateVariant": "ChangeSelectedCheckIndex",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-selected-check-index",
   "binaryTag": 0,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
-  "outcomeClasses": ["applied", "warning"],
+  "outcomeClasses": [
+    "applied",
+    "warning"
+  ],
   "composition": "atomic",
-  "requiredLanguageSurfaces": ["rust", "json-schema", "typescript", "text", "binary"]
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "typescript",
+    "text",
+    "binary"
+  ]
 }

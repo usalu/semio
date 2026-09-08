@@ -1,0 +1,326 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/ply/1.0/any/mutation/set-snapshot.json",
+  "title": "SetSnapshot",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "snapshot"
+  ],
+  "properties": {
+    "snapshot": {
+      "$ref": "#/$defs/PlySnapshot"
+    },
+    "mutation": {
+      "const": "setSnapshot",
+      "description": "Aggregate discriminator spliced in by PlyMutation; absent when the payload stands alone."
+    }
+  },
+  "$defs": {
+    "PlySnapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema"
+      ],
+      "properties": {
+        "schema": {
+          "type": "string"
+        },
+        "format": {
+          "$ref": "#/$defs/PlyFormat"
+        },
+        "comments": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "elements": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PlyElement"
+          }
+        }
+      }
+    },
+    "PlyFormat": {
+      "type": "string",
+      "enum": [
+        "ascii",
+        "binaryLittleEndian",
+        "binaryBigEndian"
+      ]
+    },
+    "PlyElement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "count",
+        "properties",
+        "rows"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "properties": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PlyProperty"
+          }
+        },
+        "rows": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PlyRow"
+          }
+        }
+      }
+    },
+    "PlyProperty": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "form",
+            "name",
+            "kind"
+          ],
+          "properties": {
+            "form": {
+              "const": "scalar"
+            },
+            "name": {
+              "type": "string"
+            },
+            "kind": {
+              "$ref": "#/$defs/PlyScalarType"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "form",
+            "name",
+            "countKind",
+            "valueKind"
+          ],
+          "properties": {
+            "form": {
+              "const": "list"
+            },
+            "name": {
+              "type": "string"
+            },
+            "countKind": {
+              "$ref": "#/$defs/PlyScalarType"
+            },
+            "valueKind": {
+              "$ref": "#/$defs/PlyScalarType"
+            }
+          }
+        }
+      ]
+    },
+    "PlyScalarType": {
+      "type": "string",
+      "enum": [
+        "char",
+        "uChar",
+        "short",
+        "uShort",
+        "int",
+        "uInt",
+        "float",
+        "double"
+      ]
+    },
+    "PlyRow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "values"
+      ],
+      "properties": {
+        "values": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PlyValue"
+          }
+        }
+      }
+    },
+    "PlyValue": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "char"
+            },
+            "value": {
+              "type": "integer",
+              "minimum": -128,
+              "maximum": 127
+            }
+          },
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "uChar"
+            },
+            "value": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 255
+            }
+          },
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "short"
+            },
+            "value": {
+              "type": "integer",
+              "minimum": -32768,
+              "maximum": 32767
+            }
+          },
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "uShort"
+            },
+            "value": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 65535
+            }
+          },
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "int"
+            },
+            "value": {
+              "type": "integer",
+              "minimum": -2147483648,
+              "maximum": 2147483647
+            }
+          },
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "uInt"
+            },
+            "value": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4294967295
+            }
+          },
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "float"
+            },
+            "value": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "double"
+            },
+            "value": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "list"
+            },
+            "value": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/PlyValue"
+              }
+            }
+          },
+          "required": [
+            "kind",
+            "value"
+          ]
+        }
+      ]
+    }
+  }
+}

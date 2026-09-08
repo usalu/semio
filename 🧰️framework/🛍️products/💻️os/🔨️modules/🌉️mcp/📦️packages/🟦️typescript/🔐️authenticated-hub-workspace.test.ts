@@ -2,17 +2,21 @@ import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { ResourceSchema } from "@modelcontextprotocol/sdk/types.js";
-import Ajv2020 from "ajv/dist/2020.js";
+import Ajv from "ajv";
 import { describe, expect, test } from "vitest";
 
 const remoteRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../../🏠️workspace/🔗️remote");
 const schema = JSON.parse(readFileSync(resolve(remoteRoot, "🧬️schema/🔣️.json"), "utf8"));
+const validateDescriptorIndex = (() => {
+  const ajv = new Ajv({ strict: true, allErrors: true });
+  ajv.addSchema(schema);
+  return ajv.getSchema(`${schema.$id}#/$defs/AuthenticatedHubDescriptorIndexV1`)!;
+})();
 const fixture = JSON.parse(readFileSync(resolve(remoteRoot, "🧫️fixtures/🔣️authenticated-hub-descriptor-index.json"), "utf8"));
 
 describe("authenticated hub workspace fixture oracle", () => {
   test("AJV independently validates the neutral P4-A contract and fixed bounds", () => {
-    const validate = new Ajv2020({ strict: true }).compile(schema);
-    expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
+    expect(validateDescriptorIndex(fixture), JSON.stringify(validateDescriptorIndex.errors)).toBe(true);
     expect(fixture.limits).toEqual({
       maxDocuments: 4096,
       maxTokenBytes: 4096,

@@ -5,7 +5,7 @@
   "displayName": "Set Info Title",
   "emoji": "🏷️",
   "aggregateVariant": "SetInfoTitle",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "set-info-title",
   "binaryTag": 8,
   "invertibility": "explicit-mutation",

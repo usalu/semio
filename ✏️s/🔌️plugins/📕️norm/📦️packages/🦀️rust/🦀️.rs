@@ -7228,18 +7228,12 @@ pub mod examples {
     pub mod app_iso16757_demo_session;
     #[path = "../../🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🦀️.rs"]
     pub mod app_vdi3805_demo_session;
-    #[path = "../../🗿️artifacts/🌬️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️.rs"]
-    pub mod art_din16798_demo;
     #[cfg(test)]
     #[path = "../../🗿️artifacts/🌬️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🦀️.rs"]
     mod art_din16798_demo_tests;
-    #[path = "../../🗿️artifacts/⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️.rs"]
-    pub mod art_din18599_demo;
     #[cfg(test)]
     #[path = "../../🗿️artifacts/⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🦀️.rs"]
     mod art_din18599_demo_tests;
-    #[path = "../../🗿️artifacts/🧱️din4108/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️.rs"]
-    pub mod art_din4108_demo;
     #[cfg(test)]
     #[path = "../../🗿️artifacts/🧱️din4108/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🦀️.rs"]
     mod art_din4108_demo_tests;
@@ -7278,8 +7272,6 @@ pub mod examples {
     #[cfg(test)]
     #[path = "../../🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🧱️loadbearing-wall/🧪️tests/🦀️.rs"]
     mod art_en1996_loadbearing_wall_tests;
-    #[path = "../../🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️.rs"]
-    pub mod art_en1997_demo;
     #[cfg(test)]
     #[path = "../../🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🦀️.rs"]
     mod art_en1997_demo_tests;
@@ -7293,13 +7285,9 @@ pub mod examples {
     #[cfg(test)]
     #[path = "../../🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🏠️aluminium-roof-purlin/🧪️tests/🦀️.rs"]
     mod art_en1999_aluminium_roof_purlin_tests;
-    #[path = "../../🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️.rs"]
-    pub mod art_iso16757_demo;
     #[cfg(test)]
     #[path = "../../🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🦀️.rs"]
     mod art_iso16757_demo_tests;
-    #[path = "../../🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️.rs"]
-    pub mod art_vdi3805_demo;
     #[cfg(test)]
     #[path = "../../🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🦀️.rs"]
     mod art_vdi3805_demo_tests;

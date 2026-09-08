@@ -108,13 +108,13 @@ fn identity_round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::{mutable_input, KINDS};
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_plugin_stdio::artifacts::svg::standards::v1_1::subsets::base::schema::mutations::{
+    use crate::standards::v1_1::subsets::base::schema::mutations::{
         apply_svg_mutation, InsertElementMutation, InsertElementPayload, RemoveElementMutation, RemoveElementPayload, SetAttributeMutation, SetAttributePayload, SetDeclarationMutation,
         SetDeclarationPayload, SetDoctypeMutation, SetDoctypePayload, SetElementNameMutation, SetElementNamePayload, SetTextMutation, SetTextPayload, SetTransformMutation,
         SetTransformPayload, SetViewBoxMutation, SetViewBoxPayload, SvgMutation,
     };
-    use semio_s_plugin_stdio::artifacts::svg::standards::v1_1::subsets::base::schema::snapshot::{element_attr, node_at, parse_transform_list, parse_view_box, set_element_attr, view_box_to_string, NodePath, SvgSnapshot, TransformOp, ViewBox};
-    use semio_s_plugin_stdio::artifacts::xml::standards::v1_0::subsets::base::schema::snapshot::{XmlAttr, XmlDeclaration, XmlDoctype, XmlNode};
+    use crate::standards::v1_1::subsets::base::schema::snapshot::{element_attr, node_at, parse_transform_list, parse_view_box, set_element_attr, view_box_to_string, NodePath, SvgSnapshot, TransformOp, ViewBox};
+    use semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::schema::snapshot::{XmlAttr, XmlDeclaration, XmlDoctype, XmlNode};
     use semio_s_plugin_stdio_test_oracle::artifacts::svg::standards::v1_1::subsets::base::project_svg_1_1;
 
     //#region 🔖️SpecCodec

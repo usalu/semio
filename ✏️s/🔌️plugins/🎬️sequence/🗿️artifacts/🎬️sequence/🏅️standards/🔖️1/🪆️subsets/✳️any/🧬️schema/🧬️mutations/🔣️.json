@@ -4,28 +4,38 @@
   "title": "SequenceMutation",
   "oneOf": [
     {
-      "$ref": "https://semio.tech/schema/s/sequence/sequence/mutation/create-step.json"
+      "$ref": "./../../../🪜️step/🧬️schema/🧬️mutations/🌱️create-step/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/sequence/sequence/mutation/delete-step.json"
+      "$ref": "./../../../🪜️step/🧬️schema/🧬️mutations/🗑️delete-step/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/sequence/sequence/mutation/move-step.json"
+      "$ref": "./../../../🪜️step/🧬️schema/🧬️mutations/📍️move-step/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/sequence/sequence/mutation/edit-step-params.json"
+      "$ref": "./../../../🪜️step/🧬️schema/🧬️mutations/🔧️edit-step-params/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/sequence/sequence/mutation/change-step-collapsed.json"
+      "$ref": "./../../../🪜️step/🧬️schema/🧬️mutations/🗂️change-step-collapsed/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/sequence/sequence/mutation/connect-steps.json"
+      "$ref": "./../../../🔗️dependency/🧬️schema/🧬️mutations/🔗️connect-steps/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/sequence/sequence/mutation/disconnect-steps.json"
+      "$ref": "./../../../🔗️dependency/🧬️schema/🧬️mutations/✂️disconnect-steps/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/sequence/sequence/mutation/duplicate-step.json"
+      "$ref": "./../../../🪜️step/🧬️schema/🧬️mutations/🧬️duplicate-step/🧬️schema/🔣️.json"
     }
+  ],
+  "x-semio-mutationKinds": [
+    "create-step",
+    "delete-step",
+    "move-step",
+    "edit-step-params",
+    "change-step-collapsed",
+    "connect-steps",
+    "disconnect-steps",
+    "duplicate-step"
   ]
 }

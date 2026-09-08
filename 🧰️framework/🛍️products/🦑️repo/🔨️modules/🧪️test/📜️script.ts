@@ -78,7 +78,12 @@ import {
   leafDescriptorCoverage,
   manifestFromLeafDescriptors,
   scaffoldOwnerDescriptors,
-  derivePayloadSchemas,
+  resolvePayloadSchemas,
+  type SchemaDiagnostic,
+  type SchemaFixtureReport,
+  discoverSchemaFixtures,
+  runSchemaFixture,
+  schemaContractDiagnostics,
   testFilenameForKind,
   isQualifyingOracleKind,
   verifyFixture,
@@ -1271,46 +1276,38 @@ class GcScript extends Script {
  * shortfall is a single percentage, and a percentage tells nobody what to do on Monday.
  */
 /**
- * 🧬️ Derives each mutation leaf's payload schema from the Rust payload struct it declares.
+ * 🧬️ Reports which mutation leaves DECLARE a payload contract, and what defeats the rest.
  *
- * The payload schema is the DEEPEST blocker in the chain to subset-scoped external-oracle coverage:
- * you cannot author a fixture for a mutation whose payload has no contract, so every leaf without one
- * is unreachable by any amount of testing effort. The struct IS the contract — it is what serde puts
- * on the wire — so this is a projection of it, not a second declaration to keep in sync.
+ * It reads; it never derives. A payload schema used to be reconstructed by grep-scanning every Rust
+ * file in the repository for a same-named struct and picking the definition whose directory sat
+ * closest to the leaf — so a contract's content depended on which same-named type happened to be
+ * nearest, and nobody had declared any of it. The leaf is the declared authority
+ * (`mutationPayloadSchemaAuthority`), its descriptor names the one path, and a leaf that declares
+ * nothing is REPORTED as declaring nothing rather than having a contract invented for it.
+ *
+ *   bun 📜️script.ts manifest payload-schema        # who declares a payload contract, and who does not
  */
-function payloadSchemaCommand(script: Script, registry: OracleRegistry, selectors: ReturnType<typeof readSelectors>, write: boolean): void {
+function payloadSchemaCommand(script: Script, registry: OracleRegistry, selectors: ReturnType<typeof readSelectors>): void {
   const owners = [...new Set(registry.contributions.map((entry) => entry.owner))].filter((owner) => selectors.subset === null || subsetCoordinatesOfOwner(owner)?.subset === selectors.subset);
   let leaves = 0;
-  let derived = 0;
-  let written = 0;
-  let present = 0;
+  let declared = 0;
   const refusals = new Map<string, number>();
+  const undeclared: string[] = [];
   for (const owner of owners) {
-    for (const row of derivePayloadSchemas(script.repoRoot, owner)) {
+    for (const row of resolvePayloadSchemas(script.repoRoot, owner)) {
       leaves += 1;
-      if (row.schema === null) {
-        for (const why of row.refused) {
-          const type = why.replace(/^field [a-z_]+: /, "").replace(/ is not a shape.*/, "");
-          refusals.set(type, (refusals.get(type) ?? 0) + 1);
-        }
+      if (row.schema !== null) {
+        declared += 1;
         continue;
       }
-      derived += 1;
-      const path = join(script.repoRoot, row.leaf, "🔣️.schema.json");
-      if (existsSync(path)) {
-        present += 1;
-        continue;
-      }
-      if (!write) continue;
-      writeFileSync(path, `${JSON.stringify(row.schema, null, 2)}\n`);
-      written += 1;
+      undeclared.push(row.leaf);
+      for (const why of row.refused) refusals.set(why.replace(/^the declared payload schema .* does not exist$/, "the declared payload schema file does not exist").replace(/^[^:]*🧬️schema[^:]*$/, "the leaf carries no 🧬️schema/🔣️.json"), (refusals.get(why) ?? 0) + 1);
     }
   }
-  console.log(`[manifest payload-schema] ${derived}/${leaves} leaves derivable from their Rust payload struct (${((derived / Math.max(leaves, 1)) * 100).toFixed(1)}%)`);
-  console.log(`[manifest payload-schema] ${present} already carry a schema; ${derived - present} would be new`);
-  console.log(`[manifest payload-schema] ${leaves - derived} refused, by the Rust type that defeated them:`);
-  for (const [type, count] of [...refusals].sort((a, b) => b[1] - a[1]).slice(0, 15)) console.log(`[manifest payload-schema]   ${String(count).padStart(4)} × ${type.slice(0, 72)}`);
-  console.log(write ? `[manifest payload-schema] ${written} schema(s) written` : "[manifest payload-schema] dry run — pass --write to emit them");
+  console.log(`[manifest payload-schema] ${declared}/${leaves} leaves declare a payload contract at the taxonomy location (${((declared / Math.max(leaves, 1)) * 100).toFixed(1)}%)`);
+  for (const [why, count] of [...refusals].sort((a, b) => b[1] - a[1]).slice(0, 15)) console.log(`[manifest payload-schema]   ${String(count).padStart(4)} × ${why.slice(0, 96)}`);
+  for (const leaf of undeclared.slice(0, 20)) console.log(`[manifest payload-schema]   undeclared: ${leaf}`);
+  if (undeclared.length > 20) console.log(`[manifest payload-schema]   … and ${undeclared.length - 20} more`);
 }
 
 /** 🏗️ Derives leaf descriptors from the leaves themselves, refusing every field it cannot cite. */
@@ -1442,7 +1439,7 @@ class ManifestScript extends Script {
     const selectors = readSelectors(segments);
     const write = segments.includes("--write");
     if (segments.includes("scaffold")) return scaffoldCommand(this, registry, selectors, write);
-    if (segments.includes("payload-schema")) return payloadSchemaCommand(this, registry, selectors, write);
+    if (segments.includes("payload-schema")) return payloadSchemaCommand(this, registry, selectors);
 
     type Row = { owner: string; capability: string; leaves: number; described: number; ready: boolean; reason: string; manifest: MutationManifest | null };
     const rows: Row[] = [];
@@ -1523,6 +1520,56 @@ class ManifestScript extends Script {
     console.log(`[manifest] ${written} manifest(s) written`);
   }
 }
+
+/**
+ * 🧬️ `test schema` — the scope-owned schema contract gate.
+ *
+ * It answers three questions in one pass and keeps them apart in the output: does every contract sit
+ * on an eligible owner in the one place it belongs (the invariants), does every `schema://` reference
+ * resolve through the declared catalog (resolution), and does every bound fixture fail or pass at the
+ * STAGE it declared (the fixtures). Nothing here searches the tree for a schema; an absent catalog is
+ * reported as absent, because a gate that silently found a substitute would be measuring the
+ * substitute.
+ *
+ *   bun 📜️script.ts test schema                     # the whole tree
+ *   bun 📜️script.ts test schema --under <path>      # one subtree, while the rest is mid-migration
+ *   bun 📜️script.ts test schema --json
+ */
+class SchemaScript extends Script {
+  run(segments: string[]): void {
+    const under = segments[segments.indexOf("--under") + 1];
+    const scope = segments.includes("--under") && under !== undefined ? under : "";
+    const diagnostics: SchemaDiagnostic[] = schemaContractDiagnostics(this.repoRoot, scope);
+    const reports: SchemaFixtureReport[] = [];
+    for (const collection of discoverSchemaFixtures(this.repoRoot, scope)) for (const fixture of collection.fixtures) reports.push(runSchemaFixture(this.repoRoot, fixture, collection.caseDir));
+    const failed = reports.filter((report) => report.outcome === "failed");
+    if (segments.includes("--json")) {
+      console.log(JSON.stringify({ diagnostics, fixtures: reports }, null, 2));
+      process.exit(diagnostics.length === 0 && failed.length === 0 ? 0 : 1);
+    }
+    const byCode = new Map<string, number>();
+    for (const entry of diagnostics) byCode.set(entry.code, (byCode.get(entry.code) ?? 0) + 1);
+    console.log(`[test schema] ${diagnostics.length} invariant finding(s) over ${scope.length === 0 ? "the repository" : scope}`);
+    for (const [code, count] of [...byCode].sort((a, b) => b[1] - a[1])) console.log(`[test schema]   ${String(count).padStart(5)} × ${code}`);
+    for (const entry of diagnostics.slice(0, 40)) console.log(`[test schema]   ${entry.code} ${entry.path ?? entry.scope ?? ""} — ${entry.detail}`);
+    if (diagnostics.length > 40) console.log(`[test schema]   … and ${diagnostics.length - 40} more`);
+    console.log(`[test schema] ${reports.length - failed.length}/${reports.length} schema-bound fixture(s) reached their declared stage`);
+    for (const report of reports) {
+      const line = report.stages.map((entry) => `${entry.stage}=${entry.result}`).join(" ");
+      console.log(`[test schema]   ${report.outcome === "passed" ? "✔" : "✘"} ${report.fixture} ${report.uri} — ${line}`);
+      if (report.outcome === "failed") console.log(`[test schema]     ${report.detail}`);
+    }
+    process.exit(diagnostics.length === 0 && failed.length === 0 ? 0 : 1);
+  }
+}
+
+/** 🧪️ `test` runs the suite; `test schema` runs the schema-contract gate. */
+class TestScript extends Script {
+  async run(segments: string[]): Promise<void> {
+    if (segments[0] === "schema") return new SchemaScript(this.root, this.repoRoot).run(segments.slice(1));
+    return new RunScript(this.root, this.repoRoot).run(segments);
+  }
+}
 //#endregion 🧭️Commands
 
 //#region 🧹️Policy
@@ -1552,7 +1599,8 @@ const router = new ScriptRouter(import.meta.dir)
   .register("subject", SubjectScript)
   .register("parity", ParityScript)
   .register("run", RunScript)
-  .register("test", RunScript)
+  .register("test", TestScript)
+  .register("schema", SchemaScript)
   .register("report", ReportScript)
   .register("clean", CleanScript)
   .register("dependency", DependencyScript)

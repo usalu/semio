@@ -61,7 +61,7 @@ impl ToValue for EquationDiff {
 impl FromValue for EquationDiff {
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
         let entries = DslValue::into_object(value)?;
-        let field = |key: &str| entries.iter().find(|(k, _)| k == key).map(|(_, v)| v.clone()).unwrap_or(DslValue::Null);
+        let field = |key: &str| entries.iter().find(|(k, _)| k == key).map_or(DslValue::Null, |(_, v)| v.clone());
         Ok(Self {
             notation: from_dsl_value(field("notation")).map_err(ValueError::new)?,
             results: from_dsl_value(field("results")).map_err(ValueError::new)?,

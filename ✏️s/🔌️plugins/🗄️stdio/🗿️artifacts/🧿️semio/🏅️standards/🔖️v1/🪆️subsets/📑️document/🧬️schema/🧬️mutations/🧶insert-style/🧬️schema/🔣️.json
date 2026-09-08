@@ -1,0 +1,43 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/document/mutation/insert-style.json",
+  "title": "InsertStyle",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "style"
+  ],
+  "properties": {
+    "style": {
+      "$ref": "#/$defs/DocStyle"
+    },
+    "kind": {
+      "const": "insertStyle",
+      "description": "Aggregate discriminator spliced in by DocPathSegment; absent when the payload stands alone."
+    }
+  },
+  "$defs": {
+    "DocStyle": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "basedOn": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    }
+  }
+}

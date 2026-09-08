@@ -5,7 +5,7 @@
   "displayName": "Delete Water System",
   "emoji": "🧼️",
   "aggregateVariant": "DeleteWaterSystem",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "delete-water-system",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

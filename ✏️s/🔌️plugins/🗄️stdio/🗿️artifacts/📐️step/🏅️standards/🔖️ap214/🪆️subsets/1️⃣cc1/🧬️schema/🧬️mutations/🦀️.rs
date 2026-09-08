@@ -31,14 +31,14 @@
 //!      `✳️ccN` vocabularies route through, so each axis has ONE implementation and six callers.
 //! @see ../🔣️oracle.json — the `step-ap214-cc1` catalog `KINDS` is checked against.
 
-use crate::artifacts::step::schema::diff::StepDiff;
-use crate::artifacts::step::standards::v_ap214::engine::ladder::{self, ClassEdit};
-use crate::artifacts::step::standards::v_ap214::subsets::cc1::schema::MAX_RUNG;
-use crate::artifacts::step::StepSnapshot;
+use crate::schema::diff::StepDiff;
+use crate::standards::v_ap214::engine::ladder::{self, ClassEdit};
+use crate::standards::v_ap214::subsets::cc1::schema::MAX_RUNG;
+use crate::StepSnapshot;
 use protocol::command::DiffAlgebra;
 use protocol::Mutation;
 
-pub use crate::artifacts::step::standards::v_ap214::subsets::base::schema::mutations::{apply_step_mutation, StepMutation};
+pub use crate::standards::v_ap214::subsets::base::schema::mutations::{apply_step_mutation, StepMutation};
 
 //#region 🔖️Vocabulary
 /// 🏷️ How this class names itself in a rejection message.
@@ -176,9 +176,9 @@ pub fn inverse_step_cc1_mutation(base: &StepSnapshot, mutation: &StepCc1Mutation
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::step::standards::v_ap214::engine::ladder::{has_product_definition_chain, ladder_violations, ShapeRepresentationRow};
-    use crate::artifacts::step::standards::v_ap214::engine::part21::{Part21Document, Part21Header, Part21Instance, Part21Value};
-    use crate::artifacts::step::standards::v_ap214::subsets::cc1::schema::check_cc1_conformance;
+    use crate::standards::v_ap214::engine::ladder::{has_product_definition_chain, ladder_violations, ShapeRepresentationRow};
+    use crate::standards::v_ap214::engine::part21::{Part21Document, Part21Header, Part21Instance, Part21Value};
+    use crate::standards::v_ap214::subsets::cc1::schema::check_cc1_conformance;
 
     fn base() -> StepSnapshot {
         StepSnapshot::from_part21_document(&Part21Document {

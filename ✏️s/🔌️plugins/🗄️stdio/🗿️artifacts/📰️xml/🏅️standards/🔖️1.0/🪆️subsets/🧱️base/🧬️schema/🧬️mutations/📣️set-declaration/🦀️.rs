@@ -1,7 +1,7 @@
 //! 🧬️ Direct set-declaration mutation owner.
-use crate::artifacts::xml::schema::diff::XmlDiff;
-use crate::artifacts::xml::schema::snapshot::XmlDeclaration;
-use crate::artifacts::xml::XmlSnapshot;
+use crate::schema::diff::XmlDiff;
+use crate::schema::snapshot::XmlDeclaration;
+use crate::XmlSnapshot;
 
 #[path = "📝️text/🦀️.rs"]
 pub mod text;

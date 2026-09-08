@@ -137,8 +137,8 @@ pub fn fastened_layout_snapshot(snapshot: &mut Puzzle2dSnapshot) {
     let node_map: HashMap<&str, &Puzzle2dNode> = snapshot.nodes.iter().map(|node| (node.id.as_str(), node)).collect();
     let mut adjacency: HashMap<String, Vec<(String, usize)>> = HashMap::new();
     for (index, edge) in snapshot.edges.iter().enumerate() {
-        let Some((_source_id, _)) = parse_endpoint(&edge.source).or_else(|| Some((edge.source.as_str(), ""))) else { continue };
-        let Some((_target_id, _)) = parse_endpoint(&edge.target).or_else(|| Some((edge.target.as_str(), ""))) else { continue };
+        let Some((_source_id, _)) = parse_endpoint(&edge.source).or(Some((edge.source.as_str(), ""))) else { continue };
+        let Some((_target_id, _)) = parse_endpoint(&edge.target).or(Some((edge.target.as_str(), ""))) else { continue };
         // Edges may be bare node ids or node:handle.
         let source_id = edge.source.split(':').next().unwrap_or(edge.source.as_str());
         let target_id = edge.target.split(':').next().unwrap_or(edge.target.as_str());
@@ -175,7 +175,7 @@ pub fn fastened_layout_snapshot(snapshot: &mut Puzzle2dSnapshot) {
                 } else {
                     None
                 };
-                let parent_t = handle_id.and_then(|id| current_node.handles.iter().find(|handle| handle.id == id)).map(|handle| handle.angle / (2.0 * std::f64::consts::PI)).unwrap_or(0.0);
+                let parent_t = handle_id.and_then(|id| current_node.handles.iter().find(|handle| handle.id == id)).map_or(0.0, |handle| handle.angle / (2.0 * std::f64::consts::PI));
                 // 2d has no parent direction z; treat as horizontal unless encoded otherwise → use horizontal scale branch when parent not at origin.
                 let (child_x, child_y) = if parent_center[0] == 0.0 && parent_center[1] == 0.0 {
                     let angle = 2.0 * std::f64::consts::PI * parent_t;

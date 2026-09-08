@@ -7,7 +7,7 @@
 //! `🦀️.rs` is outside this file's own directory anyway).
 
 #[cfg(feature = "component-app-assembly")]
-use crate::artifacts::binary::standards::v_raw::subsets::any::{io, schema};
+use crate::standards::v_raw::subsets::any::{io, schema};
 #[cfg(feature = "component-app-assembly")]
 use crate::editor::binary as editor;
 #[cfg(feature = "component-app-assembly")]
@@ -27,13 +27,13 @@ pub const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.binary", standard
 #[cfg(feature = "component-app-assembly")]
 fn examples() -> &'static [ExampleSource] {
     static EXAMPLES: OnceLock<Vec<ExampleSource>> = OnceLock::new();
-    EXAMPLES.get_or_init(|| vec![crate::artifacts::binary::examples::demo::source()]).as_slice()
+    EXAMPLES.get_or_init(|| vec![crate::examples::demo::source()]).as_slice()
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 #[cfg(feature = "component-app-assembly")]
-fn inference_descriptors() -> &'static [::schema::ArtifactInferenceDescriptor] {
-    static DESCRIPTORS: OnceLock<Vec<::schema::ArtifactInferenceDescriptor>> = OnceLock::new();
+fn inference_descriptors() -> &'static [::framework_schema::ArtifactInferenceDescriptor] {
+    static DESCRIPTORS: OnceLock<Vec<::framework_schema::ArtifactInferenceDescriptor>> = OnceLock::new();
     DESCRIPTORS.get_or_init(|| vec![schema::inferences::binary_artifact_inference_descriptor()]).as_slice()
 }
 
@@ -42,13 +42,13 @@ fn inference_descriptors() -> &'static [::schema::ArtifactInferenceDescriptor] {
 /// the one `demo` example, `inferences` carries the `extent` inference descriptor.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 #[cfg(feature = "component-app-assembly")]
-pub fn subset() -> SubsetDeclaration<crate::plugin::StdioApps> {
+pub fn subset() -> SubsetDeclaration<crate::BinaryApps> {
     SubsetDeclaration {
         dialect: DIALECT,
         schema: SchemaDeclaration { descriptor: schema::binary_artifact_schema_descriptor(), inferences: inference_descriptors(), inference_services: Vec::new() },
         io: io::io(),
-        viewer: viewer_surface::<viewer::BinaryViewer, crate::plugin::StdioApps>(viewer::create_binary_viewer()),
-        editor: editor_surface::<editor::BinaryEditor, crate::plugin::StdioApps>(editor::create_binary_editor()),
+        viewer: viewer_surface::<viewer::BinaryViewer, crate::BinaryApps>(viewer::create_binary_viewer()),
+        editor: editor_surface::<editor::BinaryEditor, crate::BinaryApps>(editor::create_binary_editor()),
         examples: examples(),
     }
 }

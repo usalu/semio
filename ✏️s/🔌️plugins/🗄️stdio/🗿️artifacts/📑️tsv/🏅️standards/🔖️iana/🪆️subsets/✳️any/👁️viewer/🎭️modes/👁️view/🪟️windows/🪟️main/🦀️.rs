@@ -2,7 +2,7 @@
 //! the framework `TableWindowKit` (contract §2.6). Independent render from the sibling
 //! mutation-capable surface — no edit affordances (`window_kind()`, the read-only variant).
 
-use crate::artifacts::tsv::TsvSnapshot;
+use crate::TsvSnapshot;
 use semio_framework_plugin::app::{TableView, TableWindowKit, WindowKit};
 use semio_framework_plugin::{BuiltNode, LocalizedLabel, WindowKindDefinition};
 

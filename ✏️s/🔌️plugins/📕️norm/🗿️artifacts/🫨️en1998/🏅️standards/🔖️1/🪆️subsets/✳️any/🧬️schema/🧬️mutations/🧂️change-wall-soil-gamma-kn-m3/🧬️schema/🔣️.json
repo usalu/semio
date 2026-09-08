@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/norm/en1998/1/any/mutation/change-wall-soil-gamma-kn-m3.json",
+  "title": "ChangeWallSoilGammaKnM3",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newWallSoilGammaKnM3"
+  ],
+  "properties": {
+    "newWallSoilGammaKnM3": {
+      "type": "number"
+    }
+  }
+}

@@ -1,19 +1,19 @@
 //! 🧵️ SpreadsheetML (xlsx) export — `XlsxWorkbook` → `xl/workbook.xml`/`xl/worksheets/sheetN.xml`/
 //! `xl/sharedStrings.xml` XML render, and the OPC package assembly/sync around it. Zip/OPC/XML
 //! byte-level work is never reimplemented here: it is reused from the shared
-//! `crate::artifacts::zip::opc` layer. Shared strings (`t="s"` cells reference an index into
+//! `semio_s_artifact_stdio_zip::opc` layer. Shared strings (`t="s"` cells reference an index into
 //! `xl/sharedStrings.xml`) are decoded/encoded as an EXPLICIT `workbook.shared_strings` table —
 //! never eagerly resolved into cell text — so the `t="s"` (shared-string reference) vs
 //! `t="inlineStr"` (literal text) distinction the format itself makes survives round-trip, and a
 //! diff over `shared_strings` means something (see `🧬️schema/🔺️diff`).
 
 use super::super::super::{attr, XlsxError, REL_TYPE_SHARED_STRINGS, REL_TYPE_WORKSHEET, SHARED_STRINGS_CONTENT_TYPE, SHARED_STRINGS_PART, SML_NS, WORKBOOK_CONTENT_TYPE, WORKBOOK_PART, WORKSHEET_CONTENT_TYPE};
-use crate::artifacts::xlsx::{
+use crate::{
     schema::snapshot::{XlsxCell, XlsxCellValue, XlsxSheet, XlsxWorkbook},
     XlsxSnapshot,
 };
-use crate::artifacts::xml::schema::snapshot::{xml_document_to_text, XmlDocument, XmlNode};
-use crate::artifacts::zip::opc::{OpcPackage, OpcRelationship, OpcTargetMode, REL_TYPE_OFFICE_DOCUMENT};
+use semio_s_artifact_stdio_xml::schema::snapshot::{xml_document_to_text, XmlDocument, XmlNode};
+use semio_s_artifact_stdio_zip::opc::{OpcPackage, OpcRelationship, OpcTargetMode, REL_TYPE_OFFICE_DOCUMENT};
 
 //#region 🔖️SharedStringsXml
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -77,7 +77,7 @@ fn format_number(n: f64) -> String {
 /// mirrors `cell_to_xml`'s own top-level match, but never itself recurses into `Formula` (a
 /// formula's cached value is never itself a formula in a spec-conformant document).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn cached_value_xml(cached: &XlsxCellValue) -> (Option<crate::artifacts::xml::schema::snapshot::XmlAttr>, Option<XmlNode>) {
+fn cached_value_xml(cached: &XlsxCellValue) -> (Option<semio_s_artifact_stdio_xml::schema::snapshot::XmlAttr>, Option<XmlNode>) {
     match cached {
         XlsxCellValue::Number(n) => (None, Some(v_element(&format_number(*n)))),
         XlsxCellValue::SharedString(idx) => (Some(attr("t", "s")), Some(v_element(&idx.to_string()))),
@@ -244,7 +244,7 @@ fn workbook_relationships(existing: &[OpcRelationship], sheet_count: usize) -> (
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn regenerate_workbook_parts(opc: &mut OpcPackage, workbook: &XlsxWorkbook) {
     opc.parts.retain(|p| !p.path.starts_with("xl/worksheets/") && p.path != WORKBOOK_PART && p.path != SHARED_STRINGS_PART);
-    opc.content_types.set_default("rels", crate::artifacts::zip::opc::RELS_CONTENT_TYPE);
+    opc.content_types.set_default("rels", semio_s_artifact_stdio_zip::opc::RELS_CONTENT_TYPE);
     opc.content_types.set_default("xml", "application/xml");
 
     let mut sheet_bytes = Vec::with_capacity(workbook.sheets.len());
@@ -289,6 +289,6 @@ pub fn build_minimal_xlsx(workbook: XlsxWorkbook) -> XlsxSnapshot {
 pub fn encode_xlsx(snap: &XlsxSnapshot) -> Result<Vec<u8>, XlsxError> {
     let mut opc = snap.opc.clone();
     regenerate_workbook_parts(&mut opc, &snap.workbook);
-    Ok(crate::artifacts::zip::opc::encode_opc_with_package_order(&opc)?)
+    Ok(semio_s_artifact_stdio_zip::opc::encode_opc_with_package_order(&opc)?)
 }
 //#endregion 🔖️Codec

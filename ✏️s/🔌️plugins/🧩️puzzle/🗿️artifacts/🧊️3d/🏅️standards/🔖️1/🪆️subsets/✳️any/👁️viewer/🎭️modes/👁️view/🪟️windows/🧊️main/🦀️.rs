@@ -44,7 +44,7 @@ fn puzzle3d_view_instances_json(document: &Puzzle3dSnapshot) -> String {
         .objects
         .iter()
         .map(|object| {
-            let mesh_id = object.mesh_url.as_deref().filter(|url| !url.is_empty()).map(world3d_mesh_id_from_url).unwrap_or_else(|| PUZZLE3D_VIEW_FALLBACK_MESH_KIND.to_string());
+            let mesh_id = object.mesh_url.as_deref().filter(|url| !url.is_empty()).map_or_else(|| PUZZLE3D_VIEW_FALLBACK_MESH_KIND.to_string(), world3d_mesh_id_from_url);
             let scale = if object.hidden { [0.0, 0.0, 0.0] } else { puzzle3d_view_object_scale(object) };
             serde_json::json!({
                 "id": object.id,

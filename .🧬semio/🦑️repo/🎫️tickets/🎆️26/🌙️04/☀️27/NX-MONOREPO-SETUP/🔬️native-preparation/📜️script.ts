@@ -17,17 +17,20 @@ if (process.argv.includes("cache")) {
   for (const [path, content] of Object.entries(cases.files)) put(path, String(content));
   const { cacheInternals } = await import(pathToFileURL(join(workspace, library, "🟨️.mjs")).href);
   const command = library + "/⚡️caching/🦀️cargo/📜️script.ts";
-  for (const path of [library + "/🟨️.mjs", library + "/⚡️caching/🔣️policy.json", ...cacheInternals.relativeScriptInputs([join(workspace, command)], workspace).map((p: string) => p.replace("{workspaceRoot}/", ""))]) put(path, readFileSync(join(workspace, path)));
+  for (const path of [library + "/🟨️.mjs", library + "/⚡️caching/🔣️policy.json", library + "/🕸️dependencies/🧩️runtime/🟨️.mjs", ...cacheInternals.relativeScriptInputs([join(workspace, command)], workspace).map((p: string) => p.replace("{workspaceRoot}/", ""))]) put(path, readFileSync(join(workspace, path)));
   put(library + "/🔣️taxonomy.json", JSON.stringify({ generatorContracts: cases.contracts }));
-  put("nx.json", JSON.stringify({ plugins: [{ plugin: "./" + library + "/🟨️.mjs", include: ["**/📋️project.json", "**/Cargo.toml"] }], maxCacheSize: "64MB", parallel: 1 }));
+  put("nx.json", JSON.stringify({ pluginsConfig: { "@nx/js": { analyzePackageJson: false, analyzeSourceFiles: false, analyzeLockfile: false } }, plugins: [{ plugin: "./" + library + "/🟨️.mjs", include: ["**/📋️project.json", "**/Cargo.toml", "bun.lock"], options: { analyzeLockfile: true } }], maxCacheSize: "64MB", parallel: 1 }));
   put("package.json", '{"name":"native-generation-fixture","private":true}');
+  const installedLock = require("nx/src/utils/json").parseJson(readFileSync(join(workspace, "bun.lock"), "utf8"));
+  const bunLock = { lockfileVersion: 1, workspaces: { "": { name: "native-generation-fixture" } }, packages: { "@iarna/toml": installedLock.packages["@iarna/toml"], unrelated: ["unrelated@1.0.0", "", {}, "unrelated-integrity"] } };
+  put("bun.lock", JSON.stringify(bunLock));
   put(".nxignore", "state\n.nx\ntarget\n**/generated\n**/dist\n");
   symlinkSync(join(workspace, "node_modules"), join(root, "node_modules"), process.platform === "win32" ? "junction" : "dir");
   mkdirSync(join(root, "state"));
   for (const [name, contract] of Object.entries(cases.contracts) as [string, any][]) {
     put(name + "/source.json", '{"value":4}');
     put(name + "/📜️script.ts", 'import { mkdirSync, writeFileSync, readFileSync, appendFileSync } from "node:fs";\nmkdirSync("generated", {recursive:true}); writeFileSync("generated/code.rs", "pub const VALUE: u8 = " + JSON.parse(readFileSync("source.json", "utf8")).value + ";\\n"); appendFileSync("../state/generators", process.cwd().split(/[\\\\/]/).at(-1) + "\\n");\n');
-    put(name + "/📋️project.json", JSON.stringify({ name, targets: { generate: { cache: true, inputs: ["{projectRoot}/source.json", "{projectRoot}/📜️script.ts"], outputs: ["{projectRoot}/generated"], options: { command: "bun ./📜️script.ts generate" } } } }));
+    put(name + "/📋️project.json", JSON.stringify({ name, targets: { generate: { cache: true, inputs: ["{projectRoot}/source.json", "{projectRoot}/📜️script.ts", { externalDependencies: [] }], outputs: ["{projectRoot}/generated"], options: { command: "bun ./📜️script.ts generate" } } } }));
     put(name + "/src/lib.rs", 'include!("../generated/code.rs");\n');
   }
   put("app/src/lib.rs", "pub const VALUE: u8 = common::VALUE;\n");
@@ -53,6 +56,8 @@ if (process.argv.includes("cache")) {
   };
   await run("cold", 1, 3); await run("warm", 1, 3);
   put("development/src/lib.rs", "pub const UNRELATED: u8 = 2;\n"); await run("development-source", 1, 3);
+  bunLock.packages.unrelated[3] = "unrelated-integrity-changed"; put("bun.lock", JSON.stringify(bunLock)); await run("unrelated-javascript", 1, 3);
+  put("package.json", '{"name":"native-generation-fixture","private":true,"description":"unrelated metadata"}'); await run("package-metadata", 1, 3);
   const digest = () => {
     const files: Record<string, string> = {};
     const walk = (path: string) => { for (const name of readdirSync(join(root, path))) { const file = join(path, name); if (statSync(join(root, file)).isDirectory()) walk(file); else files[file] = createHash("sha256").update(readFileSync(join(root, file))).digest("hex"); } };
@@ -64,5 +69,6 @@ if (process.argv.includes("cache")) {
   try { await run("restore", 1, 3); assert.deepEqual(digest(), before); }
   finally { if (existsSync(join(root, "target"))) rmSync(join(root, "target"), {recursive:true}); renameSync(join(root, "state/compiler-store"), join(root, "target")); }
   put("library/source.json", '{"value":7}'); await run("schema-change", 2, 4);
+  bunLock.packages["@iarna/toml"][3] += "-changed"; put("bun.lock", JSON.stringify(bunLock)); await run("toml-tool-change", 3, 4);
   writeFileSync(join(ticket, "📓️native-preparation.md"), "# Native Generator Prerequisites\n\nActual Nx 23 and Cargo passed cold generation-before-compilation, warm reuse, deleted-output restoration without the compiler store, and schema-change invalidation in an isolated workspace using the real plugin and Cargo producer. The test checks actual generator and native producer execution counters and byte-identical output restoration.\n\n| Scenario | Native executions | Generator executions |\n| --- | ---: | ---: |\n" + rows.map((r) => `| ${r.scenario} | ${r.native} | ${r.generators} |`).join("\n") + "\n\nThis fixture qualifies ordering and artifact hashing; the separate Cargo metadata test qualifies production versus test generator selection.\n");
 }

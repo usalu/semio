@@ -5,7 +5,7 @@
   "displayName": "Set Page Media Box",
   "emoji": "📐️",
   "aggregateVariant": "SetPageMediaBox",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "set-page-media-box",
   "binaryTag": 2,
   "invertibility": "explicit-mutation",

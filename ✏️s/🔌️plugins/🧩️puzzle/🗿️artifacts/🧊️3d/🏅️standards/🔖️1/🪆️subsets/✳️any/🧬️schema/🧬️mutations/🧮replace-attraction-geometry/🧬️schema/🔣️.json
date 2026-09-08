@@ -1,0 +1,47 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/puzzle/3d/1/any/mutation/replace-attraction-geometry.json",
+  "title": "ReplaceAttractionGeometry",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newGap",
+    "newRise",
+    "newRotation",
+    "newShift",
+    "newTilt",
+    "newTurn",
+    "newX",
+    "newY"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "newGap": {
+      "type": "number"
+    },
+    "newShift": {
+      "type": "number"
+    },
+    "newRise": {
+      "type": "number"
+    },
+    "newRotation": {
+      "type": "number"
+    },
+    "newTurn": {
+      "type": "number"
+    },
+    "newTilt": {
+      "type": "number"
+    },
+    "newX": {
+      "type": "number"
+    },
+    "newY": {
+      "type": "number"
+    }
+  }
+}

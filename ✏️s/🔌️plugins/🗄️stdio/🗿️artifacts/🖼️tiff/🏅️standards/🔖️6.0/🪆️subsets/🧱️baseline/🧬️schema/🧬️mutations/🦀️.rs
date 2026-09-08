@@ -65,8 +65,8 @@
 //! @see ../🦀️.rs — this subset's conformance check, one axis per variant below.
 //! @see ../../✳️any/🧬️schema/🧬️mutations/🦀️.rs — the DOCUMENT vocabulary this one is disjoint from.
 
-use crate::artifacts::tiff::standards::v6_0::subsets::document::schema::diff::{TiffDiff, TiffIfdDiff, TiffIfdModified, TiffIfdsDiff, TiffTagAdded, TiffTagModified, TiffTagsDiff};
-use crate::artifacts::tiff::standards::v6_0::subsets::document::schema::snapshot::{TiffFieldType, TiffSnapshot, TiffTag, TiffValues, TAG_BITS_PER_SAMPLE, TAG_COMPRESSION, TAG_PHOTOMETRIC, TAG_STRIP_OFFSETS, TAG_TILE_LENGTH, TAG_TILE_WIDTH};
+use crate::standards::v6_0::subsets::document::schema::diff::{TiffDiff, TiffIfdDiff, TiffIfdModified, TiffIfdsDiff, TiffTagAdded, TiffTagModified, TiffTagsDiff};
+use crate::standards::v6_0::subsets::document::schema::snapshot::{TiffFieldType, TiffSnapshot, TiffTag, TiffValues, TAG_BITS_PER_SAMPLE, TAG_COMPRESSION, TAG_PHOTOMETRIC, TAG_STRIP_OFFSETS, TAG_TILE_LENGTH, TAG_TILE_WIDTH};
 use protocol::{Mutation, MutationDiff};
 
 //#region 🔖️Mutations
@@ -136,7 +136,7 @@ pub fn encode_tiff_baseline_projection_json(snapshot: &TiffSnapshot) -> String {
         },
         None => "absent".to_string(),
     };
-    let verdict = crate::artifacts::tiff::standards::v6_0::subsets::baseline::schema::check_tiff_baseline_conformance(snapshot)
+    let verdict = crate::standards::v6_0::subsets::baseline::schema::check_tiff_baseline_conformance(snapshot)
         .into_iter()
         .map(|finding| format!("\"{}\"", finding.code.0))
         .collect::<Vec<_>>()
@@ -157,7 +157,7 @@ pub fn encode_tiff_baseline_projection_json(snapshot: &TiffSnapshot) -> String {
 /// `mutate-<kind>` scenario names when it claims a kind leaves the class by its own axis.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn tiff_baseline_conformance_codes(snapshot: &TiffSnapshot) -> Vec<String> {
-    crate::artifacts::tiff::standards::v6_0::subsets::baseline::schema::check_tiff_baseline_conformance(snapshot).into_iter().map(|finding| finding.code.0).collect()
+    crate::standards::v6_0::subsets::baseline::schema::check_tiff_baseline_conformance(snapshot).into_iter().map(|finding| finding.code.0).collect()
 }
 //#endregion 🌉️ConformanceProjection
 //#endregion 🔖️Mutations
@@ -268,7 +268,7 @@ fn longs(values: &TiffValues) -> Vec<u32> {
 // 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
 pub(crate) fn agg_diff(this: &TiffBaselineMutation, base: &TiffSnapshot) -> protocol::MutationOutcome<TiffDiff> {
         protocol::MutationOutcome::new(match this {
-            TiffBaselineMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => crate::artifacts::tiff::standards::v6_0::subsets::document::schema::diff::diff_set_snapshot(base, snapshot),
+            TiffBaselineMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => crate::standards::v6_0::subsets::document::schema::diff::diff_set_snapshot(base, snapshot),
             TiffBaselineMutation::SetCompression(set_compression::SetCompression { compression }) => set_ifd0_tag(base, TAG_COMPRESSION, TiffFieldType::Short, TiffValues::Short(vec![*compression])),
             TiffBaselineMutation::SetPhotometricInterpretation(set_photometric_interpretation::SetPhotometricInterpretation { photometric }) => set_ifd0_tag(base, TAG_PHOTOMETRIC, TiffFieldType::Short, TiffValues::Short(vec![*photometric])),
             TiffBaselineMutation::SetBitsPerSample(set_bits_per_sample::SetBitsPerSample { bits }) => set_ifd0_tag(base, TAG_BITS_PER_SAMPLE, TiffFieldType::Short, TiffValues::Short(bits.clone())),
@@ -341,8 +341,8 @@ pub(crate) fn agg_inverse(this: &TiffBaselineMutation, base: &TiffSnapshot) -> V
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::tiff::standards::v6_0::subsets::document::schema::snapshot::{TiffByteOrder, TiffIfd};
-    use crate::artifacts::tiff::standards::v6_0::subsets::baseline::schema::{check_tiff_baseline_conformance, CODE_MISSING_STRIP_OFFSETS, CODE_TILED_NOT_BASELINE, CODE_UNSUPPORTED_BITS_PER_SAMPLE, CODE_UNSUPPORTED_COMPRESSION, CODE_UNSUPPORTED_PHOTOMETRIC};
+    use crate::standards::v6_0::subsets::document::schema::snapshot::{TiffByteOrder, TiffIfd};
+    use crate::standards::v6_0::subsets::baseline::schema::{check_tiff_baseline_conformance, CODE_MISSING_STRIP_OFFSETS, CODE_TILED_NOT_BASELINE, CODE_UNSUPPORTED_BITS_PER_SAMPLE, CODE_UNSUPPORTED_COMPRESSION, CODE_UNSUPPORTED_PHOTOMETRIC};
 
     fn tag(id: u16, kind: TiffFieldType, values: TiffValues) -> TiffTag {
         TiffTag { tag: id, kind, values }

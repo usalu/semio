@@ -4,12 +4,12 @@
 //! `mutation.target-missing`; otherwise the diff is a bare `frames.removed[index]` — note it does
 //! NOT carry the removed frame's content, which is why the INVERSE has to read it back out of
 //! `base`. Removing index 0 is the case that renumbers everything behind it.
-use crate::artifacts::semio::standards::v1::subsets::image::schema::diff::SemioImageDiff;
-use crate::artifacts::semio::standards::v1::subsets::image::schema::mutations::{apply_semio_image_mutation, SemioImageMutation};
-use crate::artifacts::semio::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
+use crate::standards::v1::subsets::image::schema::diff::SemioImageDiff;
+use crate::standards::v1::subsets::image::schema::mutations::{apply_semio_image_mutation, SemioImageMutation};
+use crate::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
 use protocol::{Mutation, MutationDiff};
-use crate::artifacts::semio::standards::v1::subsets::image::schema::mutations::insert_frame;
-use crate::artifacts::semio::standards::v1::subsets::image::schema::mutations::remove_frame;
+use crate::standards::v1::subsets::image::schema::mutations::insert_frame;
+use crate::standards::v1::subsets::image::schema::mutations::remove_frame;
 
 /// 🔗️ This leaf's own `🔺️diff` oracle, mounted directly: the enum-level `Mutation::diff` arm
 /// deliberately carries NO guard branches — every `mutation.no-op`/`mutation.clamped`/

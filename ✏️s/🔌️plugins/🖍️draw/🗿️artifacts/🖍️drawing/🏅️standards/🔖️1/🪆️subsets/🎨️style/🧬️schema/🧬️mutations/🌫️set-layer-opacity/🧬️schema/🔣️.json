@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/draw/drawing/1/style/mutation/set-layer-opacity.json",
+  "title": "SetLayerOpacity",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "layerId",
+    "opacity"
+  ],
+  "properties": {
+    "layerId": {
+      "type": "string"
+    },
+    "opacity": {
+      "type": "number"
+    }
+  }
+}

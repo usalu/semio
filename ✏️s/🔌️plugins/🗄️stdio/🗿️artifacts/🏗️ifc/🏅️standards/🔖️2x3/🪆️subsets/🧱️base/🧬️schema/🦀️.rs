@@ -1,10 +1,10 @@
 //! 🧬️ Ifc2x3Artifact schema — full artifact state for the `2x3` standard (buildingSMART
 //! Coordination View 2.0 era, ISO/PAS 16739:2005 schema). Sibling of `4️⃣4`'s `IfcArtifact`, own
 //! distinct schema id `s.stdio.ifc.2x3` so the two standards' descriptors never collide in the
-//! flat `::schema::register_artifact_schema_descriptor` registry.
+//! flat `::framework_schema::register_artifact_schema_descriptor` registry.
 
-use crate::artifacts::ifc::standards::v2x3::subsets::base::schema::snapshot::{Ifc2x3EdmPreamble, Ifc2x3Snapshot};
-use schema::ArtifactSchema;
+use crate::standards::v2x3::subsets::base::schema::snapshot::{Ifc2x3EdmPreamble, Ifc2x3Snapshot};
+use framework_schema::ArtifactSchema;
 
 //#region 🔖️Artifact
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
@@ -17,7 +17,7 @@ pub struct Ifc2x3Artifact {
     /// [`Ifc2x3Snapshot`] type — the actual persisted state.
     #[state(artifact)]
     #[value(default)]
-    pub document: crate::artifacts::step::engine::part21::Part21Document,
+    pub document: semio_s_artifact_stdio_step::engine::part21::Part21Document,
     #[state(artifact)]
     #[value(default)]
     pub edm_preamble: Option<Ifc2x3EdmPreamble>,
@@ -53,31 +53,31 @@ impl Ifc2x3Artifact {
 
 //#region 🔖️Descriptor
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn ifc2x3_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
-    schema::ArtifactSchemaDescriptor {
+pub fn ifc2x3_artifact_schema_descriptor() -> framework_schema::ArtifactSchemaDescriptor {
+    framework_schema::ArtifactSchemaDescriptor {
         id: "s.stdio.ifc.2x3",
-        artifact: schema::FacetLeaves {
+        artifact: framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),
             json_schema: include_str!("🔣️.json"),
             proto: include_str!("🛰️.proto"),
         },
-        snapshot: schema::FacetLeaves {
+        snapshot: framework_schema::FacetLeaves {
             rust: include_str!("📸️snapshot/🦀️.rs"),
             typescript: include_str!("📸️snapshot/🟦️.ts"),
             graphql: include_str!("📸️snapshot/🔗️.graphql"),
             json_schema: include_str!("📸️snapshot/🔣️.json"),
             proto: include_str!("📸️snapshot/🛰️.proto"),
         },
-        diff: schema::FacetLeaves {
+        diff: framework_schema::FacetLeaves {
             rust: include_str!("🔺️diff/🦀️.rs"),
             typescript: include_str!("🔺️diff/🟦️.ts"),
             graphql: include_str!("🔺️diff/🔗️.graphql"),
             json_schema: include_str!("🔺️diff/🔣️.json"),
             proto: include_str!("🔺️diff/🛰️.proto"),
         },
-        mutations: schema::FacetLeaves {
+        mutations: framework_schema::FacetLeaves {
             rust: include_str!("🧬️mutations/🦀️.rs"),
             typescript: include_str!("🧬️mutations/🟦️.ts"),
             graphql: include_str!("🧬️mutations/🔗️.graphql"),
@@ -89,9 +89,9 @@ pub fn ifc2x3_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
 //#endregion 🔖️Descriptor
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use crate::artifacts::ifc::standards::v2x3::subsets::base::schema::diff::Ifc2x3Diff;
-    use crate::artifacts::ifc::standards::v2x3::subsets::base::schema::mutations::{apply_ifc2x3_mutation, Ifc2x3Mutation};
-    use crate::artifacts::ifc::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot;
+    use crate::standards::v2x3::subsets::base::schema::diff::Ifc2x3Diff;
+    use crate::standards::v2x3::subsets::base::schema::mutations::{apply_ifc2x3_mutation, Ifc2x3Mutation};
+    use crate::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot;
     use semio_framework_plugin::ArtifactBuilder;
 
     //#region 🔖️Builder
@@ -140,7 +140,7 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use crate::artifacts::ifc::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot;
+    use crate::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot;
     use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     //#region 🔖️Parts
@@ -200,7 +200,7 @@ pub mod derived_analysis {
             for source in sources {
                 match source {
                     AnalyzeSource::Text(text) => match if text.trim_start().starts_with("ISO-10303-21") {
-                        crate::artifacts::ifc::standards::v2x3::engine::decode_ifc2x3(text.as_bytes()).map_err(|error| store::TextError::new(error, dsl::TextSpan::at(1, 1)))
+                        crate::standards::v2x3::engine::decode_ifc2x3(text.as_bytes()).map_err(|error| store::TextError::new(error, dsl::TextSpan::at(1, 1)))
                     } else {
                         <Ifc2x3Snapshot as store::ArtifactDsl>::parse_dsl(text)
                     } {
@@ -210,7 +210,7 @@ pub mod derived_analysis {
                             diagnostics.push(dsl::Diagnostic::error("stdio.analyze.text", dsl::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
-                    AnalyzeSource::Binary(bytes) => match <Ifc2x3Snapshot as store::ArtifactPack>::decode_pack(bytes).or_else(|_| crate::artifacts::ifc::standards::v2x3::engine::decode_ifc2x3(bytes).map_err(store::PackError::Schema)) {
+                    AnalyzeSource::Binary(bytes) => match <Ifc2x3Snapshot as store::ArtifactPack>::decode_pack(bytes).or_else(|_| crate::standards::v2x3::engine::decode_ifc2x3(bytes).map_err(store::PackError::Schema)) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = IoConfidence::Low;
@@ -268,7 +268,7 @@ semio_framework_plugin::derive_artifact_facets!(
 //#region 🔖️DocumentHelpers
 /// 🌱 Empty persisted snapshot. Dissolved out of `⚙️engine`
 /// (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) — reached as
-/// `crate::artifacts::ifc::standards::v2x3::engine::empty_ifc2x3_snapshot` through the `engine`
+/// `crate::standards::v2x3::engine::empty_ifc2x3_snapshot` through the `engine`
 /// barrel shim.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn empty_ifc2x3_snapshot() -> Ifc2x3Snapshot {
@@ -284,7 +284,7 @@ pub fn empty_ifc2x3_snapshot() -> Ifc2x3Snapshot {
 /// `empty_ifc2x3_snapshot()` stub, so every recognizer/walk law actually exercises real content).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn demo_ifc2x3_snapshot() -> Ifc2x3Snapshot {
-    use crate::artifacts::step::engine::part21::{Part21Document, Part21Header, Part21Instance, Part21Value};
+    use semio_s_artifact_stdio_step::engine::part21::{Part21Document, Part21Header, Part21Instance, Part21Value};
     let document = Part21Document {
         header: Part21Header {
             file_description: vec![Part21Value::List(vec![]), Part21Value::Str("2;1".into())],
@@ -305,7 +305,7 @@ pub fn demo_ifc2x3_snapshot() -> Ifc2x3Snapshot {
         ],
     };
     
-    Ifc2x3Snapshot { schema: crate::artifacts::ifc::standards::v2x3::subsets::base::schema::snapshot::STDIO_IFC2X3_DOCUMENT_SCHEMA.into(), document, edm_preamble: None }
+    Ifc2x3Snapshot { schema: crate::standards::v2x3::subsets::base::schema::snapshot::STDIO_IFC2X3_DOCUMENT_SCHEMA.into(), document, edm_preamble: None }
 }
 //#endregion 🔖️DocumentHelpers
 
@@ -315,7 +315,7 @@ pub fn demo_ifc2x3_snapshot() -> Ifc2x3Snapshot {
 /// alone" — `ArtifactDeclaration` has exactly one `.schema()`/`.document_codec()` slot and
 /// cannot hold both `4`'s and `2x3`'s independent descriptors/codecs at once, see the artifact
 /// root `🦀️.rs`'s own doc comment). Only physically dissolved out of `⚙️engine`; reached
-/// as `crate::artifacts::ifc::standards::v2x3::engine::register()` through the `engine` barrel
+/// as `crate::standards::v2x3::engine::register()` through the `engine` barrel
 /// shim, which is exactly the path `🦀️.rs`'s root `ifc::engine::register()` override calls
 /// explicitly (alongside `v4::engine::register()`).
 ///
@@ -327,18 +327,18 @@ pub fn demo_ifc2x3_snapshot() -> Ifc2x3Snapshot {
 /// `89a::engine::register` doc comment gives).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn register() {
-    ::schema::register_artifact_schema_descriptor(ifc2x3_artifact_schema_descriptor());
+    ::framework_schema::register_artifact_schema_descriptor(ifc2x3_artifact_schema_descriptor());
     register_artifact_inferences();
     register_pilot_languages();
-    store::register_document_codec(store::ArtifactCodec::of::<Ifc2x3Snapshot, crate::artifacts::ifc::standards::v2x3::subsets::base::schema::mutations::Ifc2x3Mutation>(
-        crate::artifacts::ifc::standards::v2x3::subsets::base::schema::snapshot::STDIO_IFC2X3_DOCUMENT_SCHEMA,
+    store::register_document_codec(store::ArtifactCodec::of::<Ifc2x3Snapshot, crate::standards::v2x3::subsets::base::schema::mutations::Ifc2x3Mutation>(
+        crate::standards::v2x3::subsets::base::schema::snapshot::STDIO_IFC2X3_DOCUMENT_SCHEMA,
     )).expect("static Stdio registration must be available and conflict-free");
     // 🛡️ D5's generic validate-on-build hook: registers each real subset's `SubsetValidator` so
     // `io_dispatch`/`wire_artifact_compose` re-check them for free. Each subset's `ComposerEntry`
     // is registered separately via this standard's own `composer::entries()` aggregation.
-    crate::artifacts::ifc::standards::v2x3::subsets::cv20::io::register();
-    crate::artifacts::ifc::standards::v2x3::subsets::sav::io::register();
-    crate::artifacts::ifc::standards::v2x3::subsets::cobie::io::register();
+    crate::standards::v2x3::subsets::cv20::io::register();
+    crate::standards::v2x3::subsets::sav::io::register();
+    crate::standards::v2x3::subsets::cobie::io::register();
 }
 
 /// 💡️ Registers `s.stdio.ifc.2x3.inference`'s facet leaves into the OS-wide inference catalog —
@@ -346,7 +346,7 @@ pub fn register() {
 /// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn register_artifact_inferences() {
-    ::schema::register_artifact_inference_descriptor(crate::artifacts::ifc::standards::v2x3::subsets::base::schema::inferences::ifc2x3_artifact_inference_descriptor());
+    ::framework_schema::register_artifact_inference_descriptor(crate::standards::v2x3::subsets::base::schema::inferences::ifc2x3_artifact_inference_descriptor());
 }
 
 /// 📌️ Ticket 26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION: 5-role
@@ -359,7 +359,7 @@ pub fn register_artifact_inferences() {
 /// `register_pilot_languages` established.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn register_pilot_languages() {
-    use crate::artifacts::ifc::standards::v2x3::subsets::base::schema::{diff, mutations, snapshot};
+    use crate::standards::v2x3::subsets::base::schema::{diff, mutations, snapshot};
     dsl::register_language(dsl::LanguageSpec {
         id: "stdio.ifc.2x3",
         extension: Some("ifc"),

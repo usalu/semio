@@ -5,7 +5,7 @@
   "displayName": "Remove Electrical Load Center Pv",
   "emoji": "🌘️",
   "aggregateVariant": "RemoveElectricalLoadCenterPv",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "remove-electrical-load-center-pv",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

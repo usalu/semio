@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangePileDM, base: &En1997Snapshot) -> protocol::Mutation
     if base.pile_d_m == payload.new_pile_d_m {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Pile diameter [m] is already {}.", payload.new_pile_d_m));
     }
-    protocol::MutationOutcome::new(En1997Diff { pile_d_m: Some(payload.new_pile_d_m.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1997Diff { pile_d_m: Some(payload.new_pile_d_m), ..Default::default() })
 }
 //#endregion 🔖️Diff

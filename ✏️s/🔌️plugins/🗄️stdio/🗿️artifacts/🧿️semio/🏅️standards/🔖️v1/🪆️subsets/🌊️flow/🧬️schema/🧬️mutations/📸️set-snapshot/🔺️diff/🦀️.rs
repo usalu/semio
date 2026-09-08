@@ -1,7 +1,7 @@
 //! 🔺️ Diff for `set-snapshot`.
 
-use crate::artifacts::semio::standards::v1::subsets::flow::schema::diff::{SemioFlowDiff, diff_set_snapshot};
-use crate::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot;
+use crate::standards::v1::subsets::flow::schema::diff::{SemioFlowDiff, diff_set_snapshot};
+use crate::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot;
 
 /// 🔺️ Diff helper for set-snapshot.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

@@ -5,9 +5,9 @@
 //! with `delete-vertex`, which DOES cascade: deleting an edge cascades nowhere — not into its
 //! vertices below it, and not into the loops above it — which is exactly what the committed diff's
 //! single-collection shape pins.
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::decode_semio_brep_diff_json;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::mutations::{decode_semio_brep_mutation_json, SemioBrepMutation};
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::{decode_semio_brep_snapshot_json, SemioBrepSnapshot};
+use crate::standards::v1::subsets::brep::schema::diff::decode_semio_brep_diff_json;
+use crate::standards::v1::subsets::brep::schema::mutations::{decode_semio_brep_mutation_json, SemioBrepMutation};
+use crate::standards::v1::subsets::brep::schema::snapshot::{decode_semio_brep_snapshot_json, SemioBrepSnapshot};
 use pack::value::ToValue;
 use protocol::{Mutation, MutationDiff};
 

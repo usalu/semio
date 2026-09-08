@@ -4,8 +4,8 @@ use crate::artifacts::equation::{equation_snapshot_from_fixture, EquationFixture
 use semio_framework::io::io_mechanism::Deserializer;
 use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};
-use semio_s_plugin_stdio::artifacts::md::{MdSnapshot, STDIO_MD_DOCUMENT_SCHEMA};
-use semio_s_plugin_stdio::artifacts::md::standards::v_commonmark::subsets::any::schema::snapshot::MdBlock;
+use semio_s_artifact_stdio_md::{MdSnapshot, STDIO_MD_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_md::standards::v_commonmark::subsets::any::schema::snapshot::MdBlock;
 
 pub const MD_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.md", standard: StandardId("commonmark"), subset: SubsetId::ANY };
 

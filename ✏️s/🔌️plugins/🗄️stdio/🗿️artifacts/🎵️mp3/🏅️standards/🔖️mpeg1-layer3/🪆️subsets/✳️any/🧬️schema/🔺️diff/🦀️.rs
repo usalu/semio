@@ -4,7 +4,7 @@
 //! tag cleared, `Some(Some(tag))` = tag set/changed); `frames` is a plain `Option<Vec<_>>`
 //! "changed or not" slot, same shape as `DeflateDiff::payload`.
 
-use crate::artifacts::mp3::standards::mpeg1_layer3::subsets::any::schema::snapshot::{Id3Frame, Id3v1Tag, Id3v2Tag, Mp3Frame, Mp3FrameHeader, Mp3Snapshot};
+use crate::standards::mpeg1_layer3::subsets::any::schema::snapshot::{Id3Frame, Id3v1Tag, Id3v2Tag, Mp3Frame, Mp3FrameHeader, Mp3Snapshot};
 use protocol::command::DiffAlgebra;
 use protocol::MutationDiff;
 

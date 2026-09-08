@@ -9,10 +9,10 @@
 //! leaf's own oracle. The derived `.op.semio`/`.spr.semio`/`.dsl.semio`/`.pack.semio`/
 //! `.patch.semio` encodings come from `fixtures generate`, not from here.
 
-use crate::artifacts::gltf::schema::mutations::create_sampler::diff::GltfCreateSamplerDiff;
-use crate::artifacts::gltf::schema::mutations::create_sampler::GltfCreateSamplerPayload;
-use crate::artifacts::gltf::schema::mutations::create_sampler::{diff, inverse, mutation};
-use crate::artifacts::gltf::GltfSnapshot;
+use crate::schema::mutations::create_sampler::diff::GltfCreateSamplerDiff;
+use crate::schema::mutations::create_sampler::GltfCreateSamplerPayload;
+use crate::schema::mutations::create_sampler::{diff, inverse, mutation};
+use crate::GltfSnapshot;
 
 const CASE: &str = "create-sampler/inserts-a-repeat-sampler-ahead-of-the-linear-sampler";
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");

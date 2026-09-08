@@ -4,9 +4,9 @@
 //! `mutation.target-missing`; otherwise `edges` is rebuilt without that id and `nodes` stays
 //! `None`. This is the asymmetry with `delete-node`, which cascades into `edges`: deleting an EDGE
 //! never cascades into `nodes`, and the two-edge before-snapshot proves the sibling edge survives.
-use crate::artifacts::semio::standards::v1::subsets::graph::schema::diff::SemioGraphDiff;
-use crate::artifacts::semio::standards::v1::subsets::graph::schema::mutations::SemioGraphMutation;
-use crate::artifacts::semio::standards::v1::subsets::graph::schema::snapshot::SemioGraphSnapshot;
+use crate::standards::v1::subsets::graph::schema::diff::SemioGraphDiff;
+use crate::standards::v1::subsets::graph::schema::mutations::SemioGraphMutation;
+use crate::standards::v1::subsets::graph::schema::snapshot::SemioGraphSnapshot;
 use protocol::{Mutation, MutationDiff};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");

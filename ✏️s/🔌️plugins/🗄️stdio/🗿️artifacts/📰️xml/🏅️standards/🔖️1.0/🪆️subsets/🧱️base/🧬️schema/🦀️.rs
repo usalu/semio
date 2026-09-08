@@ -1,7 +1,7 @@
 //! 🧬️ XmlArtifact schema — full artifact state.
 
-use crate::artifacts::xml::XmlSnapshot;
-use schema::ArtifactSchema;
+use crate::XmlSnapshot;
+use framework_schema::ArtifactSchema;
 
 //#region 🔖️Artifact
 /// 🧬️ Full `stdio.xml` artifact state.
@@ -13,7 +13,7 @@ pub struct XmlArtifact {
     pub schema: String,
     #[state(artifact)]
     #[value(default)]
-    pub doc: crate::artifacts::xml::schema::snapshot::XmlDocument,
+    pub doc: crate::schema::snapshot::XmlDocument,
 }
 //#endregion 🔖️Artifact
 
@@ -49,31 +49,31 @@ impl XmlArtifact {
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.stdio.xml`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn xml_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
-    schema::ArtifactSchemaDescriptor {
+pub fn xml_artifact_schema_descriptor() -> framework_schema::ArtifactSchemaDescriptor {
+    framework_schema::ArtifactSchemaDescriptor {
         id: "s.stdio.xml",
-        artifact: schema::FacetLeaves {
+        artifact: framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),
             json_schema: include_str!("🔣️.json"),
             proto: include_str!("🛰️.proto"),
         },
-        snapshot: schema::FacetLeaves {
+        snapshot: framework_schema::FacetLeaves {
             rust: include_str!("📸️snapshot/🦀️.rs"),
             typescript: include_str!("📸️snapshot/🟦️.ts"),
             graphql: include_str!("📸️snapshot/🔗️.graphql"),
             json_schema: include_str!("📸️snapshot/🔣️.json"),
             proto: include_str!("📸️snapshot/🛰️.proto"),
         },
-        diff: schema::FacetLeaves {
+        diff: framework_schema::FacetLeaves {
             rust: include_str!("🔺️diff/🦀️.rs"),
             typescript: include_str!("🔺️diff/🟦️.ts"),
             graphql: include_str!("🔺️diff/🔗️.graphql"),
             json_schema: include_str!("🔺️diff/🔣️.json"),
             proto: include_str!("🔺️diff/🛰️.proto"),
         },
-        mutations: schema::FacetLeaves {
+        mutations: framework_schema::FacetLeaves {
             rust: include_str!("🧬️mutations/🦀️.rs"),
             typescript: include_str!("🧬️mutations/🟦️.ts"),
             graphql: include_str!("🧬️mutations/🔗️.graphql"),
@@ -85,7 +85,7 @@ pub fn xml_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
 //#endregion 🔖️Descriptor
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use crate::artifacts::xml::{XmlDiff, XmlMutation, XmlSnapshot};
+    use crate::{XmlDiff, XmlMutation, XmlSnapshot};
     use semio_framework_plugin::ArtifactBuilder;
 
     //#region 🔖️Builder
@@ -113,7 +113,7 @@ pub mod derived_construction {
             Ok(Self::from_snapshot(<XmlSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
         fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
-            let diff = crate::artifacts::xml::schema::mutations::apply_xml_mutation(&mut self.snapshot, &mutation);
+            let diff = crate::schema::mutations::apply_xml_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
         fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
@@ -135,7 +135,7 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use crate::artifacts::xml::XmlSnapshot;
+    use crate::XmlSnapshot;
     use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     //#region 🔖️Parts
@@ -206,8 +206,8 @@ pub fn empty_xml_snapshot() -> XmlSnapshot {
 /// snapshot's `print_dsl`/`encode_pack` output, asserted equal by `fixture_honesty_law` below).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn demo_xml_snapshot() -> XmlSnapshot {
-    use crate::artifacts::xml::schema::snapshot::{XmlAttr, XmlDeclaration, XmlDocument, XmlNode};
-    use crate::artifacts::xml::STDIO_XML_DOCUMENT_SCHEMA;
+    use crate::schema::snapshot::{XmlAttr, XmlDeclaration, XmlDocument, XmlNode};
+    use crate::STDIO_XML_DOCUMENT_SCHEMA;
     let root = XmlNode::Element {
         name: "catalog".into(),
         attrs: vec![XmlAttr { name: "xmlns:c".into(), value: "urn:example:catalog".into() }, XmlAttr { name: "version".into(), value: "2".into() }],
@@ -243,10 +243,10 @@ semio_framework_plugin::derive_artifact_facets!(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::xml::schema::diff::{XmlChildAdded, XmlNodeDiff};
-    use crate::artifacts::xml::schema::mutations::{InsertElementMutation, InsertElementPayload, RemoveElementMutation, RemoveElementPayload, SetAttributeMutation, SetAttributePayload, SetDeclarationMutation, SetDeclarationPayload, SetDoctypeMutation, SetDoctypePayload, SetTextMutation, SetTextPayload, XmlNodePath};
-    use crate::artifacts::xml::schema::snapshot::{XmlAttr, XmlDeclaration, XmlDocument, XmlNode};
-    use crate::artifacts::xml::{XmlDiff, XmlMutation, STDIO_XML_DOCUMENT_SCHEMA};
+    use crate::schema::diff::{XmlChildAdded, XmlNodeDiff};
+    use crate::schema::mutations::{InsertElementMutation, InsertElementPayload, RemoveElementMutation, RemoveElementPayload, SetAttributeMutation, SetAttributePayload, SetDeclarationMutation, SetDeclarationPayload, SetDoctypeMutation, SetDoctypePayload, SetTextMutation, SetTextPayload, XmlNodePath};
+    use crate::schema::snapshot::{XmlAttr, XmlDeclaration, XmlDocument, XmlNode};
+    use crate::{XmlDiff, XmlMutation, STDIO_XML_DOCUMENT_SCHEMA};
     use protocol::command::DiffAlgebra;
     use protocol::{Mutation, MutationDiff};
 
@@ -383,7 +383,7 @@ mod tests {
             let applied_via_diff = MutationDiff::apply(diff_direct.diff(), &base).unwrap();
 
             let mut via_apply = base.clone();
-            let diff_from_apply = crate::artifacts::xml::schema::mutations::apply_xml_mutation(&mut via_apply, &mutation);
+            let diff_from_apply = crate::schema::mutations::apply_xml_mutation(&mut via_apply, &mutation);
 
             assert_eq!(applied_via_diff, via_apply, "mutation_diff_law: apply mismatch for {mutation:?}");
             assert_eq!(diff_direct, diff_from_apply, "mutation_diff_law: diff mismatch for {mutation:?}");
@@ -399,9 +399,9 @@ mod tests {
 
             // Mutation-level round-trip.
             let mut round_tripped = base.clone();
-            crate::artifacts::xml::schema::mutations::apply_xml_mutation(&mut round_tripped, &mutation);
+            crate::schema::mutations::apply_xml_mutation(&mut round_tripped, &mutation);
             for inverse_mutation in <XmlMutation as Mutation<XmlSnapshot>>::inverse(&mutation, &base) {
-                crate::artifacts::xml::schema::mutations::apply_xml_mutation(&mut round_tripped, &inverse_mutation);
+                crate::schema::mutations::apply_xml_mutation(&mut round_tripped, &inverse_mutation);
             }
             assert_eq!(round_tripped, base, "inverse_law (mutation-level).await failed for {mutation:?}");
 
@@ -443,7 +443,7 @@ mod tests {
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn root_children_diff(diff: &XmlDiff) -> &crate::artifacts::xml::schema::diff::XmlChildrenDiff {
+    fn root_children_diff(diff: &XmlDiff) -> &crate::schema::diff::XmlChildrenDiff {
         match diff.root.as_ref().expect("root diff present") {
             XmlNodeDiff::Element(e) => e.children.as_ref().expect("children diff present"),
             other => panic!("expected element diff, got {other:?}"),
@@ -553,10 +553,10 @@ mod tests {
 
         // Real fixture (the demo's `🏷️.xml`) diffed against a mutated variant.
         let fixture_text = include_str!("../📚️examples/🎬️demo/🖼️assets/🏷️.xml");
-        let fixture_doc = crate::artifacts::xml::schema::snapshot::xml_document_from_text(fixture_text).expect("fixture parses");
+        let fixture_doc = crate::schema::snapshot::xml_document_from_text(fixture_text).expect("fixture parses");
         let fixture = XmlSnapshot { schema: STDIO_XML_DOCUMENT_SCHEMA.into(), doc: fixture_doc };
         let mut mutated = fixture.clone();
-        crate::artifacts::xml::schema::mutations::apply_xml_mutation(&mut mutated, &XmlMutation::SetAttribute(SetAttributeMutation::Apply(SetAttributePayload { path: XmlNodePath::root(), name: "id".into(), value: Some("1".into()) })));
+        crate::schema::mutations::apply_xml_mutation(&mut mutated, &XmlMutation::SetAttribute(SetAttributeMutation::Apply(SetAttributePayload { path: XmlNodePath::root(), name: "id".into(), value: Some("1".into()) })));
         assert_ne!(fixture, mutated);
         assert_eq!(MutationDiff::apply(&<XmlDiff as DiffAlgebra<XmlSnapshot>>::between(&fixture, &mutated), &fixture).unwrap(), mutated);
         assert_eq!(MutationDiff::apply(&<XmlDiff as DiffAlgebra<XmlSnapshot>>::between(&mutated, &fixture), &mutated).unwrap(), fixture);
@@ -567,11 +567,11 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn codec_retention_law() {
         let fixture_text = include_str!("../📚️examples/🎬️demo/🖼️assets/🏷️.xml");
-        let doc = crate::artifacts::xml::schema::snapshot::xml_document_from_text(fixture_text).expect("fixture parses");
+        let doc = crate::schema::snapshot::xml_document_from_text(fixture_text).expect("fixture parses");
         // Documented normal form: leading/trailing whitespace around the document is trimmed (the
         // codec re-emits no trailing newline); the fixture has neither internal whitespace nor
         // empty elements, so the byte content otherwise round-trips exactly.
-        let re_encoded = crate::artifacts::xml::schema::snapshot::xml_document_to_text(&doc);
+        let re_encoded = crate::schema::snapshot::xml_document_to_text(&doc);
         assert_eq!(re_encoded, fixture_text.trim());
 
         let snap = XmlSnapshot { schema: STDIO_XML_DOCUMENT_SCHEMA.into(), doc };
@@ -616,7 +616,7 @@ mod tests {
         let XmlNodeDiff::Element(modified_element) = &modified_entry.diff else { panic!("expected element diff") };
         assert!(modified_element.name.is_some(), "modified child: name not exercised");
         assert!(modified_element.attributes.is_some(), "modified child: attributes not exercised");
-        let nested_children: &crate::artifacts::xml::schema::diff::XmlChildrenDiff = modified_element.children.as_ref().expect("nested children diff present");
+        let nested_children: &crate::schema::diff::XmlChildrenDiff = modified_element.children.as_ref().expect("nested children diff present");
         let nested_added: &Vec<XmlChildAdded> = &nested_children.added;
         assert!(!nested_added.is_empty(), "children: added (nested) not exercised");
     }
@@ -632,7 +632,7 @@ mod tests {
     /// mutations/diff facets that harness does not auto-discover at all.
     mod conformance_laws {
         use super::*;
-        use crate::artifacts::xml::schema::{diff, mutations, snapshot};
+        use crate::schema::{diff, mutations, snapshot};
         use protocol::{DiffCodec, OpBinary, OpText};
 
         /// ✅️ "committed files parse": all 6 handcrafted `.grammar.semio`/`.protocol.semio` files

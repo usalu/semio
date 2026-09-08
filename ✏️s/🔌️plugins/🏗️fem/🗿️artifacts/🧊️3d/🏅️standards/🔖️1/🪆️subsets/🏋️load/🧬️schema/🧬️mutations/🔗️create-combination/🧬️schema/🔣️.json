@@ -1,0 +1,36 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/fem/3d/1/load/mutation/create-combination.json",
+  "title": "CreateCombination",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "combination"
+  ],
+  "properties": {
+    "combination": {
+      "title": "FemCombination",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "terms"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "terms": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "number"
+          }
+        }
+      }
+    }
+  }
+}

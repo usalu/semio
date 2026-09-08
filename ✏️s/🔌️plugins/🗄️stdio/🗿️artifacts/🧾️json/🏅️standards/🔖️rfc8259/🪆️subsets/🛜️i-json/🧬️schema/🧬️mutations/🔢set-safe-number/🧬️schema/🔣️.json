@@ -1,0 +1,65 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/json/rfc8259/i-json/mutation/set-safe-number.json",
+  "title": "SetSafeNumber",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "path",
+    "lexeme"
+  ],
+  "properties": {
+    "path": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/JsonPathSegment"
+      }
+    },
+    "lexeme": {
+      "type": "string"
+    },
+    "kind": {
+      "const": "setSafeNumber",
+      "description": "Aggregate discriminator spliced in by JsonIJsonRoot; absent when the payload stands alone."
+    }
+  },
+  "$defs": {
+    "JsonPathSegment": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ],
+          "properties": {
+            "kind": {
+              "const": "key"
+            },
+            "value": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ],
+          "properties": {
+            "kind": {
+              "const": "index"
+            },
+            "value": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        }
+      ]
+    }
+  }
+}

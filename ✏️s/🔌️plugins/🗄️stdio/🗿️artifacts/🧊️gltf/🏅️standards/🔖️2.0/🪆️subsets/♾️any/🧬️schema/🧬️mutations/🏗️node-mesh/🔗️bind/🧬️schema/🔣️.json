@@ -1,0 +1,32 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/node-mesh/bind.json",
+  "title": "GltfBindNodeMeshMutation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "node",
+    "mesh"
+  ],
+  "properties": {
+    "node": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "mesh": {
+      "type": "integer",
+      "minimum": 0
+    }
+  },
+  "x-semio": {
+    "id": "s.stdio.gltf.mutation.bind-node-mesh.v1",
+    "version": 1,
+    "phase": "mutation",
+    "kind": "bind",
+    "touchedPaths": [
+      "document/nodes/*/mesh"
+    ],
+    "referencePolicy": "validates the typed mesh reference"
+  },
+  "x-semio-mutation": "bind-node-mesh"
+}

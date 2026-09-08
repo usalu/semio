@@ -68,7 +68,7 @@
         {
           "id": "insert-record",
           "capability": "csv-rfc4180-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -87,7 +87,7 @@
         {
           "id": "remove-record",
           "capability": "csv-rfc4180-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -106,7 +106,7 @@
         {
           "id": "set-field",
           "capability": "csv-rfc4180-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -125,7 +125,7 @@
         {
           "id": "set-has-header",
           "capability": "csv-rfc4180-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -144,7 +144,7 @@
         {
           "id": "set-snapshot",
           "capability": "csv-rfc4180-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],

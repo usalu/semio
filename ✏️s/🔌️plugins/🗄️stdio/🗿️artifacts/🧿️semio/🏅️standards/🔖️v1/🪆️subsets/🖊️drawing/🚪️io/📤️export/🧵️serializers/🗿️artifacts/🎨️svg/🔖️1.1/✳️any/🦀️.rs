@@ -10,13 +10,13 @@
 //! sibling `<g id="layer-<id>">`, so MULTIPLE layers DO survive, just not as anything SVG itself
 //! calls a layer); colors are emitted as `rgba(r,g,b,a)` (matches the import leaf's own parser).
 
-use crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::{SemioRgba, SemioTransform};
-use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{DrawNode, DrawStyle, PathSegment, SemioDrawingSnapshot};
-use crate::artifacts::svg::{
+use crate::standards::v1::subsets::base::schema::geometry::{SemioRgba, SemioTransform};
+use crate::standards::v1::subsets::drawing::schema::snapshot::{DrawNode, DrawStyle, PathSegment, SemioDrawingSnapshot};
+use semio_s_artifact_stdio_svg::{
     schema::snapshot::{svg_element_to_xml_node, CommonAttrs, Matrix2D, PathCommand, PresentationAttrs, SvgElement, TransformOp, ViewBox},
     SvgSnapshot,
 };
-use crate::artifacts::xml::schema::snapshot::{XmlAttr, XmlDocument};
+use semio_s_artifact_stdio_xml::schema::snapshot::{XmlAttr, XmlDocument};
 use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
 
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("drawing") };
@@ -155,7 +155,7 @@ impl ArtifactSerializer for SemioDrawingToSvg {
             xmlns: Some("http://www.w3.org/2000/svg".into()),
             children: layer_groups,
         };
-        Ok(SvgSnapshot { schema: crate::artifacts::svg::STDIO_SVG_DOCUMENT_SCHEMA.into(), doc: XmlDocument { root: Some(svg_element_to_xml_node(&root)), doctype: None, declaration: None, prolog: Vec::new() } })
+        Ok(SvgSnapshot { schema: semio_s_artifact_stdio_svg::STDIO_SVG_DOCUMENT_SCHEMA.into(), doc: XmlDocument { root: Some(svg_element_to_xml_node(&root)), doctype: None, declaration: None, prolog: Vec::new() } })
     }
 }
 //#endregion 🔖️Serializer
@@ -164,8 +164,8 @@ impl ArtifactSerializer for SemioDrawingToSvg {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioPoint2;
-    use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{DrawCanvas, DrawLayer};
+    use crate::standards::v1::subsets::base::schema::geometry::SemioPoint2;
+    use crate::standards::v1::subsets::drawing::schema::snapshot::{DrawCanvas, DrawLayer};
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn sample_drawing() -> SemioDrawingSnapshot {
@@ -195,7 +195,7 @@ mod tests {
         let svg = semio_framework_plugin::resolve_ready(SemioDrawingToSvg::serialize(&drawing)).expect("serialize");
         let text = <SvgSnapshot as store::ArtifactDsl>::print_dsl(&svg);
         let reparsed = <SvgSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("reparse real svg text");
-        let root = crate::artifacts::svg::schema::snapshot::svg_element_from_xml_node(reparsed.doc.root.as_ref().unwrap()).expect("typed view");
+        let root = semio_s_artifact_stdio_svg::schema::snapshot::svg_element_from_xml_node(reparsed.doc.root.as_ref().unwrap()).expect("typed view");
         match &root {
             SvgElement::Svg { view_box, .. } => assert_eq!(*view_box, Some(ViewBox { min_x: 0.0, min_y: 0.0, width: 100.0, height: 50.0 })),
             other => panic!("expected <svg>, got {other:?}"),
@@ -206,7 +206,7 @@ mod tests {
     async fn image_node_round_trips_through_data_uri_convention() {
         let drawing = sample_drawing();
         let svg = semio_framework_plugin::resolve_ready(SemioDrawingToSvg::serialize(&drawing)).expect("serialize");
-        let root = crate::artifacts::svg::schema::snapshot::svg_element_from_xml_node(svg.doc.root.as_ref().unwrap()).expect("typed view");
+        let root = semio_s_artifact_stdio_svg::schema::snapshot::svg_element_from_xml_node(svg.doc.root.as_ref().unwrap()).expect("typed view");
         let layer_group = match &root {
             SvgElement::Svg { children, .. } => &children[0],
             _ => panic!("expected svg root"),

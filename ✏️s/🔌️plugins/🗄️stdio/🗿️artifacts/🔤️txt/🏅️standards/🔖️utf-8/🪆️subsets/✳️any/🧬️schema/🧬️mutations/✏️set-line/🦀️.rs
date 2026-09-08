@@ -1,8 +1,8 @@
 //! 🧬️ Direct set-line mutation owner.
 //#region 🔖️Payload
-use crate::artifacts::txt::TxtSnapshot;
-use crate::artifacts::txt::schema::diff::{TxtDiff, TxtLineModified, TxtLinesDiff};
-use crate::artifacts::txt::schema::mutation_support::{native_shape_error, native_snapshot_error, native_text_error, txt_u32_to_usize};
+use crate::TxtSnapshot;
+use crate::schema::diff::{TxtDiff, TxtLineModified, TxtLinesDiff};
+use crate::schema::mutation_support::{native_shape_error, native_snapshot_error, native_text_error, txt_u32_to_usize};
 
 #[path = "💾️binary/🦀️.rs"]
 pub mod binary;
@@ -20,10 +20,10 @@ pub struct SetLineMutation {
 pub type SetLinePayload = SetLineMutation;
 
 pub fn decode_set_line_payload(value: &dsl::DslValue) -> Result<SetLinePayload, String> {
-    let fields = crate::artifacts::txt::schema::mutation_support::txt_required_object(value, &["index", "text"])?;
+    let fields = crate::schema::mutation_support::txt_required_object(value, &["index", "text"])?;
     Ok(SetLinePayload {
-        index: crate::artifacts::txt::schema::mutation_support::txt_graphql_u32_variable(fields[0].1)?,
-        text: crate::artifacts::txt::schema::mutation_support::txt_unicode_string(fields[1].1, "text")?,
+        index: crate::schema::mutation_support::txt_graphql_u32_variable(fields[0].1)?,
+        text: crate::schema::mutation_support::txt_unicode_string(fields[1].1, "text")?,
     })
 }
 //#endregion 🔖️Payload
@@ -81,7 +81,7 @@ impl protocol::MutationKind<TxtSnapshot, super::TxtMutation> for SetLineMutation
 mod tests {
     use super::super::{TxtMutation, apply_txt_mutation};
     use super::*;
-    use crate::artifacts::txt::schema::snapshot::LineEnding;
+    use crate::schema::snapshot::LineEnding;
     use protocol::{Mutation, MutationKind, MutationLeaf, OpBinary, OpText};
 
     #[test]

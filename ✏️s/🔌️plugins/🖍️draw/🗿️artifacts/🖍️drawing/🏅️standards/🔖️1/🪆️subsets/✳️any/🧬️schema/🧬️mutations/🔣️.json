@@ -1,15 +1,65 @@
 {
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://semio.tech/schema/s/drawing/drawing/mutation.json",
   "title": "DrawingMutation",
-  "type": "object",
-  "properties": {
-    "schema": {
-      "type": "string",
-      "x-semio-state": "artifact"
+  "oneOf": [
+    {
+      "$ref": "./../../../🏷️metadata/🧬️schema/🧬️mutations/👁️set-layer-visible/🧬️schema/🔣️.json"
     },
-    "value": {
-      "type": "string",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./../../../🏷️metadata/🧬️schema/🧬️mutations/🔒️set-layer-locked/🧬️schema/🔣️.json"
+    },
+    {
+      "$ref": "./../../../🎨️style/🧬️schema/🧬️mutations/🌫️set-layer-opacity/🧬️schema/🔣️.json"
+    },
+    {
+      "$ref": "./../../../🎨️style/🧬️schema/🧬️mutations/🌓️set-layer-blend-mode/🧬️schema/🔣️.json"
+    },
+    {
+      "$ref": "./../../../🏷️metadata/🧬️schema/🧬️mutations/✏️rename-layer/🧬️schema/🔣️.json"
+    },
+    {
+      "$ref": "./../../../🔀️transform/🧬️schema/🧬️mutations/🔄️update-layer-transform/🧬️schema/🔣️.json"
+    },
+    {
+      "$ref": "./../../../🎨️style/🧬️schema/🧬️mutations/🎨️replace-layer-fill/🧬️schema/🔣️.json"
+    },
+    {
+      "$ref": "./../../../🎨️style/🧬️schema/🧬️mutations/🖊️replace-layer-stroke/🧬️schema/🔣️.json"
+    },
+    {
+      "$ref": "./../../../🔀️transform/🧬️schema/🧬️mutations/🔀set-layer-boolean-operation/🧬️schema/🔣️.json"
+    },
+    {
+      "$ref": "./../../../🔀️transform/🧬️schema/🧬️mutations/🔍️update-layer-trace-params/🧬️schema/🔣️.json"
+    },
+    {
+      "$ref": "./../../../🧱️structure/🧬️schema/🧬️mutations/➕️create-layer/🧬️schema/🔣️.json"
+    },
+    {
+      "$ref": "./../../../🧱️structure/🧬️schema/🧬️mutations/📋️duplicate-layer/🧬️schema/🔣️.json"
+    },
+    {
+      "$ref": "./../../../🧱️structure/🧬️schema/🧬️mutations/🗑️delete-layer/🧬️schema/🔣️.json"
+    },
+    {
+      "$ref": "./../../../🧱️structure/🧬️schema/🧬️mutations/🔃reorder-layer/🧬️schema/🔣️.json"
     }
-  }
+  ],
+  "x-semio-mutationKinds": [
+    "set-layer-visible",
+    "set-layer-locked",
+    "set-layer-opacity",
+    "set-layer-blend-mode",
+    "rename-layer",
+    "update-layer-transform",
+    "replace-layer-fill",
+    "replace-layer-stroke",
+    "set-layer-boolean-operation",
+    "update-layer-trace-params",
+    "create-layer",
+    "duplicate-layer",
+    "delete-layer",
+    "reorder-layer"
+  ]
 }

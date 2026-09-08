@@ -97,7 +97,7 @@ impl Din4108Artifact {
             envelope_area_m2: snapshot.envelope_area_m2,
             bb2_details_conform: snapshot.bb2_details_conform,
             application_type: snapshot.application_type.clone(),
-            declared_application_class: snapshot.declared_application_class.clone(),
+            declared_application_class: snapshot.declared_application_class,
             selected_check_index: None,
         }
     }

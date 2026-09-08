@@ -1,0 +1,781 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/base/mutation/apply-brep.json",
+  "title": "ApplyBrep",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation"
+  ],
+  "properties": {
+    "mutation": {
+      "$ref": "#/$defs/SemioBrepMutation"
+    }
+  },
+  "$defs": {
+    "SemioBrepMutation": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "CreateVertex"
+          ],
+          "properties": {
+            "CreateVertex": {
+              "$ref": "#/$defs/CreateVertex"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "DeleteVertex"
+          ],
+          "properties": {
+            "DeleteVertex": {
+              "$ref": "#/$defs/DeleteVertex"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "CreateEdge"
+          ],
+          "properties": {
+            "CreateEdge": {
+              "$ref": "#/$defs/CreateEdge"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "DeleteEdge"
+          ],
+          "properties": {
+            "DeleteEdge": {
+              "$ref": "#/$defs/DeleteEdge"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "CreateFace"
+          ],
+          "properties": {
+            "CreateFace": {
+              "$ref": "#/$defs/CreateFace"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "DeleteFace"
+          ],
+          "properties": {
+            "DeleteFace": {
+              "$ref": "#/$defs/DeleteFace"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "CreateShell"
+          ],
+          "properties": {
+            "CreateShell": {
+              "$ref": "#/$defs/CreateShell"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "DeleteShell"
+          ],
+          "properties": {
+            "DeleteShell": {
+              "$ref": "#/$defs/DeleteShell"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "CreateSolid"
+          ],
+          "properties": {
+            "CreateSolid": {
+              "$ref": "#/$defs/CreateSolid"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "DeleteSolid"
+          ],
+          "properties": {
+            "DeleteSolid": {
+              "$ref": "#/$defs/DeleteSolid"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "ReplaceCurve"
+          ],
+          "properties": {
+            "ReplaceCurve": {
+              "$ref": "#/$defs/ReplaceCurve"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "ReplaceSurface"
+          ],
+          "properties": {
+            "ReplaceSurface": {
+              "$ref": "#/$defs/ReplaceSurface"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "MoveVertex"
+          ],
+          "properties": {
+            "MoveVertex": {
+              "$ref": "#/$defs/MoveVertex"
+            }
+          }
+        }
+      ]
+    },
+    "CreateVertex": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "point"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "point": {
+          "$ref": "#/$defs/SemioPoint3"
+        }
+      }
+    },
+    "SemioPoint3": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y",
+        "z"
+      ],
+      "properties": {
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "z": {
+          "type": "number"
+        }
+      }
+    },
+    "DeleteVertex": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        }
+      }
+    },
+    "CreateEdge": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "source",
+        "target"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/GraphEdgeId"
+        },
+        "source": {
+          "$ref": "#/$defs/GraphNodeId"
+        },
+        "target": {
+          "$ref": "#/$defs/GraphNodeId"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        }
+      }
+    },
+    "GraphEdgeId": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "value"
+      ],
+      "properties": {
+        "value": {
+          "type": "string"
+        }
+      }
+    },
+    "GraphNodeId": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "value"
+      ],
+      "properties": {
+        "value": {
+          "type": "string"
+        }
+      }
+    },
+    "DeleteEdge": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/GraphEdgeId"
+        }
+      }
+    },
+    "CreateFace": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "outer_loop",
+        "surface",
+        "orientation"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "outer_loop": {
+          "type": "string"
+        },
+        "inner_loops": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "surface": {
+          "$ref": "#/$defs/BrepSurface"
+        },
+        "orientation": {
+          "type": "boolean"
+        }
+      }
+    },
+    "BrepSurface": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "origin",
+            "normal"
+          ],
+          "properties": {
+            "kind": {
+              "const": "plane"
+            },
+            "origin": {
+              "$ref": "#/$defs/SemioPoint3"
+            },
+            "normal": {
+              "$ref": "#/$defs/SemioPoint3"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "origin",
+            "axis",
+            "radius"
+          ],
+          "properties": {
+            "kind": {
+              "const": "cylinder"
+            },
+            "origin": {
+              "$ref": "#/$defs/SemioPoint3"
+            },
+            "axis": {
+              "$ref": "#/$defs/SemioPoint3"
+            },
+            "radius": {
+              "type": "number"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "origin",
+            "axis",
+            "radius",
+            "halfAngle"
+          ],
+          "properties": {
+            "kind": {
+              "const": "cone"
+            },
+            "origin": {
+              "$ref": "#/$defs/SemioPoint3"
+            },
+            "axis": {
+              "$ref": "#/$defs/SemioPoint3"
+            },
+            "radius": {
+              "type": "number"
+            },
+            "halfAngle": {
+              "type": "number"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "center",
+            "radius"
+          ],
+          "properties": {
+            "kind": {
+              "const": "sphere"
+            },
+            "center": {
+              "$ref": "#/$defs/SemioPoint3"
+            },
+            "radius": {
+              "type": "number"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "center",
+            "axis",
+            "majorRadius",
+            "minorRadius"
+          ],
+          "properties": {
+            "kind": {
+              "const": "torus"
+            },
+            "center": {
+              "$ref": "#/$defs/SemioPoint3"
+            },
+            "axis": {
+              "$ref": "#/$defs/SemioPoint3"
+            },
+            "majorRadius": {
+              "type": "number"
+            },
+            "minorRadius": {
+              "type": "number"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "controlPoints",
+            "weights",
+            "uCount",
+            "vCount",
+            "degreeU",
+            "degreeV",
+            "knotsU",
+            "knotsV"
+          ],
+          "properties": {
+            "kind": {
+              "const": "nurbs"
+            },
+            "controlPoints": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/SemioPoint3"
+              }
+            },
+            "weights": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              }
+            },
+            "uCount": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4294967295
+            },
+            "vCount": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4294967295
+            },
+            "degreeU": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4294967295
+            },
+            "degreeV": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4294967295
+            },
+            "knotsU": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              }
+            },
+            "knotsV": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "DeleteFace": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        }
+      }
+    },
+    "CreateShell": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "faces": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/BrepShellFace"
+          }
+        }
+      }
+    },
+    "BrepShellFace": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "face",
+        "orientation"
+      ],
+      "properties": {
+        "face": {
+          "type": "string"
+        },
+        "orientation": {
+          "type": "boolean"
+        }
+      }
+    },
+    "DeleteShell": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        }
+      }
+    },
+    "CreateSolid": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "shells": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/BrepSolidShell"
+          }
+        }
+      }
+    },
+    "BrepSolidShell": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "shell",
+        "isVoid"
+      ],
+      "properties": {
+        "shell": {
+          "type": "string"
+        },
+        "isVoid": {
+          "type": "boolean"
+        }
+      }
+    },
+    "DeleteSolid": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        }
+      }
+    },
+    "ReplaceCurve": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "edge_id",
+        "new_curve"
+      ],
+      "properties": {
+        "edge_id": {
+          "type": "string"
+        },
+        "new_curve": {
+          "$ref": "#/$defs/BrepCurve"
+        }
+      }
+    },
+    "BrepCurve": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "origin",
+            "direction"
+          ],
+          "properties": {
+            "kind": {
+              "const": "line"
+            },
+            "origin": {
+              "$ref": "#/$defs/SemioPoint3"
+            },
+            "direction": {
+              "$ref": "#/$defs/SemioPoint3"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "center",
+            "axis",
+            "radius"
+          ],
+          "properties": {
+            "kind": {
+              "const": "circle"
+            },
+            "center": {
+              "$ref": "#/$defs/SemioPoint3"
+            },
+            "axis": {
+              "$ref": "#/$defs/SemioPoint3"
+            },
+            "radius": {
+              "type": "number"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "center",
+            "axis",
+            "radiusMajor",
+            "radiusMinor"
+          ],
+          "properties": {
+            "kind": {
+              "const": "ellipse"
+            },
+            "center": {
+              "$ref": "#/$defs/SemioPoint3"
+            },
+            "axis": {
+              "$ref": "#/$defs/SemioPoint3"
+            },
+            "radiusMajor": {
+              "type": "number"
+            },
+            "radiusMinor": {
+              "type": "number"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "controlPoints",
+            "weights",
+            "degree",
+            "knots"
+          ],
+          "properties": {
+            "kind": {
+              "const": "nurbs"
+            },
+            "controlPoints": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/SemioPoint3"
+              }
+            },
+            "weights": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              }
+            },
+            "degree": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4294967295
+            },
+            "knots": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "ReplaceSurface": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "face_id",
+        "new_surface"
+      ],
+      "properties": {
+        "face_id": {
+          "type": "string"
+        },
+        "new_surface": {
+          "$ref": "#/$defs/BrepSurface"
+        }
+      }
+    },
+    "MoveVertex": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mesh_id",
+        "primitive_id",
+        "vertex_index",
+        "new_point"
+      ],
+      "properties": {
+        "mesh_id": {
+          "type": "string"
+        },
+        "primitive_id": {
+          "type": "string"
+        },
+        "vertex_index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "new_point": {
+          "$ref": "#/$defs/SemioPoint3"
+        }
+      }
+    }
+  }
+}

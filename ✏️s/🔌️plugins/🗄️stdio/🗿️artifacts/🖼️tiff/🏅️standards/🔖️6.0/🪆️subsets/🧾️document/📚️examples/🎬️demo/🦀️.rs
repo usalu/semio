@@ -30,8 +30,8 @@ mod tests {
     /// parsed through the real `ArtifactDsl` codec — not a hand-built stub).
     #[semio_framework_async_macros::async_test]
     async fn inference_determinism_law() {
-        use crate::artifacts::tiff::standards::v6_0::subsets::document::schema::inferences::TiffInference;
-        use crate::artifacts::tiff::TiffSnapshot;
+        use crate::standards::v6_0::subsets::document::schema::inferences::TiffInference;
+        use crate::TiffSnapshot;
         use protocol::Inference;
         let snapshot = <TiffSnapshot as store::ArtifactDsl>::parse_dsl(PRIMARY_TEXT).expect("demo fixture must parse");
         assert_eq!(TiffInference::infer(&snapshot), TiffInference::infer(&snapshot));
@@ -39,8 +39,8 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn inference_default_law() {
-        use crate::artifacts::tiff::standards::v6_0::subsets::document::schema::inferences::TiffInference;
-        use crate::artifacts::tiff::TiffSnapshot;
+        use crate::standards::v6_0::subsets::document::schema::inferences::TiffInference;
+        use crate::TiffSnapshot;
         use protocol::Inference;
         assert_eq!(TiffInference::infer(&TiffSnapshot::default()), TiffInference::default());
     }
@@ -49,9 +49,9 @@ mod tests {
     struct TiffAnyRoundtrip;
 
     impl store::os_store::test_support::SubsetRoundtripSpec for TiffAnyRoundtrip {
-        type Snapshot = crate::artifacts::tiff::TiffSnapshot;
-        type Mutation = crate::artifacts::tiff::TiffMutation;
-        type Inference = crate::artifacts::tiff::standards::v6_0::subsets::document::schema::inferences::TiffInference;
+        type Snapshot = crate::TiffSnapshot;
+        type Mutation = crate::TiffMutation;
+        type Inference = crate::standards::v6_0::subsets::document::schema::inferences::TiffInference;
 
         async fn dialect() -> store::os_io::ArtifactDialect {
             store::os_io::ArtifactDialect { artifact_kind: "s.stdio.tiff".into(), standard: "6.0".into(), subset: "*".into() }
@@ -66,15 +66,15 @@ mod tests {
         }
 
         async fn parse_native(asset: &store::os_store::test_support::ExampleAsset<'_>) -> Result<Self::Snapshot, String> {
-            crate::artifacts::tiff::engine::decode_tiff(asset.bytes)
+            crate::engine::decode_tiff(asset.bytes)
         }
 
         async fn export_native(snapshot: &Self::Snapshot) -> Result<Vec<u8>, String> {
-            crate::artifacts::tiff::engine::encode_tiff(snapshot)
+            crate::engine::encode_tiff(snapshot)
         }
 
         async fn reimport_native(bytes: &[u8]) -> Result<Self::Snapshot, String> {
-            crate::artifacts::tiff::engine::decode_tiff(bytes)
+            crate::engine::decode_tiff(bytes)
         }
 
         async fn infer(snapshot: &Self::Snapshot) -> Self::Inference {
@@ -83,7 +83,7 @@ mod tests {
         }
 
         async fn sample_mutations(snapshot: &Self::Snapshot) -> Vec<Self::Mutation> {
-            use crate::artifacts::tiff::schema::snapshot::{TiffFieldType, TiffValues, TAG_IMAGE_WIDTH};
+            use crate::schema::snapshot::{TiffFieldType, TiffValues, TAG_IMAGE_WIDTH};
             let width = snapshot
                 .ifds
                 .first()
@@ -93,11 +93,11 @@ mod tests {
                     _ => None,
                 })
                 .unwrap_or(1);
-            vec![crate::artifacts::tiff::TiffMutation::ReplaceTag(crate::artifacts::tiff::schema::mutations::ReplaceTagMutation { ifd_index: 0, tag: TAG_IMAGE_WIDTH, kind: TiffFieldType::Long, values: TiffValues::Long(vec![width + 1]) })]
+            vec![crate::TiffMutation::ReplaceTag(crate::schema::mutations::ReplaceTagMutation { ifd_index: 0, tag: TAG_IMAGE_WIDTH, kind: TiffFieldType::Long, values: TiffValues::Long(vec![width + 1]) })]
         }
 
         async fn validate_payload(bytes: &[u8]) -> Result<(), Vec<String>> {
-            crate::artifacts::tiff::engine::decode_tiff(bytes).map(|_| ()).map_err(|e| vec![e])
+            crate::engine::decode_tiff(bytes).map(|_| ()).map_err(|e| vec![e])
         }
 
         async fn validate_negative(_bytes: &[u8]) -> Result<Vec<String>, String> {

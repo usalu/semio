@@ -1,4256 +1,1074 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://semio.tech/schema/s/architect/program/mutation.json",
   "title": "ProgramMutation",
   "description": "One real per-mutation record per SEMANTIC-MUTATIONS-OVERHAUL — 266 semantic kinds, matching the Rust dispatch enum 1:1 (Wave C rewrite; supersedes the pre-migration whole-snapshot-shaped generic schema).",
   "oneOf": [
     {
-      "$ref": "#/$defs/CreateInformationRequirement"
+      "$ref": "./🧲️adjacency/🧲️connect/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/DeleteInformationRequirement"
+      "$ref": "./🧵️trace/🧵️connect/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/RenameInformationRequirement"
+      "$ref": "./🔑️access-rule/🌱️create/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/ReplaceInformationRequirement"
+      "$ref": "./♿️accessibility-requirement/🌱️create/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/CreateSustainabilityRequirement"
+      "$ref": "./🏃️activity/🌱️create/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/DeleteSustainabilityRequirement"
+      "$ref": "./🔬️analysis-record/🌱️create/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/RenameSustainabilityRequirement"
+      "$ref": "./👍️approval-record/🌱️create/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/ReplaceSustainabilityRequirement"
+      "$ref": "./💭️assumption/🌱️create/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/CreateAccessibilityRequirement"
+      "$ref": "./📒️audit-event/🌱️create/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/DeleteAccessibilityRequirement"
+      "$ref": "./🏁️benchmark-record/🌱️create/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/RenameAccessibilityRequirement"
+      "$ref": "./🔀️change-record/🌱️create/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/ReplaceAccessibilityRequirement"
+      "$ref": "./🤝️collaboration-record/🌱️create/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/CreateConflict"
+      "$ref": "./📡️communication-requirement/🌱️create/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/DeleteConflict"
+      "$ref": "./🛂️compliance-record/🌱️create/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/RenameConflict"
+      "$ref": "./⚔️conflict/🌱️create/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/ReplaceConflict"
+      "$ref": "./🚧️constraint-record/🌱️create/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/CreateOptionEvaluation"
+      "$ref": "./💰️cost-requirement/🌱️create/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/DeleteOptionEvaluation"
+      "$ref": "./✅️decision/🌱️create/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/RenameOptionEvaluation"
+      "$ref": "./🚚️delivery-constraint/🌱️create/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/ReplaceOptionEvaluation"
+      "$ref": "./📃️document/🌱️create/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/CreateFunction"
+      "$ref": "./🌿️environmental-requirement/🌱️create/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/DeleteFunction"
+      "$ref": "./🛠️equipment/🌱️create/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/RenameFunction"
+      "$ref": "./🧩️flexibility-requirement/🌱️create/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/ReplaceFunction"
+      "$ref": "./🌊️flow-requirement/🌱️create/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/CreateRisk"
+      "$ref": "./⚙️function/🌱️create/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/DeleteRisk"
+      "$ref": "./📈️growth-plan/🌱️create/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/RenameRisk"
+      "$ref": "./🧠️human-factor-requirement/🌱️create/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/ReplaceRisk"
+      "$ref": "./ℹ️information-requirement/🌱️create/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/CreateDecision"
+      "$ref": "./🏗️infrastructure-requirement/🌱️create/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/DeleteDecision"
+      "$ref": "./🐛️issue/🌱️create/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/RenameDecision"
+      "$ref": "./📚️knowledge-record/🌱️create/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/ReplaceDecision"
+      "$ref": "./🗓️meeting-record/🌱️create/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/CreateValidationRecord"
+      "$ref": "./📋️operational-requirement/🌱️create/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/DeleteValidationRecord"
+      "$ref": "./⚖️option-evaluation/🌱️create/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/RenameValidationRecord"
+      "$ref": "./🏢️organizational-requirement/🌱️create/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/ReplaceValidationRecord"
+      "$ref": "./📊️performance-criterion/🌱️create/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/CreatePriorityRecord"
+      "$ref": "./⭐️priority-record/🌱️create/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/DeletePriorityRecord"
+      "$ref": "./🔒️privacy-requirement/🌱️create/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/RenamePriorityRecord"
+      "$ref": "./🔄️process/🌱️create/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/ReplacePriorityRecord"
+      "$ref": "./🧱️program-element/🌱️create/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/CreateFlowRequirement"
+      "$ref": "./💎️quality-record/🌱️create/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/DeleteFlowRequirement"
+      "$ref": "./🔢️quantity-requirement/🌱️create/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/RenameFlowRequirement"
+      "$ref": "./📜️regulatory-requirement/🌱️create/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/ReplaceFlowRequirement"
+      "$ref": "./🕸️relationship/🌱️create/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/CreateEnvironmentalRequirement"
+      "$ref": "./📑️report-record/🌱️create/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/DeleteEnvironmentalRequirement"
+      "$ref": "./📌️requirement/🌱️create/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/RenameEnvironmentalRequirement"
+      "$ref": "./💪️resilience-requirement/🌱️create/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/ReplaceEnvironmentalRequirement"
+      "$ref": "./📦️resource/🌱️create/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/CreateWorkshop"
+      "$ref": "./⚠️risk/🌱️create/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/DeleteWorkshop"
+      "$ref": "./🦺️safety-requirement/🌱️create/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/RenameWorkshop"
+      "$ref": "./🎬️scenario/🌱️create/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/ReplaceWorkshop"
+      "$ref": "./📅️schedule-requirement/🌱️create/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/CreateScenario"
+      "$ref": "./🔍️search-filter/🌱️create/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/DeleteScenario"
+      "$ref": "./🛡️security-requirement/🌱️create/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/RenameScenario"
+      "$ref": "./🛎️service-requirement/🌱️create/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/ReplaceScenario"
+      "$ref": "./📍️site-context/🌱️create/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/CreateBenchmarkRecord"
+      "$ref": "./👥️stakeholder/🌱️create/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/DeleteBenchmarkRecord"
+      "$ref": "./📶️status-record/🌱️create/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/RenameBenchmarkRecord"
+      "$ref": "./🗄️storage-requirement/🌱️create/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/ReplaceBenchmarkRecord"
+      "$ref": "./🗳️survey/🌱️create/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/CreateActivity"
+      "$ref": "./♻️sustainability-requirement/🌱️create/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/DeleteActivity"
+      "$ref": "./📐️template-record/🌱️create/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/RenameActivity"
+      "$ref": "./🧑️user-profile/🌱️create/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/ReplaceActivity"
+      "$ref": "./✔️validation-record/🌱️create/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/CreateInfrastructureRequirement"
+      "$ref": "./🧭️wayfinding-requirement/🌱️create/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/DeleteInfrastructureRequirement"
+      "$ref": "./🎓️workshop/🌱️create/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/RenameInfrastructureRequirement"
+      "$ref": "./🔑️access-rule/🗑️delete/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/ReplaceInfrastructureRequirement"
+      "$ref": "./♿️accessibility-requirement/🗑️delete/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/CreateOrganizationalRequirement"
+      "$ref": "./🏃️activity/🗑️delete/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/DeleteOrganizationalRequirement"
+      "$ref": "./🔬️analysis-record/🗑️delete/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/RenameOrganizationalRequirement"
+      "$ref": "./👍️approval-record/🗑️delete/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/ReplaceOrganizationalRequirement"
+      "$ref": "./💭️assumption/🗑️delete/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/CreateIssue"
+      "$ref": "./📒️audit-event/🗑️delete/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/DeleteIssue"
+      "$ref": "./🏁️benchmark-record/🗑️delete/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/RenameIssue"
+      "$ref": "./🔀️change-record/🗑️delete/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/ReplaceIssue"
+      "$ref": "./🤝️collaboration-record/🗑️delete/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/CreateApprovalRecord"
+      "$ref": "./📡️communication-requirement/🗑️delete/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/DeleteApprovalRecord"
+      "$ref": "./🛂️compliance-record/🗑️delete/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/RenameApprovalRecord"
+      "$ref": "./⚔️conflict/🗑️delete/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/ReplaceApprovalRecord"
+      "$ref": "./🚧️constraint-record/🗑️delete/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/CreateStakeholder"
+      "$ref": "./💰️cost-requirement/🗑️delete/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/DeleteStakeholder"
+      "$ref": "./✅️decision/🗑️delete/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/RenameStakeholder"
+      "$ref": "./🚚️delivery-constraint/🗑️delete/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/ReplaceStakeholder"
+      "$ref": "./📃️document/🗑️delete/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/CreateQualityRecord"
+      "$ref": "./🌿️environmental-requirement/🗑️delete/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/DeleteQualityRecord"
+      "$ref": "./🛠️equipment/🗑️delete/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/RenameQualityRecord"
+      "$ref": "./🧩️flexibility-requirement/🗑️delete/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/ReplaceQualityRecord"
+      "$ref": "./🌊️flow-requirement/🗑️delete/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/CreateResilienceRequirement"
+      "$ref": "./⚙️function/🗑️delete/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/DeleteResilienceRequirement"
+      "$ref": "./📈️growth-plan/🗑️delete/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/RenameResilienceRequirement"
+      "$ref": "./🧠️human-factor-requirement/🗑️delete/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/ReplaceResilienceRequirement"
+      "$ref": "./ℹ️information-requirement/🗑️delete/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/CreateAssumption"
+      "$ref": "./🏗️infrastructure-requirement/🗑️delete/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/DeleteAssumption"
+      "$ref": "./🐛️issue/🗑️delete/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/RenameAssumption"
+      "$ref": "./📚️knowledge-record/🗑️delete/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/ReplaceAssumption"
+      "$ref": "./🗓️meeting-record/🗑️delete/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/CreateCostRequirement"
+      "$ref": "./📋️operational-requirement/🗑️delete/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/DeleteCostRequirement"
+      "$ref": "./⚖️option-evaluation/🗑️delete/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/RenameCostRequirement"
+      "$ref": "./🏢️organizational-requirement/🗑️delete/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/ReplaceCostRequirement"
+      "$ref": "./📊️performance-criterion/🗑️delete/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/CreateDocument"
+      "$ref": "./⭐️priority-record/🗑️delete/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/DeleteDocument"
+      "$ref": "./🔒️privacy-requirement/🗑️delete/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/RenameDocument"
+      "$ref": "./🔄️process/🗑️delete/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/ReplaceDocument"
+      "$ref": "./🧱️program-element/🗑️delete/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/CreateScheduleRequirement"
+      "$ref": "./💎️quality-record/🗑️delete/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/DeleteScheduleRequirement"
+      "$ref": "./🔢️quantity-requirement/🗑️delete/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/RenameScheduleRequirement"
+      "$ref": "./📜️regulatory-requirement/🗑️delete/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/ReplaceScheduleRequirement"
+      "$ref": "./🕸️relationship/🗑️delete/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/CreateGrowthPlan"
+      "$ref": "./📑️report-record/🗑️delete/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/DeleteGrowthPlan"
+      "$ref": "./📌️requirement/🗑️delete/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/RenameGrowthPlan"
+      "$ref": "./💪️resilience-requirement/🗑️delete/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/ReplaceGrowthPlan"
+      "$ref": "./📦️resource/🗑️delete/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/CreatePerformanceCriterion"
+      "$ref": "./⚠️risk/🗑️delete/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/DeletePerformanceCriterion"
+      "$ref": "./🦺️safety-requirement/🗑️delete/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/RenamePerformanceCriterion"
+      "$ref": "./🎬️scenario/🗑️delete/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/ReplacePerformanceCriterion"
+      "$ref": "./📅️schedule-requirement/🗑️delete/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/CreateOperationalRequirement"
+      "$ref": "./🔍️search-filter/🗑️delete/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/DeleteOperationalRequirement"
+      "$ref": "./🛡️security-requirement/🗑️delete/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/RenameOperationalRequirement"
+      "$ref": "./🛎️service-requirement/🗑️delete/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/ReplaceOperationalRequirement"
+      "$ref": "./📍️site-context/🗑️delete/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/CreateRequirement"
+      "$ref": "./👥️stakeholder/🗑️delete/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/DeleteRequirement"
+      "$ref": "./📶️status-record/🗑️delete/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/RenameRequirement"
+      "$ref": "./🗄️storage-requirement/🗑️delete/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/ReplaceRequirement"
+      "$ref": "./🗳️survey/🗑️delete/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/CreateSiteContext"
+      "$ref": "./♻️sustainability-requirement/🗑️delete/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/DeleteSiteContext"
+      "$ref": "./📐️template-record/🗑️delete/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/RenameSiteContext"
+      "$ref": "./🧑️user-profile/🗑️delete/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/ReplaceSiteContext"
+      "$ref": "./✔️validation-record/🗑️delete/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/CreateTemplateRecord"
+      "$ref": "./🧭️wayfinding-requirement/🗑️delete/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/DeleteTemplateRecord"
+      "$ref": "./🎓️workshop/🗑️delete/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/RenameTemplateRecord"
+      "$ref": "./🧲️adjacency/🫷️disconnect/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/ReplaceTemplateRecord"
+      "$ref": "./🧵️trace/✂️disconnect/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/CreateReportRecord"
+      "$ref": "./🔑️access-rule/🏷️rename/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/DeleteReportRecord"
+      "$ref": "./♿️accessibility-requirement/🏷️rename/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/RenameReportRecord"
+      "$ref": "./🏃️activity/🏷️rename/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/ReplaceReportRecord"
+      "$ref": "./🔬️analysis-record/🏷️rename/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/CreateAuditEvent"
+      "$ref": "./👍️approval-record/🏷️rename/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/DeleteAuditEvent"
+      "$ref": "./💭️assumption/🏷️rename/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/RenameAuditEvent"
+      "$ref": "./📒️audit-event/🏷️rename/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/ReplaceAuditEvent"
+      "$ref": "./🏁️benchmark-record/🏷️rename/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/CreateKnowledgeRecord"
+      "$ref": "./🔀️change-record/🏷️rename/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/DeleteKnowledgeRecord"
+      "$ref": "./🤝️collaboration-record/🏷️rename/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/RenameKnowledgeRecord"
+      "$ref": "./📡️communication-requirement/🏷️rename/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/ReplaceKnowledgeRecord"
+      "$ref": "./🛂️compliance-record/🏷️rename/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/CreateRegulatoryRequirement"
+      "$ref": "./⚔️conflict/🏷️rename/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/DeleteRegulatoryRequirement"
+      "$ref": "./🚧️constraint-record/🏷️rename/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/RenameRegulatoryRequirement"
+      "$ref": "./💰️cost-requirement/🏷️rename/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/ReplaceRegulatoryRequirement"
+      "$ref": "./✅️decision/🏷️rename/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/CreateChangeRecord"
+      "$ref": "./🚚️delivery-constraint/🏷️rename/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/DeleteChangeRecord"
+      "$ref": "./📃️document/🏷️rename/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/RenameChangeRecord"
+      "$ref": "./🌿️environmental-requirement/🏷️rename/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/ReplaceChangeRecord"
+      "$ref": "./🛠️equipment/🏷️rename/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/CreateCommunicationRequirement"
+      "$ref": "./🧩️flexibility-requirement/🏷️rename/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/DeleteCommunicationRequirement"
+      "$ref": "./🌊️flow-requirement/🏷️rename/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/RenameCommunicationRequirement"
+      "$ref": "./⚙️function/🏷️rename/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/ReplaceCommunicationRequirement"
+      "$ref": "./🏛️governance/🏷️rename/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/CreateResource"
+      "$ref": "./📈️growth-plan/🏷️rename/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/DeleteResource"
+      "$ref": "./🧠️human-factor-requirement/🏷️rename/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/RenameResource"
+      "$ref": "./ℹ️information-requirement/🏷️rename/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/ReplaceResource"
+      "$ref": "./🏗️infrastructure-requirement/🏷️rename/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/CreateStatusRecord"
+      "$ref": "./🐛️issue/🏷️rename/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/DeleteStatusRecord"
+      "$ref": "./📚️knowledge-record/🏷️rename/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/RenameStatusRecord"
+      "$ref": "./🗓️meeting-record/🏷️rename/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/ReplaceStatusRecord"
+      "$ref": "./🏷️meta/🏷️rename/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/CreateProcess"
+      "$ref": "./📋️operational-requirement/🏷️rename/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/DeleteProcess"
+      "$ref": "./⚖️option-evaluation/🏷️rename/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/RenameProcess"
+      "$ref": "./🏢️organizational-requirement/🏷️rename/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/ReplaceProcess"
+      "$ref": "./📊️performance-criterion/🏷️rename/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/CreateSearchFilter"
+      "$ref": "./⭐️priority-record/🏷️rename/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/DeleteSearchFilter"
+      "$ref": "./🔒️privacy-requirement/🏷️rename/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/RenameSearchFilter"
+      "$ref": "./🔄️process/🏷️rename/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/ReplaceSearchFilter"
+      "$ref": "./🧱️program-element/🏷️rename/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/CreateAccessRule"
+      "$ref": "./🏙️project/🏷️rename/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/DeleteAccessRule"
+      "$ref": "./💎️quality-record/🏷️rename/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/RenameAccessRule"
+      "$ref": "./🔢️quantity-requirement/🏷️rename/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/ReplaceAccessRule"
+      "$ref": "./📜️regulatory-requirement/🏷️rename/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/CreatePrivacyRequirement"
+      "$ref": "./🕸️relationship/🏷️rename/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/DeletePrivacyRequirement"
+      "$ref": "./📑️report-record/🏷️rename/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/RenamePrivacyRequirement"
+      "$ref": "./📌️requirement/🏷️rename/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/ReplacePrivacyRequirement"
+      "$ref": "./💪️resilience-requirement/🏷️rename/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/CreateRelationship"
+      "$ref": "./📦️resource/🏷️rename/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/DeleteRelationship"
+      "$ref": "./⚠️risk/🏷️rename/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/RenameRelationship"
+      "$ref": "./🦺️safety-requirement/🏷️rename/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/ReplaceRelationship"
+      "$ref": "./🎬️scenario/🏷️rename/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/CreateQuantityRequirement"
+      "$ref": "./📅️schedule-requirement/🏷️rename/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/DeleteQuantityRequirement"
+      "$ref": "./🔍️search-filter/🏷️rename/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/RenameQuantityRequirement"
+      "$ref": "./🛡️security-requirement/🏷️rename/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/ReplaceQuantityRequirement"
+      "$ref": "./🛎️service-requirement/🏷️rename/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/CreateAnalysisRecord"
+      "$ref": "./📍️site-context/🏷️rename/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/DeleteAnalysisRecord"
+      "$ref": "./👥️stakeholder/🏷️rename/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/RenameAnalysisRecord"
+      "$ref": "./📶️status-record/🏷️rename/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/ReplaceAnalysisRecord"
+      "$ref": "./🗄️storage-requirement/🏷️rename/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/CreateStorageRequirement"
+      "$ref": "./🗳️survey/🏷️rename/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/DeleteStorageRequirement"
+      "$ref": "./♻️sustainability-requirement/🏷️rename/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/RenameStorageRequirement"
+      "$ref": "./📐️template-record/🏷️rename/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/ReplaceStorageRequirement"
+      "$ref": "./🧑️user-profile/🏷️rename/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/CreateMeetingRecord"
+      "$ref": "./✔️validation-record/🏷️rename/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/DeleteMeetingRecord"
+      "$ref": "./🧭️wayfinding-requirement/🏷️rename/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/RenameMeetingRecord"
+      "$ref": "./🎓️workshop/🏷️rename/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/ReplaceMeetingRecord"
+      "$ref": "./🔑️access-rule/♻️replace/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/CreateSurvey"
+      "$ref": "./♿️accessibility-requirement/♻️replace/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/DeleteSurvey"
+      "$ref": "./🏃️activity/♻️replace/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/RenameSurvey"
+      "$ref": "./🔬️analysis-record/♻️replace/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/ReplaceSurvey"
+      "$ref": "./👍️approval-record/♻️replace/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/CreateDeliveryConstraint"
+      "$ref": "./💭️assumption/♻️replace/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/DeleteDeliveryConstraint"
+      "$ref": "./📒️audit-event/♻️replace/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/RenameDeliveryConstraint"
+      "$ref": "./🏁️benchmark-record/♻️replace/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/ReplaceDeliveryConstraint"
+      "$ref": "./🔀️change-record/♻️replace/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/CreateConstraintRecord"
+      "$ref": "./🤝️collaboration-record/♻️replace/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/DeleteConstraintRecord"
+      "$ref": "./📡️communication-requirement/♻️replace/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/RenameConstraintRecord"
+      "$ref": "./🛂️compliance-record/♻️replace/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/ReplaceConstraintRecord"
+      "$ref": "./⚔️conflict/♻️replace/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/CreateComplianceRecord"
+      "$ref": "./🚧️constraint-record/♻️replace/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/DeleteComplianceRecord"
+      "$ref": "./💰️cost-requirement/♻️replace/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/RenameComplianceRecord"
+      "$ref": "./✅️decision/♻️replace/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/ReplaceComplianceRecord"
+      "$ref": "./🚚️delivery-constraint/♻️replace/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/CreateServiceRequirement"
+      "$ref": "./📃️document/♻️replace/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/DeleteServiceRequirement"
+      "$ref": "./🌿️environmental-requirement/♻️replace/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/RenameServiceRequirement"
+      "$ref": "./🛠️equipment/♻️replace/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/ReplaceServiceRequirement"
+      "$ref": "./🧩️flexibility-requirement/♻️replace/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/CreateEquipment"
+      "$ref": "./🌊️flow-requirement/♻️replace/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/DeleteEquipment"
+      "$ref": "./⚙️function/♻️replace/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/RenameEquipment"
+      "$ref": "./🏛️governance/♻️replace/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/ReplaceEquipment"
+      "$ref": "./📈️growth-plan/♻️replace/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/CreateSecurityRequirement"
+      "$ref": "./🧠️human-factor-requirement/♻️replace/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/DeleteSecurityRequirement"
+      "$ref": "./ℹ️information-requirement/♻️replace/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/RenameSecurityRequirement"
+      "$ref": "./🏗️infrastructure-requirement/♻️replace/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/ReplaceSecurityRequirement"
+      "$ref": "./🐛️issue/♻️replace/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/CreateCollaborationRecord"
+      "$ref": "./📚️knowledge-record/♻️replace/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/DeleteCollaborationRecord"
+      "$ref": "./🗓️meeting-record/♻️replace/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/RenameCollaborationRecord"
+      "$ref": "./🏷️meta/♻️replace/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/ReplaceCollaborationRecord"
+      "$ref": "./📋️operational-requirement/♻️replace/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/CreateSafetyRequirement"
+      "$ref": "./⚖️option-evaluation/♻️replace/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/DeleteSafetyRequirement"
+      "$ref": "./🏢️organizational-requirement/♻️replace/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/RenameSafetyRequirement"
+      "$ref": "./📊️performance-criterion/♻️replace/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/ReplaceSafetyRequirement"
+      "$ref": "./⭐️priority-record/♻️replace/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/CreateUserProfile"
+      "$ref": "./🔒️privacy-requirement/♻️replace/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/DeleteUserProfile"
+      "$ref": "./🔄️process/♻️replace/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/RenameUserProfile"
+      "$ref": "./🧱️program-element/♻️replace/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/ReplaceUserProfile"
+      "$ref": "./🏙️project/♻️replace/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/CreateHumanFactorRequirement"
+      "$ref": "./💎️quality-record/♻️replace/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/DeleteHumanFactorRequirement"
+      "$ref": "./🔢️quantity-requirement/♻️replace/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/RenameHumanFactorRequirement"
+      "$ref": "./📜️regulatory-requirement/♻️replace/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/ReplaceHumanFactorRequirement"
+      "$ref": "./🕸️relationship/♻️replace/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/CreateFlexibilityRequirement"
+      "$ref": "./📑️report-record/♻️replace/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/DeleteFlexibilityRequirement"
+      "$ref": "./📌️requirement/♻️replace/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/RenameFlexibilityRequirement"
+      "$ref": "./💪️resilience-requirement/♻️replace/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/ReplaceFlexibilityRequirement"
+      "$ref": "./📦️resource/♻️replace/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/CreateWayfindingRequirement"
+      "$ref": "./⚠️risk/♻️replace/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/DeleteWayfindingRequirement"
+      "$ref": "./🦺️safety-requirement/♻️replace/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/RenameWayfindingRequirement"
+      "$ref": "./🎬️scenario/♻️replace/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/ReplaceWayfindingRequirement"
+      "$ref": "./📅️schedule-requirement/♻️replace/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/CreateProgramElement"
+      "$ref": "./🔍️search-filter/♻️replace/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/DeleteProgramElement"
+      "$ref": "./🛡️security-requirement/♻️replace/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/RenameProgramElement"
+      "$ref": "./🛎️service-requirement/♻️replace/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/ReplaceProgramElement"
+      "$ref": "./📍️site-context/♻️replace/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/ConnectAdjacency"
+      "$ref": "./👥️stakeholder/♻️replace/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/DisconnectAdjacency"
+      "$ref": "./📶️status-record/♻️replace/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/ConnectTrace"
+      "$ref": "./🗄️storage-requirement/♻️replace/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/DisconnectTrace"
+      "$ref": "./🗳️survey/♻️replace/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/RenameMeta"
+      "$ref": "./♻️sustainability-requirement/♻️replace/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/ReplaceMeta"
+      "$ref": "./📐️template-record/♻️replace/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/RenameProject"
+      "$ref": "./🧑️user-profile/♻️replace/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/ReplaceProject"
+      "$ref": "./✔️validation-record/♻️replace/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/RenameGovernance"
+      "$ref": "./🧭️wayfinding-requirement/♻️replace/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/ReplaceGovernance"
+      "$ref": "./🎓️workshop/♻️replace/🧬️schema/🔣️.json"
     }
   ],
-  "$defs": {
-    "CreateInformationRequirement": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "informationRequirement"
-      ],
-      "properties": {
-        "informationRequirement": {
-          "type": "object"
-        }
-      }
-    },
-    "DeleteInformationRequirement": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        }
-      }
-    },
-    "RenameInformationRequirement": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "newName"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "newName": {
-          "type": "string"
-        }
-      }
-    },
-    "ReplaceInformationRequirement": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "informationRequirement"
-      ],
-      "properties": {
-        "informationRequirement": {
-          "type": "object"
-        }
-      }
-    },
-    "CreateSustainabilityRequirement": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "sustainabilityRequirement"
-      ],
-      "properties": {
-        "sustainabilityRequirement": {
-          "type": "object"
-        }
-      }
-    },
-    "DeleteSustainabilityRequirement": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        }
-      }
-    },
-    "RenameSustainabilityRequirement": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "newName"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "newName": {
-          "type": "string"
-        }
-      }
-    },
-    "ReplaceSustainabilityRequirement": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "sustainabilityRequirement"
-      ],
-      "properties": {
-        "sustainabilityRequirement": {
-          "type": "object"
-        }
-      }
-    },
-    "CreateAccessibilityRequirement": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "accessibilityRequirement"
-      ],
-      "properties": {
-        "accessibilityRequirement": {
-          "type": "object"
-        }
-      }
-    },
-    "DeleteAccessibilityRequirement": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        }
-      }
-    },
-    "RenameAccessibilityRequirement": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "newName"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "newName": {
-          "type": "string"
-        }
-      }
-    },
-    "ReplaceAccessibilityRequirement": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "accessibilityRequirement"
-      ],
-      "properties": {
-        "accessibilityRequirement": {
-          "type": "object"
-        }
-      }
-    },
-    "CreateConflict": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "conflict"
-      ],
-      "properties": {
-        "conflict": {
-          "type": "object"
-        }
-      }
-    },
-    "DeleteConflict": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        }
-      }
-    },
-    "RenameConflict": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "newName"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "newName": {
-          "type": "string"
-        }
-      }
-    },
-    "ReplaceConflict": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "conflict"
-      ],
-      "properties": {
-        "conflict": {
-          "type": "object"
-        }
-      }
-    },
-    "CreateOptionEvaluation": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "optionEvaluation"
-      ],
-      "properties": {
-        "optionEvaluation": {
-          "type": "object"
-        }
-      }
-    },
-    "DeleteOptionEvaluation": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        }
-      }
-    },
-    "RenameOptionEvaluation": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "newName"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "newName": {
-          "type": "string"
-        }
-      }
-    },
-    "ReplaceOptionEvaluation": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "optionEvaluation"
-      ],
-      "properties": {
-        "optionEvaluation": {
-          "type": "object"
-        }
-      }
-    },
-    "CreateFunction": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "function"
-      ],
-      "properties": {
-        "function": {
-          "type": "object"
-        }
-      }
-    },
-    "DeleteFunction": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        }
-      }
-    },
-    "RenameFunction": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "newName"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "newName": {
-          "type": "string"
-        }
-      }
-    },
-    "ReplaceFunction": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "function"
-      ],
-      "properties": {
-        "function": {
-          "type": "object"
-        }
-      }
-    },
-    "CreateRisk": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "risk"
-      ],
-      "properties": {
-        "risk": {
-          "type": "object"
-        }
-      }
-    },
-    "DeleteRisk": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        }
-      }
-    },
-    "RenameRisk": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "newName"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "newName": {
-          "type": "string"
-        }
-      }
-    },
-    "ReplaceRisk": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "risk"
-      ],
-      "properties": {
-        "risk": {
-          "type": "object"
-        }
-      }
-    },
-    "CreateDecision": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "decision"
-      ],
-      "properties": {
-        "decision": {
-          "type": "object"
-        }
-      }
-    },
-    "DeleteDecision": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        }
-      }
-    },
-    "RenameDecision": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "newName"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "newName": {
-          "type": "string"
-        }
-      }
-    },
-    "ReplaceDecision": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "decision"
-      ],
-      "properties": {
-        "decision": {
-          "type": "object"
-        }
-      }
-    },
-    "CreateValidationRecord": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "validationRecord"
-      ],
-      "properties": {
-        "validationRecord": {
-          "type": "object"
-        }
-      }
-    },
-    "DeleteValidationRecord": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        }
-      }
-    },
-    "RenameValidationRecord": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "newName"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "newName": {
-          "type": "string"
-        }
-      }
-    },
-    "ReplaceValidationRecord": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "validationRecord"
-      ],
-      "properties": {
-        "validationRecord": {
-          "type": "object"
-        }
-      }
-    },
-    "CreatePriorityRecord": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "priorityRecord"
-      ],
-      "properties": {
-        "priorityRecord": {
-          "type": "object"
-        }
-      }
-    },
-    "DeletePriorityRecord": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        }
-      }
-    },
-    "RenamePriorityRecord": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "newName"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "newName": {
-          "type": "string"
-        }
-      }
-    },
-    "ReplacePriorityRecord": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "priorityRecord"
-      ],
-      "properties": {
-        "priorityRecord": {
-          "type": "object"
-        }
-      }
-    },
-    "CreateFlowRequirement": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "flowRequirement"
-      ],
-      "properties": {
-        "flowRequirement": {
-          "type": "object"
-        }
-      }
-    },
-    "DeleteFlowRequirement": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        }
-      }
-    },
-    "RenameFlowRequirement": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "newName"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "newName": {
-          "type": "string"
-        }
-      }
-    },
-    "ReplaceFlowRequirement": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "flowRequirement"
-      ],
-      "properties": {
-        "flowRequirement": {
-          "type": "object"
-        }
-      }
-    },
-    "CreateEnvironmentalRequirement": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "environmentalRequirement"
-      ],
-      "properties": {
-        "environmentalRequirement": {
-          "type": "object"
-        }
-      }
-    },
-    "DeleteEnvironmentalRequirement": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        }
-      }
-    },
-    "RenameEnvironmentalRequirement": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "newName"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "newName": {
-          "type": "string"
-        }
-      }
-    },
-    "ReplaceEnvironmentalRequirement": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "environmentalRequirement"
-      ],
-      "properties": {
-        "environmentalRequirement": {
-          "type": "object"
-        }
-      }
-    },
-    "CreateWorkshop": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "workshop"
-      ],
-      "properties": {
-        "workshop": {
-          "type": "object"
-        }
-      }
-    },
-    "DeleteWorkshop": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        }
-      }
-    },
-    "RenameWorkshop": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "newName"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "newName": {
-          "type": "string"
-        }
-      }
-    },
-    "ReplaceWorkshop": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "workshop"
-      ],
-      "properties": {
-        "workshop": {
-          "type": "object"
-        }
-      }
-    },
-    "CreateScenario": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "scenario"
-      ],
-      "properties": {
-        "scenario": {
-          "type": "object"
-        }
-      }
-    },
-    "DeleteScenario": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        }
-      }
-    },
-    "RenameScenario": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "newName"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "newName": {
-          "type": "string"
-        }
-      }
-    },
-    "ReplaceScenario": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "scenario"
-      ],
-      "properties": {
-        "scenario": {
-          "type": "object"
-        }
-      }
-    },
-    "CreateBenchmarkRecord": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "benchmarkRecord"
-      ],
-      "properties": {
-        "benchmarkRecord": {
-          "type": "object"
-        }
-      }
-    },
-    "DeleteBenchmarkRecord": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        }
-      }
-    },
-    "RenameBenchmarkRecord": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "newName"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "newName": {
-          "type": "string"
-        }
-      }
-    },
-    "ReplaceBenchmarkRecord": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "benchmarkRecord"
-      ],
-      "properties": {
-        "benchmarkRecord": {
-          "type": "object"
-        }
-      }
-    },
-    "CreateActivity": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "activity"
-      ],
-      "properties": {
-        "activity": {
-          "type": "object"
-        }
-      }
-    },
-    "DeleteActivity": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        }
-      }
-    },
-    "RenameActivity": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "newName"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "newName": {
-          "type": "string"
-        }
-      }
-    },
-    "ReplaceActivity": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "activity"
-      ],
-      "properties": {
-        "activity": {
-          "type": "object"
-        }
-      }
-    },
-    "CreateInfrastructureRequirement": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "infrastructureRequirement"
-      ],
-      "properties": {
-        "infrastructureRequirement": {
-          "type": "object"
-        }
-      }
-    },
-    "DeleteInfrastructureRequirement": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        }
-      }
-    },
-    "RenameInfrastructureRequirement": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "newName"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "newName": {
-          "type": "string"
-        }
-      }
-    },
-    "ReplaceInfrastructureRequirement": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "infrastructureRequirement"
-      ],
-      "properties": {
-        "infrastructureRequirement": {
-          "type": "object"
-        }
-      }
-    },
-    "CreateOrganizationalRequirement": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "organizationalRequirement"
-      ],
-      "properties": {
-        "organizationalRequirement": {
-          "type": "object"
-        }
-      }
-    },
-    "DeleteOrganizationalRequirement": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        }
-      }
-    },
-    "RenameOrganizationalRequirement": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "newName"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "newName": {
-          "type": "string"
-        }
-      }
-    },
-    "ReplaceOrganizationalRequirement": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "organizationalRequirement"
-      ],
-      "properties": {
-        "organizationalRequirement": {
-          "type": "object"
-        }
-      }
-    },
-    "CreateIssue": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "issue"
-      ],
-      "properties": {
-        "issue": {
-          "type": "object"
-        }
-      }
-    },
-    "DeleteIssue": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        }
-      }
-    },
-    "RenameIssue": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "newName"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "newName": {
-          "type": "string"
-        }
-      }
-    },
-    "ReplaceIssue": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "issue"
-      ],
-      "properties": {
-        "issue": {
-          "type": "object"
-        }
-      }
-    },
-    "CreateApprovalRecord": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "approvalRecord"
-      ],
-      "properties": {
-        "approvalRecord": {
-          "type": "object"
-        }
-      }
-    },
-    "DeleteApprovalRecord": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        }
-      }
-    },
-    "RenameApprovalRecord": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "newName"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "newName": {
-          "type": "string"
-        }
-      }
-    },
-    "ReplaceApprovalRecord": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "approvalRecord"
-      ],
-      "properties": {
-        "approvalRecord": {
-          "type": "object"
-        }
-      }
-    },
-    "CreateStakeholder": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "stakeholder"
-      ],
-      "properties": {
-        "stakeholder": {
-          "type": "object"
-        }
-      }
-    },
-    "DeleteStakeholder": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        }
-      }
-    },
-    "RenameStakeholder": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "newName"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "newName": {
-          "type": "string"
-        }
-      }
-    },
-    "ReplaceStakeholder": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "stakeholder"
-      ],
-      "properties": {
-        "stakeholder": {
-          "type": "object"
-        }
-      }
-    },
-    "CreateQualityRecord": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "qualityRecord"
-      ],
-      "properties": {
-        "qualityRecord": {
-          "type": "object"
-        }
-      }
-    },
-    "DeleteQualityRecord": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        }
-      }
-    },
-    "RenameQualityRecord": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "newName"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "newName": {
-          "type": "string"
-        }
-      }
-    },
-    "ReplaceQualityRecord": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "qualityRecord"
-      ],
-      "properties": {
-        "qualityRecord": {
-          "type": "object"
-        }
-      }
-    },
-    "CreateResilienceRequirement": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "resilienceRequirement"
-      ],
-      "properties": {
-        "resilienceRequirement": {
-          "type": "object"
-        }
-      }
-    },
-    "DeleteResilienceRequirement": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        }
-      }
-    },
-    "RenameResilienceRequirement": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "newName"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "newName": {
-          "type": "string"
-        }
-      }
-    },
-    "ReplaceResilienceRequirement": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "resilienceRequirement"
-      ],
-      "properties": {
-        "resilienceRequirement": {
-          "type": "object"
-        }
-      }
-    },
-    "CreateAssumption": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "assumption"
-      ],
-      "properties": {
-        "assumption": {
-          "type": "object"
-        }
-      }
-    },
-    "DeleteAssumption": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        }
-      }
-    },
-    "RenameAssumption": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "newName"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "newName": {
-          "type": "string"
-        }
-      }
-    },
-    "ReplaceAssumption": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "assumption"
-      ],
-      "properties": {
-        "assumption": {
-          "type": "object"
-        }
-      }
-    },
-    "CreateCostRequirement": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "costRequirement"
-      ],
-      "properties": {
-        "costRequirement": {
-          "type": "object"
-        }
-      }
-    },
-    "DeleteCostRequirement": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        }
-      }
-    },
-    "RenameCostRequirement": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "newName"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "newName": {
-          "type": "string"
-        }
-      }
-    },
-    "ReplaceCostRequirement": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "costRequirement"
-      ],
-      "properties": {
-        "costRequirement": {
-          "type": "object"
-        }
-      }
-    },
-    "CreateDocument": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "document"
-      ],
-      "properties": {
-        "document": {
-          "type": "object"
-        }
-      }
-    },
-    "DeleteDocument": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        }
-      }
-    },
-    "RenameDocument": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "newName"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "newName": {
-          "type": "string"
-        }
-      }
-    },
-    "ReplaceDocument": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "document"
-      ],
-      "properties": {
-        "document": {
-          "type": "object"
-        }
-      }
-    },
-    "CreateScheduleRequirement": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "scheduleRequirement"
-      ],
-      "properties": {
-        "scheduleRequirement": {
-          "type": "object"
-        }
-      }
-    },
-    "DeleteScheduleRequirement": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        }
-      }
-    },
-    "RenameScheduleRequirement": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "newName"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "newName": {
-          "type": "string"
-        }
-      }
-    },
-    "ReplaceScheduleRequirement": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "scheduleRequirement"
-      ],
-      "properties": {
-        "scheduleRequirement": {
-          "type": "object"
-        }
-      }
-    },
-    "CreateGrowthPlan": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "growthPlan"
-      ],
-      "properties": {
-        "growthPlan": {
-          "type": "object"
-        }
-      }
-    },
-    "DeleteGrowthPlan": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        }
-      }
-    },
-    "RenameGrowthPlan": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "newName"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "newName": {
-          "type": "string"
-        }
-      }
-    },
-    "ReplaceGrowthPlan": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "growthPlan"
-      ],
-      "properties": {
-        "growthPlan": {
-          "type": "object"
-        }
-      }
-    },
-    "CreatePerformanceCriterion": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "performanceCriterion"
-      ],
-      "properties": {
-        "performanceCriterion": {
-          "type": "object"
-        }
-      }
-    },
-    "DeletePerformanceCriterion": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        }
-      }
-    },
-    "RenamePerformanceCriterion": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "newName"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "newName": {
-          "type": "string"
-        }
-      }
-    },
-    "ReplacePerformanceCriterion": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "performanceCriterion"
-      ],
-      "properties": {
-        "performanceCriterion": {
-          "type": "object"
-        }
-      }
-    },
-    "CreateOperationalRequirement": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "operationalRequirement"
-      ],
-      "properties": {
-        "operationalRequirement": {
-          "type": "object"
-        }
-      }
-    },
-    "DeleteOperationalRequirement": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        }
-      }
-    },
-    "RenameOperationalRequirement": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "newName"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "newName": {
-          "type": "string"
-        }
-      }
-    },
-    "ReplaceOperationalRequirement": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "operationalRequirement"
-      ],
-      "properties": {
-        "operationalRequirement": {
-          "type": "object"
-        }
-      }
-    },
-    "CreateRequirement": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "requirement"
-      ],
-      "properties": {
-        "requirement": {
-          "type": "object"
-        }
-      }
-    },
-    "DeleteRequirement": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        }
-      }
-    },
-    "RenameRequirement": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "newName"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "newName": {
-          "type": "string"
-        }
-      }
-    },
-    "ReplaceRequirement": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "requirement"
-      ],
-      "properties": {
-        "requirement": {
-          "type": "object"
-        }
-      }
-    },
-    "CreateSiteContext": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "siteContext"
-      ],
-      "properties": {
-        "siteContext": {
-          "type": "object"
-        }
-      }
-    },
-    "DeleteSiteContext": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        }
-      }
-    },
-    "RenameSiteContext": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "newName"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "newName": {
-          "type": "string"
-        }
-      }
-    },
-    "ReplaceSiteContext": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "siteContext"
-      ],
-      "properties": {
-        "siteContext": {
-          "type": "object"
-        }
-      }
-    },
-    "CreateTemplateRecord": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "templateRecord"
-      ],
-      "properties": {
-        "templateRecord": {
-          "type": "object"
-        }
-      }
-    },
-    "DeleteTemplateRecord": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        }
-      }
-    },
-    "RenameTemplateRecord": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "newName"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "newName": {
-          "type": "string"
-        }
-      }
-    },
-    "ReplaceTemplateRecord": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "templateRecord"
-      ],
-      "properties": {
-        "templateRecord": {
-          "type": "object"
-        }
-      }
-    },
-    "CreateReportRecord": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "reportRecord"
-      ],
-      "properties": {
-        "reportRecord": {
-          "type": "object"
-        }
-      }
-    },
-    "DeleteReportRecord": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        }
-      }
-    },
-    "RenameReportRecord": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "newName"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "newName": {
-          "type": "string"
-        }
-      }
-    },
-    "ReplaceReportRecord": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "reportRecord"
-      ],
-      "properties": {
-        "reportRecord": {
-          "type": "object"
-        }
-      }
-    },
-    "CreateAuditEvent": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "auditEvent"
-      ],
-      "properties": {
-        "auditEvent": {
-          "type": "object"
-        }
-      }
-    },
-    "DeleteAuditEvent": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        }
-      }
-    },
-    "RenameAuditEvent": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "newName"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "newName": {
-          "type": "string"
-        }
-      }
-    },
-    "ReplaceAuditEvent": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "auditEvent"
-      ],
-      "properties": {
-        "auditEvent": {
-          "type": "object"
-        }
-      }
-    },
-    "CreateKnowledgeRecord": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "knowledgeRecord"
-      ],
-      "properties": {
-        "knowledgeRecord": {
-          "type": "object"
-        }
-      }
-    },
-    "DeleteKnowledgeRecord": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        }
-      }
-    },
-    "RenameKnowledgeRecord": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "newName"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "newName": {
-          "type": "string"
-        }
-      }
-    },
-    "ReplaceKnowledgeRecord": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "knowledgeRecord"
-      ],
-      "properties": {
-        "knowledgeRecord": {
-          "type": "object"
-        }
-      }
-    },
-    "CreateRegulatoryRequirement": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "regulatoryRequirement"
-      ],
-      "properties": {
-        "regulatoryRequirement": {
-          "type": "object"
-        }
-      }
-    },
-    "DeleteRegulatoryRequirement": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        }
-      }
-    },
-    "RenameRegulatoryRequirement": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "newName"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "newName": {
-          "type": "string"
-        }
-      }
-    },
-    "ReplaceRegulatoryRequirement": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "regulatoryRequirement"
-      ],
-      "properties": {
-        "regulatoryRequirement": {
-          "type": "object"
-        }
-      }
-    },
-    "CreateChangeRecord": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "changeRecord"
-      ],
-      "properties": {
-        "changeRecord": {
-          "type": "object"
-        }
-      }
-    },
-    "DeleteChangeRecord": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        }
-      }
-    },
-    "RenameChangeRecord": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "newName"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "newName": {
-          "type": "string"
-        }
-      }
-    },
-    "ReplaceChangeRecord": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "changeRecord"
-      ],
-      "properties": {
-        "changeRecord": {
-          "type": "object"
-        }
-      }
-    },
-    "CreateCommunicationRequirement": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "communicationRequirement"
-      ],
-      "properties": {
-        "communicationRequirement": {
-          "type": "object"
-        }
-      }
-    },
-    "DeleteCommunicationRequirement": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        }
-      }
-    },
-    "RenameCommunicationRequirement": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "newName"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "newName": {
-          "type": "string"
-        }
-      }
-    },
-    "ReplaceCommunicationRequirement": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "communicationRequirement"
-      ],
-      "properties": {
-        "communicationRequirement": {
-          "type": "object"
-        }
-      }
-    },
-    "CreateResource": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "resource"
-      ],
-      "properties": {
-        "resource": {
-          "type": "object"
-        }
-      }
-    },
-    "DeleteResource": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        }
-      }
-    },
-    "RenameResource": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "newName"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "newName": {
-          "type": "string"
-        }
-      }
-    },
-    "ReplaceResource": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "resource"
-      ],
-      "properties": {
-        "resource": {
-          "type": "object"
-        }
-      }
-    },
-    "CreateStatusRecord": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "statusRecord"
-      ],
-      "properties": {
-        "statusRecord": {
-          "type": "object"
-        }
-      }
-    },
-    "DeleteStatusRecord": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        }
-      }
-    },
-    "RenameStatusRecord": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "newName"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "newName": {
-          "type": "string"
-        }
-      }
-    },
-    "ReplaceStatusRecord": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "statusRecord"
-      ],
-      "properties": {
-        "statusRecord": {
-          "type": "object"
-        }
-      }
-    },
-    "CreateProcess": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "process"
-      ],
-      "properties": {
-        "process": {
-          "type": "object"
-        }
-      }
-    },
-    "DeleteProcess": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        }
-      }
-    },
-    "RenameProcess": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "newName"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "newName": {
-          "type": "string"
-        }
-      }
-    },
-    "ReplaceProcess": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "process"
-      ],
-      "properties": {
-        "process": {
-          "type": "object"
-        }
-      }
-    },
-    "CreateSearchFilter": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "searchFilter"
-      ],
-      "properties": {
-        "searchFilter": {
-          "type": "object"
-        }
-      }
-    },
-    "DeleteSearchFilter": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        }
-      }
-    },
-    "RenameSearchFilter": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "newName"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "newName": {
-          "type": "string"
-        }
-      }
-    },
-    "ReplaceSearchFilter": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "searchFilter"
-      ],
-      "properties": {
-        "searchFilter": {
-          "type": "object"
-        }
-      }
-    },
-    "CreateAccessRule": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "accessRule"
-      ],
-      "properties": {
-        "accessRule": {
-          "type": "object"
-        }
-      }
-    },
-    "DeleteAccessRule": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        }
-      }
-    },
-    "RenameAccessRule": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "newName"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "newName": {
-          "type": "string"
-        }
-      }
-    },
-    "ReplaceAccessRule": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "accessRule"
-      ],
-      "properties": {
-        "accessRule": {
-          "type": "object"
-        }
-      }
-    },
-    "CreatePrivacyRequirement": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "privacyRequirement"
-      ],
-      "properties": {
-        "privacyRequirement": {
-          "type": "object"
-        }
-      }
-    },
-    "DeletePrivacyRequirement": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        }
-      }
-    },
-    "RenamePrivacyRequirement": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "newName"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "newName": {
-          "type": "string"
-        }
-      }
-    },
-    "ReplacePrivacyRequirement": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "privacyRequirement"
-      ],
-      "properties": {
-        "privacyRequirement": {
-          "type": "object"
-        }
-      }
-    },
-    "CreateRelationship": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "relationship"
-      ],
-      "properties": {
-        "relationship": {
-          "type": "object"
-        }
-      }
-    },
-    "DeleteRelationship": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        }
-      }
-    },
-    "RenameRelationship": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "newName"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "newName": {
-          "type": "string"
-        }
-      }
-    },
-    "ReplaceRelationship": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "relationship"
-      ],
-      "properties": {
-        "relationship": {
-          "type": "object"
-        }
-      }
-    },
-    "CreateQuantityRequirement": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "quantityRequirement"
-      ],
-      "properties": {
-        "quantityRequirement": {
-          "type": "object"
-        }
-      }
-    },
-    "DeleteQuantityRequirement": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        }
-      }
-    },
-    "RenameQuantityRequirement": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "newName"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "newName": {
-          "type": "string"
-        }
-      }
-    },
-    "ReplaceQuantityRequirement": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "quantityRequirement"
-      ],
-      "properties": {
-        "quantityRequirement": {
-          "type": "object"
-        }
-      }
-    },
-    "CreateAnalysisRecord": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "analysisRecord"
-      ],
-      "properties": {
-        "analysisRecord": {
-          "type": "object"
-        }
-      }
-    },
-    "DeleteAnalysisRecord": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        }
-      }
-    },
-    "RenameAnalysisRecord": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "newName"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "newName": {
-          "type": "string"
-        }
-      }
-    },
-    "ReplaceAnalysisRecord": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "analysisRecord"
-      ],
-      "properties": {
-        "analysisRecord": {
-          "type": "object"
-        }
-      }
-    },
-    "CreateStorageRequirement": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "storageRequirement"
-      ],
-      "properties": {
-        "storageRequirement": {
-          "type": "object"
-        }
-      }
-    },
-    "DeleteStorageRequirement": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        }
-      }
-    },
-    "RenameStorageRequirement": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "newName"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "newName": {
-          "type": "string"
-        }
-      }
-    },
-    "ReplaceStorageRequirement": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "storageRequirement"
-      ],
-      "properties": {
-        "storageRequirement": {
-          "type": "object"
-        }
-      }
-    },
-    "CreateMeetingRecord": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "meetingRecord"
-      ],
-      "properties": {
-        "meetingRecord": {
-          "type": "object"
-        }
-      }
-    },
-    "DeleteMeetingRecord": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        }
-      }
-    },
-    "RenameMeetingRecord": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "newName"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "newName": {
-          "type": "string"
-        }
-      }
-    },
-    "ReplaceMeetingRecord": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "meetingRecord"
-      ],
-      "properties": {
-        "meetingRecord": {
-          "type": "object"
-        }
-      }
-    },
-    "CreateSurvey": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "survey"
-      ],
-      "properties": {
-        "survey": {
-          "type": "object"
-        }
-      }
-    },
-    "DeleteSurvey": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        }
-      }
-    },
-    "RenameSurvey": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "newName"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "newName": {
-          "type": "string"
-        }
-      }
-    },
-    "ReplaceSurvey": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "survey"
-      ],
-      "properties": {
-        "survey": {
-          "type": "object"
-        }
-      }
-    },
-    "CreateDeliveryConstraint": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "deliveryConstraint"
-      ],
-      "properties": {
-        "deliveryConstraint": {
-          "type": "object"
-        }
-      }
-    },
-    "DeleteDeliveryConstraint": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        }
-      }
-    },
-    "RenameDeliveryConstraint": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "newName"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "newName": {
-          "type": "string"
-        }
-      }
-    },
-    "ReplaceDeliveryConstraint": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "deliveryConstraint"
-      ],
-      "properties": {
-        "deliveryConstraint": {
-          "type": "object"
-        }
-      }
-    },
-    "CreateConstraintRecord": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "constraintRecord"
-      ],
-      "properties": {
-        "constraintRecord": {
-          "type": "object"
-        }
-      }
-    },
-    "DeleteConstraintRecord": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        }
-      }
-    },
-    "RenameConstraintRecord": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "newName"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "newName": {
-          "type": "string"
-        }
-      }
-    },
-    "ReplaceConstraintRecord": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "constraintRecord"
-      ],
-      "properties": {
-        "constraintRecord": {
-          "type": "object"
-        }
-      }
-    },
-    "CreateComplianceRecord": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "complianceRecord"
-      ],
-      "properties": {
-        "complianceRecord": {
-          "type": "object"
-        }
-      }
-    },
-    "DeleteComplianceRecord": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        }
-      }
-    },
-    "RenameComplianceRecord": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "newName"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "newName": {
-          "type": "string"
-        }
-      }
-    },
-    "ReplaceComplianceRecord": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "complianceRecord"
-      ],
-      "properties": {
-        "complianceRecord": {
-          "type": "object"
-        }
-      }
-    },
-    "CreateServiceRequirement": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "serviceRequirement"
-      ],
-      "properties": {
-        "serviceRequirement": {
-          "type": "object"
-        }
-      }
-    },
-    "DeleteServiceRequirement": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        }
-      }
-    },
-    "RenameServiceRequirement": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "newName"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "newName": {
-          "type": "string"
-        }
-      }
-    },
-    "ReplaceServiceRequirement": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "serviceRequirement"
-      ],
-      "properties": {
-        "serviceRequirement": {
-          "type": "object"
-        }
-      }
-    },
-    "CreateEquipment": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "equipment"
-      ],
-      "properties": {
-        "equipment": {
-          "type": "object"
-        }
-      }
-    },
-    "DeleteEquipment": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        }
-      }
-    },
-    "RenameEquipment": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "newName"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "newName": {
-          "type": "string"
-        }
-      }
-    },
-    "ReplaceEquipment": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "equipment"
-      ],
-      "properties": {
-        "equipment": {
-          "type": "object"
-        }
-      }
-    },
-    "CreateSecurityRequirement": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "securityRequirement"
-      ],
-      "properties": {
-        "securityRequirement": {
-          "type": "object"
-        }
-      }
-    },
-    "DeleteSecurityRequirement": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        }
-      }
-    },
-    "RenameSecurityRequirement": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "newName"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "newName": {
-          "type": "string"
-        }
-      }
-    },
-    "ReplaceSecurityRequirement": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "securityRequirement"
-      ],
-      "properties": {
-        "securityRequirement": {
-          "type": "object"
-        }
-      }
-    },
-    "CreateCollaborationRecord": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "collaborationRecord"
-      ],
-      "properties": {
-        "collaborationRecord": {
-          "type": "object"
-        }
-      }
-    },
-    "DeleteCollaborationRecord": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        }
-      }
-    },
-    "RenameCollaborationRecord": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "newName"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "newName": {
-          "type": "string"
-        }
-      }
-    },
-    "ReplaceCollaborationRecord": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "collaborationRecord"
-      ],
-      "properties": {
-        "collaborationRecord": {
-          "type": "object"
-        }
-      }
-    },
-    "CreateSafetyRequirement": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "safetyRequirement"
-      ],
-      "properties": {
-        "safetyRequirement": {
-          "type": "object"
-        }
-      }
-    },
-    "DeleteSafetyRequirement": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        }
-      }
-    },
-    "RenameSafetyRequirement": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "newName"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "newName": {
-          "type": "string"
-        }
-      }
-    },
-    "ReplaceSafetyRequirement": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "safetyRequirement"
-      ],
-      "properties": {
-        "safetyRequirement": {
-          "type": "object"
-        }
-      }
-    },
-    "CreateUserProfile": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "userProfile"
-      ],
-      "properties": {
-        "userProfile": {
-          "type": "object"
-        }
-      }
-    },
-    "DeleteUserProfile": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        }
-      }
-    },
-    "RenameUserProfile": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "newName"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "newName": {
-          "type": "string"
-        }
-      }
-    },
-    "ReplaceUserProfile": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "userProfile"
-      ],
-      "properties": {
-        "userProfile": {
-          "type": "object"
-        }
-      }
-    },
-    "CreateHumanFactorRequirement": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "humanFactorRequirement"
-      ],
-      "properties": {
-        "humanFactorRequirement": {
-          "type": "object"
-        }
-      }
-    },
-    "DeleteHumanFactorRequirement": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        }
-      }
-    },
-    "RenameHumanFactorRequirement": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "newName"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "newName": {
-          "type": "string"
-        }
-      }
-    },
-    "ReplaceHumanFactorRequirement": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "humanFactorRequirement"
-      ],
-      "properties": {
-        "humanFactorRequirement": {
-          "type": "object"
-        }
-      }
-    },
-    "CreateFlexibilityRequirement": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "flexibilityRequirement"
-      ],
-      "properties": {
-        "flexibilityRequirement": {
-          "type": "object"
-        }
-      }
-    },
-    "DeleteFlexibilityRequirement": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        }
-      }
-    },
-    "RenameFlexibilityRequirement": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "newName"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "newName": {
-          "type": "string"
-        }
-      }
-    },
-    "ReplaceFlexibilityRequirement": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "flexibilityRequirement"
-      ],
-      "properties": {
-        "flexibilityRequirement": {
-          "type": "object"
-        }
-      }
-    },
-    "CreateWayfindingRequirement": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "wayfindingRequirement"
-      ],
-      "properties": {
-        "wayfindingRequirement": {
-          "type": "object"
-        }
-      }
-    },
-    "DeleteWayfindingRequirement": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        }
-      }
-    },
-    "RenameWayfindingRequirement": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "newName"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "newName": {
-          "type": "string"
-        }
-      }
-    },
-    "ReplaceWayfindingRequirement": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "wayfindingRequirement"
-      ],
-      "properties": {
-        "wayfindingRequirement": {
-          "type": "object"
-        }
-      }
-    },
-    "CreateProgramElement": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "programElement"
-      ],
-      "properties": {
-        "programElement": {
-          "type": "object"
-        }
-      }
-    },
-    "DeleteProgramElement": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        }
-      }
-    },
-    "RenameProgramElement": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "newName"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "newName": {
-          "type": "string"
-        }
-      }
-    },
-    "ReplaceProgramElement": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "programElement"
-      ],
-      "properties": {
-        "programElement": {
-          "type": "object"
-        }
-      }
-    },
-    "ConnectAdjacency": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "adjacency"
-      ],
-      "properties": {
-        "adjacency": {
-          "type": "object"
-        }
-      }
-    },
-    "DisconnectAdjacency": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        }
-      }
-    },
-    "ConnectTrace": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "trace"
-      ],
-      "properties": {
-        "trace": {
-          "type": "object"
-        }
-      }
-    },
-    "DisconnectTrace": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        }
-      }
-    },
-    "RenameMeta": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "newTitle"
-      ],
-      "properties": {
-        "newTitle": {
-          "type": "string"
-        }
-      }
-    },
-    "ReplaceMeta": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "newMeta"
-      ],
-      "properties": {
-        "newMeta": {
-          "type": "object"
-        }
-      }
-    },
-    "RenameProject": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "newCode"
-      ],
-      "properties": {
-        "newCode": {
-          "type": "string"
-        }
-      }
-    },
-    "ReplaceProject": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "newProject"
-      ],
-      "properties": {
-        "newProject": {
-          "type": "object"
-        }
-      }
-    },
-    "RenameGovernance": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "newFramework"
-      ],
-      "properties": {
-        "newFramework": {
-          "type": "string"
-        }
-      }
-    },
-    "ReplaceGovernance": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "newGovernance"
-      ],
-      "properties": {
-        "newGovernance": {
-          "type": "object"
-        }
-      }
-    }
-  }
+  "x-semio-mutationKinds": [
+    "connect-adjacency",
+    "connect-trace",
+    "create-access-rule",
+    "create-accessibility-requirement",
+    "create-activity",
+    "create-analysis-record",
+    "create-approval-record",
+    "create-assumption",
+    "create-audit-event",
+    "create-benchmark-record",
+    "create-change-record",
+    "create-collaboration-record",
+    "create-communication-requirement",
+    "create-compliance-record",
+    "create-conflict",
+    "create-constraint-record",
+    "create-cost-requirement",
+    "create-decision",
+    "create-delivery-constraint",
+    "create-document",
+    "create-environmental-requirement",
+    "create-equipment",
+    "create-flexibility-requirement",
+    "create-flow-requirement",
+    "create-function",
+    "create-growth-plan",
+    "create-human-factor-requirement",
+    "create-information-requirement",
+    "create-infrastructure-requirement",
+    "create-issue",
+    "create-knowledge-record",
+    "create-meeting-record",
+    "create-operational-requirement",
+    "create-option-evaluation",
+    "create-organizational-requirement",
+    "create-performance-criterion",
+    "create-priority-record",
+    "create-privacy-requirement",
+    "create-process",
+    "create-program-element",
+    "create-quality-record",
+    "create-quantity-requirement",
+    "create-regulatory-requirement",
+    "create-relationship",
+    "create-report-record",
+    "create-requirement",
+    "create-resilience-requirement",
+    "create-resource",
+    "create-risk",
+    "create-safety-requirement",
+    "create-scenario",
+    "create-schedule-requirement",
+    "create-search-filter",
+    "create-security-requirement",
+    "create-service-requirement",
+    "create-site-context",
+    "create-stakeholder",
+    "create-status-record",
+    "create-storage-requirement",
+    "create-survey",
+    "create-sustainability-requirement",
+    "create-template-record",
+    "create-user-profile",
+    "create-validation-record",
+    "create-wayfinding-requirement",
+    "create-workshop",
+    "delete-access-rule",
+    "delete-accessibility-requirement",
+    "delete-activity",
+    "delete-analysis-record",
+    "delete-approval-record",
+    "delete-assumption",
+    "delete-audit-event",
+    "delete-benchmark-record",
+    "delete-change-record",
+    "delete-collaboration-record",
+    "delete-communication-requirement",
+    "delete-compliance-record",
+    "delete-conflict",
+    "delete-constraint-record",
+    "delete-cost-requirement",
+    "delete-decision",
+    "delete-delivery-constraint",
+    "delete-document",
+    "delete-environmental-requirement",
+    "delete-equipment",
+    "delete-flexibility-requirement",
+    "delete-flow-requirement",
+    "delete-function",
+    "delete-growth-plan",
+    "delete-human-factor-requirement",
+    "delete-information-requirement",
+    "delete-infrastructure-requirement",
+    "delete-issue",
+    "delete-knowledge-record",
+    "delete-meeting-record",
+    "delete-operational-requirement",
+    "delete-option-evaluation",
+    "delete-organizational-requirement",
+    "delete-performance-criterion",
+    "delete-priority-record",
+    "delete-privacy-requirement",
+    "delete-process",
+    "delete-program-element",
+    "delete-quality-record",
+    "delete-quantity-requirement",
+    "delete-regulatory-requirement",
+    "delete-relationship",
+    "delete-report-record",
+    "delete-requirement",
+    "delete-resilience-requirement",
+    "delete-resource",
+    "delete-risk",
+    "delete-safety-requirement",
+    "delete-scenario",
+    "delete-schedule-requirement",
+    "delete-search-filter",
+    "delete-security-requirement",
+    "delete-service-requirement",
+    "delete-site-context",
+    "delete-stakeholder",
+    "delete-status-record",
+    "delete-storage-requirement",
+    "delete-survey",
+    "delete-sustainability-requirement",
+    "delete-template-record",
+    "delete-user-profile",
+    "delete-validation-record",
+    "delete-wayfinding-requirement",
+    "delete-workshop",
+    "disconnect-adjacency",
+    "disconnect-trace",
+    "rename-access-rule",
+    "rename-accessibility-requirement",
+    "rename-activity",
+    "rename-analysis-record",
+    "rename-approval-record",
+    "rename-assumption",
+    "rename-audit-event",
+    "rename-benchmark-record",
+    "rename-change-record",
+    "rename-collaboration-record",
+    "rename-communication-requirement",
+    "rename-compliance-record",
+    "rename-conflict",
+    "rename-constraint-record",
+    "rename-cost-requirement",
+    "rename-decision",
+    "rename-delivery-constraint",
+    "rename-document",
+    "rename-environmental-requirement",
+    "rename-equipment",
+    "rename-flexibility-requirement",
+    "rename-flow-requirement",
+    "rename-function",
+    "rename-governance",
+    "rename-growth-plan",
+    "rename-human-factor-requirement",
+    "rename-information-requirement",
+    "rename-infrastructure-requirement",
+    "rename-issue",
+    "rename-knowledge-record",
+    "rename-meeting-record",
+    "rename-meta",
+    "rename-operational-requirement",
+    "rename-option-evaluation",
+    "rename-organizational-requirement",
+    "rename-performance-criterion",
+    "rename-priority-record",
+    "rename-privacy-requirement",
+    "rename-process",
+    "rename-program-element",
+    "rename-project",
+    "rename-quality-record",
+    "rename-quantity-requirement",
+    "rename-regulatory-requirement",
+    "rename-relationship",
+    "rename-report-record",
+    "rename-requirement",
+    "rename-resilience-requirement",
+    "rename-resource",
+    "rename-risk",
+    "rename-safety-requirement",
+    "rename-scenario",
+    "rename-schedule-requirement",
+    "rename-search-filter",
+    "rename-security-requirement",
+    "rename-service-requirement",
+    "rename-site-context",
+    "rename-stakeholder",
+    "rename-status-record",
+    "rename-storage-requirement",
+    "rename-survey",
+    "rename-sustainability-requirement",
+    "rename-template-record",
+    "rename-user-profile",
+    "rename-validation-record",
+    "rename-wayfinding-requirement",
+    "rename-workshop",
+    "replace-access-rule",
+    "replace-accessibility-requirement",
+    "replace-activity",
+    "replace-analysis-record",
+    "replace-approval-record",
+    "replace-assumption",
+    "replace-audit-event",
+    "replace-benchmark-record",
+    "replace-change-record",
+    "replace-collaboration-record",
+    "replace-communication-requirement",
+    "replace-compliance-record",
+    "replace-conflict",
+    "replace-constraint-record",
+    "replace-cost-requirement",
+    "replace-decision",
+    "replace-delivery-constraint",
+    "replace-document",
+    "replace-environmental-requirement",
+    "replace-equipment",
+    "replace-flexibility-requirement",
+    "replace-flow-requirement",
+    "replace-function",
+    "replace-governance",
+    "replace-growth-plan",
+    "replace-human-factor-requirement",
+    "replace-information-requirement",
+    "replace-infrastructure-requirement",
+    "replace-issue",
+    "replace-knowledge-record",
+    "replace-meeting-record",
+    "replace-meta",
+    "replace-operational-requirement",
+    "replace-option-evaluation",
+    "replace-organizational-requirement",
+    "replace-performance-criterion",
+    "replace-priority-record",
+    "replace-privacy-requirement",
+    "replace-process",
+    "replace-program-element",
+    "replace-project",
+    "replace-quality-record",
+    "replace-quantity-requirement",
+    "replace-regulatory-requirement",
+    "replace-relationship",
+    "replace-report-record",
+    "replace-requirement",
+    "replace-resilience-requirement",
+    "replace-resource",
+    "replace-risk",
+    "replace-safety-requirement",
+    "replace-scenario",
+    "replace-schedule-requirement",
+    "replace-search-filter",
+    "replace-security-requirement",
+    "replace-service-requirement",
+    "replace-site-context",
+    "replace-stakeholder",
+    "replace-status-record",
+    "replace-storage-requirement",
+    "replace-survey",
+    "replace-sustainability-requirement",
+    "replace-template-record",
+    "replace-user-profile",
+    "replace-validation-record",
+    "replace-wayfinding-requirement",
+    "replace-workshop"
+  ]
 }

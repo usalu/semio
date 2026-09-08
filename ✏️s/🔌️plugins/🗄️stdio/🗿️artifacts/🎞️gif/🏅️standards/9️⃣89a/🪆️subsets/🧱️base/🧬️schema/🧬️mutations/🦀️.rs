@@ -5,8 +5,8 @@
 //! disposal/transparency/user-input, and comment/app-extension insert/remove. Every variant's
 //! `diff()` is handcrafted directly against the sparse `GifDiff` shape (no apply-and-capture).
 
-use crate::artifacts::gif::standards::v89a::subsets::any::schema::diff::{self, GifAppExtensionAdded, GifAppExtensionsDiff, GifCommentAdded, GifCommentsDiff, GifDiff, GifFrameAdded, GifFrameDiff, GifFrameModified, GifFramesDiff};
-use crate::artifacts::gif::standards::v89a::subsets::any::schema::snapshot::{GifAppExtension, GifColorTable, GifDisposal, GifFrame, GifSnapshot};
+use crate::standards::v89a::subsets::any::schema::diff::{self, GifAppExtensionAdded, GifAppExtensionsDiff, GifCommentAdded, GifCommentsDiff, GifDiff, GifFrameAdded, GifFrameDiff, GifFrameModified, GifFramesDiff};
+use crate::standards::v89a::subsets::any::schema::snapshot::{GifAppExtension, GifColorTable, GifDisposal, GifFrame, GifSnapshot};
 use protocol::{Mutation, MutationDiff};
 use protocol::{OpBinary, OpText};
 
@@ -183,10 +183,10 @@ pub(crate) fn demo_mutation_cases() -> Vec<GifMutation> {
     // op-text payload is unnecessarily large for exercising the mutations grammar's own
     // shape, which this compact snapshot already covers field-for-field.
     let base = GifSnapshot {
-        schema: crate::artifacts::gif::standards::v89a::subsets::any::schema::snapshot::STDIO_GIF89A_DOCUMENT_SCHEMA.into(),
+        schema: crate::standards::v89a::subsets::any::schema::snapshot::STDIO_GIF89A_DOCUMENT_SCHEMA.into(),
         width: 2,
         height: 2,
-        gct: Some(GifColorTable { sorted: false, colors: vec![crate::artifacts::gif::standards::v89a::subsets::any::schema::snapshot::GifRgb { r: 4, g: 5, b: 6 }; 2] }),
+        gct: Some(GifColorTable { sorted: false, colors: vec![crate::standards::v89a::subsets::any::schema::snapshot::GifRgb { r: 4, g: 5, b: 6 }; 2] }),
         background_color_index: 0,
         pixel_aspect_ratio: 0,
         loop_count: Some(0),
@@ -200,7 +200,7 @@ pub(crate) fn demo_mutation_cases() -> Vec<GifMutation> {
         width: 2,
         height: 2,
         interlace: false,
-        lct: Some(GifColorTable { sorted: false, colors: vec![crate::artifacts::gif::standards::v89a::subsets::any::schema::snapshot::GifRgb { r: 9, g: 9, b: 9 }; 2] }),
+        lct: Some(GifColorTable { sorted: false, colors: vec![crate::standards::v89a::subsets::any::schema::snapshot::GifRgb { r: 9, g: 9, b: 9 }; 2] }),
         indices: vec![0, 1, 1, 0],
         delay_cs: 10,
         disposal: GifDisposal::DoNotDispose,
@@ -438,7 +438,7 @@ mod tests {
             width: 2,
             height: 2,
             interlace: false,
-            lct: Some(GifColorTable { sorted: false, colors: vec![crate::artifacts::gif::standards::v89a::subsets::any::schema::snapshot::GifRgb { r: seed, g: seed, b: seed }; 2] }),
+            lct: Some(GifColorTable { sorted: false, colors: vec![crate::standards::v89a::subsets::any::schema::snapshot::GifRgb { r: seed, g: seed, b: seed }; 2] }),
             indices: vec![0, 1, 1, 0],
             delay_cs: 10,
             disposal: GifDisposal::DoNotDispose,

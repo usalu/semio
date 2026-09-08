@@ -8,6 +8,6 @@ pub fn diff(payload: &ChangeStrictMode, base: &Vdi3805Snapshot) -> protocol::Mut
     if base.strict_mode == payload.new_strict_mode {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "Strict mode already has this value.");
     }
-    protocol::MutationOutcome::new(Vdi3805Diff { strict_mode: Some(payload.new_strict_mode.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(Vdi3805Diff { strict_mode: Some(payload.new_strict_mode), ..Default::default() })
 }
 //#endregion 🔖️Diff

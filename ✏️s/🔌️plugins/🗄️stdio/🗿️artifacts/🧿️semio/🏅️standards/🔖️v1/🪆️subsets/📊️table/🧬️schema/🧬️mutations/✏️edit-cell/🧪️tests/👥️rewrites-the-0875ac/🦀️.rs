@@ -6,10 +6,10 @@
 //! `new_value`. None fire here. The cell is addressed by `{row_index, column_name}` but WRITTEN at
 //! the column's resolved POSITION, so this case pins that name→index resolution.
 
-use crate::artifacts::semio::standards::v1::subsets::table::schema::diff::SemioTableDiff;
-use crate::artifacts::semio::standards::v1::subsets::table::schema::mutations::SemioTableMutation;
-use crate::artifacts::semio::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot;
-use crate::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValue;
+use crate::standards::v1::subsets::table::schema::diff::SemioTableDiff;
+use crate::standards::v1::subsets::table::schema::mutations::SemioTableMutation;
+use crate::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot;
+use crate::standards::v1::subsets::value::schema::snapshot::SemioValue;
 use protocol::{Mutation, MutationDiff};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");

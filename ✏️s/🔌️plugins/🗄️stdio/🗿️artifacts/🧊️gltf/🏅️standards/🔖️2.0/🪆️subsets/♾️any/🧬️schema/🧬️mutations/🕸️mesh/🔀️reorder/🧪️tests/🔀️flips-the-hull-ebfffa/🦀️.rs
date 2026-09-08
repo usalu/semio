@@ -9,10 +9,10 @@
 //! leaf's own oracle. The derived `.op.semio`/`.spr.semio`/`.dsl.semio`/`.pack.semio`/
 //! `.patch.semio` encodings come from `fixtures generate`, not from here.
 
-use crate::artifacts::gltf::schema::mutations::reorder_meshs::diff::GltfReorderMeshsDiff;
-use crate::artifacts::gltf::schema::mutations::reorder_meshs::GltfReorderMeshsPayload;
-use crate::artifacts::gltf::schema::mutations::reorder_meshs::{diff, inverse, mutation};
-use crate::artifacts::gltf::GltfSnapshot;
+use crate::schema::mutations::reorder_meshs::diff::GltfReorderMeshsDiff;
+use crate::schema::mutations::reorder_meshs::GltfReorderMeshsPayload;
+use crate::schema::mutations::reorder_meshs::{diff, inverse, mutation};
+use crate::GltfSnapshot;
 
 const CASE: &str = "reorder-meshs/flips-the-hull-and-deck-meshes";
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");

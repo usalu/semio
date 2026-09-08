@@ -1,0 +1,32 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/energy/model/1/any/mutation/change-surface-boundary-condition.json",
+  "title": "ChangeSurfaceBoundaryCondition",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newBoundary",
+    "newInterzoneSurfaceId"
+  ],
+  "properties": {
+    "id": {
+      "type": "integer"
+    },
+    "newBoundary": {
+      "enum": [
+        "OutdoorAir",
+        "Ground",
+        "OtherSideTemperature",
+        "Adiabatic",
+        "Interzone"
+      ]
+    },
+    "newInterzoneSurfaceId": {
+      "type": [
+        "integer",
+        "null"
+      ]
+    }
+  }
+}

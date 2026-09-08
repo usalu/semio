@@ -12,8 +12,8 @@
 //! deep, the SAME `derive-nested-multi-buffer-record` wall mesh's own report first named. Hand-rolled
 //! instead — see this wave's report `mechanism_gaps`.
 
-use crate::artifacts::semio::standards::v1::subsets::base::schema::triples::{split_top_level, strip_brackets};
-use schema::ArtifactSchema;
+use crate::standards::v1::subsets::base::schema::triples::{split_top_level, strip_brackets};
+use framework_schema::ArtifactSchema;
 
 //#region 🔖️VideoModel
 /// 🎞️ Owned by the `video` subset (per `w1b-type-ownership.md`): `SemioVideoStream`,

@@ -10,7 +10,7 @@ use crate::artifacts::program::ProgramSnapshot;
 pub fn diff(payload: &CreateStatusRecord, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
     let id = payload.status_record.header.id.clone();
     if base.status_records.iter().any(|row| row.header.id == id) {
-        return protocol::MutationOutcome::fatal("mutation.duplicate-id", "A status record already exists with this id.", [id.0.clone()]);
+        return protocol::MutationOutcome::fatal("mutation.duplicate-id", "A status record already exists with this id.", [id.0]);
     }
     protocol::MutationOutcome::new(ProgramDiff { status_records: Some(ProgramStatusRecordsDelta { added: vec![payload.status_record.clone()], ..Default::default() }), ..Default::default() })
 }

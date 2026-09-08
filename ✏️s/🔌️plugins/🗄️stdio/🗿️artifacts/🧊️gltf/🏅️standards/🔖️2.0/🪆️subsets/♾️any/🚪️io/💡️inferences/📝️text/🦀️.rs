@@ -2,7 +2,7 @@
 
 use std::{cmp::Ordering, fmt};
 
-use crate::artifacts::gltf::schema::inferences::GLTF_INFERENCE_FIELDS;
+use crate::schema::inferences::GLTF_INFERENCE_FIELDS;
 
 //#region 📖️SemioGrammar
 pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");

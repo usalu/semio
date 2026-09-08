@@ -10,10 +10,10 @@
 //! leaf's own oracle. The derived `.op.semio`/`.spr.semio`/`.dsl.semio`/`.pack.semio`/
 //! `.patch.semio` encodings come from `fixtures generate`, not from here.
 
-use crate::artifacts::gltf::schema::mutations::change_node_name::diff::GltfChangeNodeNameDiff;
-use crate::artifacts::gltf::schema::mutations::change_node_name::GltfChangeNodeNamePayload;
-use crate::artifacts::gltf::schema::mutations::change_node_name::{diff, inverse, mutation};
-use crate::artifacts::gltf::GltfSnapshot;
+use crate::schema::mutations::change_node_name::diff::GltfChangeNodeNameDiff;
+use crate::schema::mutations::change_node_name::GltfChangeNodeNamePayload;
+use crate::schema::mutations::change_node_name::{diff, inverse, mutation};
+use crate::GltfSnapshot;
 
 const CASE: &str = "change-node-name/renames-the-root-node-to-pivot";
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");

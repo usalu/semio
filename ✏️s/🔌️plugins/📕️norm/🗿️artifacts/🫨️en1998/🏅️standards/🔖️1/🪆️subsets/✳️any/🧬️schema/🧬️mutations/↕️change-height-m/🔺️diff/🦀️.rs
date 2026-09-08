@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeHeightM, base: &En1998Snapshot) -> protocol::Mutatio
     if base.height_m == payload.new_height_m {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Building height [m] is already {}.", payload.new_height_m));
     }
-    protocol::MutationOutcome::new(En1998Diff { height_m: Some(payload.new_height_m.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1998Diff { height_m: Some(payload.new_height_m), ..Default::default() })
 }
 //#endregion 🔖️Diff

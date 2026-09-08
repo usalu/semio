@@ -12,9 +12,6 @@ pub fn layout_to_wire(from: &LayoutSnapshot) -> Vec<u8> {
 pub fn layout_from_wire(bytes: &[u8]) -> Result<LayoutSnapshot, store::PackError> {
     <LayoutSnapshot as store::ArtifactPack>::decode_pack(bytes)
 }
-pub fn pack_err_as_text(err: store::PackError) -> store::TextError {
-    store::TextError::new(err.to_string(), dsl::TextSpan::at(1, 1))
-}
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
     use crate::artifacts::layout::standards::v1::subsets::any::schema::LayoutAnalyzer;
@@ -41,8 +38,8 @@ pub mod derived_composition {
             for source in sources {
                 if source.dialect == DIALECT {
                     let native = match &source.payload {
-                        AnalyzeSource::Text(t) => AnalyzeSource::Text(*t),
-                        AnalyzeSource::Binary(b) => AnalyzeSource::Binary(*b),
+                        AnalyzeSource::Text(t) => AnalyzeSource::Text(t),
+                        AnalyzeSource::Binary(b) => AnalyzeSource::Binary(b),
                     };
                     let analysis = LayoutAnalyzer::analyze(&[native]);
                     if let Some(snapshot) = analysis.parts.snapshot {
@@ -163,12 +160,12 @@ impl From<std::io::Error> for LayoutError {
 /// region's own header on the "more than one consumer" rule).
 use crate::artifacts::layout::{Frame, GridSettings, Layer, LayoutSnapshot, Page, PageColumns, PageMargins, Spread, LAYOUT_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{io_dispatch, resolve_ready, Dialect, ErasedComposeSource, IoDirection, IoKey, IoPayload, StandardId, SubsetId};
-use semio_s_plugin_stdio::artifacts::dwg::{DwgDrawing, DwgGeometry};
+use semio_s_artifact_stdio_dwg::{DwgDrawing, DwgGeometry};
 #[cfg(test)]
-use semio_s_plugin_stdio::artifacts::dwg::{DwgColor, DwgEntity};
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::base::schema::geometry::{SemioPoint3, SemioRgba, SemioTransform};
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{DrawCanvas, DrawLayer, DrawNode, DrawStyle, PathSegment, SemioDrawingSnapshot, STDIO_SEMIODRAWING_DOCUMENT_SCHEMA};
-use semio_s_plugin_stdio::artifacts::svg::schema::snapshot::{write_svg_xml, SvgSnapshot};
+use semio_s_artifact_stdio_dwg::{DwgColor, DwgEntity};
+use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::{SemioPoint3, SemioRgba, SemioTransform};
+use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::{DrawCanvas, DrawLayer, DrawNode, DrawStyle, PathSegment, SemioDrawingSnapshot, STDIO_SEMIODRAWING_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_svg::schema::snapshot::{write_svg_xml, SvgSnapshot};
 use dsl::{DslValue as Value, FromValue, ToValue};
 
 const DRAWING_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("drawing") };
@@ -179,7 +176,7 @@ const SVG_FORMAT_STANDARD: &str = "1.1";
 /// "rects-as-paths" primitive both `layout_snapshot_to_semio_drawing` (page/frame rects) and the app
 /// engine's `display_list_to_semio_drawing` (rendered display-list rects) build on.
 pub fn rect_path_segments(x: f64, y: f64, width: f64, height: f64) -> Vec<PathSegment> {
-    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioPoint2;
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::SemioPoint2;
     vec![
         PathSegment::MoveTo { to: SemioPoint2 { x, y } },
         PathSegment::LineTo { to: SemioPoint2 { x: x + width, y } },
@@ -211,7 +208,7 @@ fn path_bounds(segments: &[PathSegment]) -> Option<(f64, f64, f64, f64)> {
             max_y = max_y.max(point.y);
         }
     }
-    any.then(|| (min_x, min_y, max_x - min_x, max_y - min_y))
+    any.then_some((min_x, min_y, max_x - min_x, max_y - min_y))
 }
 
 fn semio_rgba_from_channels(channels: [f32; 4]) -> SemioRgba {
@@ -419,7 +416,7 @@ pub fn layout_document_json_from_dwg(drawing: &DwgDrawing) -> Result<Value, Stri
 #[cfg(test)]
 pub fn ensure_stdio_semio_drawing_registered() {
     static ONCE: std::sync::Once = std::sync::Once::new();
-    ONCE.call_once(semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::drawing::io::register);
+    ONCE.call_once(semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::io::register);
 }
 //#endregion 🔖️TestSupport
 
@@ -593,7 +590,7 @@ pub mod io_registry {
 mod pdf_contract_vectors {
     use super::*;
     use store::ArtifactDsl;
-    use semio_s_plugin_stdio::artifacts::pdf::standards::v1_4::subsets::base::schema::snapshot::{PageDoc, PdfSnapshot};
+    use semio_s_artifact_stdio_pdf::standards::v1_4::subsets::base::schema::snapshot::{PageDoc, PdfSnapshot};
 
     #[test]
     fn layout_pdf_page_collection_matches_the_json_oracle() {

@@ -3,12 +3,18 @@ import { readFileSync, mkdirSync, writeFileSync, mkdtempSync, rmSync } from "nod
 import { dirname, join, resolve, relative } from "node:path";
 import { createRequire } from "node:module";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { testGraphCoalescing } from "./🕸️daemon/📜️script.ts";
 
 /** 🧪️ Verifies native source and command ownership against compiler and bundler input oracles. */
 export async function testCommandInputs(workspace: string, output: string): Promise<void> {
   testNxDaemonTaskEnvironment(workspace);
   testNxDaemonDiagnostics(workspace, output);
   testNxDaemonRetention(workspace, output);
+  await testGraphCoalescing(workspace);
+  testWorkspaceRoots(workspace, output);
+  await testRuntimeComponents(workspace);
+  await testDemonstratorRuntime(workspace);
+  await testBrowserModuleRelocation(workspace);
   await testBunDependencies(workspace, output);
   await testNativePreparation(workspace, output);
   const require = createRequire(import.meta.url), fixtures = join(dirname(fileURLToPath(import.meta.url)), "../🧫️fixtures");
@@ -51,6 +57,121 @@ export async function testCommandInputs(workspace: string, output: string): Prom
   } finally { rmSync(root, { recursive: true, force: true }); }
 }
 
+/** 🪢️ Compares generated module relocation with independent JavaScript import spans. */
+export async function testBrowserModuleRelocation(workspace: string): Promise<void> {
+  const require = createRequire(import.meta.url), directory = join(workspace, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/🕸️imports");
+  const { rewritePreview2ShimImportSource } = await import(pathToFileURL(join(directory, "🟦️.ts")).href);
+  const fixture = JSON.parse(readFileSync(join(directory, "🧫️cases.json"), "utf8"));
+  assert.ok(new (require("ajv/dist/2020").default)().validate(JSON.parse(readFileSync(join(directory, "🧬️schema.json"), "utf8")), fixture));
+  const lexer = await import("es-module-lexer");
+  await lexer.init;
+  for (const row of fixture.cases) {
+    let expected = row.source;
+    for (const specifier of [...lexer.parse(row.source)[0]].reverse()) {
+      if (!specifier.n?.includes("preview2-shim/")) continue;
+      const name = specifier.n.split("/").at(-1)!.replace(/\.js$/, "");
+      expected = expected.slice(0, specifier.s) + row.prefix + name + ".js" + expected.slice(specifier.e);
+    }
+    assert.equal(expected, row.output);
+    assert.equal(rewritePreview2ShimImportSource(row.source, row.prefix), expected);
+  }
+  const bundle = await require("esbuild").build({ entryPoints: [join(directory, "🟦️.ts")], absWorkingDir: workspace, bundle: true, write: false, platform: "node", format: "esm", packages: "external", metafile: true, logLevel: "silent" });
+  assert.equal(Object.keys(bundle.metafile.inputs).length, 1);
+  console.log(`[DEBUG] ${fixture.cases.length} browser relocation vectors match es-module-lexer import spans with a single-file production boundary PASS`);
+}
+
+/** 🎪️ Keeps Vite's runtime description independent of build commands and brand implementations. */
+export async function testDemonstratorRuntime(workspace: string): Promise<void> {
+  const require = createRequire(import.meta.url), directory = join(workspace, "♻️mit-bestand/🧺️demonstrator/🔨️modules/🧩️runtime");
+  const catalog = JSON.parse(readFileSync(join(directory, "🔣️.json"), "utf8")), fixture = JSON.parse(readFileSync(join(directory, "🧫️cases.json"), "utf8"));
+  assert.ok(new (require("ajv/dist/2020").default)().validate(JSON.parse(readFileSync(join(directory, "🧬️schema.json"), "utf8")), catalog));
+  const runtime = await import(pathToFileURL(join(directory, "🟦️.ts")).href);
+  const bundle = await require("esbuild").build({ entryPoints: [join(directory, "🟦️.ts")], absWorkingDir: workspace, bundle: true, write: false, platform: "node", format: "esm", packages: "external", metafile: true, logLevel: "silent" });
+  const inputs = Object.keys(bundle.metafile.inputs);
+  assert.ok(inputs.every(path => !path.endsWith("📜️script.ts") && !path.endsWith("🪧️brand.ts")), "Runtime descriptions must not load task or brand implementations");
+  assert.deepEqual(runtime.demonstratorRuntimeBuildVariants(fixture.primary), fixture.additionalBuildVariants);
+  assert.equal(new Set(catalog.panes.map((row: any) => row.variant)).size, catalog.panes.length);
+  for (const row of catalog.panes) assert.equal(runtime.demonstratorPaneRuntimeVariant(row.variant), row.runtimeVariant);
+  for (const variant of fixture.invalidVariants) assert.throws(() => runtime.demonstratorPaneRuntimeVariant(variant), /variant/);
+  const moduleCatalog = JSON.parse(readFileSync(join(workspace, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🗺️catalog.json"), "utf8"));
+  const names = (ids: string[]) => ids.map(id => moduleCatalog.modules.find((row: any) => row.pluginId === id).directoryName);
+  const layout = runtime.demonstratorRuntimeModuleLayout(["demonstrator", "procedural"]);
+  assert.deepEqual(layout.pluginModuleDirNames, [...fixture.supportDirectories, ...names(fixture.pluginIds)]);
+  assert.deepEqual(layout.extensionModuleDirNames, names(fixture.extensionIds));
+  const pipeline = JSON.parse(readFileSync(join(directory, "🧫️pipeline.json"), "utf8"));
+  assert.ok(new (require("ajv/dist/2020").default)().validate(JSON.parse(readFileSync(join(directory, "🧬️pipeline.schema.json"), "utf8")), pipeline));
+  assert.deepEqual(runtime.DEMONSTRATOR_RUNTIME_TARGETS.map((row: any) => row.variant).sort(), pipeline.variants);
+  const project = JSON.parse(readFileSync(join(directory, "../../📋️project.json"), "utf8"));
+  for (const profile of pipeline.profiles) {
+    const preparation = project.targets[`prepare-${profile}`];
+    assert.ok(preparation, `Missing Demonstrator ${profile} preparation`);
+    assert.equal(preparation.cache, false);
+    assert.deepEqual(preparation.dependsOn, pipeline.variants.map((variant: string) => `${pipeline.preparationProject}:prepare-${variant}-react-${profile}`));
+  }
+  const command = readFileSync(join(directory, "../..", pipeline.command), "utf8");
+  for (const forbidden of [...pipeline.forbiddenCommandImports, ...pipeline.forbiddenOrchestration]) assert.equal(command.includes(forbidden), false, `Demonstrator hides ${forbidden}`);
+  console.log(`[DEBUG] Demonstrator runtime catalog, full component union and ${inputs.length}-file pure import boundary PASS`);
+}
+
+/** 🕸️ Compares runtime selection with an independent directed-graph traversal. */
+export async function testRuntimeComponents(workspace: string): Promise<void> {
+  const require = createRequire(import.meta.url), fixtures = join(dirname(fileURLToPath(import.meta.url)), "../🧫️fixtures/runtime-components");
+  const fixture = JSON.parse(readFileSync(join(fixtures, "🔣️.json"), "utf8"));
+  assert.ok(new (require("ajv/dist/2020").default)().validate(JSON.parse(readFileSync(join(fixtures, "🧬️schema.json"), "utf8")), fixture));
+  const { cacheInternals } = await import(pathToFileURL(join(workspace, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs")).href);
+  assert.equal(typeof cacheInternals.runtimeComponentClosure, "function", "Runtime preparation needs transitive component consumption");
+  const oracle = (rows: any[], roots: string[]) => {
+    const { Graph, alg } = require("graphlib"), graph = new Graph({ directed: true });
+    for (const row of rows) graph.setNode(row.pluginId);
+    for (const row of rows) for (const dependency of new Set([...(row.dependsOn ?? []), ...rows.filter(candidate => row.host || (candidate.contributes ?? []).some((topic: string) => (row.consumes ?? []).includes(topic))).map(candidate => candidate.pluginId)])) graph.setEdge(row.pluginId, dependency);
+    return [...new Set(roots.flatMap(root => alg.preorder(graph, root)))].sort();
+  };
+  for (const row of fixture.cases) {
+    assert.deepEqual(oracle(fixture.components, row.roots), row.expected, row.name + ": graphlib");
+    assert.deepEqual(cacheInternals.runtimeComponentClosure(fixture.components, row.roots), row.expected, row.name);
+  }
+  for (const row of fixture.invalid) assert.throws(() => cacheInternals.runtimeComponentClosure(row.components, row.roots), /component/i, row.name);
+  const registry = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry", dev = "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript";
+  const entries = JSON.parse(readFileSync(join(workspace, registry, "🤖️generated/🔌️plugins.json"), "utf8"));
+  const paths = entries.map((row: any) => row.cratePath + "/Cargo.toml");
+  const components = paths.map((path: string) => {
+    const manifest = require("@iarna/toml").parse(readFileSync(join(workspace, path), "utf8")), metadata = manifest.package.metadata;
+    const project = JSON.parse(readFileSync(join(workspace, dirname(path), "📋️project.json"), "utf8")).name;
+    return { ...metadata.semio, project, pluginId: metadata.component.package.slice(6), dependsOn: [...(metadata.semio.extends ? [metadata.semio.extends] : []), ...(metadata.semio["depends-on"] ?? [])] };
+  });
+  const targets = cacheInternals.playgroundPreparationTargets(paths, workspace, dev), projects = new Map(components.map((row: any) => [row.pluginId, row.project]));
+  let checked = 0;
+  for (const component of components) for (const row of component.playground ?? []) for (const profile of ["dev", "release"]) {
+    const expected = oracle(components, [component.pluginId]).map((id: string) => `${projects.get(id)}:materialize-${profile}`).sort();
+    const actual = targets[`prepare-${row.variant}-react-${profile}`].dependsOn.filter((id: string) => id.endsWith(`:materialize-${profile}`)).sort();
+    assert.deepEqual(actual, expected, `${row.variant} ${profile}: Cargo metadata and graphlib`);
+    checked++;
+  }
+  console.log("[DEBUG] Runtime component closure includes transitive contributions, unions and hosts and matches graphlib PASS");
+  console.log(`[DEBUG] ${checked} real playground preparation targets match the independent Cargo metadata runtime closure PASS`);
+}
+
+/** 🗂️ Keeps producers inside the workspace supplied by Nx's own task environment. */
+export function testWorkspaceRoots(workspace: string, output: string): void {
+  const require = createRequire(import.meta.url), root = mkdtempSync(join(output, "workspace-roots-"));
+  const fixture = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../🧫️fixtures/🗂️workspace-roots.json"), "utf8"));
+  const schema = { type: "object", required: ["schemaVersion", "cases"], properties: { schemaVersion: { const: 1 }, cases: { type: "array", minItems: 1, items: { type: "object", required: ["name", "nx", "hint", "expected"], properties: { name: { type: "string" }, nx: { type: "boolean" }, hint: { type: "boolean" }, expected: { enum: ["workspace", "hint"] } } } } } };
+  assert.equal(require("jsonschema").validate(fixture, schema).valid, true);
+  try {
+    const supplied = require("nx/src/tasks-runner/task-env").getEnvVariablesForBatchProcess(false, true);
+    assert.equal(supplied.NX_WORKSPACE_ROOT, workspace);
+    const script = join(root, "📜️script.ts"), helper = join(workspace, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts");
+    writeFileSync(script, `import { getWorkspaceRoot } from ${JSON.stringify(helper)}; process.stdout.write(getWorkspaceRoot());\n`);
+    for (const row of fixture.cases) {
+      const env = { ...supplied, NX_WORKSPACE_ROOT: row.nx ? supplied.NX_WORKSPACE_ROOT : undefined, REPO_ROOT: row.hint ? root : undefined };
+      const child = Bun.spawnSync([process.execPath, script], { cwd: workspace, env, stdout: "pipe", stderr: "pipe" });
+      assert.equal(child.exitCode, 0, child.stderr.toString());
+      assert.equal(child.stdout.toString(), row.expected === "workspace" ? workspace : root, row.name);
+    }
+  } finally { rmSync(root, { recursive: true, force: true }); }
+  console.log("[DEBUG] Workspace resolution respects Nx's native task environment before standalone hints PASS");
+}
+
 /** 🧶️ Validates location-sensitive locked dependencies against Nx's native hash planner. */
 export async function testBunDependencies(workspace: string, output: string): Promise<void> {
   const require = createRequire(import.meta.url), fixtures = join(dirname(fileURLToPath(import.meta.url)), "../🧫️fixtures/bun-dependencies");
@@ -62,6 +183,10 @@ export async function testBunDependencies(workspace: string, output: string): Pr
   for (const row of cases.resolutions) assert.equal(graph.resolve(row.from, row.name), row.key);
   for (const row of cases.importers) assert.equal(graph.resolveImport(row.file, row.name), row.key);
   for (const name of cases.unresolvedImports) assert.equal(graph.resolveImport("domain/📜️script.ts", name), undefined);
+  const native = cacheInternals.cargoTargets("🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust", workspace).build.inputs;
+  assert.deepEqual(native.flatMap((input: any) => input.externalDependencies ?? []), cases.nativeInputs.externalDependencies);
+  for (const path of cases.nativeInputs.excluded) assert.equal(native.includes(path), false);
+  assert.deepEqual(native.find((input: any) => input.json === "{workspaceRoot}/package.json")?.fields, cases.nativeInputs.manifestFields);
   const { HashPlanner, transferProjectGraph } = require("nx/src/native"), { transformProjectGraphForRust } = require("nx/src/native/transform-objects");
   const plan = (model: any, key: string): string[] => {
     const project = { name: "probe", type: "lib", data: { root: "probe", targets: { build: { executor: "nx:run-commands", inputs: [{ externalDependencies: ["npm:" + key] }], options: { command: "bun ./📜️script.ts build" } } } } };

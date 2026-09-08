@@ -16,9 +16,9 @@
 //! `.pack.semio`/`.patch.semio` encodings are derived from it by `fixtures generate` and are
 //! asserted by the shared codec-matrix harness, not here.
 
-use crate::artifacts::html::standards::v5::subsets::any::schema::diff::HtmlDiff;
-use crate::artifacts::html::standards::v5::subsets::any::schema::mutations::{apply_html_mutation, HtmlMutation};
-use crate::artifacts::html::standards::v5::subsets::any::schema::snapshot::HtmlSnapshot;
+use crate::standards::v5::subsets::any::schema::diff::HtmlDiff;
+use crate::standards::v5::subsets::any::schema::mutations::{apply_html_mutation, HtmlMutation};
+use crate::standards::v5::subsets::any::schema::snapshot::HtmlSnapshot;
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");
@@ -44,7 +44,7 @@ async fn applies_to_committed_after() {
     assert!(outcome.messages().is_empty(), "set-snapshot/declares-the-document-language-on-the-root-html-element: set-snapshot raised diagnostics it should not have");
     assert_eq!(snapshot, expected_after(), "set-snapshot/declares-the-document-language-on-the-root-html-element: applied state differs from committed after-snapshot");
     let root_attributes = match &snapshot.root {
-        crate::artifacts::html::standards::v5::subsets::any::schema::snapshot::HtmlNode::Element { attributes, .. } => attributes.clone(),
+        crate::standards::v5::subsets::any::schema::snapshot::HtmlNode::Element { attributes, .. } => attributes.clone(),
         other => panic!("set-snapshot/declares-the-document-language-on-the-root-html-element: the root must stay an element, got {other:?}"),
     };
     assert_eq!(root_attributes.len(), 1, "set-snapshot/declares-the-document-language-on-the-root-html-element: the root element must end up carrying exactly the one new attribute");
@@ -125,7 +125,7 @@ async fn produces_committed_diff() {
     assert!(raised.diff().doctype.is_none(), "set-snapshot/declares-the-document-language-on-the-root-html-element: an attribute edit must never reach the document-level doctype slot");
     let root = raised.diff().root.as_ref().expect("set-snapshot/declares-the-document-language-on-the-root-html-element: the root node diff must be present");
     let element = match root {
-        crate::artifacts::html::standards::v5::subsets::any::schema::diff::HtmlNodeDiff::Element(element) => element,
+        crate::standards::v5::subsets::any::schema::diff::HtmlNodeDiff::Element(element) => element,
         other => panic!("set-snapshot/declares-the-document-language-on-the-root-html-element: adding an attribute must keep the kind-shaped Element diff, got {other:?}"),
     };
     assert!(element.name.is_none(), "set-snapshot/declares-the-document-language-on-the-root-html-element: the root element keeps the name html");

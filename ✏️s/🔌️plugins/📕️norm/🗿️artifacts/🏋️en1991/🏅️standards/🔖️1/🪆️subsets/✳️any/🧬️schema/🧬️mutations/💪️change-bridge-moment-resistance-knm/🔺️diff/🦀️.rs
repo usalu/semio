@@ -11,6 +11,6 @@ pub fn diff(payload: &ChangeBridgeMomentResistanceKnm, base: &En1991Snapshot) ->
     if base.bridge_moment_resistance_knm == payload.new_bridge_moment_resistance_knm {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "Bridge moment resistance knm already has this value.");
     }
-    protocol::MutationOutcome::new(En1991Diff { bridge_moment_resistance_knm: Some(payload.new_bridge_moment_resistance_knm.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1991Diff { bridge_moment_resistance_knm: Some(payload.new_bridge_moment_resistance_knm), ..Default::default() })
 }
 //#endregion 🔖️Diff

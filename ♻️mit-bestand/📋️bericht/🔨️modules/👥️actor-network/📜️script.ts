@@ -797,7 +797,7 @@ function renderActorNetwork(): void {
 }
 //#endregion Akteursnetz
 
-class ActorNetworkScript extends BundleScript {
+export class ActorNetworkScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length !== 1) throw new Error("Akteursnetz requires exactly one command");
     const command = segments[0];

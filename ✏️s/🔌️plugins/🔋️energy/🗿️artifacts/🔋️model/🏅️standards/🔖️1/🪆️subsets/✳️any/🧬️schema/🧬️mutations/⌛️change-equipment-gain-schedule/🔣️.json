@@ -5,7 +5,7 @@
   "displayName": "Change Equipment Gain Schedule",
   "emoji": "⌛️",
   "aggregateVariant": "ChangeEquipmentGainSchedule",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-equipment-gain-schedule",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

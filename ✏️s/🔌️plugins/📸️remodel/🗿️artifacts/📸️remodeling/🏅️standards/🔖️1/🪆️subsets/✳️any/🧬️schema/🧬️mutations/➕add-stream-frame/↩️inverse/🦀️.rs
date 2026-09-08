@@ -10,7 +10,7 @@ pub fn inverse(payload: &super::AddStreamFrame, base: &RemodelingSnapshot) -> Ve
     let Some(stream) = base.streams.iter().find(|stream| stream.id == payload.id) else {
         return Vec::new();
     };
-    if payload.kind != stream.kind || stream.frames.iter().any(|frame| *frame == payload.frame) {
+    if payload.kind != stream.kind || stream.frames.contains(&payload.frame) {
         return Vec::new();
     }
     let at = crate::artifacts::remodeling::mutations::ordered_index(&stream.frames, &(payload.frame.index, payload.frame.asset_id.clone()), |frame| (frame.index, frame.asset_id.clone()));

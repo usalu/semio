@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/shooting/shooting/1/any/mutation/change-shot-shape.json",
+  "title": "ChangeShotShape",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newShape"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "newShape": {
+      "type": "string"
+    }
+  }
+}

@@ -15,17 +15,17 @@
 //! target), mirroring `tiff`'s own `RemoveTileTags`/`RemoveStripOffsets` "_ => return Vec::new()"
 //! precedent (`../../../../🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧱️baseline/🧬️schema/🧬️mutations/🦀️.rs`).
 
-use crate::artifacts::bcf::schema::diff::{
+use crate::schema::diff::{
     dec_bcf_snapshot_bin, dec_camera_bin, dec_comment_bin, dec_components_bin, dec_topic_bin, dec_viewpoint_bin, enc_bcf_snapshot_bin, enc_camera_bin, enc_comment_bin, enc_components_bin, enc_topic_bin, enc_viewpoint_bin, read_bytes_lp, read_str_lp,
     write_bytes_lp, write_str_lp,
 };
-use crate::artifacts::bcf::schema::diff::{
+use crate::schema::diff::{
     dec_bytes, dec_camera, dec_comment, dec_components, dec_list, dec_part, dec_str, dec_topic, dec_viewpoint, decode_option, enc_bytes, enc_camera, enc_comment, enc_components, enc_list, enc_part, enc_str, enc_topic, enc_viewpoint, encode_option,
     split_top_level, strip_brackets,
 };
-use crate::artifacts::bcf::schema::diff::{diff_set_snapshot, wrap_comment_diff, wrap_topic_diff, wrap_viewpoint_diff, BcfCommentDiff, BcfCommentsDiff, BcfDiff, BcfTopicDiff, BcfTopicsDiff, BcfViewpointDiff, BcfViewpointsDiff};
-use crate::artifacts::bcf::schema::snapshot::{BcfCamera, BcfComment, BcfComponents, BcfTopic, BcfViewpoint};
-use crate::artifacts::bcf::BcfSnapshot;
+use crate::schema::diff::{diff_set_snapshot, wrap_comment_diff, wrap_topic_diff, wrap_viewpoint_diff, BcfCommentDiff, BcfCommentsDiff, BcfDiff, BcfTopicDiff, BcfTopicsDiff, BcfViewpointDiff, BcfViewpointsDiff};
+use crate::schema::snapshot::{BcfCamera, BcfComment, BcfComponents, BcfTopic, BcfViewpoint};
+use crate::BcfSnapshot;
 use protocol::Mutation;
 
 //#region 🔖️Mutations
@@ -569,7 +569,7 @@ impl protocol::OpBinary for BcfMutation {
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_mutation_cases() -> Vec<BcfMutation> {
-    use crate::artifacts::bcf::schema::diff::{demo_snapshot_a, demo_snapshot_b};
+    use crate::schema::diff::{demo_snapshot_a, demo_snapshot_b};
     let base = demo_snapshot_a();
     let snapshot = demo_snapshot_b();
     vec![

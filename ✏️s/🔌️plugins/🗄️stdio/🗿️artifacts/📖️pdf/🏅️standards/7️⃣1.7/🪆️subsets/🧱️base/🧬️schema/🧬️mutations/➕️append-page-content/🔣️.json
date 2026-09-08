@@ -5,7 +5,7 @@
   "displayName": "Append Page Content",
   "emoji": "➕️",
   "aggregateVariant": "AppendPageContent",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "append-page-content",
   "binaryTag": 4,
   "invertibility": "explicit-mutation",

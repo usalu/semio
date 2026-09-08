@@ -7,8 +7,8 @@
 //! declares, `ZipEditorCommand::SetNode`, which renames either the archive comment or one entry's
 //! name (see the window's own doc comment for the honest scope note).
 
-use crate::artifacts::zip::schema::mutations::{rename_entry, set_archive_comment};
-use crate::artifacts::zip::{ZipMutation, ZipSnapshot, STDIO_ZIP_DOCUMENT_SCHEMA};
+use crate::schema::mutations::{rename_entry, set_archive_comment};
+use crate::{ZipMutation, ZipSnapshot, STDIO_ZIP_DOCUMENT_SCHEMA};
 use crate::editor::zip::iso21320::modes::edit;
 use crate::editor::zip::iso21320::modes::edit::windows::main;
 use semio_framework_plugin::{
@@ -20,7 +20,7 @@ use store::EngineHandles;
 /// 🎯️ This surface's dialect coordinate — `s.stdio.zip@2.0/iso21320`, verified against this
 /// artifact's own `🏅️standards/🔖️2.0/🪆️subsets/🌐️iso21320` location on disk, matching the SAME
 /// literal already declared as `pub const DIALECT` at
-/// `crate::artifacts::zip::standards::v2_0::subsets::iso21320::schema::DIALECT` (that module is
+/// `crate::standards::v2_0::subsets::iso21320::schema::DIALECT` (that module is
 /// under `🧬️schema/**`, owned by the sibling peer ticket, so it is not imported from here — this is
 /// an independent, verified-matching literal, not a duplication oversight).
 pub const ZIP_ISO21320_EDITOR_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.zip", standard: StandardId("2.0"), subset: SubsetId("iso21320") };

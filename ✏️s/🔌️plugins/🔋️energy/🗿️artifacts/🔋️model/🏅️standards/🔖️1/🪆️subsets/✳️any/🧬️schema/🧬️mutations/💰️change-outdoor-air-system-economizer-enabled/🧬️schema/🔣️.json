@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/energy/model/1/any/mutation/change-outdoor-air-system-economizer-enabled.json",
+  "title": "ChangeOutdoorAirSystemEconomizerEnabled",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newEconomizerEnabled"
+  ],
+  "properties": {
+    "id": {
+      "type": "integer"
+    },
+    "newEconomizerEnabled": {
+      "type": "boolean"
+    }
+  }
+}

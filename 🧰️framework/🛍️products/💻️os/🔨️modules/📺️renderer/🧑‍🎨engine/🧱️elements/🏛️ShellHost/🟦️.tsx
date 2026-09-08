@@ -9,7 +9,8 @@
 // #region 🔌️Adapters
 import { createAdmittedShellInstanceV1, shellDialogOriginIsCurrentV1, shellDialogOriginV1, shellDialogSessionIsCurrentV1, shellEffectSourceIsCurrentV1, type ShellDialogOriginV1, type ShellDialogV1 } from "./🧬️contracts/🗨️dialog-origin/🟦️.ts";
 import { OwnedShellDialog } from "./🧬️contracts/🗨️dialog-origin/🌐️browser/🟦️.tsx";
-import { OwnedTutorialRunV1 } from "./🧬️contracts/🗨️dialog-origin/🎥️tutorial/🟦️.ts";
+import { runDocumentOpeningAttemptV1 } from "./🧬️contracts/🗨️dialog-origin/🚪️opening/📄️document/🟦️.ts";
+import { OwnedTutorialRunV1, TutorialDriveV1, runPausedTutorialSeekV1 } from "./🧬️contracts/🗨️dialog-origin/🎥️tutorial/🟦️.ts";
 import React, {
   createContext,
   type CSSProperties,
@@ -20,6 +21,7 @@ import React, {
   useCallback,
   useContext,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useReducer,
   useRef,
@@ -1177,16 +1179,98 @@ export function mintDirectoryCommandRequestId(): string {
 
 /** 🌱️ Converts the trusted-catalog presentation choice into the closed host creation request.
  * The decoded schema/dialect/labels are deliberately discarded; Hub resolves `kindId` again. */
+export type SpaceArtifactCreationCatalogAuthorityV1 = Readonly<{
+  runtimeKey: string;
+  clientInstanceId: string;
+  spaceId: string;
+  catalogGenerationId: string;
+  kindChoices: readonly string[];
+}>;
+
+export type SpaceArtifactCreationCatalogProjectionV1 = Readonly<{
+  phase: "loading" | "ready" | "unavailable";
+  kinds: readonly ArtifactKindChoice[];
+  choiceRevision: string;
+  authority: SpaceArtifactCreationCatalogAuthorityV1 | null;
+}>;
+
+export type ArtifactKindChoiceDraftDefinitionV1 = Readonly<{
+  ownerId: string;
+  args: readonly Readonly<{ id: string; artifactKind: boolean }>[];
+}>;
+
+/** 🧹️ Selects only staged artifact-kind fields; static choices and text remain untouched. */
+export function artifactKindChoiceDraftRetirementsV1(
+  stagedByOwner: Readonly<Record<string, Readonly<Record<string, unknown>>>>,
+  definitions: readonly ArtifactKindChoiceDraftDefinitionV1[],
+): readonly Readonly<{ ownerId: string; argId: string }>[] {
+  const retirements: { ownerId: string; argId: string }[] = [];
+  for (const definition of definitions) {
+    const staged = stagedByOwner[definition.ownerId];
+    if (staged === undefined) continue;
+    for (const arg of definition.args) if (arg.artifactKind && Object.prototype.hasOwnProperty.call(staged, arg.id) && staged[arg.id] !== undefined) retirements.push({ ownerId: definition.ownerId, argId: arg.id });
+  }
+  return retirements;
+}
+
+/** 🌱️ Captures only a ready catalog owned by the exact mounted Space-index instance. */
+export function captureSpaceArtifactCreationCatalogAuthorityV1(
+  catalog: Extract<BackboneWorkerResponse, { readonly kind: "space-artifact-creation-catalog" }> | null,
+  status: Extract<BackboneWorkerResponse, { readonly kind: "space-artifact-creation-catalog-status" }> | null,
+  origin: ShellDialogOriginV1 | null,
+): SpaceArtifactCreationCatalogAuthorityV1 | null {
+  const document = origin?.document;
+  const scope = document?.scope;
+  if (document === null || document === undefined || scope === null || scope === undefined || scope.documentId !== S_SPACE_INDEX_DOCUMENT_ID
+    || status?.phase !== "ready" || status.clientInstanceId !== document.clientInstanceId || status.spaceId !== scope.spaceId
+    || catalog === null || catalog.clientInstanceId !== document.clientInstanceId || catalog.spaceId !== scope.spaceId) return null;
+  return {
+    runtimeKey: document.runtimeKey,
+    clientInstanceId: document.clientInstanceId,
+    spaceId: scope.spaceId,
+    catalogGenerationId: catalog.catalogGenerationId,
+    kindChoices: catalog.kinds.map(encodeArtifactKindChoice),
+  };
+}
+
+/** 🗂️ Projects the current mounted catalog without falling back to process manifests. */
+export function selectedSpaceArtifactCreationCatalogV1(
+  catalog: Extract<BackboneWorkerResponse, { readonly kind: "space-artifact-creation-catalog" }> | null,
+  status: Extract<BackboneWorkerResponse, { readonly kind: "space-artifact-creation-catalog-status" }> | null,
+  origin: ShellDialogOriginV1 | null,
+): SpaceArtifactCreationCatalogProjectionV1 | null {
+  const document = origin?.document;
+  const scope = document?.scope;
+  if (document === null || document === undefined || scope === null || scope === undefined || scope.documentId !== S_SPACE_INDEX_DOCUMENT_ID) return null;
+  const authority = captureSpaceArtifactCreationCatalogAuthorityV1(catalog, status, origin);
+  const phase = authority !== null ? "ready" : status?.clientInstanceId === document.clientInstanceId && status.spaceId === scope.spaceId ? status.phase : "loading";
+  const safePhase = phase === "ready" ? "unavailable" : phase;
+  const effectivePhase = authority === null ? safePhase : "ready";
+  return {
+    phase: effectivePhase,
+    kinds: authority === null ? [] : catalog!.kinds,
+    choiceRevision: `${document.runtimeKey}:${document.clientInstanceId}:${scope.spaceId}:${effectivePhase}:${authority?.catalogGenerationId ?? "none"}`,
+    authority,
+  };
+}
+
+/** 🌱️ Converts only an exact current selected-catalog member into the closed host request. */
 export function spaceArtifactCreationRequestFromAction(
   actionId: string,
   args: Readonly<Record<string, unknown>> | undefined,
   spaceId: string,
   requestId: string,
+  capturedCatalog: SpaceArtifactCreationCatalogAuthorityV1 | null,
+  currentCatalog: SpaceArtifactCreationCatalogAuthorityV1 | null,
 ): Extract<BackboneWorkerRequest, { readonly kind: "space-artifact-create" }> | null {
   if (actionId !== "os.create-space-artifact" || args === undefined || Object.keys(args).sort().join(",") !== "kindChoice,name" || typeof args.kindChoice !== "string" || typeof args.name !== "string") return null;
   try {
     const choice = decodeArtifactKindChoice(args.kindChoice);
-    if (encodeArtifactKindChoice(choice) !== args.kindChoice || choice.kindId !== choice.dialect.artifactKind) return null;
+    const encoded = encodeArtifactKindChoice(choice);
+    if (encoded !== args.kindChoice || choice.kindId !== choice.dialect.artifactKind || capturedCatalog === null || currentCatalog === null
+      || capturedCatalog.runtimeKey !== currentCatalog.runtimeKey || capturedCatalog.clientInstanceId !== currentCatalog.clientInstanceId
+      || capturedCatalog.spaceId !== spaceId || currentCatalog.spaceId !== spaceId || capturedCatalog.catalogGenerationId !== currentCatalog.catalogGenerationId
+      || !capturedCatalog.kindChoices.includes(encoded) || !currentCatalog.kindChoices.includes(encoded)) return null;
     return { kind: "space-artifact-create", requestId, spaceId, kindId: choice.kindId, name: args.name };
   } catch {
     return null;
@@ -1780,6 +1864,10 @@ function FrameworkOsShellInner({
   const [spaceArtifactCreationUi, setSpaceArtifactCreationUi] = useState<ArtifactCreationProgressUiStateV1>({});
   const [spaceArtifactCreationCatalog, setSpaceArtifactCreationCatalog] = useState<Extract<BackboneWorkerResponse, { readonly kind: "space-artifact-creation-catalog" }> | null>(null);
   const [spaceArtifactCreationCatalogUi, setSpaceArtifactCreationCatalogUi] = useState<Extract<BackboneWorkerResponse, { readonly kind: "space-artifact-creation-catalog-status" }> | null>(null);
+  const spaceArtifactCreationCatalogRef = useRef(spaceArtifactCreationCatalog);
+  const spaceArtifactCreationCatalogUiRef = useRef(spaceArtifactCreationCatalogUi);
+  spaceArtifactCreationCatalogRef.current = spaceArtifactCreationCatalog;
+  spaceArtifactCreationCatalogUiRef.current = spaceArtifactCreationCatalogUi;
   const cancelSpaceArtifactCreationsForRuntime = useCallback((runtimeKey: string, worker: Worker | null) => {
     const cleared: string[] = [];
     for (const [requestId, owner] of spaceArtifactCreationOwnersRef.current) {
@@ -1855,6 +1943,7 @@ function FrameworkOsShellInner({
     source: captureDialogOrigin(source),
     session: source,
     plugin: loadedPluginsRef.current.find((entry) => entry.handle.pluginId === source.pluginId)?.handle ?? null,
+    creationCatalog: captureSpaceArtifactCreationCatalogAuthorityV1(spaceArtifactCreationCatalogRef.current, spaceArtifactCreationCatalogUiRef.current, presentation),
   }), [captureDialogOrigin]);
   const isCurrentEffectOwner = useCallback((owner: ReturnType<typeof captureEffectOwner>): boolean => {
     const primary = shellStateRef.current.pluginRuntime.session;
@@ -3216,7 +3305,7 @@ function FrameworkOsShellInner({
    * check below skips setting `deviated`/auto-pausing for anything stamped while this is true, mirroring
    * how the introduction mechanism's own interception distinguishes shell-originated from user-originated
    * activity. Never read during render, only inside event callbacks — a plain mutable ref is correct. */
-  const tutorialDrivenRef = useRef(false);
+  const tutorialDrivenRef = useRef(new TutorialDriveV1());
   const tutorialPlayingRef = useRef(tutorialPlaying);
   tutorialPlayingRef.current = tutorialPlaying;
   const tutorialRecordingRef = useRef(tutorialRecording);
@@ -4158,7 +4247,12 @@ function FrameworkOsShellInner({
               console.warn("[os-shell] replayShellCommand: space artifact creation dropped, no signed-in identity");
             } else {
               const requestId = mintDirectoryCommandRequestId();
-              const request = spaceArtifactCreationRequestFromAction(actionId, argsRecord, origin[1].scope.spaceId, requestId);
+              const currentCatalog = captureSpaceArtifactCreationCatalogAuthorityV1(
+                spaceArtifactCreationCatalogRef.current,
+                spaceArtifactCreationCatalogUiRef.current,
+                effectOrigin,
+              );
+              const request = spaceArtifactCreationRequestFromAction(actionId, argsRecord, origin[1].scope.spaceId, requestId, effectOwner.creationCatalog, currentCatalog);
               if (request === null) {
                 console.warn("[os-shell] replayShellCommand: invalid space artifact creation request");
               } else {
@@ -4486,33 +4580,37 @@ function FrameworkOsShellInner({
       const socketActor = expectsSocketActor
         ? new Promise<string>((resolve, reject) => socketActorReadyRef.current.set(runtimeKey, { clientInstanceId, resolve, reject }))
         : null;
-      worker.postMessage({ wire: encodeBackboneWorkerRequest(request) });
-      if (socketActor) {
-        try {
-          await Promise.race([
-            socketActor,
-            new Promise<never>((_, reject) => setTimeout(() => reject(new Error("socket actor deadline exceeded")), 10_000)),
-          ]);
-        } finally {
+      void socketActor?.catch(() => {});
+      const uri = `actor://${runtimeKey}`;
+      await runDocumentOpeningAttemptV1({
+        deadlineMs: 10_000,
+        current: () => openDocumentSessionsRef.current.get(runtimeKey)?.clientInstanceId === clientInstanceId,
+        socket: async () => {
+          worker.postMessage({ wire: encodeBackboneWorkerRequest(request) });
+          await socketActor;
+        },
+        retire: () => {
           const waiter = socketActorReadyRef.current.get(runtimeKey);
           if (waiter !== undefined && waiter.clientInstanceId === clientInstanceId) socketActorReadyRef.current.delete(runtimeKey);
-        }
-      }
-      if (openDocumentSessionsRef.current.get(runtimeKey)?.clientInstanceId !== clientInstanceId) return;
-      if (hubBinding && scope) {
-        directoryScopedOwnersRef.current.set(runtimeKey, scope);
-        worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "directory-scope-open", baseUrl: hubBinding.baseUrl, scope, since: 0 }) });
-        if (scope.documentId === S_SPACE_INDEX_DOCUMENT_ID) {
-          setSpaceArtifactCreationCatalog(null);
-          setSpaceArtifactCreationCatalogUi({ kind: "space-artifact-creation-catalog-status", clientInstanceId, spaceId: scope.spaceId, phase: "loading" });
-          worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "space-artifact-creation-catalog-open", clientInstanceId, spaceId: scope.spaceId }) });
-        }
-      }
-      const uri = `actor://${runtimeKey}`;
-      if (plugin.attachBackbone) await plugin.attachBackbone(targetSession.instanceId, uri);
-      if (openDocumentSessionsRef.current.get(runtimeKey)?.clientInstanceId !== clientInstanceId) return;
-      dispatch({ type: "SET_SYNC_BACKBONE_URI", value: uri });
-      dispatch({ type: "SET_SYNC_CARD_KIND", value: null });
+        },
+        close: () => closeDocumentRef.current(runtimeKey, clientInstanceId),
+        attach: async () => {
+          if (hubBinding && scope) {
+            directoryScopedOwnersRef.current.set(runtimeKey, scope);
+            worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "directory-scope-open", baseUrl: hubBinding.baseUrl, scope, since: 0 }) });
+            if (scope.documentId === S_SPACE_INDEX_DOCUMENT_ID) {
+              setSpaceArtifactCreationCatalog(null);
+              setSpaceArtifactCreationCatalogUi({ kind: "space-artifact-creation-catalog-status", clientInstanceId, spaceId: scope.spaceId, phase: "loading" });
+              worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "space-artifact-creation-catalog-open", clientInstanceId, spaceId: scope.spaceId }) });
+            }
+          }
+          if (plugin.attachBackbone) await plugin.attachBackbone(targetSession.instanceId, uri);
+        },
+        commit: () => {
+          dispatch({ type: "SET_SYNC_BACKBONE_URI", value: uri });
+          dispatch({ type: "SET_SYNC_CARD_KIND", value: null });
+        },
+      });
     },
     [loadedPlugins, relayPluginBackboneMessage, resolveSyncTargetSession, hubEnv],
   );
@@ -4547,6 +4645,7 @@ function FrameworkOsShellInner({
     const tutorial = tutorialRunRef.current;
     if (tutorial?.origin.document?.runtimeKey === runtimeKey && tutorial.origin.document.clientInstanceId === entry?.clientInstanceId) {
       tutorialTransitionEpochRef.current += 1;
+      tutorialDrivenRef.current.retire();
       tutorialClockRef.current?.pause();
       void tutorial.stop().catch((error) => console.error("[DEBUG] tutorial retirement failed", error));
       dispatch({ type: "SET_TUTORIAL", value: null });
@@ -4631,7 +4730,7 @@ function FrameworkOsShellInner({
   );
 
   const onAction = useCallback(
-    (action: ActionDescriptor, submittedOrigin?: ShellDialogOriginV1) => {
+    (action: ActionDescriptor, submittedOrigin?: ShellDialogOriginV1, propagateFailure = false) => {
       if (action.controllerId === "recovery") {
         const args = typeof action.args === "object" && action.args != null ? (action.args as { pluginId?: string }) : {};
         const pluginId = args.pluginId ?? primaryPluginId;
@@ -4680,7 +4779,7 @@ function FrameworkOsShellInner({
       // 🎥️ Deviation detection: any action NOT stamped by the tutorial director/seek/converge path while
       // a tutorial is actively playing means the user diverged from the recording — auto-pause and flag
       // `deviated` so pressing Play again converges instead of resuming blindly mid-drift.
-      if (tutorialPlayingRef.current && !tutorialDrivenRef.current) {
+      if (tutorialPlayingRef.current && !tutorialDrivenRef.current.active) {
         dispatch({ type: "SET_TUTORIAL_PLAYING", value: false });
         dispatch({ type: "SET_TUTORIAL_DEVIATED", value: true });
       }
@@ -4688,7 +4787,7 @@ function FrameworkOsShellInner({
       // ⏺️ Recorder tap: annotational-only capture (see `TutorialTracks.events` doc comment) — never
       // re-dispatched on playback. Skips navigation/introduction/tutorial-control actions (noise, or
       // meaningless to replay) and anything the director itself just dispatched.
-      if (tutorialRecordingRef.current && !tutorialDrivenRef.current) {
+      if (tutorialRecordingRef.current && !tutorialDrivenRef.current.active) {
         if (!TUTORIAL_RECORDING_EXCLUDED_ACTION_IDS.has(action.action)) {
           tutorialRecorderRef.current?.recordEvent({ kind: "action", action: action.action, args: action.args as Record<string, unknown> | undefined });
         }
@@ -4920,6 +5019,7 @@ function FrameworkOsShellInner({
           if (OBSERVED_INTERACTION_ACTION_IDS.has(action.action)) observeLocalInteraction({ plugin, instanceId: targetSession.instanceId });
         })
         .catch((actionError) => {
+          if (propagateFailure) throw actionError;
           if (isViewerReadOnlyFault(actionError)) {
             showTransientNotice(viewerReadOnlyNoticeText(uiLocale), "info", SURFACE_FAULT_CODES.ViewerReadOnly);
             return;
@@ -5004,7 +5104,14 @@ function FrameworkOsShellInner({
   const tutorialClockRef = useRef<TutorialClock | null>(null);
   if (!tutorialClockRef.current) tutorialClockRef.current = createTutorialClock(activeTutorial?.durationMs ?? 0);
   const tutorialClock = tutorialClockRef.current;
-  useEffect(() => () => tutorialClockRef.current?.dispose(), []);
+  useEffect(() => () => {
+    const run = tutorialRunRef.current;
+    tutorialRunRef.current = null;
+    tutorialTransitionEpochRef.current += 1;
+    tutorialDrivenRef.current.retire();
+    void run?.stop().catch((error) => console.error("[DEBUG] tutorial retirement failed", error));
+    tutorialClockRef.current?.dispose();
+  }, []);
   useEffect(() => {
     tutorialClock.setDurationMs(activeTutorial?.durationMs ?? 0);
   }, [activeTutorial?.durationMs, tutorialClock]);
@@ -5012,7 +5119,7 @@ function FrameworkOsShellInner({
     tutorialClock.setRate(tutorialRate);
   }, [tutorialRate, tutorialClock]);
   useEffect(() => {
-    if (tutorialPlaying) tutorialClock.play();
+    if (tutorialPlaying && !tutorialDrivenRef.current.busy) tutorialClock.play();
     else tutorialClock.pause();
   }, [tutorialPlaying, tutorialClock]);
 
@@ -5060,24 +5167,26 @@ function FrameworkOsShellInner({
     }
     if (!run.isCurrent() || activeTutorialId !== run.tutorialId || session === null) {
       tutorialClock.pause();
+      tutorialDrivenRef.current.retire();
       if (activeTutorialId !== null) dispatch({ type: "SET_TUTORIAL", value: null });
       void run.stop().catch((error) => console.error("[DEBUG] tutorial sandbox restore failed", error)).finally(() => {
         if (tutorialRunRef.current !== run) return;
         tutorialRunRef.current = null;
-        tutorialDrivenRef.current = false;
       });
       return;
     }
     if (tutorialInitializingRunRef.current === run) return;
     const def = activeTutorials.find((tutorial) => tutorial.id === run.tutorialId);
     if (def === undefined) {
+      tutorialDrivenRef.current.retire();
+      void run.stop().catch((error) => console.error("[DEBUG] tutorial retirement failed", error));
       dispatch({ type: "SET_TUTORIAL", value: null });
       return;
     }
     tutorialInitializingRunRef.current = run;
-    tutorialDrivenRef.current = true;
+    const driveToken = tutorialDrivenRef.current.claim();
     void (async () => {
-      if (!await run.start() || tutorialRunRef.current !== run || !run.isCurrent()) return;
+      if (!await run.start() || tutorialRunRef.current !== run || !run.isCurrent() || !tutorialDrivenRef.current.accepts(driveToken)) return;
       if (def.base.exampleId) dispatch({ type: "SET_ACTIVE_EXAMPLE_ID", value: def.base.exampleId });
       applyTutorialUiSnapshotToShell(dispatch, def.base.ui, uiBridgeCtxRef.current);
       for (const cameraKeyframe of def.base.cameras) getTutorialCameraDriver(cameraKeyframe.windowId)?.set(cameraKeyframe.camera);
@@ -5088,7 +5197,7 @@ function FrameworkOsShellInner({
       console.error("[DEBUG] tutorial sandbox start failed", error);
       if (tutorialRunRef.current === run) dispatch({ type: "SET_TUTORIAL", value: null });
     }).finally(() => {
-      if (tutorialRunRef.current === run) tutorialDrivenRef.current = false;
+      tutorialDrivenRef.current.release(driveToken);
     });
   }, [activeTutorialId, activeTutorials, session, loadedPlugins, tutorialClock, refreshUi]);
 
@@ -5100,13 +5209,13 @@ function FrameworkOsShellInner({
    * `onAction` funnel the app's own undo/redo buttons dispatch through (never a bespoke channel) — then
    * pulses any annotational event's target element via the existing `celebrateElements` vocabulary. */
   const applyTutorialSliceToShell = useCallback(
-    async (slice: TutorialSlice, activeSession: ActiveSession, run: OwnedTutorialRunV1) => {
-      if (tutorialRunRef.current !== run || !run.ready || !shellDialogOriginIsCurrentV1(run.origin, captureDialogOrigin(activeSession))) return;
+    async (slice: TutorialSlice, activeSession: ActiveSession, run: OwnedTutorialRunV1, driveToken: number) => {
+      if (tutorialRunRef.current !== run || !run.ready || !tutorialDrivenRef.current.accepts(driveToken) || !shellDialogOriginIsCurrentV1(run.origin, captureDialogOrigin(activeSession))) return;
       for (const change of slice.uiChanges) applyTutorialUiChangeToShell(dispatch, change, uiBridgeCtxRef.current);
       const plugin = loadedPlugins.find((entry) => entry.handle.pluginId === activeSession.pluginId)?.handle;
       let documentTouched = false;
       for (const documentEvent of slice.document) {
-        if (tutorialRunRef.current !== run || !run.ready) return;
+        if (tutorialRunRef.current !== run || !run.ready || !tutorialDrivenRef.current.accepts(driveToken)) return;
         const kind: TutorialArtifactEventKind = documentEvent.kind;
         if (kind.kind === "edit") {
           documentTouched = true;
@@ -5119,24 +5228,24 @@ function FrameworkOsShellInner({
           // cannot replay through the plugin bridge; the UI/camera/event tracks alongside it still do.
           documentTouched = true;
         } else if (kind.kind === "undo") {
-          onActionRef.current({ controllerId: activeSession.app.controllerId, action: slice.forward ? "undo" : "redo" });
+          await onActionRef.current({ controllerId: activeSession.app.controllerId, action: slice.forward ? "undo" : "redo" }, run.origin, true);
         } else if (kind.kind === "redo") {
-          onActionRef.current({ controllerId: activeSession.app.controllerId, action: slice.forward ? "redo" : "undo" });
+          await onActionRef.current({ controllerId: activeSession.app.controllerId, action: slice.forward ? "redo" : "undo" }, run.origin, true);
         } else if (kind.kind === "checkpoint") {
-          if (slice.forward) onActionRef.current({ controllerId: activeSession.app.controllerId, action: "commitCheckpoint" });
+          if (slice.forward) await onActionRef.current({ controllerId: activeSession.app.controllerId, action: "commitCheckpoint" }, run.origin, true);
         } else if (kind.kind === "checkoutCheckpoint") {
-          onActionRef.current({ controllerId: activeSession.app.controllerId, action: "checkoutCheckpoint", args: { checkpointId: kind.checkpointId } });
+          await onActionRef.current({ controllerId: activeSession.app.controllerId, action: "checkoutCheckpoint", args: { checkpointId: kind.checkpointId } }, run.origin, true);
         } else if (kind.kind === "switchAlternative") {
-          onActionRef.current({ controllerId: activeSession.app.controllerId, action: "switchAlternative", args: { alternativeId: kind.alternativeId } });
+          await onActionRef.current({ controllerId: activeSession.app.controllerId, action: "switchAlternative", args: { alternativeId: kind.alternativeId } }, run.origin, true);
         }
       }
       for (const event of slice.events) {
-        if (tutorialRunRef.current !== run || !run.ready) return;
+        if (tutorialRunRef.current !== run || !run.ready || !tutorialDrivenRef.current.accepts(driveToken)) return;
         const kind = event.kind;
         const targetId = kind.kind === "action" ? kind.action : kind.kind === "command" ? kind.command : undefined;
         if (targetId && scope.rootRef.current) celebrateElements(elementIdSelector(targetId), CELEBRATE_STAMP_DURATION_MS, scope.rootRef.current);
       }
-      if (documentTouched && tutorialRunRef.current === run && run.ready) await refreshUi(activeSession, { kind: "full" });
+      if (documentTouched && tutorialRunRef.current === run && run.ready && tutorialDrivenRef.current.accepts(driveToken)) await refreshUi(activeSession, { kind: "full" });
     },
     [loadedPlugins, refreshUi],
   );
@@ -5151,7 +5260,7 @@ function FrameworkOsShellInner({
     let lastHeavyTickAt = 0;
     const cameraWindowIds = new Set([...def.base.cameras, ...def.tracks.camera].map((keyframe) => keyframe.windowId));
     const unsubscribe = tutorialClock.subscribe(() => {
-      if (tutorialRunRef.current !== run || !run.ready) return;
+      if (tutorialRunRef.current !== run || !run.ready || tutorialDrivenRef.current.busy) return;
       const t = tutorialClock.getTimeMs();
       for (const windowId of cameraWindowIds) {
         const pose = tutorialCameraAt(def, windowId, t);
@@ -5161,13 +5270,14 @@ function FrameworkOsShellInner({
       const now = performance.now();
       if (now - lastHeavyTickAt < TUTORIAL_DIRECTOR_TICK_MS) return;
       lastHeavyTickAt = now;
-      const from = tutorialLastAppliedMsRef.current;
-      if (from === t) return;
-      const slice = tutorialSlice(def, from, t);
-      tutorialLastAppliedMsRef.current = t;
-      tutorialDrivenRef.current = true;
-      void applyTutorialSliceToShell(slice, session, run).finally(() => {
-        if (tutorialRunRef.current === run) tutorialDrivenRef.current = false;
+      void tutorialDrivenRef.current.enqueue(() => tutorialRunRef.current === run && run.ready, async driveToken => {
+        const from = tutorialLastAppliedMsRef.current;
+        if (from === t) return;
+        await applyTutorialSliceToShell(tutorialSlice(def, from, t), session, run, driveToken);
+        if (tutorialRunRef.current === run && run.ready && tutorialDrivenRef.current.accepts(driveToken)) tutorialLastAppliedMsRef.current = t;
+      }).catch((error) => {
+        tutorialClock.pause();
+        console.error("[DEBUG] tutorial director failed", error);
       });
     });
     return unsubscribe;
@@ -5184,15 +5294,14 @@ function FrameworkOsShellInner({
       const run = tutorialRunRef.current;
       if (run === null || run.tutorialId !== def.id || !run.ready) return;
       const clamped = Math.min(def.durationMs, Math.max(0, ms));
-      const from = tutorialLastAppliedMsRef.current;
-      tutorialDrivenRef.current = true;
-      void (async () => {
+      void runPausedTutorialSeekV1(tutorialClock, tutorialDrivenRef.current, () => tutorialRunRef.current === run && run.ready, () => tutorialPlayingRef.current, async driveToken => {
+        const from = tutorialLastAppliedMsRef.current;
         applyTutorialUiSnapshotToShell(dispatch, composeTutorialUi(def, clamped), uiBridgeCtxRef.current);
         const plugin = loadedPlugins.find((entry) => entry.handle.pluginId === session.pluginId)?.handle;
         const slice = tutorialSlice(def, from, clamped);
         let documentTouched = false;
         for (const documentEvent of slice.document) {
-          if (tutorialRunRef.current !== run || !run.ready) return;
+          if (tutorialRunRef.current !== run || !run.ready || !tutorialDrivenRef.current.accepts(driveToken)) return;
           const kind: TutorialArtifactEventKind = documentEvent.kind;
           if (kind.kind === "edit") {
             documentTouched = true;
@@ -5210,7 +5319,7 @@ function FrameworkOsShellInner({
           // ambiguous without more VCS-side infrastructure) — the director's per-tick forward playback
           // above still applies them correctly; only a large scrub jumping OVER one of these entries misses it.
         }
-        if (tutorialRunRef.current !== run || !run.ready) return;
+        if (tutorialRunRef.current !== run || !run.ready || !tutorialDrivenRef.current.accepts(driveToken)) return;
         const cameraWindowIds = new Set([...def.base.cameras, ...def.tracks.camera].map((keyframe) => keyframe.windowId));
         for (const windowId of cameraWindowIds) {
           const pose = tutorialCameraAt(def, windowId, clamped);
@@ -5219,9 +5328,9 @@ function FrameworkOsShellInner({
         tutorialLastAppliedMsRef.current = clamped;
         tutorialClock.seek(clamped);
         if (documentTouched) await refreshUi(session, { kind: "full" });
+        if (tutorialRunRef.current !== run || !run.ready || !tutorialDrivenRef.current.accepts(driveToken)) return;
         console.log("[DEBUG] tutorial rebuild", { atMs: clamped });
-        if (tutorialRunRef.current === run) tutorialDrivenRef.current = false;
-      })();
+      }).catch((error) => console.error("[DEBUG] tutorial seek failed", error));
     },
     [activeTutorial, session, loadedPlugins, tutorialClock, refreshUi],
   );
@@ -5233,6 +5342,10 @@ function FrameworkOsShellInner({
     if (!activeTutorial) return;
     const run = tutorialRunRef.current;
     if (run === null || run.tutorialId !== activeTutorial.id || !run.ready) return;
+    if (tutorialDrivenRef.current.busy) {
+      dispatch({ type: "SET_TUTORIAL_PLAYING", value: !tutorialPlaying });
+      return;
+    }
     if (tutorialPlaying) {
       dispatch({ type: "SET_TUTORIAL_PLAYING", value: false });
       return;
@@ -5240,7 +5353,7 @@ function FrameworkOsShellInner({
     if (tutorialDeviated && session) {
       const def = activeTutorial;
       const atMs = tutorialClock.getTimeMs();
-      tutorialDrivenRef.current = true;
+      const driveToken = tutorialDrivenRef.current.claim();
       applyTutorialUiSnapshotToShell(dispatch, composeTutorialUi(def, atMs), uiBridgeCtxRef.current);
       const cameraWindowIds = new Set([...def.base.cameras, ...def.tracks.camera].map((keyframe) => keyframe.windowId));
       const startPoseByWindow = new Map<string, TutorialCameraState>();
@@ -5250,7 +5363,10 @@ function FrameworkOsShellInner({
       }
       const startedAt = performance.now();
       const tween = (now: number) => {
-        if (tutorialRunRef.current !== run || !run.ready) return;
+        if (tutorialRunRef.current !== run || !run.ready || !tutorialDrivenRef.current.accepts(driveToken)) {
+          tutorialDrivenRef.current.release(driveToken);
+          return;
+        }
         const progress = Math.min(1, (now - startedAt) / TUTORIAL_CONVERGE_MS);
         for (const windowId of cameraWindowIds) {
           const targetPose = tutorialCameraAt(def, windowId, atMs);
@@ -5266,7 +5382,7 @@ function FrameworkOsShellInner({
         }
         if (progress < 1) requestAnimationFrame(tween);
         else {
-          tutorialDrivenRef.current = false;
+          tutorialDrivenRef.current.release(driveToken);
           dispatch({ type: "SET_TUTORIAL_DEVIATED", value: false });
           dispatch({ type: "SET_TUTORIAL_PLAYING", value: true });
         }
@@ -5286,12 +5402,16 @@ function FrameworkOsShellInner({
       const plugin = owner.plugin;
       const epoch = ++tutorialTransitionEpochRef.current;
       tutorialClock.pause();
+      tutorialDrivenRef.current.retire();
       dispatch({ type: "SET_TUTORIAL", value: null });
       void (async () => {
-        await tutorialRunRef.current?.stop();
+        const previous = tutorialRunRef.current;
+        await previous?.stop().catch((error) => console.error("[DEBUG] tutorial sandbox restore failed", error));
+        if (tutorialRunRef.current === previous) tutorialRunRef.current = null;
         if (epoch !== tutorialTransitionEpochRef.current || !isCurrentEffectOwner(owner)) return;
         const run: OwnedTutorialRunV1 = new OwnedTutorialRunV1(tutorialId, origin, (): boolean => tutorialRunRef.current === run && isCurrentEffectOwner(owner), {
           read: async () => plugin.readAppDocumentPack ? plugin.readAppDocumentPack(session.instanceId) : null,
+          drain: () => tutorialDrivenRef.current.drain(),
           restore: async (snapshot) => {
             if (!isCurrentEffectOwner(owner)) return;
             if (plugin.loadAppDocumentPack) await plugin.loadAppDocumentPack(session.instanceId, snapshot.pack, snapshot.spr);
@@ -5308,6 +5428,7 @@ function FrameworkOsShellInner({
   const stopTutorial = useCallback(() => {
     tutorialTransitionEpochRef.current += 1;
     tutorialClock.pause();
+    tutorialDrivenRef.current.retire();
     void tutorialRunRef.current?.stop().catch((error) => console.error("[DEBUG] tutorial sandbox restore failed", error));
     dispatch({ type: "SET_TUTORIAL", value: null });
   }, [tutorialClock]);
@@ -6632,13 +6753,13 @@ function FrameworkOsShellInner({
     return null;
   })();
   const currentDocumentId = currentDocumentRuntimeKey === null ? null : (openDocumentSessionsRef.current.get(currentDocumentRuntimeKey)?.documentId ?? null);
-  const selectedSpaceArtifactKinds = useMemo((): readonly ArtifactKindChoice[] | undefined => {
-    if (currentDocumentRuntimeKey === null || currentDocumentId !== S_SPACE_INDEX_DOCUMENT_ID) return undefined;
-    if (spaceArtifactCreationCatalog === null) return [];
-    const entry = openDocumentSessionsRef.current.get(currentDocumentRuntimeKey);
-    if (entry?.clientInstanceId !== spaceArtifactCreationCatalog.clientInstanceId || entry.scope?.spaceId !== spaceArtifactCreationCatalog.spaceId) return [];
-    return spaceArtifactCreationCatalog.kinds;
-  }, [currentDocumentId, currentDocumentRuntimeKey, spaceArtifactCreationCatalog]);
+  const selectedSpaceArtifactCreationCatalog = useMemo(() => selectedSpaceArtifactCreationCatalogV1(
+    spaceArtifactCreationCatalog,
+    spaceArtifactCreationCatalogUi,
+    session === null ? null : captureDialogOrigin(session),
+  ), [captureDialogOrigin, currentDocumentId, currentDocumentRuntimeKey, session, spaceArtifactCreationCatalog, spaceArtifactCreationCatalogUi]);
+  const selectedSpaceArtifactKinds = selectedSpaceArtifactCreationCatalog?.kinds;
+  const artifactCreationChoiceRevisionRef = useRef<string | undefined>(undefined);
   const currentBrowserActorUi = useMemo(
     () => currentDocumentRuntimeKey === null ? undefined : browserActorUiByRuntimeKeyRef.current.get(currentDocumentRuntimeKey),
     [browserActorUiVersion, currentDocumentRuntimeKey],
@@ -7062,6 +7183,37 @@ function FrameworkOsShellInner({
     return session?.app.role === "viewer" ? resolved.filter((entry) => !isMutationKindDefinition(entry.definition)) : resolved;
   }, [osCommands, activePluginManifest, session?.app, activeModeId, appLabelsOverlay, uiTerminology, uiLocale, loadedPlugins, selectedSpaceArtifactKinds]);
 
+  useLayoutEffect(() => {
+    const revision = selectedSpaceArtifactCreationCatalog?.choiceRevision;
+    if (artifactCreationChoiceRevisionRef.current === revision) return;
+    artifactCreationChoiceRevisionRef.current = revision;
+    const choiceArgs = (args: readonly { readonly id: string; readonly schema: { readonly kind: string; readonly format?: { readonly kind: string } } }[]) =>
+      args.map((arg) => ({ id: arg.id, artifactKind: arg.schema.kind === "string" && arg.schema.format?.kind === "artifactKind" }));
+    const actionDefinitions: ArtifactKindChoiceDraftDefinitionV1[] = [];
+    if (session !== null) {
+      for (const instance of sessionWindowInstances(session.app, extraWindowInstances)) {
+        const kind = session.app.windowKinds.find((candidate) => candidate.id === instance.windowKindId);
+        if (kind === undefined) continue;
+        for (const definition of resolveWindowActions(session.app, kind)) actionDefinitions.push({ ownerId: actionStageKey(instance.id, definition.id), args: choiceArgs(definition.args) });
+      }
+    }
+    for (const spawned of panel?.spawnedApps ?? []) {
+      const app = loadedPlugins.find((entry) => entry.handle.pluginId === spawned.pluginId)?.manifest.apps.find((candidate) => candidate.id === spawned.appId);
+      const kind = app?.windowKinds[0];
+      if (app === undefined || kind === undefined) continue;
+      for (const definition of resolveWindowActions(app, kind)) actionDefinitions.push({ ownerId: actionStageKey(spawned.id, definition.id), args: choiceArgs(definition.args) });
+    }
+    for (const retirement of artifactKindChoiceDraftRetirementsV1(actionPaneStagedArgsByKey, actionDefinitions)) {
+      const split = retirement.ownerId.lastIndexOf(":");
+      if (split < 1) continue;
+      dispatch({ type: "STAGE_ACTION_ARG", windowId: retirement.ownerId.slice(0, split), actionId: retirement.ownerId.slice(split + 1), argId: retirement.argId, value: undefined });
+    }
+    const commandDefinitions = resolvedCommands.map((entry) => ({ ownerId: commandAddressKey(entry.address), args: choiceArgs(entry.definition.args) }));
+    for (const retirement of artifactKindChoiceDraftRetirementsV1(commandStagedArgsByCommandId, commandDefinitions)) {
+      dispatch({ type: "STAGE_COMMAND_ARG", commandId: retirement.ownerId, argId: retirement.argId, value: undefined });
+    }
+  }, [actionPaneStagedArgsByKey, commandStagedArgsByCommandId, extraWindowInstances, loadedPlugins, panel?.spawnedApps, resolvedCommands, selectedSpaceArtifactCreationCatalog?.choiceRevision, session]);
+
   const commandCategoryList = useMemo(() => commandCategories(resolvedCommands), [resolvedCommands, uiLocale]);
 
   useEffect(() => {
@@ -7105,7 +7257,7 @@ function FrameworkOsShellInner({
       }
       if (!session) return;
       // ⏺️ Recorder tap for plugin/app/mode-scope commands — mirrors `onAction`'s tap above.
-      if (tutorialRecordingRef.current && !tutorialDrivenRef.current) {
+      if (tutorialRecordingRef.current && !tutorialDrivenRef.current.active) {
         tutorialRecorderRef.current?.recordEvent({ kind: "command", command: commandId, args });
       }
       const ownerPluginId = commandOwnerPluginId(address.owner);
@@ -8603,11 +8755,17 @@ function FrameworkOsShellInner({
             if (!isCurrentDialogOrigin(overlayDialog.origin)) return null;
             const dialog = session.app.dialogs?.find((entry) => entry.id === overlayDialog.dialogId);
             if (!dialog) return null;
+            const resolved = resolveDialogDefinition(dialog, appLabelsOverlay, uiTerminology, uiLocale, loadedPlugins.map((entry) => entry.manifest), selectedSpaceArtifactKinds);
+            const artifactKindArgIds = resolved.args.filter((def) => def.schema.kind === "string" && def.schema.format?.kind === "artifactKind").map((def) => def.id);
+            const creationCatalog = artifactKindArgIds.length > 0 ? selectedSpaceArtifactCreationCatalog : null;
+            const choiceRevisions = creationCatalog === null ? undefined : Object.fromEntries(artifactKindArgIds.map((id) => [id, creationCatalog.choiceRevision]));
             return (
               <OwnedShellDialog
                 owner={overlayDialog}
-                dialog={resolveDialogDefinition(dialog, appLabelsOverlay, uiTerminology, uiLocale, loadedPlugins.map((entry) => entry.manifest), selectedSpaceArtifactKinds)}
-                renderField={(def, value, onChange) => renderStagedArgControl(def, value, onChange)}
+                dialog={resolved}
+                renderField={(def, value, onChange, field) => renderStagedArgControl(def, value, onChange, false, field)}
+                notice={creationCatalog === null ? undefined : <ArtifactCreationCatalogNotice status={creationCatalog} locale={uiLocale} hasChoices={creationCatalog.kinds.length > 0} />}
+                choiceRevisions={choiceRevisions}
                 isCurrent={isCurrentDialogOrigin}
                 close={closeOwnedDialog}
                 dispatch={(action, origin, args) => onAction({ controllerId: origin.controllerId, action, args }, origin)}

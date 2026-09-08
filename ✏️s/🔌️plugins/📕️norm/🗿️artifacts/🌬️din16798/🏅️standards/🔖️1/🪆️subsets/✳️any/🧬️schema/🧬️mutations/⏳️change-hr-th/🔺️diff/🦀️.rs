@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeHrTH, base: &Din16798Snapshot) -> protocol::Mutation
     if base.hr_t_h == payload.new_hr_t_h {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Heat recovery operating time is already {}.", payload.new_hr_t_h));
     }
-    protocol::MutationOutcome::new(Din16798Diff { hr_t_h: Some(payload.new_hr_t_h.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(Din16798Diff { hr_t_h: Some(payload.new_hr_t_h), ..Default::default() })
 }
 //#endregion 🔖️Diff

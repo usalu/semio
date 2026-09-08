@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeNPileEdKn, base: &En1997Snapshot) -> protocol::Mutat
     if base.n_pile_ed_kn == payload.new_n_pile_ed_kn {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Design pile axial load N_Ed [kN] is already {}.", payload.new_n_pile_ed_kn));
     }
-    protocol::MutationOutcome::new(En1997Diff { n_pile_ed_kn: Some(payload.new_n_pile_ed_kn.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1997Diff { n_pile_ed_kn: Some(payload.new_n_pile_ed_kn), ..Default::default() })
 }
 //#endregion 🔖️Diff

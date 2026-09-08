@@ -1,0 +1,283 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/xlsx/ecma-376/transitional/mutation/set-snapshot.json",
+  "title": "SetSnapshot",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "snapshot"
+  ],
+  "properties": {
+    "snapshot": {
+      "$ref": "#/$defs/XlsxSnapshot"
+    }
+  },
+  "$defs": {
+    "XlsxSnapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema"
+      ],
+      "properties": {
+        "schema": {
+          "type": "string"
+        },
+        "opc": {
+          "$ref": "#/$defs/OpcPackage"
+        },
+        "workbook": {
+          "$ref": "#/$defs/XlsxWorkbook"
+        }
+      }
+    },
+    "OpcPackage": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "parts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/OpcPart"
+          }
+        },
+        "contentTypes": {
+          "$ref": "#/$defs/OpcContentTypes"
+        },
+        "comment": {
+          "type": "string"
+        }
+      }
+    },
+    "OpcPart": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "contentType"
+      ],
+      "properties": {
+        "path": {
+          "type": "string"
+        },
+        "contentType": {
+          "type": "string"
+        },
+        "bytes": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          }
+        }
+      }
+    },
+    "OpcContentTypes": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "defaults": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "additionalItems": false,
+            "minItems": 2,
+            "maxItems": 2
+          }
+        },
+        "overrides": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "additionalItems": false,
+            "minItems": 2,
+            "maxItems": 2
+          }
+        }
+      }
+    },
+    "XlsxWorkbook": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "sheets": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/XlsxSheet"
+          }
+        },
+        "sharedStrings": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "XlsxSheet": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "cells": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/XlsxCell"
+          }
+        }
+      }
+    },
+    "XlsxCell": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "row",
+        "col"
+      ],
+      "properties": {
+        "row": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "col": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "value": {
+          "$ref": "#/$defs/XlsxCellValue"
+        }
+      }
+    },
+    "XlsxCellValue": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ],
+          "properties": {
+            "kind": {
+              "const": "number"
+            },
+            "value": {
+              "type": "number"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ],
+          "properties": {
+            "kind": {
+              "const": "sharedString"
+            },
+            "value": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ],
+          "properties": {
+            "kind": {
+              "const": "inlineString"
+            },
+            "value": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ],
+          "properties": {
+            "kind": {
+              "const": "boolean"
+            },
+            "value": {
+              "type": "boolean"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "expr"
+          ],
+          "properties": {
+            "kind": {
+              "const": "formula"
+            },
+            "expr": {
+              "type": "string"
+            },
+            "cached": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/XlsxCellValue"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "empty"
+            }
+          }
+        }
+      ]
+    }
+  }
+}

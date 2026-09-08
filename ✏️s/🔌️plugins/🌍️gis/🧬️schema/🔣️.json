@@ -1,0 +1,816 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/gis/schema.json",
+  "$defs": {
+    "GisArtifactIdentity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "pluginId",
+        "packageId",
+        "artifacts",
+        "hostileKinds"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.gis.artifact-identity/v1"
+        },
+        "pluginId": {
+          "const": "gis"
+        },
+        "packageId": {
+          "const": "semio:gis"
+        },
+        "artifacts": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "kind",
+              "nativeDialect",
+              "documentSchema",
+              "extension",
+              "codecExtension",
+              "roles"
+            ],
+            "properties": {
+              "kind": {
+                "enum": [
+                  "s.gis.gismap",
+                  "s.gis.gisterrain"
+                ]
+              },
+              "nativeDialect": {
+                "enum": [
+                  "s.gis.gismap@1/*",
+                  "s.gis.gisterrain@1/*"
+                ]
+              },
+              "documentSchema": {
+                "enum": [
+                  "gis.map",
+                  "gis.terrain"
+                ]
+              },
+              "extension": {
+                "enum": [
+                  "gismap",
+                  "gisterrain"
+                ]
+              },
+              "codecExtension": {
+                "enum": [
+                  "7:gis.map:gismap",
+                  "11:gis.terrain:gisterrain"
+                ]
+              },
+              "roles": {
+                "const": [
+                  "editor",
+                  "viewer"
+                ]
+              }
+            }
+          }
+        },
+        "hostileKinds": {
+          "const": [
+            "s.gismap",
+            "s.gisterrain",
+            "s.foreign.gismap",
+            "gis.gismap",
+            "s.gis.gismap.extra"
+          ]
+        }
+      },
+      "title": "GisArtifactIdentity"
+    },
+    "GisInferenceControlFeatures": {
+      "type": "array",
+      "maxItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "data"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 32
+          },
+          "data": {
+            "type": "object"
+          }
+        }
+      }
+    },
+    "GisInferenceControl": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "snapshot",
+        "expected",
+        "checkpoints",
+        "interruptions",
+        "proposalJobId",
+        "proposal",
+        "proposalRejections"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.gis.inference-control/v1"
+        },
+        "proposalJobId": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{32}$"
+        },
+        "proposalRejections": {
+          "type": "array",
+          "minItems": 7,
+          "maxItems": 7,
+          "uniqueItems": true,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "case",
+              "error"
+            ],
+            "properties": {
+              "case": {
+                "enum": [
+                  "wrong-job",
+                  "duplicate-id",
+                  "stale-count",
+                  "no-bounds",
+                  "non-finite",
+                  "out-of-range",
+                  "reversed"
+                ]
+              },
+              "error": {
+                "enum": [
+                  "Identity",
+                  "Stale",
+                  "Bounds"
+                ]
+              }
+            }
+          }
+        },
+        "proposal": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "CreateRegion"
+          ],
+          "properties": {
+            "CreateRegion": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "index",
+                "item"
+              ],
+              "properties": {
+                "index": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 65536
+                },
+                "item": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "id",
+                    "data"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "pattern": "^inference-[a-f0-9]{32}$"
+                    },
+                    "data": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "id",
+                        "kind",
+                        "ring"
+                      ],
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "pattern": "^inference-[a-f0-9]{32}$"
+                        },
+                        "kind": {
+                          "const": "inference-bounds"
+                        },
+                        "ring": {
+                          "type": "array",
+                          "minItems": 5,
+                          "maxItems": 5,
+                          "items": {
+                            "type": "array",
+                            "minItems": 2,
+                            "maxItems": 2,
+                            "items": {
+                              "type": "number",
+                              "minimum": -180,
+                              "maximum": 180
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "snapshot": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "positions",
+            "routes",
+            "regions"
+          ],
+          "properties": {
+            "positions": {
+              "$ref": "#/$defs/GisInferenceControlFeatures"
+            },
+            "routes": {
+              "$ref": "#/$defs/GisInferenceControlFeatures"
+            },
+            "regions": {
+              "$ref": "#/$defs/GisInferenceControlFeatures"
+            }
+          }
+        },
+        "expected": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "positionCount",
+            "routeCount",
+            "regionCount",
+            "bounds"
+          ],
+          "properties": {
+            "positionCount": {
+              "const": 1
+            },
+            "routeCount": {
+              "const": 1
+            },
+            "regionCount": {
+              "const": 0
+            },
+            "bounds": {
+              "const": {
+                "lonMin": 7,
+                "lonMax": 9,
+                "latMin": 46,
+                "latMax": 48
+              }
+            }
+          }
+        },
+        "checkpoints": {
+          "type": "array",
+          "minItems": 10,
+          "maxItems": 10,
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 64
+          }
+        },
+        "interruptions": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "at",
+              "error",
+              "calls"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "maxLength": 32
+              },
+              "at": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 8
+              },
+              "error": {
+                "enum": [
+                  "cancelled",
+                  "expired"
+                ]
+              },
+              "calls": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 10
+              }
+            }
+          }
+        }
+      },
+      "title": "GisInferenceControl"
+    },
+    "GisDurableThreeStoreAssemblyParent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "role",
+        "document",
+        "owner"
+      ],
+      "properties": {
+        "role": {
+          "const": "parent"
+        },
+        "document": {
+          "const": "map-1!s.gis.gismap@1/*"
+        },
+        "owner": {
+          "type": "null"
+        }
+      }
+    },
+    "GisDurableThreeStoreAssemblyDrawing": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "role",
+        "document",
+        "owner"
+      ],
+      "properties": {
+        "role": {
+          "const": "drawing"
+        },
+        "document": {
+          "const": "gismap-drawing!s.stdio.semio@v1/drawing"
+        },
+        "owner": {
+          "const": "map-1"
+        }
+      }
+    },
+    "GisDurableThreeStoreAssemblyValue": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "role",
+        "document",
+        "owner"
+      ],
+      "properties": {
+        "role": {
+          "const": "value"
+        },
+        "document": {
+          "const": "gismap-value!s.stdio.semio@v1/value"
+        },
+        "owner": {
+          "const": "map-1"
+        }
+      }
+    },
+    "GisDurableThreeStoreAssemblyCancellation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "at",
+        "prepared",
+        "journalBegins",
+        "terminalStores"
+      ],
+      "properties": {
+        "at": {
+          "enum": [
+            "admit-parent",
+            "prepare-parent",
+            "prepare-drawing",
+            "prepare-value"
+          ]
+        },
+        "prepared": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 3
+        },
+        "journalBegins": {
+          "const": 0
+        },
+        "terminalStores": {
+          "const": 3
+        }
+      }
+    },
+    "GisDurableThreeStoreAssemblyRejection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "at",
+        "priorPreparations",
+        "terminalStores"
+      ],
+      "properties": {
+        "at": {
+          "enum": [
+            "parent",
+            "drawing",
+            "value"
+          ]
+        },
+        "priorPreparations": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2
+        },
+        "terminalStores": {
+          "const": 3
+        }
+      }
+    },
+    "GisDurableThreeStoreAssembly": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "shape",
+        "actor",
+        "operation",
+        "members",
+        "preparationOrder",
+        "successTrace",
+        "invariants",
+        "cancellationCases",
+        "rejectionCases",
+        "canonicalIdentity",
+        "canonicalIdentitySha256"
+      ],
+      "properties": {
+        "schema": {
+          "const": "gis.map.durable-three-store-assembly.v1"
+        },
+        "shape": {
+          "const": "parent-drawing-value"
+        },
+        "actor": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "operation": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "members": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": [
+            {
+              "$ref": "#/$defs/GisDurableThreeStoreAssemblyParent"
+            },
+            {
+              "$ref": "#/$defs/GisDurableThreeStoreAssemblyDrawing"
+            },
+            {
+              "$ref": "#/$defs/GisDurableThreeStoreAssemblyValue"
+            }
+          ],
+          "additionalItems": false
+        },
+        "preparationOrder": {
+          "const": [
+            "parent",
+            "drawing",
+            "value"
+          ]
+        },
+        "successTrace": {
+          "const": [
+            "admit-parent",
+            "admit-drawing",
+            "admit-value",
+            "prepare-parent",
+            "prepare-drawing",
+            "prepare-value",
+            "bind-once",
+            "mount-host",
+            "journal",
+            "publish-parent",
+            "publish-drawing",
+            "publish-value",
+            "await-ack",
+            "terminal-handoff"
+          ]
+        },
+        "invariants": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "publishBeforeAllPrepared",
+            "callerSuppliesGroupId",
+            "exposesPreparedSeal",
+            "terminalReturnsStores",
+            "journalBegins"
+          ],
+          "properties": {
+            "publishBeforeAllPrepared": {
+              "const": false
+            },
+            "callerSuppliesGroupId": {
+              "const": false
+            },
+            "exposesPreparedSeal": {
+              "const": false
+            },
+            "terminalReturnsStores": {
+              "const": 3
+            },
+            "journalBegins": {
+              "const": 1
+            }
+          }
+        },
+        "cancellationCases": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 4,
+          "items": {
+            "$ref": "#/$defs/GisDurableThreeStoreAssemblyCancellation"
+          }
+        },
+        "rejectionCases": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {
+            "$ref": "#/$defs/GisDurableThreeStoreAssemblyRejection"
+          }
+        },
+        "canonicalIdentity": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1024
+        },
+        "canonicalIdentitySha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      },
+      "title": "GisDurableThreeStoreAssembly"
+    },
+    "GisComponentColdMapPatchPosition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "lon",
+        "lat"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "lon": {
+          "type": "number",
+          "minimum": -180,
+          "maximum": 180
+        },
+        "lat": {
+          "type": "number",
+          "minimum": -90,
+          "maximum": 90
+        }
+      }
+    },
+    "GisComponentColdMapPatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "package",
+        "app",
+        "surface",
+        "receipt",
+        "document",
+        "authority",
+        "expected",
+        "hostile"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.gis.component-cold-map-patch/v1"
+        },
+        "package": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "pluginId",
+            "packageId",
+            "cargoPackage",
+            "componentFile"
+          ],
+          "properties": {
+            "pluginId": {
+              "const": "gis"
+            },
+            "packageId": {
+              "const": "semio:gis"
+            },
+            "cargoPackage": {
+              "const": "semio-s-plugin-gis"
+            },
+            "componentFile": {
+              "const": "semio_s_plugin_gis.wasm"
+            }
+          }
+        },
+        "app": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "modeId",
+            "windowKindId",
+            "windowInstanceId",
+            "actionId"
+          ],
+          "properties": {
+            "id": {
+              "const": "s.gis.gismap@1/*#editor"
+            },
+            "modeId": {
+              "const": "edit"
+            },
+            "windowKindId": {
+              "const": "gis2d-main"
+            },
+            "windowInstanceId": {
+              "const": "gis2d-main"
+            },
+            "actionId": {
+              "const": "patchPositions"
+            }
+          }
+        },
+        "surface": {
+          "const": "1:gis2d.play.composite"
+        },
+        "receipt": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "componentSha256",
+            "descriptorSha256"
+          ],
+          "properties": {
+            "componentSha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "descriptorSha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            }
+          }
+        },
+        "document": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "before",
+            "after"
+          ],
+          "properties": {
+            "id": {
+              "const": "shared-map"
+            },
+            "before": {
+              "$ref": "#/$defs/GisComponentColdMapPatchPosition"
+            },
+            "after": {
+              "$ref": "#/$defs/GisComponentColdMapPatchPosition"
+            }
+          }
+        },
+        "authority": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "activationGeneration",
+            "requestSequence",
+            "transferGeneration",
+            "headEditOrdinal",
+            "headEditId",
+            "lastCommitSeq",
+            "chainSha256"
+          ],
+          "properties": {
+            "activationGeneration": {
+              "const": 41
+            },
+            "requestSequence": {
+              "const": 7
+            },
+            "transferGeneration": {
+              "const": 51
+            },
+            "headEditOrdinal": {
+              "const": 7
+            },
+            "headEditId": {
+              "const": "edit-7"
+            },
+            "lastCommitSeq": {
+              "const": 5
+            },
+            "chainSha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            }
+          }
+        },
+        "expected": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "coldStatuses",
+            "sceneSchema",
+            "beforeMarker",
+            "afterMarker",
+            "patchSequenceMinimum"
+          ],
+          "properties": {
+            "coldStatuses": {
+              "type": "array",
+              "items": [
+                {
+                  "const": "applied"
+                }
+              ],
+              "additionalItems": false,
+              "minItems": 1,
+              "maxItems": 1
+            },
+            "sceneSchema": {
+              "const": "tiled-map@1"
+            },
+            "beforeMarker": {
+              "const": "cold-before"
+            },
+            "afterMarker": {
+              "const": "patched-after"
+            },
+            "patchSequenceMinimum": {
+              "type": "integer",
+              "minimum": 2
+            }
+          }
+        },
+        "hostile": {
+          "type": "array",
+          "minItems": 4,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "foreign-package",
+              "stale-lifetime",
+              "wrong-descriptor",
+              "wrong-action-owner",
+              "changed-component-after-receipt"
+            ]
+          }
+        }
+      },
+      "title": "GisComponentColdMapPatch"
+    }
+  }
+}

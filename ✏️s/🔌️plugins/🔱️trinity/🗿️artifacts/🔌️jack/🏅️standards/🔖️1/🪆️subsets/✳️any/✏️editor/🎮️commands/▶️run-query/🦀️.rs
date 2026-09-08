@@ -4,7 +4,7 @@ use crate::artifacts::jack::op::TrinityGraphMutation;
 use crate::artifacts::jack::JackSnapshot;
 use crate::core;
 use crate::editor::jack::config::JackConfigMutation;
-use semio_framework_plugin::{Emit, Fault};
+use semio_framework_plugin::Emit;
 
 /// 🔎️ Runs a jack query against the fixture, returning `(result_json, forward operations)`; a parse/execute
 /// failure yields an error result and no operations (no document mutation).
@@ -34,12 +34,12 @@ fn error_result_json(message: &str) -> String {
     pack::json!({ "error": message }).to_string()
 }
 
-pub(crate) fn run_query(fixture: &JackSnapshot, query: &Option<String>, current_query: &str) -> Result<Emit<TrinityGraphMutation, JackConfigMutation>, Fault> {
+pub(crate) fn run_query(fixture: &JackSnapshot, query: &Option<String>, current_query: &str) -> Emit<TrinityGraphMutation, JackConfigMutation> {
     let resolved = query.as_deref().filter(|value| !value.trim().is_empty()).map_or_else(|| current_query.to_string(), str::to_string);
     let (result_json, operations) = run_jack_query(fixture, &resolved);
-    Ok(Emit {
+    Emit {
         artifact_mutations: operations,
         config_mutations: vec![JackConfigMutation::SetQuery(crate::editor::jack::config::SetQuery { value: resolved }), JackConfigMutation::SetResult(crate::editor::jack::config::SetResult { value: result_json }), JackConfigMutation::SetResultsEngagementInput(crate::editor::jack::config::SetResultsEngagementInput { value: String::new() })],
         ..Default::default()
-    })
+    }
 }

@@ -9,10 +9,10 @@
 //! leaf's own oracle. The derived `.op.semio`/`.spr.semio`/`.dsl.semio`/`.pack.semio`/
 //! `.patch.semio` encodings come from `fixtures generate`, not from here.
 
-use crate::artifacts::gltf::schema::mutations::move_buffer_view::diff::GltfMoveBufferViewDiff;
-use crate::artifacts::gltf::schema::mutations::move_buffer_view::GltfMoveBufferViewPayload;
-use crate::artifacts::gltf::schema::mutations::move_buffer_view::{diff, inverse, mutation};
-use crate::artifacts::gltf::GltfSnapshot;
+use crate::schema::mutations::move_buffer_view::diff::GltfMoveBufferViewDiff;
+use crate::schema::mutations::move_buffer_view::GltfMoveBufferViewPayload;
+use crate::schema::mutations::move_buffer_view::{diff, inverse, mutation};
+use crate::GltfSnapshot;
 
 const CASE: &str = "move-buffer-view/swaps-the-two-windows-and-renumbers-both-accessors";
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");

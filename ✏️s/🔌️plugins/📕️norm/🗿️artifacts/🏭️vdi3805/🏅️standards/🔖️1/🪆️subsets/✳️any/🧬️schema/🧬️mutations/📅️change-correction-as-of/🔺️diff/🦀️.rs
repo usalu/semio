@@ -8,6 +8,6 @@ pub fn diff(payload: &ChangeCorrectionAsOf, base: &Vdi3805Snapshot) -> protocol:
     if base.correction_as_of == payload.new_correction_as_of {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "Correction as of already has this value.");
     }
-    protocol::MutationOutcome::new(Vdi3805Diff { correction_as_of: Some(payload.new_correction_as_of.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(Vdi3805Diff { correction_as_of: Some(payload.new_correction_as_of), ..Default::default() })
 }
 //#endregion 🔖️Diff

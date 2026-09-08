@@ -5,7 +5,7 @@
   "displayName": "Create Time Series Schedule",
   "emoji": "🪗️",
   "aggregateVariant": "CreateTimeSeriesSchedule",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "create-time-series-schedule",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

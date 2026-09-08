@@ -5,7 +5,7 @@
   "displayName": "Change Mechanical Ventilation Fan Total Efficiency",
   "emoji": "💠️",
   "aggregateVariant": "ChangeMechanicalVentilationFanTotalEfficiency",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-mechanical-ventilation-fan-total-efficiency",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

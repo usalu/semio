@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeSectionDepthMm, base: &En1995Snapshot) -> protocol::
     if base.section_depth_mm == payload.new_section_depth_mm {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "Section depth mm already has this value.");
     }
-    protocol::MutationOutcome::new(En1995Diff { section_depth_mm: Some(payload.new_section_depth_mm.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1995Diff { section_depth_mm: Some(payload.new_section_depth_mm), ..Default::default() })
 }
 //#endregion 🔖️Diff

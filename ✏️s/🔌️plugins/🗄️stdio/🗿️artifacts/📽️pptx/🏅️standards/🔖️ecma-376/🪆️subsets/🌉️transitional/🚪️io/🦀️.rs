@@ -5,9 +5,9 @@
 //! `🧱️base/🚪️io` already established for this artifact.
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use crate::artifacts::pptx::standards::v_ecma_376::subsets::base::schema::PptxComposer as PptxAnyComposer;
-    use crate::artifacts::pptx::standards::v_ecma_376::subsets::transitional::schema::check_transitional_conformance;
-    use crate::artifacts::pptx::PptxSnapshot;
+    use crate::standards::v_ecma_376::subsets::base::schema::PptxComposer as PptxAnyComposer;
+    use crate::standards::v_ecma_376::subsets::transitional::schema::check_transitional_conformance;
+    use crate::PptxSnapshot;
     use dsl::{Diagnostic, FaultCode, Severity, TextSpan};
     use semio_framework_plugin::{register_subset_validator, subset_validator_entry_of, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, IoPayload, StandardId, SubsetId, SubsetValidator, SubsetValidatorEntry};
     use std::sync::OnceLock;
@@ -79,7 +79,7 @@ pub mod derived_composition {
     /// 📌️ Registers this subset's `SubsetValidator` with the generic io registry (D5's
     /// validate-on-build hook). Called from ecma-376's own `⚙️engine::register()`. The `ComposerEntry`
     /// itself is registered separately by the standard-level composer aggregator
-    /// (`crate::artifacts::pptx::standards::v_ecma_376::engine::io_registry::entries()`), matching how `🧱️base`'s
+    /// (`crate::standards::v_ecma_376::engine::io_registry::entries()`), matching how `🧱️base`'s
     /// own entry is registered.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn register() {
@@ -90,7 +90,7 @@ pub mod derived_composition {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use crate::artifacts::zip::opc::{self, OpcPackage, RELS_CONTENT_TYPE, REL_TYPE_OFFICE_DOCUMENT};
+        use semio_s_artifact_stdio_zip::opc::{self, OpcPackage, RELS_CONTENT_TYPE, REL_TYPE_OFFICE_DOCUMENT};
         use semio_framework_plugin::AnalyzeSource;
 
         const TRANSITIONAL_PRESENTATION_XML: &str = concat!(

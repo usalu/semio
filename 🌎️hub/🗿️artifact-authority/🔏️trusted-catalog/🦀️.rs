@@ -12,6 +12,10 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
+#[path = "🧬️schema/🦀️.rs"]
+pub mod schema;
+use schema::{publication_revision, TrustedCatalogCurrentPointerV1, TrustedCatalogPublicationCommandV1, TrustedCatalogPublicationReceiptV1, TRUSTED_CATALOG_PUBLICATION_MAX_BYTES, TRUSTED_CATALOG_PUBLICATION_OUTCOME_DURABLE, TRUSTED_CATALOG_PUBLICATION_OUTCOME_UNCONFIRMED, TRUSTED_CATALOG_PUBLICATION_RECEIPT_SCHEMA, TRUSTED_CATALOG_PUBLICATION_SCHEMA};
+
 #[path = "🌐️browser-actor/🦀️.rs"]
 mod browser_actor;
 use browser_actor::BundleBrowserActor;
@@ -172,64 +176,6 @@ struct Bundle {
     packages: Vec<BundlePackage>,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
-struct TrustedCatalogCurrentPointer {
-    profile_id: String,
-    generation_id: String,
-    bundle_sha256: String,
-    publication_revision: String,
-}
-
-impl TrustedCatalogCurrentPointer {
-    fn decode(bytes: &[u8]) -> Result<Self, AuthorityError> {
-        let pointer: Self = serde_json::from_slice(bytes).map_err(catalog_error)?;
-        if pointer.encode()? != bytes || pointer.profile_id.is_empty() || pointer.profile_id.len() > TRUSTED_IDENTITY_MAX_BYTES || pointer.profile_id.chars().any(char::is_control) {
-            return Err(catalog("trusted catalog current pointer is not exact canonical metadata"));
-        }
-        decode_digest(&pointer.generation_id, "trusted generation id")?;
-        decode_digest(&pointer.bundle_sha256, "trusted bundle sha256")?;
-        publication_revision(&pointer.publication_revision)?;
-        Ok(pointer)
-    }
-
-    fn encode(&self) -> Result<Vec<u8>, AuthorityError> {
-        let mut bytes = serde_json::to_vec(self).map_err(catalog_error)?;
-        bytes.push(b'\n');
-        Ok(bytes)
-    }
-}
-
-fn publication_revision(value: &str) -> Result<u64, AuthorityError> {
-    let revision = value.parse::<u64>().map_err(catalog_error)?;
-    if revision == 0 || revision.to_string() != value { return Err(catalog("trusted publication revision is not canonical nonzero u64")); }
-    Ok(revision)
-}
-
-#[derive(Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
-struct TrustedCatalogPublicationCommand {
-    schema: String,
-    request_id: String,
-    profile_id: String,
-    generation_id: String,
-    bundle_sha256: String,
-    expected_current_sha256: Option<String>,
-}
-
-#[derive(Serialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
-struct TrustedCatalogPublicationReceipt {
-    schema: &'static str,
-    request_id: String,
-    profile_id: String,
-    generation_id: String,
-    bundle_sha256: String,
-    publication_revision: String,
-    current_sha256: String,
-    outcome: &'static str,
-}
-
 /// 🔐️ Publishes only a fully verified selection while holding the cooperating-writer OS fence.
 pub struct TrustedCatalogPublisher;
 
@@ -243,11 +189,11 @@ impl TrustedCatalogPublisher {
     /// 📤️ Consumes the closed command schema under a private server-owned catalog namespace.
     pub async fn publish_current(data_path: &Path, command_bytes: &[u8], providers: &dyn NativeCodecProviderSourceV1, context: &OperationContext<'_>) -> Result<TrustedCatalogPublicationOutcome, AuthorityError> {
         context.checkpoint()?;
-        if command_bytes.is_empty() || command_bytes.len() > 4_096 { return Err(catalog("trusted publication command exceeds its bound")); }
+        if command_bytes.is_empty() || command_bytes.len() > TRUSTED_CATALOG_PUBLICATION_MAX_BYTES { return Err(catalog("trusted publication command exceeds its bound")); }
         let fields: serde_json::Value = serde_json::from_slice(command_bytes).map_err(catalog_error)?;
         if !fields.as_object().is_some_and(|object| object.contains_key("expectedCurrentSha256")) { return Err(catalog("trusted publication expected current token is required")); }
-        let command: TrustedCatalogPublicationCommand = serde_json::from_slice(command_bytes).map_err(catalog_error)?;
-        if command.schema != "semio.hub.trusted-catalog-publication/v1" || command.request_id.len() != 32 || !command.request_id.bytes().all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte)) || command.profile_id.is_empty() || command.profile_id.len() > TRUSTED_IDENTITY_MAX_BYTES || command.profile_id.chars().any(char::is_control) {
+        let command: TrustedCatalogPublicationCommandV1 = serde_json::from_slice(command_bytes).map_err(catalog_error)?;
+        if command.schema != TRUSTED_CATALOG_PUBLICATION_SCHEMA || command.request_id.len() != 32 || !command.request_id.bytes().all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte)) || command.profile_id.is_empty() || command.profile_id.len() > TRUSTED_IDENTITY_MAX_BYTES || command.profile_id.chars().any(char::is_control) {
             return Err(catalog("trusted publication command has invalid identity"));
         }
         decode_digest(&command.generation_id, "trusted generation id")?;
@@ -258,7 +204,7 @@ impl TrustedCatalogPublisher {
         let (observed, revision) = match owner.open_current()? {
             Some(file) => {
                 let bytes = file.read_bounded(65_536, context).await?;
-                let current = TrustedCatalogCurrentPointer::decode(&bytes)?;
+                let current = TrustedCatalogCurrentPointerV1::decode(&bytes)?;
                 (Some(hex_lower(&sha256(&bytes, context).await?)), publication_revision(&current.publication_revision)?)
             }
             None => (None, 0),
@@ -283,11 +229,11 @@ impl TrustedCatalogPublisher {
         }
         let final_bundle = generation.read_regular(&TrustedCatalogRelativePath::parse("trusted-catalog.json")?, TRUSTED_BUNDLE_MAX_BYTES, context).await?;
         if sha256(&final_bundle, context).await? != bundle_digest { return Err(catalog("trusted publication bundle changed after candidate verification")); }
-        let pointer = TrustedCatalogCurrentPointer { profile_id: command.profile_id, generation_id: command.generation_id, bundle_sha256: command.bundle_sha256, publication_revision: revision.to_string() };
+        let pointer = TrustedCatalogCurrentPointerV1 { profile_id: command.profile_id, generation_id: command.generation_id, bundle_sha256: command.bundle_sha256, publication_revision: revision.to_string() };
         let current_bytes = pointer.encode()?;
         let current_sha256 = hex_lower(&sha256(&current_bytes, context).await?);
         let sync = owner.replace_current(&command.request_id, &current_bytes, context)?;
-        let receipt = TrustedCatalogPublicationReceipt { schema: "semio.hub.trusted-catalog-publication-receipt/v1", request_id: command.request_id, profile_id: pointer.profile_id, generation_id: pointer.generation_id, bundle_sha256: pointer.bundle_sha256, publication_revision: pointer.publication_revision, current_sha256, outcome: match sync { opened_root::TrustedPublicationSync::Durable => "durable", opened_root::TrustedPublicationSync::Unconfirmed => "replaced-unconfirmed" } };
+        let receipt = TrustedCatalogPublicationReceiptV1 { schema: TRUSTED_CATALOG_PUBLICATION_RECEIPT_SCHEMA, request_id: command.request_id, profile_id: pointer.profile_id, generation_id: pointer.generation_id, bundle_sha256: pointer.bundle_sha256, publication_revision: pointer.publication_revision, current_sha256, outcome: match sync { opened_root::TrustedPublicationSync::Durable => TRUSTED_CATALOG_PUBLICATION_OUTCOME_DURABLE, opened_root::TrustedPublicationSync::Unconfirmed => TRUSTED_CATALOG_PUBLICATION_OUTCOME_UNCONFIRMED } };
         let bytes = serde_json::to_vec(&receipt).map_err(catalog_error)?;
         Ok(match sync { opened_root::TrustedPublicationSync::Durable => TrustedCatalogPublicationOutcome::Durable(bytes), opened_root::TrustedPublicationSync::Unconfirmed => TrustedCatalogPublicationOutcome::Unconfirmed(bytes) })
     }
@@ -663,7 +609,7 @@ impl TrustedCatalogLoader {
             return Ok(None);
         };
         let current_bytes = current_file.read_bounded(64 * 1024, context).await?;
-        let current = TrustedCatalogCurrentPointer::decode(&current_bytes)?;
+        let current = TrustedCatalogCurrentPointerV1::decode(&current_bytes)?;
         let expected_bundle_sha256 = decode_digest(&current.bundle_sha256, "trusted bundle sha256")?;
         let generation_root = data_root.open_generation(&current.generation_id)?;
         let bundle_path = TrustedCatalogRelativePath::parse("trusted-catalog.json")?;

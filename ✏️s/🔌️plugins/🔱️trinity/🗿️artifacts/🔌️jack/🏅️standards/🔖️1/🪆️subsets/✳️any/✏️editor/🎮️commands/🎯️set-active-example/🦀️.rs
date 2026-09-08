@@ -4,7 +4,7 @@ use crate::artifacts::jack::op::TrinityGraphMutation;
 use crate::artifacts::jack::JackSnapshot;
 use crate::core;
 use crate::editor::jack::config::JackConfigMutation;
-use semio_framework_plugin::{Emit, Fault};
+use semio_framework_plugin::Emit;
 use store::ArtifactDsl;
 
 /// 🔎️ Runs a jack query against the fixture, returning `(result_json, forward operations)`; a parse/execute
@@ -42,12 +42,12 @@ fn fixture_dsl_for_preset(preset_id: &str) -> Option<&'static str> {
     }
 }
 
-pub(crate) fn set_active_example(example_id: &str) -> Result<Emit<TrinityGraphMutation, JackConfigMutation>, Fault> {
+pub(crate) fn set_active_example(example_id: &str) -> Emit<TrinityGraphMutation, JackConfigMutation> {
     match fixture_dsl_for_preset(example_id).and_then(|dsl| JackSnapshot::parse_dsl(dsl).ok()) {
         Some(next) => {
             let query = preset_query(example_id).to_string();
             let (result_json, _) = run_jack_query(&next, &query);
-            Ok(Emit {
+            Emit {
                 effects: vec![crate::editor::jack::reset_document_effect(&next)],
                 config_mutations: vec![
                     JackConfigMutation::SetActiveFixture(crate::editor::jack::config::SetActiveFixture { value: example_id.to_string() }),
@@ -56,8 +56,8 @@ pub(crate) fn set_active_example(example_id: &str) -> Result<Emit<TrinityGraphMu
                     JackConfigMutation::SetResult(crate::editor::jack::config::SetResult { value: result_json }),
                 ],
                 ..Default::default()
-            })
+            }
         }
-        None => Ok(Emit::default()),
+        None => Emit::default(),
     }
 }

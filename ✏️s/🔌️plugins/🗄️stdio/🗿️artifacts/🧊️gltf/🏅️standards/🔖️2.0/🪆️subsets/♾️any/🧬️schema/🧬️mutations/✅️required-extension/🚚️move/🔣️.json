@@ -5,7 +5,7 @@
   "displayName": "Move Required Extension",
   "emoji": "🚚️",
   "aggregateVariant": "MoveRequiredExtension",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

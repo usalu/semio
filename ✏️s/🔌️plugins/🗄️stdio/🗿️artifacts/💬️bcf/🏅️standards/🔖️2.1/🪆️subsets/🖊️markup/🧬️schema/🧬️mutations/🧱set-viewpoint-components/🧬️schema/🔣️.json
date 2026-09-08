@@ -1,0 +1,88 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/bcf/2.1/markup/mutation/set-viewpoint-components.json",
+  "title": "SetViewpointComponents",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "topic_guid",
+    "guid"
+  ],
+  "properties": {
+    "topic_guid": {
+      "type": "string"
+    },
+    "guid": {
+      "type": "string"
+    },
+    "components": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/BcfComponents"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "$defs": {
+    "BcfComponents": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "selection": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "visibility": {
+          "$ref": "#/$defs/BcfVisibility"
+        },
+        "coloring": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/BcfColoring"
+          }
+        }
+      }
+    },
+    "BcfVisibility": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "defaultVisibility"
+      ],
+      "properties": {
+        "defaultVisibility": {
+          "type": "boolean"
+        },
+        "exceptions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "BcfColoring": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "color"
+      ],
+      "properties": {
+        "color": {
+          "type": "string"
+        },
+        "components": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

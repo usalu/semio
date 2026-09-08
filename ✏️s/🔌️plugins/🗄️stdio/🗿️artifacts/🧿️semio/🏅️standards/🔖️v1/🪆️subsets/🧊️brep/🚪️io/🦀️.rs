@@ -4,10 +4,10 @@
 //! 📤️export/🧵️serializers.
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use crate::artifacts::semio::standards::v1::subsets::brep::io::export::serializers::artifacts::step::v_ap214::any::SemioBrepToStep;
-    use crate::artifacts::semio::standards::v1::subsets::brep::io::import::deserializers::artifacts::step::v_ap214::any::SemioBrepFromStep;
-    use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
-    use crate::artifacts::semio::standards::v1::subsets::brep::schema::SemioBrepAnalyzer;
+    use crate::standards::v1::subsets::brep::io::export::serializers::artifacts::step::v_ap214::any::SemioBrepToStep;
+    use crate::standards::v1::subsets::brep::io::import::deserializers::artifacts::step::v_ap214::any::SemioBrepFromStep;
+    use crate::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
+    use crate::standards::v1::subsets::brep::schema::SemioBrepAnalyzer;
     use semio_framework_plugin::{
         deserializer_entry_of, register_composer_entries, register_subset_validator, serializer_entry_of, subset_validator_entry_of, AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, ComposerEntry, Composition, Dialect, IoPayload,
         StandardId, SubsetId, SubsetValidator, SubsetValidatorEntry,
@@ -137,9 +137,9 @@ pub mod derived_composition {
     /// this artifact's standard-level `engine::register()`.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn register() {
-        ::schema::register_artifact_schema_descriptor(crate::artifacts::semio::standards::v1::subsets::brep::schema::semio_brep_artifact_schema_descriptor());
-        store::register_document_codec(store::ArtifactCodec::of::<SemioBrepSnapshot, crate::artifacts::semio::standards::v1::subsets::brep::schema::mutations::SemioBrepMutation>(
-            crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::STDIO_SEMIOBREP_DOCUMENT_SCHEMA,
+        ::framework_schema::register_artifact_schema_descriptor(crate::standards::v1::subsets::brep::schema::semio_brep_artifact_schema_descriptor());
+        store::register_document_codec(store::ArtifactCodec::of::<SemioBrepSnapshot, crate::standards::v1::subsets::brep::schema::mutations::SemioBrepMutation>(
+            crate::standards::v1::subsets::brep::schema::snapshot::STDIO_SEMIOBREP_DOCUMENT_SCHEMA,
         )).expect("static Stdio registration must be available and conflict-free");
         register_subset_validator(validator_entry()).expect("static Stdio registration must be available and conflict-free");
         register_composer_entries(io_bridge_entries()).expect("static Stdio registration must be available and conflict-free");
@@ -151,7 +151,7 @@ pub mod derived_composition {
     /// ticket 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn register_artifact_inferences() {
-        ::schema::register_artifact_inference_descriptor(crate::artifacts::semio::standards::v1::subsets::brep::schema::inferences::semio_brep_artifact_inference_descriptor());
+        ::framework_schema::register_artifact_inference_descriptor(crate::standards::v1::subsets::brep::schema::inferences::semio_brep_artifact_inference_descriptor());
     }
 
     /// 🌉️ W4 semio↔step bridge — one deserializer entry (writes brep, reads step) + one serializer
@@ -169,8 +169,8 @@ pub mod derived_composition {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioPoint3;
-        use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::{BrepCurve, BrepEdge, BrepFace, BrepLoop, BrepLoopEdge, BrepShell, BrepShellFace, BrepSolid, BrepSolidShell, BrepSurface, BrepVertex};
+        use crate::standards::v1::subsets::base::schema::geometry::SemioPoint3;
+        use crate::standards::v1::subsets::brep::schema::snapshot::{BrepCurve, BrepEdge, BrepFace, BrepLoop, BrepLoopEdge, BrepShell, BrepShellFace, BrepSolid, BrepSolidShell, BrepSurface, BrepVertex};
 
         // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         fn valid_snapshot() -> SemioBrepSnapshot {
@@ -234,7 +234,7 @@ pub mod derived_composition {
         /// scope anyway).
         mod conformance_laws {
 
-            use crate::artifacts::semio::standards::v1::subsets::brep::schema::{diff, mutations, snapshot};
+            use crate::standards::v1::subsets::brep::schema::{diff, mutations, snapshot};
             use protocol::{DiffCodec, OpBinary, OpText};
 
             /// ✅️ "committed files parse": all 6 handcrafted `.grammar.semio`/`.protocol.semio` files
@@ -346,15 +346,15 @@ pub use derived_composition::*;
 
 /// 🖊️ DWG mesh conversion for the BREP artifact.
 pub mod dwg {
-    use crate::artifacts::semio::standards::v1::subsets::brep::schema::engine::{BrepError, BrepKernel, GeometryHandle};
+    use crate::standards::v1::subsets::brep::schema::engine::{BrepError, BrepKernel, GeometryHandle};
 struct DwgExporter;
 impl semio_framework_mesh_engine::MeshExporter for DwgExporter {
     fn format_kind(&self) -> &'static str {
         "dwg"
     }
     fn export(&self, mesh: &semio_framework_mesh_engine::MeshData) -> Result<Vec<u8>, String> {
-        let drawing = crate::artifacts::dwg::mesh_to_dwg_drawing(mesh);
-        crate::artifacts::dwg::dwg_to_bytes(&drawing)
+        let drawing = semio_s_artifact_stdio_dwg::mesh_to_dwg_drawing(mesh);
+        semio_s_artifact_stdio_dwg::dwg_to_bytes(&drawing)
     }
 }
 struct DwgImporter;
@@ -363,8 +363,8 @@ impl semio_framework_mesh_engine::MeshImporter for DwgImporter {
         "dwg"
     }
     fn import(&self, bytes: &[u8]) -> Result<semio_framework_mesh_engine::MeshData, String> {
-        let drawing = crate::artifacts::dwg::dwg_from_bytes(bytes)?;
-        Ok(crate::artifacts::dwg::dwg_drawing_to_mesh(&drawing))
+        let drawing = semio_s_artifact_stdio_dwg::dwg_from_bytes(bytes)?;
+        Ok(semio_s_artifact_stdio_dwg::dwg_drawing_to_mesh(&drawing))
     }
 }
 

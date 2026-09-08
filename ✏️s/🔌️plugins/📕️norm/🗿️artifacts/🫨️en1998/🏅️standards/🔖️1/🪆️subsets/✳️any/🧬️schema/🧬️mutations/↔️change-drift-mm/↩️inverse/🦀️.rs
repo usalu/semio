@@ -7,6 +7,6 @@ use crate::artifacts::en1998::En1998Snapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(_payload: &ChangeDriftMm, base: &En1998Snapshot) -> Vec<En1998Mutation> {
-    vec![En1998Mutation::ChangeDriftMm(ChangeDriftMm { new_drift_mm: base.drift_mm.clone() })]
+    vec![En1998Mutation::ChangeDriftMm(ChangeDriftMm { new_drift_mm: base.drift_mm })]
 }
 //#endregion 🔖️Inverse

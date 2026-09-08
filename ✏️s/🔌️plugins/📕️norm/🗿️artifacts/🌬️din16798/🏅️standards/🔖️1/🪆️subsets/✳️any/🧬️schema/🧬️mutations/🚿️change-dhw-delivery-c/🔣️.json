@@ -5,7 +5,7 @@
   "displayName": "Change Dhw Delivery C",
   "emoji": "🚿️",
   "aggregateVariant": "ChangeDhwDeliveryC",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

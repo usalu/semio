@@ -33,8 +33,8 @@ pub mod derived_composition {
             for source in sources {
                 if source.dialect == DIALECT {
                     let native = match &source.payload {
-                        AnalyzeSource::Text(t) => AnalyzeSource::Text(*t),
-                        AnalyzeSource::Binary(b) => AnalyzeSource::Binary(*b),
+                        AnalyzeSource::Text(t) => AnalyzeSource::Text(t),
+                        AnalyzeSource::Binary(b) => AnalyzeSource::Binary(b),
                     };
                     let analysis = En1996Analyzer::analyze(&[native]);
                     if let Some(snapshot) = analysis.parts.snapshot {

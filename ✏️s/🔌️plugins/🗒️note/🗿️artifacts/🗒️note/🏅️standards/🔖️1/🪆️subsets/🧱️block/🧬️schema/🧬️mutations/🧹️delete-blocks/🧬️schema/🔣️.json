@@ -1,0 +1,18 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/note/note/1/block/mutation/delete-blocks.json",
+  "title": "DeleteBlocks",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "ids"
+  ],
+  "properties": {
+    "ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}

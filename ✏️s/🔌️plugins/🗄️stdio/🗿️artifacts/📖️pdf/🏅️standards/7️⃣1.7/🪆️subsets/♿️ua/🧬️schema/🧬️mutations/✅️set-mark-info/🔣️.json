@@ -5,7 +5,7 @@
   "displayName": "Set Mark Info",
   "emoji": "🏷️",
   "aggregateVariant": "SetMarkInfo",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "set-mark-info",
   "binaryTag": 0,
   "invertibility": "explicit-mutation",

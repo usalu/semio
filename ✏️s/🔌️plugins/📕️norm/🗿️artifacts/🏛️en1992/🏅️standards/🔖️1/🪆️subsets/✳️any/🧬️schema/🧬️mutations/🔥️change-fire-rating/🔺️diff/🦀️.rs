@@ -9,6 +9,6 @@ pub fn diff(payload: &ChangeFireRating, base: &En1992Snapshot) -> protocol::Muta
     if base.fire_rating == payload.new_fire_rating {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "Fire rating already has this value.");
     }
-    protocol::MutationOutcome::new(En1992Diff { fire_rating: Some(payload.new_fire_rating.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1992Diff { fire_rating: Some(payload.new_fire_rating), ..Default::default() })
 }
 //#endregion 🔖️Diff

@@ -33,8 +33,8 @@
 //! `InferredField`, since diff constructors call it directly on their own ephemeral rep, never on
 //! a persisted snapshot.
 
-use crate::artifacts::semio::standards::v1::subsets::brep::io::check_brep_referential_integrity;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
+use crate::standards::v1::subsets::brep::io::check_brep_referential_integrity;
+use crate::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
 
 //#region 🔖️Value
 /// 🩺 One referential-integrity finding — a small, owned, `ToValue`/`FromValue` projection of
@@ -90,12 +90,12 @@ impl store::InferredField<SemioBrepSnapshot> for BrepValidationReport {
         // comment) — cheaper than hand-rolling a borrowing byte encoder.
         #[derive(value_derive::ToValue)]
         struct DepInput {
-            vertices: Vec<crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::BrepVertex>,
-            edges: Vec<crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::BrepEdge>,
-            loops: Vec<crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::BrepLoop>,
-            faces: Vec<crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::BrepFace>,
-            shells: Vec<crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::BrepShell>,
-            solids: Vec<crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::BrepSolid>,
+            vertices: Vec<crate::standards::v1::subsets::brep::schema::snapshot::BrepVertex>,
+            edges: Vec<crate::standards::v1::subsets::brep::schema::snapshot::BrepEdge>,
+            loops: Vec<crate::standards::v1::subsets::brep::schema::snapshot::BrepLoop>,
+            faces: Vec<crate::standards::v1::subsets::brep::schema::snapshot::BrepFace>,
+            shells: Vec<crate::standards::v1::subsets::brep::schema::snapshot::BrepShell>,
+            solids: Vec<crate::standards::v1::subsets::brep::schema::snapshot::BrepSolid>,
         }
         pack::to_json_string(&DepInput {
             vertices: snapshot.vertices.clone(),
@@ -124,8 +124,8 @@ pub use body::validate_body;
 //#region 🧪️Tests
 mod tests {
     use super::*;
-    use crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioPoint3;
-    use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::{BrepCurve, BrepEdge, BrepFace, BrepLoop, BrepLoopEdge, BrepShell, BrepShellFace, BrepSolid, BrepSolidShell, BrepSurface, BrepVertex};
+    use crate::standards::v1::subsets::base::schema::geometry::SemioPoint3;
+    use crate::standards::v1::subsets::brep::schema::snapshot::{BrepCurve, BrepEdge, BrepFace, BrepLoop, BrepLoopEdge, BrepShell, BrepShellFace, BrepSolid, BrepSolidShell, BrepSurface, BrepVertex};
     use store::{InferenceCache, InferenceCacheConfig};
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9

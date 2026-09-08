@@ -11,6 +11,6 @@ pub fn diff(payload: &ChangeDeltaTK, base: &En1991Snapshot) -> protocol::Mutatio
     if base.delta_t_k == payload.new_delta_t_k {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "Delta tk already has this value.");
     }
-    protocol::MutationOutcome::new(En1991Diff { delta_t_k: Some(payload.new_delta_t_k.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1991Diff { delta_t_k: Some(payload.new_delta_t_k), ..Default::default() })
 }
 //#endregion 🔖️Diff

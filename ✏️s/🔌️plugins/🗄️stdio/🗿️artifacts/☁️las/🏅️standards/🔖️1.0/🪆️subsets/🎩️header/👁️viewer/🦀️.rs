@@ -4,8 +4,8 @@
 //! (framework SDK) is the sole runtime adapter, so this file can never structurally emit an artifact
 //! or draft mutation. MUST NOT reference the sibling editor module.
 
-use crate::artifacts::las::standards::v1_0::subsets::any::schema::mutations::LasMutation;
-use crate::artifacts::las::standards::v1_0::subsets::any::schema::snapshot::LasSnapshot;
+use crate::standards::v1_0::subsets::any::schema::mutations::LasMutation;
+use crate::standards::v1_0::subsets::any::schema::snapshot::LasSnapshot;
 use crate::viewer::las::modes::view;
 use crate::viewer::las::modes::view::windows::main;
 use semio_framework_plugin::app::InteractionView;

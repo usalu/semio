@@ -11,10 +11,10 @@
 //! leaf's own oracle. The derived `.op.semio`/`.spr.semio`/`.dsl.semio`/`.pack.semio`/
 //! `.patch.semio` encodings come from `fixtures generate`, not from here.
 
-use crate::artifacts::gltf::schema::mutations::change_material_double_sided::diff::GltfChangeMaterialDoubleSidedDiff;
-use crate::artifacts::gltf::schema::mutations::change_material_double_sided::GltfChangeMaterialDoubleSidedPayload;
-use crate::artifacts::gltf::schema::mutations::change_material_double_sided::{diff, inverse, mutation};
-use crate::artifacts::gltf::GltfSnapshot;
+use crate::schema::mutations::change_material_double_sided::diff::GltfChangeMaterialDoubleSidedDiff;
+use crate::schema::mutations::change_material_double_sided::GltfChangeMaterialDoubleSidedPayload;
+use crate::schema::mutations::change_material_double_sided::{diff, inverse, mutation};
+use crate::GltfSnapshot;
 
 const CASE: &str = "change-material-double-sided/makes-the-default-material-double-sided";
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
@@ -40,7 +40,7 @@ async fn applies_to_committed_after() {
     mutation::apply(&mut snapshot, &payload()).expect("change-material-double-sided applies to its committed before-snapshot");
     assert_eq!(snapshot, expected_after(), "{CASE}: applied state differs from committed after-snapshot");
     assert!(snapshot.document.materials[0].double_sided, "{CASE}: the material must become double sided");
-    assert_eq!(snapshot.document.materials[0].alpha_mode, crate::artifacts::gltf::schema::snapshot::GltfAlphaMode::Opaque, "{CASE}: alphaMode belongs to a different leaf and must stay OPAQUE");
+    assert_eq!(snapshot.document.materials[0].alpha_mode, crate::schema::snapshot::GltfAlphaMode::Opaque, "{CASE}: alphaMode belongs to a different leaf and must stay OPAQUE");
 }
 
 /// ↩️ `reconstruct` witnesses the forward result and writes the prior `false` back.

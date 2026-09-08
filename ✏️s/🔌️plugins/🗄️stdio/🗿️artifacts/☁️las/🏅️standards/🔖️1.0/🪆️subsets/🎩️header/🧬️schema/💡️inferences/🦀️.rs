@@ -6,8 +6,8 @@
 //! `header` alone — LAS's own spec puts the authoritative bounding box and point count directly
 //! in the public header block, not derived from `points`).
 
-use crate::artifacts::las::LasSnapshot;
-use schema::ArtifactSchema;
+use crate::LasSnapshot;
+use framework_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 
 use super::bounds::{compute_las_bounds, LasBounds};
@@ -55,7 +55,7 @@ impl protocol::InferenceSpec<LasSnapshot> for LasInference {
 /// spec-mandated declared bounds/count fields, already O(1) with no per-entity decomposition (a
 /// merkle dep-chain over a flat header-field read costs more than the read it would cache) — the
 /// default `infer_cached` passthrough is exact.
-impl ArtifactInferrer for crate::artifacts::las::standards::v1_0::subsets::any::schema::LasBuilder {
+impl ArtifactInferrer for crate::standards::v1_0::subsets::any::schema::LasBuilder {
     type Snapshot = LasSnapshot;
     type Inference = LasInference;
 }
@@ -65,10 +65,10 @@ impl ArtifactInferrer for crate::artifacts::las::standards::v1_0::subsets::any::
 /// 💡️ Registers `s.stdio.las.inference`'s facet leaves into the OS-wide inference catalog —
 /// call once at plugin init, alongside `las_artifact_schema_descriptor`'s registration.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn las_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
-    schema::ArtifactInferenceDescriptor {
+pub fn las_artifact_inference_descriptor() -> framework_schema::ArtifactInferenceDescriptor {
+    framework_schema::ArtifactInferenceDescriptor {
         id: "s.stdio.las.inference",
-        inference: schema::FacetLeaves {
+        inference: framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),

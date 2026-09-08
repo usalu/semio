@@ -5,7 +5,7 @@
   "displayName": "Replace Quant Table",
   "emoji": "📊️",
   "aggregateVariant": "ReplaceQuantTable",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "replace-quant-table",
   "binaryTag": 3,
   "invertibility": "explicit-mutation",

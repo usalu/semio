@@ -5,7 +5,7 @@
   "displayName": "Remove Annual Schedule Holiday",
   "emoji": "🎊️",
   "aggregateVariant": "RemoveAnnualScheduleHoliday",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "remove-annual-schedule-holiday",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

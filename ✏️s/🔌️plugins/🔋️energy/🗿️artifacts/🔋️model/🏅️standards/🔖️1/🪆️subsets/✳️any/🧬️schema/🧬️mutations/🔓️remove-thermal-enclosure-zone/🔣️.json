@@ -5,7 +5,7 @@
   "displayName": "Remove Thermal Enclosure Zone",
   "emoji": "🔓️",
   "aggregateVariant": "RemoveThermalEnclosureZone",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "remove-thermal-enclosure-zone",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

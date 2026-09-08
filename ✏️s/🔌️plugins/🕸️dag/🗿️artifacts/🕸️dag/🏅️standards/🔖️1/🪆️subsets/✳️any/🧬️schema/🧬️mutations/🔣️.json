@@ -1,61 +1,65 @@
 {
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://semio.tech/schema/s/dag/dag/mutation.json",
   "title": "DagMutation",
   "oneOf": [
-    { "$ref": "#/$defs/CreateNode" },
-    { "$ref": "#/$defs/DeleteNode" },
-    { "$ref": "#/$defs/RenameNode" },
-    { "$ref": "#/$defs/ChangeNodeName" },
-    { "$ref": "#/$defs/MoveNode" },
-    { "$ref": "#/$defs/ResizeNode" },
-    { "$ref": "#/$defs/ChangeNodeIcon" },
-    { "$ref": "#/$defs/ChangeNodeAbbreviation" },
-    { "$ref": "#/$defs/ChangeNodeOperatorKind" },
-    { "$ref": "#/$defs/ReplaceNodeKind" },
-    { "$ref": "#/$defs/ReplaceNodeProperties" },
-    { "$ref": "#/$defs/ReorderNodes" },
-    { "$ref": "#/$defs/ConnectNodes" },
-    { "$ref": "#/$defs/DisconnectNodes" }
+    {
+      "$ref": "./🔡change-node-abbreviation/🧬️schema/🔣️.json"
+    },
+    {
+      "$ref": "./🖼️change-node-icon/🧬️schema/🔣️.json"
+    },
+    {
+      "$ref": "./🔤change-node-name/🧬️schema/🔣️.json"
+    },
+    {
+      "$ref": "./🧮change-node-operator-kind/🧬️schema/🔣️.json"
+    },
+    {
+      "$ref": "./🤝️connect-nodes/🧬️schema/🔣️.json"
+    },
+    {
+      "$ref": "./🌱create-node/🧬️schema/🔣️.json"
+    },
+    {
+      "$ref": "./🗑️delete-node/🧬️schema/🔣️.json"
+    },
+    {
+      "$ref": "./✂️disconnect-nodes/🧬️schema/🔣️.json"
+    },
+    {
+      "$ref": "./↔️move-node/🧬️schema/🔣️.json"
+    },
+    {
+      "$ref": "./🏷️rename-node/🧬️schema/🔣️.json"
+    },
+    {
+      "$ref": "./🔀reorder-nodes/🧬️schema/🔣️.json"
+    },
+    {
+      "$ref": "./🔁replace-node-kind/🧬️schema/🔣️.json"
+    },
+    {
+      "$ref": "./🗃️replace-node-properties/🧬️schema/🔣️.json"
+    },
+    {
+      "$ref": "./📐resize-node/🧬️schema/🔣️.json"
+    }
   ],
-  "$defs": {
-    "DagNodeSpec": {
-      "title": "DagNodeSpec",
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["id", "name", "abbreviation", "icon", "x", "y", "width", "height", "kindJson", "propertiesJson"],
-      "properties": {
-        "id": { "type": "string" },
-        "name": { "type": "string" },
-        "abbreviation": { "type": "string" },
-        "icon": { "type": "string" },
-        "x": { "type": "number" },
-        "y": { "type": "number" },
-        "width": { "type": "number" },
-        "height": { "type": "number" },
-        "operatorKind": { "type": "string" },
-        "kindJson": { "type": "string", "description": "Opaque serde_json-encoded DagNodeKind." },
-        "propertiesJson": { "type": "string", "description": "Opaque serde_json-encoded PropertyBag." }
-      }
-    },
-    "CreateNode": { "title": "CreateNode", "type": "object", "additionalProperties": false, "required": ["mutation", "node"], "properties": { "mutation": { "const": "create-node" }, "node": { "$ref": "#/$defs/DagNodeSpec" } } },
-    "DeleteNode": { "title": "DeleteNode", "type": "object", "additionalProperties": false, "required": ["mutation", "id"], "properties": { "mutation": { "const": "delete-node" }, "id": { "type": "string" } } },
-    "RenameNode": { "title": "RenameNode", "type": "object", "additionalProperties": false, "required": ["mutation", "id", "newId"], "properties": { "mutation": { "const": "rename-node" }, "id": { "type": "string" }, "newId": { "type": "string" } } },
-    "ChangeNodeName": { "title": "ChangeNodeName", "type": "object", "additionalProperties": false, "required": ["mutation", "id", "newName"], "properties": { "mutation": { "const": "change-node-name" }, "id": { "type": "string" }, "newName": { "type": "string" } } },
-    "MoveNode": { "title": "MoveNode", "type": "object", "additionalProperties": false, "required": ["mutation", "id", "x", "y"], "properties": { "mutation": { "const": "move-node" }, "id": { "type": "string" }, "x": { "type": "number" }, "y": { "type": "number" } } },
-    "ResizeNode": { "title": "ResizeNode", "type": "object", "additionalProperties": false, "required": ["mutation", "id", "width", "height"], "properties": { "mutation": { "const": "resize-node" }, "id": { "type": "string" }, "width": { "type": "number" }, "height": { "type": "number" } } },
-    "ChangeNodeIcon": { "title": "ChangeNodeIcon", "type": "object", "additionalProperties": false, "required": ["mutation", "id", "newIcon"], "properties": { "mutation": { "const": "change-node-icon" }, "id": { "type": "string" }, "newIcon": { "type": "string" } } },
-    "ChangeNodeAbbreviation": { "title": "ChangeNodeAbbreviation", "type": "object", "additionalProperties": false, "required": ["mutation", "id", "newAbbreviation"], "properties": { "mutation": { "const": "change-node-abbreviation" }, "id": { "type": "string" }, "newAbbreviation": { "type": "string" } } },
-    "ChangeNodeOperatorKind": { "title": "ChangeNodeOperatorKind", "type": "object", "additionalProperties": false, "required": ["mutation", "id"], "properties": { "mutation": { "const": "change-node-operator-kind" }, "id": { "type": "string" }, "newOperatorKind": { "type": "string" } } },
-    "ReplaceNodeKind": { "title": "ReplaceNodeKind", "type": "object", "additionalProperties": false, "required": ["mutation", "id", "newKindJson"], "properties": { "mutation": { "const": "replace-node-kind" }, "id": { "type": "string" }, "newKindJson": { "type": "string" } } },
-    "ReplaceNodeProperties": { "title": "ReplaceNodeProperties", "type": "object", "additionalProperties": false, "required": ["mutation", "id", "newPropertiesJson"], "properties": { "mutation": { "const": "replace-node-properties" }, "id": { "type": "string" }, "newPropertiesJson": { "type": "string" } } },
-    "ReorderNodes": { "title": "ReorderNodes", "type": "object", "additionalProperties": false, "required": ["mutation", "order"], "properties": { "mutation": { "const": "reorder-nodes" }, "order": { "type": "array", "items": { "type": "string" } } } },
-    "ConnectNodes": {
-      "title": "ConnectNodes",
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["mutation", "id", "source", "target", "routeStyle", "propertiesJson"],
-      "properties": { "mutation": { "const": "connect-nodes" }, "id": { "type": "string" }, "source": { "type": "string" }, "target": { "type": "string" }, "routeStyle": { "enum": ["bezier", "sharpSz"] }, "propertiesJson": { "type": "string" } }
-    },
-    "DisconnectNodes": { "title": "DisconnectNodes", "type": "object", "additionalProperties": false, "required": ["mutation", "id"], "properties": { "mutation": { "const": "disconnect-nodes" }, "id": { "type": "string" } } }
-  }
+  "x-semio-mutationKinds": [
+    "change-node-abbreviation",
+    "change-node-icon",
+    "change-node-name",
+    "change-node-operator-kind",
+    "connect-nodes",
+    "create-node",
+    "delete-node",
+    "disconnect-nodes",
+    "move-node",
+    "rename-node",
+    "reorder-nodes",
+    "replace-node-kind",
+    "replace-node-properties",
+    "resize-node"
+  ]
 }

@@ -12,8 +12,8 @@
 //!   (`key: "comment"`); every other `other_segments` entry (unrecognized APPn, etc.) has no
 //!   textual home on `SemioImageMetadataEntry` and is dropped.
 
-use crate::artifacts::jpg::{schema::snapshot::JpgSegment, JpgSnapshot};
-use crate::artifacts::semio::standards::v1::subsets::image::schema::snapshot::{SemioColorspace, SemioImageFrame, SemioImageMetadataEntry, SemioImageSnapshot, STDIO_SEMIOIMAGE_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_jpg::{schema::snapshot::JpgSegment, JpgSnapshot};
+use crate::standards::v1::subsets::image::schema::snapshot::{SemioColorspace, SemioImageFrame, SemioImageMetadataEntry, SemioImageSnapshot, STDIO_SEMIOIMAGE_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId};
 
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.jpg", standard: StandardId("jfif-1.01"), subset: SubsetId::ANY };

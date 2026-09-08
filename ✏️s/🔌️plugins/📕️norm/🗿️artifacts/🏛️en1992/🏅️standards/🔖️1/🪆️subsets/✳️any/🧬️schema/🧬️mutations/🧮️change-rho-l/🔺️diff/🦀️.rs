@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeRhoL, base: &En1992Snapshot) -> protocol::MutationOu
     if base.rho_l == payload.new_rho_l {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "Rho l already has this value.");
     }
-    protocol::MutationOutcome::new(En1992Diff { rho_l: Some(payload.new_rho_l.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1992Diff { rho_l: Some(payload.new_rho_l), ..Default::default() })
 }
 //#endregion 🔖️Diff

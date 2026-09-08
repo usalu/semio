@@ -1,0 +1,514 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/mp4/isobmff/any/mutation/insert-track.json",
+  "title": "InsertTrack",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "index",
+    "track"
+  ],
+  "properties": {
+    "index": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "track": {
+      "$ref": "#/$defs/Mp4Track"
+    },
+    "mutation": {
+      "const": "insertTrack",
+      "description": "Aggregate discriminator spliced in by Mp4Mutation; absent when the payload stands alone."
+    }
+  },
+  "$defs": {
+    "Mp4Track": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "trackId",
+        "timescale",
+        "codec",
+        "width",
+        "height",
+        "metadata"
+      ],
+      "properties": {
+        "trackId": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "timescale": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "codec": {
+          "$ref": "#/$defs/Mp4Codec"
+        },
+        "width": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "height": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "metadata": {
+          "$ref": "#/$defs/Mp4TrackMetadata"
+        },
+        "chunkSampleCounts": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4294967295
+          }
+        },
+        "samples": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Mp4Sample"
+          }
+        }
+      }
+    },
+    "Mp4Codec": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "nalLengthSize"
+      ],
+      "properties": {
+        "sps": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 255
+            }
+          }
+        },
+        "pps": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 255
+            }
+          }
+        },
+        "nalLengthSize": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "extension": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Mp4AvcExtension"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "Mp4AvcExtension": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "chromaFormat",
+        "bitDepthLumaMinus8",
+        "bitDepthChromaMinus8"
+      ],
+      "properties": {
+        "chromaFormat": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "bitDepthLumaMinus8": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "bitDepthChromaMinus8": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "spsExt": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 255
+            }
+          }
+        }
+      }
+    },
+    "Mp4TrackMetadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "creationTime",
+        "modificationTime",
+        "flags",
+        "duration",
+        "layer",
+        "alternateGroup",
+        "volume",
+        "matrix",
+        "mediaDuration",
+        "mediaCreationTime",
+        "mediaModificationTime",
+        "language",
+        "quality",
+        "handlerName",
+        "visual"
+      ],
+      "properties": {
+        "creationTime": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "modificationTime": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "flags": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "duration": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "layer": {
+          "type": "integer",
+          "minimum": -32768,
+          "maximum": 32767
+        },
+        "alternateGroup": {
+          "type": "integer",
+          "minimum": -32768,
+          "maximum": 32767
+        },
+        "volume": {
+          "type": "integer",
+          "minimum": -32768,
+          "maximum": 32767
+        },
+        "matrix": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": -2147483648,
+            "maximum": 2147483647
+          },
+          "minItems": 9,
+          "maxItems": 9
+        },
+        "mediaDuration": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "mediaCreationTime": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "mediaModificationTime": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "language": {
+          "type": "string"
+        },
+        "quality": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "handlerName": {
+          "type": "string"
+        },
+        "edits": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Mp4Edit"
+          }
+        },
+        "visual": {
+          "$ref": "#/$defs/Mp4VisualSampleEntry"
+        },
+        "color": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Mp4Color"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "pixelAspectRatio": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Mp4PixelAspectRatio"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "bitrate": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Mp4Bitrate"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "Mp4Edit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "segmentDuration",
+        "mediaTime",
+        "mediaRateInteger",
+        "mediaRateFraction"
+      ],
+      "properties": {
+        "segmentDuration": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "mediaTime": {
+          "type": "integer"
+        },
+        "mediaRateInteger": {
+          "type": "integer",
+          "minimum": -32768,
+          "maximum": 32767
+        },
+        "mediaRateFraction": {
+          "type": "integer",
+          "minimum": -32768,
+          "maximum": 32767
+        }
+      }
+    },
+    "Mp4VisualSampleEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "dataReferenceIndex",
+        "version",
+        "revisionLevel",
+        "vendor",
+        "temporalQuality",
+        "spatialQuality",
+        "horizontalResolution",
+        "verticalResolution",
+        "frameCount",
+        "compressorName",
+        "depth",
+        "colorTableId"
+      ],
+      "properties": {
+        "dataReferenceIndex": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "version": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "revisionLevel": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "vendor": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "temporalQuality": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "spatialQuality": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "horizontalResolution": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "verticalResolution": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "frameCount": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "compressorName": {
+          "type": "string"
+        },
+        "depth": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "colorTableId": {
+          "type": "integer",
+          "minimum": -32768,
+          "maximum": 32767
+        }
+      }
+    },
+    "Mp4Color": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "colorType",
+        "primaries",
+        "transfer",
+        "matrix"
+      ],
+      "properties": {
+        "colorType": {
+          "type": "string"
+        },
+        "primaries": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "transfer": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "matrix": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "fullRange": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "Mp4PixelAspectRatio": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "horizontalSpacing",
+        "verticalSpacing"
+      ],
+      "properties": {
+        "horizontalSpacing": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "verticalSpacing": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        }
+      }
+    },
+    "Mp4Bitrate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "bufferSize",
+        "maximum",
+        "average"
+      ],
+      "properties": {
+        "bufferSize": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "maximum": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "average": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        }
+      }
+    },
+    "Mp4Sample": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "duration",
+        "sync"
+      ],
+      "properties": {
+        "data": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          }
+        },
+        "duration": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "ctsOffset": {
+          "type": "integer",
+          "minimum": -2147483648,
+          "maximum": 2147483647
+        },
+        "sync": {
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}

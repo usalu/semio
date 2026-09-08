@@ -1,0 +1,92 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/zip/2.0/iso21320/mutations.json",
+  "title": "ZipIso21320Method",
+  "description": "Discriminated union over this module's mutation leaves (externally tagged); every payload is the leaf's own schema, referenced, never restated.",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "addDeflatedEntry"
+      ],
+      "properties": {
+        "addDeflatedEntry": {
+          "$ref": "./🗜️add-deflated-entry/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "addStoredEntry"
+      ],
+      "properties": {
+        "addStoredEntry": {
+          "$ref": "./📦add-stored-entry/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "removeEntry"
+      ],
+      "properties": {
+        "removeEntry": {
+          "$ref": "./➖remove-entry/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "renameEntry"
+      ],
+      "properties": {
+        "renameEntry": {
+          "$ref": "./🏷️rename-entry/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "setArchiveComment"
+      ],
+      "properties": {
+        "setArchiveComment": {
+          "$ref": "./💬set-archive-comment/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "setEntryData"
+      ],
+      "properties": {
+        "setEntryData": {
+          "$ref": "./✍️set-entry-data/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "setSnapshot"
+      ],
+      "properties": {
+        "setSnapshot": {
+          "$ref": "./📸️set-snapshot/🧬️schema/🔣️.json"
+        }
+      }
+    }
+  ]
+}

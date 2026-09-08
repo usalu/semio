@@ -5,7 +5,7 @@
   "displayName": "Replace Page Text",
   "emoji": "📝️",
   "aggregateVariant": "ReplacePageText",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "replace-page-text",
   "binaryTag": 4,
   "invertibility": "explicit-mutation",

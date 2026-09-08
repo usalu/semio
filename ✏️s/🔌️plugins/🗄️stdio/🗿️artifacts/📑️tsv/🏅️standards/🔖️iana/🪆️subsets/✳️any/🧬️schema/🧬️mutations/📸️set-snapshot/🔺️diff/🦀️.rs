@@ -1,5 +1,5 @@
-use crate::artifacts::tsv::standards::iana::subsets::any::schema::diff::{diff_set_snapshot, TsvDiff};
-use crate::artifacts::tsv::standards::iana::subsets::any::schema::snapshot::TsvSnapshot;
+use crate::standards::iana::subsets::any::schema::diff::{diff_set_snapshot, TsvDiff};
+use crate::standards::iana::subsets::any::schema::snapshot::TsvSnapshot;
 
 /// 🔺️ Diff helper for set-snapshot.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

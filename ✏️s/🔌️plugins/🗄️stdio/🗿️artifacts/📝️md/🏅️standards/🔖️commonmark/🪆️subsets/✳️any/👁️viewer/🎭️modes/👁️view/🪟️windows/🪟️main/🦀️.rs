@@ -1,7 +1,7 @@
 //! 👁️ `md` view (any) — Main window: real `TextWindowKit`
 //! render of the current document (read-only).
 
-use crate::artifacts::md::standards::v_commonmark::subsets::any::schema::snapshot::MdSnapshot;
+use crate::standards::v_commonmark::subsets::any::schema::snapshot::MdSnapshot;
 use semio_framework_plugin::app::{TextView, TextWindowKit};
 use semio_framework_plugin::{BuiltNode, WindowKindDefinition, WindowKit};
 use store::ArtifactDsl;

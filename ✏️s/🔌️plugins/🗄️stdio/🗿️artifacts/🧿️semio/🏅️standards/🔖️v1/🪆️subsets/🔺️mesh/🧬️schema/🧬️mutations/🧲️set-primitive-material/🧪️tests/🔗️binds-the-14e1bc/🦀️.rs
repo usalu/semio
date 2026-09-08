@@ -7,9 +7,9 @@
 //! case takes the SET arm (`Some(Some(id))`), whose inner value is a real string, so the committed
 //! diff survives a JSON round trip (the `null`/unbind arm would not).
 
-use crate::artifacts::semio::standards::v1::subsets::mesh::schema::diff::SemioMeshDiff;
-use crate::artifacts::semio::standards::v1::subsets::mesh::schema::mutations::SemioMeshMutation;
-use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
+use crate::standards::v1::subsets::mesh::schema::diff::SemioMeshDiff;
+use crate::standards::v1::subsets::mesh::schema::mutations::SemioMeshMutation;
+use crate::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
 use protocol::{Mutation, MutationDiff};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");

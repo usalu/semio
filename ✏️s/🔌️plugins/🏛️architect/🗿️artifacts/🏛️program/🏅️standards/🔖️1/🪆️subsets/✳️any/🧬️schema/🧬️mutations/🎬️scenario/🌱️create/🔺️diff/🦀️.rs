@@ -10,7 +10,7 @@ use crate::artifacts::program::ProgramSnapshot;
 pub fn diff(payload: &CreateScenario, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
     let id = payload.scenario.header.id.clone();
     if base.scenarios.iter().any(|row| row.header.id == id) {
-        return protocol::MutationOutcome::fatal("mutation.duplicate-id", "A scenario already exists with this id.", [id.0.clone()]);
+        return protocol::MutationOutcome::fatal("mutation.duplicate-id", "A scenario already exists with this id.", [id.0]);
     }
     protocol::MutationOutcome::new(ProgramDiff { scenarios: Some(ProgramScenariosDelta { added: vec![payload.scenario.clone()], ..Default::default() }), ..Default::default() })
 }

@@ -1,7 +1,7 @@
 //! 🧬️ JpgArtifact schema — full artifact state.
 
-use crate::artifacts::jpg::JpgSnapshot;
-use schema::ArtifactSchema;
+use crate::JpgSnapshot;
+use framework_schema::ArtifactSchema;
 
 /// 🎪️ Reduced UI-editable view: identity + the raster the user is directly manipulating. Ticket
 /// 26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION killed the shared
@@ -52,31 +52,31 @@ impl JpgArtifact {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn jpg_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
-    schema::ArtifactSchemaDescriptor {
+pub fn jpg_artifact_schema_descriptor() -> framework_schema::ArtifactSchemaDescriptor {
+    framework_schema::ArtifactSchemaDescriptor {
         id: "s.stdio.jpg",
-        artifact: schema::FacetLeaves {
+        artifact: framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),
             json_schema: include_str!("🔣️.json"),
             proto: include_str!("🛰️.proto"),
         },
-        snapshot: schema::FacetLeaves {
+        snapshot: framework_schema::FacetLeaves {
             rust: include_str!("📸️snapshot/🦀️.rs"),
             typescript: include_str!("📸️snapshot/🟦️.ts"),
             graphql: include_str!("📸️snapshot/🔗️.graphql"),
             json_schema: include_str!("📸️snapshot/🔣️.json"),
             proto: include_str!("📸️snapshot/🛰️.proto"),
         },
-        diff: schema::FacetLeaves {
+        diff: framework_schema::FacetLeaves {
             rust: include_str!("🔺️diff/🦀️.rs"),
             typescript: include_str!("🔺️diff/🟦️.ts"),
             graphql: include_str!("🔺️diff/🔗️.graphql"),
             json_schema: include_str!("🔺️diff/🔣️.json"),
             proto: include_str!("🔺️diff/🛰️.proto"),
         },
-        mutations: schema::FacetLeaves {
+        mutations: framework_schema::FacetLeaves {
             rust: include_str!("🧬️mutations/🦀️.rs"),
             typescript: include_str!("🧬️mutations/🟦️.ts"),
             graphql: include_str!("🧬️mutations/🔗️.graphql"),
@@ -87,7 +87,7 @@ pub fn jpg_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
 }
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use crate::artifacts::jpg::{JpgDiff, JpgMutation, JpgSnapshot};
+    use crate::{JpgDiff, JpgMutation, JpgSnapshot};
     use semio_framework_plugin::ArtifactBuilder;
 
     //#region 🔖️Builder
@@ -115,7 +115,7 @@ pub mod derived_construction {
             Ok(Self::from_snapshot(<JpgSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
         fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
-            let diff = crate::artifacts::jpg::schema::mutations::apply_jpg_mutation(&mut self.snapshot, &mutation);
+            let diff = crate::schema::mutations::apply_jpg_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
         fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
@@ -137,7 +137,7 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use crate::artifacts::jpg::JpgSnapshot;
+    use crate::JpgSnapshot;
     use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     //#region 🔖️Parts
@@ -263,8 +263,8 @@ pub fn empty_jpg_snapshot() -> JpgSnapshot {
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_jpg_snapshot() -> JpgSnapshot {
-    use crate::artifacts::jpg::JpgSnapshot;
-    use crate::artifacts::jpg::STDIO_JPG_DOCUMENT_SCHEMA;
+    use crate::JpgSnapshot;
+    use crate::STDIO_JPG_DOCUMENT_SCHEMA;
     let (w, h) = (16u32, 16u32);
     let mut pixels = vec![0u8; (w * h * 4) as usize];
     for (i, px) in pixels.chunks_mut(4).enumerate() {
@@ -280,7 +280,7 @@ pub(crate) fn demo_jpg_snapshot() -> JpgSnapshot {
         pixels,
         re_encode_quality: Some(85),
         jfif_version: (1, 1),
-        jfif_density_units: crate::artifacts::jpg::standards::v_jfif_1_01::subsets::document::schema::snapshot::JfifDensityUnits::PixelsPerInch,
+        jfif_density_units: crate::standards::v_jfif_1_01::subsets::document::schema::snapshot::JfifDensityUnits::PixelsPerInch,
         jfif_x_density: 72,
         jfif_y_density: 72,
         jfif_thumbnail: None,

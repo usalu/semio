@@ -1,0 +1,139 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/dxf/r12/header/mutation/set-style.json",
+  "title": "SetStyle",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "name",
+    "style"
+  ],
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "style": {
+      "$ref": "#/$defs/DxfStyle"
+    },
+    "mutation": {
+      "const": "setStyle",
+      "description": "Aggregate discriminator spliced in by DxfMutation; absent when the payload stands alone."
+    }
+  },
+  "$defs": {
+    "DxfStyle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "flags",
+        "fontName"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "flags": {
+          "type": "integer",
+          "minimum": -2147483648,
+          "maximum": 2147483647
+        },
+        "fontName": {
+          "type": "string"
+        },
+        "unknownGroupCodes": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": [
+              {
+                "type": "integer",
+                "minimum": -2147483648,
+                "maximum": 2147483647
+              },
+              {
+                "$ref": "#/$defs/DxfValue"
+              }
+            ],
+            "additionalItems": false,
+            "minItems": 2,
+            "maxItems": 2
+          }
+        }
+      }
+    },
+    "DxfValue": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ],
+          "properties": {
+            "kind": {
+              "const": "str"
+            },
+            "value": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ],
+          "properties": {
+            "kind": {
+              "const": "int"
+            },
+            "value": {
+              "type": "integer"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ],
+          "properties": {
+            "kind": {
+              "const": "double"
+            },
+            "value": {
+              "type": "number"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ],
+          "properties": {
+            "kind": {
+              "const": "point"
+            },
+            "value": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 3,
+              "maxItems": 3
+            }
+          }
+        }
+      ]
+    }
+  }
+}

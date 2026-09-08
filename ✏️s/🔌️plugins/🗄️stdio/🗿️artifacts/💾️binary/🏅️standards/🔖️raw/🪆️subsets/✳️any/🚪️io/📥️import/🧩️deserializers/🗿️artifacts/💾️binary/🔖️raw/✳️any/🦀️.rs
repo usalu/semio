@@ -1,7 +1,7 @@
 //! 🧩️ Deserialize stdio.binary (raw/✳️any) from stdio.binary (raw/✳️any) — identity, the terminal
 //! self-referential base case every other stdio artifact's DAG chain resolves through.
 
-use crate::artifacts::binary::BinarySnapshot;
+use crate::BinarySnapshot;
 use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId};
 
 const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.binary", standard: StandardId("raw"), subset: SubsetId("*") };

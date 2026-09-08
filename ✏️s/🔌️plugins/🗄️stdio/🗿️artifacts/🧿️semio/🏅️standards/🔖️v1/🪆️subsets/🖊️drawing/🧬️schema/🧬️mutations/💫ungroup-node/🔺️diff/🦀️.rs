@@ -1,9 +1,9 @@
 //! 🔺️ Diff for `UngroupNode`.
 
-use crate::artifacts::semio::standards::v1::subsets::base::schema::triples::{IndexAdded, IndexedTripleDiff};
-use crate::artifacts::semio::standards::v1::subsets::drawing::schema::diff::{DrawGroupDiff, DrawNodeDiff, SemioDrawingDiff, diff_at_path, node_at};
-use crate::artifacts::semio::standards::v1::subsets::drawing::schema::mutations::delete_node::parent_and_index;
-use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{DrawNode, SemioDrawingSnapshot};
+use crate::standards::v1::subsets::base::schema::triples::{IndexAdded, IndexedTripleDiff};
+use crate::standards::v1::subsets::drawing::schema::diff::{DrawGroupDiff, DrawNodeDiff, SemioDrawingDiff, diff_at_path, node_at};
+use crate::standards::v1::subsets::drawing::schema::mutations::delete_node::parent_and_index;
+use crate::standards::v1::subsets::drawing::schema::snapshot::{DrawNode, SemioDrawingSnapshot};
 
 //#region 🔖️Diff
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

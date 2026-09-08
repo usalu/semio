@@ -5,9 +5,9 @@
 //! established by `🗄️a/🚪️io` and `🧱️base/🚪️io` for this artifact. ISO 14289-1:2014 (PDF/UA-1).
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use crate::artifacts::pdf::standards::v1_7::subsets::base::schema::snapshot::PdfSnapshot;
-    use crate::artifacts::pdf::standards::v1_7::subsets::base::schema::PdfComposer as PdfAnyComposer;
-    use crate::artifacts::pdf::standards::v1_7::subsets::ua::schema::check_ua_conformance;
+    use crate::standards::v1_7::subsets::base::schema::snapshot::PdfSnapshot;
+    use crate::standards::v1_7::subsets::base::schema::PdfComposer as PdfAnyComposer;
+    use crate::standards::v1_7::subsets::ua::schema::check_ua_conformance;
     use dsl::{Diagnostic, FaultCode, Severity, TextSpan};
     use semio_framework_plugin::{register_subset_validator, subset_validator_entry_of, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, IoPayload, StandardId, SubsetId, SubsetValidator, SubsetValidatorEntry};
     use std::sync::OnceLock;
@@ -137,7 +137,7 @@ pub mod derived_composition {
             let bytes = <PdfSnapshot as store::ArtifactPack>::encode_pack(&snapshot);
             let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Binary(&bytes) }];
             let err = PdfUaComposerComposition::compose(&sources).expect_err("an untagged document must not stamp ua");
-            assert!(err.diagnostics.iter().any(|d| d.code.0 == crate::artifacts::pdf::standards::v1_7::subsets::ua::schema::CODE_MARKINFO), "got {:?}", err.diagnostics);
+            assert!(err.diagnostics.iter().any(|d| d.code.0 == crate::standards::v1_7::subsets::ua::schema::CODE_MARKINFO), "got {:?}", err.diagnostics);
         }
     }
 }

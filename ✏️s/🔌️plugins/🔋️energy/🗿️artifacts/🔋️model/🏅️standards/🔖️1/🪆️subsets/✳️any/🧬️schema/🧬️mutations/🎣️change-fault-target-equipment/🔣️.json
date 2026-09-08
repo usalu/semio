@@ -5,7 +5,7 @@
   "displayName": "Change Fault Target Equipment",
   "emoji": "🎣️",
   "aggregateVariant": "ChangeFaultTargetEquipment",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-fault-target-equipment",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

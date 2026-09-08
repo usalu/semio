@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/tsv/iana/any/mutation/set-trailing-newline.json",
+  "title": "SetTrailingNewlineMutation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "trailingNewline"
+  ],
+  "properties": {
+    "trailingNewline": {
+      "type": "boolean"
+    },
+    "mutation": {
+      "const": "setTrailingNewline",
+      "description": "Aggregate discriminator spliced in by TsvMutation; absent when the payload stands alone."
+    }
+  }
+}

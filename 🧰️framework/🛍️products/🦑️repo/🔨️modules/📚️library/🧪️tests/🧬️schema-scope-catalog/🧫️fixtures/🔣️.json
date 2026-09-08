@@ -1,0 +1,215 @@
+{
+  "contract": "schema-scope-catalog-cases-v1",
+  "cases": [
+    {
+      "id": "valid-module",
+      "reason": "A subset module with a draft-07 $id, a root object export and one $defs export is catalogued without findings.",
+      "files": {
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://semio.tech/schema/s/probe/thing/artifact.json",
+          "title": "ThingArtifact",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": { "corner": { "$ref": "#/$defs/Corner" } },
+          "$defs": {
+            "Corner": { "type": "object", "additionalProperties": false, "properties": { "x": { "type": "number" } } }
+          }
+        },
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs": "pub struct ThingArtifact;\n"
+      },
+      "expected": {
+        "scopes": {
+          "s.probe.thing": {
+            "path": "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema",
+            "level": "artifact-standard-subset",
+            "exports": ["Corner", "ThingArtifact"],
+            "dependsOn": []
+          }
+        },
+        "diagnosticCodes": [],
+        "placementPaths": []
+      }
+    },
+    {
+      "id": "cross-scope-reference",
+      "reason": "A cross-scope $ref names the target $id and becomes a dependsOn edge, never a nearest-parent guess.",
+      "files": {
+        "🌎️hub/💡️inference/🧬️schema/🔣️.json": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://semio.tech/schema/hub/inference/contract.json",
+          "title": "InferenceApproval",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": { "id": { "type": "string" } },
+          "$defs": {
+            "Receipt": { "type": "object", "additionalProperties": false, "properties": { "at": { "type": "string" } } }
+          }
+        },
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://semio.tech/schema/s/probe/thing/artifact.json",
+          "title": "ThingArtifact",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": { "receipt": { "$ref": "https://semio.tech/schema/hub/inference/contract.json#/$defs/Receipt" } }
+        }
+      },
+      "expected": {
+        "scopes": {
+          "hub.inference": {
+            "path": "🌎️hub/💡️inference/🧬️schema",
+            "level": "hub-area-module",
+            "exports": ["InferenceApproval", "Receipt"],
+            "dependsOn": []
+          },
+          "s.probe.thing": {
+            "path": "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema",
+            "level": "artifact-standard-subset",
+            "exports": ["ThingArtifact"],
+            "dependsOn": ["hub.inference"]
+          }
+        },
+        "diagnosticCodes": [],
+        "placementPaths": []
+      }
+    },
+    {
+      "id": "duplicate-scope-id",
+      "reason": "Two eligible modules that resolve to the same dotted scope id are a duplicate finding, not a silent merge.",
+      "files": {
+        "🌎️hub/💡️inference/🧬️schema/🔣️.json": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://semio.tech/schema/hub/inference/contract.json",
+          "title": "InferenceApproval",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": { "id": { "type": "string" } }
+        },
+        "🌎️hub/🔐️auth/🧬️schema/🔣️.json": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://semio.tech/schema/hub/inference/mirror.json",
+          "title": "InferenceApprovalMirror",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": { "id": { "type": "string" } }
+        }
+      },
+      "expected": {
+        "scopes": {
+          "hub.inference": {
+            "path": "🌎️hub/💡️inference/🧬️schema",
+            "level": "hub-area-module",
+            "exports": ["InferenceApproval"],
+            "dependsOn": []
+          }
+        },
+        "diagnosticCodes": ["scope-id-duplicate", "scope-id-duplicate"],
+        "placementPaths": []
+      }
+    },
+    {
+      "id": "unresolved-reference",
+      "reason": "A $ref whose target $id no catalogued document declares fails instead of resolving by proximity.",
+      "files": {
+        "🌎️hub/💡️inference/🧬️schema/🔣️.json": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://semio.tech/schema/hub/inference/contract.json",
+          "title": "InferenceApproval",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": { "missing": { "$ref": "https://semio.tech/schema/hub/absent/contract.json#/$defs/Nope" } }
+        }
+      },
+      "expected": {
+        "scopes": {
+          "hub.inference": {
+            "path": "🌎️hub/💡️inference/🧬️schema",
+            "level": "hub-area-module",
+            "exports": ["InferenceApproval"],
+            "dependsOn": []
+          }
+        },
+        "diagnosticCodes": ["ref-unresolved"],
+        "placementPaths": []
+      }
+    },
+    {
+      "id": "wrong-dialect",
+      "reason": "Only the single declared draft-07 dialect is admitted; a 2020-12 document is reported.",
+      "files": {
+        "🌎️hub/💡️inference/🧬️schema/🔣️.json": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "$id": "https://semio.tech/schema/hub/inference/contract.json",
+          "title": "InferenceApproval",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": { "id": { "type": "string" } }
+        }
+      },
+      "expected": {
+        "scopes": {
+          "hub.inference": {
+            "path": "🌎️hub/💡️inference/🧬️schema",
+            "level": "hub-area-module",
+            "exports": ["InferenceApproval"],
+            "dependsOn": []
+          }
+        },
+        "diagnosticCodes": ["document-dialect-unexpected"],
+        "placementPaths": []
+      }
+    },
+    {
+      "id": "fixture-owned-schema",
+      "reason": "A schema authored beside fixture data is a retired placement: fixtures carry data, owners carry contracts.",
+      "files": {
+        "🌎️hub/💡️inference/🧪️fixtures/🧫️approval/🧬️.schema.json": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "title": "ApprovalFixture",
+          "type": "object"
+        },
+        "🌎️hub/💡️inference/🧪️fixtures/🧫️approval/🔣️.json": { "id": "a" }
+      },
+      "expected": {
+        "scopes": {},
+        "diagnosticCodes": [],
+        "placementPaths": ["🌎️hub/💡️inference/🧪️fixtures/🧫️approval/🧬️.schema.json"]
+      }
+    },
+    {
+      "id": "per-contract-directory",
+      "reason": "A single-contract 🧬️contracts directory is a retired placement and never an eligible scope owner.",
+      "files": {
+        "🌎️hub/💡️inference/🧬️contracts/📝️approval/🔣️.json": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://semio.tech/schema/hub/inference/approval.json",
+          "title": "Approval",
+          "type": "object"
+        }
+      },
+      "expected": {
+        "scopes": {},
+        "diagnosticCodes": [],
+        "placementPaths": ["🌎️hub/💡️inference/🧬️contracts"]
+      }
+    },
+    {
+      "id": "ineligible-level",
+      "reason": "A package boundary is never a scope owner, so a schema module inside one is reported rather than catalogued.",
+      "files": {
+        "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🧬️schema/🔣️.json": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://semio.tech/schema/framework/ui/contract.json",
+          "title": "UiContract",
+          "type": "object"
+        }
+      },
+      "expected": {
+        "scopes": {},
+        "diagnosticCodes": ["module-level-ineligible"],
+        "placementPaths": []
+      }
+    }
+  ]
+}

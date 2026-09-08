@@ -5,7 +5,7 @@
   "displayName": "Insert JavaScript Action",
   "emoji": "📜️",
   "aggregateVariant": "InsertJavascriptAction",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "insert-javascript-action",
   "binaryTag": 2,
   "invertibility": "explicit-mutation",

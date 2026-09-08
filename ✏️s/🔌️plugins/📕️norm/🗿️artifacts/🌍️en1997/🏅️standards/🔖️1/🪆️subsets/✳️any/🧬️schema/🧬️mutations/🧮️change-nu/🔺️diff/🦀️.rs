@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeNu, base: &En1997Snapshot) -> protocol::MutationOutc
     if base.nu == payload.new_nu {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Poisson's ratio nu is already {}.", payload.new_nu));
     }
-    protocol::MutationOutcome::new(En1997Diff { nu: Some(payload.new_nu.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1997Diff { nu: Some(payload.new_nu), ..Default::default() })
 }
 //#endregion 🔖️Diff

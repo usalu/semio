@@ -8,6 +8,6 @@ pub fn diff(payload: &ChangeClimate, base: &Din4108Snapshot) -> protocol::Mutati
     if base.climate == payload.new_climate {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "Climate already has this value.");
     }
-    protocol::MutationOutcome::new(Din4108Diff { climate: Some(payload.new_climate.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(Din4108Diff { climate: Some(payload.new_climate), ..Default::default() })
 }
 //#endregion 🔖️Diff

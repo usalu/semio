@@ -90,7 +90,7 @@
         {
           "id": "remove-conformance-attribute",
           "capability": "docx-ecma-376-transitional-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -110,7 +110,7 @@
         {
           "id": "set-conformance-attribute",
           "capability": "docx-ecma-376-transitional-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -130,7 +130,7 @@
         {
           "id": "set-main-namespace",
           "capability": "docx-ecma-376-transitional-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -150,7 +150,7 @@
         {
           "id": "set-relationship-base",
           "capability": "docx-ecma-376-transitional-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -170,7 +170,7 @@
         {
           "id": "set-snapshot",
           "capability": "docx-ecma-376-transitional-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],

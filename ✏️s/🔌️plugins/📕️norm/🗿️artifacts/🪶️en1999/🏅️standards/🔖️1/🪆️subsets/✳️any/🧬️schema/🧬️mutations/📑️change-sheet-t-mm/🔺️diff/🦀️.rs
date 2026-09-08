@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeSheetTMm, base: &En1999Snapshot) -> protocol::Mutati
     if base.sheet_t_mm == payload.new_sheet_t_mm {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Sheet thickness t [mm] is already {}.", payload.new_sheet_t_mm));
     }
-    protocol::MutationOutcome::new(En1999Diff { sheet_t_mm: Some(payload.new_sheet_t_mm.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1999Diff { sheet_t_mm: Some(payload.new_sheet_t_mm), ..Default::default() })
 }
 //#endregion 🔖️Diff

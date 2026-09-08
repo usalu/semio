@@ -1,0 +1,159 @@
+{
+  "schema": "https://semio.tech/schema/repo/server/coordinator/schema.json",
+  "accepted": [
+    {
+      "export": "TicketOpenRequest",
+      "value": { "action": "open", "ticket_id": "2026/09/08/scope-owned-schema-contracts", "title": "Scope Owned Schema Contracts" },
+      "parsed": { "action": "open", "ticket_id": "2026/09/08/scope-owned-schema-contracts", "title": "Scope Owned Schema Contracts", "prompt": "", "llm": "", "client": "", "author": "", "github_issue": "", "goal": "", "parent": null }
+    },
+    {
+      "export": "TicketOpenRequest",
+      "value": { "action": "open", "ticket_id": "2026/09/08/child", "title": "Child", "prompt": "do the thing", "llm": "opus", "client": "claude-code", "author": "ueli", "github_issue": "42", "goal": "schema/contracts", "parent": "2026/09/08/parent" },
+      "parsed": { "action": "open", "ticket_id": "2026/09/08/child", "title": "Child", "prompt": "do the thing", "llm": "opus", "client": "claude-code", "author": "ueli", "github_issue": "42", "goal": "schema/contracts", "parent": "2026/09/08/parent" }
+    },
+    {
+      "export": "TicketCloseRequest",
+      "value": { "action": "close", "ticket_id": "2026/09/08/scope-owned-schema-contracts", "summary": "done" },
+      "parsed": { "action": "close", "ticket_id": "2026/09/08/scope-owned-schema-contracts", "summary": "done", "files": [] }
+    },
+    {
+      "export": "TicketCloseRequest",
+      "value": { "action": "close", "ticket_id": "2026/09/08/t", "summary": "done", "files": ["a.ts", "b.go"] },
+      "parsed": { "action": "close", "ticket_id": "2026/09/08/t", "summary": "done", "files": ["a.ts", "b.go"] }
+    },
+    {
+      "export": "TicketReopenRequest",
+      "value": { "action": "reopen", "ticket_id": "2026/09/08/t", "prompt": "more work" },
+      "parsed": { "action": "reopen", "ticket_id": "2026/09/08/t", "prompt": "more work", "llm": "", "title": "", "client": "" }
+    },
+    {
+      "export": "Ticket",
+      "value": { "id": "2026/09/08/t", "status": "open", "title": "T", "prompt": "", "summary": "", "llm": "", "client": "", "author": "", "github_issue": "", "goal": "", "parent": null, "created_at": "2026-09-08T10:00:00.000Z", "closed_at": null },
+      "parsed": { "id": "2026/09/08/t", "status": "open", "title": "T", "prompt": "", "summary": "", "llm": "", "client": "", "author": "", "github_issue": "", "goal": "", "parent": null, "created_at": "2026-09-08T10:00:00.000Z", "closed_at": null }
+    },
+    {
+      "export": "CreateDeveloperRequest",
+      "value": { "action": "create-developer", "email": "ueli.saluz@posteo.de", "display_name": "Ueli" },
+      "parsed": { "action": "create-developer", "email": "ueli.saluz@posteo.de", "display_name": "Ueli", "github_login": "", "trusted": false, "role": "developer" }
+    },
+    {
+      "export": "CreateKeyRequest",
+      "value": { "action": "create-key", "developer_email": "ueli.saluz@posteo.de" },
+      "parsed": { "action": "create-key", "developer_email": "ueli.saluz@posteo.de", "label": "cli" }
+    },
+    {
+      "export": "CreateKeyResponse",
+      "value": { "key": "0f1e2d", "id": "key-1", "label": "cli" },
+      "parsed": { "key": "0f1e2d", "id": "key-1", "label": "cli" }
+    },
+    {
+      "export": "RevokeKeyRequest",
+      "value": { "action": "revoke-key", "key_id": "key-1" },
+      "parsed": { "action": "revoke-key", "key_id": "key-1" }
+    },
+    {
+      "export": "AuthWhoAmIResponse",
+      "value": { "id": "dev-1", "email": "ueli.saluz@posteo.de", "github_login": null, "display_name": "Ueli", "role": "owner", "trusted": true },
+      "parsed": { "id": "dev-1", "email": "ueli.saluz@posteo.de", "github_login": null, "display_name": "Ueli", "role": "owner", "trusted": true }
+    },
+    {
+      "export": "DiffIngestRequest",
+      "value": { "ticket_id": "2026/09/08/t", "patch": "diff --git a/x b/x\n" },
+      "parsed": { "ticket_id": "2026/09/08/t", "patch": "diff --git a/x b/x\n", "repo_id": "", "snapshots": [] }
+    },
+    {
+      "export": "DiffIngestRequest",
+      "value": { "ticket_id": "2026/09/08/t", "repo_id": "semio", "patch": "diff --git a/x b/x\n", "snapshots": [{ "path": "x", "content": "1" }] },
+      "parsed": { "ticket_id": "2026/09/08/t", "repo_id": "semio", "patch": "diff --git a/x b/x\n", "snapshots": [{ "path": "x", "content": "1" }] }
+    },
+    {
+      "export": "DiffIngestResponse",
+      "value": { "changed_files": ["x"], "claimed_scopes": ["x#s"], "warnings": [], "breachs": [], "blockers": [] },
+      "parsed": { "changed_files": ["x"], "claimed_scopes": ["x#s"], "warnings": [], "breachs": [], "blockers": [] }
+    },
+    {
+      "export": "EventPublishRequest",
+      "value": { "kind": "ticket.open.ended" },
+      "parsed": { "kind": "ticket.open.ended", "source": "", "payload": {} }
+    },
+    {
+      "export": "EventPublishRequest",
+      "value": { "kind": "DiffIngested", "source": "repo-cli", "payload": { "ticket_id": "2026/09/08/t", "files": ["x"] } },
+      "parsed": { "kind": "DiffIngested", "source": "repo-cli", "payload": { "ticket_id": "2026/09/08/t", "files": ["x"] } }
+    },
+    {
+      "export": "EventPublishResponse",
+      "value": { "status": "ok", "event_id": "evt-1" },
+      "parsed": { "status": "ok", "event_id": "evt-1" }
+    },
+    {
+      "export": "Event",
+      "value": { "id": "evt-1", "kind": "TicketOpened", "source": "repo-cli", "payload_json": { "id": "2026/09/08/t" }, "created_at": "2026-09-08T10:00:00Z" },
+      "parsed": { "id": "evt-1", "kind": "TicketOpened", "source": "repo-cli", "payload_json": { "id": "2026/09/08/t" }, "created_at": "2026-09-08T10:00:00Z" }
+    },
+    {
+      "export": "IndexFileRequest",
+      "value": { "action": "index-file", "file_path": "🧰️framework/x.ts" },
+      "parsed": { "action": "index-file", "file_path": "🧰️framework/x.ts", "content": "" }
+    },
+    {
+      "export": "ReindexRequest",
+      "value": { "action": "reindex" },
+      "parsed": { "action": "reindex" }
+    },
+    {
+      "export": "ReindexResponse",
+      "value": { "files": 0 },
+      "parsed": { "files": 0 }
+    },
+    {
+      "export": "Scope",
+      "value": { "id": "x#s", "kind": "section", "file_path": "x.ts", "section_path": "Adapters", "definition_name": "", "start_line": 1, "end_line": 9, "updated_at": "2026-09-08T10:00:00Z" },
+      "parsed": { "id": "x#s", "kind": "section", "file_path": "x.ts", "section_path": "Adapters", "definition_name": "", "start_line": 1, "end_line": 9, "updated_at": "2026-09-08T10:00:00Z" }
+    },
+    {
+      "export": "Warning",
+      "value": { "id": "w1", "kind": "conflict", "severity": "error", "message": "conflict on x#s", "ticket_id": "", "scope_id": "x#s", "created_at": "2026-09-08T10:00:00Z", "acknowledged_at": null, "ack_by": "" },
+      "parsed": { "id": "w1", "kind": "conflict", "severity": "error", "message": "conflict on x#s", "ticket_id": "", "scope_id": "x#s", "created_at": "2026-09-08T10:00:00Z", "acknowledged_at": null, "ack_by": "" }
+    },
+    {
+      "export": "Breach",
+      "value": { "id": "b1", "kind": "policy", "priority": "low", "scope_id": "x#s", "file_path": "x.ts", "line": 3, "col": null, "summary": "s", "excerpt": "e", "autofixable": false, "detected_at": "2026-09-08T10:00:00Z", "ticket_id": "", "resolved_at": null },
+      "parsed": { "id": "b1", "kind": "policy", "priority": "low", "scope_id": "x#s", "file_path": "x.ts", "line": 3, "col": null, "summary": "s", "excerpt": "e", "autofixable": false, "detected_at": "2026-09-08T10:00:00Z", "ticket_id": "", "resolved_at": null }
+    },
+    {
+      "export": "ErrorResponse",
+      "value": { "error": "ticket not found" },
+      "parsed": { "error": "ticket not found" }
+    },
+    {
+      "export": "StatusResponse",
+      "value": { "status": "ok" },
+      "parsed": { "status": "ok" }
+    }
+  ],
+  "rejected": [
+    { "export": "TicketOpenRequest", "value": {}, "reason": "action" },
+    { "export": "TicketOpenRequest", "value": { "action": "close", "ticket_id": "t", "title": "T" }, "reason": "action" },
+    { "export": "TicketOpenRequest", "value": { "action": "open", "ticket_id": "", "title": "T" }, "reason": "ticket_id" },
+    { "export": "TicketOpenRequest", "value": { "action": "open", "ticket_id": "t", "title": "" }, "reason": "title" },
+    { "export": "TicketOpenRequest", "value": { "action": "open", "ticket_id": "t", "title": "T", "unexpected": true }, "reason": "unexpected" },
+    { "export": "TicketCloseRequest", "value": { "action": "close", "ticket_id": "t", "summary": "s", "files": [1] }, "reason": "files" },
+    { "export": "TicketReopenRequest", "value": { "action": "reopen", "ticket_id": "t" }, "reason": "prompt" },
+    { "export": "CreateDeveloperRequest", "value": { "action": "create-developer", "email": "invalid", "display_name": "Ueli" }, "reason": "email" },
+    { "export": "CreateDeveloperRequest", "value": { "action": "create-developer", "email": "a@b.c", "display_name": "Ueli", "role": "guest" }, "reason": "role" },
+    { "export": "CreateKeyRequest", "value": { "action": "create-key" }, "reason": "developer_email" },
+    { "export": "RevokeKeyRequest", "value": { "action": "revoke-key", "key_id": "" }, "reason": "key_id" },
+    { "export": "DiffIngestRequest", "value": { "ticket_id": "t" }, "reason": "patch" },
+    { "export": "DiffIngestRequest", "value": { "ticket_id": "t", "patch": "p", "snapshots": [{ "path": "x" }] }, "reason": "content" },
+    { "export": "EventPublishRequest", "value": { "kind": "" }, "reason": "kind" },
+    { "export": "IndexFileRequest", "value": { "action": "index-file" }, "reason": "file_path" },
+    { "export": "ReindexRequest", "value": { "action": "index-file" }, "reason": "action" },
+    { "export": "Ticket", "value": { "id": "t", "status": "archived", "title": "T", "prompt": "", "summary": "", "llm": "", "client": "", "author": "", "github_issue": "", "goal": "", "parent": null, "created_at": "2026-09-08T10:00:00Z", "closed_at": null }, "reason": "status" },
+    { "export": "Ticket", "value": { "id": "t", "status": "open", "title": "T", "prompt": "", "summary": "", "llm": "", "client": "", "author": "", "github_issue": "", "goal": "", "parent": null, "created_at": "not-a-date", "closed_at": null }, "reason": "created_at" },
+    { "export": "Scope", "value": { "id": "s", "kind": "module", "file_path": "x", "section_path": "", "definition_name": "", "start_line": 0, "end_line": 0, "updated_at": "2026-09-08T10:00:00Z" }, "reason": "kind" },
+    { "export": "Warning", "value": { "id": "w", "kind": "conflict", "severity": "fatal", "message": "", "ticket_id": "", "scope_id": "", "created_at": "2026-09-08T10:00:00Z", "acknowledged_at": null, "ack_by": "" }, "reason": "severity" },
+    { "export": "StatusResponse", "value": { "status": "failed" }, "reason": "status" },
+    { "export": "ErrorResponse", "value": { "error": "" }, "reason": "error" }
+  ]
+}

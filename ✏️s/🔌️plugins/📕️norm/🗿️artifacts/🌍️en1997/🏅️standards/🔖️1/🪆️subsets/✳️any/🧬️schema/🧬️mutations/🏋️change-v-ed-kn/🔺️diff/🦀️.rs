@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeVEdKn, base: &En1997Snapshot) -> protocol::MutationO
     if base.v_ed_kn == payload.new_v_ed_kn {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Design vertical load V_Ed [kN] is already {}.", payload.new_v_ed_kn));
     }
-    protocol::MutationOutcome::new(En1997Diff { v_ed_kn: Some(payload.new_v_ed_kn.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1997Diff { v_ed_kn: Some(payload.new_v_ed_kn), ..Default::default() })
 }
 //#endregion 🔖️Diff

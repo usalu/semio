@@ -6,8 +6,8 @@
 //! from this directed node/edge graph's own `nodes`/`edges` — the same Kahn's-algorithm shape
 //! trinity's own `jack` inference facet establishes for its own node/edge graph).
 
-use crate::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot;
-use schema::ArtifactSchema;
+use crate::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot;
+use framework_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 
 use super::topology::{compute_semio_flow_topology, SemioFlowTopology};
@@ -50,7 +50,7 @@ impl protocol::InferenceSpec<SemioFlowSnapshot> for SemioFlowInference {
 /// `infer_cached` passthrough (just calls `infer`) is exactly right here, no `InferredField`
 /// chain needed (there is no honest per-node incremental decomposition of a global topological
 /// sort) — same ruling trinity's `jack` inference facet documents for its own node/edge graph.
-impl ArtifactInferrer for crate::artifacts::semio::standards::v1::subsets::flow::schema::SemioFlowBuilder {
+impl ArtifactInferrer for crate::standards::v1::subsets::flow::schema::SemioFlowBuilder {
     type Snapshot = SemioFlowSnapshot;
     type Inference = SemioFlowInference;
 }
@@ -60,10 +60,10 @@ impl ArtifactInferrer for crate::artifacts::semio::standards::v1::subsets::flow:
 /// 💡️ Registers `s.stdio.semio.flow.inference`'s facet leaves into the OS-wide inference catalog
 /// — call once at plugin init, alongside `semio_flow_artifact_schema_descriptor`'s registration.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn semio_flow_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
-    schema::ArtifactInferenceDescriptor {
+pub fn semio_flow_artifact_inference_descriptor() -> framework_schema::ArtifactInferenceDescriptor {
+    framework_schema::ArtifactInferenceDescriptor {
         id: "s.stdio.semio.flow.inference",
-        inference: schema::FacetLeaves {
+        inference: framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),

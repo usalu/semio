@@ -1,0 +1,90 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/node/change-extras.json",
+  "title": "GltfChangeNodeExtraDataMutation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "node",
+    "data"
+  ],
+  "properties": {
+    "node": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "data": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "state": {
+              "const": "absent"
+            }
+          },
+          "required": [
+            "state"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "state": {
+              "const": "present"
+            },
+            "value": {
+              "$ref": "#/$defs/gltfJson"
+            }
+          },
+          "required": [
+            "state",
+            "value"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    }
+  },
+  "$defs": {
+    "gltfJson": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "number"
+        },
+        {
+          "type": "string"
+        },
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/gltfJson"
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/gltfJson"
+          }
+        }
+      ]
+    }
+  },
+  "x-semio": {
+    "id": "s.stdio.gltf.mutation.change-node-extra-data.v1",
+    "version": 1,
+    "phase": "mutation",
+    "kind": "change",
+    "touchedPaths": [
+      "document/nodes/*/extras"
+    ],
+    "referencePolicy": "none"
+  },
+  "x-semio-mutation": "change-node-extra-data"
+}

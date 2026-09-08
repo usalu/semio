@@ -11,6 +11,6 @@ pub fn diff(payload: &ChangeMPla, base: &En1994Snapshot) -> protocol::MutationOu
     if base.m_pla == payload.new_m_pla {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "M pla already has this value.");
     }
-    protocol::MutationOutcome::new(En1994Diff { m_pla: Some(payload.new_m_pla.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1994Diff { m_pla: Some(payload.new_m_pla), ..Default::default() })
 }
 //#endregion 🔖️Diff

@@ -5,7 +5,7 @@
   "displayName": "Set Display Doc Title",
   "emoji": "🪧️",
   "aggregateVariant": "SetDisplayDocTitle",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "set-display-doc-title",
   "binaryTag": 6,
   "invertibility": "explicit-mutation",

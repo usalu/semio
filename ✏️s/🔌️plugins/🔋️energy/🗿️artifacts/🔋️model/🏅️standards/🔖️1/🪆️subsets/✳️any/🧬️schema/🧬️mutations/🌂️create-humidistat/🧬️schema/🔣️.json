@@ -1,0 +1,35 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/energy/model/1/any/mutation/create-humidistat.json",
+  "title": "CreateHumidistat",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "zoneId",
+    "humidifyingSetpointScheduleId",
+    "dehumidifyingSetpointScheduleId",
+    "humidifyingThrottleRange",
+    "dehumidifyingThrottleRange"
+  ],
+  "properties": {
+    "id": {
+      "type": "integer"
+    },
+    "zoneId": {
+      "type": "integer"
+    },
+    "humidifyingSetpointScheduleId": {
+      "type": "integer"
+    },
+    "dehumidifyingSetpointScheduleId": {
+      "type": "integer"
+    },
+    "humidifyingThrottleRange": {
+      "type": "number"
+    },
+    "dehumidifyingThrottleRange": {
+      "type": "number"
+    }
+  }
+}

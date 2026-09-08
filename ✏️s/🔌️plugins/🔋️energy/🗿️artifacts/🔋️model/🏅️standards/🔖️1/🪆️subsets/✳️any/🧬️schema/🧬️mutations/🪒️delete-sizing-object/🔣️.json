@@ -5,7 +5,7 @@
   "displayName": "Delete Sizing Object",
   "emoji": "🪒️",
   "aggregateVariant": "DeleteSizingObject",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "delete-sizing-object",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

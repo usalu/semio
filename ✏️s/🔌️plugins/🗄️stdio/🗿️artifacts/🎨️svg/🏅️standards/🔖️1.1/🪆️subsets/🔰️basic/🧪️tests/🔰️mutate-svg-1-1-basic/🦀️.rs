@@ -126,9 +126,9 @@ fn round_trip_oracle_once(input: &[u8], what: &str) -> Result<(Vec<u8>, Json), S
 mod subject {
     use super::mutable_input;
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_plugin_stdio::artifacts::svg::standards::v1_1::subsets::base::schema::snapshot::{element_attr, parse_view_box, set_element_attr, view_box_to_string, NodePath, SvgSnapshot, TransformOp, ViewBox};
-    use semio_s_plugin_stdio::artifacts::svg::standards::v1_1::subsets::basic::schema::mutations::{apply_svg_basic_mutation, insert_basic_element, insert_clip_path_shape, inverse_svg_basic_mutation, remove_element, set_basic_attribute, set_clip_path_reference, set_snapshot, set_text, set_transform, set_view_box, stamp_base_profile, SvgBasicMutation};
-    use semio_s_plugin_stdio::artifacts::xml::standards::v1_0::subsets::base::schema::snapshot::{XmlAttr, XmlNode};
+    use crate::standards::v1_1::subsets::base::schema::snapshot::{element_attr, parse_view_box, set_element_attr, view_box_to_string, NodePath, SvgSnapshot, TransformOp, ViewBox};
+    use crate::standards::v1_1::subsets::basic::schema::mutations::{apply_svg_basic_mutation, insert_basic_element, insert_clip_path_shape, inverse_svg_basic_mutation, remove_element, set_basic_attribute, set_clip_path_reference, set_snapshot, set_text, set_transform, set_view_box, stamp_base_profile, SvgBasicMutation};
+    use semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::schema::snapshot::{XmlAttr, XmlNode};
     use semio_s_plugin_stdio_test_oracle::artifacts::svg::standards::v1_1::subsets::basic::project_svg_basic;
 
     //#region 🔖️SpecCodec

@@ -1,6 +1,6 @@
 //! rewriting <- txt
 use crate::artifacts::rewriting::RewritingSnapshot;
-use semio_s_plugin_stdio::artifacts::txt::{TxtSnapshot, STDIO_TXT_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_txt::{TxtSnapshot, STDIO_TXT_DOCUMENT_SCHEMA};
 
 pub fn register() {}
 

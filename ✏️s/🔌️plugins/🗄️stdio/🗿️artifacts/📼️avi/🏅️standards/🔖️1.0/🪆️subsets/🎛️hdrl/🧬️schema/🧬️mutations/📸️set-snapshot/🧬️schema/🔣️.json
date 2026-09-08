@@ -1,0 +1,482 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/avi/1.0/hdrl/mutation/set-snapshot.json",
+  "title": "SetSnapshot",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "snapshot"
+  ],
+  "properties": {
+    "snapshot": {
+      "$ref": "#/$defs/AviSnapshot"
+    },
+    "mutation": {
+      "const": "setSnapshot",
+      "description": "Aggregate discriminator spliced in by AviMutation; absent when the payload stands alone."
+    }
+  },
+  "$defs": {
+    "AviSnapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mainHeader",
+        "idx1Present"
+      ],
+      "properties": {
+        "schema": {
+          "type": "string"
+        },
+        "mainHeader": {
+          "$ref": "#/$defs/AviMainHeader"
+        },
+        "streams": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/AviStream"
+          }
+        },
+        "idx1Present": {
+          "type": "boolean"
+        },
+        "unknownChunks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/RiffChunk"
+          }
+        },
+        "hdrlExtra": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/RiffChunk"
+          }
+        }
+      }
+    },
+    "AviMainHeader": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "microSecPerFrame",
+        "maxBytesPerSec",
+        "paddingGranularity",
+        "flags",
+        "totalFrames",
+        "initialFrames",
+        "streams",
+        "suggestedBufferSize",
+        "width",
+        "height"
+      ],
+      "properties": {
+        "microSecPerFrame": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "maxBytesPerSec": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "paddingGranularity": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "flags": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "totalFrames": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "initialFrames": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "streams": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "suggestedBufferSize": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "width": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "height": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "reserved": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4294967295
+          }
+        }
+      }
+    },
+    "AviStream": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "strh",
+        "strf"
+      ],
+      "properties": {
+        "strh": {
+          "$ref": "#/$defs/AviStreamHeader"
+        },
+        "strf": {
+          "$ref": "#/$defs/AviStreamFormat"
+        },
+        "chunks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/AviChunk"
+          }
+        },
+        "strlExtra": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/RiffChunk"
+          }
+        }
+      }
+    },
+    "AviStreamHeader": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "fccType",
+        "fccHandler",
+        "flags",
+        "priority",
+        "language",
+        "initialFrames",
+        "scale",
+        "rate",
+        "start",
+        "length",
+        "suggestedBufferSize",
+        "quality",
+        "sampleSize",
+        "rcFrameLeft",
+        "rcFrameTop",
+        "rcFrameRight",
+        "rcFrameBottom"
+      ],
+      "properties": {
+        "fccType": {
+          "type": "string"
+        },
+        "fccHandler": {
+          "type": "string"
+        },
+        "flags": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "priority": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "language": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "initialFrames": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "scale": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "rate": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "start": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "length": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "suggestedBufferSize": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "quality": {
+          "type": "integer",
+          "minimum": -2147483648,
+          "maximum": 2147483647
+        },
+        "sampleSize": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "rcFrameLeft": {
+          "type": "integer",
+          "minimum": -2147483648,
+          "maximum": 2147483647
+        },
+        "rcFrameTop": {
+          "type": "integer",
+          "minimum": -2147483648,
+          "maximum": 2147483647
+        },
+        "rcFrameRight": {
+          "type": "integer",
+          "minimum": -2147483648,
+          "maximum": 2147483647
+        },
+        "rcFrameBottom": {
+          "type": "integer",
+          "minimum": -2147483648,
+          "maximum": 2147483647
+        },
+        "rcFrameWidth": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "strhExtra": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          }
+        }
+      }
+    },
+    "AviStreamFormat": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "format",
+            "size",
+            "width",
+            "height",
+            "planes",
+            "bitCount",
+            "compression",
+            "sizeImage",
+            "xPelsPerMeter",
+            "yPelsPerMeter",
+            "colorsUsed",
+            "colorsImportant"
+          ],
+          "properties": {
+            "format": {
+              "const": "bitmapInfo"
+            },
+            "size": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4294967295
+            },
+            "width": {
+              "type": "integer",
+              "minimum": -2147483648,
+              "maximum": 2147483647
+            },
+            "height": {
+              "type": "integer",
+              "minimum": -2147483648,
+              "maximum": 2147483647
+            },
+            "planes": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 65535
+            },
+            "bitCount": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 65535
+            },
+            "compression": {
+              "type": "string"
+            },
+            "sizeImage": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4294967295
+            },
+            "xPelsPerMeter": {
+              "type": "integer",
+              "minimum": -2147483648,
+              "maximum": 2147483647
+            },
+            "yPelsPerMeter": {
+              "type": "integer",
+              "minimum": -2147483648,
+              "maximum": 2147483647
+            },
+            "colorsUsed": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4294967295
+            },
+            "colorsImportant": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4294967295
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "format",
+            "formatTag",
+            "channels",
+            "samplesPerSec",
+            "avgBytesPerSec",
+            "blockAlign",
+            "bitsPerSample"
+          ],
+          "properties": {
+            "format": {
+              "const": "waveFormat"
+            },
+            "formatTag": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 65535
+            },
+            "channels": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 65535
+            },
+            "samplesPerSec": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4294967295
+            },
+            "avgBytesPerSec": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4294967295
+            },
+            "blockAlign": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 65535
+            },
+            "bitsPerSample": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 65535
+            },
+            "extra": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 255
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "format",
+            "data"
+          ],
+          "properties": {
+            "format": {
+              "const": "raw"
+            },
+            "data": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 255
+              }
+            }
+          }
+        }
+      ]
+    },
+    "AviChunk": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "fourcc",
+        "keyframe"
+      ],
+      "properties": {
+        "fourcc": {
+          "type": "string"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          }
+        },
+        "keyframe": {
+          "type": "boolean"
+        }
+      }
+    },
+    "RiffChunk": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "fourcc"
+      ],
+      "properties": {
+        "fourcc": {
+          "type": "string"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          }
+        }
+      }
+    }
+  }
+}

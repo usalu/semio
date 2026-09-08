@@ -89,9 +89,9 @@ fn identity_round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::mutable_input;
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_plugin_stdio::artifacts::pdf::standards::v1_4::subsets::base::io::{decode_pdf, encode_pdf};
-    use semio_s_plugin_stdio::artifacts::pdf::standards::v1_4::subsets::base::schema::mutations::{apply_pdf_mutation, inverse_pdf_mutation, InsertPage, MovePage, PdfMutation, RemovePage, ReplacePageText, ResizePage};
-    use semio_s_plugin_stdio::artifacts::pdf::standards::v1_4::subsets::base::schema::snapshot::PageDoc;
+    use crate::standards::v1_4::subsets::base::io::{decode_pdf, encode_pdf};
+    use crate::standards::v1_4::subsets::base::schema::mutations::{apply_pdf_mutation, inverse_pdf_mutation, InsertPage, MovePage, PdfMutation, RemovePage, ReplacePageText, ResizePage};
+    use crate::standards::v1_4::subsets::base::schema::snapshot::PageDoc;
     use semio_s_plugin_stdio_test_oracle::artifacts::pdf::standards::v1_4::subsets::base::project_pdf_1_4;
 
     fn mutation_from_spec(spec: &Json) -> Result<PdfMutation, String> {

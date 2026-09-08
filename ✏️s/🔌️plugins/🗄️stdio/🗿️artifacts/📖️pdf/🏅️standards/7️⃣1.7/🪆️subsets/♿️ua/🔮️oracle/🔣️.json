@@ -107,7 +107,7 @@
         {
           "id": "embed-font-file",
           "capability": "pdf-1-7-ua-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -127,7 +127,7 @@
         {
           "id": "remove-display-doc-title",
           "capability": "pdf-1-7-ua-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -147,7 +147,7 @@
         {
           "id": "remove-font-file",
           "capability": "pdf-1-7-ua-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -167,7 +167,7 @@
         {
           "id": "remove-lang",
           "capability": "pdf-1-7-ua-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -187,7 +187,7 @@
         {
           "id": "remove-mark-info",
           "capability": "pdf-1-7-ua-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -207,7 +207,7 @@
         {
           "id": "remove-struct-tree-root",
           "capability": "pdf-1-7-ua-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -227,7 +227,7 @@
         {
           "id": "set-display-doc-title",
           "capability": "pdf-1-7-ua-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -247,7 +247,7 @@
         {
           "id": "set-info-title",
           "capability": "pdf-1-7-ua-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -267,7 +267,7 @@
         {
           "id": "set-lang",
           "capability": "pdf-1-7-ua-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -287,7 +287,7 @@
         {
           "id": "set-mark-info",
           "capability": "pdf-1-7-ua-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -307,7 +307,7 @@
         {
           "id": "set-struct-tree-root",
           "capability": "pdf-1-7-ua-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],

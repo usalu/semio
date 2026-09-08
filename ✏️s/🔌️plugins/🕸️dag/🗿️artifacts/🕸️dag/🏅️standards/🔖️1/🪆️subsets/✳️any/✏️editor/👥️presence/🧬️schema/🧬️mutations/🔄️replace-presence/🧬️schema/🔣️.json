@@ -1,0 +1,32 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/dag/dag/1/any/editor/presence/mutation/replace-presence.json",
+  "title": "ReplacePresence",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "presence"
+  ],
+  "properties": {
+    "presence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "cameraX",
+        "cameraY",
+        "cameraZoom"
+      ],
+      "properties": {
+        "cameraX": {
+          "type": "number"
+        },
+        "cameraY": {
+          "type": "number"
+        },
+        "cameraZoom": {
+          "type": "number"
+        }
+      }
+    }
+  }
+}

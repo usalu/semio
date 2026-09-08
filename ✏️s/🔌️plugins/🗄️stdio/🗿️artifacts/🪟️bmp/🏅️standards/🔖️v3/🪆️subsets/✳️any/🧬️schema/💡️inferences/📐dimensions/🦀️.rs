@@ -2,7 +2,7 @@
 //! O(1) read of already-decoded header fields — nothing here is per-entity/incremental, so this
 //! holds only the value type + its pure `compute` fn (no `InferredField`).
 
-use crate::artifacts::bmp::BmpSnapshot;
+use crate::BmpSnapshot;
 
 //#region 🔖️Dimensions
 /// 📐️ BMP BITMAPINFOHEADER-derived raster geometry. `has_alpha` is a documented heuristic, not

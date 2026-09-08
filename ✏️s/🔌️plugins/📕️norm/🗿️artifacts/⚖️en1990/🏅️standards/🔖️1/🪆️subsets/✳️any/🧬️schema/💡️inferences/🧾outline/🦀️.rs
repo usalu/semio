@@ -35,9 +35,7 @@ impl En1990Outline {
         let governing = report
             .checks
             .iter()
-            .max_by(|left, right| left.utilization.partial_cmp(&right.utilization).unwrap_or(std::cmp::Ordering::Equal))
-            .map(|check| (check.clause.to_string(), check.utilization))
-            .unwrap_or_else(|| ("EN 1990 §6.4 6.10".into(), 0.0));
+            .max_by(|left, right| left.utilization.partial_cmp(&right.utilization).unwrap_or(std::cmp::Ordering::Equal)).map_or_else(|| ("EN 1990 §6.4 6.10".into(), 0.0), |check| (check.clause.to_string(), check.utilization));
         Self { section_outline, field_count, entry_count, check_count, pass_count, all_pass, governing_clause: governing.0, governing_utilization: governing.1 }
     }
 }

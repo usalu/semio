@@ -30,11 +30,11 @@ pub use infinite_board_port_directed_dag::{DagEdgePatch, DagFixtureEdge, DagNode
 /// nodes/edges now live in this composed child's `nodes`/`edges` rather than inline on `DagSnapshot`.
 pub type DagContentChild = store::ArtifactChild<SemioGraphSnapshot>;
 
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioPoint2;
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::graph::schema::snapshot::{
+use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::SemioPoint2;
+use semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::snapshot::{
     GraphEdgeId as SemioGraphEdgeId, GraphNodeId as SemioGraphNodeId, SemioGraphEdge, SemioGraphNode, SemioGraphPort, SemioGraphPortKind, SemioGraphSnapshot, STDIO_SEMIOGRAPH_DOCUMENT_SCHEMA,
 };
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::value::schema::snapshot::{SemioValue, SemioValueEntry};
+use semio_s_artifact_stdio_semio::standards::v1::subsets::value::schema::snapshot::{SemioValue, SemioValueEntry};
 
 /// 🏷️ `dag.node` is the honest string boundary carrying the FULL `DagNodeSpec` (every field this
 /// plugin's rich node-kind enum can hold — computation/slider/select/screen/note/image/preview/
@@ -222,7 +222,7 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
     use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
 
-    let rows: &[(&str, &str, &str, &[(&str, &str)], Option<(&str, &str)>)] = &[
+    let rows: &[semio_framework_plugin::ArtifactCapabilityRow<'_>] = &[
         ("s.dag.dag.standard.v1", "standard", "1", &[], None),
         ("s.dag.dag.standard.v1.profile.any", "profile", "any", &[], None),
         ("s.dag.dag.schema.artifact", "schema", "s.dag.dag", &[("schema", "s.dag.dag")], None),

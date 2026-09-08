@@ -5,7 +5,7 @@
   "displayName": "Update Site",
   "emoji": "🌍️",
   "aggregateVariant": "UpdateSite",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "update-site",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

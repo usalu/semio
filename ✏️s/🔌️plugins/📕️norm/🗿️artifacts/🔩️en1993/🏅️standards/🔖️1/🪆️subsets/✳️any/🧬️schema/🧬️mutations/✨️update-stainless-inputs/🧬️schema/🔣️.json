@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/norm/en1993/1/any/mutation/update-stainless-inputs.json",
+  "title": "UpdateStainlessInputs",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newStainlessFYMpa",
+    "newStainlessMEdKnm",
+    "newStainlessWPlMm3"
+  ],
+  "properties": {
+    "newStainlessMEdKnm": {
+      "type": "number"
+    },
+    "newStainlessWPlMm3": {
+      "type": "number"
+    },
+    "newStainlessFYMpa": {
+      "type": "number"
+    }
+  }
+}

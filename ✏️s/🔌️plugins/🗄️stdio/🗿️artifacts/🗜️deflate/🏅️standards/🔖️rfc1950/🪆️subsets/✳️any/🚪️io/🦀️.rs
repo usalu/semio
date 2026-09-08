@@ -2,8 +2,8 @@
 //! (called once from 🔌️plugin/🔧️setup via ⚙️engine::register), not per-leaf register().
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use crate::artifacts::deflate::standards::v_rfc1950::subsets::any::schema::DeflateAnalyzer;
-    use crate::artifacts::deflate::DeflateSnapshot;
+    use crate::standards::v_rfc1950::subsets::any::schema::DeflateAnalyzer;
+    use crate::DeflateSnapshot;
     use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.deflate", standard: StandardId("rfc1950"), subset: SubsetId("*") };
@@ -55,8 +55,8 @@ pub use derived_composition::*;
 // — PNG IDAT, PDF stream objects — which have never gone through a `DeflateSnapshot` and must not
 // start doing so here); `encode_deflate_snapshot`/`decode_deflate_snapshot` are the RFC1950
 // container<->typed-snapshot pair `DeflateSnapshot`'s `ArtifactDsl`/`ArtifactPack` impls call.
-use crate::artifacts::deflate::schema::snapshot::{DeflateLevelHint, DeflateSnapshot};
-use crate::artifacts::deflate::STDIO_DEFLATE_DOCUMENT_SCHEMA;
+use crate::schema::snapshot::{DeflateLevelHint, DeflateSnapshot};
+use crate::STDIO_DEFLATE_DOCUMENT_SCHEMA;
 
 //#region Adler32
 /// 🧮 Adler-32 (RFC1950).
@@ -1363,7 +1363,7 @@ mod codec_tests {
 /// with a DIFFERENT return type (`&'static [&'static ComposerEntry]` vs this module's
 /// `&'static [ComposerEntry]`); a bare `io_registry::entries()` silently rebinds to the wrong one.
 pub mod io_registry {
-    use crate::artifacts::deflate::standards::v_rfc1950::subsets::any::schema::DeflateComposer as DeflateRawAnyComposer;
+    use crate::standards::v_rfc1950::subsets::any::schema::DeflateComposer as DeflateRawAnyComposer;
     use semio_framework_plugin::{composer_entry_of, ComposerEntry};
     use std::sync::OnceLock;
 

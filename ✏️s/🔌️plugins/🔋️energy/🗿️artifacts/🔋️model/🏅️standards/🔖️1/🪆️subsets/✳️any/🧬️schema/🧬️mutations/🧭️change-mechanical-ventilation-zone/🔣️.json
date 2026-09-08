@@ -5,7 +5,7 @@
   "displayName": "Change Mechanical Ventilation Zone",
   "emoji": "🧭️",
   "aggregateVariant": "ChangeMechanicalVentilationZone",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-mechanical-ventilation-zone",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

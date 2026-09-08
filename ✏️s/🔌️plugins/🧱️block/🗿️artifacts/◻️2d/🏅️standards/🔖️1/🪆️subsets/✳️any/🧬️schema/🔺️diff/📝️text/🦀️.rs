@@ -280,7 +280,7 @@ pub fn diff_set_handle_kind(index: usize, handle_kind: Block2dHandleKind, base: 
     if block2d_index_of(&base.handle_kinds, &handle_kind.id).is_none() {
         let mut order: Vec<String> = base.handle_kinds.iter().map(|e| e.id.clone()).collect();
         let at = index.min(order.len());
-        order.insert(at, handle_kind.id.clone());
+        order.insert(at, handle_kind.id);
         delta.reordered = Some(order);
     }
     Block2dDiff { handle_kinds: Some(delta), ..Default::default() }
@@ -297,7 +297,7 @@ pub fn diff_set_handle(index: usize, handle: Block2dHandleTemplate, base: &Block
     if block2d_index_of(&base.handles, &handle.id).is_none() {
         let mut order: Vec<String> = base.handles.iter().map(|e| e.id.clone()).collect();
         let at = index.min(order.len());
-        order.insert(at, handle.id.clone());
+        order.insert(at, handle.id);
         delta.reordered = Some(order);
     }
     Block2dDiff { handles: Some(delta), ..Default::default() }
@@ -314,7 +314,7 @@ pub fn diff_set_compatibility_rule(index: usize, rule: BlockCompatibilityRule, b
     if block2d_index_of(&base.compatibility, &rule.id).is_none() {
         let mut order: Vec<String> = base.compatibility.iter().map(|e| e.id.clone()).collect();
         let at = index.min(order.len());
-        order.insert(at, rule.id.clone());
+        order.insert(at, rule.id);
         delta.reordered = Some(order);
     }
     Block2dDiff { compatibility: Some(delta), ..Default::default() }
@@ -331,7 +331,7 @@ pub fn diff_set_attribute(index: usize, attribute: BlockAttribute, base: &Block2
     if block2d_index_of(&base.attributes, &attribute.key).is_none() {
         let mut order: Vec<String> = base.attributes.iter().map(|e| e.key.clone()).collect();
         let at = index.min(order.len());
-        order.insert(at, attribute.key.clone());
+        order.insert(at, attribute.key);
         delta.reordered = Some(order);
     }
     Block2dDiff { attributes: Some(delta), ..Default::default() }

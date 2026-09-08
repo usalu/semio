@@ -31,13 +31,13 @@
 //!   (named colors, `hsl()`, `currentColor`, …) is not parsed and yields no color (documented,
 //!   real-but-partial, not fabricated).
 
-use crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioPoint3, SemioQuaternion, SemioRgba, SemioTransform};
-use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{DrawCanvas, DrawLayer, DrawNode, DrawStyle, PathSegment, SemioDrawingSnapshot, STDIO_SEMIODRAWING_DOCUMENT_SCHEMA};
-use crate::artifacts::svg::{
+use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioPoint3, SemioQuaternion, SemioRgba, SemioTransform};
+use crate::standards::v1::subsets::drawing::schema::snapshot::{DrawCanvas, DrawLayer, DrawNode, DrawStyle, PathSegment, SemioDrawingSnapshot, STDIO_SEMIODRAWING_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_svg::{
     schema::snapshot::{svg_element_from_xml_node, transform_ops_to_matrix, Matrix2D, PathCommand, SvgElement, ViewBox},
     SvgSnapshot,
 };
-use crate::artifacts::xml::schema::snapshot::XmlAttr;
+use semio_s_artifact_stdio_xml::schema::snapshot::XmlAttr;
 use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId};
 
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.svg", standard: StandardId("1.1"), subset: SubsetId::ANY };
@@ -255,7 +255,7 @@ fn base64_decode(s: &str) -> Option<Vec<u8>> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn common_presentation(common: &crate::artifacts::svg::schema::snapshot::CommonAttrs) -> (Option<&str>, Option<&str>, Option<&str>, Option<&str>) {
+fn common_presentation(common: &semio_s_artifact_stdio_svg::schema::snapshot::CommonAttrs) -> (Option<&str>, Option<&str>, Option<&str>, Option<&str>) {
     (common.presentation.fill.as_deref(), common.presentation.stroke.as_deref(), common.presentation.stroke_width.as_deref(), common.presentation.opacity.as_deref())
 }
 
@@ -378,8 +378,8 @@ impl ArtifactDeserializer for SemioDrawingFromSvg {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::svg::schema::snapshot::{CommonAttrs, PresentationAttrs, TransformOp};
-    use crate::artifacts::xml::schema::snapshot::XmlDocument;
+    use semio_s_artifact_stdio_svg::schema::snapshot::{CommonAttrs, PresentationAttrs, TransformOp};
+    use semio_s_artifact_stdio_xml::schema::snapshot::XmlDocument;
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn sample_svg() -> SvgSnapshot {
@@ -398,7 +398,7 @@ mod tests {
                 SvgElement::Text { common: CommonAttrs::default(), x: Some(1.0), y: Some(2.0), children: vec![SvgElement::TextNode("hi".into())] },
             ],
         };
-        SvgSnapshot { doc: XmlDocument { root: Some(crate::artifacts::svg::schema::snapshot::svg_element_to_xml_node(&svg_el)), doctype: None, declaration: None, prolog: Vec::new() }, ..SvgSnapshot::default() }
+        SvgSnapshot { doc: XmlDocument { root: Some(semio_s_artifact_stdio_svg::schema::snapshot::svg_element_to_xml_node(&svg_el)), doctype: None, declaration: None, prolog: Vec::new() }, ..SvgSnapshot::default() }
     }
 
     #[semio_framework_async_macros::async_test]

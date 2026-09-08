@@ -98,7 +98,7 @@
         {
           "id": "insert-layout",
           "capability": "semio-v1-presentation-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -117,7 +117,7 @@
         {
           "id": "insert-master",
           "capability": "semio-v1-presentation-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -136,7 +136,7 @@
         {
           "id": "insert-shape",
           "capability": "semio-v1-presentation-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -155,7 +155,7 @@
         {
           "id": "insert-slide",
           "capability": "semio-v1-presentation-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -174,7 +174,7 @@
         {
           "id": "remove-layout",
           "capability": "semio-v1-presentation-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -193,7 +193,7 @@
         {
           "id": "remove-master",
           "capability": "semio-v1-presentation-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -212,7 +212,7 @@
         {
           "id": "remove-shape",
           "capability": "semio-v1-presentation-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -231,7 +231,7 @@
         {
           "id": "remove-slide",
           "capability": "semio-v1-presentation-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -250,7 +250,7 @@
         {
           "id": "set-layout-master",
           "capability": "semio-v1-presentation-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -269,7 +269,7 @@
         {
           "id": "set-shape-frame",
           "capability": "semio-v1-presentation-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -288,7 +288,7 @@
         {
           "id": "set-slide-layout",
           "capability": "semio-v1-presentation-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -307,7 +307,7 @@
         {
           "id": "set-slide-notes",
           "capability": "semio-v1-presentation-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -326,7 +326,7 @@
         {
           "id": "set-snapshot",
           "capability": "semio-v1-presentation-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -345,7 +345,7 @@
         {
           "id": "set-text-box-blocks",
           "capability": "semio-v1-presentation-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],

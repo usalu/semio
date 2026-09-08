@@ -5,7 +5,7 @@
   "displayName": "Set Lint Signal",
   "emoji": "🔍️",
   "aggregateVariant": "SetLintSignal",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "set-lint-signal",
   "binaryTag": 3,
   "invertibility": "explicit-mutation",

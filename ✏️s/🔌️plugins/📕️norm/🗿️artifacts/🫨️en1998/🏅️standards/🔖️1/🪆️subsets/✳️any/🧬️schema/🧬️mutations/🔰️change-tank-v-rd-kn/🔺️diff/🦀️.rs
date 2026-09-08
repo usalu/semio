@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeTankVRdKn, base: &En1998Snapshot) -> protocol::Mutat
     if base.tank_v_rd_kn == payload.new_tank_v_rd_kn {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Tank shear resistance V_Rd [kN] is already {}.", payload.new_tank_v_rd_kn));
     }
-    protocol::MutationOutcome::new(En1998Diff { tank_v_rd_kn: Some(payload.new_tank_v_rd_kn.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1998Diff { tank_v_rd_kn: Some(payload.new_tank_v_rd_kn), ..Default::default() })
 }
 //#endregion 🔖️Diff

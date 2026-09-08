@@ -19,9 +19,9 @@ pub fn source() -> ExampleSource {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::docx::standards::v_ecma_376::subsets::base::schema::inferences::DocxInference;
-    use crate::artifacts::docx::schema::mutations::set_snapshot;
-    use crate::artifacts::docx::{DocxMutation, DocxSnapshot};
+    use crate::standards::v_ecma_376::subsets::base::schema::inferences::DocxInference;
+    use crate::schema::mutations::set_snapshot;
+    use crate::{DocxMutation, DocxSnapshot};
     use protocol::Inference;
 
     use store::os_store::test_support::{self, ExampleAsset, IoFidelityClass, SubsetRoundtripSpec};
@@ -52,15 +52,15 @@ mod tests {
         }
 
         async fn parse_native(asset: &ExampleAsset<'_>) -> Result<Self::Snapshot, String> {
-            crate::artifacts::docx::engine::decode_docx(asset.bytes).map_err(|e| e.to_string())
+            crate::engine::decode_docx(asset.bytes).map_err(|e| e.to_string())
         }
 
         async fn export_native(snapshot: &Self::Snapshot) -> Result<Vec<u8>, String> {
-            crate::artifacts::docx::engine::encode_docx(snapshot).map_err(|e| e.to_string())
+            crate::engine::encode_docx(snapshot).map_err(|e| e.to_string())
         }
 
         async fn reimport_native(bytes: &[u8]) -> Result<Self::Snapshot, String> {
-            crate::artifacts::docx::engine::decode_docx(bytes).map_err(|e| e.to_string())
+            crate::engine::decode_docx(bytes).map_err(|e| e.to_string())
         }
 
         async fn infer(snapshot: &Self::Snapshot) -> Self::Inference {
@@ -72,7 +72,7 @@ mod tests {
         }
 
         async fn validate_payload(bytes: &[u8]) -> Result<(), Vec<String>> {
-            crate::artifacts::docx::engine::decode_docx(bytes).map(|_| ()).map_err(|e| vec![e.to_string()])
+            crate::engine::decode_docx(bytes).map(|_| ()).map_err(|e| vec![e.to_string()])
         }
 
         async fn validate_negative(_bytes: &[u8]) -> Result<Vec<String>, String> {

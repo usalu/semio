@@ -18,7 +18,7 @@ pub fn diff(payload: &MoveReference, base: &CadSnapshot) -> protocol::MutationOu
     if existing.origin == payload.new_origin {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Reference \"{}\" is already at {:?}.", payload.reference_id, payload.new_origin));
     }
-    let patch = CadReferencePatch { origin: Some(payload.new_origin.clone()), ..Default::default() };
+    let patch = CadReferencePatch { origin: Some(payload.new_origin), ..Default::default() };
     let next = references
         .into_iter()
         .map(|mut reference| {

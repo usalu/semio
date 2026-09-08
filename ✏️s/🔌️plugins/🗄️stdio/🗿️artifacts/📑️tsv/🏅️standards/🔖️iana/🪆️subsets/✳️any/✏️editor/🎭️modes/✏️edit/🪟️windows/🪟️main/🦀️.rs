@@ -3,7 +3,7 @@
 //! distinction (unlike csv's optional convention) — every record renders as one editable row,
 //! columns are synthesized positionally (`Column N`).
 
-use crate::artifacts::tsv::TsvSnapshot;
+use crate::TsvSnapshot;
 use semio_framework_plugin::app::{TableView, TableWindowKit, WindowKit};
 use semio_framework_plugin::{BuiltNode, LocalizedLabel, WindowKindDefinition};
 

@@ -8,8 +8,8 @@ use crate::artifacts::writer::{writer_snapshot_with_text, WriterSnapshot, WRITER
 use semio_framework::io::io_mechanism::Deserializer;
 use semio_framework::io_schema::{IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{Dialect, StandardId, SubsetId};
-use semio_s_plugin_stdio::artifacts::docx::schema::snapshot::DocxBlock;
-use semio_s_plugin_stdio::artifacts::docx::DocxSnapshot;
+use semio_s_artifact_stdio_docx::schema::snapshot::DocxBlock;
+use semio_s_artifact_stdio_docx::DocxSnapshot;
 
 pub const DOCX_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.docx", standard: StandardId("ecma-376"), subset: SubsetId("*") };
 
@@ -44,8 +44,8 @@ impl Deserializer<WriterSnapshot> for DocxIntoWriter {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use semio_s_plugin_stdio::artifacts::docx::engine::build_minimal_docx;
-    use semio_s_plugin_stdio::artifacts::docx::schema::snapshot::DocxDocument;
+    use semio_s_artifact_stdio_docx::engine::build_minimal_docx;
+    use semio_s_artifact_stdio_docx::schema::snapshot::DocxDocument;
 
     #[semio_framework_async_macros::async_test]
     async fn docx_into_writer_joins_paragraph_runs() {

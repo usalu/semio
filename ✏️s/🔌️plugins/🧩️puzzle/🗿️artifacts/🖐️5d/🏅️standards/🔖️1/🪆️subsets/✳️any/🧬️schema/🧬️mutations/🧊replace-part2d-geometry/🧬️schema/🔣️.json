@@ -1,0 +1,27 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/puzzle/5d/1/any/mutation/replace-part2d-geometry.json",
+  "title": "ReplacePart2dGeometry",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "newShape": {
+      "type": "string"
+    },
+    "newRadius": {
+      "type": "number"
+    },
+    "newWidth": {
+      "type": "number"
+    },
+    "newHeight": {
+      "type": "number"
+    }
+  }
+}

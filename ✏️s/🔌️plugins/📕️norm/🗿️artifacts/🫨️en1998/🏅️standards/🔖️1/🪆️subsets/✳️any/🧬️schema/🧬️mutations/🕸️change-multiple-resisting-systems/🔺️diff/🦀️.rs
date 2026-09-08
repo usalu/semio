@@ -9,6 +9,6 @@ pub fn diff(payload: &ChangeMultipleResistingSystems, base: &En1998Snapshot) -> 
     if base.multiple_resisting_systems == payload.new_multiple_resisting_systems {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Multiple resisting systems flag is already {}.", payload.new_multiple_resisting_systems));
     }
-    protocol::MutationOutcome::new(En1998Diff { multiple_resisting_systems: Some(payload.new_multiple_resisting_systems.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1998Diff { multiple_resisting_systems: Some(payload.new_multiple_resisting_systems), ..Default::default() })
 }
 //#endregion 🔖️Diff

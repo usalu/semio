@@ -7,8 +7,8 @@
 //! kill directive (W0: "shared verbatim across jpg/png/tiff, png already killed its own copy") —
 //! `width`/`height`/`pixels` are first-class fields here, no shared wrapper type.
 
-use crate::artifacts::jpg::STDIO_JPG_DOCUMENT_SCHEMA;
-use schema::ArtifactSchema;
+use crate::STDIO_JPG_DOCUMENT_SCHEMA;
+use framework_schema::ArtifactSchema;
 
 //#region Jfif
 /// 📏️ JFIF APP0 `units` byte (ITU-T T.871 / JFIF 1.02 §). `Aspect` means `x_density`/
@@ -290,11 +290,11 @@ impl store::ArtifactDsl for JpgSnapshot {
             bytes.push(byte);
             i += 2;
         }
-        crate::artifacts::jpg::engine::decode_jpg(&bytes).map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))
+        crate::engine::decode_jpg(&bytes).map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))
     }
 
     fn print_dsl(&self) -> String {
-        let bytes = crate::artifacts::jpg::engine::encode_jpg(self).unwrap_or_default();
+        let bytes = crate::engine::encode_jpg(self).unwrap_or_default();
         let body: String = bytes.iter().map(|b| format!("{b:02x}")).collect();
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
@@ -304,7 +304,7 @@ impl store::ArtifactDsl for JpgSnapshot {
 impl store::ArtifactPack for JpgSnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
-        let raw = crate::artifacts::jpg::engine::encode_jpg(self).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let raw = crate::engine::encode_jpg(self).map_err(|e| store::PackError::Schema(e.to_string()))?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
@@ -315,7 +315,7 @@ impl store::ArtifactPack for JpgSnapshot {
             return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
         }
         let _ = options;
-        crate::artifacts::jpg::engine::decode_jpg(&inner).map_err(|e| store::PackError::Schema(e.to_string()))
+        crate::engine::decode_jpg(&inner).map_err(|e| store::PackError::Schema(e.to_string()))
     }
 }
 //#endregion HandcraftedArtifactCodecs

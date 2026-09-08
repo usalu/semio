@@ -115,10 +115,10 @@ mod subject {
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_plugin_stdio_test_oracle::law::{inverse_restores_within, mutation_is_observable_within};
     use semio_s_plugin_stdio_test_oracle::artifacts::pdf::standards::v1_7::subsets::base::UNOBSERVABLE;
-    use semio_s_plugin_stdio::artifacts::pdf::standards::v1_7::subsets::base::io::{decode_pdf, encode_pdf};
-    use semio_s_plugin_stdio::artifacts::pdf::standards::v1_7::subsets::base::schema::diff::PdfPathSegment;
-    use semio_s_plugin_stdio::artifacts::pdf::standards::v1_7::subsets::base::schema::mutations::*;
-    use semio_s_plugin_stdio::artifacts::pdf::standards::v1_7::subsets::base::schema::snapshot::{ObjRef, PdfDecimal, PdfDictEntry, PdfInfo, PdfObject, PdfPage, PdfSnapshot};
+    use crate::standards::v1_7::subsets::base::io::{decode_pdf, encode_pdf};
+    use crate::standards::v1_7::subsets::base::schema::diff::PdfPathSegment;
+    use crate::standards::v1_7::subsets::base::schema::mutations::*;
+    use crate::standards::v1_7::subsets::base::schema::snapshot::{ObjRef, PdfDecimal, PdfDictEntry, PdfInfo, PdfObject, PdfPage, PdfSnapshot};
     use semio_s_plugin_stdio_test_oracle::artifacts::pdf::standards::v1_7::subsets::base::project_pdf_1_7;
 
     //#region 🔖️SpecCodec

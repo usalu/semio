@@ -5,7 +5,7 @@
   "displayName": "Set Scalar",
   "emoji": "✏️",
   "aggregateVariant": "SetScalar",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "set-scalar",
   "binaryTag": 5,
   "invertibility": "explicit-mutation",

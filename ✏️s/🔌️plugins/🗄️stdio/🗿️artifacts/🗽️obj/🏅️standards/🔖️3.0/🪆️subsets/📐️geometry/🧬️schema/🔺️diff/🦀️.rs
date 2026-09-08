@@ -36,12 +36,12 @@ pub(crate) type NamedDiffParts<D, T> = (Vec<String>, Vec<(String, D)>, Vec<(usiz
 
 use std::collections::{BTreeSet, HashMap, HashSet};
 
-use crate::artifacts::obj::schema::snapshot::{ObjFace, ObjFaceVertex, ObjGroup, ObjNormal, ObjObject, ObjSmoothingRange, ObjTexCoord, ObjUnknownStatement, ObjUsemtlRange, ObjVertex};
-use crate::artifacts::obj::ObjSnapshot;
+use crate::schema::snapshot::{ObjFace, ObjFaceVertex, ObjGroup, ObjNormal, ObjObject, ObjSmoothingRange, ObjTexCoord, ObjUnknownStatement, ObjUsemtlRange, ObjVertex};
+use crate::ObjSnapshot;
 use protocol::command::DiffAlgebra;
 use protocol::DiffCodec;
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
-use schema::ArtifactSchema;
+use framework_schema::ArtifactSchema;
 
 //#region IndexCollectionCore
 /// 🧮 Per-item sparse-diff behavior shared by the four flat, position-keyed collections. `Diff`

@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/block/3d/1/any/mutation/change-vortex-kind-color.json",
+  "title": "ChangeVortexKindColor",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newColor"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "newColor": {
+      "type": "string"
+    }
+  }
+}

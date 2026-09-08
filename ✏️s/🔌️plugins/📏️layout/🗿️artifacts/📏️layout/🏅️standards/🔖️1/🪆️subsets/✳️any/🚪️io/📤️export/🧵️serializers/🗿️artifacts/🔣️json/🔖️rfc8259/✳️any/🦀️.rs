@@ -1,6 +1,6 @@
 //! 🧾️ Serialize layout through the first-party JSON artifact codec.
 use crate::artifacts::layout::LayoutSnapshot;
-use semio_s_plugin_stdio::artifacts::json::schema::snapshot::JsonSnapshot;
+use semio_s_artifact_stdio_json::schema::snapshot::JsonSnapshot;
 
 pub fn register() {}
 
@@ -24,7 +24,7 @@ mod tests {
         let parsed: serde_json::Value = serde_json::from_str(&actual).unwrap();
         for (key, value) in oracle.as_object().unwrap() { assert_eq!(&parsed[key], value, "field {key}"); }
         let artifact = serialize(&snapshot).unwrap();
-        let artifact_json = semio_s_plugin_stdio::artifacts::json::schema::snapshot::write_json_text(&artifact.value);
+        let artifact_json = semio_s_artifact_stdio_json::schema::snapshot::write_json_text(&artifact.value);
         assert_eq!(serde_json::from_str::<serde_json::Value>(&artifact_json).unwrap(), parsed);
         assert_eq!(crate::artifacts::layout::schema::parse_layout_document(&artifact_json).unwrap(), snapshot);
     }

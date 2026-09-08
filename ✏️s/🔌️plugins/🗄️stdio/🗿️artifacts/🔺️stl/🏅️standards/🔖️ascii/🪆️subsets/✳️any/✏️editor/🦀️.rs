@@ -2,8 +2,8 @@
 //! 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §2.1). `StlAnyEditor`
 //! implements `ArtifactEditor`, wiring the shared `MeshWindowKit` to a single Main window.
 
-use crate::artifacts::stl::standards::v_ascii::subsets::any::schema::mutations::StlMutation;
-use crate::artifacts::stl::standards::v_ascii::subsets::any::schema::snapshot::StlSnapshot;
+use crate::standards::v_ascii::subsets::any::schema::mutations::StlMutation;
+use crate::standards::v_ascii::subsets::any::schema::snapshot::StlSnapshot;
 use crate::editor::stl::modes::edit;
 use crate::editor::stl::modes::edit::windows::main;
 use semio_framework_plugin::app::InteractionView;

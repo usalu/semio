@@ -11,7 +11,7 @@
 /// never fabricated into a partial/empty document.
 #[derive(Clone, Debug, PartialEq)]
 pub enum DocxError {
-    Opc(crate::artifacts::zip::opc::OpcError),
+    Opc(semio_s_artifact_stdio_zip::opc::OpcError),
     MissingMainDocumentRelationship,
     MissingPart(String),
     Xml { part: String, detail: String },
@@ -32,8 +32,8 @@ impl std::fmt::Display for DocxError {
 
 impl std::error::Error for DocxError {}
 
-impl From<crate::artifacts::zip::opc::OpcError> for DocxError {
-    fn from(e: crate::artifacts::zip::opc::OpcError) -> Self {
+impl From<semio_s_artifact_stdio_zip::opc::OpcError> for DocxError {
+    fn from(e: semio_s_artifact_stdio_zip::opc::OpcError) -> Self {
         Self::Opc(e)
     }
 }
@@ -70,8 +70,8 @@ pub const STRICT_REL_TYPE_STYLES: &str = "http://purl.oclc.org/ooxml/officeDocum
 
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use crate::artifacts::docx::standards::v_ecma_376::subsets::base::schema::DocxAnalyzer;
-    use crate::artifacts::docx::DocxSnapshot;
+    use crate::standards::v_ecma_376::subsets::base::schema::DocxAnalyzer;
+    use crate::DocxSnapshot;
     use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.docx", standard: StandardId("ecma-376"), subset: SubsetId("*") };
@@ -115,9 +115,9 @@ pub use derived_composition::*;
 
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
-    use crate::artifacts::docx::standards::v_ecma_376::subsets::base::schema::DocxComposer as DocxRawAnyComposer;
-    use crate::artifacts::docx::standards::v_ecma_376::subsets::strict::schema::DocxStrictComposer;
-    use crate::artifacts::docx::standards::v_ecma_376::subsets::transitional::schema::DocxTransitionalComposer;
+    use crate::standards::v_ecma_376::subsets::base::schema::DocxComposer as DocxRawAnyComposer;
+    use crate::standards::v_ecma_376::subsets::strict::schema::DocxStrictComposer;
+    use crate::standards::v_ecma_376::subsets::transitional::schema::DocxTransitionalComposer;
     use semio_framework_plugin::{composer_entry_of, ComposerEntry};
     use std::sync::OnceLock;
 

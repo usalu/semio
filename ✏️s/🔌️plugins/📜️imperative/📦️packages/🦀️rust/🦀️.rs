@@ -492,8 +492,6 @@ semio_framework_plugin::plugin_exports!(plugin::plugin, plugin::ImperativeApps);
 pub mod examples {
     #[path = "../../🗿️artifacts/📜️procedure/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🦀️.rs"]
     pub mod app_procedure_demo_session;
-    #[path = "../../🗿️artifacts/📜️procedure/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️.rs"]
-    pub mod art_procedure_demo;
     #[cfg(test)]
     #[path = "../../🗿️artifacts/📜️procedure/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🦀️.rs"]
     mod art_procedure_demo_tests;

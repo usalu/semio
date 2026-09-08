@@ -5,7 +5,7 @@
 //! (`ArtifactCommand::MigrateDialect`). This leaf exists so `🪆️subsets/🔰️basic/🧬️schema/` is
 //! present per `🔣️taxonomy.json`'s `subsetChildDirs`, without duplicating the schema definition.
 
-pub use crate::artifacts::svg::standards::v1_1::subsets::base::schema::*;
+pub use crate::standards::v1_1::subsets::base::schema::*;
 
 //#region 🧬️Mutations
 /// 🧬️ THIS subset's own mutation vocabulary — `SvgBasicMutation`, not the `✳️any` subset's
@@ -18,10 +18,10 @@ pub use mutations::{apply_svg_basic_mutation, SvgBasicMutation, KINDS as BASIC_M
 //#endregion 🧬️Mutations
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use crate::artifacts::svg::standards::v1_1::subsets::base::schema::snapshot::set_element_attr;
-    use crate::artifacts::svg::standards::v1_1::subsets::basic::schema::check_svg_basic_conformance;
-    use crate::artifacts::svg::standards::v1_1::subsets::basic::schema::mutations::{apply_svg_basic_mutation, SvgBasicMutation};
-    use crate::artifacts::svg::{SvgDiff, SvgSnapshot};
+    use crate::standards::v1_1::subsets::base::schema::snapshot::set_element_attr;
+    use crate::standards::v1_1::subsets::basic::schema::check_svg_basic_conformance;
+    use crate::standards::v1_1::subsets::basic::schema::mutations::{apply_svg_basic_mutation, SvgBasicMutation};
+    use crate::{SvgDiff, SvgSnapshot};
     use dsl::Diagnostic;
     use semio_framework_plugin::ArtifactBuilder;
 
@@ -83,8 +83,8 @@ pub mod derived_construction {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use crate::artifacts::svg::standards::v1_1::subsets::basic::schema::CODE_FILTER_PRIMITIVE;
-        use crate::artifacts::xml::schema::snapshot::{XmlAttr, XmlNode};
+        use crate::standards::v1_1::subsets::basic::schema::CODE_FILTER_PRIMITIVE;
+        use semio_s_artifact_stdio_xml::schema::snapshot::{XmlAttr, XmlNode};
 
         #[semio_framework_async_macros::async_test]
         async fn empty_builder_injects_profile_and_builds_clean() {
@@ -104,7 +104,7 @@ pub mod derived_construction {
             if let Some(XmlNode::Element { children, .. }) = snapshot.doc.root.as_mut() {
                 children.push(XmlNode::Element { name: "filter".into(), attrs: vec![XmlAttr { name: "id".into(), value: "f1".into() }], children: vec![XmlNode::Element { name: "feMorphology".into(), attrs: vec![], children: vec![] }] });
             }
-            let (mutated, _diff) = SvgBasicBuilderConstruction::from_snapshot(SvgSnapshot::default()).mutate(SvgBasicMutation::SetSnapshot(crate::artifacts::svg::standards::v1_1::subsets::basic::schema::mutations::set_snapshot::SetSnapshot { snapshot }));
+            let (mutated, _diff) = SvgBasicBuilderConstruction::from_snapshot(SvgSnapshot::default()).mutate(SvgBasicMutation::SetSnapshot(crate::standards::v1_1::subsets::basic::schema::mutations::set_snapshot::SetSnapshot { snapshot }));
             let err = mutated.build().expect_err("a feMorphology primitive must fail build()");
             assert!(err.iter().any(|d| d.code.0 == CODE_FILTER_PRIMITIVE));
         }
@@ -122,10 +122,10 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use crate::artifacts::svg::standards::v1_1::subsets::base::schema::snapshot::SvgSnapshot;
-    use crate::artifacts::svg::standards::v1_1::subsets::base::schema::SvgAnalyzer as SvgAnyAnalyzer;
-    pub use crate::artifacts::svg::standards::v1_1::subsets::base::schema::SvgParts;
-    use crate::artifacts::xml::schema::snapshot::{XmlAttr, XmlNode};
+    use crate::standards::v1_1::subsets::base::schema::snapshot::SvgSnapshot;
+    use crate::standards::v1_1::subsets::base::schema::SvgAnalyzer as SvgAnyAnalyzer;
+    pub use crate::standards::v1_1::subsets::base::schema::SvgParts;
+    use semio_s_artifact_stdio_xml::schema::snapshot::{XmlAttr, XmlNode};
     use dsl::{Diagnostic, FaultCode, Severity, TextSpan};
     use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
     use std::collections::HashMap;

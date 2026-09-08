@@ -97,7 +97,7 @@
         {
           "id": "insert-element",
           "capability": "xml-1-0-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -117,7 +117,7 @@
         {
           "id": "remove-element",
           "capability": "xml-1-0-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -137,7 +137,7 @@
         {
           "id": "set-attribute",
           "capability": "xml-1-0-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -157,7 +157,7 @@
         {
           "id": "set-declaration",
           "capability": "xml-1-0-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -177,7 +177,7 @@
         {
           "id": "set-doctype",
           "capability": "xml-1-0-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -197,7 +197,7 @@
         {
           "id": "set-text",
           "capability": "xml-1-0-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],

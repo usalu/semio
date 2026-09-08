@@ -1,6 +1,8 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/json/rfc8259/base/mutations.json",
   "title": "JsonMutation",
+  "description": "Discriminated union over this module's mutation leaves (adjacently tagged); every payload is the leaf's own schema, referenced, never restated.",
   "oneOf": [
     {
       "type": "object",
@@ -11,10 +13,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "set-member"
+          "const": "insertArrayElement"
         },
         "payload": {
-          "$ref": "✏️set-member/🧬️.schema.json"
+          "$ref": "./📥️insert-array-element/🧬️schema/🔣️.json"
         }
       }
     },
@@ -27,10 +29,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "remove-member"
+          "const": "removeArrayElement"
         },
         "payload": {
-          "$ref": "🗑️remove-member/🧬️.schema.json"
+          "$ref": "./📤️remove-array-element/🧬️schema/🔣️.json"
         }
       }
     },
@@ -43,10 +45,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "insert-array-element"
+          "const": "removeMember"
         },
         "payload": {
-          "$ref": "📥️insert-array-element/🧬️.schema.json"
+          "$ref": "./🗑️remove-member/🧬️schema/🔣️.json"
         }
       }
     },
@@ -59,10 +61,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "remove-array-element"
+          "const": "setMember"
         },
         "payload": {
-          "$ref": "📤️remove-array-element/🧬️.schema.json"
+          "$ref": "./✏️set-member/🧬️schema/🔣️.json"
         }
       }
     },
@@ -75,10 +77,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "set-scalar"
+          "const": "setScalar"
         },
         "payload": {
-          "$ref": "🔢️set-scalar/🧬️.schema.json"
+          "$ref": "./🔢️set-scalar/🧬️schema/🔣️.json"
         }
       }
     }

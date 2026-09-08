@@ -4,8 +4,8 @@
 //! document with only a root element is depth 1, no root at all is depth 0); `hasDoctype` mirrors
 //! the snapshot's own `doctype` presence.
 
-use crate::artifacts::xml::schema::snapshot::XmlNode;
-use crate::artifacts::xml::XmlSnapshot;
+use crate::schema::snapshot::XmlNode;
+use crate::XmlSnapshot;
 
 //#region 🔖️Outline
 /// 🧾️ `Xml` document outline.
@@ -53,7 +53,7 @@ impl XmlOutline {
 //#region 🧪️Tests
 mod tests {
     use super::*;
-    use crate::artifacts::xml::schema::snapshot::XmlDocument;
+    use crate::schema::snapshot::XmlDocument;
 
     #[semio_framework_async_macros::async_test]
     async fn counts_elements_and_depth_over_nested_structure() {

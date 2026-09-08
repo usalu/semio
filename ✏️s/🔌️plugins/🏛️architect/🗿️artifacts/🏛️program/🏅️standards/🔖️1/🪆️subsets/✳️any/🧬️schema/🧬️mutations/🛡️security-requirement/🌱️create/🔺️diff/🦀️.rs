@@ -10,7 +10,7 @@ use crate::artifacts::program::ProgramSnapshot;
 pub fn diff(payload: &CreateSecurityRequirement, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
     let id = payload.security_requirement.header.id.clone();
     if base.security.iter().any(|row| row.header.id == id) {
-        return protocol::MutationOutcome::fatal("mutation.duplicate-id", "A security requirement already exists with this id.", [id.0.clone()]);
+        return protocol::MutationOutcome::fatal("mutation.duplicate-id", "A security requirement already exists with this id.", [id.0]);
     }
     protocol::MutationOutcome::new(ProgramDiff { security: Some(ProgramSecurityDelta { added: vec![payload.security_requirement.clone()], ..Default::default() }), ..Default::default() })
 }

@@ -5,7 +5,7 @@
   "displayName": "Change Pv System Azimuth",
   "emoji": "🧿️",
   "aggregateVariant": "ChangePvSystemAzimuth",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-pv-system-azimuth",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

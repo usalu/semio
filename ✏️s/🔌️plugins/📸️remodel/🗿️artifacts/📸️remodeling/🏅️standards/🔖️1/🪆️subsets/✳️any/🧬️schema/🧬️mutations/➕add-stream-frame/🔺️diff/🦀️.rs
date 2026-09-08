@@ -15,7 +15,7 @@ pub fn diff(payload: &super::AddStreamFrame, base: &RemodelingSnapshot) -> proto
     if payload.kind != stream.kind {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Stream \"{}\" is not of the media kind this frame declares.", payload.id), [payload.id.clone()]);
     }
-    if stream.frames.iter().any(|frame| *frame == payload.frame) {
+    if stream.frames.contains(&payload.frame) {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Stream \"{}\" already has frame {}.", payload.id, payload.frame.index));
     }
     let mut streams = base.streams.clone();

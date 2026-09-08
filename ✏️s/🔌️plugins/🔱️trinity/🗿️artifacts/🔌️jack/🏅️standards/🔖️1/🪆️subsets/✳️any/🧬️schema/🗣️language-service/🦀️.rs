@@ -12,7 +12,7 @@ pub mod queryable {
     fn trinity_jack_manifest() -> &'static graph::manifest::GraphManifest {
         use std::sync::OnceLock;
         static MANIFEST: OnceLock<graph::manifest::GraphManifest> = OnceLock::new();
-        MANIFEST.get_or_init(|| graph::manifest::manifest_by_id("nakagin").expect("nakagin manifest").clone())
+        MANIFEST.get_or_init(|| graph::manifest::manifest_by_id("nakagin").expect("nakagin manifest"))
     }
 
     fn trinity_queryable_edges(graph: &Graph) -> Vec<QueryableEdge> {

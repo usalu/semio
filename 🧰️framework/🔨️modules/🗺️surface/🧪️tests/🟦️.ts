@@ -4,7 +4,7 @@ import { dirname, join } from "node:path";
 import Ajv from "ajv";
 import ts from "typescript";
 import fixture from "./📇️bindings.json";
-import schema from "./🧬️bindings.schema.json";
+import schema from "./../🧬️schema/🔣️.json";
 import { fixedFilenameContractIdsForPath, loadTaxonomy } from "../../../🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts";
 
 test("surface compiler companions keep their exact paired identity in the handpicked output owner", () => {

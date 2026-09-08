@@ -7,6 +7,6 @@ use crate::artifacts::din16798::Din16798Snapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(_payload: &ChangeHeatRecoveryEtaMin, base: &Din16798Snapshot) -> Vec<Din16798Mutation> {
-    vec![Din16798Mutation::ChangeHeatRecoveryEtaMin(ChangeHeatRecoveryEtaMin { new_heat_recovery_eta_min: base.heat_recovery_eta_min.clone() })]
+    vec![Din16798Mutation::ChangeHeatRecoveryEtaMin(ChangeHeatRecoveryEtaMin { new_heat_recovery_eta_min: base.heat_recovery_eta_min })]
 }
 //#endregion 🔖️Inverse

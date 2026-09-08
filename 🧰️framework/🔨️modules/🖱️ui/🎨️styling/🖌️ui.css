@@ -7068,14 +7068,14 @@
 }
 
 [data-slot="introduction-info-box"],
-[data-slot="dialog-box"] {
+[data-slot="dialog-content"] {
   border-width: 0;
   border-style: none;
   border-color: transparent !important;
 }
 
 [data-slot="introduction-info-box"]:hover,
-[data-slot="dialog-box"]:hover {
+[data-slot="dialog-content"]:hover {
   border-color: transparent !important;
 }
 

@@ -1,0 +1,26 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/puzzle/2d/1/any/mutation/edit-node-text.json",
+  "title": "EditNodeText",
+  "description": "The `edit-node-text` mutation record — internally tagged `\"mutation\": \"editNodeText\"`, the one branch the aggregate `../🔣️.json` union carries for this kind.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "editNodeText"
+    },
+    "id": {
+      "type": "string"
+    },
+    "newText": {
+      "type": [
+        "string",
+        "null"
+      ]
+    }
+  }
+}

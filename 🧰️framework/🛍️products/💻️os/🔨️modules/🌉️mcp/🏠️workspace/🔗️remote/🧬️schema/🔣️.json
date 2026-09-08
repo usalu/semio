@@ -1,40 +1,15 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://semio.tech/schema/mcp/authenticated-hub-descriptor-index-fixture-v1.json",
-  "title": "Authenticated Hub Descriptor Index Fixture",
-  "type": "object",
-  "additionalProperties": false,
-  "required": ["contractVersion", "limits", "cases"],
-  "properties": {
-    "contractVersion": { "const": 1 },
-    "limits": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["maxDocuments", "maxTokenBytes", "maxDiagnosticBytes", "operationTimeoutMs"],
-      "properties": {
-        "maxDocuments": { "const": 4096 },
-        "maxTokenBytes": { "const": 4096 },
-        "maxDiagnosticBytes": { "const": 4096 },
-        "operationTimeoutMs": { "const": 10000 }
-      }
-    },
-    "cases": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["noToken", "expiredToken", "publicWithoutMembership", "memberReady", "sameDocumentOtherSpace", "memberRevoked", "streamReconnect"],
-      "properties": {
-        "noToken": { "$ref": "#/$defs/case" },
-        "expiredToken": { "$ref": "#/$defs/case" },
-        "publicWithoutMembership": { "$ref": "#/$defs/case" },
-        "memberReady": { "$ref": "#/$defs/case" },
-        "sameDocumentOtherSpace": { "$ref": "#/$defs/case" },
-        "memberRevoked": { "$ref": "#/$defs/case" },
-        "streamReconnect": { "$ref": "#/$defs/case" }
-      }
-    }
-  },
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/os/mcp/workspace/remote/component.json",
+  "title": "Semio OS MCP Remote Workspace",
   "$defs": {
-    "case": {
+    "Sha256Hex": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "Sha256Etag": { "type": "string", "pattern": "^\"[0-9a-f]{64}\"$" },
+    "LowerHex": { "type": "string", "pattern": "^[0-9a-f]*$" },
+    "ScopeId": { "type": "string", "minLength": 1, "maxLength": 256 },
+    "HubOrigin": { "type": "string", "minLength": 1, "maxLength": 2048, "pattern": "^https?://[^\\s/]+" },
+    "Generation": { "type": "integer", "minimum": 1, "maximum": 9007199254740991 },
+    "AuthenticatedHubDescriptorIndexCaseV1": {
       "type": "object",
       "additionalProperties": false,
       "required": ["tokenPresent", "responses", "expected"],
@@ -46,11 +21,16 @@
           "items": {
             "type": "object",
             "additionalProperties": false,
-            "required": ["status", "body"],
+            "required": ["status"],
             "properties": {
               "status": { "type": "integer", "minimum": 100, "maximum": 599 },
-              "body": {}
-            }
+              "body": {},
+              "canonicalBody": { "type": "string" }
+            },
+            "oneOf": [
+              { "type": "object", "required": ["body"], "properties": { "body": {} } },
+              { "type": "object", "required": ["canonicalBody"], "properties": { "canonicalBody": { "type": "string" } } }
+            ]
           }
         },
         "streamMessage": { "type": "object" },
@@ -69,6 +49,121 @@
             },
             "noTokenLeak": { "const": true }
           }
+        }
+      }
+    },
+    "AuthenticatedHubDescriptorIndexV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["contractVersion", "limits", "cases"],
+      "properties": {
+        "contractVersion": { "const": 1 },
+        "limits": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["maxDocuments", "maxTokenBytes", "maxDiagnosticBytes", "operationTimeoutMs"],
+          "properties": {
+            "maxDocuments": { "const": 4096 },
+            "maxTokenBytes": { "const": 4096 },
+            "maxDiagnosticBytes": { "const": 4096 },
+            "operationTimeoutMs": { "const": 10000 }
+          }
+        },
+        "cases": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["noToken", "expiredToken", "publicWithoutMembership", "memberReady", "sameDocumentOtherSpace", "memberRevoked", "streamReconnect"],
+          "properties": {
+            "noToken": { "$ref": "#/$defs/AuthenticatedHubDescriptorIndexCaseV1" },
+            "expiredToken": { "$ref": "#/$defs/AuthenticatedHubDescriptorIndexCaseV1" },
+            "publicWithoutMembership": { "$ref": "#/$defs/AuthenticatedHubDescriptorIndexCaseV1" },
+            "memberReady": { "$ref": "#/$defs/AuthenticatedHubDescriptorIndexCaseV1" },
+            "sameDocumentOtherSpace": { "$ref": "#/$defs/AuthenticatedHubDescriptorIndexCaseV1" },
+            "memberRevoked": { "$ref": "#/$defs/AuthenticatedHubDescriptorIndexCaseV1" },
+            "streamReconnect": { "$ref": "#/$defs/AuthenticatedHubDescriptorIndexCaseV1" }
+          }
+        }
+      }
+    },
+    "CanonicalPairCacheMountBindingV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["hubOrigin", "authorityGeneration", "spaceId", "documentId", "sameDocumentOtherSpace", "descriptorDigest", "checkpointId", "catalogGeneration"],
+      "properties": {
+        "hubOrigin": { "$ref": "#/$defs/HubOrigin" },
+        "authorityGeneration": { "$ref": "#/$defs/Generation" },
+        "spaceId": { "$ref": "#/$defs/ScopeId" },
+        "documentId": { "$ref": "#/$defs/ScopeId" },
+        "sameDocumentOtherSpace": { "$ref": "#/$defs/ScopeId" },
+        "descriptorDigest": { "$ref": "#/$defs/Sha256Hex" },
+        "checkpointId": { "$ref": "#/$defs/Sha256Hex" },
+        "catalogGeneration": { "$ref": "#/$defs/Generation" }
+      }
+    },
+    "CanonicalPairWireV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mediaType", "etag", "packHex", "sprHex", "packSha256", "sprSha256", "aggregateSha256", "wireHex"],
+      "properties": {
+        "mediaType": { "const": "application/vnd.semio.canonical-checkpoint-pair.v1" },
+        "etag": { "$ref": "#/$defs/Sha256Etag" },
+        "packHex": { "$ref": "#/$defs/LowerHex" },
+        "sprHex": { "$ref": "#/$defs/LowerHex" },
+        "packSha256": { "$ref": "#/$defs/Sha256Hex" },
+        "sprSha256": { "$ref": "#/$defs/Sha256Hex" },
+        "aggregateSha256": { "$ref": "#/$defs/Sha256Hex" },
+        "wireHex": { "$ref": "#/$defs/LowerHex" }
+      }
+    },
+    "CanonicalPairCacheMountV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "limits", "binding", "valid", "negativeVectors", "lifecycle"],
+      "properties": {
+        "schema": { "const": "semio.mcp.canonical-pair-cache-mount.fixture/v1" },
+        "limits": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["pairBytes", "cacheBytes", "entries", "headerBytes", "recordBytes"],
+          "properties": {
+            "pairBytes": { "const": 4194304 },
+            "cacheBytes": { "const": 8388608 },
+            "entries": { "const": 4 },
+            "headerBytes": { "const": 16384 },
+            "recordBytes": { "const": 4096 }
+          }
+        },
+        "binding": { "$ref": "#/$defs/CanonicalPairCacheMountBindingV1" },
+        "valid": { "$ref": "#/$defs/CanonicalPairWireV1" },
+        "negativeVectors": {
+          "type": "array",
+          "minItems": 15,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "truncated",
+              "reordered",
+              "duplicate",
+              "oversize-record",
+              "wrong-scope",
+              "wrong-digest",
+              "wrong-checkpoint",
+              "malformed-utf8",
+              "control-character",
+              "bad-pack-hash",
+              "bad-aggregate",
+              "bad-etag",
+              "missing-terminal",
+              "trailing-data",
+              "same-document-other-space"
+            ]
+          }
+        },
+        "lifecycle": {
+          "type": "array",
+          "minItems": 8,
+          "uniqueItems": true,
+          "items": { "enum": ["cache-hit", "cache-miss", "stale-completion", "eviction", "revoke", "stream-loss-reconnect", "rebootstrap", "cancel", "restart"] }
         }
       }
     }

@@ -1,0 +1,24 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/node/delete.json",
+  "title": "GltfDeleteNodePayloadV1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "index"
+  ],
+  "properties": {
+    "index": {
+      "type": "integer",
+      "minimum": 0
+    }
+  },
+  "x-semio": {
+    "id": "s.stdio.gltf.mutation.delete-node.v1",
+    "version": 1,
+    "phase": "mutation",
+    "touchedPathPattern": "document/nodes",
+    "referencePolicy": "typed references remap, repair, or reject"
+  },
+  "x-semio-mutation": "delete-node"
+}

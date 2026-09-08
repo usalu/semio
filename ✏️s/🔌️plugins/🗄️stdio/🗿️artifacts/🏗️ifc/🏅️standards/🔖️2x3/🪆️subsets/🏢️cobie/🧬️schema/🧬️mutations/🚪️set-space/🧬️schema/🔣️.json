@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/ifc/2x3/cobie/mutation/set-space.json",
+  "title": "SetSpace",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id"
+  ],
+  "properties": {
+    "id": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "space": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/CobieSpaceRow"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "$defs": {
+    "CobieSpaceRow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "globalId",
+        "name",
+        "placement"
+      ],
+      "properties": {
+        "globalId": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "placement": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    }
+  }
+}

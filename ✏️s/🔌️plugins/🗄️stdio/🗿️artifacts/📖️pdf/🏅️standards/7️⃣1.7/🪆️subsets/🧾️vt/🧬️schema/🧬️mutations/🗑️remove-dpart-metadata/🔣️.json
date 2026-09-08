@@ -5,7 +5,7 @@
   "displayName": "Remove Dpart Metadata",
   "emoji": "🗑️",
   "aggregateVariant": "RemoveDpartMetadata",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "remove-dpart-metadata",
   "binaryTag": 17,
   "invertibility": "explicit-mutation",

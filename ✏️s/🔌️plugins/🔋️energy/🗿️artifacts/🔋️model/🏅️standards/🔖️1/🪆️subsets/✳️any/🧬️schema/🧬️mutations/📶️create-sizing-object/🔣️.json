@@ -5,7 +5,7 @@
   "displayName": "Create Sizing Object",
   "emoji": "📶️",
   "aggregateVariant": "CreateSizingObject",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "create-sizing-object",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

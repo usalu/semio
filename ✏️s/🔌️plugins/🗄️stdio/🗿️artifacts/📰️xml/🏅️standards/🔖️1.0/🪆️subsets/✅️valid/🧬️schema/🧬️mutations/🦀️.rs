@@ -57,11 +57,11 @@
 //! test adapter registers directly; it names no `XmlValidMutation` variant of its own).
 //! @see ../../../../../../🧪️tests/✅️mutate-xml-1-0-valid/🥒️.feature — the case that exercises it.
 
-use crate::artifacts::xml::schema::diff::{diff_at_path, diff_set_snapshot, XmlDiff, XmlElementDiff, XmlNodeDiff};
-use crate::artifacts::xml::schema::snapshot::{XmlDeclaration, XmlDoctype, XmlDtdDeclaration, XmlExternalId, XmlNode};
-use crate::artifacts::xml::standards::v1_0::subsets::base::schema::mutations::XmlNodePath;
-use crate::artifacts::xml::standards::v1_0::subsets::valid::schema::check_valid_conformance;
-use crate::artifacts::xml::XmlSnapshot;
+use crate::schema::diff::{diff_at_path, diff_set_snapshot, XmlDiff, XmlElementDiff, XmlNodeDiff};
+use crate::schema::snapshot::{XmlDeclaration, XmlDoctype, XmlDtdDeclaration, XmlExternalId, XmlNode};
+use crate::standards::v1_0::subsets::base::schema::mutations::XmlNodePath;
+use crate::standards::v1_0::subsets::valid::schema::check_valid_conformance;
+use crate::XmlSnapshot;
 use protocol::Mutation;
 
 //#region 🔖️Mutations
@@ -308,7 +308,7 @@ pub(crate) fn agg_inverse(this: &XmlValidMutation, base: &XmlSnapshot) -> Vec<Xm
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::xml::standards::v1_0::subsets::valid::schema::{CODE_DOCTYPE_MISSING, CODE_ROOT_NAME_MISMATCH};
+    use crate::standards::v1_0::subsets::valid::schema::{CODE_DOCTYPE_MISSING, CODE_ROOT_NAME_MISMATCH};
 
     // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
     fn valid_document() -> XmlSnapshot {

@@ -8,8 +8,8 @@
 //! an element literally named `"face"`, if present — also generic, no assumption it exists. A
 //! pure whole-snapshot fold — no `InferredField` needed.
 
-use crate::artifacts::ply::schema::snapshot::{PlyProperty, PlyValue};
-use crate::artifacts::ply::PlySnapshot;
+use crate::schema::snapshot::{PlyProperty, PlyValue};
+use crate::PlySnapshot;
 
 //#region 🔖️Bounds
 /// 📦️ Ply vertex-element bounding box plus vertex/face row counts.
@@ -95,8 +95,8 @@ pub fn compute_ply_bounds(snapshot: &PlySnapshot) -> PlyBounds {
 //#region 🧪️Tests
 mod tests {
     use super::*;
-    use crate::artifacts::ply::schema::snapshot::{PlyElement, PlyFormat, PlyRow};
-    use crate::artifacts::ply::STDIO_PLY_DOCUMENT_SCHEMA;
+    use crate::schema::snapshot::{PlyElement, PlyFormat, PlyRow};
+    use crate::STDIO_PLY_DOCUMENT_SCHEMA;
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn vertex_element(rows: Vec<[f64; 3]>) -> PlyElement {
@@ -104,9 +104,9 @@ mod tests {
             name: "vertex".into(),
             count: rows.len(),
             properties: vec![
-                PlyProperty::Scalar { name: "x".into(), kind: crate::artifacts::ply::schema::snapshot::PlyScalarType::Float },
-                PlyProperty::Scalar { name: "y".into(), kind: crate::artifacts::ply::schema::snapshot::PlyScalarType::Float },
-                PlyProperty::Scalar { name: "z".into(), kind: crate::artifacts::ply::schema::snapshot::PlyScalarType::Float },
+                PlyProperty::Scalar { name: "x".into(), kind: crate::schema::snapshot::PlyScalarType::Float },
+                PlyProperty::Scalar { name: "y".into(), kind: crate::schema::snapshot::PlyScalarType::Float },
+                PlyProperty::Scalar { name: "z".into(), kind: crate::schema::snapshot::PlyScalarType::Float },
             ],
             rows: rows.into_iter().map(|[x, y, z]| PlyRow { values: vec![PlyValue::Double(x), PlyValue::Double(y), PlyValue::Double(z)] }).collect(),
         }
@@ -117,7 +117,7 @@ mod tests {
         PlyElement {
             name: "face".into(),
             count: face_count,
-            properties: vec![PlyProperty::List { name: "vertex_indices".into(), count_kind: crate::artifacts::ply::schema::snapshot::PlyScalarType::UChar, value_kind: crate::artifacts::ply::schema::snapshot::PlyScalarType::Int }],
+            properties: vec![PlyProperty::List { name: "vertex_indices".into(), count_kind: crate::schema::snapshot::PlyScalarType::UChar, value_kind: crate::schema::snapshot::PlyScalarType::Int }],
             rows: (0..face_count).map(|_| PlyRow { values: vec![PlyValue::List(vec![PlyValue::Int(0), PlyValue::Int(1), PlyValue::Int(2)])] }).collect(),
         }
     }

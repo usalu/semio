@@ -3,9 +3,9 @@
 //! Emits the frozen `set-pixel-region` action onto the artifact's own whole-raster replace mutation.
 //! MUST NOT be reached by the sibling `viewer` module (`policyViewerPurityBreaches`).
 
-use crate::artifacts::bmp::standards::v_v3::subsets::any::schema::mutations::BmpMutation;
-use crate::artifacts::bmp::standards::v_v3::subsets::any::schema::snapshot::BmpSnapshot;
-use crate::artifacts::bmp::{BMP_DIALECT, STDIO_BMP_DOCUMENT_SCHEMA};
+use crate::standards::v_v3::subsets::any::schema::mutations::BmpMutation;
+use crate::standards::v_v3::subsets::any::schema::snapshot::BmpSnapshot;
+use crate::{BMP_DIALECT, STDIO_BMP_DOCUMENT_SCHEMA};
 use crate::editor::bmp::modes::edit;
 use crate::editor::bmp::modes::edit::windows::main;
 use semio_framework_plugin::{ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation};
@@ -61,7 +61,7 @@ impl ArtifactEditor for BmpEditor {
         _engines: &EngineHandles,
     ) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
         match command {
-            BmpEditCommand::SetPixelRegion { pixels } => Ok(Emit::mutations(vec![BmpMutation::ReplacePixelData(crate::artifacts::bmp::schema::mutations::ReplacePixelDataMutation { pixels: pixels.clone() })])),
+            BmpEditCommand::SetPixelRegion { pixels } => Ok(Emit::mutations(vec![BmpMutation::ReplacePixelData(crate::schema::mutations::ReplacePixelDataMutation { pixels: pixels.clone() })])),
         }
     }
 

@@ -290,7 +290,7 @@ pub fn diff_set_representation(index: usize, item: BlockRepresentation, base: &B
     let mut delta = Block3dRepresentationsDelta { added: vec![item.clone()], ..Default::default() };
     if block3d_index_of(&base.representations, &item.id).is_none() {
         let mut order: Vec<_> = base.representations.iter().map(|e| e.id.clone()).collect();
-        order.insert(index.min(order.len()), item.id.clone());
+        order.insert(index.min(order.len()), item.id);
         delta.reordered = Some(order);
     }
     Block3dDiff { representations: Some(delta), ..Default::default() }
@@ -303,7 +303,7 @@ pub fn diff_set_vortex_kind(index: usize, item: Block3dVortexKind, base: &Block3
     let mut delta = Block3dVortexKindsDelta { added: vec![item.clone()], ..Default::default() };
     if block3d_index_of(&current, &item.id).is_none() {
         let mut order: Vec<_> = current.iter().map(|e| e.id.clone()).collect();
-        order.insert(index.min(order.len()), item.id.clone());
+        order.insert(index.min(order.len()), item.id);
         delta.reordered = Some(order);
     }
     Block3dDiff { vortex_kinds: Some(delta), ..Default::default() }
@@ -315,7 +315,7 @@ pub fn diff_set_vortex(index: usize, item: Block3dVortexTemplate, base: &Block3d
     let mut delta = Block3dVorticesDelta { added: vec![item.clone()], ..Default::default() };
     if block3d_index_of(&base.vortices, &item.id).is_none() {
         let mut order: Vec<_> = base.vortices.iter().map(|e| e.id.clone()).collect();
-        order.insert(index.min(order.len()), item.id.clone());
+        order.insert(index.min(order.len()), item.id);
         delta.reordered = Some(order);
     }
     Block3dDiff { vortices: Some(delta), ..Default::default() }
@@ -327,7 +327,7 @@ pub fn diff_set_compatibility_rule(index: usize, rule: BlockCompatibilityRule, b
     let mut delta = Block3dCompatibilityDelta { added: vec![rule.clone()], ..Default::default() };
     if block3d_index_of(&base.compatibility, &rule.id).is_none() {
         let mut order: Vec<_> = base.compatibility.iter().map(|e| e.id.clone()).collect();
-        order.insert(index.min(order.len()), rule.id.clone());
+        order.insert(index.min(order.len()), rule.id);
         delta.reordered = Some(order);
     }
     Block3dDiff { compatibility: Some(delta), ..Default::default() }
@@ -339,7 +339,7 @@ pub fn diff_set_attribute(index: usize, attribute: BlockAttribute, base: &Block3
     let mut delta = Block3dAttributesDelta { added: vec![attribute.clone()], ..Default::default() };
     if block3d_index_of(&base.attributes, &attribute.key).is_none() {
         let mut order: Vec<_> = base.attributes.iter().map(|e| e.key.clone()).collect();
-        order.insert(index.min(order.len()), attribute.key.clone());
+        order.insert(index.min(order.len()), attribute.key);
         delta.reordered = Some(order);
     }
     Block3dDiff { attributes: Some(delta), ..Default::default() }

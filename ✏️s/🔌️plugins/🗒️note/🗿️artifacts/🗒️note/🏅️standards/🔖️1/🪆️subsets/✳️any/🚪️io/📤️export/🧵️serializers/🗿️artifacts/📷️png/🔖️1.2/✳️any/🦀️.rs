@@ -8,8 +8,8 @@ use crate::artifacts::note::NoteSnapshot;
 use semio_framework::io::io_mechanism::Serializer;
 use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};
-use semio_s_plugin_stdio::artifacts::png::io::encode_png;
-use semio_s_plugin_stdio::artifacts::png::schema::empty_png_snapshot;
+use semio_s_artifact_stdio_png::io::encode_png;
+use semio_s_artifact_stdio_png::schema::empty_png_snapshot;
 
 pub const PNG_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.png", standard: StandardId("1.2"), subset: SubsetId::ANY };
 

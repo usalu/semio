@@ -98,9 +98,9 @@ fn round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::{mutable_input, MP3_TOLERANCE, MP3_WRITER_FREEDOM};
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_plugin_stdio::artifacts::mp3::standards::mpeg1_layer3::subsets::any::io::{decode_mp3, encode_mp3};
-    use semio_s_plugin_stdio::artifacts::mp3::standards::mpeg1_layer3::subsets::any::schema::mutations::{apply_mp3_mutation, set_frames, set_id3v1, set_id3v2, set_snapshot, Mp3Mutation};
-    use semio_s_plugin_stdio::artifacts::mp3::standards::mpeg1_layer3::subsets::any::schema::snapshot::{Id3Frame, Id3v1Tag, Id3v2Tag, Mp3Snapshot};
+    use crate::standards::mpeg1_layer3::subsets::any::io::{decode_mp3, encode_mp3};
+    use crate::standards::mpeg1_layer3::subsets::any::schema::mutations::{apply_mp3_mutation, set_frames, set_id3v1, set_id3v2, set_snapshot, Mp3Mutation};
+    use crate::standards::mpeg1_layer3::subsets::any::schema::snapshot::{Id3Frame, Id3v1Tag, Id3v2Tag, Mp3Snapshot};
     use semio_s_plugin_stdio_test_oracle::artifacts::mp3::standards::v_mpeg1_layer3::subsets::any::project_mp3;
     use semio_s_plugin_stdio_test_oracle::law::{carrier_is_exact, inverse_restores_within, round_trip_preserves_within};
 
@@ -157,7 +157,7 @@ mod subject {
         Ok(Some(Id3v1Tag { raw }))
     }
 
-    fn take_of(params: &Json, base: &Mp3Snapshot, kind: &str) -> Result<Vec<semio_s_plugin_stdio::artifacts::mp3::standards::mpeg1_layer3::subsets::any::schema::snapshot::Mp3Frame>, String> {
+    fn take_of(params: &Json, base: &Mp3Snapshot, kind: &str) -> Result<Vec<crate::standards::mpeg1_layer3::subsets::any::schema::snapshot::Mp3Frame>, String> {
         match params.get("take") {
             Some(Json::Number(count)) => {
                 let keep = *count as usize;

@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/docx/ecma-376/base/mutation/remove-part.json",
+  "title": "RemovePart",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "path"
+  ],
+  "properties": {
+    "path": {
+      "type": "string"
+    },
+    "mutation": {
+      "const": "removePart",
+      "description": "Aggregate discriminator spliced in by DocxMutation; absent when the payload stands alone."
+    }
+  }
+}

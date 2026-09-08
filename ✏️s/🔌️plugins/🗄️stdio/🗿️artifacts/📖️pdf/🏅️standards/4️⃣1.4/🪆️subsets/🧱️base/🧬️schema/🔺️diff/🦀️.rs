@@ -15,10 +15,10 @@
 //! same reason and its grammar file is written from its own `format!` call sites; this one follows
 //! it exactly, at 1.4's own much smaller field set (`W`=width, `H`=height, `X`=text).
 
-use crate::artifacts::pdf::standards::v1_4::subsets::base::schema::snapshot::{PageDoc, PdfSnapshot};
+use crate::standards::v1_4::subsets::base::schema::snapshot::{PageDoc, PdfSnapshot};
 use protocol::command::DiffAlgebra;
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
-use schema::ArtifactSchema;
+use framework_schema::ArtifactSchema;
 use std::collections::{HashMap, HashSet};
 
 //#region 🔖️PageDiff
@@ -650,7 +650,7 @@ impl protocol::DiffCodec for PdfDiff {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::pdf::STDIO_PDF_DOCUMENT_SCHEMA;
+    use crate::STDIO_PDF_DOCUMENT_SCHEMA;
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn page(width: f64, height: f64, text: &str) -> PageDoc {

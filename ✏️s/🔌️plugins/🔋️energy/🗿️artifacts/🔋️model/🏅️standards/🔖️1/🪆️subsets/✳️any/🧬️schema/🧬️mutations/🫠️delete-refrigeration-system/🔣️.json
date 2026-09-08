@@ -5,7 +5,7 @@
   "displayName": "Delete Refrigeration System",
   "emoji": "🫠️",
   "aggregateVariant": "DeleteRefrigerationSystem",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "delete-refrigeration-system",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

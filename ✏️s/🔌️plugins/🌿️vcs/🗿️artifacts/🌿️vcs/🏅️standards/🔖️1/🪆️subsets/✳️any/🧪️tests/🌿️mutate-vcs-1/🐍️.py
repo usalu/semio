@@ -3,7 +3,7 @@
 `s.vcs.vcs` is a semio-NATIVE review-checkpoint document — its two wire forms, `.vcs.dsl.semio` and
 `.vcs.pack.semio`, are grammars this repository defines and nobody else reads, so no reference
 LIBRARY exists. The reference is therefore a second IMPLEMENTATION, written from this subset's own
-committed `../../🧬️schema/📸️snapshot/🔣️.json` and each mutation's `🔣️.schema.json`, and from
+committed `../../🧬️schema/📸️snapshot/🔣️.json` and each mutation's `🧬️schema/🔣️.json`, and from
 `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-DIRECT-LEAF-OVERHAUL/📓️taxonomy.md`'s
 `change`/`rename`/`add`/`remove` verb entries. It imports nothing from the Rust it judges and
 transliterates none of it.

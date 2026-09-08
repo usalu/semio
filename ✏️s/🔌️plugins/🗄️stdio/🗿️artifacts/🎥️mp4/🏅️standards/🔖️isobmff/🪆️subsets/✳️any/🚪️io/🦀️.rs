@@ -4,8 +4,8 @@
 //! 📤️export/🧵️serializers.
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use crate::artifacts::mp4::standards::isobmff::subsets::any::schema::snapshot::Mp4Snapshot;
-    use crate::artifacts::mp4::standards::isobmff::subsets::any::schema::Mp4Analyzer;
+    use crate::standards::isobmff::subsets::any::schema::snapshot::Mp4Snapshot;
+    use crate::standards::isobmff::subsets::any::schema::Mp4Analyzer;
     use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.mp4", standard: StandardId("isobmff"), subset: SubsetId("*") };
@@ -44,10 +44,10 @@ pub mod derived_composition {
     /// 📌️ Registers this subset's schema descriptor, document codec. Called from
     /// this artifact's standard-level `engine::register()`.
     pub async fn register() {
-        ::schema::register_artifact_schema_descriptor(crate::artifacts::mp4::standards::isobmff::subsets::any::schema::mp4_artifact_schema_descriptor());
+        ::framework_schema::register_artifact_schema_descriptor(crate::standards::isobmff::subsets::any::schema::mp4_artifact_schema_descriptor());
         register_artifact_inferences().await;
-        store::register_document_codec(store::ArtifactCodec::of::<Mp4Snapshot, crate::artifacts::mp4::standards::isobmff::subsets::any::schema::mutations::Mp4Mutation>(
-            crate::artifacts::mp4::standards::isobmff::subsets::any::schema::snapshot::STDIO_MP4_DOCUMENT_SCHEMA,
+        store::register_document_codec(store::ArtifactCodec::of::<Mp4Snapshot, crate::standards::isobmff::subsets::any::schema::mutations::Mp4Mutation>(
+            crate::standards::isobmff::subsets::any::schema::snapshot::STDIO_MP4_DOCUMENT_SCHEMA,
         )).expect("static Stdio registration must be available and conflict-free");
     }
 
@@ -55,7 +55,7 @@ pub mod derived_composition {
     /// catalog — sibling to `register_artifact_schema_descriptor` above (separate registry,
     /// ticket 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING P2/S3+S4).
     pub async fn register_artifact_inferences() {
-        ::schema::register_artifact_inference_descriptor(crate::artifacts::mp4::standards::isobmff::subsets::any::schema::inferences::mp4_artifact_inference_descriptor());
+        ::framework_schema::register_artifact_inference_descriptor(crate::standards::isobmff::subsets::any::schema::inferences::mp4_artifact_inference_descriptor());
     }
     //#endregion 🔖️Register
 }
@@ -76,7 +76,7 @@ pub use derived_composition::*;
 // The schema retains named ISO-BMFF concepts and semantic encoded sample payloads only. Native
 // box syntax is parsed at import and deterministically rebuilt at export.
 
-use crate::artifacts::mp4::standards::isobmff::subsets::any::schema::snapshot::{
+use crate::standards::isobmff::subsets::any::schema::snapshot::{
     Mp4Bitrate, Mp4Codec, Mp4Color, Mp4Edit, Mp4Ftyp, Mp4Movie, Mp4PixelAspectRatio, Mp4Sample, Mp4Snapshot, Mp4Track, Mp4TrackMetadata, Mp4VisualSampleEntry, STDIO_MP4_DOCUMENT_SCHEMA,
 };
 
@@ -933,7 +933,7 @@ pub fn encode_mp4(snapshot: &Mp4Snapshot) -> Vec<u8> {
 #[cfg(test)]
 mod codec_tests {
     use super::*;
-    use crate::artifacts::mp4::standards::isobmff::subsets::any::schema::snapshot::{Mp4Codec, Mp4Ftyp, Mp4Sample, Mp4Snapshot, Mp4Track};
+    use crate::standards::isobmff::subsets::any::schema::snapshot::{Mp4Codec, Mp4Ftyp, Mp4Sample, Mp4Snapshot, Mp4Track};
     use protocol::command::DiffAlgebra;
     use protocol::MutationDiff;
 
@@ -1021,7 +1021,7 @@ mod codec_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn exact_bauen_mit_bestand_fixture_round_trips_byte_for_byte() {
-        use crate::artifacts::mp4::standards::isobmff::subsets::any::schema::{
+        use crate::standards::isobmff::subsets::any::schema::{
             diff::Mp4Diff,
             mutations::{apply_mp4_mutation, Mp4Mutation},
             Mp4AnalyzerAnalysis,
@@ -1057,11 +1057,11 @@ mod codec_tests {
         assert_eq!(encode_mp4(&binary_diff.apply(&snapshot).unwrap()), bytes);
 
         let mut no_op = snapshot.clone();
-        let no_op_mutation = Mp4Mutation::SetSnapshot(crate::artifacts::mp4::standards::isobmff::subsets::any::schema::mutations::set_snapshot::SetSnapshot { snapshot: no_op.clone() });
+        let no_op_mutation = Mp4Mutation::SetSnapshot(crate::standards::isobmff::subsets::any::schema::mutations::set_snapshot::SetSnapshot { snapshot: no_op.clone() });
         assert!(apply_mp4_mutation(&mut no_op, &no_op_mutation).diff().is_empty());
         assert_eq!(encode_mp4(&no_op), bytes);
 
-        let set_snapshot = Mp4Mutation::SetSnapshot(crate::artifacts::mp4::standards::isobmff::subsets::any::schema::mutations::set_snapshot::SetSnapshot { snapshot: snapshot.clone() });
+        let set_snapshot = Mp4Mutation::SetSnapshot(crate::standards::isobmff::subsets::any::schema::mutations::set_snapshot::SetSnapshot { snapshot: snapshot.clone() });
         let text_op = Mp4Mutation::parse_op(&set_snapshot.print_op()).expect("parse MP4 operation text");
         let mut from_text_op = Mp4Snapshot::default();
         apply_mp4_mutation(&mut from_text_op, &text_op);
@@ -1072,7 +1072,7 @@ mod codec_tests {
         assert_eq!(encode_mp4(&from_binary_op), bytes);
 
         let mut changed = snapshot.clone();
-        let mutation = Mp4Mutation::SetTrackDimensions(crate::artifacts::mp4::standards::isobmff::subsets::any::schema::mutations::set_track_dimensions::SetTrackDimensions { track_index: 0, width: snapshot.tracks[0].width + 1, height: snapshot.tracks[0].height });
+        let mutation = Mp4Mutation::SetTrackDimensions(crate::standards::isobmff::subsets::any::schema::mutations::set_track_dimensions::SetTrackDimensions { track_index: 0, width: snapshot.tracks[0].width + 1, height: snapshot.tracks[0].height });
         apply_mp4_mutation(&mut changed, &mutation);
         let changed_bytes = encode_mp4(&changed);
         assert_ne!(changed_bytes, bytes, "semantic mutation must materialize changed logical state");
@@ -1129,7 +1129,7 @@ mod codec_tests {
 }
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
-    use crate::artifacts::mp4::standards::isobmff::subsets::any::schema::Mp4Composer as Mp4RawAnyComposer;
+    use crate::standards::isobmff::subsets::any::schema::Mp4Composer as Mp4RawAnyComposer;
     use semio_framework_plugin::{composer_entry_of, ComposerEntry};
     use std::sync::OnceLock;
 

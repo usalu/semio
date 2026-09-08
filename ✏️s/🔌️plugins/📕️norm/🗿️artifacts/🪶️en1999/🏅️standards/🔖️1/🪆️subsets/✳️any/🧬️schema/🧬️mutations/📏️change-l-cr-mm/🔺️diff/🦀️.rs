@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeLCrMm, base: &En1999Snapshot) -> protocol::MutationO
     if base.l_cr_mm == payload.new_l_cr_mm {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Buckling length L_cr [mm] is already {}.", payload.new_l_cr_mm));
     }
-    protocol::MutationOutcome::new(En1999Diff { l_cr_mm: Some(payload.new_l_cr_mm.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1999Diff { l_cr_mm: Some(payload.new_l_cr_mm), ..Default::default() })
 }
 //#endregion 🔖️Diff

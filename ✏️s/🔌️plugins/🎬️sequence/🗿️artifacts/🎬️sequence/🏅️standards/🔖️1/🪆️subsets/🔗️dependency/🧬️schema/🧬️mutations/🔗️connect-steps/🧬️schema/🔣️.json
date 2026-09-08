@@ -1,0 +1,53 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/sequence/sequence/1/dependency/mutation/connect-steps.json",
+  "title": "ConnectSteps",
+  "$ref": "#/$defs/Payload",
+  "$defs": {
+    "Payload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "string"
+        },
+        "to": {
+          "type": "string"
+        }
+      }
+    },
+    "Wire": {
+      "title": "ConnectStepsMutation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "connectSteps"
+        },
+        "id": {
+          "$ref": "#/$defs/Payload/properties/id"
+        },
+        "from": {
+          "$ref": "#/$defs/Payload/properties/from"
+        },
+        "to": {
+          "$ref": "#/$defs/Payload/properties/to"
+        }
+      }
+    }
+  }
+}

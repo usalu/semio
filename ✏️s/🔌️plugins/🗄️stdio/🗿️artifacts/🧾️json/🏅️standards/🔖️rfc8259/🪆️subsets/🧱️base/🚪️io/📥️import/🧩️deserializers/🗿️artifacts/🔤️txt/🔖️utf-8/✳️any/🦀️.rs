@@ -1,7 +1,7 @@
 //! deser json via txt
-use crate::artifacts::json::schema::snapshot::parse_json_text;
-use crate::artifacts::json::{JsonSnapshot, STDIO_JSON_DOCUMENT_SCHEMA};
-use crate::artifacts::txt::TxtSnapshot;
+use crate::schema::snapshot::parse_json_text;
+use crate::{JsonSnapshot, STDIO_JSON_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_txt::TxtSnapshot;
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn register() {}
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

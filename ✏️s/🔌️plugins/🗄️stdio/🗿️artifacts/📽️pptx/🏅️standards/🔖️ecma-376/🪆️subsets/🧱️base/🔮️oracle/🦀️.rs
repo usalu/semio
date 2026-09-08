@@ -11,7 +11,7 @@
 //!
 //! **Design**: every mutation kind is expressed as a pure operation on an in-memory, ordered
 //! `Vec<PSlide>` (this module's own typed shape tree, independent of
-//! `crate::artifacts::pptx::schema::snapshot::PptxShape`), mirroring the vocabulary's own
+//! `crate::schema::snapshot::PptxShape`), mirroring the vocabulary's own
 //! `slide_index`/`shape_index` addressing. After the operation, every `ppt/slides/*.xml` part,
 //! `ppt/_rels/presentation.xml.rels`'s slide relationships, `ppt/presentation.xml`'s
 //! `p:sldIdLst`, and `[Content_Types].xml`'s slide `Override` entries are freshly regenerated from
@@ -200,7 +200,7 @@ mod oracles {
 
     //#region 🔖️Package
     /// 📦 Every OPC part, read/written by the registered `zip` reference implementation —
-    /// independent of `crate::artifacts::zip::opc::OpcPackage`, this repository's own codec.
+    /// independent of `semio_s_artifact_stdio_zip::opc::OpcPackage`, this repository's own codec.
     #[derive(Clone, Debug, Default)]
     struct Package {
         parts: HashMap<String, Vec<u8>>,
@@ -245,7 +245,7 @@ mod oracles {
 
     //#region 🔖️Types
     /// 📐 A shape's `a:xfrm` position/size, in EMUs — mirrors
-    /// `crate::artifacts::pptx::schema::snapshot::PptxTransform` field-for-field, independent type.
+    /// `crate::schema::snapshot::PptxTransform` field-for-field, independent type.
     #[derive(Clone, Copy, Debug, Default, PartialEq)]
     struct Transform {
         x: i64,
@@ -360,7 +360,7 @@ mod oracles {
 
     /// 🔎️ The full ordered slide list: `_rels/.rels` → `presentation.xml` → `p:sldIdLst`'s
     /// ordered `r:id`s → `presentation.xml.rels` → each `ppt/slides/slideN.xml` in presentation
-    /// order — every hop resolved independently of `crate::artifacts::pptx`'s own importer.
+    /// order — every hop resolved independently of `crate`'s own importer.
     fn read_presentation(pkg: &Package) -> Result<Vec<PSlide>, String> {
         let pres_path = presentation_part_path(pkg)?;
         let pres_doc = pkg.xml(&pres_path)?;

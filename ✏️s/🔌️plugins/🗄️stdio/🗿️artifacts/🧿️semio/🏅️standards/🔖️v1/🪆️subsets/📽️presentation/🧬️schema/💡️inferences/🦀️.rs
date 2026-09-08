@@ -6,8 +6,8 @@
 //! own outline facet establishes, since `SlideShape::TextBox`/`Table` cell content reuse
 //! `document::DocBlock` verbatim, per this subset's own module doc comment).
 
-use crate::artifacts::semio::standards::v1::subsets::presentation::schema::snapshot::SemioPresentationSnapshot;
-use schema::ArtifactSchema;
+use crate::standards::v1::subsets::presentation::schema::snapshot::SemioPresentationSnapshot;
+use framework_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 
 use super::outline::{compute_semio_presentation_outline, SemioPresentationOutline};
@@ -56,7 +56,7 @@ impl protocol::InferenceSpec<SemioPresentationSnapshot> for SemioPresentationInf
 /// 💡️ No `InferredField`s here (a recursive block walk is a single whole-snapshot pass over
 /// already-flat `masters`/`layouts`/`slides` collections, no per-entity incremental decomposition
 /// applies) — the default `infer_cached` passthrough (`ArtifactInferrer::infer_cached`) is exact.
-impl ArtifactInferrer for crate::artifacts::semio::standards::v1::subsets::presentation::schema::SemioPresentationBuilder {
+impl ArtifactInferrer for crate::standards::v1::subsets::presentation::schema::SemioPresentationBuilder {
     type Snapshot = SemioPresentationSnapshot;
     type Inference = SemioPresentationInference;
 }
@@ -67,10 +67,10 @@ impl ArtifactInferrer for crate::artifacts::semio::standards::v1::subsets::prese
 /// catalog — call once at plugin init, alongside `semio_presentation_artifact_schema_descriptor`'s
 /// registration.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn semio_presentation_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
-    schema::ArtifactInferenceDescriptor {
+pub fn semio_presentation_artifact_inference_descriptor() -> framework_schema::ArtifactInferenceDescriptor {
+    framework_schema::ArtifactInferenceDescriptor {
         id: "s.stdio.semio.presentation.inference",
-        inference: schema::FacetLeaves {
+        inference: framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),

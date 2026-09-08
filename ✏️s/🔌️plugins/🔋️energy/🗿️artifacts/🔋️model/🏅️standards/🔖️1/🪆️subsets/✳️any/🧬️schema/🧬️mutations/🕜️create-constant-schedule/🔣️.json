@@ -5,7 +5,7 @@
   "displayName": "Create Constant Schedule",
   "emoji": "🕜️",
   "aggregateVariant": "CreateConstantSchedule",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "create-constant-schedule",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

@@ -270,7 +270,7 @@ pub fn diff_set_representation(index: usize, item: BlockRepresentation, base: &B
     let mut delta = Block5dRepresentationsDelta { added: vec![item.clone()], ..Default::default() };
     if block5d_index_of(&base.representations, &item.id).is_none() {
         let mut order: Vec<_> = base.representations.iter().map(|e| e.id.clone()).collect();
-        order.insert(index.min(order.len()), item.id.clone());
+        order.insert(index.min(order.len()), item.id);
         delta.reordered = Some(order);
     }
     Block5dDiff { representations: Some(delta), ..Default::default() }
@@ -282,7 +282,7 @@ pub fn diff_set_grip_kind(index: usize, item: Block5dGripKind, base: &Block5dSna
     let mut delta = Block5dGripKindsDelta { added: vec![item.clone()], ..Default::default() };
     if block5d_index_of(&base.grip_kinds, &item.id).is_none() {
         let mut order: Vec<_> = base.grip_kinds.iter().map(|e| e.id.clone()).collect();
-        order.insert(index.min(order.len()), item.id.clone());
+        order.insert(index.min(order.len()), item.id);
         delta.reordered = Some(order);
     }
     Block5dDiff { grip_kinds: Some(delta), ..Default::default() }
@@ -294,7 +294,7 @@ pub fn diff_set_grip(index: usize, item: Block5dGripTemplate, base: &Block5dSnap
     let mut delta = Block5dGripsDelta { added: vec![item.clone()], ..Default::default() };
     if block5d_index_of(&base.grips, &item.id).is_none() {
         let mut order: Vec<_> = base.grips.iter().map(|e| e.id.clone()).collect();
-        order.insert(index.min(order.len()), item.id.clone());
+        order.insert(index.min(order.len()), item.id);
         delta.reordered = Some(order);
     }
     Block5dDiff { grips: Some(delta), ..Default::default() }
@@ -306,7 +306,7 @@ pub fn diff_set_compatibility_rule(index: usize, rule: BlockCompatibilityRule, b
     let mut delta = Block5dCompatibilityDelta { added: vec![rule.clone()], ..Default::default() };
     if block5d_index_of(&base.compatibility, &rule.id).is_none() {
         let mut order: Vec<_> = base.compatibility.iter().map(|e| e.id.clone()).collect();
-        order.insert(index.min(order.len()), rule.id.clone());
+        order.insert(index.min(order.len()), rule.id);
         delta.reordered = Some(order);
     }
     Block5dDiff { compatibility: Some(delta), ..Default::default() }
@@ -318,7 +318,7 @@ pub fn diff_set_attribute(index: usize, attribute: BlockAttribute, base: &Block5
     let mut delta = Block5dAttributesDelta { added: vec![attribute.clone()], ..Default::default() };
     if block5d_index_of(&base.attributes, &attribute.key).is_none() {
         let mut order: Vec<_> = base.attributes.iter().map(|e| e.key.clone()).collect();
-        order.insert(index.min(order.len()), attribute.key.clone());
+        order.insert(index.min(order.len()), attribute.key);
         delta.reordered = Some(order);
     }
     Block5dDiff { attributes: Some(delta), ..Default::default() }

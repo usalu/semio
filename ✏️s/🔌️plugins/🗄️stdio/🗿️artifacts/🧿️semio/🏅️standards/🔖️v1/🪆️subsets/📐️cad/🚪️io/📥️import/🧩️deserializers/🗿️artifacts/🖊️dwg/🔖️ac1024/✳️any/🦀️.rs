@@ -9,8 +9,8 @@
 //! `SemioCadSnapshot` (zero layers/blocks/entities), and is asserted to do so by its own test
 //! rather than silently claiming content that was never decoded.
 
-use crate::artifacts::dwg::DwgSnapshot;
-use crate::artifacts::semio::standards::v1::subsets::cad::schema::snapshot::{SemioCadSnapshot, STDIO_SEMIOCAD_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_dwg::DwgSnapshot;
+use crate::standards::v1::subsets::cad::schema::snapshot::{SemioCadSnapshot, STDIO_SEMIOCAD_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId};
 
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.dwg", standard: StandardId("ac1024"), subset: SubsetId::ANY };
@@ -43,8 +43,8 @@ mod tests {
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn sample_dwg() -> DwgSnapshot {
-        let bytes = crate::artifacts::dwg::dwg_to_bytes(&crate::artifacts::dwg::DwgDrawing::default()).expect("encode sample");
-        crate::artifacts::dwg::standards::v_ac1024::subsets::any::schema::snapshot::decode_dwg(&bytes).expect("decode sample")
+        let bytes = semio_s_artifact_stdio_dwg::dwg_to_bytes(&semio_s_artifact_stdio_dwg::DwgDrawing::default()).expect("encode sample");
+        semio_s_artifact_stdio_dwg::standards::v_ac1024::subsets::any::schema::snapshot::decode_dwg(&bytes).expect("decode sample")
     }
 
     #[semio_framework_async_macros::async_test]

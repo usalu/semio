@@ -13,8 +13,8 @@
 //! dependency chain to author yet (`canvas` and `styles` themselves are already fully persisted,
 //! not derived).
 
-use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot;
-use schema::ArtifactSchema;
+use crate::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot;
+use framework_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 use std::collections::BTreeMap;
 
@@ -51,7 +51,7 @@ impl protocol::InferenceSpec<SemioDrawingSnapshot> for SemioDrawingInference {
 //#endregion 🔖️Inference
 
 //#region 🔖️ArtifactInferrer
-impl ArtifactInferrer for crate::artifacts::semio::standards::v1::subsets::drawing::schema::SemioDrawingBuilder {
+impl ArtifactInferrer for crate::standards::v1::subsets::drawing::schema::SemioDrawingBuilder {
     type Snapshot = SemioDrawingSnapshot;
     type Inference = SemioDrawingInference;
 
@@ -68,10 +68,10 @@ impl ArtifactInferrer for crate::artifacts::semio::standards::v1::subsets::drawi
 /// catalog — call once at plugin init, alongside `semio_drawing_artifact_schema_descriptor`'s own
 /// registration (`../🦀️.rs`).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn semio_drawing_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
-    schema::ArtifactInferenceDescriptor {
+pub fn semio_drawing_artifact_inference_descriptor() -> framework_schema::ArtifactInferenceDescriptor {
+    framework_schema::ArtifactInferenceDescriptor {
         id: "s.stdio.semio.drawing.inference",
-        inference: schema::FacetLeaves {
+        inference: framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),
@@ -86,8 +86,8 @@ pub fn semio_drawing_artifact_inference_descriptor() -> schema::ArtifactInferenc
 //#region 🧪️Tests
 mod tests {
     use super::*;
-    use crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioTransform};
-    use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{DrawCanvas, DrawLayer, DrawNode, STDIO_SEMIODRAWING_DOCUMENT_SCHEMA};
+    use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioTransform};
+    use crate::standards::v1::subsets::drawing::schema::snapshot::{DrawCanvas, DrawLayer, DrawNode, STDIO_SEMIODRAWING_DOCUMENT_SCHEMA};
     use protocol::Inference;
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9

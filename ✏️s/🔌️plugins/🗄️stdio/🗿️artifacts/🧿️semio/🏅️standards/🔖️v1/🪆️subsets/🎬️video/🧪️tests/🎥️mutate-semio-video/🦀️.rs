@@ -41,11 +41,11 @@ const KINDS: &[&str] = &["no-mutation", "set-snapshot", "insert-stream", "remove
 mod subject {
     use semio_repo_test_host::{digest, Context, Json, Outcome};
     use semio_s_plugin_stdio_test_oracle::law::carrier_is_exact;
-    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::base::schema::mutations::semio_mutation_refusals;
-    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::video::schema::mutations::{
+    use crate::standards::v1::subsets::base::schema::mutations::semio_mutation_refusals;
+    use crate::standards::v1::subsets::video::schema::mutations::{
         apply_semio_video_mutation, insert_sample, insert_stream, inverse_semio_video_mutation, remove_sample, remove_stream, set_sample_data, set_sample_flags, set_snapshot, set_stream_meta, SemioVideoMutation,
     };
-    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::video::schema::snapshot::{parse_semio_video_dsl, print_semio_video_dsl, SemioRational, SemioVideoSample, SemioVideoSnapshot, SemioVideoStream, SemioVideoStreamKind};
+    use crate::standards::v1::subsets::video::schema::snapshot::{parse_semio_video_dsl, print_semio_video_dsl, SemioRational, SemioVideoSample, SemioVideoSnapshot, SemioVideoStream, SemioVideoStreamKind};
 
     //#region 🔖️JsonReaders
     fn text(value: &Json, key: &str) -> Result<String, String> {

@@ -1,7 +1,7 @@
 //! gisterrain <- json
 use crate::artifacts::gisterrain::GisTerrainSnapshot;
 use dsl::FromValue;
-use semio_s_plugin_stdio::artifacts::json::{JsonSnapshot, STDIO_JSON_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_json::{JsonSnapshot, STDIO_JSON_DOCUMENT_SCHEMA};
 
 pub fn register() {}
 

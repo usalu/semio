@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeAnchorFYkMpa, base: &En1992Snapshot) -> protocol::Mu
     if base.anchor_f_yk_mpa == payload.new_anchor_f_yk_mpa {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "Anchor f yk mpa already has this value.");
     }
-    protocol::MutationOutcome::new(En1992Diff { anchor_f_yk_mpa: Some(payload.new_anchor_f_yk_mpa.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1992Diff { anchor_f_yk_mpa: Some(payload.new_anchor_f_yk_mpa), ..Default::default() })
 }
 //#endregion 🔖️Diff

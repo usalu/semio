@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeEerActual, base: &Din16798Snapshot) -> protocol::Mut
     if base.eer_actual == payload.new_eer_actual {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Actual EER is already {}.", payload.new_eer_actual));
     }
-    protocol::MutationOutcome::new(Din16798Diff { eer_actual: Some(payload.new_eer_actual.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(Din16798Diff { eer_actual: Some(payload.new_eer_actual), ..Default::default() })
 }
 //#endregion 🔖️Diff

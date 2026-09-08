@@ -1,0 +1,188 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/framework/replication/schema.json",
+  "title": "Replication Schema Module",
+  "definitions": {
+    "hash": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "evenHex": {
+      "type": "string",
+      "minLength": 2,
+      "pattern": "^(?:[0-9a-f]{2})+$"
+    },
+    "frontier": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "documentId",
+        "headEditOrdinal",
+        "headEditId",
+        "lastCommitSeq",
+        "chainHash"
+      ],
+      "properties": {
+        "documentId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "headEditOrdinal": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "headEditId": {
+          "type": "string"
+        },
+        "lastCommitSeq": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "chainHash": {
+          "$ref": "#/definitions/hash"
+        }
+      }
+    }
+  },
+  "$defs": {
+    "ArtifactBootstrapFixture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "formatVersion",
+        "artifact",
+        "payload",
+        "chunkByteLengths",
+        "wire"
+      ],
+      "properties": {
+        "$schema": {
+          "type": "string"
+        },
+        "schemaVersion": {
+          "const": 1
+        },
+        "formatVersion": {
+          "const": 1
+        },
+        "artifact": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "descriptorHash",
+            "schema",
+            "kind",
+            "packSchemaHash",
+            "baselineFrontier",
+            "requiredTailFrontier"
+          ],
+          "properties": {
+            "descriptorHash": {
+              "$ref": "#/definitions/hash"
+            },
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            },
+            "kind": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            },
+            "packSchemaHash": {
+              "$ref": "#/definitions/hash"
+            },
+            "baselineFrontier": {
+              "$ref": "#/definitions/frontier"
+            },
+            "requiredTailFrontier": {
+              "$ref": "#/definitions/frontier"
+            }
+          }
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "packHex",
+            "sprHex",
+            "packLength",
+            "sprLength",
+            "packHash",
+            "sprHash",
+            "aggregateHash"
+          ],
+          "properties": {
+            "packHex": {
+              "$ref": "#/definitions/evenHex"
+            },
+            "sprHex": {
+              "$ref": "#/definitions/evenHex"
+            },
+            "packLength": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "sprLength": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "packHash": {
+              "$ref": "#/definitions/hash"
+            },
+            "sprHash": {
+              "$ref": "#/definitions/hash"
+            },
+            "aggregateHash": {
+              "$ref": "#/definitions/hash"
+            }
+          }
+        },
+        "chunkByteLengths": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 4096
+          }
+        },
+        "wire": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "inlineWelcomeHex",
+            "chunkedWelcomeHex",
+            "chunkHex",
+            "doneHex"
+          ],
+          "properties": {
+            "inlineWelcomeHex": {
+              "$ref": "#/definitions/evenHex"
+            },
+            "chunkedWelcomeHex": {
+              "$ref": "#/definitions/evenHex"
+            },
+            "chunkHex": {
+              "type": "array",
+              "minItems": 2,
+              "items": {
+                "$ref": "#/definitions/evenHex"
+              }
+            },
+            "doneHex": {
+              "$ref": "#/definitions/evenHex"
+            }
+          }
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "$ref": "#/$defs/ArtifactBootstrapFixture"
+    }
+  ]
+}

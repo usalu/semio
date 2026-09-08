@@ -11,9 +11,9 @@
 //! test). `nodes` always decodes empty — XML has no id-graph/reference concept for `Ref` to come
 //! from.
 
-use crate::artifacts::semio::standards::v1::subsets::value::schema::snapshot::{SemioValue, SemioValueEntry, SemioValueSnapshot, STDIO_SEMIOVALUE_DOCUMENT_SCHEMA};
-use crate::artifacts::xml::schema::snapshot::{XmlDeclaration, XmlDoctype, XmlDocument, XmlDtdDeclaration, XmlExternalId, XmlNode};
-use crate::artifacts::xml::XmlSnapshot;
+use crate::standards::v1::subsets::value::schema::snapshot::{SemioValue, SemioValueEntry, SemioValueSnapshot, STDIO_SEMIOVALUE_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_xml::schema::snapshot::{XmlDeclaration, XmlDoctype, XmlDocument, XmlDtdDeclaration, XmlExternalId, XmlNode};
+use semio_s_artifact_stdio_xml::XmlSnapshot;
 use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId};
 
 //#region 🔖️Deserializer
@@ -112,7 +112,7 @@ pub fn semio_value_from_xml_document(doc: &XmlDocument) -> SemioValue {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::xml::schema::snapshot::XmlAttr;
+    use semio_s_artifact_stdio_xml::schema::snapshot::XmlAttr;
 
     #[semio_framework_async_macros::async_test]
     async fn element_with_attrs_and_children_maps_to_a_kind_tagged_structure() {

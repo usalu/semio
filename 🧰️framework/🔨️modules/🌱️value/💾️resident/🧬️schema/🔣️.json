@@ -1,0 +1,357 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/framework/value/resident/schema.json",
+  "title": "Value Resident Schema Module",
+  "definitions": {
+    "count": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "resources": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "bytes",
+        "slots",
+        "owners"
+      ],
+      "properties": {
+        "bytes": {
+          "$ref": "#/definitions/count"
+        },
+        "slots": {
+          "$ref": "#/definitions/count"
+        },
+        "owners": {
+          "$ref": "#/definitions/count"
+        }
+      }
+    }
+  },
+  "$defs": {
+    "ResidentFixture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "capacity",
+        "invalidCapacities",
+        "overflow",
+        "recordCharges",
+        "storageCases",
+        "lifecycle",
+        "pattern",
+        "pageLengths",
+        "controlCases",
+        "externalFailures",
+        "closeChildren",
+        "childFaultFrontiers",
+        "domainRecord",
+        "admissionFailures",
+        "liveRecord"
+      ],
+      "properties": {
+        "liveRecord": {
+          "type": "array",
+          "minItems": 7,
+          "maxItems": 7,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "transition",
+              "live",
+              "identity"
+            ],
+            "properties": {
+              "transition": {
+                "enum": [
+                  "live",
+                  "foreign",
+                  "record-close",
+                  "cell-close",
+                  "ledger-close",
+                  "own-fault",
+                  "detach"
+                ]
+              },
+              "live": {
+                "type": "boolean"
+              },
+              "identity": {
+                "type": "boolean"
+              }
+            }
+          }
+        },
+        "admissionFailures": {
+          "type": "array",
+          "minItems": 5,
+          "maxItems": 5,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "owner",
+              "record",
+              "page",
+              "reader",
+              "external"
+            ]
+          }
+        },
+        "domainRecord": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "envelope",
+            "intrinsic",
+            "cases"
+          ],
+          "properties": {
+            "envelope": {
+              "$ref": "https://semio.tech/schema/framework/value/resident/schema.json#/definitions/resources"
+            },
+            "intrinsic": {
+              "$ref": "https://semio.tech/schema/framework/value/resident/schema.json#/definitions/resources"
+            },
+            "cases": {
+              "type": "array",
+              "minItems": 15,
+              "uniqueItems": true,
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "controlCases": {
+          "type": "array",
+          "minItems": 3,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "control"
+            ],
+            "properties": {
+              "name": {
+                "enum": [
+                  "bytes",
+                  "slots",
+                  "owners"
+                ]
+              },
+              "control": {
+                "$ref": "https://semio.tech/schema/framework/value/resident/schema.json#/definitions/resources"
+              }
+            }
+          }
+        },
+        "externalFailures": {
+          "type": "array",
+          "minItems": 7,
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        },
+        "closeChildren": {
+          "type": "array",
+          "minItems": 5,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "blocked",
+              "rejected",
+              "throw",
+              "over-grant",
+              "full-grant-complete"
+            ]
+          }
+        },
+        "childFaultFrontiers": {
+          "type": "array",
+          "minItems": 2,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "before-fill",
+              "after-fill"
+            ]
+          }
+        },
+        "pageLengths": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 4,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              0,
+              1,
+              255,
+              256
+            ]
+          }
+        },
+        "version": {
+          "const": 1
+        },
+        "capacity": {
+          "$ref": "https://semio.tech/schema/framework/value/resident/schema.json#/$defs/Resident"
+        },
+        "invalidCapacities": {
+          "type": "array",
+          "minItems": 6,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "value"
+            ],
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "value": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "overflow": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "capacity",
+            "used",
+            "request",
+            "accepted"
+          ],
+          "properties": {
+            "capacity": {
+              "type": "integer"
+            },
+            "used": {
+              "type": "integer"
+            },
+            "request": {
+              "type": "integer"
+            },
+            "accepted": {
+              "const": false
+            }
+          }
+        },
+        "recordCharges": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "owner",
+            "storage",
+            "reader",
+            "witness",
+            "pageBacking"
+          ],
+          "properties": {
+            "owner": {
+              "$ref": "https://semio.tech/schema/framework/value/resident/schema.json#/definitions/resources"
+            },
+            "storage": {
+              "$ref": "https://semio.tech/schema/framework/value/resident/schema.json#/definitions/resources"
+            },
+            "reader": {
+              "$ref": "https://semio.tech/schema/framework/value/resident/schema.json#/definitions/resources"
+            },
+            "witness": {
+              "$ref": "https://semio.tech/schema/framework/value/resident/schema.json#/definitions/resources"
+            },
+            "pageBacking": {
+              "$ref": "https://semio.tech/schema/framework/value/resident/schema.json#/definitions/resources"
+            }
+          }
+        },
+        "storageCases": {
+          "type": "array",
+          "minItems": 3,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "bytes",
+              "posted"
+            ],
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "bytes": {
+                "$ref": "https://semio.tech/schema/framework/value/resident/schema.json#/definitions/count"
+              },
+              "posted": {
+                "type": "boolean"
+              }
+            }
+          }
+        },
+        "lifecycle": {
+          "type": "array",
+          "minItems": 12,
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        },
+        "pattern": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "length",
+            "multiplier",
+            "addend"
+          ],
+          "properties": {
+            "length": {
+              "const": 256
+            },
+            "multiplier": {
+              "const": 73
+            },
+            "addend": {
+              "const": 19
+            }
+          }
+        }
+      }
+    },
+    "Resident": {
+      "title": "Shared Resident Capacity",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "bytes",
+        "slots",
+        "owners",
+        "control"
+      ],
+      "properties": {
+        "bytes": {
+          "$ref": "#/definitions/count"
+        },
+        "slots": {
+          "$ref": "#/definitions/count"
+        },
+        "owners": {
+          "$ref": "#/definitions/count"
+        },
+        "control": {
+          "$ref": "#/definitions/resources"
+        }
+      }
+    }
+  }
+}

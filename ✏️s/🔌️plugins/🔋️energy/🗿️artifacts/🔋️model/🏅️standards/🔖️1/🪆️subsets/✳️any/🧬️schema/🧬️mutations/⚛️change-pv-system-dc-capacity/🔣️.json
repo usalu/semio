@@ -5,7 +5,7 @@
   "displayName": "Change Pv System Dc Capacity",
   "emoji": "⚛️",
   "aggregateVariant": "ChangePvSystemDcCapacity",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-pv-system-dc-capacity",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

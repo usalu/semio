@@ -5,7 +5,7 @@
   "displayName": "Change Outdoor Air System Economizer Enabled",
   "emoji": "💰️",
   "aggregateVariant": "ChangeOutdoorAirSystemEconomizerEnabled",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-outdoor-air-system-economizer-enabled",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

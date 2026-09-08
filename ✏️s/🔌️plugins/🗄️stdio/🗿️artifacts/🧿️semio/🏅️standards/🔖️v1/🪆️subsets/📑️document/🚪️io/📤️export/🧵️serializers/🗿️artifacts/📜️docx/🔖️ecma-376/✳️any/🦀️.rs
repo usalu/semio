@@ -15,10 +15,10 @@
 //!   own default "HeadingN" style ids), not a fabrication.
 //! - `RunStyle::{size,font,color,link}` have no `DocxRun` field and are dropped.
 
-use crate::artifacts::docx::schema::snapshot::{DocxBlock, DocxDocument, DocxParagraph, DocxRun, DocxStyle, DocxTable, DocxTableCell, DocxTableRow};
-use crate::artifacts::docx::DocxSnapshot;
-use crate::artifacts::semio::standards::v1::subsets::document::schema::snapshot::{DocBlock, DocRun, SemioDocumentSnapshot};
-use crate::artifacts::zip::opc::OpcPackage;
+use semio_s_artifact_stdio_docx::schema::snapshot::{DocxBlock, DocxDocument, DocxParagraph, DocxRun, DocxStyle, DocxTable, DocxTableCell, DocxTableRow};
+use semio_s_artifact_stdio_docx::DocxSnapshot;
+use crate::standards::v1::subsets::document::schema::snapshot::{DocBlock, DocRun, SemioDocumentSnapshot};
+use semio_s_artifact_stdio_zip::opc::OpcPackage;
 use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
 
 //#region 🔖️FieldMapping
@@ -80,7 +80,7 @@ impl ArtifactSerializer for SemioDocumentToDocx {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::semio::standards::v1::subsets::document::schema::snapshot::{DocImage, DocStyle, DocTableCell, DocTableRow, RunStyle, STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA};
+    use crate::standards::v1::subsets::document::schema::snapshot::{DocImage, DocStyle, DocTableCell, DocTableRow, RunStyle, STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA};
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn sample_semio() -> SemioDocumentSnapshot {
@@ -113,7 +113,7 @@ mod tests {
             styles: Vec::new(),
             images: vec![DocImage { id: "img1".into(), mime: "image/png".into(), bytes: vec![1, 2, 3] }],
             blocks: vec![
-                DocBlock::List { ordered: true, items: vec![crate::artifacts::semio::standards::v1::subsets::document::schema::snapshot::DocListItem { blocks: vec![DocBlock::paragraph("item one")] }] },
+                DocBlock::List { ordered: true, items: vec![crate::standards::v1::subsets::document::schema::snapshot::DocListItem { blocks: vec![DocBlock::paragraph("item one")] }] },
                 DocBlock::Quote { blocks: vec![DocBlock::paragraph("quoted")] },
                 DocBlock::Image { image_id: "img1".into(), alt: "alt text".into(), width: None, height: None },
                 DocBlock::PageBreak,

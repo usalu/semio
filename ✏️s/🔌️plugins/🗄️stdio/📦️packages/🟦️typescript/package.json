@@ -6,16 +6,64 @@
   "description": "Stdio plugin TS barrel",
   "type": "module",
   "private": true,
+  "sideEffects": false,
+  "files": [
+    "dist"
+  ],
+  "types": "./dist/🟦️.d.ts",
   "scripts": {
+    "build": "bun nx run @semio-tech/stdio-js:build",
+    "check": "bun nx run @semio-tech/stdio-js:check",
+    "package-contract": "bun nx run @semio-tech/stdio-js:package-contract",
+    "package-graph": "bun nx run @semio-tech/stdio-js:package-graph",
     "test": "bun nx run @semio-tech/stdio-js:test",
     "test:quick": "bun nx run @semio-tech/stdio-js:test-quick",
     "test:long": "bun nx run @semio-tech/stdio-js:test-long",
     "test:exhaustive": "bun nx run @semio-tech/stdio-js:test-exhaustive"
   },
   "exports": {
-    ".": "./🟦️.ts"
+    ".": {
+      "types": "./dist/🟦️.d.ts",
+      "import": "./dist/🟦️.js"
+    }
   },
   "dependencies": {
+    "@semio-tech/stdio-binary": "workspace:*",
+    "@semio-tech/stdio-txt": "workspace:*",
+    "@semio-tech/stdio-xml": "workspace:*",
+    "@semio-tech/stdio-deflate": "workspace:*",
+    "@semio-tech/stdio-zip": "workspace:*",
+    "@semio-tech/stdio-json": "workspace:*",
+    "@semio-tech/stdio-csv": "workspace:*",
+    "@semio-tech/stdio-md": "workspace:*",
+    "@semio-tech/stdio-gltf": "workspace:*",
+    "@semio-tech/stdio-obj": "workspace:*",
+    "@semio-tech/stdio-stl": "workspace:*",
+    "@semio-tech/stdio-ply": "workspace:*",
+    "@semio-tech/stdio-las": "workspace:*",
+    "@semio-tech/stdio-step": "workspace:*",
+    "@semio-tech/stdio-ifc": "workspace:*",
+    "@semio-tech/stdio-dwg": "workspace:*",
+    "@semio-tech/stdio-dxf": "workspace:*",
+    "@semio-tech/stdio-svg": "workspace:*",
+    "@semio-tech/stdio-png": "workspace:*",
+    "@semio-tech/stdio-jpg": "workspace:*",
+    "@semio-tech/stdio-gif": "workspace:*",
+    "@semio-tech/stdio-bmp": "workspace:*",
+    "@semio-tech/stdio-tiff": "workspace:*",
+    "@semio-tech/stdio-pdf": "workspace:*",
+    "@semio-tech/stdio-docx": "workspace:*",
+    "@semio-tech/stdio-pptx": "workspace:*",
+    "@semio-tech/stdio-xlsx": "workspace:*",
+    "@semio-tech/stdio-bcf": "workspace:*",
+    "@semio-tech/stdio-semio": "workspace:*",
+    "@semio-tech/stdio-mp4": "workspace:*",
+    "@semio-tech/stdio-avi": "workspace:*",
+    "@semio-tech/stdio-mp3": "workspace:*",
+    "@semio-tech/stdio-wav": "workspace:*",
+    "@semio-tech/stdio-epw": "workspace:*",
+    "@semio-tech/stdio-tsv": "workspace:*",
+    "@semio-tech/stdio-html": "workspace:*",
     "@semio-tech/framework": "workspace:*"
   },
   "devDependencies": {

@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeWallSoilGammaKnM3, base: &En1998Snapshot) -> protoco
     if base.wall_soil_gamma_kn_m3 == payload.new_wall_soil_gamma_kn_m3 {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Wall backfill unit weight [kN/m3] is already {}.", payload.new_wall_soil_gamma_kn_m3));
     }
-    protocol::MutationOutcome::new(En1998Diff { wall_soil_gamma_kn_m3: Some(payload.new_wall_soil_gamma_kn_m3.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1998Diff { wall_soil_gamma_kn_m3: Some(payload.new_wall_soil_gamma_kn_m3), ..Default::default() })
 }
 //#endregion 🔖️Diff

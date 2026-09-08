@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "state": "semio:local-interaction#/$defs/state",
-  "domainPatch": "semio:local-interaction#/$defs/domainPatch",
+  "state": "https://semio.tech/schema/framework/replication/wire/local-interaction/schema.json#/$defs/state",
+  "domainPatch": "https://semio.tech/schema/framework/replication/wire/local-interaction/schema.json#/$defs/domainPatch",
   "changeKind": "localInteractionDomain",
   "domainOrder": "utf16-code-unit-lexicographic",
   "ordering": "Compare domain names as unsigned 16-bit code-unit sequences, without locale or normalization; shorter equal prefixes sort first. Implementations with Unicode scalar strings encode each scalar as UTF-16 before comparison.",

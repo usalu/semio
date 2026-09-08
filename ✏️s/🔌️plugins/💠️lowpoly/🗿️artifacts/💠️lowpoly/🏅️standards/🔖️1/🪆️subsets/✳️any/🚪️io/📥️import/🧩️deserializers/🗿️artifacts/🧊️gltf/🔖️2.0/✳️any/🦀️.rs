@@ -5,7 +5,7 @@
 //! parsed nodes/meshes -- an out-of-scope architecture change, not a pure `&GltfSnapshot -> …`
 //! mapping.
 use crate::artifacts::lowpoly::schema::snapshot::LowpolySnapshot;
-use semio_s_plugin_stdio::artifacts::gltf::GltfSnapshot;
+use semio_s_artifact_stdio_gltf::GltfSnapshot;
 
 pub fn register() {}
 

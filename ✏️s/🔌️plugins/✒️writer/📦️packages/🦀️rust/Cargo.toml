@@ -27,7 +27,12 @@ path = "🦀️.rs"
 [dependencies]
 semio-framework-job.workspace = true
 semio-framework-ui-contract.workspace = true
-semio-s-plugin-stdio = { path = "../../../🗄️stdio/📦️packages/🦀️rust", package = "semio-s-plugin-stdio", default-features = false, features = ["full-artifact-catalog"] }
+semio-s-artifact-stdio-docx = { workspace = true }
+semio-s-artifact-stdio-json = { workspace = true }
+semio-s-artifact-stdio-md = { workspace = true }
+semio-s-artifact-stdio-pdf = { workspace = true }
+semio-s-artifact-stdio-semio = { workspace = true }
+semio-s-artifact-stdio-txt = { workspace = true }
 semio-framework = { path = "../../../../../🧰️framework/📦️packages/🦀️rust", package = "semio-framework" }
 semio-framework-os-kernel = { path = "../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
 framework_editor = { path = "../../../../../🧰️framework/🔨️modules/✍️editor/📦️packages/🦀️rust", package = "semio-framework-editor" }

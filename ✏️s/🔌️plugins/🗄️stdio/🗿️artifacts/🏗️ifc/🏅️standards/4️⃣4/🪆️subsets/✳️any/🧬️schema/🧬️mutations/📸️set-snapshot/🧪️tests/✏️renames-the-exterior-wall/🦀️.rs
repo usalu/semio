@@ -15,9 +15,9 @@
 //! `.pack.semio`/`.patch.semio` encodings are derived from it by `fixtures generate` and are
 //! asserted by the shared codec-matrix harness, not here.
 
-use crate::artifacts::ifc::standards::v4::subsets::any::schema::diff::IfcDiff;
-use crate::artifacts::ifc::standards::v4::subsets::any::schema::mutations::{apply_ifc_mutation, IfcMutation};
-use crate::artifacts::ifc::standards::v4::subsets::any::schema::snapshot::IfcSnapshot;
+use crate::standards::v4::subsets::any::schema::diff::IfcDiff;
+use crate::standards::v4::subsets::any::schema::mutations::{apply_ifc_mutation, IfcMutation};
+use crate::standards::v4::subsets::any::schema::snapshot::IfcSnapshot;
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");
@@ -44,11 +44,11 @@ async fn applies_to_committed_after() {
     assert_eq!(snapshot, expected_after(), "set-snapshot/renames-the-exterior-wall: applied state differs from committed after-snapshot");
     assert_eq!(
         snapshot.entities[0].args[2],
-        crate::artifacts::ifc::standards::v4::subsets::any::schema::snapshot::IfcValue::String("Exterior Wall".into()),
+        crate::standards::v4::subsets::any::schema::snapshot::IfcValue::String("Exterior Wall".into()),
         "set-snapshot/renames-the-exterior-wall: the wall's Name attribute must land on 'Exterior Wall'"
     );
     assert_eq!(snapshot.entities[0].name, "IFCWALL", "set-snapshot/renames-the-exterior-wall: the EXPRESS entity keyword is untouched");
-    assert!(matches!(snapshot.entities[0].args[1], crate::artifacts::ifc::standards::v4::subsets::any::schema::snapshot::IfcValue::Unset), "set-snapshot/renames-the-exterior-wall: the OwnerHistory attribute stays the Part-21 unset marker");
+    assert!(matches!(snapshot.entities[0].args[1], crate::standards::v4::subsets::any::schema::snapshot::IfcValue::Unset), "set-snapshot/renames-the-exterior-wall: the OwnerHistory attribute stays the Part-21 unset marker");
     assert_eq!(snapshot.entities[1], before().entities[1], "set-snapshot/renames-the-exterior-wall: the IFCPROJECT instance is identical on both sides and must survive untouched");
     assert_eq!(snapshot.header, before().header, "set-snapshot/renames-the-exterior-wall: all three HEADER records are equal on both sides");
 }

@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/puzzle/3d/1/any/mutation/change-object-anchor.json",
+  "title": "ChangeObjectAnchor",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newAnchor"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "newAnchor": {
+      "type": "string",
+      "enum": [
+        "Fixed",
+        "Derived"
+      ]
+    }
+  }
+}

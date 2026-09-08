@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeFatigueM, base: &En1999Snapshot) -> protocol::Mutati
     if base.fatigue_m == payload.new_fatigue_m {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Fatigue S-N slope m is already {}.", payload.new_fatigue_m));
     }
-    protocol::MutationOutcome::new(En1999Diff { fatigue_m: Some(payload.new_fatigue_m.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1999Diff { fatigue_m: Some(payload.new_fatigue_m), ..Default::default() })
 }
 //#endregion 🔖️Diff

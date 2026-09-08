@@ -5,7 +5,7 @@
   "displayName": "Change Surface Construction",
   "emoji": "🧰️",
   "aggregateVariant": "ChangeSurfaceConstruction",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-surface-construction",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

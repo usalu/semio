@@ -936,8 +936,8 @@ pub mod writer {
     use std::path::{Path, PathBuf};
 
     //#region 🔖️Mp4RawCodec
-    use semio_s_plugin_stdio::artifacts::mp4::standards::isobmff::subsets::any::io::{decode_mp4, encode_mp4};
-    use semio_s_plugin_stdio::artifacts::mp4::standards::isobmff::subsets::any::schema::snapshot::{Mp4Codec, Mp4Sample, Mp4Snapshot, Mp4Track};
+    use semio_s_artifact_stdio_mp4::standards::isobmff::subsets::any::io::{decode_mp4, encode_mp4};
+    use semio_s_artifact_stdio_mp4::standards::isobmff::subsets::any::schema::snapshot::{Mp4Codec, Mp4Sample, Mp4Snapshot, Mp4Track};
 
     /// 🧬️ Builds one partial segment's real `Mp4Snapshot` from captured RGBA8 frames — real ISO-
     /// BMFF container structure via stdio's own `encode_mp4` below, never hand-rolled here.
@@ -951,8 +951,8 @@ pub mod writer {
     //#endregion 🔖️Mp4RawCodec
 
     //#region 🔖️GifQuantize
-    use semio_s_plugin_stdio::artifacts::gif::engine::encode_gif;
-    use semio_s_plugin_stdio::artifacts::gif::schema::snapshot::{GifColorTable, GifDisposal, GifFrame, GifRgb, GifSnapshot};
+    use semio_s_artifact_stdio_gif::engine::encode_gif;
+    use semio_s_artifact_stdio_gif::schema::snapshot::{GifColorTable, GifDisposal, GifFrame, GifRgb, GifSnapshot};
 
     const GIF_CUBE_LEVELS: [u8; 6] = [0, 51, 102, 153, 204, 255];
     const GIF_TARGET_FPS: f64 = 15.0;

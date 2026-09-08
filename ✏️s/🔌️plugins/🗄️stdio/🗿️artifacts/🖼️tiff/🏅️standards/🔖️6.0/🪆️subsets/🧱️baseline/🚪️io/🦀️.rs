@@ -5,9 +5,9 @@
 //! already established for this artifact.
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use crate::artifacts::tiff::standards::v6_0::subsets::document::schema::snapshot::TiffSnapshot;
-    use crate::artifacts::tiff::standards::v6_0::subsets::document::schema::TiffComposer as TiffAnyComposer;
-    use crate::artifacts::tiff::standards::v6_0::subsets::baseline::schema::check_tiff_baseline_conformance;
+    use crate::standards::v6_0::subsets::document::schema::snapshot::TiffSnapshot;
+    use crate::standards::v6_0::subsets::document::schema::TiffComposer as TiffAnyComposer;
+    use crate::standards::v6_0::subsets::baseline::schema::check_tiff_baseline_conformance;
     use dsl::{Diagnostic, FaultCode, Severity, TextSpan};
     use semio_framework_plugin::{register_subset_validator, subset_validator_entry_of, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, IoPayload, StandardId, SubsetId, SubsetValidator, SubsetValidatorEntry};
     use std::sync::OnceLock;
@@ -80,7 +80,7 @@ pub mod derived_composition {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use crate::artifacts::tiff::standards::v6_0::subsets::document::schema::snapshot::{TiffByteOrder, TiffFieldType, TiffIfd, TiffTag, TiffValues};
+        use crate::standards::v6_0::subsets::document::schema::snapshot::{TiffByteOrder, TiffFieldType, TiffIfd, TiffTag, TiffValues};
         use semio_framework_plugin::AnalyzeSource;
 
         /// 🩹 `TiffSnapshot::default()` has no IFD at all, which the real encoder rejects ("tiff:
@@ -123,7 +123,7 @@ pub mod derived_composition {
         #[semio_framework_async_macros::async_test]
         async fn no_ifd_diagnostic_is_reachable_via_direct_check_not_through_encode_pack() {
             let diagnostics = check_tiff_baseline_conformance(&TiffSnapshot::default());
-            assert!(diagnostics.iter().any(|d| d.code.0 == crate::artifacts::tiff::standards::v6_0::subsets::baseline::schema::CODE_NO_IFD), "got {diagnostics:?}");
+            assert!(diagnostics.iter().any(|d| d.code.0 == crate::standards::v6_0::subsets::baseline::schema::CODE_NO_IFD), "got {diagnostics:?}");
         }
     }
 }

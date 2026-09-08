@@ -5,7 +5,7 @@
 //! has no natural slot for scalar header fields, so editing them is out of this first pass's scope
 //! (a documented limitation, not a silent drop; a future header-focused window could add them).
 
-use crate::artifacts::epw::EpwSnapshot;
+use crate::EpwSnapshot;
 use semio_framework_plugin::app::{TableView, TableWindowKit, WindowKit};
 use semio_framework_plugin::{BuiltNode, LocalizedLabel, WindowKindDefinition};
 

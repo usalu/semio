@@ -5,7 +5,7 @@
 //! `🪆️subsets/3️⃣cc3/🧬️schema/` is present per `🔣️taxonomy.json`'s `subsetChildDirs`, without
 //! duplicating the schema definition.
 
-pub use crate::artifacts::step::standards::v_ap214::subsets::base::schema::*;
+pub use crate::standards::v_ap214::subsets::base::schema::*;
 
 //#region 🧬️Mutations
 /// 🧬️ This subset's OWN mutation vocabulary — one kind per ISO 10303-214 CC3 (wireframe with topology) conformance
@@ -18,8 +18,8 @@ pub mod mutations;
 //#endregion 🧬️Mutations
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use crate::artifacts::step::standards::v_ap214::subsets::cc3::schema::check_cc3_conformance;
-    use crate::artifacts::step::{StepDiff, StepMutation, StepSnapshot};
+    use crate::standards::v_ap214::subsets::cc3::schema::check_cc3_conformance;
+    use crate::{StepDiff, StepMutation, StepSnapshot};
     use dsl::{Diagnostic, Severity};
     use semio_framework_plugin::ArtifactBuilder;
 
@@ -52,7 +52,7 @@ pub mod derived_construction {
         }
 
         fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
-            let diff = crate::artifacts::step::schema::mutations::apply_step_mutation(&mut self.snapshot, &mutation);
+            let diff = crate::schema::mutations::apply_step_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
 
@@ -81,8 +81,8 @@ pub mod derived_construction {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use crate::artifacts::step::standards::v_ap214::engine::part21::{Part21Document, Part21Header, Part21Instance, Part21Value};
-        use crate::artifacts::step::standards::v_ap214::subsets::cc3::schema::CODE_LADDER;
+        use crate::standards::v_ap214::engine::part21::{Part21Document, Part21Header, Part21Instance, Part21Value};
+        use crate::standards::v_ap214::subsets::cc3::schema::CODE_LADDER;
 
         // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         fn conforming_snapshot() -> StepSnapshot {
@@ -99,7 +99,7 @@ pub mod derived_construction {
         #[semio_framework_async_macros::async_test]
         async fn conforming_construction_builds() {
             let snapshot = StepCc3BuilderConstruction::from_snapshot(conforming_snapshot()).build().expect("conforming construction must build");
-            assert!(crate::artifacts::step::standards::v_ap214::engine::ladder::has_product_definition_chain(&snapshot.to_part21_document()));
+            assert!(crate::standards::v_ap214::engine::ladder::has_product_definition_chain(&snapshot.to_part21_document()));
         }
 
         #[semio_framework_async_macros::async_test]
@@ -108,7 +108,7 @@ pub mod derived_construction {
             let mut doc = snapshot.to_part21_document();
             doc.instances.push(Part21Instance { id: 99, entities: vec![("ADVANCED_BREP_SHAPE_REPRESENTATION".into(), vec![])] });
             snapshot = StepSnapshot::from_part21_document(&doc);
-            let (mutated, _diff) = StepCc3BuilderConstruction::from_snapshot(StepSnapshot::default()).mutate(StepMutation::SetSnapshot(crate::artifacts::step::standards::v_ap214::subsets::base::schema::mutations::set_snapshot::SetSnapshot { snapshot }));
+            let (mutated, _diff) = StepCc3BuilderConstruction::from_snapshot(StepSnapshot::default()).mutate(StepMutation::SetSnapshot(crate::standards::v_ap214::subsets::base::schema::mutations::set_snapshot::SetSnapshot { snapshot }));
             let err = mutated.build().expect_err("an ADVANCED_BREP_SHAPE_REPRESENTATION instance above rung 3 must fail build()");
             assert!(err.iter().any(|d| d.code.0 == CODE_LADDER));
         }
@@ -119,10 +119,10 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use crate::artifacts::step::standards::v_ap214::engine::ladder::{file_schema_contains, has_product_definition_chain, ladder_violations};
-    use crate::artifacts::step::standards::v_ap214::subsets::base::schema::snapshot::StepSnapshot;
-    use crate::artifacts::step::standards::v_ap214::subsets::base::schema::StepAnalyzer as StepAnyAnalyzer;
-    pub use crate::artifacts::step::standards::v_ap214::subsets::base::schema::StepParts;
+    use crate::standards::v_ap214::engine::ladder::{file_schema_contains, has_product_definition_chain, ladder_violations};
+    use crate::standards::v_ap214::subsets::base::schema::snapshot::StepSnapshot;
+    use crate::standards::v_ap214::subsets::base::schema::StepAnalyzer as StepAnyAnalyzer;
+    pub use crate::standards::v_ap214::subsets::base::schema::StepParts;
     use dsl::{Diagnostic, FaultCode, FaultScope, Severity, TextSpan};
     use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
@@ -204,7 +204,7 @@ pub mod derived_analysis {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use crate::artifacts::step::standards::v_ap214::engine::part21::{Part21Document, Part21Header, Part21Instance, Part21Value};
+        use crate::standards::v_ap214::engine::part21::{Part21Document, Part21Header, Part21Instance, Part21Value};
 
         // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         fn base_doc() -> Part21Document {

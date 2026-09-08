@@ -5,7 +5,7 @@
 //! `InferredField`/incremental caching needed for a single BFS pass (same ruling trinity's own
 //! `jack` and sibling `🌊️flow` topology facets reach for their own node/edge graphs).
 
-use crate::artifacts::semio::standards::v1::subsets::graph::schema::snapshot::SemioGraphSnapshot;
+use crate::standards::v1::subsets::graph::schema::snapshot::SemioGraphSnapshot;
 use std::collections::{BTreeMap, VecDeque};
 
 //#region 🔖️Topology
@@ -89,7 +89,7 @@ pub fn compute_semio_graph_topology(snapshot: &SemioGraphSnapshot) -> SemioGraph
 //#region 🧪️Tests
 mod tests {
     use super::*;
-    use crate::artifacts::semio::standards::v1::subsets::graph::schema::snapshot::{GraphEdgeId, GraphNodeId, SemioGraphEdge, SemioGraphNode, STDIO_SEMIOGRAPH_DOCUMENT_SCHEMA};
+    use crate::standards::v1::subsets::graph::schema::snapshot::{GraphEdgeId, GraphNodeId, SemioGraphEdge, SemioGraphNode, STDIO_SEMIOGRAPH_DOCUMENT_SCHEMA};
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn node(id: &str) -> SemioGraphNode {

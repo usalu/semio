@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeSiloRadiusM, base: &En1998Snapshot) -> protocol::Mut
     if base.silo_radius_m == payload.new_silo_radius_m {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Silo radius [m] is already {}.", payload.new_silo_radius_m));
     }
-    protocol::MutationOutcome::new(En1998Diff { silo_radius_m: Some(payload.new_silo_radius_m.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1998Diff { silo_radius_m: Some(payload.new_silo_radius_m), ..Default::default() })
 }
 //#endregion 🔖️Diff

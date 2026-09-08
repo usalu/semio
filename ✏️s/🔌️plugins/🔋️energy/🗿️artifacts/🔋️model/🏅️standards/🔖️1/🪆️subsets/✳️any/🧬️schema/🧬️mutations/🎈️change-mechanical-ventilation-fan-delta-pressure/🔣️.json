@@ -5,7 +5,7 @@
   "displayName": "Change Mechanical Ventilation Fan Delta Pressure",
   "emoji": "🎈️",
   "aggregateVariant": "ChangeMechanicalVentilationFanDeltaPressure",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-mechanical-ventilation-fan-delta-pressure",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

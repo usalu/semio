@@ -19,9 +19,9 @@
 //! handle no `serialize`/`serialize_bytes` signature here receives).
 use crate::artifacts::lowpoly::schema::snapshot::text::print_dsl;
 use crate::artifacts::lowpoly::schema::snapshot::{enc_str, LowpolySnapshot};
-use semio_s_plugin_stdio::artifacts::obj::engine::encode_obj;
-use semio_s_plugin_stdio::artifacts::obj::schema::snapshot::ObjUnknownStatement;
-use semio_s_plugin_stdio::artifacts::obj::ObjSnapshot;
+use semio_s_artifact_stdio_obj::engine::encode_obj;
+use semio_s_artifact_stdio_obj::schema::snapshot::ObjUnknownStatement;
+use semio_s_artifact_stdio_obj::ObjSnapshot;
 
 pub(crate) const LOWPOLY_DSL_COMMENT_PREFIX: &str = "# semio-lowpoly-dsl ";
 

@@ -1,0 +1,46 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/csv/rfc4180/any/mutation/insert-record.json",
+  "title": "InsertRecord",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "index",
+    "record"
+  ],
+  "properties": {
+    "index": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "record": {
+      "$ref": "#/$defs/CsvRecord"
+    }
+  },
+  "$defs": {
+    "CsvRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "fields": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CsvField"
+          }
+        }
+      }
+    },
+    "CsvField": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "value": {
+          "type": "string"
+        },
+        "quoted": {
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}

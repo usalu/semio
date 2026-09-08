@@ -1,0 +1,55 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/avi/1.0/hdrl/mutation/insert-chunk.json",
+  "title": "InsertChunk",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "stream_index",
+    "index",
+    "chunk"
+  ],
+  "properties": {
+    "stream_index": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "index": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "chunk": {
+      "$ref": "#/$defs/AviChunk"
+    },
+    "mutation": {
+      "const": "insertChunk",
+      "description": "Aggregate discriminator spliced in by AviMutation; absent when the payload stands alone."
+    }
+  },
+  "$defs": {
+    "AviChunk": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "fourcc",
+        "keyframe"
+      ],
+      "properties": {
+        "fourcc": {
+          "type": "string"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          }
+        },
+        "keyframe": {
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}

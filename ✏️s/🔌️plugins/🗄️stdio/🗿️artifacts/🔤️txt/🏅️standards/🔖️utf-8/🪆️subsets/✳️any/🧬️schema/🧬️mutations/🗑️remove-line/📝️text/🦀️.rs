@@ -1,7 +1,7 @@
 //! 📝️ Canonical text payload codec for remove-line.
 //#region 📝️PayloadCodec
 use super::RemoveLinePayload;
-use crate::artifacts::txt::schema::mutations::TxtMutation;
+use crate::schema::mutations::TxtMutation;
 pub const TEXT_OPCODE: &str = "remove-line";
 pub fn encode_payload(value: &RemoveLinePayload) -> Result<String, String> {
     Ok(pack::to_json_string(value))

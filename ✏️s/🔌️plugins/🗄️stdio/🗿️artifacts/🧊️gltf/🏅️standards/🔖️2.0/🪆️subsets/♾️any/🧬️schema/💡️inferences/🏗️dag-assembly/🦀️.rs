@@ -6,7 +6,7 @@ use super::{
     mass_distribution::GltfMassInference, orientation::GltfOrientationInference, proportion::GltfProportionInference, roughness::GltfRoughnessInference, size::GltfSizeInference, symmetry::GltfSymmetryInference, thickness::GltfThicknessInference,
     topology::GltfTopologyInference, GltfEntityIndicators, GltfGeometricInference, GltfInferenceCounts, GltfPairInference, GltfPartInference,
 };
-use crate::artifacts::gltf::schema::snapshot::GltfSnapshot;
+use crate::schema::snapshot::GltfSnapshot;
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn empty_indicators(diagnostic_ids: &[String]) -> GltfEntityIndicators {

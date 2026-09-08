@@ -5,7 +5,7 @@
   "displayName": "Change Ideal Loads System Outdoor Air Per Person",
   "emoji": "🧍️",
   "aggregateVariant": "ChangeIdealLoadsSystemOutdoorAirPerPerson",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-ideal-loads-system-outdoor-air-per-person",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

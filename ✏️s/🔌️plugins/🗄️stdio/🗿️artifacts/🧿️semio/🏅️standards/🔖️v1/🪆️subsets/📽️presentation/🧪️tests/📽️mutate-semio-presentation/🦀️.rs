@@ -69,14 +69,14 @@ const KINDS: &[&str] = &[
 mod subject {
     use semio_repo_test_host::{digest, Context, Json, Outcome};
     use semio_s_plugin_stdio_test_oracle::law::carrier_is_exact;
-    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::base::schema::mutations::semio_mutation_refusals;
-    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioPoint2;
-    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::document::schema::snapshot::{DocBlock, DocListItem, DocRun, DocTableCell, DocTableRow, RunStyle};
-    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::presentation::schema::mutations::{
+    use crate::standards::v1::subsets::base::schema::mutations::semio_mutation_refusals;
+    use crate::standards::v1::subsets::base::schema::geometry::SemioPoint2;
+    use crate::standards::v1::subsets::document::schema::snapshot::{DocBlock, DocListItem, DocRun, DocTableCell, DocTableRow, RunStyle};
+    use crate::standards::v1::subsets::presentation::schema::mutations::{
         apply_semio_presentation_mutation, insert_layout, insert_master, insert_shape, insert_slide, remove_layout, remove_master, remove_shape, remove_slide, semio_presentation_mutation_inverse, set_layout_master, set_shape_frame,
         set_slide_layout, set_slide_notes, set_snapshot, set_textbox_blocks, SemioPresentationMutation,
     };
-    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::presentation::schema::snapshot::{
+    use crate::standards::v1::subsets::presentation::schema::snapshot::{
         decode_semio_presentation_pack, encode_semio_presentation_pack, parse_semio_presentation_dsl, print_semio_presentation_dsl, PlaceholderKind, SemioPresentationSnapshot, Slide, SlideFrame, SlideLayout, SlideMaster, SlidePictureImage,
         SlideShape, SlideTableCell, SlideTableRow,
     };

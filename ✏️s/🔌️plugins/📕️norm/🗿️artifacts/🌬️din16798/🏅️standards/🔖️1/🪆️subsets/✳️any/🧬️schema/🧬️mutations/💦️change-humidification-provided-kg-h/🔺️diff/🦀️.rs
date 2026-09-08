@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeHumidificationProvidedKgH, base: &Din16798Snapshot) 
     if base.humidification_provided_kg_h == payload.new_humidification_provided_kg_h {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Provided humidification rate is already {}.", payload.new_humidification_provided_kg_h));
     }
-    protocol::MutationOutcome::new(Din16798Diff { humidification_provided_kg_h: Some(payload.new_humidification_provided_kg_h.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(Din16798Diff { humidification_provided_kg_h: Some(payload.new_humidification_provided_kg_h), ..Default::default() })
 }
 //#endregion 🔖️Diff

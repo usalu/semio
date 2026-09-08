@@ -20,7 +20,7 @@ impl Din16798Diff {
             }
             let mut next = artifact.clone();
             if let Some(value) = &self.annex {
-                next.annex = value.clone();
+                next.annex = *value;
             }
             if let Some(value) = &self.occupancy {
                 next.occupancy = value.clone();
@@ -29,181 +29,181 @@ impl Din16798Diff {
                 next.comfort_category = value.clone();
             }
             if let Some(value) = &self.t_op_c {
-                next.t_op_c = value.clone();
+                next.t_op_c = *value;
             }
             if let Some(value) = &self.rh_percent {
-                next.rh_percent = value.clone();
+                next.rh_percent = *value;
             }
             if let Some(value) = &self.air_speed_m_s {
-                next.air_speed_m_s = value.clone();
+                next.air_speed_m_s = *value;
             }
             if let Some(value) = &self.theta_rm_c {
-                next.theta_rm_c = value.clone();
+                next.theta_rm_c = *value;
             }
             if let Some(value) = &self.co2_ppm {
-                next.co2_ppm = value.clone();
+                next.co2_ppm = *value;
             }
             if let Some(value) = &self.df_percent {
-                next.df_percent = value.clone();
+                next.df_percent = *value;
             }
             if let Some(value) = &self.l_aeq_db {
-                next.l_aeq_db = value.clone();
+                next.l_aeq_db = *value;
             }
             if let Some(value) = &self.persons {
-                next.persons = value.clone();
+                next.persons = *value;
             }
             if let Some(value) = &self.ida_class {
                 next.ida_class = value.clone();
             }
             if let Some(value) = &self.ventilation_m3_h {
-                next.ventilation_m3_h = value.clone();
+                next.ventilation_m3_h = *value;
             }
             if let Some(value) = &self.floor_area_m2 {
-                next.floor_area_m2 = value.clone();
+                next.floor_area_m2 = *value;
             }
             if let Some(value) = &self.bedrooms {
-                next.bedrooms = value.clone();
+                next.bedrooms = *value;
             }
             if let Some(value) = &self.dwelling_ventilation_m3_h {
-                next.dwelling_ventilation_m3_h = value.clone();
+                next.dwelling_ventilation_m3_h = *value;
             }
             if let Some(value) = &self.occupants {
-                next.occupants = value.clone();
+                next.occupants = *value;
             }
             if let Some(value) = &self.residential_ventilation_m3_h {
-                next.residential_ventilation_m3_h = value.clone();
+                next.residential_ventilation_m3_h = *value;
             }
             if let Some(value) = &self.sfp_w_m3_s {
-                next.sfp_w_m3_s = value.clone();
+                next.sfp_w_m3_s = *value;
             }
             if let Some(value) = &self.sfp_required_class {
-                next.sfp_required_class = value.clone();
+                next.sfp_required_class = *value;
             }
             if let Some(value) = &self.heat_recovery_eta {
-                next.heat_recovery_eta = value.clone();
+                next.heat_recovery_eta = *value;
             }
             if let Some(value) = &self.heat_recovery_eta_min {
-                next.heat_recovery_eta_min = value.clone();
+                next.heat_recovery_eta_min = *value;
             }
             if let Some(value) = &self.system_type {
                 next.system_type = value.clone();
             }
             if let Some(value) = &self.years_since_inspection {
-                next.years_since_inspection = value.clone();
+                next.years_since_inspection = *value;
             }
             if let Some(value) = &self.humidification_required_kg_h {
-                next.humidification_required_kg_h = value.clone();
+                next.humidification_required_kg_h = *value;
             }
             if let Some(value) = &self.humidification_provided_kg_h {
-                next.humidification_provided_kg_h = value.clone();
+                next.humidification_provided_kg_h = *value;
             }
             if let Some(value) = &self.fan_q_v_m3_s {
-                next.fan_q_v_m3_s = value.clone();
+                next.fan_q_v_m3_s = *value;
             }
             if let Some(value) = &self.fan_t_run_h {
-                next.fan_t_run_h = value.clone();
+                next.fan_t_run_h = *value;
             }
             if let Some(value) = &self.fan_energy_reference_kwh {
-                next.fan_energy_reference_kwh = value.clone();
+                next.fan_energy_reference_kwh = *value;
             }
             if let Some(value) = &self.night_setback_k {
-                next.night_setback_k = value.clone();
+                next.night_setback_k = *value;
             }
             if let Some(value) = &self.hr_m_dot_kg_s {
-                next.hr_m_dot_kg_s = value.clone();
+                next.hr_m_dot_kg_s = *value;
             }
             if let Some(value) = &self.hr_cp_j_kgk {
-                next.hr_cp_j_kgk = value.clone();
+                next.hr_cp_j_kgk = *value;
             }
             if let Some(value) = &self.hr_delta_t_c {
-                next.hr_delta_t_c = value.clone();
+                next.hr_delta_t_c = *value;
             }
             if let Some(value) = &self.hr_t_h {
-                next.hr_t_h = value.clone();
+                next.hr_t_h = *value;
             }
             if let Some(value) = &self.hr_savings_reference_kwh {
-                next.hr_savings_reference_kwh = value.clone();
+                next.hr_savings_reference_kwh = *value;
             }
             if let Some(value) = &self.n50_h_inv {
-                next.n50_h_inv = value.clone();
+                next.n50_h_inv = *value;
             }
             if let Some(value) = &self.volume_m3 {
-                next.volume_m3 = value.clone();
+                next.volume_m3 = *value;
             }
             if let Some(value) = &self.infiltration_allowance_m3_h {
-                next.infiltration_allowance_m3_h = value.clone();
+                next.infiltration_allowance_m3_h = *value;
             }
             if let Some(value) = &self.cellar_area_m2 {
-                next.cellar_area_m2 = value.clone();
+                next.cellar_area_m2 = *value;
             }
             if let Some(value) = &self.cellar_ventilation_m3_h {
-                next.cellar_ventilation_m3_h = value.clone();
+                next.cellar_ventilation_m3_h = *value;
             }
             if let Some(value) = &self.h_tr_w_k {
-                next.h_tr_w_k = value.clone();
+                next.h_tr_w_k = *value;
             }
             if let Some(value) = &self.h_ve_w_k {
-                next.h_ve_w_k = value.clone();
+                next.h_ve_w_k = *value;
             }
             if let Some(value) = &self.theta_e_c {
-                next.theta_e_c = value.clone();
+                next.theta_e_c = *value;
             }
             if let Some(value) = &self.theta_set_c {
-                next.theta_set_c = value.clone();
+                next.theta_set_c = *value;
             }
             if let Some(value) = &self.cooling_delta_t_h {
-                next.cooling_delta_t_h = value.clone();
+                next.cooling_delta_t_h = *value;
             }
             if let Some(value) = &self.cooling_gains_kwh {
-                next.cooling_gains_kwh = value.clone();
+                next.cooling_gains_kwh = *value;
             }
             if let Some(value) = &self.cooling_utilization_factor {
-                next.cooling_utilization_factor = value.clone();
+                next.cooling_utilization_factor = *value;
             }
             if let Some(value) = &self.cooling_reference_kwh {
-                next.cooling_reference_kwh = value.clone();
+                next.cooling_reference_kwh = *value;
             }
             if let Some(value) = &self.chiller_type {
                 next.chiller_type = value.clone();
             }
             if let Some(value) = &self.eer_actual {
-                next.eer_actual = value.clone();
+                next.eer_actual = *value;
             }
             if let Some(value) = &self.q_c_kwh {
-                next.q_c_kwh = value.clone();
+                next.q_c_kwh = *value;
             }
             if let Some(value) = &self.generation_reference_kwh {
-                next.generation_reference_kwh = value.clone();
+                next.generation_reference_kwh = *value;
             }
             if let Some(value) = &self.data_center_supply_c {
-                next.data_center_supply_c = value.clone();
+                next.data_center_supply_c = *value;
             }
             if let Some(value) = &self.h_st_w_k {
-                next.h_st_w_k = value.clone();
+                next.h_st_w_k = *value;
             }
             if let Some(value) = &self.theta_st_c {
-                next.theta_st_c = value.clone();
+                next.theta_st_c = *value;
             }
             if let Some(value) = &self.theta_amb_c {
-                next.theta_amb_c = value.clone();
+                next.theta_amb_c = *value;
             }
             if let Some(value) = &self.storage_t_h {
-                next.storage_t_h = value.clone();
+                next.storage_t_h = *value;
             }
             if let Some(value) = &self.storage_allowance_kwh {
-                next.storage_allowance_kwh = value.clone();
+                next.storage_allowance_kwh = *value;
             }
             if let Some(value) = &self.dhw_delivery_c {
-                next.dhw_delivery_c = value.clone();
+                next.dhw_delivery_c = *value;
             }
             if let Some(value) = &self.duct_class {
                 next.duct_class = value.clone();
             }
             if let Some(value) = &self.duct_test_pressure_pa {
-                next.duct_test_pressure_pa = value.clone();
+                next.duct_test_pressure_pa = *value;
             }
             if let Some(value) = &self.duct_leakage_m3_s_m2 {
-                next.duct_leakage_m3_s_m2 = value.clone();
+                next.duct_leakage_m3_s_m2 = *value;
             }
             if let Some(value) = &self.selected_check_index {
                 next.selected_check_index = *value;
@@ -221,7 +221,7 @@ impl MutationDiff<Din16798Snapshot> for Din16798Diff {
             }
             let mut next = snapshot.clone();
             if let Some(value) = &self.annex {
-                next.annex = value.clone();
+                next.annex = *value;
             }
             if let Some(value) = &self.occupancy {
                 next.occupancy = value.clone();
@@ -230,181 +230,181 @@ impl MutationDiff<Din16798Snapshot> for Din16798Diff {
                 next.comfort_category = value.clone();
             }
             if let Some(value) = &self.t_op_c {
-                next.t_op_c = value.clone();
+                next.t_op_c = *value;
             }
             if let Some(value) = &self.rh_percent {
-                next.rh_percent = value.clone();
+                next.rh_percent = *value;
             }
             if let Some(value) = &self.air_speed_m_s {
-                next.air_speed_m_s = value.clone();
+                next.air_speed_m_s = *value;
             }
             if let Some(value) = &self.theta_rm_c {
-                next.theta_rm_c = value.clone();
+                next.theta_rm_c = *value;
             }
             if let Some(value) = &self.co2_ppm {
-                next.co2_ppm = value.clone();
+                next.co2_ppm = *value;
             }
             if let Some(value) = &self.df_percent {
-                next.df_percent = value.clone();
+                next.df_percent = *value;
             }
             if let Some(value) = &self.l_aeq_db {
-                next.l_aeq_db = value.clone();
+                next.l_aeq_db = *value;
             }
             if let Some(value) = &self.persons {
-                next.persons = value.clone();
+                next.persons = *value;
             }
             if let Some(value) = &self.ida_class {
                 next.ida_class = value.clone();
             }
             if let Some(value) = &self.ventilation_m3_h {
-                next.ventilation_m3_h = value.clone();
+                next.ventilation_m3_h = *value;
             }
             if let Some(value) = &self.floor_area_m2 {
-                next.floor_area_m2 = value.clone();
+                next.floor_area_m2 = *value;
             }
             if let Some(value) = &self.bedrooms {
-                next.bedrooms = value.clone();
+                next.bedrooms = *value;
             }
             if let Some(value) = &self.dwelling_ventilation_m3_h {
-                next.dwelling_ventilation_m3_h = value.clone();
+                next.dwelling_ventilation_m3_h = *value;
             }
             if let Some(value) = &self.occupants {
-                next.occupants = value.clone();
+                next.occupants = *value;
             }
             if let Some(value) = &self.residential_ventilation_m3_h {
-                next.residential_ventilation_m3_h = value.clone();
+                next.residential_ventilation_m3_h = *value;
             }
             if let Some(value) = &self.sfp_w_m3_s {
-                next.sfp_w_m3_s = value.clone();
+                next.sfp_w_m3_s = *value;
             }
             if let Some(value) = &self.sfp_required_class {
-                next.sfp_required_class = value.clone();
+                next.sfp_required_class = *value;
             }
             if let Some(value) = &self.heat_recovery_eta {
-                next.heat_recovery_eta = value.clone();
+                next.heat_recovery_eta = *value;
             }
             if let Some(value) = &self.heat_recovery_eta_min {
-                next.heat_recovery_eta_min = value.clone();
+                next.heat_recovery_eta_min = *value;
             }
             if let Some(value) = &self.system_type {
                 next.system_type = value.clone();
             }
             if let Some(value) = &self.years_since_inspection {
-                next.years_since_inspection = value.clone();
+                next.years_since_inspection = *value;
             }
             if let Some(value) = &self.humidification_required_kg_h {
-                next.humidification_required_kg_h = value.clone();
+                next.humidification_required_kg_h = *value;
             }
             if let Some(value) = &self.humidification_provided_kg_h {
-                next.humidification_provided_kg_h = value.clone();
+                next.humidification_provided_kg_h = *value;
             }
             if let Some(value) = &self.fan_q_v_m3_s {
-                next.fan_q_v_m3_s = value.clone();
+                next.fan_q_v_m3_s = *value;
             }
             if let Some(value) = &self.fan_t_run_h {
-                next.fan_t_run_h = value.clone();
+                next.fan_t_run_h = *value;
             }
             if let Some(value) = &self.fan_energy_reference_kwh {
-                next.fan_energy_reference_kwh = value.clone();
+                next.fan_energy_reference_kwh = *value;
             }
             if let Some(value) = &self.night_setback_k {
-                next.night_setback_k = value.clone();
+                next.night_setback_k = *value;
             }
             if let Some(value) = &self.hr_m_dot_kg_s {
-                next.hr_m_dot_kg_s = value.clone();
+                next.hr_m_dot_kg_s = *value;
             }
             if let Some(value) = &self.hr_cp_j_kgk {
-                next.hr_cp_j_kgk = value.clone();
+                next.hr_cp_j_kgk = *value;
             }
             if let Some(value) = &self.hr_delta_t_c {
-                next.hr_delta_t_c = value.clone();
+                next.hr_delta_t_c = *value;
             }
             if let Some(value) = &self.hr_t_h {
-                next.hr_t_h = value.clone();
+                next.hr_t_h = *value;
             }
             if let Some(value) = &self.hr_savings_reference_kwh {
-                next.hr_savings_reference_kwh = value.clone();
+                next.hr_savings_reference_kwh = *value;
             }
             if let Some(value) = &self.n50_h_inv {
-                next.n50_h_inv = value.clone();
+                next.n50_h_inv = *value;
             }
             if let Some(value) = &self.volume_m3 {
-                next.volume_m3 = value.clone();
+                next.volume_m3 = *value;
             }
             if let Some(value) = &self.infiltration_allowance_m3_h {
-                next.infiltration_allowance_m3_h = value.clone();
+                next.infiltration_allowance_m3_h = *value;
             }
             if let Some(value) = &self.cellar_area_m2 {
-                next.cellar_area_m2 = value.clone();
+                next.cellar_area_m2 = *value;
             }
             if let Some(value) = &self.cellar_ventilation_m3_h {
-                next.cellar_ventilation_m3_h = value.clone();
+                next.cellar_ventilation_m3_h = *value;
             }
             if let Some(value) = &self.h_tr_w_k {
-                next.h_tr_w_k = value.clone();
+                next.h_tr_w_k = *value;
             }
             if let Some(value) = &self.h_ve_w_k {
-                next.h_ve_w_k = value.clone();
+                next.h_ve_w_k = *value;
             }
             if let Some(value) = &self.theta_e_c {
-                next.theta_e_c = value.clone();
+                next.theta_e_c = *value;
             }
             if let Some(value) = &self.theta_set_c {
-                next.theta_set_c = value.clone();
+                next.theta_set_c = *value;
             }
             if let Some(value) = &self.cooling_delta_t_h {
-                next.cooling_delta_t_h = value.clone();
+                next.cooling_delta_t_h = *value;
             }
             if let Some(value) = &self.cooling_gains_kwh {
-                next.cooling_gains_kwh = value.clone();
+                next.cooling_gains_kwh = *value;
             }
             if let Some(value) = &self.cooling_utilization_factor {
-                next.cooling_utilization_factor = value.clone();
+                next.cooling_utilization_factor = *value;
             }
             if let Some(value) = &self.cooling_reference_kwh {
-                next.cooling_reference_kwh = value.clone();
+                next.cooling_reference_kwh = *value;
             }
             if let Some(value) = &self.chiller_type {
                 next.chiller_type = value.clone();
             }
             if let Some(value) = &self.eer_actual {
-                next.eer_actual = value.clone();
+                next.eer_actual = *value;
             }
             if let Some(value) = &self.q_c_kwh {
-                next.q_c_kwh = value.clone();
+                next.q_c_kwh = *value;
             }
             if let Some(value) = &self.generation_reference_kwh {
-                next.generation_reference_kwh = value.clone();
+                next.generation_reference_kwh = *value;
             }
             if let Some(value) = &self.data_center_supply_c {
-                next.data_center_supply_c = value.clone();
+                next.data_center_supply_c = *value;
             }
             if let Some(value) = &self.h_st_w_k {
-                next.h_st_w_k = value.clone();
+                next.h_st_w_k = *value;
             }
             if let Some(value) = &self.theta_st_c {
-                next.theta_st_c = value.clone();
+                next.theta_st_c = *value;
             }
             if let Some(value) = &self.theta_amb_c {
-                next.theta_amb_c = value.clone();
+                next.theta_amb_c = *value;
             }
             if let Some(value) = &self.storage_t_h {
-                next.storage_t_h = value.clone();
+                next.storage_t_h = *value;
             }
             if let Some(value) = &self.storage_allowance_kwh {
-                next.storage_allowance_kwh = value.clone();
+                next.storage_allowance_kwh = *value;
             }
             if let Some(value) = &self.dhw_delivery_c {
-                next.dhw_delivery_c = value.clone();
+                next.dhw_delivery_c = *value;
             }
             if let Some(value) = &self.duct_class {
                 next.duct_class = value.clone();
             }
             if let Some(value) = &self.duct_test_pressure_pa {
-                next.duct_test_pressure_pa = value.clone();
+                next.duct_test_pressure_pa = *value;
             }
             if let Some(value) = &self.duct_leakage_m3_s_m2 {
-                next.duct_leakage_m3_s_m2 = value.clone();
+                next.duct_leakage_m3_s_m2 = *value;
             }
             next
         })

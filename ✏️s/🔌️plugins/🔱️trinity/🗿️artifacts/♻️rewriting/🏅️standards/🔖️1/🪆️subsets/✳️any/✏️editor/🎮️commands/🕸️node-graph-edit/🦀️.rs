@@ -6,7 +6,7 @@ use crate::artifacts::rewriting::op::RewriteRuleMutation;
 use crate::artifacts::rewriting::schema::Rhs;
 use crate::artifacts::rewriting::RewritingSnapshot;
 use crate::editor::rewriting::config::RewritingConfigMutation;
-use semio_framework_plugin::{Emit, Fault};
+use semio_framework_plugin::Emit;
 use pack::JsonValue as Value;
 
 /// 🧭️ One addressable rule-clause node in the LHS/RHS semantic graphs (`lhs-where`, `rhs-create-N`,
@@ -163,12 +163,12 @@ fn apply_rewriting_node_graph_edit_operations(state: &mut RewritingSnapshot, sel
 /// deleting a selected id here is enough on its own: the framework re-validates/prunes the "graph"
 /// domain's selection against the fresh `interaction_topology` right after this document dispatch
 /// lands, so no explicit selection-clearing mutation is emitted anymore.
-pub(crate) fn node_graph_edit(state: &RewritingSnapshot, selected_node_ids: &[String], surface_id: &str, operations_json: &str) -> Result<Emit<RewriteRuleMutation, RewritingConfigMutation>, Fault> {
+pub(crate) fn node_graph_edit(state: &RewritingSnapshot, selected_node_ids: &[String], surface_id: &str, operations_json: &str) -> Emit<RewriteRuleMutation, RewritingConfigMutation> {
     let operations: Vec<Value> = pack::from_json_str(operations_json).unwrap_or_default();
     let mut next = state.clone();
     let changed = apply_rewriting_node_graph_edit_operations(&mut next, selected_node_ids, surface_id, &operations);
     if !changed {
-        return Ok(Emit::default());
+        return Emit::default();
     }
-    Ok(Emit { artifact_mutations: rewriting_snapshot_mutations(state, &next), ..Default::default() })
+    Emit { artifact_mutations: rewriting_snapshot_mutations(state, &next), ..Default::default() }
 }

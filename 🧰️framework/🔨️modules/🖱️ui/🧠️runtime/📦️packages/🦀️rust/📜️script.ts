@@ -19,7 +19,7 @@ const packageRoot = import.meta.dir ?? dirname(fileURLToPath(import.meta.url));
 /** 📐️ Validates physical backing independently with Ajv and Node's fixed byte-buffer allocation. */
 export function surfaceOwnershipSelfTests(): number {
   const fixture = JSON.parse(readFileSync(new URL("../../📏️ownership/🧫️fixture/🔣️.json", import.meta.url), "utf8"));
-  const schema = JSON.parse(readFileSync(new URL("../../📏️ownership/🧬️schema.json", import.meta.url), "utf8"));
+  const schema = JSON.parse(readFileSync(new URL("../../📏️ownership/🧬️schema/🔣️.json", import.meta.url), "utf8"));
   const validate = new Ajv({ strict: true, allErrors: true }).compile(schema);
   assert(validate(fixture), JSON.stringify(validate.errors));
   for (const entry of fixture.backingCases) {
@@ -60,21 +60,21 @@ export function surfaceOwnershipSelfTests(): number {
   assert.equal(existing.byteLength / fixture.existingComponent.workGrant, fixture.existingComponent.minimumTurns);
   assert.equal(validate({ ...fixture, existingComponent: { ...fixture.existingComponent, oldRootCopied: true } }), false);
   const patch = JSON.parse(readFileSync(new URL("../../🩹️patch/🧫️fixture/🔣️.json", import.meta.url), "utf8"));
-  const patchSchema = JSON.parse(readFileSync(new URL("../../🩹️patch/🧬️schema.json", import.meta.url), "utf8"));
+  const patchSchema = JSON.parse(readFileSync(new URL("../../🩹️patch/🧬️schema/🔣️.json", import.meta.url), "utf8"));
   const validatePatch = new Ajv({ strict: true, allErrors: true }).compile(patchSchema);
   assert(validatePatch(patch), JSON.stringify(validatePatch.errors));
   assert.equal(Buffer.from(patch.surface).byteLength, patch.surfaceBytes);
   assert.equal(validatePatch({ ...patch, occupiedTargetPreservesSource: false }), false);
   assert.equal(validatePatch({ ...patch, contendedReleasePreservesSource: false }), false);
   const handback = JSON.parse(readFileSync(new URL("../../🚪️handback/🧫️fixture/🔣️.json", import.meta.url), "utf8"));
-  const handbackSchema = JSON.parse(readFileSync(new URL("../../🚪️handback/🧬️schema.json", import.meta.url), "utf8"));
+  const handbackSchema = JSON.parse(readFileSync(new URL("../../🚪️handback/🧬️schema/🔣️.json", import.meta.url), "utf8"));
   const validateHandback = new Ajv({ strict: true, allErrors: true }).compile(handbackSchema);
   assert(validateHandback(handback), JSON.stringify(validateHandback.errors));
   assert.equal(Buffer.from(handback.surface).toString("hex"), handback.surfaceUtf8);
   for (const field of ["entryWaits", "poisonMutatesOwner", "busyLosesOwner", "queuedOwnerLeavesSlotDuringStep"]) assert.equal(validateHandback({ ...handback, [field]: true }), false);
   assert.equal(validateHandback({ ...handback, poisonIsFault: false }), false);
   const document = JSON.parse(readFileSync(new URL("../../📃️document/🧫️fixture/🔣️.json", import.meta.url), "utf8"));
-  const documentSchema = JSON.parse(readFileSync(new URL("../../📃️document/🧬️schema.json", import.meta.url), "utf8"));
+  const documentSchema = JSON.parse(readFileSync(new URL("../../📃️document/🧬️schema/🔣️.json", import.meta.url), "utf8"));
   const validateDocument = new Ajv({ strict: true, allErrors: true }).compile(documentSchema);
   assert(validateDocument(document), JSON.stringify(validateDocument.errors));
   assert.equal(document.aggregateCeilingBytes / document.surfaceCeilingBytes, 4);
@@ -86,7 +86,7 @@ export function surfaceOwnershipSelfTests(): number {
   assert.equal(validateDocument({ ...document, sameRootForReader: false }), false);
   assert.equal(validateDocument({ ...document, oldReaderSurvivesReplacement: false }), false);
   const outputs = JSON.parse(readFileSync(new URL("../../📤️output/🧫️fixture/🔣️.json", import.meta.url), "utf8"));
-  const outputSchema = JSON.parse(readFileSync(new URL("../../📤️output/🧬️schema.json", import.meta.url), "utf8"));
+  const outputSchema = JSON.parse(readFileSync(new URL("../../📤️output/🧬️schema/🔣️.json", import.meta.url), "utf8"));
   const validateOutputs = new Ajv({ strict: true, allErrors: true }).compile(outputSchema);
   assert(validateOutputs(outputs), JSON.stringify(validateOutputs.errors));
   assert.deepEqual(outputs.surfaces.map((surface: string) => Buffer.from(surface).toString("hex")), outputs.surfaceUtf8);
@@ -166,7 +166,7 @@ export function surfaceOwnershipSelfTests(): number {
     assert.equal(outcome, row.outcome);
   }
   const transaction = JSON.parse(readFileSync(new URL("../../🔄️transaction/🧪️fixture/🔣️.json", import.meta.url), "utf8"));
-  const transactionSchema = JSON.parse(readFileSync(new URL("../../🔄️transaction/🧬️schema.json", import.meta.url), "utf8"));
+  const transactionSchema = JSON.parse(readFileSync(new URL("../../🔄️transaction/🧬️schema/🔣️.json", import.meta.url), "utf8"));
   const validateTransaction = new Ajv({ strict: true, allErrors: true }).compile(transactionSchema);
   assert(validateTransaction(transaction), JSON.stringify(validateTransaction.errors));
   const requiredNodes = Buffer.alloc(8); requiredNodes.writeBigUInt64LE(BigInt(transaction.requiredNodes));

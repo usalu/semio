@@ -4,9 +4,9 @@
 //! `ComposerEntry` via the standard-level aggregator), not per-leaf `register()`.
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use crate::artifacts::docx::standards::v_ecma_376::subsets::base::schema::DocxComposer as DocxAnyComposer;
-    use crate::artifacts::docx::standards::v_ecma_376::subsets::strict::schema::check_strict_conformance;
-    use crate::artifacts::docx::DocxSnapshot;
+    use crate::standards::v_ecma_376::subsets::base::schema::DocxComposer as DocxAnyComposer;
+    use crate::standards::v_ecma_376::subsets::strict::schema::check_strict_conformance;
+    use crate::DocxSnapshot;
     use dsl::{Diagnostic, FaultCode, Severity, TextSpan};
     use semio_framework_plugin::{register_subset_validator, subset_validator_entry_of, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, IoPayload, StandardId, SubsetId, SubsetValidator, SubsetValidatorEntry};
     use std::sync::OnceLock;
@@ -80,7 +80,7 @@ pub mod derived_composition {
     /// 📌️ Registers this subset's `SubsetValidator` with the generic io registry (D5's
     /// validate-on-build hook). Called from the ecma-376 standard's own `⚙️engine::register()`. The
     /// `ComposerEntry` itself is aggregated separately by the standard-level composer
-    /// (`crate::artifacts::docx::standards::v_ecma_376::engine::io_registry::entries()`).
+    /// (`crate::standards::v_ecma_376::engine::io_registry::entries()`).
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn register() {
         register_subset_validator(validator_entry()).expect("static Stdio registration must be available and conflict-free");
@@ -90,8 +90,8 @@ pub mod derived_composition {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use crate::artifacts::docx::standards::v_ecma_376::subsets::strict::schema::CODE_REL_BASE;
-        use crate::artifacts::zip::opc::{OpcPackage, RELS_CONTENT_TYPE, REL_TYPE_OFFICE_DOCUMENT};
+        use crate::standards::v_ecma_376::subsets::strict::schema::CODE_REL_BASE;
+        use semio_s_artifact_stdio_zip::opc::{OpcPackage, RELS_CONTENT_TYPE, REL_TYPE_OFFICE_DOCUMENT};
         use semio_framework_plugin::AnalyzeSource;
 
         const STRICT_MAIN_NS: &str = "http://purl.oclc.org/ooxml/wordprocessingml/main";
@@ -118,7 +118,7 @@ pub mod derived_composition {
         /// this test genuinely exercises a document whose main-part XML matches what was set on `opc`.
         // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         fn conforming_pack_bytes(snapshot: &DocxSnapshot) -> Vec<u8> {
-            let raw = crate::artifacts::zip::opc::encode_opc(&snapshot.opc).expect("valid opc package encodes");
+            let raw = semio_s_artifact_stdio_zip::opc::encode_opc(&snapshot.opc).expect("valid opc package encodes");
             let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<DocxSnapshot as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).expect("valid envelope_id");
             store::semio_format::wrap_binary(&envelope, &raw)
         }

@@ -5,7 +5,7 @@
   "displayName": "Change Mechanical Ventilation Schedule",
   "emoji": "📆️",
   "aggregateVariant": "ChangeMechanicalVentilationSchedule",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-mechanical-ventilation-schedule",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

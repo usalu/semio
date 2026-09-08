@@ -1,7 +1,7 @@
 //! 📝️ Canonical text payload codec for set-trailing-newline.
 //#region 📝️PayloadCodec
 use super::SetTrailingNewlinePayload;
-use crate::artifacts::txt::schema::mutations::TxtMutation;
+use crate::schema::mutations::TxtMutation;
 pub const TEXT_OPCODE: &str = "set-trailing-newline";
 pub fn encode_payload(value: &SetTrailingNewlinePayload) -> Result<String, String> {
     Ok(pack::to_json_string(value))

@@ -20,10 +20,10 @@ use std::collections::HashMap;
 
 use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
 
-use crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioPoint3;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::{BrepCurve, BrepSurface, SemioBrepSnapshot};
-use crate::artifacts::step::engine::part21::{Part21Builder, Part21Header, Part21Value};
-use crate::artifacts::step::schema::snapshot::StepSnapshot;
+use crate::standards::v1::subsets::base::schema::geometry::SemioPoint3;
+use crate::standards::v1::subsets::brep::schema::snapshot::{BrepCurve, BrepSurface, SemioBrepSnapshot};
+use semio_s_artifact_stdio_step::engine::part21::{Part21Builder, Part21Header, Part21Value};
+use semio_s_artifact_stdio_step::schema::snapshot::StepSnapshot;
 
 //#region 🔖️ValueBuild
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -187,7 +187,7 @@ fn surface_to_part21(b: &mut Part21Builder, surface: &BrepSurface) -> u64 {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn build_part21(snapshot: &SemioBrepSnapshot) -> Result<crate::artifacts::step::engine::part21::Part21Document, String> {
+fn build_part21(snapshot: &SemioBrepSnapshot) -> Result<semio_s_artifact_stdio_step::engine::part21::Part21Document, String> {
     let mut b = Part21Builder::new();
 
     let mut vertex_ids: HashMap<&str, u64> = HashMap::new();
@@ -289,8 +289,8 @@ impl ArtifactSerializer for SemioBrepToStep {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::semio::standards::v1::subsets::brep::io::import::deserializers::artifacts::step::v_ap214::any::SemioBrepFromStep;
-    use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::{BrepEdge, BrepFace, BrepLoop, BrepLoopEdge, BrepShell, BrepShellFace, BrepSolid, BrepSolidShell, BrepVertex};
+    use crate::standards::v1::subsets::brep::io::import::deserializers::artifacts::step::v_ap214::any::SemioBrepFromStep;
+    use crate::standards::v1::subsets::brep::schema::snapshot::{BrepEdge, BrepFace, BrepLoop, BrepLoopEdge, BrepShell, BrepShellFace, BrepSolid, BrepSolidShell, BrepVertex};
     use semio_framework_plugin::ArtifactDeserializer;
 
     /// 🧱️ Exercises every `BrepCurve`/`BrepSurface` variant (Line/Circle/Ellipse/Nurbs curves;

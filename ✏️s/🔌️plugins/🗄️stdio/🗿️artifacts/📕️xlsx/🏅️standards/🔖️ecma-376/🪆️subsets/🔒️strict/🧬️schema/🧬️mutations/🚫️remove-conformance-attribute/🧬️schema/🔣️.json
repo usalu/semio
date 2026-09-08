@@ -1,0 +1,8 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/xlsx/ecma-376/strict/mutation/remove-conformance-attribute.json",
+  "title": "RemoveConformanceAttribute",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {}
+}

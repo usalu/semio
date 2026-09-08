@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeBridgeSigmaCMpa, base: &En1992Snapshot) -> protocol:
     if base.bridge_sigma_c_mpa == payload.new_bridge_sigma_c_mpa {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "Bridge sigma c mpa already has this value.");
     }
-    protocol::MutationOutcome::new(En1992Diff { bridge_sigma_c_mpa: Some(payload.new_bridge_sigma_c_mpa.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1992Diff { bridge_sigma_c_mpa: Some(payload.new_bridge_sigma_c_mpa), ..Default::default() })
 }
 //#endregion 🔖️Diff

@@ -500,10 +500,10 @@ impl ArtifactEditor for HomeApp {
             "copyInviteLink" => Ok(HomeCommand::CopyInviteLink(copy_invite_link::CopyInviteLink {
                 space_id: str_field("spaceId").or_else(|| str_field("space_id")).unwrap_or_default(),
                 role: str_field("role").unwrap_or_default(),
-                ttl_secs: args.and_then(|value| value.get("ttlSecs")).and_then(DslValue::as_f64).map(|n| n as u64).unwrap_or(0),
+                ttl_secs: args.and_then(|value| value.get("ttlSecs")).and_then(DslValue::as_f64).map_or(0, |n| n as u64),
             })),
             "foldDirectoryEvents" => {
-                Ok(HomeCommand::FoldDirectoryEvents(fold_directory_events::FoldDirectoryEvents { events_json: args.and_then(|value| value.get("eventsJson")).and_then(DslValue::as_str).map(str::to_string).unwrap_or_else(|| "[]".into()) }))
+                Ok(HomeCommand::FoldDirectoryEvents(fold_directory_events::FoldDirectoryEvents { events_json: args.and_then(|value| value.get("eventsJson")).and_then(DslValue::as_str).map_or_else(|| "[]".into(), str::to_string) }))
             }
             "presenceHeartbeat" => Ok(HomeCommand::PresenceHeartbeat(presence_heartbeat::PresenceHeartbeat {})),
             "setClient" => Ok(HomeCommand::SetClient(set_client::SetClient {
@@ -551,7 +551,8 @@ impl ArtifactEditor for HomeApp {
 /// `EditorBuilder` (contract §2.4, W0-F gap 4) — `create_home_app` never called either, so nothing is
 /// dropped here (unlike other W2 packets that had to note a loss).
 pub async fn create_home_app() -> semio_framework_plugin::AppDefinition {
-    let definition = Editor::builder(crate::artifacts::home::HOME_DIALECT)
+    
+    Editor::builder(crate::artifacts::home::HOME_DIALECT)
         .document(["semio", "s", "home"])
         .icon_id("home")
         .mode_def(crate::editor::home::modes::explore::definition())
@@ -660,8 +661,7 @@ pub async fn create_home_app() -> semio_framework_plugin::AppDefinition {
         ])
         .keybinding("mod+n", "createStudio")
         .keybinding("mod+o", "importSpace")
-        .build_definition();
-    definition
+        .build_definition()
 }
 //#endregion 🔖️HomeManifest
 

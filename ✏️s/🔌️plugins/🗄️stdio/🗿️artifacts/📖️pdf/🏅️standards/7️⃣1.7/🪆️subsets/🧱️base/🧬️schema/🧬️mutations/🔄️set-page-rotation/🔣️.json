@@ -5,7 +5,7 @@
   "displayName": "Set Page Rotation",
   "emoji": "🔄️",
   "aggregateVariant": "SetPageRotation",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "set-page-rotation",
   "binaryTag": 15,
   "invertibility": "explicit-mutation",

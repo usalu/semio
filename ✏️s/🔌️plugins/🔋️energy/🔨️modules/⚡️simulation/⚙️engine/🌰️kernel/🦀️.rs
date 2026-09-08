@@ -988,8 +988,8 @@ impl TimestepWork {
                     sensible_gain_w,
                     heating_setpoint_c: work.heating_setpoint_c,
                     cooling_setpoint_c: work.cooling_setpoint_c,
-                    thermostat: work.thermostat.clone(),
-                    humidistat: work.humidistat.clone(),
+                    thermostat: work.thermostat,
+                    humidistat: work.humidistat,
                     delivered: DeliveredEnergy::default(),
                     system: SystemSubstepWork { stage: SystemSubstepStage::Predict, ideal_cursor: 0, fault_cursor: 0, equipment_cursor: 0, selected_ideal: None, fault_factor: 1.0, balance: None },
                 });

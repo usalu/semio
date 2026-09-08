@@ -8,7 +8,7 @@ const library = "🧰️framework/🛍️products/🦑️repo/🔨️modules/�
 const cases = JSON.parse(readFileSync(join(workspace, library, "⚡️caching/🧫️fixtures/bun-dependencies/🔣️.json"), "utf8"));
 const root = mkdtempSync(join(ticket, "🗑️generated/bun-dependencies-cache-"));
 const put = (path: string, content: string | Buffer) => { const file = join(root, path); mkdirSync(dirname(file), { recursive: true }); writeFileSync(file, content); };
-for (const path of [library + "/🟨️.mjs", library + "/⚡️caching/🔣️policy.json"]) put(path, readFileSync(join(workspace, path)));
+for (const path of [library + "/🟨️.mjs", library + "/⚡️caching/🔣️policy.json", library + "/🕸️dependencies/🧩️runtime/🟨️.mjs"]) put(path, readFileSync(join(workspace, path)));
 put("bun.lock", JSON.stringify(cases.lock));
 for (const [path, content] of Object.entries(cases.patches)) put(path, String(content));
 put("package.json", '{"name":"locked-input-fixture","private":true}');

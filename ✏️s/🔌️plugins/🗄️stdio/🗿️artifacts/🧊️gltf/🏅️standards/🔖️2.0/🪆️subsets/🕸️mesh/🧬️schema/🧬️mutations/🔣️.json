@@ -1,7 +1,8 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/stdio/gltf/2.0/mutation/mesh",
+  "$id": "https://semio.tech/schema/s/stdio/gltf/2.0/mesh/mutations.json",
   "title": "glTF Mesh Mutation",
+  "description": "View over the any subset's mutation leaves (adjacently tagged); every payload is the owning leaf's own schema, referenced, never restated.",
   "oneOf": [
     {
       "type": "object",
@@ -12,10 +13,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "bind-morph-target-attribute"
+          "const": "bindMorphTargetAttribute"
         },
         "payload": {
-          "$ref": "🎚️morph-attribute/🔗️bind/🧬️.schema.json"
+          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🎚️morph-attribute/🔗️bind/🧬️schema/🔣️.json"
         }
       }
     },
@@ -28,10 +29,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "bind-primitive-attribute"
+          "const": "bindPrimitiveAttribute"
         },
         "payload": {
-          "$ref": "🔤️primitive-attribute/🔗️bind/🧬️.schema.json"
+          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🔤️primitive-attribute/🔗️bind/🧬️schema/🔣️.json"
         }
       }
     },
@@ -44,10 +45,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "bind-primitive-indices"
+          "const": "bindPrimitiveIndices"
         },
         "payload": {
-          "$ref": "🔢️primitive-indices/🔗️bind/🧬️.schema.json"
+          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🔢️primitive-indices/🔗️bind/🧬️schema/🔣️.json"
         }
       }
     },
@@ -60,10 +61,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "bind-primitive-material"
+          "const": "bindPrimitiveMaterial"
         },
         "payload": {
-          "$ref": "🧱️primitive-material/🔗️bind/🧬️.schema.json"
+          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🧱️primitive-material/🔗️bind/🧬️schema/🔣️.json"
         }
       }
     },
@@ -76,10 +77,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "change-mesh-extension-data"
+          "const": "changeMeshExtensionData"
         },
         "payload": {
-          "$ref": "🕸️mesh/🧩️change-extensions/🧬️.schema.json"
+          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🕸️mesh/🧩️change-extensions/🧬️schema/🔣️.json"
         }
       }
     },
@@ -92,10 +93,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "change-mesh-extra-data"
+          "const": "changeMeshExtraData"
         },
         "payload": {
-          "$ref": "🕸️mesh/📝️change-extras/🧬️.schema.json"
+          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🕸️mesh/📝️change-extras/🧬️schema/🔣️.json"
         }
       }
     },
@@ -108,10 +109,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "change-mesh-morph-weights"
+          "const": "changeMeshMorphWeights"
         },
         "payload": {
-          "$ref": "🕸️mesh/⚖️change-weights/🧬️.schema.json"
+          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🕸️mesh/⚖️change-weights/🧬️schema/🔣️.json"
         }
       }
     },
@@ -124,10 +125,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "change-mesh-name"
+          "const": "changeMeshName"
         },
         "payload": {
-          "$ref": "🕸️mesh/🏷️rename/🧬️.schema.json"
+          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🕸️mesh/🏷️rename/🧬️schema/🔣️.json"
         }
       }
     },
@@ -140,10 +141,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "change-primitive-extension-data"
+          "const": "changePrimitiveExtensionData"
         },
         "payload": {
-          "$ref": "🔺️primitive/🧩️change-extensions/🧬️.schema.json"
+          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🔺️primitive/🧩️change-extensions/🧬️schema/🔣️.json"
         }
       }
     },
@@ -156,10 +157,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "change-primitive-extra-data"
+          "const": "changePrimitiveExtraData"
         },
         "payload": {
-          "$ref": "🔺️primitive/📝️change-extras/🧬️.schema.json"
+          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🔺️primitive/📝️change-extras/🧬️schema/🔣️.json"
         }
       }
     },
@@ -172,10 +173,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "change-primitive-topology-mode"
+          "const": "changePrimitiveTopologyMode"
         },
         "payload": {
-          "$ref": "🔺️primitive/📐️change-topology/🧬️.schema.json"
+          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🔺️primitive/📐️change-topology/🧬️schema/🔣️.json"
         }
       }
     },
@@ -188,10 +189,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "create-accessor"
+          "const": "createAccessor"
         },
         "payload": {
-          "$ref": "📐️accessor/🌱️create/🧬️.schema.json"
+          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/📐️accessor/🌱️create/🧬️schema/🔣️.json"
         }
       }
     },
@@ -204,10 +205,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "create-mesh"
+          "const": "createMesh"
         },
         "payload": {
-          "$ref": "🕸️mesh/🌱️create/🧬️.schema.json"
+          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🕸️mesh/🌱️create/🧬️schema/🔣️.json"
         }
       }
     },
@@ -220,10 +221,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "create-morph-target"
+          "const": "createMorphTarget"
         },
         "payload": {
-          "$ref": "🧬️morph-target/🌱️create/🧬️.schema.json"
+          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🧬️morph-target/🌱️create/🧬️schema/🔣️.json"
         }
       }
     },
@@ -236,10 +237,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "create-primitive"
+          "const": "createPrimitive"
         },
         "payload": {
-          "$ref": "🔺️primitive/🌱️create/🧬️.schema.json"
+          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🔺️primitive/🌱️create/🧬️schema/🔣️.json"
         }
       }
     },
@@ -252,10 +253,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "delete-accessor"
+          "const": "deleteAccessor"
         },
         "payload": {
-          "$ref": "📐️accessor/🗑️delete/🧬️.schema.json"
+          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/📐️accessor/🗑️delete/🧬️schema/🔣️.json"
         }
       }
     },
@@ -268,10 +269,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "delete-mesh"
+          "const": "deleteMesh"
         },
         "payload": {
-          "$ref": "🕸️mesh/🗑️delete/🧬️.schema.json"
+          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🕸️mesh/🗑️delete/🧬️schema/🔣️.json"
         }
       }
     },
@@ -284,10 +285,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "delete-morph-target"
+          "const": "deleteMorphTarget"
         },
         "payload": {
-          "$ref": "🧬️morph-target/🗑️delete/🧬️.schema.json"
+          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🧬️morph-target/🗑️delete/🧬️schema/🔣️.json"
         }
       }
     },
@@ -300,10 +301,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "delete-primitive"
+          "const": "deletePrimitive"
         },
         "payload": {
-          "$ref": "🔺️primitive/🗑️delete/🧬️.schema.json"
+          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🔺️primitive/🗑️delete/🧬️schema/🔣️.json"
         }
       }
     },
@@ -316,10 +317,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "move-accessor"
+          "const": "moveAccessor"
         },
         "payload": {
-          "$ref": "📐️accessor/🚚️move/🧬️.schema.json"
+          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/📐️accessor/🚚️move/🧬️schema/🔣️.json"
         }
       }
     },
@@ -332,10 +333,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "move-mesh"
+          "const": "moveMesh"
         },
         "payload": {
-          "$ref": "🕸️mesh/🚚️move/🧬️.schema.json"
+          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🕸️mesh/🚚️move/🧬️schema/🔣️.json"
         }
       }
     },
@@ -348,10 +349,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "move-morph-target"
+          "const": "moveMorphTarget"
         },
         "payload": {
-          "$ref": "🧬️morph-target/🚚️move/🧬️.schema.json"
+          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🧬️morph-target/🚚️move/🧬️schema/🔣️.json"
         }
       }
     },
@@ -364,10 +365,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "move-morph-target-attribute"
+          "const": "moveMorphTargetAttribute"
         },
         "payload": {
-          "$ref": "🎚️morph-attribute/🚚️move/🧬️.schema.json"
+          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🎚️morph-attribute/🚚️move/🧬️schema/🔣️.json"
         }
       }
     },
@@ -380,10 +381,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "move-primitive"
+          "const": "movePrimitive"
         },
         "payload": {
-          "$ref": "🔺️primitive/🚚️move/🧬️.schema.json"
+          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🔺️primitive/🚚️move/🧬️schema/🔣️.json"
         }
       }
     },
@@ -396,10 +397,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "move-primitive-attribute"
+          "const": "movePrimitiveAttribute"
         },
         "payload": {
-          "$ref": "🔤️primitive-attribute/🚚️move/🧬️.schema.json"
+          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🔤️primitive-attribute/🚚️move/🧬️schema/🔣️.json"
         }
       }
     },
@@ -412,10 +413,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "reorder-accessors"
+          "const": "reorderAccessors"
         },
         "payload": {
-          "$ref": "📐️accessor/🔀️reorder/🧬️.schema.json"
+          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/📐️accessor/🔀️reorder/🧬️schema/🔣️.json"
         }
       }
     },
@@ -428,10 +429,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "reorder-meshs"
+          "const": "reorderMeshs"
         },
         "payload": {
-          "$ref": "🕸️mesh/🔀️reorder/🧬️.schema.json"
+          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🕸️mesh/🔀️reorder/🧬️schema/🔣️.json"
         }
       }
     },
@@ -444,10 +445,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "reorder-morph-target-attributes"
+          "const": "reorderMorphTargetAttributes"
         },
         "payload": {
-          "$ref": "🎚️morph-attribute/🔀️reorder/🧬️.schema.json"
+          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🎚️morph-attribute/🔀️reorder/🧬️schema/🔣️.json"
         }
       }
     },
@@ -460,10 +461,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "reorder-morph-targets"
+          "const": "reorderMorphTargets"
         },
         "payload": {
-          "$ref": "🧬️morph-target/🔀️reorder/🧬️.schema.json"
+          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🧬️morph-target/🔀️reorder/🧬️schema/🔣️.json"
         }
       }
     },
@@ -476,10 +477,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "reorder-primitive-attributes"
+          "const": "reorderPrimitiveAttributes"
         },
         "payload": {
-          "$ref": "🔤️primitive-attribute/🔀️reorder/🧬️.schema.json"
+          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🔤️primitive-attribute/🔀️reorder/🧬️schema/🔣️.json"
         }
       }
     },
@@ -492,10 +493,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "reorder-primitives"
+          "const": "reorderPrimitives"
         },
         "payload": {
-          "$ref": "🔺️primitive/🔀️reorder/🧬️.schema.json"
+          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🔺️primitive/🔀️reorder/🧬️schema/🔣️.json"
         }
       }
     },
@@ -508,10 +509,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "unbind-morph-target-attribute"
+          "const": "unbindMorphTargetAttribute"
         },
         "payload": {
-          "$ref": "🎚️morph-attribute/✂️unbind/🧬️.schema.json"
+          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🎚️morph-attribute/✂️unbind/🧬️schema/🔣️.json"
         }
       }
     },
@@ -524,10 +525,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "unbind-primitive-attribute"
+          "const": "unbindPrimitiveAttribute"
         },
         "payload": {
-          "$ref": "🔤️primitive-attribute/✂️unbind/🧬️.schema.json"
+          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🔤️primitive-attribute/✂️unbind/🧬️schema/🔣️.json"
         }
       }
     },
@@ -540,10 +541,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "unbind-primitive-indices"
+          "const": "unbindPrimitiveIndices"
         },
         "payload": {
-          "$ref": "🔢️primitive-indices/✂️unbind/🧬️.schema.json"
+          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🔢️primitive-indices/✂️unbind/🧬️schema/🔣️.json"
         }
       }
     },
@@ -556,10 +557,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "unbind-primitive-material"
+          "const": "unbindPrimitiveMaterial"
         },
         "payload": {
-          "$ref": "🧱️primitive-material/✂️unbind/🧬️.schema.json"
+          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🧱️primitive-material/✂️unbind/🧬️schema/🔣️.json"
         }
       }
     }

@@ -4,11 +4,11 @@
 //! Warning `mutation.no-op`, otherwise the enum arm emits `colorspace` and nothing else. The field
 //! records the SOURCE colorspace only — frame buffers are always normalized RGBA8 — so this
 //! mutation must never rewrite a single pixel, which is the load-bearing claim below.
-use crate::artifacts::semio::standards::v1::subsets::image::schema::diff::SemioImageDiff;
-use crate::artifacts::semio::standards::v1::subsets::image::schema::mutations::{apply_semio_image_mutation, SemioImageMutation};
-use crate::artifacts::semio::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
+use crate::standards::v1::subsets::image::schema::diff::SemioImageDiff;
+use crate::standards::v1::subsets::image::schema::mutations::{apply_semio_image_mutation, SemioImageMutation};
+use crate::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
 use protocol::{Mutation, MutationDiff};
-use crate::artifacts::semio::standards::v1::subsets::image::schema::mutations::set_colorspace;
+use crate::standards::v1::subsets::image::schema::mutations::set_colorspace;
 
 /// 🔗️ This leaf's own `🔺️diff` oracle, mounted directly: the enum-level `Mutation::diff` arm
 /// deliberately carries NO guard branches — every `mutation.no-op`/`mutation.clamped`/
@@ -43,7 +43,7 @@ async fn records_rgba_without_touching_a_single_pixel() {
     let base = before();
     let produced = leaf_outcome().diff().apply(&base).expect("set-colorspace applies to its committed before-snapshot");
     assert_eq!(produced, expected_after(), "set-colorspace/records-the-source-colorspace-as-rgba: applied state differs from the committed after-snapshot");
-    assert_eq!(produced.colorspace, crate::artifacts::semio::standards::v1::subsets::image::schema::snapshot::SemioColorspace::Rgba, "the recorded source colorspace must become the payload's value");
+    assert_eq!(produced.colorspace, crate::standards::v1::subsets::image::schema::snapshot::SemioColorspace::Rgba, "the recorded source colorspace must become the payload's value");
     assert_eq!(produced.frames, base.frames, "set-colorspace records provenance only — it must never rewrite a frame's RGBA8 buffer");
     assert_eq!(produced.bit_depth, base.bit_depth, "set-colorspace must not touch the recorded bit depth");
     let mut in_place = before();

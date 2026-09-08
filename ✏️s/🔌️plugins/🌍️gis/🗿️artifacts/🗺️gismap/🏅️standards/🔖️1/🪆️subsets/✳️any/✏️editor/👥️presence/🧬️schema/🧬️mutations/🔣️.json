@@ -1,15 +1,13 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://semio.tech/schema/gis/gis2d-presence/mutations",
-  "type": "object",
+  "title": "SGisGismap1AnyEditorPresenceMutation",
   "oneOf": [
     {
-      "allOf": [
-        {"$ref": "https://semio.tech/schema/gis/gis2d-presence/set-camera#/$defs/payload"},
-        {"type": "object", "required": ["operation"], "properties": {"operation": {"const": "setCamera"}}}
-      ],
-      "unevaluatedProperties": false
+      "$ref": "./🎥️set-camera/🧬️schema/🔣️.json"
     }
   ],
-  "unevaluatedProperties": false
+  "x-semio-mutationKinds": [
+    "set-camera"
+  ]
 }

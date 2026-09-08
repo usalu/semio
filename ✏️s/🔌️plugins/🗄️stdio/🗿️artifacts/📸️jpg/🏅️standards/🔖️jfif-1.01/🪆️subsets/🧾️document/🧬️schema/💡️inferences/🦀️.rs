@@ -4,8 +4,8 @@
 //! slug dirs directly — `🦀️.rs` is the sole mounting mechanism, same as mutations); each named
 //! inference gets its own `<emoji><slug>/` child (currently: `📐dimensions/`).
 
-use crate::artifacts::jpg::JpgSnapshot;
-use schema::ArtifactSchema;
+use crate::JpgSnapshot;
+use framework_schema::ArtifactSchema;
 
 use super::dimensions::{compute_jpg_dimensions, JpgDimensions};
 
@@ -53,7 +53,7 @@ impl protocol::InferenceSpec<JpgSnapshot> for JpgInference {
 //#region 🔖️ArtifactInferrer
 /// 💡️ No `InferredField`s here (a canonical-field read is already O(1)) — the default
 /// `infer_cached` passthrough (`ArtifactInferrer::infer_cached`) is exact.
-impl semio_framework_plugin::ArtifactInferrer for crate::artifacts::jpg::standards::v_jfif_1_01::subsets::document::schema::JpgBuilder {
+impl semio_framework_plugin::ArtifactInferrer for crate::standards::v_jfif_1_01::subsets::document::schema::JpgBuilder {
     type Snapshot = JpgSnapshot;
     type Inference = JpgInference;
 }
@@ -63,10 +63,10 @@ impl semio_framework_plugin::ArtifactInferrer for crate::artifacts::jpg::standar
 /// 💡️ Registers `s.stdio.jpg.inference`'s facet leaves into the OS-wide inference catalog — call
 /// once at plugin init, alongside `jpg_artifact_schema_descriptor`'s registration.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn jpg_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
-    schema::ArtifactInferenceDescriptor {
+pub fn jpg_artifact_inference_descriptor() -> framework_schema::ArtifactInferenceDescriptor {
+    framework_schema::ArtifactInferenceDescriptor {
         id: "s.stdio.jpg.inference",
-        inference: schema::FacetLeaves {
+        inference: framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),

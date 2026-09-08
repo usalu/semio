@@ -7,7 +7,7 @@
 pub type InlineLinkDestination = ((usize, usize), String, Option<String>, usize);
 
 
-use crate::artifacts::md::schema::snapshot::{MdBlock, MdInline};
+use crate::schema::snapshot::{MdBlock, MdInline};
 
 //#region 🔖️BlockLineClassifiers
 /// 📏️ Leading-space count (ASCII spaces only, matching every other classifier here -- a line

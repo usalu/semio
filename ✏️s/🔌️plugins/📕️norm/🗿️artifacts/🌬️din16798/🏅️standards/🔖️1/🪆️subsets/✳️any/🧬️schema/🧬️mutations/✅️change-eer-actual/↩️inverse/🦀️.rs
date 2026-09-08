@@ -7,6 +7,6 @@ use crate::artifacts::din16798::Din16798Snapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(_payload: &ChangeEerActual, base: &Din16798Snapshot) -> Vec<Din16798Mutation> {
-    vec![Din16798Mutation::ChangeEerActual(ChangeEerActual { new_eer_actual: base.eer_actual.clone() })]
+    vec![Din16798Mutation::ChangeEerActual(ChangeEerActual { new_eer_actual: base.eer_actual })]
 }
 //#endregion 🔖️Inverse

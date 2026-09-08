@@ -25,5 +25,5 @@
     {"name":"refused post keeps exact attached backing","actions":["capture","normalize","postRefused"],"expected":{"phase":"heldFault","transferCreditsSpent":0,"rawRetained":true,"backingRetained":true,"faultRetained":true}},
     {"name":"detached backing after throwing wrapper cannot be resent","actions":["capture","normalize","detachedPostFault","duplicate"],"expected":{"phase":"heldFault","transferCreditsSpent":1,"rawRetained":true,"backingRetained":false,"faultRetained":true}}
   ],
-  "boundaries":{"operationRevocationReleasesCredit":false,"oldWorkerReplyMayBeRetained":true,"formatMintsProvenance":false,"callbackReleasesRawLease":false,"responseCountIsByteAdmission":false,"fieldCopyIsNativeInputAck":false,"fixedFaultReleasesOriginalError":false,"emergencyMayOverwrite":false,"rogueFloodIsBounded":false,"wireLayout":"semio.actor.return-response.v1"}
+  "boundaries":{"operationRevocationReleasesCredit":false,"oldWorkerReplyMayBeRetained":true,"formatMintsProvenance":false,"callbackReleasesRawLease":false,"responseCountIsByteAdmission":false,"fieldCopyIsNativeInputAck":false,"fixedFaultReleasesOriginalError":false,"emergencyMayOverwrite":false,"rogueFloodIsBounded":false,"wireLayout":"https://semio.tech/schema/framework/actor/return/response/schema.json#/$defs/Response"}
 }

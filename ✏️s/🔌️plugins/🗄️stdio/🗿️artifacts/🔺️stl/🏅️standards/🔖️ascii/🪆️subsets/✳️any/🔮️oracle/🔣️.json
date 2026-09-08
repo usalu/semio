@@ -82,7 +82,7 @@
         {
           "id": "insert-triangle",
           "capability": "stl-ascii-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -101,7 +101,7 @@
         {
           "id": "remove-triangle",
           "capability": "stl-ascii-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -120,7 +120,7 @@
         {
           "id": "set-snapshot",
           "capability": "stl-ascii-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -139,7 +139,7 @@
         {
           "id": "set-solid-name",
           "capability": "stl-ascii-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -158,7 +158,7 @@
         {
           "id": "set-triangle-normal",
           "capability": "stl-ascii-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -177,7 +177,7 @@
         {
           "id": "set-triangle-vertices",
           "capability": "stl-ascii-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],

@@ -5,7 +5,7 @@
   "displayName": "Change Equipment Gain Zone",
   "emoji": "🖨️",
   "aggregateVariant": "ChangeEquipmentGainZone",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-equipment-gain-zone",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

@@ -1,0 +1,695 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/registry/schema.json",
+  "$defs": {
+    "NativeCodecFactoriesIdentity": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256,
+      "pattern": "^[^\\u0000-\\u001f\\u007f]+$"
+    },
+    "NativeCodecFactoriesDigest": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$",
+      "not": {
+        "const": "0000000000000000000000000000000000000000000000000000000000000000"
+      }
+    },
+    "NativeCodecFactoriesReceipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "artifact",
+        "factory_id",
+        "descriptor_codec_id",
+        "runtime_capability_id",
+        "artifact_kind",
+        "document_schema",
+        "extension",
+        "pack_schema_sha256",
+        "protocol_path"
+      ],
+      "properties": {
+        "artifact": {
+          "$ref": "#/$defs/NativeCodecFactoriesIdentity"
+        },
+        "factory_id": {
+          "$ref": "#/$defs/NativeCodecFactoriesIdentity"
+        },
+        "descriptor_codec_id": {
+          "$ref": "#/$defs/NativeCodecFactoriesIdentity"
+        },
+        "runtime_capability_id": {
+          "$ref": "#/$defs/NativeCodecFactoriesIdentity"
+        },
+        "artifact_kind": {
+          "$ref": "#/$defs/NativeCodecFactoriesIdentity"
+        },
+        "document_schema": {
+          "$ref": "#/$defs/NativeCodecFactoriesIdentity"
+        },
+        "extension": {
+          "$ref": "#/$defs/NativeCodecFactoriesIdentity"
+        },
+        "pack_schema_sha256": {
+          "$ref": "#/$defs/NativeCodecFactoriesDigest"
+        },
+        "protocol_path": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1024,
+          "pattern": "^🗿️artifacts/.+/📡️\\.protocol\\.semio$"
+        }
+      }
+    },
+    "NativeCodecFactories": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "provider_id",
+        "plugin_id",
+        "package_id",
+        "receipts"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.stdio.native-openable-catalog-provider/v1"
+        },
+        "provider_id": {
+          "const": "stdio/native-codecs/v1"
+        },
+        "plugin_id": {
+          "const": "stdio"
+        },
+        "package_id": {
+          "const": "semio:stdio"
+        },
+        "receipts": {
+          "type": "array",
+          "minItems": 26,
+          "maxItems": 26,
+          "items": {
+            "$ref": "#/$defs/NativeCodecFactoriesReceipt"
+          }
+        }
+      },
+      "title": "NativeCodecFactories"
+    },
+    "NativeCatalogSurface": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "definitionCount",
+        "codecCount",
+        "cases"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.stdio.native-catalog-surface/v1"
+        },
+        "definitionCount": {
+          "const": 36
+        },
+        "codecCount": {
+          "const": 26
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 9,
+          "maxItems": 9,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "mutation",
+              "accepted"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "mutation": {
+                "enum": [
+                  "none",
+                  "reverse",
+                  "missing",
+                  "extra",
+                  "duplicate",
+                  "identity",
+                  "schema",
+                  "name",
+                  "source-format"
+                ]
+              },
+              "accepted": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      },
+      "title": "NativeCatalogSurface"
+    },
+    "NativeCatalogSurfaceCommitmentText": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 16384
+    },
+    "NativeCatalogSurfaceCommitmentIdentity": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 4096,
+      "pattern": "^s[.]stdio[.]"
+    },
+    "NativeCatalogSurfaceCommitmentDigest": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "NativeCatalogSurfaceCommitment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "pluginId",
+        "packageId",
+        "packageVersion",
+        "definitions",
+        "codecs"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.stdio.artifact-catalog/v1"
+        },
+        "pluginId": {
+          "const": "stdio"
+        },
+        "packageId": {
+          "const": "semio:stdio"
+        },
+        "packageVersion": {
+          "type": "string",
+          "pattern": "^[0-9]+[.][0-9]+[.][0-9]+$"
+        },
+        "definitions": {
+          "type": "array",
+          "minItems": 36,
+          "maxItems": 36,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "identity",
+              "capabilities"
+            ],
+            "properties": {
+              "identity": {
+                "$ref": "#/$defs/NativeCatalogSurfaceCommitmentIdentity"
+              },
+              "capabilities": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 2048,
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "identity",
+                    "kind",
+                    "descriptorSha256",
+                    "executable",
+                    "claims",
+                    "localizations"
+                  ],
+                  "properties": {
+                    "identity": {
+                      "$ref": "#/$defs/NativeCatalogSurfaceCommitmentIdentity"
+                    },
+                    "kind": {
+                      "$ref": "#/$defs/NativeCatalogSurfaceCommitmentText"
+                    },
+                    "descriptorSha256": {
+                      "$ref": "#/$defs/NativeCatalogSurfaceCommitmentDigest"
+                    },
+                    "executable": {
+                      "type": "boolean"
+                    },
+                    "claims": {
+                      "type": "array",
+                      "maxItems": 64,
+                      "items": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "namespace",
+                          "value"
+                        ],
+                        "properties": {
+                          "namespace": {
+                            "$ref": "#/$defs/NativeCatalogSurfaceCommitmentText"
+                          },
+                          "value": {
+                            "$ref": "#/$defs/NativeCatalogSurfaceCommitmentText"
+                          }
+                        }
+                      }
+                    },
+                    "localizations": {
+                      "type": "array",
+                      "maxItems": 64,
+                      "items": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "locale",
+                          "text"
+                        ],
+                        "properties": {
+                          "locale": {
+                            "$ref": "#/$defs/NativeCatalogSurfaceCommitmentText"
+                          },
+                          "text": {
+                            "$ref": "#/$defs/NativeCatalogSurfaceCommitmentText"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "codecs": {
+          "type": "array",
+          "minItems": 26,
+          "maxItems": 26,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "factoryId",
+              "definitionIdentity",
+              "descriptorCodecId",
+              "runtimeCapabilityId",
+              "artifactKind",
+              "schema",
+              "extension",
+              "packSchemaSha256"
+            ],
+            "properties": {
+              "factoryId": {
+                "$ref": "#/$defs/NativeCatalogSurfaceCommitmentText"
+              },
+              "definitionIdentity": {
+                "$ref": "#/$defs/NativeCatalogSurfaceCommitmentIdentity"
+              },
+              "descriptorCodecId": {
+                "$ref": "#/$defs/NativeCatalogSurfaceCommitmentIdentity"
+              },
+              "runtimeCapabilityId": {
+                "$ref": "#/$defs/NativeCatalogSurfaceCommitmentIdentity"
+              },
+              "artifactKind": {
+                "enum": [
+                  "stdio.avi",
+                  "stdio.bcf",
+                  "stdio.csv",
+                  "stdio.deflate",
+                  "stdio.docx",
+                  "stdio.dwg",
+                  "stdio.dxf",
+                  "s.stdio.gltf",
+                  "stdio.jpg",
+                  "stdio.json",
+                  "stdio.las",
+                  "stdio.md",
+                  "stdio.mp3",
+                  "stdio.mp4",
+                  "stdio.obj",
+                  "stdio.pdf",
+                  "stdio.ply",
+                  "stdio.png",
+                  "stdio.pptx",
+                  "stdio.step",
+                  "stdio.stl",
+                  "stdio.svg",
+                  "stdio.tiff",
+                  "stdio.xlsx",
+                  "stdio.xml",
+                  "stdio.zip"
+                ]
+              },
+              "schema": {
+                "$ref": "#/$defs/NativeCatalogSurfaceCommitmentText"
+              },
+              "extension": {
+                "$ref": "#/$defs/NativeCatalogSurfaceCommitmentText"
+              },
+              "packSchemaSha256": {
+                "$ref": "#/$defs/NativeCatalogSurfaceCommitmentDigest"
+              }
+            }
+          }
+        }
+      },
+      "title": "NativeCatalogSurfaceCommitment"
+    },
+    "NativeCatalogSurfaceCommitmentCases": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "topic",
+        "cases"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.stdio.artifact-catalog-cases/v1"
+        },
+        "topic": {
+          "const": "stdio.artifact-catalog.v1"
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 30,
+          "maxItems": 30,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "operation",
+              "path",
+              "accepted"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "operation": {
+                "enum": [
+                  "none",
+                  "reverse-object-fields",
+                  "missing-topic",
+                  "duplicate-topic",
+                  "foreign-topic",
+                  "bare-topic",
+                  "unknown-field",
+                  "replace",
+                  "remove-last",
+                  "append-first",
+                  "reverse",
+                  "toggle"
+                ]
+              },
+              "path": {
+                "type": "array",
+                "maxItems": 6,
+                "items": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    {
+                      "type": "integer",
+                      "minimum": 0
+                    }
+                  ]
+                }
+              },
+              "accepted": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      },
+      "title": "NativeCatalogSurfaceCommitmentCases"
+    },
+    "NativeCatalogSurfaceBudgetCharges": {
+      "type": "array",
+      "maxItems": 4,
+      "items": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 16777216
+      }
+    },
+    "NativeCatalogSurfaceBudget": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "projectionLimitBytes",
+        "descriptorLimitBytes",
+        "cases",
+        "aggregateCases"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.stdio.catalog-projection-budget-cases/v1"
+        },
+        "projectionLimitBytes": {
+          "const": 2097152
+        },
+        "descriptorLimitBytes": {
+          "const": 16777216
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 6,
+          "maxItems": 6,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "text",
+              "encodedBytes"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "text": {
+                "type": "string"
+              },
+              "encodedBytes": {
+                "type": "integer",
+                "minimum": 2,
+                "maximum": 16384
+              }
+            }
+          }
+        },
+        "aggregateCases": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 4,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "projectionCharges",
+              "descriptorCharges",
+              "accepted"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "projectionCharges": {
+                "$ref": "#/$defs/NativeCatalogSurfaceBudgetCharges"
+              },
+              "descriptorCharges": {
+                "$ref": "#/$defs/NativeCatalogSurfaceBudgetCharges"
+              },
+              "accepted": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      },
+      "title": "NativeCatalogSurfaceBudget"
+    },
+    "NativeCatalogSurfaceImports": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "features",
+        "cases"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.stdio.headless-imports/v1"
+        },
+        "features": {
+          "const": [
+            "full-artifact-catalog"
+          ]
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 5,
+          "maxItems": 5,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "source",
+              "accepted"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[a-z][a-z-]+$"
+              },
+              "source": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 512
+              },
+              "accepted": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      },
+      "title": "NativeCatalogSurfaceImports"
+    },
+    "ClaimAuthority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "cases"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.stdio.claim-authority/v1"
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 8,
+          "maxItems": 8,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "claims",
+              "code"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "code": {
+                "enum": [
+                  "accepted",
+                  "artifact-definition.duplicate-claim"
+                ]
+              },
+              "claims": {
+                "type": "array",
+                "minItems": 2,
+                "maxItems": 2,
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "category",
+                    "namespace",
+                    "value"
+                  ],
+                  "properties": {
+                    "category": {
+                      "enum": [
+                        "composer",
+                        "subset-validator",
+                        "codec"
+                      ]
+                    },
+                    "namespace": {
+                      "enum": [
+                        "dialect",
+                        "validated-dialect",
+                        "codec-extension"
+                      ]
+                    },
+                    "value": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "codecSchema": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "extension": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  },
+                  "allOf": [
+                    {
+                      "if": {
+                        "properties": {
+                          "category": {
+                            "const": "codec"
+                          }
+                        },
+                        "required": [
+                          "category"
+                        ]
+                      },
+                      "then": {
+                        "required": [
+                          "codecSchema",
+                          "extension"
+                        ],
+                        "properties": {
+                          "namespace": {
+                            "const": "codec-extension"
+                          },
+                          "codecSchema": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "extension": {
+                            "type": "string",
+                            "minLength": 1
+                          }
+                        }
+                      },
+                      "else": {
+                        "properties": {
+                          "codecSchema": false,
+                          "extension": false
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "title": "ClaimAuthority"
+    }
+  }
+}

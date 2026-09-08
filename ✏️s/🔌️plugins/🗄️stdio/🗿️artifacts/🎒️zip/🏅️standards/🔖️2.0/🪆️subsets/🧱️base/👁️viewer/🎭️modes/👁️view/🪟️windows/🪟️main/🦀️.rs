@@ -3,7 +3,7 @@
 //! mutation-capable surface — the same `ZipSnapshot` read, no edit affordances (`window_kind()`, the
 //! read-only variant, not the editable one).
 
-use crate::artifacts::zip::ZipSnapshot;
+use crate::ZipSnapshot;
 use semio_framework_plugin::app::{TreeNodeView, TreeView, TreeWindowKit, WindowKit};
 use semio_framework_plugin::{BuiltNode, LocalizedLabel, WindowKindDefinition};
 
@@ -37,7 +37,7 @@ pub fn render(document: &ZipSnapshot) -> semio_framework_plugin::UiAssemblyResul
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::zip::schema::snapshot::ZipEntry;
+    use crate::schema::snapshot::ZipEntry;
 
     #[semio_framework_async_macros::async_test]
     async fn definition_declares_a_read_only_tree_window() {

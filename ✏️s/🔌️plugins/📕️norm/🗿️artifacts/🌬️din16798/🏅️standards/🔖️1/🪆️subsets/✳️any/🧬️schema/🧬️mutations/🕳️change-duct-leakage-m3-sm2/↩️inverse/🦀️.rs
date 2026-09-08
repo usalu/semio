@@ -7,6 +7,6 @@ use crate::artifacts::din16798::Din16798Snapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(_payload: &ChangeDuctLeakageM3SM2, base: &Din16798Snapshot) -> Vec<Din16798Mutation> {
-    vec![Din16798Mutation::ChangeDuctLeakageM3SM2(ChangeDuctLeakageM3SM2 { new_duct_leakage_m3_s_m2: base.duct_leakage_m3_s_m2.clone() })]
+    vec![Din16798Mutation::ChangeDuctLeakageM3SM2(ChangeDuctLeakageM3SM2 { new_duct_leakage_m3_s_m2: base.duct_leakage_m3_s_m2 })]
 }
 //#endregion 🔖️Inverse

@@ -8,7 +8,7 @@
 //! Ticket 26/08/11/ARTIFACT-STANDARD-SUBSETS-REAL-VOCABULARIES: real ISO/IEC 29500-1 Strict
 //! conformance-class subset, same shared pattern as `📜️docx`/`📕️xlsx` ecma-376 🔒️strict.
 
-pub use crate::artifacts::pptx::standards::v_ecma_376::subsets::base::schema::*;
+pub use crate::standards::v_ecma_376::subsets::base::schema::*;
 //#region 🧬️Mutations
 // 🧬️ This subset's OWN conformance-class vocabulary, mounted here rather than in the crate's shared
 // `🦀️.rs`: that file is one wiring file for every stdio artifact at once, and the rationale the
@@ -24,11 +24,11 @@ pub mod mutations;
 
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use crate::artifacts::pptx::standards::v_ecma_376::subsets::base::schema::PptxBuilder as PptxAnyBuilder;
-    use crate::artifacts::pptx::standards::v_ecma_376::subsets::strict::schema::check_strict_conformance;
+    use crate::standards::v_ecma_376::subsets::base::schema::PptxBuilder as PptxAnyBuilder;
+    use crate::standards::v_ecma_376::subsets::strict::schema::check_strict_conformance;
     #[cfg(test)]
-    use crate::artifacts::pptx::schema::mutations::set_snapshot;
-    use crate::artifacts::pptx::{PptxDiff, PptxMutation, PptxSnapshot};
+    use crate::schema::mutations::set_snapshot;
+    use crate::{PptxDiff, PptxMutation, PptxSnapshot};
     use dsl::{Diagnostic, Severity};
     use semio_framework_plugin::ArtifactBuilder;
 
@@ -87,7 +87,7 @@ pub mod derived_construction {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use crate::artifacts::zip::opc::{OpcPackage, RELS_CONTENT_TYPE};
+        use semio_s_artifact_stdio_zip::opc::{OpcPackage, RELS_CONTENT_TYPE};
 
         const STRICT_PRESENTATION_XML: &str = concat!(
             r#"<p:presentation xmlns:a="http://purl.oclc.org/ooxml/drawingml/main" xmlns:p="http://purl.oclc.org/ooxml/presentationml/main" xmlns:r="http://purl.oclc.org/ooxml/officeDocument/relationships" conformance="strict">"#,
@@ -109,7 +109,7 @@ pub mod derived_construction {
         #[semio_framework_async_macros::async_test]
         async fn empty_builder_has_no_office_document_relationship_and_fails_build() {
             let err = PptxStrictBuilderConstruction::empty().build().expect_err("an empty package has no officeDocument relationship, must fail build()");
-            assert!(err.iter().any(|d| d.code.0 == crate::artifacts::pptx::standards::v_ecma_376::subsets::strict::schema::CODE_MAIN_NS));
+            assert!(err.iter().any(|d| d.code.0 == crate::standards::v_ecma_376::subsets::strict::schema::CODE_MAIN_NS));
         }
 
         #[semio_framework_async_macros::async_test]
@@ -124,7 +124,7 @@ pub mod derived_construction {
             violating.opc.set_part("ppt/slides/slide1.xml", "application/vnd.openxmlformats-officedocument.presentationml.slide+xml", b"<v:shape xmlns:v=\"urn:schemas-microsoft-com:vml\"/>".to_vec());
             let (mutated, _diff) = PptxStrictBuilderConstruction::from_snapshot(PptxSnapshot::default()).mutate(PptxMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: violating }));
             let err = mutated.build().expect_err("VML markup must fail build()");
-            assert!(err.iter().any(|d| d.code.0 == crate::artifacts::pptx::standards::v_ecma_376::subsets::strict::schema::CODE_VML_PRESENT));
+            assert!(err.iter().any(|d| d.code.0 == crate::standards::v_ecma_376::subsets::strict::schema::CODE_VML_PRESENT));
         }
     }
 }
@@ -133,9 +133,9 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use crate::artifacts::pptx::standards::v_ecma_376::subsets::base::schema::{PptxAnalyzer as PptxAnyAnalyzer, PptxParts};
-    use crate::artifacts::pptx::PptxSnapshot;
-    use crate::artifacts::zip::opc::OpcPackage;
+    use crate::standards::v_ecma_376::subsets::base::schema::{PptxAnalyzer as PptxAnyAnalyzer, PptxParts};
+    use crate::PptxSnapshot;
+    use semio_s_artifact_stdio_zip::opc::OpcPackage;
     use dsl::{Diagnostic, FaultCode, FaultScope, Severity, TextSpan};
     use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
@@ -163,7 +163,7 @@ pub mod derived_analysis {
     /// Transitional or Strict officeDocument relationship type.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn main_part_path(opc: &OpcPackage) -> Option<String> {
-        crate::artifacts::pptx::standards::v_ecma_376::subsets::base::io::resolve_office_document_relationship(opc)
+        crate::standards::v_ecma_376::subsets::base::io::resolve_office_document_relationship(opc)
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -267,7 +267,7 @@ pub mod derived_analysis {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use crate::artifacts::zip::opc::{OpcPackage, RELS_CONTENT_TYPE, REL_TYPE_OFFICE_DOCUMENT};
+        use semio_s_artifact_stdio_zip::opc::{OpcPackage, RELS_CONTENT_TYPE, REL_TYPE_OFFICE_DOCUMENT};
 
         const STRICT_PRESENTATION_XML: &str = concat!(
             r#"<p:presentation xmlns:a="http://purl.oclc.org/ooxml/drawingml/main" xmlns:p="http://purl.oclc.org/ooxml/presentationml/main" xmlns:r="http://purl.oclc.org/ooxml/officeDocument/relationships" conformance="strict">"#,

@@ -1,8 +1,8 @@
-use crate::artifacts::semio::standards::v1::subsets::image::schema::diff::SemioImageDiff;
-use crate::artifacts::semio::standards::v1::subsets::image::schema::mutations::SemioImageMutation;
-use crate::artifacts::semio::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
+use crate::standards::v1::subsets::image::schema::diff::SemioImageDiff;
+use crate::standards::v1::subsets::image::schema::mutations::SemioImageMutation;
+use crate::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
 use protocol::Mutation;
-use crate::artifacts::semio::standards::v1::subsets::image::schema::mutations::remove_metadata_entry;
+use crate::standards::v1::subsets::image::schema::mutations::remove_metadata_entry;
 
 /// 🔺️ Diff helper for remove-metadata-entry — a `key` absent from `base.metadata` is
 /// `mutation.target-missing` (Error, empty diff).

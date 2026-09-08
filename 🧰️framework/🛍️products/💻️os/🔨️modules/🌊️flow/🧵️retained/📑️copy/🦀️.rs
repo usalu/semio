@@ -1,5 +1,8 @@
 //! 🗿️ Retained typed scene copying under an immutable rooted borrow witness.
 
+/// 📑️ Selects the next child-copy task for a rooted record.
+type RecordCopyTaskFactory<T> = fn(&Rooted<T>, usize) -> Option<Box<dyn Task>>;
+
 use super::{FlowOwner as Owner, FlowRetirement as Retirement};
 use crate::os_store::{ErasedSnapshotRetirement, SnapshotRetirementFactory, SnapshotRetirementStep};
 use std::mem::ManuallyDrop;
@@ -90,7 +93,7 @@ impl Task for TextTask {
 
 struct RecordTask<T: Copy> {
     source: Rooted<T>, target: Option<T>, index: usize,
-    next: fn(&Rooted<T>, usize) -> Option<Box<dyn Task>>,
+    next: RecordCopyTaskFactory<T>,
     set: fn(&mut T, usize, Box<dyn Copied>),
 }
 

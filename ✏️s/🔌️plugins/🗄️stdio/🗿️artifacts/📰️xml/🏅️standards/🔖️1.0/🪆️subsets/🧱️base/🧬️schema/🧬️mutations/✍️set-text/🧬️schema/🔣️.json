@@ -1,0 +1,25 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/xml/1.0/base/mutation/set-text.json",
+  "title": "SetTextPayload",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "path",
+    "text"
+  ],
+  "properties": {
+    "path": {
+      "type": "array",
+      "items": {
+        "type": [
+          "object",
+          "integer"
+        ]
+      }
+    },
+    "text": {
+      "type": "string"
+    }
+  }
+}

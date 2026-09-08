@@ -107,12 +107,12 @@ mod subject {
     use super::{empty_params, spec, INPUT, SMALL_INPUT};
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_plugin_stdio_test_oracle::artifacts::gif::standards::v87a::subsets::any::project_gif_87a;
-    use semio_s_plugin_stdio::artifacts::gif::standards::v87a::subsets::any::io::{decode_gif, encode_gif};
-    use semio_s_plugin_stdio::artifacts::gif::standards::v87a::subsets::any::schema::mutations::{
+    use crate::standards::v87a::subsets::any::io::{decode_gif, encode_gif};
+    use crate::standards::v87a::subsets::any::schema::mutations::{
         apply_gif_mutation, insert_image, move_image, remove_image, set_background_color_index, set_global_color_table, set_image_geometry, set_image_interlace, set_image_pixels, set_pixel_aspect_ratio, set_screen_size, set_snapshot, GifMutation,
     };
-    use semio_s_plugin_stdio::artifacts::gif::standards::v87a::subsets::any::schema::snapshot::{GifColorTable, GifImage, GifRgb, GifSnapshot};
-    use semio_s_plugin_stdio::artifacts::gif::STDIO_GIF_DOCUMENT_SCHEMA;
+    use crate::standards::v87a::subsets::any::schema::snapshot::{GifColorTable, GifImage, GifRgb, GifSnapshot};
+    use crate::STDIO_GIF_DOCUMENT_SCHEMA;
 
     //#region 🔖️JsonBridge
     /// 🌉️ Mirrors the oracle's own JSON bridge (`../../🏅️standards/7️⃣87a/🪆️subsets/✳️any/🔮️oracle/

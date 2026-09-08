@@ -8,5 +8,22 @@
     { "change": "descriptor", "accepted": false },
     { "change": "actor", "accepted": false },
     { "change": "bundle", "accepted": false }
+  ],
+  "commandCases": [
+    { "id": "exact", "set": {}, "remove": [], "expectation": { "stage": "contract", "result": "accepted", "code": "exact" } },
+    { "id": "expected-current-present", "set": { "expectedCurrentSha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc" }, "remove": [], "expectation": { "stage": "contract", "result": "accepted", "code": "expected-current-present" } },
+    { "id": "unknown-bundle-path", "set": { "bundlePath": "/untrusted" }, "remove": [], "expectation": { "stage": "contract", "result": "rejected", "code": "unknown-field" } },
+    { "id": "unknown-publication-revision", "set": { "publicationRevision": "2" }, "remove": [], "expectation": { "stage": "contract", "result": "rejected", "code": "unknown-field" } },
+    { "id": "missing-expected-current", "set": {}, "remove": ["expectedCurrentSha256"], "expectation": { "stage": "contract", "result": "rejected", "code": "missing-required-field" } },
+    { "id": "uppercase-expected-current", "set": { "expectedCurrentSha256": "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC" }, "remove": [], "expectation": { "stage": "contract", "result": "rejected", "code": "non-canonical-digest" } },
+    { "id": "empty-request-id", "set": { "requestId": "" }, "remove": [], "expectation": { "stage": "contract", "result": "rejected", "code": "malformed-request-id" } }
+  ],
+  "receiptCases": [
+    { "id": "durable", "set": { "outcome": "durable" }, "expectation": { "stage": "contract", "result": "accepted", "code": "durable" } },
+    { "id": "replaced-unconfirmed", "set": { "outcome": "replaced-unconfirmed" }, "expectation": { "stage": "contract", "result": "accepted", "code": "replaced-unconfirmed" } },
+    { "id": "foreign-request", "set": { "requestId": "ffffffffffffffffffffffffffffffff" }, "expectation": { "stage": "domain", "result": "rejected", "code": "request-mismatch" } },
+    { "id": "foreign-current", "set": { "currentSha256": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff" }, "expectation": { "stage": "domain", "result": "rejected", "code": "pointer-token-mismatch" } },
+    { "id": "wrong-revision", "set": { "publicationRevision": "2" }, "expectation": { "stage": "domain", "result": "rejected", "code": "revision-mismatch" } },
+    { "id": "unknown-field", "set": { "extra": true }, "expectation": { "stage": "contract", "result": "rejected", "code": "unknown-field" } }
   ]
 }

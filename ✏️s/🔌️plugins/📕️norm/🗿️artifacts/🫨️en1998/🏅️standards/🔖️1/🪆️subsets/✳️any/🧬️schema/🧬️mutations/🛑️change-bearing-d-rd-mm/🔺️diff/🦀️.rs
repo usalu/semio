@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeBearingDRdMm, base: &En1998Snapshot) -> protocol::Mu
     if base.bearing_d_rd_mm == payload.new_bearing_d_rd_mm {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Bearing design displacement capacity D_Rd [mm] is already {}.", payload.new_bearing_d_rd_mm));
     }
-    protocol::MutationOutcome::new(En1998Diff { bearing_d_rd_mm: Some(payload.new_bearing_d_rd_mm.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1998Diff { bearing_d_rd_mm: Some(payload.new_bearing_d_rd_mm), ..Default::default() })
 }
 //#endregion 🔖️Diff

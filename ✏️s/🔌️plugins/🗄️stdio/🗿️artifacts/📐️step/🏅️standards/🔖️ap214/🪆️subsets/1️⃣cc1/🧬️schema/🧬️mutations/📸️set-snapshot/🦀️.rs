@@ -2,9 +2,9 @@
 //! The class-neutral edit is performed by the shared ladder module; this file only names the axis and
 //! routes to it, so each rule has ONE implementation and six class callers.
 
-use crate::artifacts::step::schema::diff::StepDiff;
-use crate::artifacts::step::standards::v_ap214::subsets::cc1::schema::mutations::StepCc1Mutation;
-use crate::artifacts::step::StepSnapshot;
+use crate::schema::diff::StepDiff;
+use crate::standards::v_ap214::subsets::cc1::schema::mutations::StepCc1Mutation;
+use crate::StepSnapshot;
 use protocol::command::DiffAlgebra;
 
 //#region 🔖️Payload

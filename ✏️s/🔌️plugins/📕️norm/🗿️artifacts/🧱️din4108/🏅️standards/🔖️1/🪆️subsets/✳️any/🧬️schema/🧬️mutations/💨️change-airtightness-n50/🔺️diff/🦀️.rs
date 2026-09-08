@@ -11,6 +11,6 @@ pub fn diff(payload: &ChangeAirtightnessN50, base: &Din4108Snapshot) -> protocol
     if base.airtightness_n50 == payload.new_airtightness_n50 {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "Airtightness n50 already has this value.");
     }
-    protocol::MutationOutcome::new(Din4108Diff { airtightness_n50: Some(payload.new_airtightness_n50.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(Din4108Diff { airtightness_n50: Some(payload.new_airtightness_n50), ..Default::default() })
 }
 //#endregion 🔖️Diff

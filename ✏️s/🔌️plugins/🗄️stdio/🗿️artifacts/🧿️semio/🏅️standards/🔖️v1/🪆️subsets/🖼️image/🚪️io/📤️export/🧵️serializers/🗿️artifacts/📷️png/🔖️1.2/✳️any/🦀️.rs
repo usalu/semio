@@ -13,11 +13,11 @@
 //!   `color_type`/`bit_depth` stamp for readers that inspect the typed snapshot directly (not the
 //!   re-encoded bytes).
 
-use crate::artifacts::png::{
+use semio_s_artifact_stdio_png::{
     schema::snapshot::{PngChunkMarker, PngColorType, PngTextChunk, PngTextKind},
     PngSnapshot,
 };
-use crate::artifacts::semio::standards::v1::subsets::image::schema::snapshot::{SemioColorspace, SemioImageSnapshot};
+use crate::standards::v1::subsets::image::schema::snapshot::{SemioColorspace, SemioImageSnapshot};
 use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
 
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("image") };
@@ -57,7 +57,7 @@ impl ArtifactSerializer for SemioImageToPng {
         chunk_order.push(PngChunkMarker::Iend);
 
         Ok(PngSnapshot {
-            schema: crate::artifacts::png::STDIO_PNG_DOCUMENT_SCHEMA.into(),
+            schema: semio_s_artifact_stdio_png::STDIO_PNG_DOCUMENT_SCHEMA.into(),
             width: from.width,
             height: from.height,
             bit_depth: 8,
@@ -76,7 +76,7 @@ impl ArtifactSerializer for SemioImageToPng {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::semio::standards::v1::subsets::image::schema::snapshot::{SemioImageFrame, SemioImageMetadataEntry};
+    use crate::standards::v1::subsets::image::schema::snapshot::{SemioImageFrame, SemioImageMetadataEntry};
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn sample_semio() -> SemioImageSnapshot {
@@ -110,8 +110,8 @@ mod tests {
     async fn real_byte_round_trip_through_png_codec() {
         let semio = sample_semio();
         let png = semio_framework_plugin::resolve_ready(SemioImageToPng::serialize(&semio)).expect("serialize");
-        let bytes = crate::artifacts::png::engine::encode_png(&png).expect("encode real png bytes");
-        let decoded = crate::artifacts::png::engine::decode_png(&bytes).expect("decode real png bytes");
+        let bytes = semio_s_artifact_stdio_png::engine::encode_png(&png).expect("encode real png bytes");
+        let decoded = semio_s_artifact_stdio_png::engine::decode_png(&bytes).expect("decode real png bytes");
         assert_eq!(decoded.pixels, semio.frames[0].rgba8);
         assert_eq!(decoded.width, semio.width);
         assert_eq!(decoded.height, semio.height);

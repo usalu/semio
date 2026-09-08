@@ -14,8 +14,8 @@
 //! NEUTRAL semio type, not itself an on-disk file format — real per-format bytes for wav/mp3 are
 //! produced by the semio↔format `🚪️io` leaves).
 
-use crate::artifacts::semio::standards::v1::subsets::base::schema::triples::{split_top_level, strip_brackets};
-use schema::ArtifactSchema;
+use crate::standards::v1::subsets::base::schema::triples::{split_top_level, strip_brackets};
+use framework_schema::ArtifactSchema;
 
 //#region 🔖️Ids
 pub const STDIO_SEMIOAUDIO_DOCUMENT_SCHEMA: &str = "stdio.semio.audio";

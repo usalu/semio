@@ -9,10 +9,10 @@
 //! following the docx/gif precedent (`f6-docx-ecma-376-report.md`, `f6-final-summary.md` §4.4). No
 //! `snapshot: Option<SemioImageSnapshot>` full-replace slot anywhere.
 
-use crate::artifacts::semio::standards::v1::subsets::base::schema::triples::{
+use crate::standards::v1::subsets::base::schema::triples::{
     dec_indexed_triple, dec_named_triple, enc_indexed_triple, enc_named_triple, split_top_level, strip_brackets, IndexAdded, IndexModified, IndexedTripleDiff, NamedModified, NamedTripleDiff,
 };
-use crate::artifacts::semio::standards::v1::subsets::image::schema::snapshot::{SemioColorspace, SemioImageFrame, SemioImageMetadataEntry, SemioImageSnapshot};
+use crate::standards::v1::subsets::image::schema::snapshot::{SemioColorspace, SemioImageFrame, SemioImageMetadataEntry, SemioImageSnapshot};
 use protocol::command::DiffAlgebra;
 /// 🔧️ Unconditional — the `#[cfg(test)] mod tests` block below calls `print_diff`/`parse_diff`/
 /// `encode_diff`/`decode_diff` via method syntax on `SemioImageDiff`, which needs `DiffCodec` in
@@ -20,7 +20,7 @@ use protocol::command::DiffAlgebra;
 /// but callers using method syntax do not get the trait for free) (W2b closer fix).
 use protocol::DiffCodec;
 use protocol::MutationDiff;
-use schema::ArtifactSchema;
+use framework_schema::ArtifactSchema;
 
 //#region 🔖️FrameDiff
 /// 🔺️ Sparse per-field diff for one [`SemioImageFrame`] — a strong entity, per the recipe.
@@ -457,11 +457,11 @@ impl MutationDiff<SemioImageSnapshot> for SemioImageDiff {
             next.icc = v.clone();
         }
         if let Some(d) = &self.frames {
-            crate::artifacts::semio::standards::v1::subsets::base::schema::triples::validate_indexed_triple(d, next.frames.len(), ["frames"])?;
+            crate::standards::v1::subsets::base::schema::triples::validate_indexed_triple(d, next.frames.len(), ["frames"])?;
             frames_apply(&mut next.frames, d);
         }
         if let Some(d) = &self.metadata {
-            crate::artifacts::semio::standards::v1::subsets::base::schema::triples::validate_named_triple(&next.metadata, d, |item| item.key.clone(), |item| item.key.clone(), ["metadata"])?;
+            crate::standards::v1::subsets::base::schema::triples::validate_named_triple(&next.metadata, d, |item| item.key.clone(), |item| item.key.clone(), ["metadata"])?;
             metadata_apply(&mut next.metadata, d);
         }
         Ok(next)
@@ -915,7 +915,7 @@ pub(crate) fn demo_diff_cases() -> Vec<SemioImageDiff> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::semio::standards::v1::subsets::image::schema::snapshot::STDIO_SEMIOIMAGE_DOCUMENT_SCHEMA;
+    use crate::standards::v1::subsets::image::schema::snapshot::STDIO_SEMIOIMAGE_DOCUMENT_SCHEMA;
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn frame(seed: u8, len: usize) -> SemioImageFrame {

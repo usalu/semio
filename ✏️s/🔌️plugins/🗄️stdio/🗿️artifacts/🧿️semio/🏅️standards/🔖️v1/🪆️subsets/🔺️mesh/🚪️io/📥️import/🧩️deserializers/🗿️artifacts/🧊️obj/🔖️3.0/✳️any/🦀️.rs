@@ -21,10 +21,10 @@
 //!   embedded PBR values or texture bytes to map) — `materials`/`textures` stay empty,
 //!   `material_id` stays `None`.
 
-use crate::artifacts::obj::schema::snapshot::ObjFace;
-use crate::artifacts::obj::ObjSnapshot;
-use crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::{SemioPoint3, SemioUv};
-use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::{SemioMesh, SemioMeshSnapshot, SemioPrimitive, SemioTopology, STDIO_SEMIOMESH_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_obj::schema::snapshot::ObjFace;
+use semio_s_artifact_stdio_obj::ObjSnapshot;
+use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint3, SemioUv};
+use crate::standards::v1::subsets::mesh::schema::snapshot::{SemioMesh, SemioMeshSnapshot, SemioPrimitive, SemioTopology, STDIO_SEMIOMESH_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId};
 
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.obj", standard: StandardId("3.0"), subset: SubsetId::ANY };
@@ -114,7 +114,7 @@ impl ArtifactDeserializer for SemioMeshFromObj {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::obj::schema::snapshot::{ObjFaceVertex, ObjNormal, ObjTexCoord, ObjVertex};
+    use semio_s_artifact_stdio_obj::schema::snapshot::{ObjFaceVertex, ObjNormal, ObjTexCoord, ObjVertex};
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn sample_obj() -> ObjSnapshot {
@@ -159,7 +159,7 @@ mod tests {
     async fn objects_partition_into_separate_semio_meshes() {
         let mut obj = sample_obj();
         obj.faces.push(ObjFace { vertices: vec![ObjFaceVertex { vertex: 0, texcoord: Some(0), normal: Some(0) }, ObjFaceVertex { vertex: 1, texcoord: Some(1), normal: Some(0) }, ObjFaceVertex { vertex: 2, texcoord: Some(2), normal: Some(0) }] });
-        obj.objects = vec![crate::artifacts::obj::schema::snapshot::ObjObject { name: "quad".into(), faces: vec![0] }, crate::artifacts::obj::schema::snapshot::ObjObject { name: "tri".into(), faces: vec![1] }];
+        obj.objects = vec![semio_s_artifact_stdio_obj::schema::snapshot::ObjObject { name: "quad".into(), faces: vec![0] }, semio_s_artifact_stdio_obj::schema::snapshot::ObjObject { name: "tri".into(), faces: vec![1] }];
         let semio = semio_framework_plugin::resolve_ready(SemioMeshFromObj::deserialize(&obj)).expect("deserialize");
         assert_eq!(semio.meshes.len(), 2);
         assert_eq!(semio.meshes[0].id, "quad");

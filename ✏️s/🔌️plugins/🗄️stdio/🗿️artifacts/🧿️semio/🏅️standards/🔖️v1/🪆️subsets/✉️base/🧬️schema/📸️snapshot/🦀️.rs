@@ -6,24 +6,24 @@
 //! structural change from the W1b scaffold to pick that up, since only the referenced types'
 //! internals grew, not their names/paths.
 
-use crate::artifacts::semio::standards::v1::subsets::animation::schema::snapshot::SemioAnimationSnapshot;
-use crate::artifacts::semio::standards::v1::subsets::audio::schema::snapshot::SemioAudioSnapshot;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
-use crate::artifacts::semio::standards::v1::subsets::cad::schema::snapshot::SemioCadSnapshot;
-use crate::artifacts::semio::standards::v1::subsets::document::schema::snapshot::SemioDocumentSnapshot;
-use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot;
-use crate::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot;
-use crate::artifacts::semio::standards::v1::subsets::graph::schema::snapshot::SemioGraphSnapshot;
-use crate::artifacts::semio::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
-use crate::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
-use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
-use crate::artifacts::semio::standards::v1::subsets::model::schema::snapshot::SemioModelSnapshot;
-use crate::artifacts::semio::standards::v1::subsets::object::schema::snapshot::SemioObjectSnapshot;
-use crate::artifacts::semio::standards::v1::subsets::presentation::schema::snapshot::SemioPresentationSnapshot;
-use crate::artifacts::semio::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot;
-use crate::artifacts::semio::standards::v1::subsets::text::schema::snapshot::SemioTextSnapshot;
-use crate::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValueSnapshot;
-use crate::artifacts::semio::standards::v1::subsets::video::schema::snapshot::SemioVideoSnapshot;
+use crate::standards::v1::subsets::animation::schema::snapshot::SemioAnimationSnapshot;
+use crate::standards::v1::subsets::audio::schema::snapshot::SemioAudioSnapshot;
+use crate::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
+use crate::standards::v1::subsets::cad::schema::snapshot::SemioCadSnapshot;
+use crate::standards::v1::subsets::document::schema::snapshot::SemioDocumentSnapshot;
+use crate::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot;
+use crate::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot;
+use crate::standards::v1::subsets::graph::schema::snapshot::SemioGraphSnapshot;
+use crate::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
+use crate::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
+use crate::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
+use crate::standards::v1::subsets::model::schema::snapshot::SemioModelSnapshot;
+use crate::standards::v1::subsets::object::schema::snapshot::SemioObjectSnapshot;
+use crate::standards::v1::subsets::presentation::schema::snapshot::SemioPresentationSnapshot;
+use crate::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot;
+use crate::standards::v1::subsets::text::schema::snapshot::SemioTextSnapshot;
+use crate::standards::v1::subsets::value::schema::snapshot::SemioValueSnapshot;
+use crate::standards::v1::subsets::video::schema::snapshot::SemioVideoSnapshot;
 
 /// 🌐️ The envelope union of all 18 semio subset snapshot types (master plan: "SemioSnapshot =
 /// tagged union of the 18" — `text` (UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM W2a) is the 14th arm,
@@ -60,7 +60,7 @@ impl Default for SemioSubsetSnapshot {
     }
 }
 
-use schema::ArtifactSchema;
+use framework_schema::ArtifactSchema;
 
 //#region 🔖️Ids
 pub const STDIO_SEMIO_DOCUMENT_SCHEMA: &str = "stdio.semio";
@@ -402,7 +402,7 @@ pub fn encode_semio_envelope_pack(snapshot: &SemioSnapshot) -> Vec<u8> {
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_semio_snapshot() -> SemioSnapshot {
-    use crate::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::demo_flow_snapshot;
+    use crate::standards::v1::subsets::flow::schema::snapshot::demo_flow_snapshot;
     SemioSnapshot { schema: STDIO_SEMIO_DOCUMENT_SCHEMA.into(), subset: SemioSubsetSnapshot::Flow(demo_flow_snapshot()) }
 }
 //#endregion 🔖️Demo

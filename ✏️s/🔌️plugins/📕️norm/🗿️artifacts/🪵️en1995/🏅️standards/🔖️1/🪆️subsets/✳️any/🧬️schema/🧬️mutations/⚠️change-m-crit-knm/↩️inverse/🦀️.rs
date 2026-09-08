@@ -7,6 +7,6 @@ use crate::artifacts::en1995::En1995Snapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(_payload: &ChangeMCritKnm, base: &En1995Snapshot) -> Vec<En1995Mutation> {
-    vec![En1995Mutation::ChangeMCritKnm(ChangeMCritKnm { new_m_crit_knm: base.m_crit_knm.clone() })]
+    vec![En1995Mutation::ChangeMCritKnm(ChangeMCritKnm { new_m_crit_knm: base.m_crit_knm })]
 }
 //#endregion 🔖️Inverse

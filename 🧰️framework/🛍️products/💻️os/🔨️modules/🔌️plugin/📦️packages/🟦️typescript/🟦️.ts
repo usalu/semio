@@ -12,6 +12,8 @@ import { spawn } from "node:child_process";
 import { copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, renameSync, writeFileSync } from "node:fs";
 import { dirname, join, relative } from "node:path";
 import ts from "typescript";
+import { rewritePreview2ShimImportSource } from "./🕸️imports/🟦️.ts";
+export { rewritePreview2ShimImportSource } from "./🕸️imports/🟦️.ts";
 import { ACTOR_INSTANCE_LIFECYCLE_MAXIMUM_BYTES, encodeActorInstanceLifecycle } from "../../../../../../../🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🟦️.ts";
 import { ACTOR_UI_PATCH_RECEIPT_MAXIMUM_BYTES, encodeActorUiPatchReceipt, validateActorUiPatchPairing } from "../../../../../../../🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🩹️patch/🟦️.ts";
 import { buildBudgetMs, resolveWorkspaceBin, runCmdStatus, runNodeBinStatus, semioBuildMode } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts";
@@ -594,13 +596,6 @@ export async function createActorApi(actorId, activationGeneration) {
   };
 }
 `;
-}
-
-const PREVIEW2_SHIM_IMPORT = /(from\s+['"])(?:@bytecodealliance\/preview2-shim|(?:\.\.\/)+(?:🔌️plugin-modules\/)?🪞️vendor\/🤝️bytecode-alliance\/🪟️preview2-shim)\/([\w-]+)(?:\.js)?(['"])/g;
-
-/** @emoji 🪢️ Rewrites bare or previously staged Preview2 imports to one caller-resolved directory prefix. */
-export function rewritePreview2ShimImportSource(source: string, prefix: string): string {
-  return source.replace(PREVIEW2_SHIM_IMPORT, (_match, lead, subpath, trail) => `${lead}${prefix}${subpath}.js${trail}`);
 }
 
 export function rewritePreview2ShimImports(componentJsPath: string, preview2VendorDir: string): void {

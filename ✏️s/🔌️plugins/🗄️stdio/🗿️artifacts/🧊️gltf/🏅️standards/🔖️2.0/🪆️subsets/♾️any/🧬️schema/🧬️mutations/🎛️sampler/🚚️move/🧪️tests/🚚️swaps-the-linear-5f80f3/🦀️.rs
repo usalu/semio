@@ -9,10 +9,10 @@
 //! leaf's own oracle. The derived `.op.semio`/`.spr.semio`/`.dsl.semio`/`.pack.semio`/
 //! `.patch.semio` encodings come from `fixtures generate`, not from here.
 
-use crate::artifacts::gltf::schema::mutations::move_sampler::diff::GltfMoveSamplerDiff;
-use crate::artifacts::gltf::schema::mutations::move_sampler::GltfMoveSamplerPayload;
-use crate::artifacts::gltf::schema::mutations::move_sampler::{diff, inverse, mutation};
-use crate::artifacts::gltf::GltfSnapshot;
+use crate::schema::mutations::move_sampler::diff::GltfMoveSamplerDiff;
+use crate::schema::mutations::move_sampler::GltfMoveSamplerPayload;
+use crate::schema::mutations::move_sampler::{diff, inverse, mutation};
+use crate::GltfSnapshot;
 
 const CASE: &str = "move-sampler/swaps-the-linear-and-clamped-samplers";
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");

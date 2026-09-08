@@ -136,11 +136,11 @@ fn identity_round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::mutable_input;
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_plugin_stdio::artifacts::jpg::schema::diff::JpgHuffmanTableKey;
-    use semio_s_plugin_stdio::artifacts::jpg::schema::mutations::{apply_jpg_mutation, inverse_jpg_mutation, JpgMutation};
-    use semio_s_plugin_stdio::artifacts::jpg::schema::snapshot::{JfifDensityUnits, JpgHuffmanClass, JpgHuffmanTable, JpgQuantTable, JpgSegment};
-    use semio_s_plugin_stdio::artifacts::jpg::io::{decode_jpg, encode_jpg};
-    use semio_s_plugin_stdio::artifacts::jpg::JpgSnapshot;
+    use crate::schema::diff::JpgHuffmanTableKey;
+    use crate::schema::mutations::{apply_jpg_mutation, inverse_jpg_mutation, JpgMutation};
+    use crate::schema::snapshot::{JfifDensityUnits, JpgHuffmanClass, JpgHuffmanTable, JpgQuantTable, JpgSegment};
+    use crate::io::{decode_jpg, encode_jpg};
+    use crate::JpgSnapshot;
     use semio_s_plugin_stdio_test_oracle::artifacts::jpg::standards::v_jfif_1_01::subsets::document::project_jpg_mutation;
 
     //#region 🔖️Json
@@ -178,27 +178,27 @@ mod subject {
                     "pixels-per-cm" => JfifDensityUnits::PixelsPerCm,
                     _ => JfifDensityUnits::Aspect,
                 };
-                Ok(JpgMutation::ChangeJfifHeader(semio_s_plugin_stdio::artifacts::jpg::schema::mutations::ChangeJfifHeaderMutation { version: (component(0, 1), component(1, 1)), density_units, x_density: number(params, "xDensity", 1.0) as u16, y_density: number(params, "yDensity", 1.0) as u16, thumbnail: None }))
+                Ok(JpgMutation::ChangeJfifHeader(crate::schema::mutations::ChangeJfifHeaderMutation { version: (component(0, 1), component(1, 1)), density_units, x_density: number(params, "xDensity", 1.0) as u16, y_density: number(params, "yDensity", 1.0) as u16, thumbnail: None }))
             }
-            "replace-quant-table" => Ok(JpgMutation::ReplaceQuantTable(semio_s_plugin_stdio::artifacts::jpg::schema::mutations::ReplaceQuantTableMutation { table: JpgQuantTable { id: number(params, "id", 0.0) as u8, precision: 0, values: [number(params, "fill", 10.0) as u16; 64] } })),
-            "remove-quant-table" => Ok(JpgMutation::RemoveQuantTable(semio_s_plugin_stdio::artifacts::jpg::schema::mutations::RemoveQuantTableMutation { id: number(params, "id", 0.0) as u8 })),
+            "replace-quant-table" => Ok(JpgMutation::ReplaceQuantTable(crate::schema::mutations::ReplaceQuantTableMutation { table: JpgQuantTable { id: number(params, "id", 0.0) as u8, precision: 0, values: [number(params, "fill", 10.0) as u16; 64] } })),
+            "remove-quant-table" => Ok(JpgMutation::RemoveQuantTable(crate::schema::mutations::RemoveQuantTableMutation { id: number(params, "id", 0.0) as u8 })),
             "replace-huffman-table" => {
                 let class = if params.str("class") == "ac" { JpgHuffmanClass::Ac } else { JpgHuffmanClass::Dc };
                 let seed = number(params, "fill", 1.0) as u8;
-                Ok(JpgMutation::ReplaceHuffmanTable(semio_s_plugin_stdio::artifacts::jpg::schema::mutations::ReplaceHuffmanTableMutation { table: JpgHuffmanTable { id: number(params, "id", 0.0) as u8, class, bits: [seed; 16], values: vec![seed, seed.wrapping_add(1)] } }))
+                Ok(JpgMutation::ReplaceHuffmanTable(crate::schema::mutations::ReplaceHuffmanTableMutation { table: JpgHuffmanTable { id: number(params, "id", 0.0) as u8, class, bits: [seed; 16], values: vec![seed, seed.wrapping_add(1)] } }))
             }
             "remove-huffman-table" => {
                 let class = if params.str("class") == "ac" { JpgHuffmanClass::Ac } else { JpgHuffmanClass::Dc };
-                Ok(JpgMutation::RemoveHuffmanTable(semio_s_plugin_stdio::artifacts::jpg::schema::mutations::RemoveHuffmanTableMutation { key: JpgHuffmanTableKey { class, id: number(params, "id", 0.0) as u8 } }))
+                Ok(JpgMutation::RemoveHuffmanTable(crate::schema::mutations::RemoveHuffmanTableMutation { key: JpgHuffmanTableKey { class, id: number(params, "id", 0.0) as u8 } }))
             }
-            "change-restart-interval" => Ok(JpgMutation::ChangeRestartInterval(semio_s_plugin_stdio::artifacts::jpg::schema::mutations::ChangeRestartIntervalMutation { restart_interval: Some(number(params, "restartInterval", 16.0) as u16) })),
-            "insert-other-segment" => Ok(JpgMutation::InsertOtherSegment(semio_s_plugin_stdio::artifacts::jpg::schema::mutations::InsertOtherSegmentMutation { index: number(params, "index", 0.0) as usize, segment: JpgSegment { marker: number(params, "marker", 226.0) as u8, data: hex_decode(&params.str("data"))? } })),
-            "remove-other-segment" => Ok(JpgMutation::RemoveOtherSegment(semio_s_plugin_stdio::artifacts::jpg::schema::mutations::RemoveOtherSegmentMutation { index: number(params, "index", 0.0) as usize })),
+            "change-restart-interval" => Ok(JpgMutation::ChangeRestartInterval(crate::schema::mutations::ChangeRestartIntervalMutation { restart_interval: Some(number(params, "restartInterval", 16.0) as u16) })),
+            "insert-other-segment" => Ok(JpgMutation::InsertOtherSegment(crate::schema::mutations::InsertOtherSegmentMutation { index: number(params, "index", 0.0) as usize, segment: JpgSegment { marker: number(params, "marker", 226.0) as u8, data: hex_decode(&params.str("data"))? } })),
+            "remove-other-segment" => Ok(JpgMutation::RemoveOtherSegment(crate::schema::mutations::RemoveOtherSegmentMutation { index: number(params, "index", 0.0) as usize })),
             "replace-pixels" => {
                 let fill = fill_of(params, [9, 9, 9, 255]);
-                Ok(JpgMutation::ReplacePixels(semio_s_plugin_stdio::artifacts::jpg::schema::mutations::ReplacePixelsMutation { pixels: fill.iter().copied().cycle().take(base.pixels.len()).collect() }))
+                Ok(JpgMutation::ReplacePixels(crate::schema::mutations::ReplacePixelsMutation { pixels: fill.iter().copied().cycle().take(base.pixels.len()).collect() }))
             }
-            "change-re-encode-quality" => Ok(JpgMutation::ChangeReEncodeQuality(semio_s_plugin_stdio::artifacts::jpg::schema::mutations::ChangeReEncodeQualityMutation { quality: Some(number(params, "quality", 90.0).clamp(1.0, 100.0) as u8) })),
+            "change-re-encode-quality" => Ok(JpgMutation::ChangeReEncodeQuality(crate::schema::mutations::ChangeReEncodeQualityMutation { quality: Some(number(params, "quality", 90.0).clamp(1.0, 100.0) as u8) })),
             other => Err(format!("mutation kind {other:?} has no subject implementation")),
         }
     }

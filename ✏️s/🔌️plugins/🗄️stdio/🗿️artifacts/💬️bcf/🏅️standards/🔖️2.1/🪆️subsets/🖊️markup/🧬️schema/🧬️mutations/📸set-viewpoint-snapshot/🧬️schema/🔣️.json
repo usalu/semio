@@ -1,0 +1,34 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/bcf/2.1/markup/mutation/set-viewpoint-snapshot.json",
+  "title": "SetViewpointSnapshot",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "topic_guid",
+    "guid"
+  ],
+  "properties": {
+    "topic_guid": {
+      "type": "string"
+    },
+    "guid": {
+      "type": "string"
+    },
+    "snapshot": {
+      "anyOf": [
+        {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          }
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  }
+}

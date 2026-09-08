@@ -5,7 +5,7 @@
   "displayName": "Create Fault",
   "emoji": "⚠️",
   "aggregateVariant": "CreateFault",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "create-fault",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

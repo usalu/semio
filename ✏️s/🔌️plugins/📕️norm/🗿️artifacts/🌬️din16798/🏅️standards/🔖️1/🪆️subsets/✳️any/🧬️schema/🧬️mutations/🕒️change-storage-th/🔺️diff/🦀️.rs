@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeStorageTH, base: &Din16798Snapshot) -> protocol::Mut
     if base.storage_t_h == payload.new_storage_t_h {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Storage duration is already {}.", payload.new_storage_t_h));
     }
-    protocol::MutationOutcome::new(Din16798Diff { storage_t_h: Some(payload.new_storage_t_h.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(Din16798Diff { storage_t_h: Some(payload.new_storage_t_h), ..Default::default() })
 }
 //#endregion 🔖️Diff

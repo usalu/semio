@@ -1,7 +1,7 @@
 //! Serialize stdio.zip to stdio.deflate (encode ZIP then zlib-compress).
 
-use crate::artifacts::deflate::{DeflateSnapshot, STDIO_DEFLATE_DOCUMENT_SCHEMA};
-use crate::artifacts::zip::ZipSnapshot;
+use semio_s_artifact_stdio_deflate::{DeflateSnapshot, STDIO_DEFLATE_DOCUMENT_SCHEMA};
+use crate::ZipSnapshot;
 
 //#region Codec
 /// Register serializer hooks.
@@ -12,8 +12,8 @@ pub fn register() {}
 /// `ArtifactPack`/`ArtifactDsl` encode, via `engine::encode_deflate_snapshot`).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn serialize(from: &ZipSnapshot) -> Result<DeflateSnapshot, store::PackError> {
-    let zip_bytes = crate::artifacts::zip::standards::v2_0::subsets::base::io::encode_zip(from).map_err(|e| store::PackError::Schema(e.to_string()))?;
-    Ok(DeflateSnapshot { schema: STDIO_DEFLATE_DOCUMENT_SCHEMA.into(), compression_method: 8, window_bits: 7, compression_level_hint: crate::artifacts::deflate::schema::snapshot::DeflateLevelHint::default(), dict_id: None, payload: zip_bytes })
+    let zip_bytes = crate::standards::v2_0::subsets::base::io::encode_zip(from).map_err(|e| store::PackError::Schema(e.to_string()))?;
+    Ok(DeflateSnapshot { schema: STDIO_DEFLATE_DOCUMENT_SCHEMA.into(), compression_method: 8, window_bits: 7, compression_level_hint: semio_s_artifact_stdio_deflate::schema::snapshot::DeflateLevelHint::default(), dict_id: None, payload: zip_bytes })
 }
 
 /// Encode as deflate pack bytes.

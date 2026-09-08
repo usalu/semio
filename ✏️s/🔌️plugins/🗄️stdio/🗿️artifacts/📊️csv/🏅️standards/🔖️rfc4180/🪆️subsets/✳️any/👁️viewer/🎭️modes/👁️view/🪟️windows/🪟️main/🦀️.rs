@@ -3,7 +3,7 @@
 //! surface — same header-row convention read, no edit affordances (`window_kind()`, the read-only
 //! variant, not the editable one).
 
-use crate::artifacts::csv::CsvSnapshot;
+use crate::CsvSnapshot;
 use semio_framework_plugin::app::{TableView, TableWindowKit, WindowKit};
 use semio_framework_plugin::{BuiltNode, LocalizedLabel, WindowKindDefinition};
 
@@ -25,7 +25,7 @@ pub fn definition() -> WindowKindDefinition {
 /// remaining record is one read-only row — no mutation, no selection state.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn render(document: &CsvSnapshot) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
-    let (columns, data_rows): (Vec<String>, &[crate::artifacts::csv::CsvRecord]) = if document.has_header && !document.records.is_empty() {
+    let (columns, data_rows): (Vec<String>, &[crate::CsvRecord]) = if document.has_header && !document.records.is_empty() {
         (document.records[0].fields.iter().map(|field| field.value.clone()).collect(), &document.records[1..])
     } else {
         let width = document.records.iter().map(|record| record.fields.len()).max().unwrap_or(0);
@@ -55,8 +55,8 @@ mod tests {
             schema: "stdio.csv".into(),
             has_header: true,
             records: vec![
-                crate::artifacts::csv::CsvRecord { fields: vec![crate::artifacts::csv::CsvField { value: "name".into(), quoted: false }] },
-                crate::artifacts::csv::CsvRecord { fields: vec![crate::artifacts::csv::CsvField { value: "ada".into(), quoted: false }] },
+                crate::CsvRecord { fields: vec![crate::CsvField { value: "name".into(), quoted: false }] },
+                crate::CsvRecord { fields: vec![crate::CsvField { value: "ada".into(), quoted: false }] },
             ],
         };
         let node = render(&document).expect("render");

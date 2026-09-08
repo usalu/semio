@@ -5,13 +5,13 @@
 //! and absorb is plain last-write-wins per field, exactly as the recipe's "Scalars: LWW" rule
 //! prescribes for artifacts with no strong entities.
 
-use crate::artifacts::deflate::schema::snapshot::DeflateLevelHint;
-use crate::artifacts::deflate::DeflateSnapshot;
+use crate::schema::snapshot::DeflateLevelHint;
+use crate::DeflateSnapshot;
 use protocol::MutationDiff;
 // 🧭️ `DiffAlgebra` lives at `command::DiffAlgebra` (not re-exported bare at the `protocol` crate
 // root the way `MutationDiff` is) -- see `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/🦀️.rs`.
 use protocol::command::DiffAlgebra;
-use schema::ArtifactSchema;
+use framework_schema::ArtifactSchema;
 
 //#region 🔖️Diff
 /// 🔺️ Diff for `stdio.deflate`. No `snapshot: Option<DeflateSnapshot>` full-replace slot --
@@ -136,7 +136,7 @@ pub fn diff_set_payload(payload: Vec<u8>) -> DeflateDiff {
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_diff_cases() -> Vec<DeflateDiff> {
-    use crate::artifacts::deflate::STDIO_DEFLATE_DOCUMENT_SCHEMA;
+    use crate::STDIO_DEFLATE_DOCUMENT_SCHEMA;
 
     let a = DeflateSnapshot { schema: STDIO_DEFLATE_DOCUMENT_SCHEMA.into(), compression_method: 8, window_bits: 7, compression_level_hint: DeflateLevelHint::Fastest, dict_id: None, payload: b"demo-cases-a-payload".to_vec() };
     let b = DeflateSnapshot {
@@ -413,9 +413,9 @@ impl protocol::DiffCodec for DeflateDiff {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::deflate::schema::mutations::{apply_deflate_mutation, set_compression_params, set_payload, set_preset_dictionary, set_snapshot, DeflateMutation};
-    use crate::artifacts::deflate::standards::v_rfc1950::subsets::any::io::{decode_deflate_snapshot, encode_deflate_snapshot};
-    use crate::artifacts::deflate::STDIO_DEFLATE_DOCUMENT_SCHEMA;
+    use crate::schema::mutations::{apply_deflate_mutation, set_compression_params, set_payload, set_preset_dictionary, set_snapshot, DeflateMutation};
+    use crate::standards::v_rfc1950::subsets::any::io::{decode_deflate_snapshot, encode_deflate_snapshot};
+    use crate::STDIO_DEFLATE_DOCUMENT_SCHEMA;
     use protocol::{DiffCodec, Mutation};
 
     //#region Fixtures

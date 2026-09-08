@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/block/5d/1/any/mutation/resize-grip3d.json",
+  "title": "ResizeGrip3d",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newRadius3d"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "newRadius3d": {
+      "type": "number"
+    }
+  }
+}

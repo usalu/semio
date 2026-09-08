@@ -84,7 +84,7 @@
         {
           "id": "set-facility-name",
           "capability": "ifc-2x3-cobie-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -104,7 +104,7 @@
         {
           "id": "set-floor-elevation",
           "capability": "ifc-2x3-cobie-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -124,7 +124,7 @@
         {
           "id": "set-snapshot",
           "capability": "ifc-2x3-cobie-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -144,7 +144,7 @@
         {
           "id": "set-space",
           "capability": "ifc-2x3-cobie-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -164,7 +164,7 @@
         {
           "id": "set-type-assignment",
           "capability": "ifc-2x3-cobie-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -184,7 +184,7 @@
         {
           "id": "set-view-definition",
           "capability": "ifc-2x3-cobie-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],

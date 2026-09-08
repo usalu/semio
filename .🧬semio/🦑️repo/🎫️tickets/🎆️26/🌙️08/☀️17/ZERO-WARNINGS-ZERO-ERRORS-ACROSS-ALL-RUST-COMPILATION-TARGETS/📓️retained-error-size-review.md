@@ -1,0 +1,3 @@
+# Retained Error Size Review
+
+Strict WASI pass 428 flags ownership-return errors in Energy, FEM and Puzzle. EnergyWirePacket holds RetainedJobPayload, an optional preview, and an optional EnergyCommitReservation. Both RetainedJobPayload and the reservation contain fixed arrays of page ownership metadata. EnergyAdmissionRejected and EnergyCheckpointRejected retain the complete model/config and numerical census for retry and incremental close. Changes must preserve these owners and the exact retry/ack/cancellation paths; suppressing the lints or replacing retained errors with messages would lose that contract. No storage or error representation changes have been made during this review.

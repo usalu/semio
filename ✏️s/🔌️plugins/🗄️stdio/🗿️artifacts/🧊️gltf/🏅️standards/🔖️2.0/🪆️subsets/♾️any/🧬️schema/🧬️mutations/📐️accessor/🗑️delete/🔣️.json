@@ -5,7 +5,7 @@
   "displayName": "Delete Accessor",
   "emoji": "🗑️",
   "aggregateVariant": "DeleteAccessor",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

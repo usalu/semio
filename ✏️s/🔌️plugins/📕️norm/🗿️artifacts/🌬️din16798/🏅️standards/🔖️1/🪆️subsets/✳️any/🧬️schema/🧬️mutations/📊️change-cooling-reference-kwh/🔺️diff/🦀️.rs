@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeCoolingReferenceKwh, base: &Din16798Snapshot) -> pro
     if base.cooling_reference_kwh == payload.new_cooling_reference_kwh {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Cooling energy reference is already {}.", payload.new_cooling_reference_kwh));
     }
-    protocol::MutationOutcome::new(Din16798Diff { cooling_reference_kwh: Some(payload.new_cooling_reference_kwh.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(Din16798Diff { cooling_reference_kwh: Some(payload.new_cooling_reference_kwh), ..Default::default() })
 }
 //#endregion 🔖️Diff

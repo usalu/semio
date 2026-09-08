@@ -7,6 +7,6 @@ use crate::artifacts::din16798::Din16798Snapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(_payload: &ChangeQCKwh, base: &Din16798Snapshot) -> Vec<Din16798Mutation> {
-    vec![Din16798Mutation::ChangeQCKwh(ChangeQCKwh { new_q_c_kwh: base.q_c_kwh.clone() })]
+    vec![Din16798Mutation::ChangeQCKwh(ChangeQCKwh { new_q_c_kwh: base.q_c_kwh })]
 }
 //#endregion 🔖️Inverse

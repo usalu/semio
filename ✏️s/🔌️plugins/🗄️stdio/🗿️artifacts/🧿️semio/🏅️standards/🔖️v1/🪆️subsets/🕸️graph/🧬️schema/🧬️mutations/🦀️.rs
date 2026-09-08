@@ -19,8 +19,8 @@
 //! Every triad leaf is mounted directly as a `mutations`-sibling module in `🦀️.rs` (owned by
 //! the stdio W2/table-graph orchestrator, so no self-wiring `#[path = "."]` blocks are needed here).
 
-use crate::artifacts::semio::standards::v1::subsets::graph::schema::diff::SemioGraphDiff;
-use crate::artifacts::semio::standards::v1::subsets::graph::schema::snapshot::SemioGraphSnapshot;
+use crate::standards::v1::subsets::graph::schema::diff::SemioGraphDiff;
+use crate::standards::v1::subsets::graph::schema::snapshot::SemioGraphSnapshot;
 
 //#region 🔖️Leaves
 use super::add_node_port;
@@ -104,9 +104,9 @@ pub fn decode_semio_graph_mutation_json(text: &str) -> Result<SemioGraphMutation
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioPoint2;
-    use crate::artifacts::semio::standards::v1::subsets::graph::schema::snapshot::{GraphEdgeId, GraphNodeId, SemioGraphEdge, SemioGraphNode, SemioGraphPort, SemioGraphPortKind};
-    use crate::artifacts::semio::standards::v1::subsets::value::schema::snapshot::{SemioValue, SemioValueEntry};
+    use crate::standards::v1::subsets::base::schema::geometry::SemioPoint2;
+    use crate::standards::v1::subsets::graph::schema::snapshot::{GraphEdgeId, GraphNodeId, SemioGraphEdge, SemioGraphNode, SemioGraphPort, SemioGraphPortKind};
+    use crate::standards::v1::subsets::value::schema::snapshot::{SemioValue, SemioValueEntry};
     use protocol::{Mutation, MutationDiff, SemanticMutation};
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9

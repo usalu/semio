@@ -29,8 +29,8 @@
 //! `📌️important.md`'s "if a real dependency chain cannot be authored honestly for a field, omit
 //! that field and say why rather than faking one", mirroring brep's own two omissions in shape.
 
-use crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioPoint3;
-use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::{SemioMesh, SemioMeshSnapshot, SemioPrimitive};
+use crate::standards::v1::subsets::base::schema::geometry::SemioPoint3;
+use crate::standards::v1::subsets::mesh::schema::snapshot::{SemioMesh, SemioMeshSnapshot, SemioPrimitive};
 
 //#region 🔖️Value
 /// 📦 One primitive's axis-aligned bounding box. `SemioAabb::default()` (`min`/`max` both the
@@ -136,7 +136,7 @@ impl store::InferredField<SemioMeshSnapshot> for MeshAabb {
 //#region 🧪️Tests
 mod tests {
     use super::*;
-    use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::{SemioMesh, SemioPrimitive};
+    use crate::standards::v1::subsets::mesh::schema::snapshot::{SemioMesh, SemioPrimitive};
     use store::{InferenceCache, InferenceCacheConfig};
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9

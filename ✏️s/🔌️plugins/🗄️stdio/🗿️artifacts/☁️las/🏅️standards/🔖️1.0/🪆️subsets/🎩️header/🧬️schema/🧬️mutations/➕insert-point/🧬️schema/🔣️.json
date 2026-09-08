@@ -1,0 +1,136 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/las/1.0/header/mutation/insert-point.json",
+  "title": "InsertPoint",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "index",
+    "point"
+  ],
+  "properties": {
+    "index": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "point": {
+      "$ref": "#/$defs/LasPoint"
+    },
+    "mutation": {
+      "const": "insertPoint",
+      "description": "Aggregate discriminator spliced in by LasMutation; absent when the payload stands alone."
+    }
+  },
+  "$defs": {
+    "LasPoint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y",
+        "z",
+        "intensity",
+        "returnNumber",
+        "numberOfReturns",
+        "scanDirectionFlag",
+        "edgeOfFlightLine",
+        "classification",
+        "scanAngleRank",
+        "userData",
+        "pointSourceId"
+      ],
+      "properties": {
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "z": {
+          "type": "number"
+        },
+        "intensity": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "returnNumber": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "numberOfReturns": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "scanDirectionFlag": {
+          "type": "boolean"
+        },
+        "edgeOfFlightLine": {
+          "type": "boolean"
+        },
+        "classification": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "scanAngleRank": {
+          "type": "integer",
+          "minimum": -128,
+          "maximum": 127
+        },
+        "userData": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "pointSourceId": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "gpsTime": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "rgb": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": [
+                {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 65535
+                },
+                {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 65535
+                },
+                {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 65535
+                }
+              ],
+              "additionalItems": false,
+              "minItems": 3,
+              "maxItems": 3
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    }
+  }
+}

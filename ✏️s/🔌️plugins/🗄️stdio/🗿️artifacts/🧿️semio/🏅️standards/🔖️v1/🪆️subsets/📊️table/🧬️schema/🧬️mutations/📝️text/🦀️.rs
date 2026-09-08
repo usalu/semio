@@ -7,15 +7,15 @@
 //! `None`, the digits for `Some(n)` — a comma-separated positional field can represent absence as
 //! an empty slot without ambiguity.
 
-pub use crate::artifacts::semio::standards::v1::subsets::table::schema::mutations::SemioTableMutation;
+pub use crate::standards::v1::subsets::table::schema::mutations::SemioTableMutation;
 
-use crate::artifacts::semio::standards::v1::subsets::base::schema::triples::split_top_level;
-use crate::artifacts::semio::standards::v1::subsets::table::schema::mutations::{
+use crate::standards::v1::subsets::base::schema::triples::split_top_level;
+use crate::standards::v1::subsets::table::schema::mutations::{
     create_column::CreateColumn, delete_column::DeleteColumn, edit_cell::EditCell, insert_row::InsertRow, remove_row::RemoveRow, rename_column::RenameColumn,
     reorder_columns::ReorderColumns, reorder_rows::ReorderRows,
 };
-use crate::artifacts::semio::standards::v1::subsets::table::schema::snapshot::{dec_cell_kind, dec_row, enc_cell_kind, enc_row};
-use crate::artifacts::semio::standards::v1::subsets::value::schema::diff::{dec_semio_value, dec_str, enc_semio_value, enc_str};
+use crate::standards::v1::subsets::table::schema::snapshot::{dec_cell_kind, dec_row, enc_cell_kind, enc_row};
+use crate::standards::v1::subsets::value::schema::diff::{dec_semio_value, dec_str, enc_semio_value, enc_str};
 
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
@@ -115,8 +115,8 @@ impl protocol::OpText for SemioTableMutation {
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_mutation_cases() -> Vec<SemioTableMutation> {
-    use crate::artifacts::semio::standards::v1::subsets::table::schema::snapshot::{SemioTableCellKind, SemioTableRow};
-    use crate::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValue;
+    use crate::standards::v1::subsets::table::schema::snapshot::{SemioTableCellKind, SemioTableRow};
+    use crate::standards::v1::subsets::value::schema::snapshot::SemioValue;
     vec![
         SemioTableMutation::CreateColumn(CreateColumn { name: "notes".into(), kind: SemioTableCellKind::Str, index: Some(1) }),
         SemioTableMutation::CreateColumn(CreateColumn { name: "extra".into(), kind: SemioTableCellKind::Int, index: None }),

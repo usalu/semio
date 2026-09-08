@@ -301,7 +301,7 @@ pub fn apply_blocks_delta(blocks: &[NoteBlockNode], delta: &NoteBlocksDelta) -> 
         }
         next = ordered;
     }
-    let next_ids: Vec<_> = flatten_blocks(&next).into_iter().map(|block| block_id(block)).collect();
+    let next_ids: Vec<_> = flatten_blocks(&next).into_iter().map(block_id).collect();
     if next_ids.iter().enumerate().any(|(index, id)| next_ids[..index].contains(id)) {
         return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "resulting block tree contains duplicate identities").at(["identities"]));
     }

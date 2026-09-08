@@ -1,0 +1,24 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/energy/model/1/any/mutation/change-infiltration-method.json",
+  "title": "ChangeInfiltrationMethod",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newMethod"
+  ],
+  "properties": {
+    "id": {
+      "type": "integer"
+    },
+    "newMethod": {
+      "enum": [
+        "ScheduledAch",
+        "PerExteriorArea",
+        "EffectiveLeakageArea",
+        "WindAndStack"
+      ]
+    }
+  }
+}

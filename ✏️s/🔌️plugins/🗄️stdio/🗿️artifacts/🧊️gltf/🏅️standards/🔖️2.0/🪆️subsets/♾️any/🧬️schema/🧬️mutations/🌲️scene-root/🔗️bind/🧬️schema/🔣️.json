@@ -1,0 +1,37 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/scene-root/bind.json",
+  "title": "GltfBindSceneRootNodeMutation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "scene",
+    "node",
+    "position"
+  ],
+  "properties": {
+    "scene": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "node": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "position": {
+      "type": "integer",
+      "minimum": 0
+    }
+  },
+  "x-semio": {
+    "id": "s.stdio.gltf.mutation.bind-scene-root-node.v1",
+    "version": 1,
+    "phase": "mutation",
+    "kind": "bind",
+    "touchedPaths": [
+      "document/scenes/*/nodes"
+    ],
+    "referencePolicy": "validates the scene and node identities; one scene root may not be duplicated"
+  },
+  "x-semio-mutation": "bind-scene-root-node"
+}

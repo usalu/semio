@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/norm/en1998/1/any/mutation/change-foundation-area-m2.json",
+  "title": "ChangeFoundationAreaM2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newFoundationAreaM2"
+  ],
+  "properties": {
+    "newFoundationAreaM2": {
+      "type": "number"
+    }
+  }
+}

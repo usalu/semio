@@ -5,7 +5,7 @@
   "displayName": "Delete Constant Schedule",
   "emoji": "📍️",
   "aggregateVariant": "DeleteConstantSchedule",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "delete-constant-schedule",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

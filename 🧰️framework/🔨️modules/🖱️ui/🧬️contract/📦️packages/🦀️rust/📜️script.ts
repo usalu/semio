@@ -19,7 +19,7 @@ const packageRoot = import.meta.dir ?? dirname(fileURLToPath(import.meta.url));
 //#region 📋️PagedListOracle
 export function fixedListStorageSelfTests(): number {
   const fixture = JSON.parse(readFileSync(new URL("../../📋️list/🧫️fixture/🔣️.json", import.meta.url), "utf8"));
-  const schema = JSON.parse(readFileSync(new URL("../../📋️list/🧬️schema.json", import.meta.url), "utf8"));
+  const schema = JSON.parse(readFileSync(new URL("../../📋️list/🧬️schema/🔣️.json", import.meta.url), "utf8"));
   const Ajv = createRequire(import.meta.url)("ajv");
   const validate = new Ajv({ strict: true, allErrors: true }).compile(schema);
   assert(validate(fixture), JSON.stringify(validate.errors));
@@ -47,7 +47,7 @@ export function fixedListStorageSelfTests(): number {
   assert.equal(validate({ ...fixture, fanout: 32 }), false);
   assert.equal(validate({ ...fixture, retirement: { ...fixture.retirement, releasesLivePayload: true } }), false);
   const copy = JSON.parse(readFileSync(new URL("../../🔗️bindings/📋️copy/🧫️fixture/🔣️.json", import.meta.url), "utf8"));
-  const copySchema = JSON.parse(readFileSync(new URL("../../🔗️bindings/📋️copy/🧬️schema.json", import.meta.url), "utf8"));
+  const copySchema = JSON.parse(readFileSync(new URL("../../🔗️bindings/📋️copy/🧬️schema/🔣️.json", import.meta.url), "utf8"));
   const validateCopy = new Ajv({ strict: true, allErrors: true }).compile(copySchema);
   assert(validateCopy(copy), JSON.stringify(validateCopy.errors));
   const bindingBytes = Buffer.alloc(copy.elementBytes);
@@ -56,7 +56,7 @@ export function fixedListStorageSelfTests(): number {
   assert.deepEqual(JSON.parse(JSON.stringify(expected)).slice(0, 3).map((binding: typeof expected[number]) => binding.action.name), copy.names);
   assert.equal(validateCopy({ ...copy, heldReaderSurvives: false }), false);
   const componentCopy = JSON.parse(readFileSync(new URL("../../🪞️copy/🧫️fixture/🔣️.json", import.meta.url), "utf8"));
-  const componentCopySchema = JSON.parse(readFileSync(new URL("../../🪞️copy/🧬️schema.json", import.meta.url), "utf8"));
+  const componentCopySchema = JSON.parse(readFileSync(new URL("../../🪞️copy/🧬️schema/🔣️.json", import.meta.url), "utf8"));
   const validateComponentCopy = new Ajv({ strict: true, allErrors: true }).compile(componentCopySchema);
   assert(validateComponentCopy(componentCopy), JSON.stringify(validateComponentCopy.errors));
   const components = JSON.parse(readFileSync(new URL("../../♻️retirement/🌳️typed/🧩️components.json", import.meta.url), "utf8"));
@@ -69,7 +69,7 @@ export function fixedListStorageSelfTests(): number {
   assert.equal(validateComponentCopy({ ...componentCopy, partialCandidateReadable: true }), false);
   assert.equal(validateComponentCopy({ ...componentCopy, allocationGrant: 65536 }), false);
   const comparison = JSON.parse(readFileSync(new URL("../../⚖️compare/🧫️fixture/🔣️.json", import.meta.url), "utf8"));
-  const comparisonSchema = JSON.parse(readFileSync(new URL("../../⚖️compare/🧬️schema.json", import.meta.url), "utf8"));
+  const comparisonSchema = JSON.parse(readFileSync(new URL("../../⚖️compare/🧬️schema/🔣️.json", import.meta.url), "utf8"));
   const validateComparison = new Ajv({ strict: true, allErrors: true }).compile(comparisonSchema);
   assert(validateComparison(comparison), JSON.stringify(validateComparison.errors));
   for (const row of comparison.cases) assert.equal(Buffer.from(JSON.stringify(row.left)).equals(Buffer.from(JSON.stringify(row.right))), row.equal);
@@ -82,7 +82,7 @@ export function fixedListStorageSelfTests(): number {
   assert.equal(frameOracle.readUInt16LE(4), comparison.frame.maximumPosition);
   assert.equal(validateComparison({ ...comparison, frame: { ...comparison.frame, bytes: 32 } }), false);
   const documentComparison = JSON.parse(readFileSync(new URL("../../⚖️compare/📃️document/🧫️fixture/🔣️.json", import.meta.url), "utf8"));
-  const documentComparisonSchema = JSON.parse(readFileSync(new URL("../../⚖️compare/📃️document/🧬️schema.json", import.meta.url), "utf8"));
+  const documentComparisonSchema = JSON.parse(readFileSync(new URL("../../⚖️compare/📃️document/🧬️schema/🔣️.json", import.meta.url), "utf8"));
   const validateDocumentComparison = new Ajv({ strict: true, allErrors: true }).compile(documentComparisonSchema);
   assert(validateDocumentComparison(documentComparison), JSON.stringify(validateDocumentComparison.errors));
   const nodeIds = Buffer.alloc(documentComparison.nodeIds.length * 8);
@@ -93,14 +93,14 @@ export function fixedListStorageSelfTests(): number {
   assert.equal(validateDocumentComparison({ ...documentComparison, waitsForLiveDocumentOnCancel: true }), false);
   assert.equal(validateDocumentComparison({ ...documentComparison, frames: 1 }), false);
   const wholePatch = JSON.parse(readFileSync(new URL("../../♻️retirement/🩹️patch/📨️pending/📦️whole/🧫️fixture/🔣️.json", import.meta.url), "utf8"));
-  const wholePatchSchema = JSON.parse(readFileSync(new URL("../../♻️retirement/🩹️patch/📨️pending/📦️whole/🧬️schema.json", import.meta.url), "utf8"));
+  const wholePatchSchema = JSON.parse(readFileSync(new URL("../../♻️retirement/🩹️patch/📨️pending/📦️whole/🧬️schema/🔣️.json", import.meta.url), "utf8"));
   const validateWholePatch = new Ajv({ strict: true, allErrors: true }).compile(wholePatchSchema);
   assert(validateWholePatch(wholePatch), JSON.stringify(validateWholePatch.errors));
   assert.equal(Buffer.from(wholePatch.surface).byteLength, wholePatch.surfaceBytes);
   assert.equal(validateWholePatch({ ...wholePatch, includesEmptyBacking: false }), false);
   assert.equal(validateWholePatch({ ...wholePatch, readableAfterCloseStarts: true }), false);
   const assembly = JSON.parse(readFileSync(new URL("../../📃️document/🎟️assembly/🧫️fixture/🔣️.json", import.meta.url), "utf8"));
-  const assemblySchema = JSON.parse(readFileSync(new URL("../../📃️document/🎟️assembly/🧬️schema.json", import.meta.url), "utf8"));
+  const assemblySchema = JSON.parse(readFileSync(new URL("../../📃️document/🎟️assembly/🧬️schema/🔣️.json", import.meta.url), "utf8"));
   const validateAssembly = new Ajv({ strict: true, allErrors: true }).compile(assemblySchema);
   assert(validateAssembly(assembly), JSON.stringify(validateAssembly.errors));
   const assemblyIds = Buffer.alloc(assembly.nodeIds.length * 8);
@@ -111,7 +111,7 @@ export function fixedListStorageSelfTests(): number {
   for (const field of ["zeroGrantAllocates", "copyOldRoot", "contentionWaits"]) assert.equal(validateAssembly({ ...assembly, [field]: true }), false);
   assert.equal(validateAssembly({ ...assembly, duplicateRetainsInput: false }), false);
   const resident = JSON.parse(readFileSync(new URL("../../🎟️resident/🧫️fixture/🔣️.json", import.meta.url), "utf8"));
-  const residentSchema = JSON.parse(readFileSync(new URL("../../🎟️resident/🧬️schema.json", import.meta.url), "utf8"));
+  const residentSchema = JSON.parse(readFileSync(new URL("../../🎟️resident/🧬️schema/🔣️.json", import.meta.url), "utf8"));
   const validateResident = new Ajv({ strict: true, allErrors: true }).compile(residentSchema);
   assert(validateResident(resident), JSON.stringify(validateResident.errors));
   const residentBytes = Buffer.alloc(8);
@@ -123,7 +123,7 @@ export function fixedListStorageSelfTests(): number {
   for (const field of ["dropWaits", "reusesBeforeFinalOwner", "duplicateReturnAfterExplicitClose"]) assert.equal(validateResident({ ...resident, [field]: true }), false);
   assert.equal(validateResident({ ...resident, aggregateBytes: resident.aggregateBytes * 2 }), false);
   const residentFixed = JSON.parse(readFileSync(new URL("../../🎟️resident/🗃️fixed/🧪️fixture/🔣️.json", import.meta.url), "utf8"));
-  const residentFixedSchema = JSON.parse(readFileSync(new URL("../../🎟️resident/🗃️fixed/🧬️schema.json", import.meta.url), "utf8"));
+  const residentFixedSchema = JSON.parse(readFileSync(new URL("../../🎟️resident/🗃️fixed/🧬️schema/🔣️.json", import.meta.url), "utf8"));
   const validateResidentFixed = new Ajv({ strict: true, allErrors: true }).compile(residentFixedSchema);
   assert(validateResidentFixed(residentFixed), JSON.stringify(validateResidentFixed.errors));
   const fixedArithmetic = residentFixed.arithmetic;
@@ -133,7 +133,7 @@ export function fixedListStorageSelfTests(): number {
   for (const field of ["finalOwnerReleasesStatic", "repeatRegistrationChargesAgain", "changedRegistrationAccepted", "zeroGrantMutates"]) assert.equal(validateResidentFixed({ ...residentFixed, [field]: true }), false);
   assert.equal(validateResidentFixed({ ...residentFixed, staticCountsAgainstAggregate: false }), false);
   const residentRoot = JSON.parse(readFileSync(new URL("../../🎟️resident/🌳️root/🧫️fixture/🔣️.json", import.meta.url), "utf8"));
-  const residentRootSchema = JSON.parse(readFileSync(new URL("../../🎟️resident/🌳️root/🧬️schema.json", import.meta.url), "utf8"));
+  const residentRootSchema = JSON.parse(readFileSync(new URL("../../🎟️resident/🌳️root/🧬️schema/🔣️.json", import.meta.url), "utf8"));
   const validateResidentRoot = new Ajv({ strict: true, allErrors: true }).compile(residentRootSchema);
   assert(validateResidentRoot(residentRoot), JSON.stringify(validateResidentRoot.errors));
   assert.equal(Buffer.from(residentRoot.surface).toString("hex"), residentRoot.surfaceUtf8);
@@ -185,10 +185,11 @@ export function conformanceCorpusSelfTests(): number {
   const root = join(packageRoot, "../../📚️examples/🧪️conformance");
   const catalog = JSON.parse(readFileSync(join(root, "📇️catalog.json"), "utf8")) as { version: number; roles: { snapshot: string; expect: string; patch: string }; groups: Record<string, { patch: boolean; cases: Record<string, string> }> };
   const Ajv = createRequire(import.meta.url)("ajv");
-  const validate = new Ajv({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(root, "🧬️catalog.schema.json"), "utf8")));
+  const contractModule = JSON.parse(readFileSync(join(packageRoot, "../../🧬️schema/🔣️.json"), "utf8"));
+  const validate = new Ajv({ strict: true, allErrors: true }).addSchema(contractModule).getSchema(`${contractModule.$id}#/$defs/ConformanceCatalogFixture`);
   assert(validate(catalog), JSON.stringify(validate.errors));
   assert(!validate({ ...catalog, roles: { ...catalog.roles, snapshot: "snapshot.json" } }));
-  assert.deepEqual(readdirSync(root).sort(), [...Object.keys(catalog.groups), "📇️catalog.json", "🧬️catalog.schema.json"].sort());
+  assert.deepEqual(readdirSync(root).sort(), [...Object.keys(catalog.groups), "📇️catalog.json"].sort());
   let count = 0;
   for (const [group, definition] of Object.entries(catalog.groups)) {
     assert.equal(new Set(Object.values(definition.cases)).size, Object.keys(definition.cases).length);

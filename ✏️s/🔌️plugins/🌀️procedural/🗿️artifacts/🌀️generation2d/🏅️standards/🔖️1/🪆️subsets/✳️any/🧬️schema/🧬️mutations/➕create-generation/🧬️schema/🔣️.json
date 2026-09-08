@@ -1,0 +1,34 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/procedural/generation2d/1/any/mutation/create-generation.json",
+  "title": "CreateGeneration",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "generation"
+  ],
+  "properties": {
+    "generation": {
+      "title": "FormGeneration",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "valuesJson"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "valuesJson": {
+          "type": "string",
+          "contentMediaType": "application/json"
+        }
+      }
+    }
+  }
+}

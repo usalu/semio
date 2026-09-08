@@ -1,6 +1,6 @@
 //! playground -> csv
 use crate::artifacts::playground::standards::v1::subsets::any::schema::snapshot::PlaygroundSnapshot;
-use semio_s_plugin_stdio::artifacts::csv::{CsvField, CsvRecord, CsvSnapshot, STDIO_CSV_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_csv::{CsvField, CsvRecord, CsvSnapshot, STDIO_CSV_DOCUMENT_SCHEMA};
 
 /// 📤️ `PlaygroundSnapshot` carries exactly one authored scalar (`schema`), so its CSV form is a
 /// single-column table: one header record naming the column, one data record holding the value.

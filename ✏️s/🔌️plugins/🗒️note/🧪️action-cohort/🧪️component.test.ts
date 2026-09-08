@@ -62,7 +62,7 @@ test("hostile source rejects global ids, copied digests, and scan-then-monolith 
   expect(retainedSource).not.toContain("fn prepare_note_artifact");
   expect(retainedSource).toContain("authority.prepare_one_item(edit");
   expect(retainedSource).toContain("NOTE_MATERIALIZATION_STRING_CHUNK_BYTES: usize = 1_024");
-  expect(retainedSource).toContain("local_owner::<semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::text::schema::snapshot::SemioTextSnapshot>()");
+  expect(retainedSource).toContain("local_owner::<semio_s_artifact_stdio_semio::standards::v1::subsets::text::schema::snapshot::SemioTextSnapshot>()");
   expect(retainedSource).toContain("child.with_local_owner(owner)");
   expect(retainedSource).toContain("text_child_materialization_preserves_present_typed_owner");
   expect(retainedSource).toContain("text_child_materialization_preserves_absent_owner");

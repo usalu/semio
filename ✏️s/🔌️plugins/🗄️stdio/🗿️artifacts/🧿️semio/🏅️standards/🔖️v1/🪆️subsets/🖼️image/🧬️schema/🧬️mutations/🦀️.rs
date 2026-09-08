@@ -9,11 +9,11 @@
 //! tuple variant wrapping its own mutation leaf (`./*/🦀️.rs`), and this file's `agg_diff`/
 //! `agg_inverse` carry the handcrafted semantics every leaf's `MutationKind` impl delegates back to.
 
-use crate::artifacts::semio::standards::v1::subsets::base::schema::triples::{split_top_level, strip_brackets, IndexAdded, IndexModified, NamedModified};
-use crate::artifacts::semio::standards::v1::subsets::image::schema::diff::{
+use crate::standards::v1::subsets::base::schema::triples::{split_top_level, strip_brackets, IndexAdded, IndexModified, NamedModified};
+use crate::standards::v1::subsets::image::schema::diff::{
     dec_colorspace, dec_frame, dec_metadata_entry, decode_option, diff_set_snapshot, enc_colorspace, enc_frame, enc_metadata_entry, encode_option, SemioImageDiff, SemioImageFrameDiff, SemioImageFramesDiff, SemioImageMetadataDiff,
 };
-use crate::artifacts::semio::standards::v1::subsets::image::schema::snapshot::{SemioColorspace, SemioImageFrame, SemioImageMetadataEntry, SemioImageSnapshot};
+use crate::standards::v1::subsets::image::schema::snapshot::{SemioColorspace, SemioImageFrame, SemioImageMetadataEntry, SemioImageSnapshot};
 use protocol::Mutation;
 /// 🔧️ Unconditional — `impl protocol::OpBinary for SemioImageMutation` below calls
 /// `self.print_op()`/`Self::parse_op(...)` via method syntax, which needs `OpText` in scope in
@@ -187,7 +187,7 @@ fn dec_snapshot(s: &str) -> Result<SemioImageSnapshot, String> {
     let frames = split_top_level(strip_brackets(frames)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_frame).collect::<Result<Vec<_>, String>>()?;
     let metadata = split_top_level(strip_brackets(metadata)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_metadata_entry).collect::<Result<Vec<_>, String>>()?;
     Ok(SemioImageSnapshot {
-        schema: crate::artifacts::semio::standards::v1::subsets::image::schema::snapshot::STDIO_SEMIOIMAGE_DOCUMENT_SCHEMA.into(),
+        schema: crate::standards::v1::subsets::image::schema::snapshot::STDIO_SEMIOIMAGE_DOCUMENT_SCHEMA.into(),
         width: width.parse().map_err(|e: std::num::ParseIntError| e.to_string())?,
         height: height.parse().map_err(|e: std::num::ParseIntError| e.to_string())?,
         colorspace: dec_colorspace(colorspace)?,

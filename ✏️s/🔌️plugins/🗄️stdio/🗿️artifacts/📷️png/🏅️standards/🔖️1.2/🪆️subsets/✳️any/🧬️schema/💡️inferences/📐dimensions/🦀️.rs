@@ -2,8 +2,8 @@
 //! pure O(1) read of already-decoded header fields — nothing here is per-entity/incremental, so
 //! this holds only the value type + its pure `compute` fn (no `InferredField`).
 
-use crate::artifacts::png::schema::snapshot::PngColorType;
-use crate::artifacts::png::PngSnapshot;
+use crate::schema::snapshot::PngColorType;
+use crate::PngSnapshot;
 
 //#region 🔖️Dimensions
 /// 📐️ PNG IHDR-derived raster geometry. `has_alpha` is exact (PNG's `colorType` is an explicit

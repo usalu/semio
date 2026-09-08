@@ -6,8 +6,8 @@
 pub mod derived_composition {
     use super::super::export::serializers::artifacts::json::v_rfc8259::any::SemioFlowToJson;
     use super::super::import::deserializers::artifacts::json::v_rfc8259::any::SemioFlowFromJson;
-    use crate::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot;
-    use crate::artifacts::semio::standards::v1::subsets::flow::schema::SemioFlowAnalyzer;
+    use crate::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot;
+    use crate::standards::v1::subsets::flow::schema::SemioFlowAnalyzer;
     use semio_framework_plugin::{
         deserializer_entry_of, register_composer_entries, register_subset_validator, serializer_entry_of, subset_validator_entry_of, AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, ComposerEntry, Composition, Dialect, IoPayload,
         StandardId, SubsetId, SubsetValidator, SubsetValidatorEntry,
@@ -115,9 +115,9 @@ pub mod derived_composition {
     /// flow<->json io bridge row. Called from this artifact's standard-level `engine::register()`.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn register() {
-        ::schema::register_artifact_schema_descriptor(crate::artifacts::semio::standards::v1::subsets::flow::schema::semio_flow_artifact_schema_descriptor());
-        store::register_document_codec(store::ArtifactCodec::of::<SemioFlowSnapshot, crate::artifacts::semio::standards::v1::subsets::flow::schema::mutations::SemioFlowMutation>(
-            crate::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::STDIO_SEMIOFLOW_DOCUMENT_SCHEMA,
+        ::framework_schema::register_artifact_schema_descriptor(crate::standards::v1::subsets::flow::schema::semio_flow_artifact_schema_descriptor());
+        store::register_document_codec(store::ArtifactCodec::of::<SemioFlowSnapshot, crate::standards::v1::subsets::flow::schema::mutations::SemioFlowMutation>(
+            crate::standards::v1::subsets::flow::schema::snapshot::STDIO_SEMIOFLOW_DOCUMENT_SCHEMA,
         )).expect("static Stdio registration must be available and conflict-free");
         register_subset_validator(validator_entry()).expect("static Stdio registration must be available and conflict-free");
         register_composer_entries(io_entries()).expect("static Stdio registration must be available and conflict-free");
@@ -129,7 +129,7 @@ pub mod derived_composition {
     /// ticket 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn register_artifact_inferences() {
-        ::schema::register_artifact_inference_descriptor(crate::artifacts::semio::standards::v1::subsets::flow::schema::inferences::semio_flow_artifact_inference_descriptor());
+        ::framework_schema::register_artifact_inference_descriptor(crate::standards::v1::subsets::flow::schema::inferences::semio_flow_artifact_inference_descriptor());
     }
     //#endregion 🔖️Register
 
@@ -137,8 +137,8 @@ pub mod derived_composition {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioPoint2;
-        use crate::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::{FlowEdge, FlowNode, PortRef};
+        use crate::standards::v1::subsets::base::schema::geometry::SemioPoint2;
+        use crate::standards::v1::subsets::flow::schema::snapshot::{FlowEdge, FlowNode, PortRef};
         use semio_framework_plugin::{ArtifactDeserializer, ArtifactSerializer};
 
         // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -184,7 +184,7 @@ pub mod derived_composition {
         /// has a direct JSON member), so the round trip is exact, not just "modulo documented losses".
         #[semio_framework_async_macros::async_test]
         async fn json_round_trip_is_stable() {
-            let semio1 = SemioFlowSnapshot { schema: crate::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::STDIO_SEMIOFLOW_DOCUMENT_SCHEMA.into(), nodes: vec![node("a"), node("b")], edges: vec![edge("e1", "a", "b")] };
+            let semio1 = SemioFlowSnapshot { schema: crate::standards::v1::subsets::flow::schema::snapshot::STDIO_SEMIOFLOW_DOCUMENT_SCHEMA.into(), nodes: vec![node("a"), node("b")], edges: vec![edge("e1", "a", "b")] };
             let json1 = semio_framework_plugin::resolve_ready(SemioFlowToJson::serialize(&semio1)).expect("serialize");
             let semio2 = semio_framework_plugin::resolve_ready(SemioFlowFromJson::deserialize(&json1)).expect("deserialize");
             assert_eq!(semio1, semio2);
@@ -200,7 +200,7 @@ pub mod derived_composition {
         /// anyway).
         mod conformance_laws {
 
-            use crate::artifacts::semio::standards::v1::subsets::flow::schema::{diff, mutations, snapshot};
+            use crate::standards::v1::subsets::flow::schema::{diff, mutations, snapshot};
             use protocol::{DiffCodec, OpBinary, OpText};
 
             /// ✅️ "committed files parse": all 6 handcrafted `.grammar.semio`/`.protocol.semio` files

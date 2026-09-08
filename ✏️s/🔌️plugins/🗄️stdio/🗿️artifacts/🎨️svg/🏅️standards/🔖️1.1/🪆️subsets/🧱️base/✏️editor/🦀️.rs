@@ -3,10 +3,10 @@
 //! SVG has no pixel buffer: `set-pixel-region` parses the vector DSL and emits direct prolog, attribute, and child mutations rather than editing pixels.
 //! MUST NOT be reached by the sibling `viewer` module (`policyViewerPurityBreaches`).
 
-use crate::artifacts::svg::standards::v1_1::subsets::base::schema::mutations::{InsertElementMutation, InsertElementPayload, RemoveElementMutation, RemoveElementPayload, SetAttributeMutation, SetAttributePayload, SetDeclarationMutation, SetDeclarationPayload, SetDoctypeMutation, SetDoctypePayload, SetElementNameMutation, SetElementNamePayload, SvgMutation};
-use crate::artifacts::svg::standards::v1_1::subsets::base::schema::snapshot::SvgSnapshot;
-use crate::artifacts::svg::{STDIO_SVG_DOCUMENT_SCHEMA, SVG_ANY_DIALECT};
-use crate::artifacts::xml::schema::snapshot::XmlNode;
+use crate::standards::v1_1::subsets::base::schema::mutations::{InsertElementMutation, InsertElementPayload, RemoveElementMutation, RemoveElementPayload, SetAttributeMutation, SetAttributePayload, SetDeclarationMutation, SetDeclarationPayload, SetDoctypeMutation, SetDoctypePayload, SetElementNameMutation, SetElementNamePayload, SvgMutation};
+use crate::standards::v1_1::subsets::base::schema::snapshot::SvgSnapshot;
+use crate::{STDIO_SVG_DOCUMENT_SCHEMA, SVG_ANY_DIALECT};
+use semio_s_artifact_stdio_xml::schema::snapshot::XmlNode;
 use crate::editor::svg_any::modes::edit;
 use crate::editor::svg_any::modes::edit::windows::main;
 use semio_framework_plugin::{ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation};

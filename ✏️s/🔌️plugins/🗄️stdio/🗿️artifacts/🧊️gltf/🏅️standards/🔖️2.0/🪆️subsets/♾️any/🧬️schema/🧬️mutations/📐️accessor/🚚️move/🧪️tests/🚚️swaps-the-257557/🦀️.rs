@@ -9,10 +9,10 @@
 //! leaf's own oracle. The derived `.op.semio`/`.spr.semio`/`.dsl.semio`/`.pack.semio`/
 //! `.patch.semio` encodings come from `fixtures generate`, not from here.
 
-use crate::artifacts::gltf::schema::mutations::move_accessor::diff::GltfMoveAccessorDiff;
-use crate::artifacts::gltf::schema::mutations::move_accessor::GltfMoveAccessorPayload;
-use crate::artifacts::gltf::schema::mutations::move_accessor::{diff, inverse, mutation};
-use crate::artifacts::gltf::GltfSnapshot;
+use crate::schema::mutations::move_accessor::diff::GltfMoveAccessorDiff;
+use crate::schema::mutations::move_accessor::GltfMoveAccessorPayload;
+use crate::schema::mutations::move_accessor::{diff, inverse, mutation};
+use crate::GltfSnapshot;
 
 const CASE: &str = "move-accessor/swaps-the-position-and-texcoord-accessors";
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
@@ -36,7 +36,7 @@ fn payload() -> GltfMoveAccessorPayload {
 async fn applies_to_committed_after() {
     let snapshot = mutation::apply(&payload(), &before()).expect("move-accessor applies to its committed before-snapshot");
     assert_eq!(snapshot, expected_after(), "{CASE}: applied state differs from committed after-snapshot");
-    assert_eq!(snapshot.document.accessors[0].kind, crate::artifacts::gltf::engine::GltfAccessorType::Vec2, "{CASE}: the VEC2 accessor must end up first");
+    assert_eq!(snapshot.document.accessors[0].kind, crate::engine::GltfAccessorType::Vec2, "{CASE}: the VEC2 accessor must end up first");
     assert_eq!(snapshot.document.meshes[0].primitives[0].attributes, vec![("POSITION".to_string(), 1usize), ("TEXCOORD_0".to_string(), 0usize)], "{CASE}: repair must renumber both attributes while preserving the map's own ordering");
 }
 
@@ -103,7 +103,7 @@ async fn committed_diff_is_canonical() {
     let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "{CASE}: committed diff JSON is not canonical");
-    assert!(matches!(decoded.operation, crate::artifacts::gltf::schema::mutations::move_accessor::diff::GltfMoveAccessorOperation::Move { index: 0, position: 1 }), "{CASE}: the committed operation must be a bare move, carrying no accessor value");
+    assert!(matches!(decoded.operation, crate::schema::mutations::move_accessor::diff::GltfMoveAccessorOperation::Move { index: 0, position: 1 }), "{CASE}: the committed operation must be a bare move, carrying no accessor value");
 }
 
 /// 🩹 Applying the committed diff directly to `before` yields the committed `after` — the diff is

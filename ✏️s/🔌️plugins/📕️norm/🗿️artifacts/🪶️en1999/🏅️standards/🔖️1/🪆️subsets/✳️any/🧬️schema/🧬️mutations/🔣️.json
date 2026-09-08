@@ -1,164 +1,113 @@
 {
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://semio.tech/schema/s/norm/en1999/mutation.json",
   "title": "En1999Mutation",
-  "type": "object",
-  "additionalProperties": false,
-  "required": [
-    "nEdKn",
-    "mEdKnm",
-    "aMm2",
-    "wElMm3",
-    "alloy",
-    "chi",
-    "iTMm4",
-    "lCrMm",
-    "thetaC",
-    "deltaSigmaEd",
-    "deltaSigmaC",
-    "fatigueM",
-    "nCycles",
-    "vWeldEdKn",
-    "weldThroatMm",
-    "weldLengthMm",
-    "betaW",
-    "sheetBMm",
-    "sheetTMm",
-    "sheetKSigma",
-    "sheetWElMm3",
-    "sheetMEdKnm",
-    "shellTMm",
-    "shellRMm",
-    "sigmaEdShellMpa",
-    "annex"
-  ],
-  "properties": {
-    "nEdKn": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+  "oneOf": [
+    {
+      "$ref": "./📐️change-a-mm2/🧬️schema/🔣️.json"
     },
-    "mEdKnm": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./⚗️change-alloy/🧬️schema/🔣️.json"
     },
-    "aMm2": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🌍️change-annex/🧬️schema/🔣️.json"
     },
-    "wElMm3": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🧮️change-beta-w/🧬️schema/🔣️.json"
     },
-    "alloy": {
-      "type": "string",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./⬇️change-chi/🧬️schema/🔣️.json"
     },
-    "chi": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🏷️change-delta-sigma-c/🧬️schema/🔣️.json"
     },
-    "iTMm4": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./↕️change-delta-sigma-ed/🧬️schema/🔣️.json"
     },
-    "lCrMm": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./📉️change-fatigue-m/🧬️schema/🔣️.json"
     },
-    "thetaC": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🌀️change-it-mm4/🧬️schema/🔣️.json"
     },
-    "deltaSigmaEd": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./📏️change-l-cr-mm/🧬️schema/🔣️.json"
     },
-    "deltaSigmaC": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./⤴️change-m-ed-knm/🧬️schema/🔣️.json"
     },
-    "fatigueM": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🔁️change-n-cycles/🧬️schema/🔣️.json"
     },
-    "nCycles": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🏋️change-n-ed-kn/🧬️schema/🔣️.json"
     },
-    "vWeldEdKn": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./↔️change-sheet-b-mm/🧬️schema/🔣️.json"
     },
-    "weldThroatMm": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🎚️change-sheet-k-sigma/🧬️schema/🔣️.json"
     },
-    "weldLengthMm": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🌊️change-sheet-m-ed-knm/🧬️schema/🔣️.json"
     },
-    "betaW": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./📑️change-sheet-t-mm/🧬️schema/🔣️.json"
     },
-    "sheetBMm": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./📊️change-sheet-w-el-mm3/🧬️schema/🔣️.json"
     },
-    "sheetTMm": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./⭕️change-shell-r-mm/🧬️schema/🔣️.json"
     },
-    "sheetKSigma": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🐚️change-shell-t-mm/🧬️schema/🔣️.json"
     },
-    "sheetWElMm3": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🗜️change-sigma-ed-shell-mpa/🧬️schema/🔣️.json"
     },
-    "sheetMEdKnm": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🌡️change-theta-c/🧬️schema/🔣️.json"
     },
-    "shellTMm": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./✂️change-v-weld-ed-kn/🧬️schema/🔣️.json"
     },
-    "shellRMm": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🧊️change-w-el-mm3/🧬️schema/🔣️.json"
     },
-    "sigmaEdShellMpa": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🧵️change-weld-length-mm/🧬️schema/🔣️.json"
     },
-    "annex": {
-      "type": "string",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🔥️change-weld-throat-mm/🧬️schema/🔣️.json"
     }
-  }
+  ],
+  "x-semio-mutationKinds": [
+    "change-a-mm2",
+    "change-alloy",
+    "change-annex",
+    "change-beta-w",
+    "change-chi",
+    "change-delta-sigma-c",
+    "change-delta-sigma-ed",
+    "change-fatigue-m",
+    "change-it-mm4",
+    "change-l-cr-mm",
+    "change-m-ed-knm",
+    "change-n-cycles",
+    "change-n-ed-kn",
+    "change-sheet-b-mm",
+    "change-sheet-k-sigma",
+    "change-sheet-m-ed-knm",
+    "change-sheet-t-mm",
+    "change-sheet-w-el-mm3",
+    "change-shell-r-mm",
+    "change-shell-t-mm",
+    "change-sigma-ed-shell-mpa",
+    "change-theta-c",
+    "change-v-weld-ed-kn",
+    "change-w-el-mm3",
+    "change-weld-length-mm",
+    "change-weld-throat-mm"
+  ]
 }

@@ -1,7 +1,7 @@
 //! 🧩 set_snapshot diff leaf.
 
-use crate::artifacts::bcf::schema::diff::{diff_set_snapshot, BcfDiff};
-use crate::artifacts::bcf::BcfSnapshot;
+use crate::schema::diff::{diff_set_snapshot, BcfDiff};
+use crate::BcfSnapshot;
 
 /// 🔺️ Diff helper for set-snapshot.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

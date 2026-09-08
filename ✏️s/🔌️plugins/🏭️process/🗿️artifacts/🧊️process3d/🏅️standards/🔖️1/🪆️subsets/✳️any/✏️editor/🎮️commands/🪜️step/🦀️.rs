@@ -170,7 +170,7 @@ pub mod update_step {
             Process3dMutation::RenameStep(RenameStep { id: step.id.clone(), new_label: step.label.clone() }),
             Process3dMutation::ChangeStepEnabled(ChangeStepEnabled { id: step.id.clone(), new_enabled: step.enabled }),
             Process3dMutation::ChangeStepOrigin(ChangeStepOrigin { id: step.id.clone(), new_origin: step.origin.clone() }),
-            Process3dMutation::ReplaceStepMeasure(ReplaceStepMeasure { id: step.id.clone(), new_measure: step.measure.clone() }),
+            Process3dMutation::ReplaceStepMeasure(ReplaceStepMeasure { id: step.id.clone(), new_measure: step.measure }),
         ];
         Ok(Emit::mutations(operations))
     }

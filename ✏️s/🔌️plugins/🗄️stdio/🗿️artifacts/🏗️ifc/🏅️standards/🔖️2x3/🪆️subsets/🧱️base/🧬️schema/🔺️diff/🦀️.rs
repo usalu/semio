@@ -5,14 +5,14 @@
 //! `4`'s `IfcDiff` is a `snapshot: Option<IfcSnapshot>` full-replace stub with no
 //! `impl DiffAlgebra`; this standard's own diff is genuinely field-sparse instead.
 
-use crate::artifacts::ifc::standards::v2x3::subsets::base::schema::snapshot::{Ifc2x3EdmPreamble, Ifc2x3Snapshot};
-use crate::artifacts::step::engine::part21::{Part21Decimal, Part21Header, Part21Instance, Part21Value};
+use crate::standards::v2x3::subsets::base::schema::snapshot::{Ifc2x3EdmPreamble, Ifc2x3Snapshot};
+use semio_s_artifact_stdio_step::engine::part21::{Part21Decimal, Part21Header, Part21Instance, Part21Value};
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
 // 🧭️ `DiffAlgebra` isn't yet on the `protocol` facade's curated re-export list (S1 added the
 // trait but the facade wasn't updated) — reached via the still-public `os_spr::command` path
 // instead, same as `txt`'s own `🔺️diff/🦀️.rs`.
 use protocol::os_spr::command::DiffAlgebra;
-use schema::ArtifactSchema;
+use framework_schema::ArtifactSchema;
 use std::collections::{BTreeSet, HashSet};
 use std::fmt::Write as _;
 
@@ -950,7 +950,7 @@ impl protocol::DiffCodec for Ifc2x3Diff {
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_diff_cases() -> Vec<Ifc2x3Diff> {
-    let a = crate::artifacts::ifc::standards::v2x3::engine::demo_ifc2x3_snapshot();
+    let a = crate::standards::v2x3::engine::demo_ifc2x3_snapshot();
     let mut b = a.clone();
     b.schema = "stdio.ifc.2x3.v2".into();
     b.document.header.file_name = vec![Part21Value::Str("changed.ifc".into())];
@@ -979,7 +979,7 @@ mod tests {
         assert_eq!(error.target, vec!["instanceOrder", "1"]);
         assert_eq!(base, Ifc2x3Snapshot::default());
     }
-    use crate::artifacts::step::engine::part21::Part21Value;
+    use semio_s_artifact_stdio_step::engine::part21::Part21Value;
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn inst(id: u64, name: &str) -> Part21Instance {
@@ -988,7 +988,7 @@ mod tests {
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn snap(schema: &str, header: Part21Header, instances: Vec<Part21Instance>) -> Ifc2x3Snapshot {
-        let document = crate::artifacts::step::engine::part21::Part21Document { header, instances };
+        let document = semio_s_artifact_stdio_step::engine::part21::Part21Document { header, instances };
         Ifc2x3Snapshot { schema: schema.into(), document, edm_preamble: None }
     }
 

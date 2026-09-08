@@ -5,7 +5,7 @@
   "displayName": "Change People Gain Radiant Fraction",
   "emoji": "📡️",
   "aggregateVariant": "ChangePeopleGainRadiantFraction",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-people-gain-radiant-fraction",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

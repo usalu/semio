@@ -8,7 +8,7 @@
 use crate::artifacts::cad::standards::v1::subsets::any::io::geometry_import::{CadObject, CadPrimitiveSlot};
 use crate::artifacts::cad::{evaluate_expr, CadPaneId, DisplayItemSpec, Effect, ExprEnv, ExprPathRoot, ExprPathSegment, ExprPathTarget, InteractionSpec};
 
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::{Brep, BrepKernel};
+use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::engine::{Brep, BrepKernel};
 use protocol::DslValue;
 use semio_framework_value_derive::{FromValue, ToValue};
 use std::collections::HashMap;
@@ -239,7 +239,7 @@ pub fn start_session(interaction_id: &str, pane: CadPaneId) -> Option<CadEngagem
         return Some(CadEngagementScratch { interaction_id: interaction_id.to_string(), state: "idle".to_string(), context: CadEngagementContext(HashMap::new()), pane, last_response: None });
     }
     let spec = spec_by_id(interaction_id)?;
-    Some(CadEngagementScratch { interaction_id: spec.id.clone(), state: spec.machine.initial.clone(), context: CadEngagementContext(HashMap::new()), pane, last_response: None })
+    Some(CadEngagementScratch { interaction_id: spec.id.clone(), state: spec.machine.initial, context: CadEngagementContext(HashMap::new()), pane, last_response: None })
 }
 
 pub fn keyed_transitions(session: &CadEngagementScratch) -> Vec<KeyedTransition> {
@@ -811,7 +811,7 @@ fn legacy_preview_display_items(session: &CadEngagementScratch) -> Vec<DslValue>
 }
 
 fn opt_string_value(value: &Option<String>) -> DslValue {
-    value.clone().map(DslValue::String).unwrap_or(DslValue::Null)
+    value.clone().map_or(DslValue::Null, DslValue::String)
 }
 
 fn display_item_to_json(item: &DisplayItemSpec, env: &ExprEnv<'_>, vars: &HashMap<String, DslValue>) -> Option<DslValue> {
@@ -927,7 +927,7 @@ pub fn preview_display_items(session: &CadEngagementScratch) -> Vec<DslValue> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::Brep;
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::engine::Brep;
 
     fn point_arg(x: f64, y: f64, z: f64) -> DslValue {
         DslValue::object([("point".to_string(), vec3_json([x, y, z]))])

@@ -10,8 +10,8 @@
 //! Real binary codec (`ArtifactPack`/`ArtifactDsl` wrap the REAL RIFF bytes `⚙️engine::{decode_avi,
 //! encode_avi}` produce/consume, mirrors mp4's/`stdio.png`'s pattern — NOT JSON-pack passthrough).
 
-use crate::artifacts::avi::standards::v1_0::subsets::any::io as engine;
-use schema::ArtifactSchema;
+use crate::standards::v1_0::subsets::any::io as engine;
+use framework_schema::ArtifactSchema;
 
 //#region 🔖️Ids
 pub const STDIO_AVI_DOCUMENT_SCHEMA: &str = "stdio.avi";

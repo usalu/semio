@@ -12,6 +12,9 @@
 //! or generic over the artifact's `Document`/`NormFamily`, so `🫀️core` stays a leaf of the dependency
 //! graph exactly as the artifacts require.
 
+/// 🧵️ Retained norm command output with its shared config and draft mutation types.
+pub type NormRetainedCommandResult<M> = Result<Emit<M, crate::config::NormConfigMutation, semio_framework_plugin::NoDraftMutation>, Fault>;
+
 use crate::document::{CheckReport, NormFamily, NormHost};
 use semio_framework_plugin::plugin_app_close_prelude as ui;
 use semio_framework_plugin::plugin_app_close_prelude::{Buildable, HasChildren};
@@ -345,7 +348,7 @@ pub fn norm_bounded_contract() -> ToolExecutionContract {
 /// below. `dispatch_retained` MUST route into the app's `🎮️commands/*` bodies, which stay the sole
 /// authority for what a norm command does.
 pub trait NormRetainedEditor: semio_framework_plugin::ArtifactEditor<Config = crate::config::NormConfig, ConfigMutation = crate::config::NormConfigMutation, DraftMutation = semio_framework_plugin::NoDraftMutation> {
-    fn dispatch_retained(command: &Self::Command, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault>;
+    fn dispatch_retained(command: &Self::Command, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>) -> NormRetainedCommandResult<Self::Mutation>;
 }
 
 /// 🧵️ The retained reducer shared by all fifteen apps — no norm command reads selection or hover, so the
@@ -364,7 +367,7 @@ pub fn norm_retained_reduce<A: NormRetainedEditor>(
     _interaction: &protocol::InteractionState,
     _hover: &semio_framework_plugin::app::InteractionHoverState,
     operation: &semio_framework_plugin::AppOperationContext,
-) -> Result<Emit<A::Mutation, A::ConfigMutation, A::DraftMutation>, Fault> {
+) -> NormRetainedCommandResult<A::Mutation> {
     if !NORM_RETAINED_TOOL_IDS.contains(&A::command_id(command)) {
         return Err(Fault::from("norm-command-retained-route-rejected"));
     }

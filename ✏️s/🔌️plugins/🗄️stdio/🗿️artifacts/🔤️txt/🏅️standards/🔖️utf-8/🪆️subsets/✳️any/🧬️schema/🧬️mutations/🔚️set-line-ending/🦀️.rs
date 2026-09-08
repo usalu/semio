@@ -1,9 +1,9 @@
 //! 🧬️ Direct set-line-ending mutation owner.
 //#region 🔖️Payload
-use crate::artifacts::txt::TxtSnapshot;
-use crate::artifacts::txt::schema::diff::TxtDiff;
-use crate::artifacts::txt::schema::mutation_support::{native_lines_error, native_snapshot_error};
-use crate::artifacts::txt::schema::snapshot::LineEnding;
+use crate::TxtSnapshot;
+use crate::schema::diff::TxtDiff;
+use crate::schema::mutation_support::{native_lines_error, native_snapshot_error};
+use crate::schema::snapshot::LineEnding;
 
 #[path = "💾️binary/🦀️.rs"]
 pub mod binary;
@@ -20,7 +20,7 @@ pub struct SetLineEndingMutation {
 pub type SetLineEndingPayload = SetLineEndingMutation;
 
 pub fn decode_set_line_ending_payload(value: &dsl::DslValue) -> Result<SetLineEndingPayload, String> {
-    let fields = crate::artifacts::txt::schema::mutation_support::txt_required_object(value, &["value"])?;
+    let fields = crate::schema::mutation_support::txt_required_object(value, &["value"])?;
     let value = match fields[0].1.as_str() {
         Some("lf") => LineEnding::Lf,
         Some("crLf") => LineEnding::CrLf,

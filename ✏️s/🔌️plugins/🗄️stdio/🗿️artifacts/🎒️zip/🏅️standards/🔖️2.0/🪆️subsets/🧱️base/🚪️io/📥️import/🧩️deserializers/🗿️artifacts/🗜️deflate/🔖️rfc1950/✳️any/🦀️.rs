@@ -1,7 +1,7 @@
 //! Deserialize stdio.zip from stdio.deflate (inflate then parse ZIP).
 
-use crate::artifacts::deflate::DeflateSnapshot;
-use crate::artifacts::zip::{ZipSnapshot, STDIO_ZIP_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_deflate::DeflateSnapshot;
+use crate::{ZipSnapshot, STDIO_ZIP_DOCUMENT_SCHEMA};
 
 //#region Codec
 /// Register deserializer hooks.
@@ -12,7 +12,7 @@ pub fn register() {}
 /// decoding already inflated it) -- parse it as ZIP directly.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn deserialize(from: &DeflateSnapshot) -> Result<ZipSnapshot, store::PackError> {
-    let mut snap = crate::artifacts::zip::standards::v2_0::subsets::base::io::decode_zip(&from.payload).map_err(|e| store::PackError::Schema(e.to_string()))?;
+    let mut snap = crate::standards::v2_0::subsets::base::io::decode_zip(&from.payload).map_err(|e| store::PackError::Schema(e.to_string()))?;
     snap.schema = STDIO_ZIP_DOCUMENT_SCHEMA.into();
     Ok(snap)
 }

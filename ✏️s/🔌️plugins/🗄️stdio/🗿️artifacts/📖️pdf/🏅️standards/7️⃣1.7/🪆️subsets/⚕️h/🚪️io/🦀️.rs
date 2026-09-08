@@ -5,9 +5,9 @@
 //! established by `🗄️a/🚪️io` and `🧱️base/🚪️io` for this artifact. AIIM/ASTM PDF Healthcare Best Practices Guide.
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use crate::artifacts::pdf::standards::v1_7::subsets::base::schema::snapshot::PdfSnapshot;
-    use crate::artifacts::pdf::standards::v1_7::subsets::base::schema::PdfComposer as PdfAnyComposer;
-    use crate::artifacts::pdf::standards::v1_7::subsets::h::schema::check_h_conformance;
+    use crate::standards::v1_7::subsets::base::schema::snapshot::PdfSnapshot;
+    use crate::standards::v1_7::subsets::base::schema::PdfComposer as PdfAnyComposer;
+    use crate::standards::v1_7::subsets::h::schema::check_h_conformance;
     use dsl::{Diagnostic, FaultCode, Severity, TextSpan};
     use semio_framework_plugin::{register_subset_validator, subset_validator_entry_of, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, IoPayload, StandardId, SubsetId, SubsetValidator, SubsetValidatorEntry};
     use std::sync::OnceLock;
@@ -81,7 +81,7 @@ pub mod derived_composition {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use crate::artifacts::pdf::standards::v1_7::subsets::h::schema::PdfHBuilderConstruction as PdfHBuilder;
+        use crate::standards::v1_7::subsets::h::schema::PdfHBuilderConstruction as PdfHBuilder;
         use semio_framework_plugin::AnalyzeSource;
         use semio_framework_plugin::ArtifactBuilder as _;
 
@@ -91,16 +91,16 @@ pub mod derived_composition {
             let bytes = <PdfSnapshot as store::ArtifactPack>::encode_pack(&snapshot);
             let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Binary(&bytes) }];
             let composed = PdfHComposerComposition::compose(&sources).expect("PDF/H never hard-gates");
-            assert!(composed.diagnostics.iter().any(|d| d.code.0 == crate::artifacts::pdf::standards::v1_7::subsets::h::schema::CODE_INFO_TITLE_OR_AUTHOR));
+            assert!(composed.diagnostics.iter().any(|d| d.code.0 == crate::standards::v1_7::subsets::h::schema::CODE_INFO_TITLE_OR_AUTHOR));
         }
 
         #[semio_framework_async_macros::async_test]
         async fn conforming_builder_snapshot_composes_with_fewer_advisories() {
             let snapshot = PdfHBuilder::new()
                 
-                .add_page(crate::artifacts::pdf::standards::v1_7::subsets::base::schema::snapshot::PdfPage::new(100.0, 100.0))
+                .add_page(crate::standards::v1_7::subsets::base::schema::snapshot::PdfPage::new(100.0, 100.0))
                 
-                .set_info(crate::artifacts::pdf::standards::v1_7::subsets::base::schema::snapshot::PdfInfo { title: Some("A Chart".into()), author: Some("Dr. X".into()), ..Default::default() })
+                .set_info(crate::standards::v1_7::subsets::base::schema::snapshot::PdfInfo { title: Some("A Chart".into()), author: Some("Dr. X".into()), ..Default::default() })
                 
                 .build()
                 

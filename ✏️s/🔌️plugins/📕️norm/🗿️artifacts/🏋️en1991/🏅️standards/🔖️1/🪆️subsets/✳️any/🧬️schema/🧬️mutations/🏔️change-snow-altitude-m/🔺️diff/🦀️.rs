@@ -11,6 +11,6 @@ pub fn diff(payload: &ChangeSnowAltitudeM, base: &En1991Snapshot) -> protocol::M
     if base.snow_altitude_m == payload.new_snow_altitude_m {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "Snow altitude m already has this value.");
     }
-    protocol::MutationOutcome::new(En1991Diff { snow_altitude_m: Some(payload.new_snow_altitude_m.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1991Diff { snow_altitude_m: Some(payload.new_snow_altitude_m), ..Default::default() })
 }
 //#endregion 🔖️Diff

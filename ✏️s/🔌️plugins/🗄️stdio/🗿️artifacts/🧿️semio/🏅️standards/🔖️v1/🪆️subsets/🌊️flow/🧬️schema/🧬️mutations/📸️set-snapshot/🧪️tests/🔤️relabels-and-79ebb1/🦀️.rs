@@ -10,10 +10,10 @@
 //! absent. The DAG's collections are keyed by `id`, never by position, precisely so a relabel
 //! never reads as a remove-plus-add.
 
-use crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioPoint2;
-use crate::artifacts::semio::standards::v1::subsets::flow::schema::diff::SemioFlowDiff;
-use crate::artifacts::semio::standards::v1::subsets::flow::schema::mutations::{apply_semio_flow_mutation, SemioFlowMutation};
-use crate::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot;
+use crate::standards::v1::subsets::base::schema::geometry::SemioPoint2;
+use crate::standards::v1::subsets::flow::schema::diff::SemioFlowDiff;
+use crate::standards::v1::subsets::flow::schema::mutations::{apply_semio_flow_mutation, SemioFlowMutation};
+use crate::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot;
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");

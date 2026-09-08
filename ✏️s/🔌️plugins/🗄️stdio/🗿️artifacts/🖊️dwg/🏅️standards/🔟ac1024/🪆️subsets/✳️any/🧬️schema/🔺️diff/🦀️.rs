@@ -1,10 +1,10 @@
 //! 🔺️ Sparse field-by-field diff for logical DWG document state.
 
-use crate::artifacts::dwg::schema::snapshot::{DwgApplicationHistory, DwgApplicationInfo, DwgAuxiliaryHeader, DwgClass, DwgDependency, DwgHeaderVariables, DwgIndexedPreview, DwgLogicalDrawing, DwgRevisionHistory, DwgSummaryInfo, DwgTemplate};
-use crate::artifacts::dwg::DwgSnapshot;
+use crate::schema::snapshot::{DwgApplicationHistory, DwgApplicationInfo, DwgAuxiliaryHeader, DwgClass, DwgDependency, DwgHeaderVariables, DwgIndexedPreview, DwgLogicalDrawing, DwgRevisionHistory, DwgSummaryInfo, DwgTemplate};
+use crate::DwgSnapshot;
 use protocol::command::DiffAlgebra;
 use protocol::{MutationApplyResult, MutationDiff};
-use schema::ArtifactSchema;
+use framework_schema::ArtifactSchema;
 
 //#region 🔖️Diff
 /// 🔺️ Diff for `stdio.dwg`; schema identity is intentionally immutable.
@@ -181,7 +181,7 @@ pub fn diff_set_snapshot(base: &DwgSnapshot, next: &DwgSnapshot) -> DwgDiff {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn diff_set_version_info(base: &DwgSnapshot, version: &str, maintenance_version: u8, codepage: u16) -> DwgDiff {
     let mut next = base.clone();
-    crate::artifacts::dwg::schema::snapshot::synchronize_version_info(&mut next, version, maintenance_version, codepage).expect("SetVersionInfo requires a valid DWG version sentinel");
+    crate::schema::snapshot::synchronize_version_info(&mut next, version, maintenance_version, codepage).expect("SetVersionInfo requires a valid DWG version sentinel");
     DwgDiff::between(base, &next)
 }
 
@@ -210,7 +210,7 @@ pub(crate) fn demo_diff_cases() -> Vec<DwgDiff> {
             preview: Some(DwgIndexedPreview::default()),
             application_history: Some(DwgApplicationHistory::default()),
         },
-        diff_set_version_info(&crate::artifacts::dwg::standards::v_ac1024::engine::demo_dwg_snapshot(), "AC1024", 2, 30),
+        diff_set_version_info(&crate::standards::v_ac1024::engine::demo_dwg_snapshot(), "AC1024", 2, 30),
     ]
 }
 //#endregion 🔖️DemoCases

@@ -10,7 +10,7 @@ use crate::artifacts::program::ProgramSnapshot;
 pub fn diff(payload: &CreateFlexibilityRequirement, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
     let id = payload.flexibility_requirement.header.id.clone();
     if base.flexibility.iter().any(|row| row.header.id == id) {
-        return protocol::MutationOutcome::fatal("mutation.duplicate-id", "A flexibility requirement already exists with this id.", [id.0.clone()]);
+        return protocol::MutationOutcome::fatal("mutation.duplicate-id", "A flexibility requirement already exists with this id.", [id.0]);
     }
     protocol::MutationOutcome::new(ProgramDiff { flexibility: Some(ProgramFlexibilityDelta { added: vec![payload.flexibility_requirement.clone()], ..Default::default() }), ..Default::default() })
 }

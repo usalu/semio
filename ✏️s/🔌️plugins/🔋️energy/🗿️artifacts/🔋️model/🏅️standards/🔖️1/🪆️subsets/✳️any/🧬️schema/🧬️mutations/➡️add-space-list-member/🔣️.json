@@ -5,7 +5,7 @@
   "displayName": "Add Space List Member",
   "emoji": "➡️",
   "aggregateVariant": "AddSpaceListMember",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "add-space-list-member",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

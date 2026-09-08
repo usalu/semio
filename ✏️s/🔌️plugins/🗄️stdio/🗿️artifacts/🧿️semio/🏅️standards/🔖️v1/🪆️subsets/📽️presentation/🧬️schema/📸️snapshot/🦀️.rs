@@ -5,16 +5,16 @@
 //! (`SlideMaster`/`SlideLayout`/`Slide`/`SlideShape`) are owned here; only the block-tree LEAF is
 //! shared, per `w1b-type-ownership.md`).
 
-use crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioPoint2;
-use crate::artifacts::semio::standards::v1::subsets::base::schema::triples::{split_top_level, strip_brackets};
-use crate::artifacts::semio::standards::v1::subsets::document::schema::snapshot::DocBlock;
+use crate::standards::v1::subsets::base::schema::geometry::SemioPoint2;
+use crate::standards::v1::subsets::base::schema::triples::{split_top_level, strip_brackets};
+use crate::standards::v1::subsets::document::schema::snapshot::DocBlock;
 /// 🧱️ REUSE, don't reinvent — the sibling `🔺️diff` facet re-exports document's own real, already-
 /// tested `DocBlock` codec (`enc_block`/`dec_block`) plus the entity value-codecs it owns
 /// (`enc_master`/`enc_layout`/`enc_slide`, `enc_str`, `enc_list`) — this facet imports them rather
 /// than duplicating a third independent copy (ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-
 /// EVOLUTION presentation wave, following `document`'s own snapshot-imports-from-diff convention).
-use crate::artifacts::semio::standards::v1::subsets::presentation::schema::diff::{dec_block, dec_layout, dec_master, dec_slide, dec_str, enc_block, enc_layout, enc_master, enc_slide, enc_str};
-use schema::ArtifactSchema;
+use crate::standards::v1::subsets::presentation::schema::diff::{dec_block, dec_layout, dec_master, dec_slide, dec_str, enc_block, enc_layout, enc_master, enc_slide, enc_str};
+use framework_schema::ArtifactSchema;
 
 //#region 🔖️Geometry
 /// 📐️ A shape's on-slide placement: top-left `origin` (EMU-agnostic plane coordinates, matching

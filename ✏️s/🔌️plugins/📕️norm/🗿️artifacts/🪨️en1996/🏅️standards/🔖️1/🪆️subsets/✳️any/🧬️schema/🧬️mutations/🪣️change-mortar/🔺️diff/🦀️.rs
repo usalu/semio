@@ -9,6 +9,6 @@ pub fn diff(payload: &ChangeMortar, base: &En1996Snapshot) -> protocol::Mutation
     if base.mortar == payload.new_mortar {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "Mortar already has this value.");
     }
-    protocol::MutationOutcome::new(En1996Diff { mortar: Some(payload.new_mortar.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1996Diff { mortar: Some(payload.new_mortar), ..Default::default() })
 }
 //#endregion 🔖️Diff

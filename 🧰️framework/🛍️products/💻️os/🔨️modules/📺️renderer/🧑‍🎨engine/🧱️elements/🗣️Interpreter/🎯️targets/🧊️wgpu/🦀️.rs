@@ -10,7 +10,7 @@
 
 #[cfg(test)]
 use crate::scenes::queue_canvas_image_upload_sized;
-use crate::scenes::{queue_canvas_image_upload_with, render_component_scene_step, AdmittedSurfaceMap, Board2dSurface, NodeGraphSurface, TiledMapSurface};
+use crate::scenes::{queue_canvas_image_upload_with, render_component_scene_step};
 use infinite_world::world::{WorldAssetFault, WorldAssetMetadataId, WorldAssetRequestKind};
 use serde_json::Value;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -535,6 +535,7 @@ fn decode_drop_payload(payload: &DragPayload) -> Option<serde_json::Map<String, 
 
 /// 🔀️ `{...existing, ...patch}` (patch wins on key collision) — mirrors
 /// `framework/renderer/react/index.tsx`'s `dispatchUiAction` merge order exactly.
+#[cfg(test)]
 fn merge_action_args(existing: Option<&semio_framework::DslValue>, patch: serde_json::Map<String, Value>) -> Option<semio_framework::DslValue> {
     let mut base = match existing {
         Some(dsl) => match Value::from(dsl) {
@@ -999,104 +1000,15 @@ fn process_scene_interaction(intent: &mut SceneInteractionIntent, input: &mut ui
     })
 }
 
-/** 🕹️ Synthesizes `PointerMove`/`PointerDown`/`PointerUp`/`Scroll` `UiEvent`s for `window_id` from
- * the current frame's aggregate `InputState` (the same pointer state the immediate-mode `widgets`
- * path already reads via `hit_at`/`register_hit`), gated to `bounds` so only the window/panel the
- * pointer is actually over reacts. Keyboard/IME/focus-scoped routing is deliberately NOT attempted
- * here — `pending_keys`/`text_buffer` are a single shared (not window-scoped) queue, so draining them
- * from inside a function called once per docked window *and* per floating panel per frame risks
- * stealing keys from whichever window/panel doesn't happen to run first; that needs "which window
- * currently has keyboard focus" bookkeeping this ticket's `must_not_touch` `shell` regions own. Use
- * `dispatch_ui_event` (above) for that once `w3-shell-input-cutover` lands it. */
-#[cfg(test)]
-fn dispatch_pointer_events(engine: &mut ui_wgpu::wgpu::Ui, window_id: &str, bounds: Rect, input: &ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Vec<ui_wgpu::wgpu::UiCommand> {
-    let local_x = input.pointer_x - bounds.x;
-    let local_y = input.pointer_y - bounds.y;
-    let inside = local_x >= 0.0 && local_y >= 0.0 && local_x <= bounds.w && local_y <= bounds.h;
-    let button = pointer_button_from_code(input.pointer_button);
-    let was_down = POINTER_EDGE_STATE.with(|cell| cell.borrow().get(window_id).map(|(down, _)| *down).unwrap_or(false));
-    let mut commands = Vec::new();
-    if inside {
-        commands.extend(engine.dispatch_event(window_id, ui_wgpu::wgpu::UiEvent::PointerMove { x: local_x, y: local_y }));
-        if input.wheel_delta != 0.0 {
-            commands.extend(engine.dispatch_event(window_id, ui_wgpu::wgpu::UiEvent::Scroll { x: local_x, y: local_y, delta_x: 0.0, delta_y: input.wheel_delta }));
-        }
-    }
-    if input.pointer_down && !was_down && inside {
-        commands.extend(engine.dispatch_event(window_id, ui_wgpu::wgpu::UiEvent::PointerDown { x: local_x, y: local_y, button }));
-    } else if !input.pointer_down && was_down {
-        commands.extend(engine.dispatch_event(window_id, ui_wgpu::wgpu::UiEvent::PointerUp { x: local_x, y: local_y, button }));
-    }
-    POINTER_EDGE_STATE.with(|cell| {
-        cell.borrow_mut().insert(window_id.to_string(), (input.pointer_down, input.pointer_button));
-    });
-    commands
-}
 
-#[cfg(test)]
-fn shift_instance(instance: &ui_wgpu::wgpu::draw::UiInstance, dx: f32, dy: f32) -> ui_wgpu::wgpu::draw::UiInstance {
-    let mut shifted = *instance;
-    shifted.rect[0] += dx;
-    shifted.rect[1] += dy;
-    shifted
-}
 
-#[cfg(test)]
-fn shift_vertex(vertex: &ui_wgpu::wgpu::draw::VectorVertex, dx: f32, dy: f32) -> ui_wgpu::wgpu::draw::VectorVertex {
-    let mut shifted = *vertex;
-    shifted.position[0] += dx;
-    shifted.position[1] += dy;
-    shifted
-}
 
-#[cfg(test)]
-fn shift_scissor(scissor: ui_wgpu::wgpu::draw::ScissorRect, dx: f32, dy: f32) -> ui_wgpu::wgpu::draw::ScissorRect {
-    ui_wgpu::wgpu::draw::ScissorRect { x: ((scissor.x as f32) + dx).max(0.0) as u32, y: ((scissor.y as f32) + dy).max(0.0) as u32, w: scissor.w, h: scissor.h }
-}
 
-/** 🧩️ Copies `retained`'s already-painted content into `target` (the same live `DrawList` the
- * immediate-mode path already draws into and the caller already hands to `gpu::GpuContext`'s
- * existing submission call), translating every position by `(offset_x, offset_y)` — `Ui::frame`
- * lays out against a `(0,0)`-origin viewport (`bounds.w`×`bounds.h`), so this applies the same
- * screen-placement offset the immediate path previously got "for free" by painting directly into
- * caller-supplied absolute `Rect`s. `DrawLayer::foreground_of` indexes into `glass_regions` (not
- * `layers` — confirmed by reading `DrawList::push_glass`/`begin_glass_content`), so only that index
- * needs rebasing by however many glass regions `target` already had; `ScenePass3d::layer_index` does
- * index into `layers` and is rebased accordingly — real content `FrameworkSceneHost::paint_slot`
- * paints directly into this same `retained` `DrawList` (e.g. `render_component_scene`'s `World3d`
- * arm, which calls into `infinite_world::world::render_world_3d`'s own `ctx.draw.push_scene_pass`) rides
- * along through this exact rebasing, no special-casing needed here now that a real `SceneHost` is
- * registered. */
-#[cfg(test)]
-fn composite_retained_draw_list(target: &mut ui_wgpu::wgpu::DrawList, retained: &ui_wgpu::wgpu::DrawList, offset_x: f32, offset_y: f32) {
-    let glass_base = target.glass_regions.len();
-    for region in &retained.glass_regions {
-        let mut shifted = *region;
-        shifted.rect[0] += offset_x;
-        shifted.rect[1] += offset_y;
-        target.glass_regions.push(shifted);
-    }
-    let layer_base = target.layers.len();
-    for layer in &retained.layers {
-        target.layers.push(ui_wgpu::wgpu::draw::DrawLayer {
-            scissor: layer.scissor.map(|s| shift_scissor(s, offset_x, offset_y)),
-            clip: layer.clip.clone(),
-            foreground_of: layer.foreground_of.map(|idx| idx + glass_base),
-            ui_instances: layer.ui_instances.iter().map(|inst| shift_instance(inst, offset_x, offset_y)).collect(),
-            raster_instances: layer.raster_instances.iter().map(|(key, inst)| (key.clone(), shift_instance(inst, offset_x, offset_y))).collect(),
-            vector_vertices: layer.vector_vertices.iter().map(|v| shift_vertex(v, offset_x, offset_y)).collect(),
-            overlay_ui_instances: layer.overlay_ui_instances.iter().map(|inst| shift_instance(inst, offset_x, offset_y)).collect(),
-            overlay_vector_vertices: layer.overlay_vector_vertices.iter().map(|v| shift_vertex(v, offset_x, offset_y)).collect(),
-        });
-    }
-    for pass in &retained.scene_passes {
-        let mut shifted = pass.clone();
-        shifted.viewport[0] += offset_x;
-        shifted.viewport[1] += offset_y;
-        shifted.layer_index += layer_base;
-        target.scene_passes.push(shifted);
-    }
-}
+
+
+
+
+
 
 /** 🎬️ The `SceneHost` implementor closing the SceneHost gap `paint_unbridged_scene_and_image_leaves`
  * used to paper over: reads a `SceneSlot`'s payload — a `&UiComponentSceneNode`/`&UiImageNode`
@@ -1112,18 +1024,11 @@ fn composite_retained_draw_list(target: &mut ui_wgpu::wgpu::DrawList, retained: 
  * takes `scene_host` as a parameter rather than a stored field (see that method's doc comment):
  * `gpu`/the per-surface-kind state maps aren't anything a `Ui`-owned `Box<dyn SceneHost>` could hold. */
 struct FrameworkSceneHost<'ctx> {
-    engine_resources: &'ctx mut crate::engine_canvas::EngineCanvasBuildContext,
-    world_resources: &'ctx mut infinite_world::world::World3dBuildContext,
     input: &'ctx mut ui_wgpu::wgpu::InputState<ActionDescriptor>,
     theme: &'ctx Theme,
     scroll_offsets: &'ctx mut std::collections::HashMap<String, f32>,
     collapsed_sections: &'ctx mut std::collections::HashMap<String, bool>,
     open_selects: &'ctx mut std::collections::HashMap<String, bool>,
-    world3d_states: &'ctx mut AdmittedSurfaceMap<infinite_world::world::World3dState>,
-    node_graph_states: &'ctx mut AdmittedSurfaceMap<NodeGraphSurface>,
-    tiled_map_states: &'ctx mut AdmittedSurfaceMap<TiledMapSurface>,
-    icon_render_states: &'ctx mut std::collections::HashMap<String, infinite_world::world::World3dState>,
-    board2d_states: &'ctx mut AdmittedSurfaceMap<Board2dSurface>,
 }
 
 impl ui_wgpu::wgpu::SceneHost for FrameworkSceneHost<'_> {
@@ -1207,20 +1112,7 @@ pub fn begin_ui_document_opportunity(consumed: bool) {
     DOCUMENT_PAGE_OPPORTUNITY_CONSUMED.store(consumed, Ordering::Release);
 }
 
-pub(crate) fn render_ui_document_step(
-    cursor: &mut UiDocumentFrameCursor,
-    document: &UiDocumentLease,
-    bounds: Rect,
-    ctx: &mut FrameworkWidgetContext<'_>,
-    window_id: &str,
-    engine_resources: &mut crate::engine_canvas::EngineCanvasBuildContext,
-    world_resources: &mut infinite_world::world::World3dBuildContext,
-    world3d_states: &mut AdmittedSurfaceMap<infinite_world::world::World3dState>,
-    node_graph_states: &mut AdmittedSurfaceMap<NodeGraphSurface>,
-    tiled_map_states: &mut AdmittedSurfaceMap<TiledMapSurface>,
-    icon_render_states: &mut std::collections::HashMap<String, infinite_world::world::World3dState>,
-    board2d_states: &mut AdmittedSurfaceMap<Board2dSurface>,
-) -> bool {
+pub(crate) fn render_ui_document_step(cursor: &mut UiDocumentFrameCursor, document: &UiDocumentLease, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>, window_id: &str) -> bool {
     let Ok(header) = document.header() else {
         cursor.phase = UiDocumentFramePhase::Fault;
         return false;
@@ -1279,18 +1171,11 @@ pub(crate) fn render_ui_document_step(
             }
             UiDocumentFramePhase::Paint => {
                 let mut scene_host = FrameworkSceneHost {
-                    engine_resources,
-                    world_resources,
                     input: ctx.input,
                     theme: ctx.theme,
                     scroll_offsets: ctx.scroll_offsets,
                     collapsed_sections: ctx.collapsed_sections,
                     open_selects: ctx.open_selects,
-                    world3d_states,
-                    node_graph_states,
-                    tiled_map_states,
-                    icon_render_states,
-                    board2d_states,
                 };
                 match engine.frame_into_step(window_id, viewport_w, viewport_h, bounds.x, bounds.y, ctx.atlas, ctx.icons, Some(&mut scene_host), ctx.draw) {
                     ui_wgpu::wgpu::UiFrameStep::Ready | ui_wgpu::wgpu::UiFrameStep::Missing => cursor.phase = UiDocumentFramePhase::Complete,
@@ -1304,86 +1189,7 @@ pub(crate) fn render_ui_document_step(
     cursor.terminal_is_complete()
 }
 
-#[cfg(test)]
-pub(crate) fn render_ui_document(
-    document: &UiDocumentLease,
-    bounds: Rect,
-    ctx: &mut FrameworkWidgetContext<'_>,
-    window_id: &str,
-    engine_resources: &mut crate::engine_canvas::EngineCanvasBuildContext,
-    world_resources: &mut infinite_world::world::World3dBuildContext,
-    world3d_states: &mut AdmittedSurfaceMap<infinite_world::world::World3dState>,
-    node_graph_states: &mut AdmittedSurfaceMap<NodeGraphSurface>,
-    tiled_map_states: &mut AdmittedSurfaceMap<TiledMapSurface>,
-    icon_render_states: &mut std::collections::HashMap<String, infinite_world::world::World3dState>,
-    board2d_states: &mut AdmittedSurfaceMap<Board2dSurface>,
-) {
-    #[cfg(all(not(target_arch = "wasm32"), not(test)))]
-    pump_clipboard_io_one();
-    let Ok(header) = document.header() else { return };
-    let generation = header.generation;
-    let mut preview_sequence = 0;
-    let now = semio_framework_job::default_now_us();
-    let mut step = semio_framework_job::StepContext::new(
-        semio_framework_job::OperationId(generation),
-        semio_framework_job::Generation(generation),
-        now.and_then(|now| semio_framework_job::StepBudget::from_duration(1, now, 2000)).unwrap_or(semio_framework_job::StepBudget::new(0, 0)),
-        semio_framework_job::CancelToken::root_now(),
-        semio_framework_job::default_now_us,
-        &mut preview_sequence,
-    );
-    let theme = *ctx.theme;
-    let viewport_w = bounds.w.max(1.0);
-    let viewport_h = bounds.h.max(1.0);
-    let advance_document = !DOCUMENT_PAGE_OPPORTUNITY_CONSUMED.swap(true, Ordering::AcqRel);
-    let commands = UI_ENGINE.with(|cell| {
-        let mut engine = cell.borrow_mut();
-        engine.set_theme(theme);
-        if advance_document {
-            let status = engine.document_status(window_id, generation);
-            let status = match status {
-                ui_wgpu::wgpu::engine::UiDocumentIngressStatus::Vacant => {
-                    if engine.begin_document(window_id, header, &mut step).is_err() {
-                        ui_wgpu::wgpu::engine::UiDocumentIngressStatus::Vacant
-                    } else {
-                        engine.document_status(window_id, generation)
-                    }
-                }
-                status => status,
-            };
-            if let ui_wgpu::wgpu::engine::UiDocumentIngressStatus::Pending { next_page, node_count } = status {
-                if next_page == node_count {
-                    let _ = engine.finish_document(window_id, generation, &mut step);
-                } else if let Ok(Some(page)) = document.read_node_page(next_page) {
-                    let _ = engine.apply_document_page(window_id, page, &mut step);
-                }
-            }
-        }
-        engine.set_viewport(window_id, viewport_w, viewport_h);
-        let _ = drive_mounted_layout_text_one(&mut engine, window_id, ctx.atlas);
-        let commands = dispatch_pointer_events(&mut engine, window_id, bounds, ctx.input);
-        let mut scene_host = FrameworkSceneHost {
-            engine_resources,
-            world_resources,
-            input: ctx.input,
-            theme: ctx.theme,
-            scroll_offsets: ctx.scroll_offsets,
-            collapsed_sections: ctx.collapsed_sections,
-            open_selects: ctx.open_selects,
-            world3d_states,
-            node_graph_states,
-            tiled_map_states,
-            icon_render_states,
-            board2d_states,
-        };
-        if matches!(engine.frame_step(window_id, viewport_w, viewport_h, ctx.atlas, ctx.icons, Some(&mut scene_host)), ui_wgpu::wgpu::UiFrameStep::Ready) {
-            let retained_draw = engine.draw_list(window_id).expect("completed fixture frame retains its draw list");
-            composite_retained_draw_list(ctx.draw, retained_draw, bounds.x, bounds.y);
-        }
-        commands
-    });
-    apply_ui_commands(&commands, ctx.input);
-}
+
 //#endregion 📄️RetainedDocumentConsumer
 
 #[cfg(all(test, not(target_arch = "wasm32")))]
@@ -2283,7 +2089,7 @@ mod render_plan_validator_tests {
 // 🔬️ Live for real via the wasm32 `#[wasm_bindgen]` exports below (`🔬️IntrospectionExports`);
 // also gated `test` since `introspection_tests` (bottom of this region) exercises this whole
 // dump pipeline natively — neither cfg alone covers both compilations.
-#[cfg(any(target_arch = "wasm32", test))]
+#[cfg(target_arch = "wasm32")]
 #[derive(serde::Serialize)]
 struct DumpViewport {
     w: f32,
@@ -2315,7 +2121,7 @@ struct DumpNode {
     state: DumpNodeState,
 }
 
-#[cfg(any(target_arch = "wasm32", test))]
+#[cfg(target_arch = "wasm32")]
 #[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 struct DumpStructure {
@@ -2324,7 +2130,7 @@ struct DumpStructure {
     nodes: Vec<DumpNode>,
 }
 
-#[cfg(any(target_arch = "wasm32", test))]
+#[cfg(target_arch = "wasm32")]
 #[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 struct DumpFrameStats {
@@ -2557,14 +2363,14 @@ fn walk_dump(tree: &ui_wgpu::wgpu::UiTree, id: NodeId, origin_x: f32, origin_y: 
 /// single docked window, no floating panels open), wrong in general once a test opens a floating
 /// panel too. Noted rather than guessed further; a real fix needs these two exports to grow an
 /// optional `windowId` JS argument, which this pass doesn't have sanction to add unasked.
-#[cfg(any(target_arch = "wasm32", test))]
+#[cfg(target_arch = "wasm32")]
 fn primary_window_id(engine: &ui_wgpu::wgpu::Ui) -> Option<String> {
     engine.window_ids().filter_map(|id| engine.viewport(id).map(|(w, h)| (id.to_string(), w * h))).max_by(|a, b| a.1.total_cmp(&b.1)).map(|(id, _)| id)
 }
 //#endregion 🔬️IntrospectionWindowSelection
 
 //#region 🔬️IntrospectionBuilders
-#[cfg(any(target_arch = "wasm32", test))]
+#[cfg(target_arch = "wasm32")]
 fn build_structure_dump(engine: &ui_wgpu::wgpu::Ui, dpr: f32) -> DumpStructure {
     let Some(window_id) = primary_window_id(engine) else {
         return DumpStructure { viewport: DumpViewport { w: 0.0, h: 0.0, dpr }, focus_path: None, nodes: Vec::new() };
@@ -2587,17 +2393,17 @@ fn build_structure_dump(engine: &ui_wgpu::wgpu::Ui, dpr: f32) -> DumpStructure {
 /// (glyphs included — a glyph is itself one `UiInstance`, see `draw::KIND_GLYPH`); `glyphCount` is
 /// the `KIND_GLYPH` subset, for boot-triage (a booted-but-blank canvas has 0 of everything; text
 /// that silently failed to shape has quads but 0 glyphs).
-#[cfg(any(target_arch = "wasm32", test))]
+#[cfg(target_arch = "wasm32")]
 fn layer_is_nonempty(layer: &ui_wgpu::wgpu::draw::DrawLayer) -> bool {
     !layer.ui_instances.is_empty() || !layer.raster_instances.is_empty() || !layer.vector_vertices.is_empty() || !layer.overlay_ui_instances.is_empty() || !layer.overlay_vector_vertices.is_empty()
 }
 
-#[cfg(any(target_arch = "wasm32", test))]
+#[cfg(target_arch = "wasm32")]
 fn is_glyph_instance(instance: &ui_wgpu::wgpu::draw::UiInstance) -> bool {
     instance.params[2] == ui_wgpu::wgpu::draw::KIND_GLYPH
 }
 
-#[cfg(any(target_arch = "wasm32", test))]
+#[cfg(target_arch = "wasm32")]
 fn build_frame_stats(engine: &ui_wgpu::wgpu::Ui) -> DumpFrameStats {
     let Some(window_id) = primary_window_id(engine) else {
         return DumpFrameStats { window_id: None, draw_calls: 0, quad_count: 0, glyph_count: 0 };

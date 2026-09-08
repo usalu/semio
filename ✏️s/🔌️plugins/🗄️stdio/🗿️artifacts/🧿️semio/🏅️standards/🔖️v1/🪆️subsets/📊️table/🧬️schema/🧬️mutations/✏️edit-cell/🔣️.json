@@ -5,7 +5,7 @@
   "displayName": "Edit Cell",
   "emoji": "✏️",
   "aggregateVariant": "EditCell",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

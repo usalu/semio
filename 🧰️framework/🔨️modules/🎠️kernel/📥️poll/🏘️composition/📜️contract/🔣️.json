@@ -1,7 +1,7 @@
 {
   "version": 1,
   "field": "composition",
-  "capacitySchema": "semio.value.resident.capacity.v1",
+  "capacitySchema": "https://semio.tech/schema/framework/value/resident/schema.json#/$defs/Resident",
   "wireOrder": ["bytes", "slots", "owners", "control.bytes", "control.slots", "control.owners"],
   "scalar": { "wit": "u64", "minimum": 0, "maximum": 9007199254740991, "ownedJson": "integer", "typescriptWit": "checked-bigint" },
   "partitions": "control-at-most-total-on-each-axis;data=total-control;no-overlap",

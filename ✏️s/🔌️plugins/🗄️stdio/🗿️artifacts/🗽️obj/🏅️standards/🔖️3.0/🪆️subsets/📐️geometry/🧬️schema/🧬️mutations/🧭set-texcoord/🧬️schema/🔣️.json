@@ -1,0 +1,52 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/obj/3.0/geometry/mutation/set-texcoord.json",
+  "title": "SetTexcoord",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "index",
+    "texcoord"
+  ],
+  "properties": {
+    "index": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "texcoord": {
+      "$ref": "#/$defs/ObjTexCoord"
+    },
+    "mutation": {
+      "const": "setTexcoord",
+      "description": "Aggregate discriminator spliced in by ObjMutation; absent when the payload stands alone."
+    }
+  },
+  "$defs": {
+    "ObjTexCoord": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "u",
+        "v"
+      ],
+      "properties": {
+        "u": {
+          "type": "number"
+        },
+        "v": {
+          "type": "number"
+        },
+        "w": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    }
+  }
+}

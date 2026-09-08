@@ -1,0 +1,621 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/framework/replication/wire/local-interaction/schema.json",
+  "title": "Replication Wire Local-interaction Schema Module",
+  "definitions": {
+    "id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "generation": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]{0,18}|1[0-7][0-9]{18}|18[0-3][0-9]{17}|184[0-3][0-9]{16}|1844[0-5][0-9]{15}|18446[0-6][0-9]{14}|184467[0-3][0-9]{13}|1844674[0-3][0-9]{12}|184467440[0-6][0-9]{10}|1844674407[0-2][0-9]{9}|18446744073[0-6][0-9]{8}|1844674407370[0-8][0-9]{6}|18446744073709[0-4][0-9]{5}|184467440737095[0-4][0-9]{4}|18446744073709550[0-9]{3}|18446744073709551[0-5][0-9]{2}|1844674407370955160[0-9]|1844674407370955161[0-4]|18446744073709551615)$",
+      "maxLength": 20
+    },
+    "revision": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "mode": {
+      "enum": [
+        "single",
+        "multiple"
+      ]
+    },
+    "identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "appInstanceId",
+        "generation",
+        "revision",
+        "documentRevision",
+        "topologyRevision"
+      ],
+      "properties": {
+        "appInstanceId": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "generation": {
+          "$ref": "#/definitions/generation"
+        },
+        "revision": {
+          "$ref": "#/definitions/revision"
+        },
+        "documentRevision": {
+          "$ref": "#/definitions/revision"
+        },
+        "topologyRevision": {
+          "$ref": "#/definitions/revision"
+        }
+      }
+    },
+    "selection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "granularity",
+        "ids"
+      ],
+      "properties": {
+        "granularity": {
+          "$ref": "#/definitions/id"
+        },
+        "ids": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/id"
+          },
+          "uniqueItems": true
+        },
+        "anchorId": {
+          "$ref": "#/definitions/id"
+        }
+      }
+    },
+    "state": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "selection",
+        "activeMode",
+        "activeGranularity"
+      ],
+      "properties": {
+        "selection": {
+          "type": "object",
+          "propertyNames": {
+            "$ref": "#/definitions/id"
+          },
+          "additionalProperties": {
+            "$ref": "#/definitions/selection"
+          }
+        },
+        "activeMode": {
+          "type": "object",
+          "propertyNames": {
+            "$ref": "#/definitions/id"
+          },
+          "additionalProperties": {
+            "$ref": "#/definitions/mode"
+          }
+        },
+        "activeGranularity": {
+          "type": "object",
+          "propertyNames": {
+            "$ref": "#/definitions/id"
+          },
+          "additionalProperties": {
+            "$ref": "#/definitions/id"
+          }
+        }
+      }
+    },
+    "domainPatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "selection",
+        "activeMode",
+        "activeGranularity"
+      ],
+      "properties": {
+        "selection": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/selection"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "activeMode": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/mode"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "activeGranularity": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/id"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "capture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "identity",
+        "state"
+      ],
+      "properties": {
+        "identity": {
+          "$ref": "#/definitions/identity"
+        },
+        "state": {
+          "$ref": "#/definitions/state"
+        }
+      }
+    },
+    "restore": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "base",
+            "state"
+          ],
+          "properties": {
+            "kind": {
+              "const": "full"
+            },
+            "base": {
+              "$ref": "#/definitions/identity"
+            },
+            "state": {
+              "$ref": "#/definitions/state"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "base",
+            "domains"
+          ],
+          "properties": {
+            "kind": {
+              "const": "domains"
+            },
+            "base": {
+              "$ref": "#/definitions/identity"
+            },
+            "domains": {
+              "type": "object",
+              "propertyNames": {
+                "$ref": "#/definitions/id"
+              },
+              "additionalProperties": {
+                "$ref": "#/definitions/domainPatch"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "page": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "requestId",
+        "queryGeneration",
+        "identity",
+        "ordinal",
+        "terminal",
+        "bytes"
+      ],
+      "properties": {
+        "requestId": {
+          "$ref": "#/definitions/generation"
+        },
+        "queryGeneration": {
+          "$ref": "#/definitions/generation"
+        },
+        "identity": {
+          "$ref": "#/definitions/identity"
+        },
+        "ordinal": {
+          "$ref": "#/definitions/generation"
+        },
+        "terminal": {
+          "type": "boolean"
+        },
+        "bytes": {
+          "type": "array",
+          "maxItems": 4096,
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "RetirementFixture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "grants",
+        "cases",
+        "zeroItemMutates",
+        "terminalOwners"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "grants": {
+          "const": [
+            1,
+            64,
+            4096
+          ]
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "sourceCase",
+              "sourceField",
+              "expectedReleasedBytes"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "sourceCase": {
+                "type": "string",
+                "minLength": 1
+              },
+              "sourceField": {
+                "enum": [
+                  "before",
+                  "expected"
+                ]
+              },
+              "expectedReleasedBytes": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        },
+        "zeroItemMutates": {
+          "const": false
+        },
+        "terminalOwners": {
+          "const": 0
+        }
+      }
+    },
+    "LocalInteractionFixture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "grants",
+        "nonbroadcastDomains",
+        "cases"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "grants": {
+          "const": [
+            1,
+            64,
+            4096
+          ]
+        },
+        "nonbroadcastDomains": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "https://semio.tech/schema/framework/replication/wire/local-interaction/schema.json#/$defs/id"
+          }
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 14,
+          "allOf": [
+            {
+              "contains": {
+                "type": "object",
+                "required": [
+                  "id"
+                ],
+                "properties": {
+                  "id": {
+                    "const": "sparse-explicit-private-replacement"
+                  }
+                }
+              }
+            },
+            {
+              "contains": {
+                "type": "object",
+                "required": [
+                  "id"
+                ],
+                "properties": {
+                  "id": {
+                    "const": "sparse-empty-preserves-three-maps"
+                  }
+                }
+              }
+            }
+          ],
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "before",
+              "current",
+              "restore"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "before": {
+                "$ref": "https://semio.tech/schema/framework/replication/wire/local-interaction/schema.json#/$defs/state"
+              },
+              "current": {
+                "$ref": "https://semio.tech/schema/framework/replication/wire/local-interaction/schema.json#/$defs/identity"
+              },
+              "restore": {
+                "$ref": "https://semio.tech/schema/framework/replication/wire/local-interaction/schema.json#/$defs/restore"
+              },
+              "expected": {
+                "$ref": "https://semio.tech/schema/framework/replication/wire/local-interaction/schema.json#/$defs/state"
+              },
+              "error": {
+                "const": "stale-authority"
+              }
+            },
+            "oneOf": [
+              {
+                "properties": {
+                  "expected": {
+                    "$ref": "https://semio.tech/schema/framework/replication/wire/local-interaction/schema.json#/$defs/state"
+                  }
+                },
+                "required": [
+                  "expected"
+                ]
+              },
+              {
+                "properties": {
+                  "error": {
+                    "const": "stale-authority"
+                  }
+                },
+                "required": [
+                  "error"
+                ]
+              }
+            ]
+          }
+        }
+      }
+    },
+    "QueryFixture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "pageBytes",
+        "grants",
+        "sourceCases",
+        "cancelAfterBytes",
+        "wrongAcknowledgements",
+        "zeroItemMutates",
+        "unacknowledgedPageAdvances",
+        "duplicateAcknowledgementAccepted",
+        "cancelledPageReadable",
+        "terminalRequiresReadReturn",
+        "partialError"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "pageBytes": {
+          "const": 256
+        },
+        "grants": {
+          "const": [
+            1,
+            64,
+            4096
+          ]
+        },
+        "sourceCases": {
+          "type": "array",
+          "minItems": 2,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "cancelAfterBytes": {
+          "const": [
+            0,
+            17,
+            4097
+          ]
+        },
+        "wrongAcknowledgements": {
+          "const": [
+            "request",
+            "queryGeneration",
+            "ordinal",
+            "instance",
+            "generation",
+            "interaction",
+            "document",
+            "topology"
+          ]
+        },
+        "zeroItemMutates": {
+          "const": false
+        },
+        "unacknowledgedPageAdvances": {
+          "const": false
+        },
+        "duplicateAcknowledgementAccepted": {
+          "const": false
+        },
+        "cancelledPageReadable": {
+          "const": false
+        },
+        "terminalRequiresReadReturn": {
+          "const": true
+        },
+        "partialError": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "first",
+            "expectedPrefix",
+            "error"
+          ],
+          "properties": {
+            "first": {
+              "const": "retained✓"
+            },
+            "expectedPrefix": {
+              "const": "{\"first\":\"retained✓\",\"second\":"
+            },
+            "error": {
+              "const": "query.hostile-source"
+            }
+          }
+        }
+      }
+    },
+    "TopologyAuthorityFixture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "domain",
+        "generationEncoding",
+        "cases",
+        "overflowMutatesCache",
+        "closedAuthorityReadable",
+        "canonicalTopologyHash"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "domain": {
+          "const": "semio.local-interaction.topology-authority.v1\u0000"
+        },
+        "generationEncoding": {
+          "const": "u64-le"
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 5,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "documentByte",
+              "configByte",
+              "uiGeneration",
+              "expected"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "documentByte": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 255
+              },
+              "configByte": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 255
+              },
+              "uiGeneration": {
+                "$ref": "https://semio.tech/schema/framework/replication/wire/local-interaction/schema.json#/$defs/generation"
+              },
+              "expected": {
+                "$ref": "https://semio.tech/schema/framework/replication/wire/local-interaction/schema.json#/$defs/revision"
+              }
+            }
+          }
+        },
+        "overflowMutatesCache": {
+          "const": false
+        },
+        "closedAuthorityReadable": {
+          "const": false
+        },
+        "canonicalTopologyHash": {
+          "const": false
+        }
+      }
+    },
+    "LocalInteraction": {
+      "oneOf": [
+        {
+          "$ref": "#/definitions/capture"
+        },
+        {
+          "$ref": "#/definitions/restore"
+        },
+        {
+          "$ref": "#/definitions/page"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/buffer/create.json",
+  "title": "GltfCreateBufferPayloadV1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "position",
+    "bytes"
+  ],
+  "properties": {
+    "position": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "bytes": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 255
+      }
+    }
+  },
+  "x-semio": {
+    "id": "s.stdio.gltf.mutation.create-buffer.v1",
+    "version": 1,
+    "phase": "mutation",
+    "touchedPathPattern": "document/buffers",
+    "referencePolicy": "typed references remap, repair, or reject"
+  },
+  "x-semio-mutation": "create-buffer"
+}

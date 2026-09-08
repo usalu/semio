@@ -5,7 +5,7 @@
   "displayName": "Connect Surfaces",
   "emoji": "🤝️",
   "aggregateVariant": "ConnectSurfaces",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "connect-surfaces",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

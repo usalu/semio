@@ -13,12 +13,12 @@
 
 use std::collections::HashMap;
 
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::{ArenaId, CoedgeId, Curve2Id, Curve3Id, EdgeId, FaceId, LoopId, ShellId, SolidId, Store, SurfaceId, VertexId};
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::{Curve2, Curve3};
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::surface::Surface;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::tolerance::Tol;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::history::{LabelSource, PersistentLabel};
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::Pnt3;
+use crate::standards::v1::subsets::brep::schema::snapshot::arena::{ArenaId, CoedgeId, Curve2Id, Curve3Id, EdgeId, FaceId, LoopId, ShellId, SolidId, Store, SurfaceId, VertexId};
+use crate::standards::v1::subsets::brep::schema::snapshot::curve::{Curve2, Curve3};
+use crate::standards::v1::subsets::brep::schema::snapshot::surface::Surface;
+use crate::standards::v1::subsets::brep::schema::snapshot::tolerance::Tol;
+use crate::standards::v1::subsets::brep::schema::snapshot::topology::history::{LabelSource, PersistentLabel};
+use crate::standards::v1::subsets::brep::schema::snapshot::vector::Pnt3;
 
 // #region 🔖️Entities
 
@@ -213,7 +213,7 @@ impl Body {
 
 /// 🌱 One restored vertex, keyed by its own [`PersistentLabel`] rather than a persisted string id
 /// — translating a snapshot's own id convention into `PersistentLabel` is the caller's job (see
-/// [`crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::history`]'s own docstring on why a label is never reused), done once per
+/// [`crate::standards::v1::subsets::brep::schema::snapshot::topology::history`]'s own docstring on why a label is never reused), done once per
 /// diff-constructor call, not baked into this ephemeral seed's own shape.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub struct SeedVertex {
@@ -235,7 +235,7 @@ pub struct SeedEdge {
 
 /// 🌱 One restored face; `outer`/`inners` are indices into [`BrepArenaSeed::loops`] — loops carry
 /// no [`PersistentLabel`] of their own (structural, not independently document-nameable, per
-/// [`crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::euler::make_loop`]'s own docstring), so an ordinal index is the only address.
+/// [`crate::standards::v1::subsets::brep::schema::diff::euler::make_loop`]'s own docstring), so an ordinal index is the only address.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub struct SeedFace {
     pub label: PersistentLabel,
@@ -287,7 +287,7 @@ fn placeholder_face_for_build() -> FaceId {
 
 impl Body {
     /// 🌱 Reconstructs a `Body` from `seed`, inserting directly into each `Store` — the ONE place
-    /// outside [`crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::euler`] allowed to construct topology entities directly. This
+    /// outside [`crate::standards::v1::subsets::brep::schema::diff::euler`] allowed to construct topology entities directly. This
     /// mirrors euler's own "the *only* functions permitted to mutate a `Body`" docstring rather
     /// than violating it: `from_seed` constructs a *fresh* `Body`, it does not mutate an existing
     /// one. It must NOT call `euler::make_vertex`/`make_edge`/`add_face`/`add_shell`/`add_solid` —
@@ -318,7 +318,7 @@ impl Body {
             .iter()
             .map(|ring| {
                 let members: Vec<(EdgeId, bool)> = ring.iter().map(|(label, forward)| (edge_ids[label], *forward)).collect();
-                crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::euler::make_loop(&mut body, placeholder, &members)
+                crate::standards::v1::subsets::brep::schema::diff::euler::make_loop(&mut body, placeholder, &members)
             })
             .collect();
 
@@ -403,13 +403,13 @@ impl Body {
 
 pub mod history {
     //! 📜️ Operation provenance: a [`PersistentLabel`] assigned once at an entity's birth and never
-    //! reused, plus the [`OpDelta`] every mutating operation in [`crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::euler`] returns.
+    //! reused, plus the [`OpDelta`] every mutating operation in [`crate::standards::v1::subsets::brep::schema::diff::euler`] returns.
     //! **Host authority:** `LabelSource` lives only inside a `Body` owned by engine compute or cache.
 
     // #region 🔖️Labels
 
     /// 📜️ A stable identity for one topological entity, assigned from a per-`Body` monotonically
-    /// increasing counter at birth. Unlike an arena [`crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::ArenaId`] (which can be reused
+    /// increasing counter at birth. Unlike an arena [`crate::standards::v1::subsets::brep::schema::snapshot::arena::ArenaId`] (which can be reused
     /// after removal once its generation increments), a label is never reused — it survives arena
     /// compaction and is the identity the document layer's persistent naming keys off of.
     #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, value_derive::ToValue, value_derive::FromValue)]
@@ -428,7 +428,7 @@ pub mod history {
             LabelSource { next: 0 }
         }
         /// 📜️ Seeds the counter at an explicit high-water mark rather than restarting at 0 — used by
-        /// [`crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::Body`]'s `from_seed` so a rebuild from a persisted seed carries
+        /// [`crate::standards::v1::subsets::brep::schema::snapshot::topology::Body`]'s `from_seed` so a rebuild from a persisted seed carries
         /// the label numbering forward instead of colliding with the labels it is restoring.
         // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn from_next(next: u64) -> Self {
@@ -476,7 +476,7 @@ pub mod history {
         }
     }
 
-    /// 📜️ Accumulates an [`OpDelta`] as a checked editor runs; passed by every [`crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::euler`]
+    /// 📜️ Accumulates an [`OpDelta`] as a checked editor runs; passed by every [`crate::standards::v1::subsets::brep::schema::diff::euler`]
     /// operator so no operation can forget to log what it touched. `record_deleted` and friends are
     /// idempotent against duplicate reporting within one operation, since some editors touch the same
     /// entity more than once (e.g. splitting an edge modifies the vertex on both sides).
@@ -524,7 +524,7 @@ pub mod history {
         use super::*;
 
         /// 📜️ `from_next`/`next` are the pair `Body::from_seed`/`Body::to_seed` use to carry the label
-        /// high-water-mark forward across a rebuild instead of restarting at 0 (see `crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology`).
+        /// high-water-mark forward across a rebuild instead of restarting at 0 (see `crate::standards::v1::subsets::brep::schema::snapshot::topology`).
         #[semio_framework_async_macros::async_test]
         async fn from_next_seeds_the_counter_and_next_reports_it_without_advancing() {
             let mut source = LabelSource::from_next(42);
@@ -601,9 +601,9 @@ pub mod history {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::ArenaId;
-    use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Frame3;
-    use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::Vec3;
+    use crate::standards::v1::subsets::brep::schema::snapshot::arena::ArenaId;
+    use crate::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Frame3;
+    use crate::standards::v1::subsets::brep::schema::snapshot::vector::Vec3;
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn null_coedge() -> CoedgeId {
@@ -777,7 +777,7 @@ mod tests {
     async fn from_seed_round_trips_a_closed_box_through_to_seed() {
         let mut body = Body::new();
         let mut rec = history::OpRecorder::new();
-        crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::primitives::make_box(&mut body, 2.0, 3.0, 4.0, &mut rec).unwrap();
+        crate::standards::v1::subsets::brep::schema::diff::primitives::make_box(&mut body, 2.0, 3.0, 4.0, &mut rec).unwrap();
 
         let seed = body.to_seed();
         assert_eq!(seed.vertices.len(), 8);
@@ -797,7 +797,7 @@ mod tests {
     async fn from_seed_round_trips_a_loose_planar_face() {
         let mut body = Body::new();
         let mut rec = history::OpRecorder::new();
-        crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::primitives::make_planar_face_from_points(&mut body, &[Pnt3::new(0.0, 0.0, 0.0), Pnt3::new(1.0, 0.0, 0.0), Pnt3::new(0.0, 1.0, 0.0)], &mut rec).unwrap();
+        crate::standards::v1::subsets::brep::schema::diff::primitives::make_planar_face_from_points(&mut body, &[Pnt3::new(0.0, 0.0, 0.0), Pnt3::new(1.0, 0.0, 0.0), Pnt3::new(0.0, 1.0, 0.0)], &mut rec).unwrap();
 
         let seed = body.to_seed();
         let rebuilt = Body::from_seed(&seed);
@@ -810,7 +810,7 @@ mod tests {
     async fn from_seed_is_deterministic_for_identical_seeds() {
         let mut body = Body::new();
         let mut rec = history::OpRecorder::new();
-        crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::primitives::make_box(&mut body, 1.0, 1.0, 1.0, &mut rec).unwrap();
+        crate::standards::v1::subsets::brep::schema::diff::primitives::make_box(&mut body, 1.0, 1.0, 1.0, &mut rec).unwrap();
         let seed = body.to_seed();
 
         let a = Body::from_seed(&seed);
@@ -825,7 +825,7 @@ mod tests {
     async fn from_seed_preserves_the_label_high_water_mark() {
         let mut body = Body::new();
         let mut rec = history::OpRecorder::new();
-        crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::primitives::make_box(&mut body, 1.0, 1.0, 1.0, &mut rec).unwrap();
+        crate::standards::v1::subsets::brep::schema::diff::primitives::make_box(&mut body, 1.0, 1.0, 1.0, &mut rec).unwrap();
         let seed = body.to_seed();
         assert!(seed.next_label > 0, "a box mints more than zero labels");
 
@@ -1190,8 +1190,8 @@ impl Body {
 #[cfg(test)]
 mod reachability_tests {
     use super::*;
-    use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::euler::make_vertex;
-    use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::primitives::make_box;
+    use crate::standards::v1::subsets::brep::schema::diff::euler::make_vertex;
+    use crate::standards::v1::subsets::brep::schema::diff::primitives::make_box;
 
     /// ♻️ A closed box plus one orphan vertex: `compact` must free exactly the orphan and nothing
     /// the box's solid transitively reaches.

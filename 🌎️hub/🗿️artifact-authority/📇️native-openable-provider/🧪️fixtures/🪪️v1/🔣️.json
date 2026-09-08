@@ -20,18 +20,109 @@
     "rendererTarget": "wasm"
   },
   "hostileCases": [
-    { "name": "owner receipt removed", "mutation": "missing-owner", "outcome": "denied", "publishedTargets": 0 },
-    { "name": "projection receipt added", "mutation": "extra-projection", "outcome": "denied", "publishedTargets": 0 },
-    { "name": "factory identity duplicated", "mutation": "duplicate-factory", "outcome": "denied", "publishedTargets": 0 },
-    { "name": "descriptor codec identity duplicated", "mutation": "duplicate-descriptor-codec", "outcome": "denied", "publishedTargets": 0 },
-    { "name": "runtime capability absent", "mutation": "missing-runtime-capability", "outcome": "denied", "publishedTargets": 0 },
-    { "name": "protocol hash substituted", "mutation": "wrong-protocol-hash", "outcome": "denied", "publishedTargets": 0 },
-    { "name": "protocol hash zeroed", "mutation": "zero-protocol-hash", "outcome": "denied", "publishedTargets": 0 },
-    { "name": "component hash substituted", "mutation": "wrong-component-hash", "outcome": "denied", "publishedTargets": 0 },
-    { "name": "descriptor hash substituted", "mutation": "wrong-descriptor-hash", "outcome": "denied", "publishedTargets": 0 },
-    { "name": "surface detached", "mutation": "wrong-surface", "outcome": "denied", "publishedTargets": 0 },
-    { "name": "role detached", "mutation": "wrong-role", "outcome": "denied", "publishedTargets": 0 },
-    { "name": "renderer detached", "mutation": "wrong-renderer", "outcome": "denied", "publishedTargets": 0 },
-    { "name": "open target duplicated", "mutation": "duplicate-target", "outcome": "denied", "publishedTargets": 0 }
+    {
+      "name": "owner receipt removed",
+      "mutation": "missing-owner",
+      "stage": "domain",
+      "result": "rejected",
+      "code": "owner-receipt-missing",
+      "publishedTargets": 0
+    },
+    {
+      "name": "projection receipt added",
+      "mutation": "extra-projection",
+      "stage": "domain",
+      "result": "rejected",
+      "code": "projection-receipt-extra",
+      "publishedTargets": 0
+    },
+    {
+      "name": "factory identity duplicated",
+      "mutation": "duplicate-factory",
+      "stage": "domain",
+      "result": "rejected",
+      "code": "factory-identity-duplicated",
+      "publishedTargets": 0
+    },
+    {
+      "name": "descriptor codec identity duplicated",
+      "mutation": "duplicate-descriptor-codec",
+      "stage": "domain",
+      "result": "rejected",
+      "code": "descriptor-codec-duplicated",
+      "publishedTargets": 0
+    },
+    {
+      "name": "runtime capability absent",
+      "mutation": "missing-runtime-capability",
+      "stage": "domain",
+      "result": "rejected",
+      "code": "runtime-capability-missing",
+      "publishedTargets": 0
+    },
+    {
+      "name": "protocol hash substituted",
+      "mutation": "wrong-protocol-hash",
+      "stage": "domain",
+      "result": "rejected",
+      "code": "protocol-hash-substituted",
+      "publishedTargets": 0
+    },
+    {
+      "name": "protocol hash zeroed",
+      "mutation": "zero-protocol-hash",
+      "stage": "domain",
+      "result": "rejected",
+      "code": "protocol-hash-zeroed",
+      "publishedTargets": 0
+    },
+    {
+      "name": "component hash substituted",
+      "mutation": "wrong-component-hash",
+      "stage": "domain",
+      "result": "rejected",
+      "code": "component-hash-substituted",
+      "publishedTargets": 0
+    },
+    {
+      "name": "descriptor hash substituted",
+      "mutation": "wrong-descriptor-hash",
+      "stage": "domain",
+      "result": "rejected",
+      "code": "descriptor-hash-substituted",
+      "publishedTargets": 0
+    },
+    {
+      "name": "surface detached",
+      "mutation": "wrong-surface",
+      "stage": "contract",
+      "result": "rejected",
+      "code": "surface-role-detached",
+      "publishedTargets": 0
+    },
+    {
+      "name": "role detached",
+      "mutation": "wrong-role",
+      "stage": "domain",
+      "result": "rejected",
+      "code": "role-detached",
+      "publishedTargets": 0
+    },
+    {
+      "name": "renderer detached",
+      "mutation": "wrong-renderer",
+      "stage": "domain",
+      "result": "rejected",
+      "code": "renderer-detached",
+      "publishedTargets": 0
+    },
+    {
+      "name": "open target duplicated",
+      "mutation": "duplicate-target",
+      "stage": "domain",
+      "result": "rejected",
+      "code": "open-target-duplicated",
+      "publishedTargets": 0
+    }
   ]
 }

@@ -6,7 +6,7 @@
 //! presence, plus a real byte-size + content digest over `payload`. A pure whole-snapshot scalar
 //! read/fold — no `InferredField` needed.
 
-use crate::artifacts::deflate::standards::v_rfc1950::subsets::any::schema::snapshot::DeflateSnapshot;
+use crate::standards::v_rfc1950::subsets::any::schema::snapshot::DeflateSnapshot;
 use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
 
@@ -56,7 +56,7 @@ pub fn compute_deflate_window(snapshot: &DeflateSnapshot) -> DeflateWindow {
 //#region 🧪️Tests
 mod tests {
     use super::*;
-    use crate::artifacts::deflate::standards::v_rfc1950::subsets::any::schema::snapshot::DeflateLevelHint;
+    use crate::standards::v_rfc1950::subsets::any::schema::snapshot::DeflateLevelHint;
 
     #[semio_framework_async_macros::async_test]
     async fn window_bits_7_yields_the_real_32kb_rfc1950_ceiling() {

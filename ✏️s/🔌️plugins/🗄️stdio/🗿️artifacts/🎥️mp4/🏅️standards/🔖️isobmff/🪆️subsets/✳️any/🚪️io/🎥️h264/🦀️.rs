@@ -16,7 +16,7 @@
 //! at its original remodel location, unmoved, for a future wave to lift as a video-subset
 //! accessor without needing to touch this container codec's schema.
 /// 🎬 AVC parameter sets and optional profile extension.
-pub type ExtendedAvcParameterSets = (Vec<Vec<u8>>, Vec<Vec<u8>>, u8, Option<crate::artifacts::mp4::standards::isobmff::subsets::any::schema::snapshot::Mp4AvcExtension>);
+pub type ExtendedAvcParameterSets = (Vec<Vec<u8>>, Vec<Vec<u8>>, u8, Option<crate::standards::isobmff::subsets::any::schema::snapshot::Mp4AvcExtension>);
 
 /// 🎥 Sequence parameters, picture parameters, and NAL length width.
 pub type AvcParameterSets = (Vec<Vec<u8>>, Vec<Vec<u8>>, u8);
@@ -256,7 +256,7 @@ pub fn parse_avcc_extended(avcc: &[u8]) -> Result<ExtendedAvcParameterSets, H264
             sps_ext.push(avcc.get(pos..pos + length).ok_or(H264Error::Truncated)?.to_vec());
             pos += length;
         }
-        Some(crate::artifacts::mp4::standards::isobmff::subsets::any::schema::snapshot::Mp4AvcExtension { chroma_format, bit_depth_luma_minus8, bit_depth_chroma_minus8, sps_ext })
+        Some(crate::standards::isobmff::subsets::any::schema::snapshot::Mp4AvcExtension { chroma_format, bit_depth_luma_minus8, bit_depth_chroma_minus8, sps_ext })
     } else {
         None
     };
@@ -275,7 +275,7 @@ pub fn build_avcc(sps_list: &[Vec<u8>], pps_list: &[Vec<u8>], nal_length_size: u
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn build_avcc_extended(sps_list: &[Vec<u8>], pps_list: &[Vec<u8>], nal_length_size: u8, extension: Option<&crate::artifacts::mp4::standards::isobmff::subsets::any::schema::snapshot::Mp4AvcExtension>) -> Vec<u8> {
+pub fn build_avcc_extended(sps_list: &[Vec<u8>], pps_list: &[Vec<u8>], nal_length_size: u8, extension: Option<&crate::standards::isobmff::subsets::any::schema::snapshot::Mp4AvcExtension>) -> Vec<u8> {
     let (profile, compat, level) = sps_list.first().and_then(|s| s.get(1..4)).map_or((66, 0, 30), |b| (b[0], b[1], b[2]));
     let mut out = vec![1, profile, compat, level, 0xFC | (nal_length_size.saturating_sub(1) & 0x03), 0xE0 | (sps_list.len() as u8 & 0x1F)];
     for nal in sps_list {
@@ -297,7 +297,7 @@ pub fn build_avcc_extended(sps_list: &[Vec<u8>], pps_list: &[Vec<u8>], nal_lengt
             out.extend_from_slice(nal);
         }
     }
-    crate::artifacts::mp4::standards::isobmff::subsets::any::io::boxes::write_box(b"avcC", &out)
+    crate::standards::isobmff::subsets::any::io::boxes::write_box(b"avcC", &out)
 }
 //#endregion 🔖️AvcC
 

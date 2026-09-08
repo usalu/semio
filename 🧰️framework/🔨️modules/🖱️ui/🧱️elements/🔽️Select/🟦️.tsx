@@ -8,6 +8,7 @@
 // #region 🔌️Adapters
 import * as React from "react";
 import { createPortal } from "react-dom";
+import { isInsideActiveScopedDialogIsolation, useDialogLayer } from "../💬️Dialog/🟦️.tsx";
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.ts";
 import { borderElementClass } from "../../🔨️modules/📏️border-presentation/🟦️.ts";
 import { formControlFocusBorderClass } from "../../🔨️modules/📝️form-control-presentation/🟦️.ts";
@@ -126,6 +127,7 @@ interface SelectPlacement {
 const SelectContext = React.createContext<SelectContextValue | null>(null);
 const SelectGroupContext = React.createContext<string | null>(null);
 const selectActivity = new Map<string, number>();
+const selectIsolationRoots = new Map<string, HTMLElement | null>();
 const handledSelectEvents = new WeakSet<Event>();
 let selectActivitySequence = 0;
 const useIsomorphicLayoutEffect = typeof window === "undefined" ? React.useEffect : React.useLayoutEffect;
@@ -216,9 +218,9 @@ function isInsideSelectBoundary(target: EventTarget | null, context: SelectConte
   return element?.closest<HTMLElement>("[data-select-boundary]")?.dataset.selectBoundary?.split(" ").includes(context.token) === true;
 }
 
-function topSelectToken(): string | undefined {
+function topSelectToken(isolationRoot: HTMLElement | null): string | undefined {
   if (typeof document === "undefined") return undefined;
-  const contents = Array.from(document.querySelectorAll<HTMLElement>("[data-select-boundary]"));
+  const contents = Array.from(document.querySelectorAll<HTMLElement>("[data-select-boundary]")).filter(content => selectIsolationRoots.get(content.dataset.selectToken ?? "") === isolationRoot);
   let selected: HTMLElement | undefined;
   for (const content of contents) {
     if (!selected) {
@@ -232,6 +234,10 @@ function topSelectToken(): string | undefined {
     if (depth > selectedDepth || (depth === selectedDepth && (selectActivity.get(token) ?? 0) > (selectActivity.get(selectedToken) ?? 0))) selected = content;
   }
   return selected?.dataset.selectToken;
+}
+
+function isInsideSelectIsolation(target: EventTarget | null, isolationRoot: HTMLElement | null): boolean {
+  return isolationRoot === null ? !isInsideActiveScopedDialogIsolation(target) : target instanceof Node && isolationRoot.contains(target);
 }
 
 /** 📍️ Resolves viewport-safe trigger-relative placement with vertical flipping and inline clamping. */
@@ -484,6 +490,7 @@ const SelectContent = React.forwardRef<HTMLDivElement, SelectContentProps>(funct
 ) {
   const context = useSelectContext();
   const [placement, setPlacement] = React.useState<SelectPlacement>();
+  const modalLayer = useDialogLayer(context.open, context.contentRef);
   const typeaheadRef = React.useRef("");
   const typeaheadTimerRef = React.useRef<number | undefined>(undefined);
   const openAutoFocusRef = React.useRef(onOpenAutoFocus);
@@ -496,10 +503,14 @@ const SelectContent = React.forwardRef<HTMLDivElement, SelectContentProps>(funct
     const content = context.contentRef.current;
     const trigger = context.triggerRef.current;
     if (!context.open || !content || !trigger) return;
-    const measure = () =>
-      setPlacement(
-        resolveSelectPlacement(trigger.getBoundingClientRect(), content.getBoundingClientRect(), { width: window.innerWidth, height: window.innerHeight }, side, align, sideOffset, Math.max(0, collisionPadding), context.direction === "rtl"),
-      );
+    const measure = () => {
+      const triggerRect = trigger.getBoundingClientRect();
+      const isolationRect = modalLayer.isolationRoot?.getBoundingClientRect();
+      const relativeTrigger = isolationRect
+        ? { top: triggerRect.top - isolationRect.top, right: triggerRect.right - isolationRect.left, bottom: triggerRect.bottom - isolationRect.top, left: triggerRect.left - isolationRect.left, width: triggerRect.width, height: triggerRect.height }
+        : triggerRect;
+      setPlacement(resolveSelectPlacement(relativeTrigger, content.getBoundingClientRect(), isolationRect ? { width: isolationRect.width, height: isolationRect.height } : { width: window.innerWidth, height: window.innerHeight }, side, align, sideOffset, Math.max(0, collisionPadding), context.direction === "rtl"));
+    };
     measure();
     const observer = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(measure);
     observer?.observe(trigger);
@@ -511,11 +522,12 @@ const SelectContent = React.forwardRef<HTMLDivElement, SelectContentProps>(funct
       window.removeEventListener("resize", measure);
       window.removeEventListener("scroll", measure, true);
     };
-  }, [align, collisionPadding, context.contentRef, context.direction, context.open, context.triggerRef, side, sideOffset]);
+  }, [align, collisionPadding, context.contentRef, context.direction, context.open, context.triggerRef, side, sideOffset, modalLayer.isolationRoot, modalLayer.ready]);
 
   useIsomorphicLayoutEffect(() => {
     const content = context.contentRef.current;
     if (!context.open || !content) return;
+    selectIsolationRoots.set(context.token, modalLayer.isolationRoot);
     markSelectActive(context.token);
     const options = selectOptionElements(content);
     const intent = context.openIntentRef.current;
@@ -535,17 +547,18 @@ const SelectContent = React.forwardRef<HTMLDivElement, SelectContentProps>(funct
     if (!openEvent.defaultPrevented) content.focus({ preventScroll: true });
     return () => {
       selectActivity.delete(context.token);
+      selectIsolationRoots.delete(context.token);
       if (!context.restoreFocusRef.current) return;
       const closeEvent = preventableEvent();
       closeAutoFocusRef.current?.(closeEvent);
       if (!closeEvent.defaultPrevented) context.triggerRef.current?.focus({ preventScroll: true });
     };
-  }, [context.contentRef, context.open, context.openIntentRef, context.restoreFocusRef, context.setActiveId, context.token, context.triggerRef]);
+  }, [context.contentRef, context.open, context.openIntentRef, context.restoreFocusRef, context.setActiveId, context.token, context.triggerRef, modalLayer.isolationRoot, modalLayer.ready]);
 
   React.useEffect(() => {
     if (!context.open) return;
     const dismiss = (event: PointerEvent | FocusEvent, kind: "pointer" | "focus") => {
-      if (handledSelectEvents.has(event) || isInsideSelectBoundary(event.target, context) || topSelectToken() !== context.token) return;
+      if (!isInsideSelectIsolation(event.target, modalLayer.isolationRoot) || handledSelectEvents.has(event) || isInsideSelectBoundary(event.target, context) || topSelectToken(modalLayer.isolationRoot) !== context.token) return;
       const owned = preventableEvent(event);
       if (kind === "pointer") onPointerDownOutside?.(owned as SelectPreventableEvent<PointerEvent>);
       else onFocusOutside?.(owned as SelectPreventableEvent<FocusEvent>);
@@ -558,7 +571,7 @@ const SelectContent = React.forwardRef<HTMLDivElement, SelectContentProps>(funct
     const handlePointerDown = (event: PointerEvent) => dismiss(event, "pointer");
     const handleFocusIn = (event: FocusEvent) => dismiss(event, "focus");
     const handleDocumentKeyDown = (event: KeyboardEvent) => {
-      if (event.key !== "Escape" || handledSelectEvents.has(event) || topSelectToken() !== context.token) return;
+      if (!isInsideSelectIsolation(event.target, modalLayer.isolationRoot) || event.key !== "Escape" || handledSelectEvents.has(event) || topSelectToken(modalLayer.isolationRoot) !== context.token) return;
       const owned = preventableEvent(event);
       onEscapeKeyDown?.(owned);
       if (owned.defaultPrevented) return;
@@ -576,9 +589,9 @@ const SelectContent = React.forwardRef<HTMLDivElement, SelectContentProps>(funct
       document.removeEventListener("keydown", handleDocumentKeyDown, true);
       if (typeaheadTimerRef.current !== undefined) window.clearTimeout(typeaheadTimerRef.current);
     };
-  }, [context, onEscapeKeyDown, onFocusOutside, onInteractOutside, onPointerDownOutside]);
+  }, [context, modalLayer.isolationRoot, onEscapeKeyDown, onFocusOutside, onInteractOutside, onPointerDownOutside]);
 
-  if (!context.open || typeof document === "undefined") return null;
+  if (!context.open || !modalLayer.ready || typeof document === "undefined") return null;
   return createPortal(
     <div
       {...props}
@@ -605,7 +618,7 @@ const SelectContent = React.forwardRef<HTMLDivElement, SelectContentProps>(funct
       )}
       style={
         {
-          position: "fixed",
+          position: modalLayer.isolationRoot ? "absolute" : "fixed",
           left: placement?.left ?? 0,
           top: placement?.top ?? 0,
           visibility: placement ? undefined : "hidden",
@@ -662,7 +675,7 @@ const SelectContent = React.forwardRef<HTMLDivElement, SelectContentProps>(funct
         <SelectScrollDownButton />
       </SurfaceScope>
     </div>,
-    container ?? document.body,
+    modalLayer.container ?? container ?? document.body,
   );
 });
 // #endregion 📍️Content

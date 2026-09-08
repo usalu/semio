@@ -6,8 +6,8 @@ use flow::FlowEvalSession;
 use semio_framework::kernel::{Effect, UiDirtyScope};
 use semio_framework_plugin::app::ChildEmit;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin, RequestId};
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::flow::schema::mutations::{insert_edge, insert_node, SemioFlowMutation};
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::{FlowEdge, FlowNode, PortRef, SemioFlowSnapshot};
+use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::mutations::{insert_edge, insert_node, SemioFlowMutation};
+use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::{FlowEdge, FlowNode, PortRef, SemioFlowSnapshot};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Constants

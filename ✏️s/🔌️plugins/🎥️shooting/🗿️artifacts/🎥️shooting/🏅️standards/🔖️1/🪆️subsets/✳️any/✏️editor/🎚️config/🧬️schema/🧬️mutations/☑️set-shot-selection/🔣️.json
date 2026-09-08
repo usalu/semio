@@ -5,7 +5,7 @@
   "displayName": "Set Shot Selection",
   "emoji": "☑️",
   "aggregateVariant": "SetShotSelection",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "set-shot-selection",
   "binaryTag": 1,
   "invertibility": "explicit-mutation",

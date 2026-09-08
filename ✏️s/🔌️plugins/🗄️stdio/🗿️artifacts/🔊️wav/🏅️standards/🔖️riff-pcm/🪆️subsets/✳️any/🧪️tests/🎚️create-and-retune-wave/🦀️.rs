@@ -46,7 +46,7 @@ mod subject {
     use super::{retune_to, spec};
     use semio_s_plugin_stdio_test_oracle::audio::{oracle_create_wav, project_wav};
     use semio_repo_test_host::{Context, Outcome};
-    use semio_s_plugin_stdio::artifacts::wav::standards::riff_pcm::subsets::any::io::{decode_wav, encode_wav};
+    use crate::standards::riff_pcm::subsets::any::io::{decode_wav, encode_wav};
 
     /// 🔁️ Decode the reference artifact with our reader, re-encode with our writer, project both.
     pub fn round_trip(ctx: &Context) -> Result<Outcome, String> {

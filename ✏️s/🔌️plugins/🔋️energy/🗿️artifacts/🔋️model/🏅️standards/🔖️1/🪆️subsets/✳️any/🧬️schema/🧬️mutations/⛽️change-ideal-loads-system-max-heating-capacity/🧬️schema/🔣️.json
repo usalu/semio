@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/energy/model/1/any/mutation/change-ideal-loads-system-max-heating-capacity.json",
+  "title": "ChangeIdealLoadsSystemMaxHeatingCapacity",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newCapacityPresent",
+    "newMaxHeatingCapacityW"
+  ],
+  "properties": {
+    "id": {
+      "type": "integer"
+    },
+    "newCapacityPresent": {
+      "type": "boolean"
+    },
+    "newMaxHeatingCapacityW": {
+      "type": "number"
+    }
+  }
+}

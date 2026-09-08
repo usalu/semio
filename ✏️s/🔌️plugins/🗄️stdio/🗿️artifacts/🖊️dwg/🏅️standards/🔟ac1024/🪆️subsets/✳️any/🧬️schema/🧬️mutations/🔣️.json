@@ -1,8 +1,44 @@
 {
-  "$id": "https://semio.tech/schema/s.stdio.dwg/mutation.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/dwg/ac1024/any/mutations.json",
   "title": "DwgMutation",
+  "description": "Discriminated union over this module's mutation leaves (internally tagged); every payload is the leaf's own schema, referenced, never restated.",
   "oneOf": [
-    { "type": "object", "additionalProperties": false, "required": ["mutation", "snapshot"], "properties": { "mutation": { "const": "setSnapshot" }, "snapshot": { "$ref": "https://semio.tech/schema/s.stdio.dwg/snapshot.json" } } },
-    { "type": "object", "additionalProperties": false, "required": ["mutation", "version", "maintenanceVersion", "codepage"], "properties": { "mutation": { "const": "setVersionInfo" }, "version": { "type": "string" }, "maintenanceVersion": { "type": "integer" }, "codepage": { "type": "integer" } } }
+    {
+      "allOf": [
+        {
+          "$ref": "./📸️set-snapshot/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setSnapshot"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "./🏷️set-version-info/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setVersionInfo"
+            }
+          }
+        }
+      ]
+    }
   ]
 }

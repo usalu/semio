@@ -7,6 +7,6 @@ use crate::artifacts::din16798::Din16798Snapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(_payload: &ChangeCoolingDeltaTH, base: &Din16798Snapshot) -> Vec<Din16798Mutation> {
-    vec![Din16798Mutation::ChangeCoolingDeltaTH(ChangeCoolingDeltaTH { new_cooling_delta_t_h: base.cooling_delta_t_h.clone() })]
+    vec![Din16798Mutation::ChangeCoolingDeltaTH(ChangeCoolingDeltaTH { new_cooling_delta_t_h: base.cooling_delta_t_h })]
 }
 //#endregion 🔖️Inverse

@@ -1,0 +1,48 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/image/mutation/insert-frame.json",
+  "title": "InsertFrame",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "index",
+    "frame"
+  ],
+  "properties": {
+    "index": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "frame": {
+      "$ref": "#/$defs/SemioImageFrame"
+    },
+    "mutation": {
+      "const": "insertFrame",
+      "description": "Aggregate discriminator spliced in by SemioImageMutation; absent when the payload stands alone."
+    }
+  },
+  "$defs": {
+    "SemioImageFrame": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "delayMs"
+      ],
+      "properties": {
+        "delayMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "rgba8": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,105 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/video/mutation/insert-stream.json",
+  "title": "InsertStream",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "index",
+    "stream"
+  ],
+  "properties": {
+    "index": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "stream": {
+      "$ref": "#/$defs/SemioVideoStream"
+    },
+    "mutation": {
+      "const": "insertStream",
+      "description": "Aggregate discriminator spliced in by SemioVideoMutation; absent when the payload stands alone."
+    }
+  },
+  "$defs": {
+    "SemioVideoStream": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "$ref": "#/$defs/SemioVideoStreamKind"
+        },
+        "codec": {
+          "type": "string"
+        },
+        "width": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "height": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "rate": {
+          "$ref": "#/$defs/SemioRational"
+        },
+        "samples": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SemioVideoSample"
+          }
+        }
+      }
+    },
+    "SemioVideoStreamKind": {
+      "type": "string",
+      "enum": [
+        "video",
+        "audio",
+        "subtitle"
+      ]
+    },
+    "SemioRational": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "num",
+        "den"
+      ],
+      "properties": {
+        "num": {
+          "type": "integer"
+        },
+        "den": {
+          "type": "integer"
+        }
+      }
+    },
+    "SemioVideoSample": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "pts"
+      ],
+      "properties": {
+        "pts": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "key": {
+          "type": "boolean"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          }
+        }
+      }
+    }
+  }
+}

@@ -5,7 +5,7 @@
   "displayName": "Delete Shw System",
   "emoji": "🚱️",
   "aggregateVariant": "DeleteShwSystem",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "delete-shw-system",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

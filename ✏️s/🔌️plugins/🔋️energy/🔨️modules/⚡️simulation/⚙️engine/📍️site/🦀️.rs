@@ -1,7 +1,7 @@
 //! 🌤️ Site, weather, EPW ingest, design days, solar position, ground temperatures.
 //!
 //! 🔗 EPW text decoding is delegated in-process to stdio's real, lossless `stdio.epw` artifact
-//! codec (`semio_s_plugin_stdio::artifacts::epw::standards::energyplus::subsets::any::io::decode_epw`,
+//! codec (`semio_s_artifact_stdio_epw::standards::energyplus::subsets::any::io::decode_epw`,
 //! all 35 spec columns, no silent defaults) — see [`EpwWeather::parse`]/[`EpwWeather::from_snapshot`].
 //! Energy's own [`WeatherRecord`]/psychrometrics stay energy-side, computed FROM stdio's
 //! `EpwSnapshot` rather than populated by an ad-hoc energy-side parse.
@@ -9,8 +9,8 @@
 use crate::error::Error;
 use crate::props::{humidity_ratio_from_rh, moist_air_density};
 use crate::units::{deg_to_rad, rad_to_deg};
-use semio_s_plugin_stdio::artifacts::epw::standards::energyplus::subsets::any::schema::snapshot::EpwRecord;
-use semio_s_plugin_stdio::artifacts::epw::EpwSnapshot;
+use semio_s_artifact_stdio_epw::standards::energyplus::subsets::any::schema::snapshot::EpwRecord;
+use semio_s_artifact_stdio_epw::EpwSnapshot;
 use serde::{Deserialize, Serialize};
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
@@ -100,7 +100,7 @@ impl EpwWeather {
     /// `stdio.epw` codec (all 8 header lines + all 35 record columns, hard errors on malformed
     /// input — no silent per-field defaulting), then derive energy's own `WeatherRecord` view.
     pub fn parse(content: &str) -> Result<Self, Error> {
-        let snapshot = semio_s_plugin_stdio::artifacts::epw::standards::energyplus::subsets::any::io::decode_epw(content).map_err(Error::fatal)?;
+        let snapshot = semio_s_artifact_stdio_epw::standards::energyplus::subsets::any::io::decode_epw(content).map_err(Error::fatal)?;
         Self::from_snapshot(&snapshot)
     }
 

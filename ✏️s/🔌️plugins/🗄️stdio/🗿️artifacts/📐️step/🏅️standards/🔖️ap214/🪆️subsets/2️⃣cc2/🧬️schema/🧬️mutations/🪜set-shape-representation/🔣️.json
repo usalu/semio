@@ -5,7 +5,7 @@
   "displayName": "Set Shape Representation",
   "emoji": "🪜",
   "aggregateVariant": "SetShapeRepresentation",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

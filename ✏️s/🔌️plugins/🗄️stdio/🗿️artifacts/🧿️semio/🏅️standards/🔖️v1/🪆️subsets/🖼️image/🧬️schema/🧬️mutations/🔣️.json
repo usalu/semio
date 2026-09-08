@@ -1,21 +1,224 @@
 {
-  "$id": "https://semio.tech/schema/s.stdio.semio.image/mutations.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/image/mutations.json",
   "title": "SemioImageMutation",
-  "description": "Named-variant union, discriminated on the `mutation` tag.",
-  "type": "object",
-  "required": ["mutation"],
+  "description": "Discriminated union over this module's mutation leaves (internally tagged); every payload is the leaf's own schema, referenced, never restated.",
   "oneOf": [
-    { "properties": { "mutation": { "const": "setSnapshot" }, "snapshot": { "type": "object" } } },
-    { "properties": { "mutation": { "const": "setDimensions" }, "width": { "type": "integer" }, "height": { "type": "integer" } } },
-    { "properties": { "mutation": { "const": "setColorspace" }, "colorspace": { "enum": ["rgb", "rgba", "grayscale", "grayscaleAlpha", "indexed"] } } },
-    { "properties": { "mutation": { "const": "setBitDepth" }, "bitDepth": { "type": "integer" } } },
-    { "properties": { "mutation": { "const": "setIcc" }, "icc": { "type": ["string", "null"] } } },
-    { "properties": { "mutation": { "const": "insertFrame" }, "index": { "type": "integer" }, "frame": { "type": "object" } } },
-    { "properties": { "mutation": { "const": "removeFrame" }, "index": { "type": "integer" } } },
-    { "properties": { "mutation": { "const": "moveFrame" }, "from": { "type": "integer" }, "to": { "type": "integer" } } },
-    { "properties": { "mutation": { "const": "setFrameDelay" }, "index": { "type": "integer" }, "delayMs": { "type": "integer" } } },
-    { "properties": { "mutation": { "const": "setFramePixels" }, "index": { "type": "integer" }, "rgba8": { "type": "string" } } },
-    { "properties": { "mutation": { "const": "setMetadataEntry" }, "key": { "type": "string" }, "value": { "type": "string" } } },
-    { "properties": { "mutation": { "const": "removeMetadataEntry" }, "key": { "type": "string" } } }
+    {
+      "allOf": [
+        {
+          "$ref": "./➕️insert-frame/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "insertFrame"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "./🔀️move-frame/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "moveFrame"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "./🚫️remove-frame/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "removeFrame"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "./🗑️remove-metadata-entry/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "removeMetadataEntry"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "./🔢️set-bit-depth/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setBitDepth"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "./🌈️set-colorspace/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setColorspace"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "./📐️set-dimensions/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setDimensions"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "./⏱️set-frame-delay/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setFrameDelay"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "./🖌️set-frame-pixels/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setFramePixels"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "./🎨️set-icc/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setIcc"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "./🏷️set-metadata-entry/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setMetadataEntry"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "./📸️set-snapshot/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setSnapshot"
+            }
+          }
+        }
+      ]
+    }
   ]
 }

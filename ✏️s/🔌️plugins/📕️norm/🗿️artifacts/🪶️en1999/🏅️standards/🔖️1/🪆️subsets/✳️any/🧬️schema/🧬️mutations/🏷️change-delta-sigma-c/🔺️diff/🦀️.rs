@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeDeltaSigmaC, base: &En1999Snapshot) -> protocol::Mut
     if base.delta_sigma_c == payload.new_delta_sigma_c {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Fatigue reference stress range [MPa] is already {}.", payload.new_delta_sigma_c));
     }
-    protocol::MutationOutcome::new(En1999Diff { delta_sigma_c: Some(payload.new_delta_sigma_c.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1999Diff { delta_sigma_c: Some(payload.new_delta_sigma_c), ..Default::default() })
 }
 //#endregion 🔖️Diff

@@ -1,0 +1,110 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/mp3/mpeg1-layer3/any/mutation/set-frames.json",
+  "title": "SetFrames",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "frames"
+  ],
+  "properties": {
+    "frames": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Mp3Frame"
+      }
+    }
+  },
+  "$defs": {
+    "Mp3Frame": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "header"
+      ],
+      "properties": {
+        "header": {
+          "$ref": "#/$defs/Mp3FrameHeader"
+        },
+        "payload": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          }
+        }
+      }
+    },
+    "Mp3FrameHeader": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mpegVersionId",
+        "layer",
+        "protectionBit",
+        "bitrateIndex",
+        "sampleRateIndex",
+        "padding",
+        "privateBit",
+        "channelMode",
+        "modeExtension",
+        "copyright",
+        "original",
+        "emphasis"
+      ],
+      "properties": {
+        "mpegVersionId": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "layer": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "protectionBit": {
+          "type": "boolean"
+        },
+        "bitrateIndex": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "sampleRateIndex": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "padding": {
+          "type": "boolean"
+        },
+        "privateBit": {
+          "type": "boolean"
+        },
+        "channelMode": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "modeExtension": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "copyright": {
+          "type": "boolean"
+        },
+        "original": {
+          "type": "boolean"
+        },
+        "emphasis": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        }
+      }
+    }
+  }
+}

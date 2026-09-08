@@ -43,34 +43,34 @@ mod step;
 pub mod contract;
 pub use contract::*;
 
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::blend::{chamfer_edges, fillet_edges, fillet_variable};
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::boolean::{boolean_solid, compound_cut, section_solid_by_plane, split_solid_by_plane, BooleanOp};
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::euler::make_vertex;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::intersect::intersect_curve_curve;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::intersect::intersect_curve_surface;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::intersect::intersect_surface_surface;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::offset::{draft_angle, offset_face, offset_solid, shell_solid_with_open_faces, thicken_face};
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::primitives::{
+use crate::standards::v1::subsets::brep::schema::diff::blend::{chamfer_edges, fillet_edges, fillet_variable};
+use crate::standards::v1::subsets::brep::schema::diff::boolean::{boolean_solid, compound_cut, section_solid_by_plane, split_solid_by_plane, BooleanOp};
+use crate::standards::v1::subsets::brep::schema::diff::euler::make_vertex;
+use crate::standards::v1::subsets::brep::schema::diff::intersect::intersect_curve_curve;
+use crate::standards::v1::subsets::brep::schema::diff::intersect::intersect_curve_surface;
+use crate::standards::v1::subsets::brep::schema::diff::intersect::intersect_surface_surface;
+use crate::standards::v1::subsets::brep::schema::diff::offset::{draft_angle, offset_face, offset_solid, shell_solid_with_open_faces, thicken_face};
+use crate::standards::v1::subsets::brep::schema::diff::primitives::{
     make_box, make_cone, make_convex_hull, make_cylinder, make_planar_face_from_points, make_planar_face_from_wire, make_polyline_wire, make_rectangle_wire, make_regular_polygon_wire, make_sphere, make_torus, Wire,
 };
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::sew::{convert_to_nurbs, defeature, heal_solid, sew_faces};
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::sweep::{extrude_face, helical_sweep, loft_profiles, pipe, revolve_face, sweep_along_path};
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::transform::{copy_solid, transform_face, transform_solid, transform_wire};
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::inferences::classification::point_in_solid;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::inferences::mass_properties::{closest_point_on_solid, distance_solid_solid, edge_length, face_area, solid_bounding_box, solid_center_of_mass, solid_surface_area, solid_volume};
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::inferences::tessellation::{tessellate_face, tessellate_solid, tessellate_wire};
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::inferences::validation_report::validate_body;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::{ArenaId, EdgeId, FaceId, SolidId, VertexId};
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::curve_ops::{approximate_curve_with_count, closest_parameter as curve_closest_parameter_fn, coons_patch_nurbs, interpolate_curve, interpolate_surface_grid, ParamMethod};
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::Curve3;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::surface::surface_ops::closest_uv as surface_closest_uv_fn;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::error::KernelError;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::surface::Surface;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::tolerance::Tol;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::history::OpRecorder;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::Body;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::matrix::{Affine3, Frame3};
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::{Pnt3, Vec3 as NativeVec3};
+use crate::standards::v1::subsets::brep::schema::diff::sew::{convert_to_nurbs, defeature, heal_solid, sew_faces};
+use crate::standards::v1::subsets::brep::schema::diff::sweep::{extrude_face, helical_sweep, loft_profiles, pipe, revolve_face, sweep_along_path};
+use crate::standards::v1::subsets::brep::schema::diff::transform::{copy_solid, transform_face, transform_solid, transform_wire};
+use crate::standards::v1::subsets::brep::schema::inferences::classification::point_in_solid;
+use crate::standards::v1::subsets::brep::schema::inferences::mass_properties::{closest_point_on_solid, distance_solid_solid, edge_length, face_area, solid_bounding_box, solid_center_of_mass, solid_surface_area, solid_volume};
+use crate::standards::v1::subsets::brep::schema::inferences::tessellation::{tessellate_face, tessellate_solid, tessellate_wire};
+use crate::standards::v1::subsets::brep::schema::inferences::validation_report::validate_body;
+use crate::standards::v1::subsets::brep::schema::snapshot::arena::{ArenaId, EdgeId, FaceId, SolidId, VertexId};
+use crate::standards::v1::subsets::brep::schema::snapshot::curve::curve_ops::{approximate_curve_with_count, closest_parameter as curve_closest_parameter_fn, coons_patch_nurbs, interpolate_curve, interpolate_surface_grid, ParamMethod};
+use crate::standards::v1::subsets::brep::schema::snapshot::curve::Curve3;
+use crate::standards::v1::subsets::brep::schema::snapshot::surface::surface_ops::closest_uv as surface_closest_uv_fn;
+use crate::standards::v1::subsets::brep::schema::snapshot::error::KernelError;
+use crate::standards::v1::subsets::brep::schema::snapshot::surface::Surface;
+use crate::standards::v1::subsets::brep::schema::snapshot::tolerance::Tol;
+use crate::standards::v1::subsets::brep::schema::snapshot::topology::history::OpRecorder;
+use crate::standards::v1::subsets::brep::schema::snapshot::topology::Body;
+use crate::standards::v1::subsets::brep::schema::snapshot::vector::matrix::{Affine3, Frame3};
+use crate::standards::v1::subsets::brep::schema::snapshot::vector::{Pnt3, Vec3 as NativeVec3};
 use mesh_io::{export_solid_mesh, export_solid_glb, export_solid_obj, export_solid_stl, import_mesh_to_body, import_glb_to_body, import_obj_to_body, import_stl_to_body, mesh_to_mesh_data, triangle_mesh_from_transfer};
 use contract::Vec3 as EVec3;
 use step::{read_step, write_step};
@@ -412,12 +412,12 @@ pub trait BrepKernel {
 
 // #region 🔖️Types
 
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::ShellId;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::history::PersistentLabel;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::EntityRef;
+use crate::standards::v1::subsets::brep::schema::snapshot::arena::ShellId;
+use crate::standards::v1::subsets::brep::schema::snapshot::topology::history::PersistentLabel;
+use crate::standards::v1::subsets::brep::schema::snapshot::topology::EntityRef;
 
 /// 🧠 One live registry entry. Vertex/Edge/Face/🐚️Shell/Solid wrap the arena id whose own
-/// [`crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::history::PersistentLabel`]
+/// [`crate::standards::v1::subsets::brep::schema::snapshot::topology::history::PersistentLabel`]
 /// [`label_of_entity`] resolves through; Wire/Curve/Surface/Compound carry no arena identity of
 /// their own (a `Wire` bundles arena ids but isn't itself stored in `Body`; a bare `Curve3`/
 /// `Surface` constructed via `register_curve`/`register_surface` never enters `body.curves3`/
@@ -477,7 +477,7 @@ fn map_err(e: &KernelError) -> BrepError {
     BrepError::Operation(e.to_string())
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn map_step(e: &crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::error::StepError) -> BrepError {
+fn map_step(e: &crate::standards::v1::subsets::brep::schema::snapshot::error::StepError) -> BrepError {
     BrepError::Operation(e.to_string())
 }
 
@@ -570,7 +570,7 @@ impl Brep {
         self.live.get(handle.as_str()).ok_or_else(|| BrepError::MissingHandle(handle.as_str().to_string()))
     }
 
-    /// ♻️ [`crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::EntityRef`] roots for every entity currently kept alive by a live
+    /// ♻️ [`crate::standards::v1::subsets::brep::schema::snapshot::topology::EntityRef`] roots for every entity currently kept alive by a live
     /// handle — the protection set [`Body::reachable_from`] walks before [`Body::compact`] frees
     /// anything, so `dispose`/`retain` never reclaim geometry a surviving handle still needs. A
     /// `Wire`'s member edges/vertices are included even though the wire itself isn't a `Body` root,

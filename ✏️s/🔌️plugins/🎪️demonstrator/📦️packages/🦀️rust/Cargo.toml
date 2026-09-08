@@ -26,7 +26,7 @@ role = "plugin"
 consumes = ["forms.questionKind", "flow.extension", "process.machines"]
 # 🔗️ Runtime actor dependencies — the six plugins whose editor/viewer surfaces this crate registers
 # over THEIR artifact kinds (`🪪️manifest/🎪️demonstrator/🦀️.rs`'s `.depends_on(…)` rows must match this
-# list exactly). `stdio` is deliberately absent: every `semio_s_plugin_stdio::artifacts::…` call here
+# list exactly). `stdio` is deliberately absent: every `semio_s_artifact_stdio_*` call here
 # is an in-process codec call into a linked rlib, not a message to a separate stdio actor.
 depends-on = ["cad", "gis", "procedural", "process", "puzzle", "sourcing"]
 
@@ -115,7 +115,10 @@ crate-type = ["cdylib", "rlib"]
 path = "🦀️.rs"
 
 [dependencies]
-semio-s-plugin-stdio = { path = "../../../🗄️stdio/📦️packages/🦀️rust", package = "semio-s-plugin-stdio", default-features = false, features = ["full-artifact-catalog"] }
+semio-s-artifact-stdio-csv = { workspace = true }
+semio-s-artifact-stdio-json = { workspace = true }
+semio-s-artifact-stdio-xlsx = { workspace = true }
+semio-s-artifact-stdio-zip = { workspace = true }
 semio-framework-os-kernel = { path = "../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
 semio-framework-plugin = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust", features = ["component-guest"], package = "semio-framework-plugin" }
 semio-framework-dispatch-macros = { path = "../../../../../🧰️framework/🔨️modules/🔀️dispatch/📦️packages/🦀️rust", package = "semio-framework-dispatch-macros" }

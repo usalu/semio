@@ -69,7 +69,7 @@ import {
   type IntroductionStepDefinition,
   type LocalizedLabel,
   type MergeMode,
-  missingRequiredArgs,
+  unresolvedActionArgs,
   type PanelTabKind,
   panelTabKindId,
   partitionWindowMeasures,
@@ -131,6 +131,7 @@ import {
   type IconName,
   IconSelector,
   Input,
+  type UIDialogFieldBinding,
   type PanelTabNode,
   resolveTranslationLabel,
   RibbonDivider,
@@ -2832,15 +2833,19 @@ export function utilityBarNode(utilities: readonly UtilityNode[] | undefined, wi
  * writes to the caller's local staged buffer. `value` is the already-resolved effective value
  * (staged ?? default ?? unset).
  */
-export function renderStagedArgControl(def: ResolvedActionArgDef, value: unknown, onChange: (value: unknown) => void, disabled?: boolean): ReactElement {
+export function renderStagedArgControl(def: ResolvedActionArgDef, value: unknown, onChange: (value: unknown) => void, disabled?: boolean, field?: UIDialogFieldBinding): ReactElement {
   const control: ActionArgControl = argControl(def);
+  const fieldId = field?.id ?? def.id;
+  const labelledBy = field?.labelledBy;
   switch (control.kind) {
     case "text":
-      return <Input id={def.id} type="text" className="h-medium w-full min-w-0" value={typeof value === "string" ? value : ""} placeholder={control.placeholder} disabled={disabled} onChange={(event) => onChange(event.target.value)} />;
+      return <Input id={fieldId} aria-labelledby={labelledBy} required={field?.required} type="text" className="h-medium w-full min-w-0" value={typeof value === "string" ? value : ""} placeholder={control.placeholder} disabled={disabled} onChange={(event) => onChange(event.target.value)} />;
     case "number":
       return (
         <Input
-          id={def.id}
+          id={fieldId}
+          aria-labelledby={labelledBy}
+          required={field?.required}
           type="number"
           className="h-medium w-full min-w-0"
           value={value === undefined || value === null || value === "" ? "" : String(value)}
@@ -2853,7 +2858,7 @@ export function renderStagedArgControl(def: ResolvedActionArgDef, value: unknown
       );
     case "slider": {
       const numeric = typeof value === "number" && Number.isFinite(value) ? value : control.min;
-      const slider = <Slider id={def.id} className="w-full min-w-0" min={control.min} max={control.max} step={control.step ?? 1} value={[numeric]} disabled={disabled} onValueChange={(values) => onChange(values[0] ?? numeric)} />;
+      const slider = <Slider id={fieldId} aria-labelledby={labelledBy} className="w-full min-w-0" min={control.min} max={control.max} step={control.step ?? 1} value={[numeric]} disabled={disabled} onValueChange={(values) => onChange(values[0] ?? numeric)} />;
       if (!control.unit) return slider;
       return (
         <div className="flex w-full min-w-0 items-center gap-single">
@@ -2865,12 +2870,14 @@ export function renderStagedArgControl(def: ResolvedActionArgDef, value: unknown
       );
     }
     case "toggle":
-      return <Toggle id={def.id} icon="check" pressed={value === true} text={uiDataLabel(def.label)} disabled={disabled} onPressedChange={(pressed) => onChange(pressed)} />;
+      return <Toggle id={fieldId} aria-labelledby={labelledBy} icon="check" pressed={value === true} text={uiDataLabel(def.label)} disabled={disabled} onPressedChange={(pressed) => onChange(pressed)} />;
+    case "artifactKind":
+    case "surfaceApp":
     case "select": {
       if (def.schema.kind !== "string") throw new Error("Select control requires a string argument schema");
       return (
-        <Select id={def.id} value={typeof value === "string" && value ? value : undefined} disabled={disabled} onValueChange={(next) => onChange(next)}>
-          <SelectTrigger id={def.id} className="h-medium w-full min-w-0" size="sm">
+        <Select id={def.id} value={typeof value === "string" && actionArgStringOptions(def.schema).some(option => option.value === value) ? value : ""} disabled={disabled || actionArgStringOptions(def.schema).length === 0} onValueChange={(next) => onChange(next)}>
+          <SelectTrigger id={fieldId} aria-labelledby={labelledBy} aria-required={field?.required} className="h-medium w-full min-w-0" size="sm">
             <SelectValue placeholder={def.label} />
           </SelectTrigger>
           <SelectContent>
@@ -2891,7 +2898,9 @@ export function renderStagedArgControl(def: ResolvedActionArgDef, value: unknown
           {axes.map((axis, index) => (
             <Input
               key={`${def.id}.${axis}`}
-              id={`${def.id}.${axis}`}
+              id={`${fieldId}.${axis}`}
+              aria-label={`${uiDataLabel(def.label)} ${axis}`}
+              required={field?.required}
               type="number"
               className="h-medium w-full min-w-0"
               value={tuple ? String(tuple[index] ?? 0) : ""}
@@ -2910,15 +2919,7 @@ export function renderStagedArgControl(def: ResolvedActionArgDef, value: unknown
       );
     }
     case "iconSelect":
-      return <IconSelector id={def.id} classifyIconSelectorMode={undefined} value={typeof value === "string" ? value : ""} uniform onChange={(next) => onChange(next)} />;
-    // 🎫️ D6: `artifactKind`/`surfaceApp` are HOST-resolved — the host substitutes them with a plain
-    // `select` before a staged form ever renders (see `artifact_kind_choices`/`🔖️HostResolvedArgs`
-    // in the Rust manifest), so neither reaches here in practice; no `ActionArgDef` builder produces
-    // them today either (`artifact_kind`/`surface_app` have zero call sites repo-wide). Kept as an
-    // explicit fallback purely so this switch stays exhaustive over `ActionArgControl.kind`.
-    case "artifactKind":
-    case "surfaceApp":
-      return <Input id={def.id} type="text" className="h-medium w-full min-w-0" value={typeof value === "string" ? value : ""} disabled={disabled} onChange={(event) => onChange(event.target.value)} />;
+      return <IconSelector id={fieldId} aria-labelledby={labelledBy} disabled={disabled} classifyIconSelectorMode={undefined} value={typeof value === "string" ? value : ""} uniform onChange={(next) => onChange(next)} />;
   }
 }
 
@@ -2968,7 +2969,7 @@ export function resolveKeybindingIntent(definition: Pick<ActionDefinition, "id" 
   if (!definition || !actionRequiresStagedForm(definition)) return { kind: "fire" };
   if (expandedActionId === definition.id) {
     const effective = effectiveActionArgs(definition.args, stagedArgs);
-    if (missingRequiredArgs(definition.args, effective).length === 0) return { kind: "execute", actionId: definition.id, args: effective };
+    if (unresolvedActionArgs(definition.args, effective).length === 0) return { kind: "execute", actionId: definition.id, args: effective };
   }
   return { kind: "open", actionId: definition.id };
 }
@@ -3051,7 +3052,7 @@ export function buildActionCategoryTree(
     if (expandedAction && actionCategoryId(expandedAction) === category.id) {
       const staged = stagedArgsByKey[actionStageKey(windowId, expandedAction.id)] ?? {};
       const effective = effectiveActionArgs(expandedAction.args, staged);
-      const missing = missingRequiredArgs(expandedAction.args, effective);
+      const missing = unresolvedActionArgs(expandedAction.args, effective);
       sections.push({
         id: `action.category.${category.id}.form`,
         defaultOpen: true,
@@ -3069,7 +3070,7 @@ export function buildActionCategoryTree(
             icon: <Icon icon="check" size="small" />,
             text: shellLabel("ui.common.execute"),
             disabled: disabled || missing.length > 0,
-            onClick: () => onExecute({ controllerId, action: expandedAction.id, args: effective }),
+            onClick: () => { if (!disabled && missing.length === 0) onExecute({ controllerId, action: expandedAction.id, args: effective }); },
           },
           {
             id: childElementId("framework.window", windowId, "action", expandedAction.id, "reset"),
@@ -3539,7 +3540,7 @@ export function buildCommandCategoryTree(
     const expandedElementKey = commandElementKey(expanded.address);
     const staged = stagedArgsByCommandId[expandedKey] ?? {};
     const effective = effectiveActionArgs(expanded.definition.args, staged);
-    const missing = missingRequiredArgs(expanded.definition.args, effective);
+    const missing = unresolvedActionArgs(expanded.definition.args, effective);
     sections.push({
       id: `command.category.${expanded.definition.category}.form`,
       items: expanded.definition.args.map(
@@ -3556,7 +3557,7 @@ export function buildCommandCategoryTree(
           icon: <Icon icon="check" size="small" />,
           text: shellLabel("ui.common.execute"),
           disabled: missing.length > 0,
-          onClick: () => onExecute(expanded, effective),
+          onClick: () => { if (missing.length === 0) onExecute(expanded, effective); },
         },
         {
           id: `command-${expandedElementKey}-reset`,

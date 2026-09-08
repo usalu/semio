@@ -5,7 +5,7 @@
   "displayName": "Replace Surface Vertices",
   "emoji": "🔺️",
   "aggregateVariant": "ReplaceSurfaceVertices",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "replace-surface-vertices",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

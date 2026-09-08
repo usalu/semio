@@ -1,11 +1,11 @@
 //! 📦 STL/OBJ/GLB/mesh mesh import/export bridged to native B-Rep.
 //!
 //! Triangle soups interchange through `semio_framework_mesh_engine` codecs where available; solids
-//! tessellate via [`crate::artifacts::semio::standards::v1::subsets::brep::schema::inferences::tessellation`] and import as
-//! one planar face per triangle (shell assembly until [`crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::sew`] can weld
+//! tessellate via [`crate::standards::v1::subsets::brep::schema::inferences::tessellation`] and import as
+//! one planar face per triangle (shell assembly until [`crate::standards::v1::subsets::brep::schema::diff::sew`] can weld
 //! shared edges). `export_mesh`/`import_mesh`/`export_solid_mesh`/`import_mesh_to_body` take their mesh
 //! codec as a `MeshExporter`/`MeshImporter` parameter (ticket
-//! `26/09/03/BREP-KERNEL-DEPENDENCY-FREE-RUNTIME` wave 1): `crate::artifacts::dwg` is a SEPARATE
+//! `26/09/03/BREP-KERNEL-DEPENDENCY-FREE-RUNTIME` wave 1): `semio_s_artifact_stdio_dwg` is a SEPARATE
 //! artifact, and this kernel-layer file must not import another artifact directly — the caller
 //! (`⚙️engine/🦀️.rs`, the contract façade that legitimately bridges artifacts) supplies the real
 //! `DwgExporter`/`DwgImporter`.
@@ -19,21 +19,21 @@
 //! file here — rather than repointing it at stdio's real `dwg` artifact from across a framework→
 //! plugin edge, which would be a real crate cycle since `stdio → semio-framework-3d` already exists
 //! for the algorithm forward-edge above — dissolves that edge instead: the mesh calls become
-//! same-crate `crate::artifacts::dwg::{…}`, and the framework-3d algorithm imports become the same
+//! same-crate `semio_s_artifact_stdio_dwg::{…}`, and the framework-3d algorithm imports become the same
 //! external `semio_framework_3d::engine::*` forward-edge pattern the parent `engine/component.rs`
 //! used at the time. `MeshTransfer` moved again in ticket 26/09/03/BREP-KERNEL-DEPENDENCY-FREE-RUNTIME
 //! wave 1 (W1-A): the parent's own `engine::contract` module now owns it same-crate.
 
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::euler::{add_shell, add_solid};
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::primitives::make_planar_face_from_points;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::inferences::tessellation::tessellate_solid;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::SolidId;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::error::KernelError;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::tolerance::Tol;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::history::OpRecorder;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::Body;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::{Pnt3, Vec3};
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::engine::MeshTransfer;
+use crate::standards::v1::subsets::brep::schema::diff::euler::{add_shell, add_solid};
+use crate::standards::v1::subsets::brep::schema::diff::primitives::make_planar_face_from_points;
+use crate::standards::v1::subsets::brep::schema::inferences::tessellation::tessellate_solid;
+use crate::standards::v1::subsets::brep::schema::snapshot::arena::SolidId;
+use crate::standards::v1::subsets::brep::schema::snapshot::error::KernelError;
+use crate::standards::v1::subsets::brep::schema::snapshot::tolerance::Tol;
+use crate::standards::v1::subsets::brep::schema::snapshot::topology::history::OpRecorder;
+use crate::standards::v1::subsets::brep::schema::snapshot::topology::Body;
+use crate::standards::v1::subsets::brep::schema::snapshot::vector::{Pnt3, Vec3};
+use crate::standards::v1::subsets::brep::schema::engine::MeshTransfer;
 use semio_framework_mesh_engine::{mesh_from_obj, mesh_from_stl, mesh_to_obj, mesh_to_stl, GlbExporter, GlbImporter, MeshData, MeshExporter, MeshImporter};
 
 // #region 🔖️Types
@@ -139,7 +139,7 @@ pub fn import_glb_to_body(body: &mut Body, data: &[u8], tolerance: f64) -> Resul
 }
 
 /// 📦 Tessellates `solid` and encodes mesh mesh bytes via `exporter` — the mesh codec itself
-/// (`crate::artifacts::dwg`) is a separate artifact this kernel-layer file must not import
+/// (`semio_s_artifact_stdio_dwg`) is a separate artifact this kernel-layer file must not import
 /// directly; the caller (`⚙️engine/🦀️.rs`, the contract façade that legitimately bridges
 /// artifacts) supplies it as a [`MeshExporter`], the same pattern `export_glb`/`import_glb` already
 /// use for `GlbExporter`/`GlbImporter`.
@@ -347,7 +347,7 @@ fn should_flip_winding(mesh: &TriangleMesh) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::primitives::make_box;
+    use crate::standards::v1::subsets::brep::schema::diff::primitives::make_box;
 
     #[semio_framework_async_macros::async_test]
     async fn export_box_mesh_stl_nonempty() {

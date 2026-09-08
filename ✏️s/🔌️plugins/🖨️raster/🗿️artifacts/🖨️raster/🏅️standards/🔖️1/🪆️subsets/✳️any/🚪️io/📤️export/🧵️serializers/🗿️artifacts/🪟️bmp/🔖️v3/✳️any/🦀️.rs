@@ -9,6 +9,6 @@ use crate::artifacts::raster::RasterSnapshot;
 pub fn register() {}
 pub fn serialize_bytes(snapshot: &RasterSnapshot) -> Result<Vec<u8>, String> {
     let image = raster_composite_image(snapshot).map_err(|reason| format!("bmp export not available for this raster document: {reason}"))?;
-    let target: semio_s_plugin_stdio::artifacts::bmp::BmpSnapshot = semio_image_to_format(&image, BMP_DIALECT)?;
-    semio_s_plugin_stdio::artifacts::bmp::io::encode_bmp(&target)
+    let target: semio_s_artifact_stdio_bmp::BmpSnapshot = semio_image_to_format(&image, BMP_DIALECT)?;
+    semio_s_artifact_stdio_bmp::io::encode_bmp(&target)
 }

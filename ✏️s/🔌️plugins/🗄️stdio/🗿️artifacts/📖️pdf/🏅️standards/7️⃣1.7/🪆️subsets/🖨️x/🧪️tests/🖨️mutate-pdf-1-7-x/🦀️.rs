@@ -142,10 +142,10 @@ fn round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::{arranged_input, mutable_input};
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_plugin_stdio::artifacts::pdf::standards::v1_7::subsets::base::io::{decode_pdf, encode_pdf};
-    use semio_s_plugin_stdio::artifacts::pdf::standards::v1_7::subsets::base::schema::conformance_support as support;
-    use semio_s_plugin_stdio::artifacts::pdf::standards::v1_7::subsets::base::schema::snapshot::{ObjRef, PdfSnapshot};
-    use semio_s_plugin_stdio::artifacts::pdf::standards::v1_7::subsets::x::schema::mutations::{apply_x_conformance_mutation, PdfXMutation, InsertEncryptionDictionary, RemoveEncryptionDictionary, SetOutputIntent, RemoveOutputIntent, SetTrimBox, RemoveTrimBox, EmbedFontFile, RemoveFontFile, InsertJavascriptAction, RemoveJavascriptAction, InsertLaunchAction, RemoveLaunchAction, InsertMediaAnnotation, RemoveMediaAnnotation};
+    use crate::standards::v1_7::subsets::base::io::{decode_pdf, encode_pdf};
+    use crate::standards::v1_7::subsets::base::schema::conformance_support as support;
+    use crate::standards::v1_7::subsets::base::schema::snapshot::{ObjRef, PdfSnapshot};
+    use crate::standards::v1_7::subsets::x::schema::mutations::{apply_x_conformance_mutation, PdfXMutation, InsertEncryptionDictionary, RemoveEncryptionDictionary, SetOutputIntent, RemoveOutputIntent, SetTrimBox, RemoveTrimBox, EmbedFontFile, RemoveFontFile, InsertJavascriptAction, RemoveJavascriptAction, InsertLaunchAction, RemoveLaunchAction, InsertMediaAnnotation, RemoveMediaAnnotation};
     use semio_s_plugin_stdio_test_oracle::artifacts::pdf::standards::v1_7::subsets::x::{oracle_inverse_spec, project_conformance};
 
     fn decode(bytes: &[u8]) -> Result<PdfSnapshot, String> {

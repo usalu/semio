@@ -5,7 +5,7 @@ use directory::os_directory::{ArtifactCheckpoint, ArtifactFrontier, ArtifactHash
 use directory::os_io::ArtifactDialect;
 use semio_framework_hash::Sha256;
 
-#[path = "📚️operation-v1/🦀️.rs"]
+#[path = "🧬️schema/🦀️.rs"]
 mod operation;
 pub use operation::*;
 

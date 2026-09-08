@@ -14,10 +14,10 @@
 //! - Multiple `SemioMesh`es flatten into ONE `solid` (STL is single-solid); `solid_name` is the
 //!   FIRST mesh's id — later meshes' id boundaries are not preserved in the STL output.
 
-use crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioPoint3;
-use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::{SemioMeshSnapshot, SemioTopology};
-use crate::artifacts::stl::schema::snapshot::StlTriangle;
-use crate::artifacts::stl::StlSnapshot;
+use crate::standards::v1::subsets::base::schema::geometry::SemioPoint3;
+use crate::standards::v1::subsets::mesh::schema::snapshot::{SemioMeshSnapshot, SemioTopology};
+use semio_s_artifact_stdio_stl::schema::snapshot::StlTriangle;
+use semio_s_artifact_stdio_stl::StlSnapshot;
 use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
 
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("mesh") };
@@ -104,8 +104,8 @@ impl ArtifactSerializer for SemioMeshToStl {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::semio::standards::v1::subsets::mesh::io::import::deserializers::artifacts::stl::v_ascii::any::SemioMeshFromStl;
-    use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::{SemioMesh, SemioPrimitive};
+    use crate::standards::v1::subsets::mesh::io::import::deserializers::artifacts::stl::v_ascii::any::SemioMeshFromStl;
+    use crate::standards::v1::subsets::mesh::schema::snapshot::{SemioMesh, SemioPrimitive};
     use semio_framework_plugin::ArtifactDeserializer;
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9

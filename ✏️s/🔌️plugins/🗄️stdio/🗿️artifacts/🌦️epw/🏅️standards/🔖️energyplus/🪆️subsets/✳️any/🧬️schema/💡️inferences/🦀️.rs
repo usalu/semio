@@ -7,8 +7,8 @@
 //! derived statistic is a min/max/avg fold over the hourly dry-bulb temperature column, not a
 //! bounding box).
 
-use crate::artifacts::epw::standards::energyplus::subsets::any::schema::snapshot::EpwSnapshot;
-use schema::ArtifactSchema;
+use crate::standards::energyplus::subsets::any::schema::snapshot::EpwSnapshot;
+use framework_schema::ArtifactSchema;
 
 use super::climate::{compute_epw_climate_summary, EpwClimateSummary};
 
@@ -55,7 +55,7 @@ impl protocol::InferenceSpec<EpwSnapshot> for EpwInference {
 /// `dry_bulb_temp` column (already O(n) in total record count), with no honest per-entity
 /// incremental decomposition (a merkle dep-chain over this flat whole-snapshot fold costs more
 /// than the fold it would cache) — the default `infer_cached` passthrough is exact.
-impl semio_framework_plugin::ArtifactInferrer for crate::artifacts::epw::standards::energyplus::subsets::any::schema::EpwBuilder {
+impl semio_framework_plugin::ArtifactInferrer for crate::standards::energyplus::subsets::any::schema::EpwBuilder {
     type Snapshot = EpwSnapshot;
     type Inference = EpwInference;
 }
@@ -65,10 +65,10 @@ impl semio_framework_plugin::ArtifactInferrer for crate::artifacts::epw::standar
 /// 💡️ Registers `s.stdio.epw.inference`'s facet leaves into the OS-wide inference catalog — call
 /// once at plugin init, alongside `epw_artifact_schema_descriptor`'s registration.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn epw_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
-    schema::ArtifactInferenceDescriptor {
+pub fn epw_artifact_inference_descriptor() -> framework_schema::ArtifactInferenceDescriptor {
+    framework_schema::ArtifactInferenceDescriptor {
         id: "s.stdio.epw.inference",
-        inference: schema::FacetLeaves {
+        inference: framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),

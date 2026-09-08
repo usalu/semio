@@ -15,8 +15,8 @@
 //! Every triad leaf is mounted directly as a `mutations`-sibling module in `🦀️.rs` (the stdio
 //! W2 agent owns `🦀️.rs`, so no self-wiring `#[path = "."]` blocks are needed here).
 
-use crate::artifacts::semio::standards::v1::subsets::text::schema::diff::SemioTextDiff;
-use crate::artifacts::semio::standards::v1::subsets::text::schema::snapshot::SemioTextSnapshot;
+use crate::standards::v1::subsets::text::schema::diff::SemioTextDiff;
+use crate::standards::v1::subsets::text::schema::snapshot::SemioTextSnapshot;
 
 //#region 🔖️Leaves
 use super::add_mark;
@@ -91,7 +91,7 @@ pub fn decode_semio_text_mutation_json(text: &str) -> Result<SemioTextMutation, 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::semio::standards::v1::subsets::text::schema::snapshot::{SemioTextMark, SemioTextMarkKind, SemioTextRun};
+    use crate::standards::v1::subsets::text::schema::snapshot::{SemioTextMark, SemioTextMarkKind, SemioTextRun};
     use protocol::{Mutation, MutationDiff, SemanticMutation};
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9

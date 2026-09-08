@@ -1,7 +1,7 @@
 //! 🔺️ Diff for `set-snapshot`.
 
-use crate::artifacts::deflate::DeflateSnapshot;
-use crate::artifacts::deflate::schema::diff::{DeflateDiff, diff_set_snapshot};
+use crate::DeflateSnapshot;
+use crate::schema::diff::{DeflateDiff, diff_set_snapshot};
 
 /// 🔺️ Diff helper for set-snapshot.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

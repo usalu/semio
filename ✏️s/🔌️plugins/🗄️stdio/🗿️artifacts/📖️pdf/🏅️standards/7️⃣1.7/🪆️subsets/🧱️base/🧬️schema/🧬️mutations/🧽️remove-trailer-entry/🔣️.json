@@ -5,7 +5,7 @@
   "displayName": "Remove Trailer Entry",
   "emoji": "🧽️",
   "aggregateVariant": "RemoveTrailerEntry",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "remove-trailer-entry",
   "binaryTag": 12,
   "invertibility": "explicit-mutation",

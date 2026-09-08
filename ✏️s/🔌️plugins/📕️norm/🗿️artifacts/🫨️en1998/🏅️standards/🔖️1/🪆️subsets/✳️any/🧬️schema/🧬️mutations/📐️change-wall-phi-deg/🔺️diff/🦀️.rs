@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeWallPhiDeg, base: &En1998Snapshot) -> protocol::Muta
     if base.wall_phi_deg == payload.new_wall_phi_deg {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Wall backfill friction angle [deg] is already {}.", payload.new_wall_phi_deg));
     }
-    protocol::MutationOutcome::new(En1998Diff { wall_phi_deg: Some(payload.new_wall_phi_deg.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1998Diff { wall_phi_deg: Some(payload.new_wall_phi_deg), ..Default::default() })
 }
 //#endregion 🔖️Diff

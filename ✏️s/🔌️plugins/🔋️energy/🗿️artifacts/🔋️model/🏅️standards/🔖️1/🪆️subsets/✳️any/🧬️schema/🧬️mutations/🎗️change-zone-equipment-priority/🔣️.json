@@ -5,7 +5,7 @@
   "displayName": "Change Zone Equipment Priority",
   "emoji": "🎗️",
   "aggregateVariant": "ChangeZoneEquipmentPriority",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-zone-equipment-priority",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

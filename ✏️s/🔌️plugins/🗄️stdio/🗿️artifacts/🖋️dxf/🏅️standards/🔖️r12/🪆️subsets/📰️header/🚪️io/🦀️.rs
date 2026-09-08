@@ -2,8 +2,8 @@
 //! (called once from 🔌️plugin/🔧️setup via ⚙️engine::register), not per-leaf register().
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use crate::artifacts::dxf::standards::v_r12::subsets::any::schema::DxfAnalyzer;
-    use crate::artifacts::dxf::DxfSnapshot;
+    use crate::standards::v_r12::subsets::any::schema::DxfAnalyzer;
+    use crate::DxfSnapshot;
     use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.dxf", standard: StandardId("r12"), subset: SubsetId("*") };
@@ -46,7 +46,7 @@ pub use derived_composition::*;
 
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
-    use crate::artifacts::dxf::standards::v_r12::subsets::any::schema::DxfComposer as DxfRawAnyComposer;
+    use crate::standards::v_r12::subsets::any::schema::DxfComposer as DxfRawAnyComposer;
     use semio_framework_plugin::{composer_entry_of, ComposerEntry};
     use std::sync::OnceLock;
 

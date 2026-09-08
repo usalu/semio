@@ -5,7 +5,7 @@
   "displayName": "Change Annual Schedule Holiday Daily Schedule",
   "emoji": "🎄️",
   "aggregateVariant": "ChangeAnnualScheduleHolidayDailySchedule",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-annual-schedule-holiday-daily-schedule",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

@@ -1,0 +1,24 @@
+{
+  "cases": [
+    {
+      "source": "import { io } from '@bytecodealliance/preview2-shim/io';\n",
+      "prefix": "../../🔌️plugin-modules/🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/",
+      "output": "import { io } from '../../🔌️plugin-modules/🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/io.js';\n"
+    },
+    {
+      "source": "import { cli } from '../🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/cli.js';\n",
+      "prefix": "../../🔌️plugin-modules/🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/",
+      "output": "import { cli } from '../../🔌️plugin-modules/🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/cli.js';\n"
+    },
+    {
+      "source": "import { clocks } from '../../🔌️plugin-modules/🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/clocks.js';\n",
+      "prefix": "../🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/",
+      "output": "import { clocks } from '../🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/clocks.js';\n"
+    },
+    {
+      "source": "import { local } from './local.js';\nexport { io } from '@bytecodealliance/preview2-shim/io.js';\n",
+      "prefix": "../vendor/",
+      "output": "import { local } from './local.js';\nexport { io } from '../vendor/io.js';\n"
+    }
+  ]
+}

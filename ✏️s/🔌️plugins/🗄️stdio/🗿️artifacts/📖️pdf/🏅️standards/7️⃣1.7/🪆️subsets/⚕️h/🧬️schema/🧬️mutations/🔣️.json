@@ -1,37 +1,188 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s.stdio.pdf.1.7.h/mutation.json",
+  "$id": "https://semio.tech/schema/s/stdio/pdf/1.7/h/mutations.json",
   "title": "PdfHMutation",
+  "description": "Discriminated union over this module's mutation leaves (internally tagged); every payload is the leaf's own schema, referenced, never restated.",
   "oneOf": [
     {
-      "$ref": "./🏷️set-info-title/🧬️.schema.json"
+      "allOf": [
+        {
+          "$ref": "./🔤️embed-font-file/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "embedFontFile"
+            }
+          }
+        }
+      ]
     },
     {
-      "$ref": "./👤️set-info-author/🧬️.schema.json"
+      "allOf": [
+        {
+          "$ref": "./📜️insert-javascript-action/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "insertJavascriptAction"
+            }
+          }
+        }
+      ]
     },
     {
-      "$ref": "./📜️insert-javascript-action/🧬️.schema.json"
+      "allOf": [
+        {
+          "$ref": "./🚀️insert-launch-action/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "insertLaunchAction"
+            }
+          }
+        }
+      ]
     },
     {
-      "$ref": "./🚫️remove-javascript-action/🧬️.schema.json"
+      "allOf": [
+        {
+          "$ref": "./✒️insert-signature-field/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "insertSignatureField"
+            }
+          }
+        }
+      ]
     },
     {
-      "$ref": "./🚀️insert-launch-action/🧬️.schema.json"
+      "allOf": [
+        {
+          "$ref": "./🧺️remove-font-file/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "removeFontFile"
+            }
+          }
+        }
+      ]
     },
     {
-      "$ref": "./🛬️remove-launch-action/🧬️.schema.json"
+      "allOf": [
+        {
+          "$ref": "./🚫️remove-javascript-action/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "removeJavascriptAction"
+            }
+          }
+        }
+      ]
     },
     {
-      "$ref": "./✒️insert-signature-field/🧬️.schema.json"
+      "allOf": [
+        {
+          "$ref": "./🛬️remove-launch-action/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "removeLaunchAction"
+            }
+          }
+        }
+      ]
     },
     {
-      "$ref": "./✂️remove-signature-field/🧬️.schema.json"
+      "allOf": [
+        {
+          "$ref": "./✂️remove-signature-field/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "removeSignatureField"
+            }
+          }
+        }
+      ]
     },
     {
-      "$ref": "./🔤️embed-font-file/🧬️.schema.json"
+      "allOf": [
+        {
+          "$ref": "./👤️set-info-author/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setInfoAuthor"
+            }
+          }
+        }
+      ]
     },
     {
-      "$ref": "./🧺️remove-font-file/🧬️.schema.json"
+      "allOf": [
+        {
+          "$ref": "./🏷️set-info-title/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setInfoTitle"
+            }
+          }
+        }
+      ]
     }
   ]
 }

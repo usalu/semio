@@ -11,9 +11,9 @@
 //!   by this direction (the `nodes` backing store always decodes empty) — see the serializer's
 //!   own doc comment for what happens going the other way.
 
-use crate::artifacts::json::schema::snapshot::JsonValue;
-use crate::artifacts::json::JsonSnapshot;
-use crate::artifacts::semio::standards::v1::subsets::value::schema::snapshot::{SemioValue, SemioValueEntry, SemioValueSnapshot, STDIO_SEMIOVALUE_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_json::schema::snapshot::JsonValue;
+use semio_s_artifact_stdio_json::JsonSnapshot;
+use crate::standards::v1::subsets::value::schema::snapshot::{SemioValue, SemioValueEntry, SemioValueSnapshot, STDIO_SEMIOVALUE_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId};
 
 //#region 🔖️Deserializer
@@ -64,7 +64,7 @@ pub fn semio_value_from_json(v: &JsonValue) -> SemioValue {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::json::schema::snapshot::JsonMember;
+    use semio_s_artifact_stdio_json::schema::snapshot::JsonMember;
 
     #[semio_framework_async_macros::async_test]
     async fn number_lexeme_splits_into_int_or_float_by_grammar_shape() {

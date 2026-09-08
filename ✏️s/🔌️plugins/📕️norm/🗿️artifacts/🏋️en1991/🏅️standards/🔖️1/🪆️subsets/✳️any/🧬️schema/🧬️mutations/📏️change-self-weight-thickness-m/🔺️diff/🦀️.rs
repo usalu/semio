@@ -11,6 +11,6 @@ pub fn diff(payload: &ChangeSelfWeightThicknessM, base: &En1991Snapshot) -> prot
     if base.self_weight_thickness_m == payload.new_self_weight_thickness_m {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "Self weight thickness m already has this value.");
     }
-    protocol::MutationOutcome::new(En1991Diff { self_weight_thickness_m: Some(payload.new_self_weight_thickness_m.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1991Diff { self_weight_thickness_m: Some(payload.new_self_weight_thickness_m), ..Default::default() })
 }
 //#endregion 🔖️Diff

@@ -89,10 +89,10 @@ fn round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::{arranged_input, mutable_input};
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_plugin_stdio::artifacts::docx::standards::v_ecma_376::subsets::any::io::export::serializers::encode_docx;
-    use semio_s_plugin_stdio::artifacts::docx::standards::v_ecma_376::subsets::any::io::import::deserializers::decode_docx;
-    use semio_s_plugin_stdio::artifacts::docx::standards::v_ecma_376::subsets::transitional::schema::mutations::{apply_docx_transitional_mutation, stamp_conformance_class, DocxTransitionalMutation};
-    use semio_s_plugin_stdio::artifacts::docx::DocxSnapshot;
+    use crate::standards::v_ecma_376::subsets::any::io::export::serializers::encode_docx;
+    use crate::standards::v_ecma_376::subsets::any::io::import::deserializers::decode_docx;
+    use crate::standards::v_ecma_376::subsets::transitional::schema::mutations::{apply_docx_transitional_mutation, stamp_conformance_class, DocxTransitionalMutation};
+    use crate::DocxSnapshot;
     use semio_s_plugin_stdio_test_oracle::artifacts::docx::standards::v_ecma_376::subsets::transitional::{oracle_inverse_spec, project_package};
 
     fn decode(bytes: &[u8]) -> Result<DocxSnapshot, String> {
@@ -114,10 +114,10 @@ mod subject {
     fn mutation_from_spec(ctx: &Context, spec: &Json) -> Result<DocxTransitionalMutation, String> {
         let params = spec.get("params").cloned().unwrap_or(Json::Null);
         Ok(match spec.str("kind").as_str() {
-            "set-snapshot" => DocxTransitionalMutation::SetSnapshot(semio_s_plugin_stdio::artifacts::docx::standards::v_ecma_376::subsets::transitional::schema::mutations::set_snapshot::SetSnapshot { snapshot: stamped(&decode(&mutable_input(ctx)?)?, params.str("conformanceClass") == "strict")? }),
-            "set-main-namespace" => DocxTransitionalMutation::SetMainNamespace(semio_s_plugin_stdio::artifacts::docx::standards::v_ecma_376::subsets::transitional::schema::mutations::set_main_namespace::SetMainNamespace { namespace: params.str("namespace") }),
-            "set-relationship-base" => DocxTransitionalMutation::SetRelationshipBase(semio_s_plugin_stdio::artifacts::docx::standards::v_ecma_376::subsets::transitional::schema::mutations::set_relationship_base::SetRelationshipBase { base: params.str("base") }),
-            "set-conformance-attribute" => DocxTransitionalMutation::SetConformanceAttribute(semio_s_plugin_stdio::artifacts::docx::standards::v_ecma_376::subsets::transitional::schema::mutations::set_conformance_attribute::SetConformanceAttribute { value: params.str("value") }),
+            "set-snapshot" => DocxTransitionalMutation::SetSnapshot(crate::standards::v_ecma_376::subsets::transitional::schema::mutations::set_snapshot::SetSnapshot { snapshot: stamped(&decode(&mutable_input(ctx)?)?, params.str("conformanceClass") == "strict")? }),
+            "set-main-namespace" => DocxTransitionalMutation::SetMainNamespace(crate::standards::v_ecma_376::subsets::transitional::schema::mutations::set_main_namespace::SetMainNamespace { namespace: params.str("namespace") }),
+            "set-relationship-base" => DocxTransitionalMutation::SetRelationshipBase(crate::standards::v_ecma_376::subsets::transitional::schema::mutations::set_relationship_base::SetRelationshipBase { base: params.str("base") }),
+            "set-conformance-attribute" => DocxTransitionalMutation::SetConformanceAttribute(crate::standards::v_ecma_376::subsets::transitional::schema::mutations::set_conformance_attribute::SetConformanceAttribute { value: params.str("value") }),
             "remove-conformance-attribute" => DocxTransitionalMutation::RemoveConformanceAttribute(remove_conformance_attribute::RemoveConformanceAttribute {}),
             other => return Err(format!("no subject rule for kind {other:?}")),
         })

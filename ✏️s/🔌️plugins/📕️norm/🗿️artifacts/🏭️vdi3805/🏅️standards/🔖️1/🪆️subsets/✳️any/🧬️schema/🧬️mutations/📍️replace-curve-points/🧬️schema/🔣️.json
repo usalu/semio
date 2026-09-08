@@ -1,0 +1,36 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/norm/vdi3805/1/any/mutation/replace-curve-points.json",
+  "title": "ReplaceCurvePoints",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newPoints"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "newPoints": {
+      "type": "array",
+      "items": {
+        "title": "CurvePoint",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "x",
+          "y"
+        ],
+        "properties": {
+          "x": {
+            "type": "number"
+          },
+          "y": {
+            "type": "number"
+          }
+        }
+      }
+    }
+  }
+}

@@ -2,8 +2,8 @@
 //! (called once from 🔌️plugin/🔧️setup via ⚙️engine::register), not per-leaf register().
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use crate::artifacts::json::standards::v_rfc8259::subsets::base::schema::JsonAnalyzer;
-    use crate::artifacts::json::JsonSnapshot;
+    use crate::standards::v_rfc8259::subsets::base::schema::JsonAnalyzer;
+    use crate::JsonSnapshot;
     use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId("*") };
@@ -53,8 +53,8 @@ pub use derived_composition::*;
 /// type (`&'static [&'static ComposerEntry]` vs this module's `&'static [ComposerEntry]`); a bare
 /// `io_registry::entries()` silently rebinds to the wrong one.
 pub mod io_registry {
-    use crate::artifacts::json::standards::v_rfc8259::subsets::base::schema::JsonComposer as JsonRawAnyComposer;
-    use crate::artifacts::json::standards::v_rfc8259::subsets::i_json::schema::JsonIJsonComposer;
+    use crate::standards::v_rfc8259::subsets::base::schema::JsonComposer as JsonRawAnyComposer;
+    use crate::standards::v_rfc8259::subsets::i_json::schema::JsonIJsonComposer;
     use semio_framework_plugin::{composer_entry_of, ComposerEntry};
     use std::sync::OnceLock;
 

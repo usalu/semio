@@ -1,0 +1,273 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/step/ap214/cc2/mutation/set-snapshot.json",
+  "title": "SetSnapshot",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "snapshot"
+  ],
+  "properties": {
+    "snapshot": {
+      "$ref": "#/$defs/StepSnapshot"
+    }
+  },
+  "$defs": {
+    "StepSnapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema"
+      ],
+      "properties": {
+        "schema": {
+          "type": "string"
+        },
+        "header": {
+          "$ref": "#/$defs/StepHeader"
+        },
+        "entities": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/StepEntity"
+          }
+        }
+      }
+    },
+    "StepHeader": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "fileDescription": {
+          "$ref": "#/$defs/StepFileDescription"
+        },
+        "fileName": {
+          "$ref": "#/$defs/StepFileName"
+        },
+        "fileSchema": {
+          "$ref": "#/$defs/StepFileSchema"
+        }
+      }
+    },
+    "StepFileDescription": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "description": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "implementationLevel": {
+          "type": "string"
+        }
+      }
+    },
+    "StepFileName": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "timestamp": {
+          "type": "string"
+        },
+        "author": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "organization": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "preprocessorVersion": {
+          "type": "string"
+        },
+        "originatingSystem": {
+          "type": "string"
+        },
+        "authorization": {
+          "type": "string"
+        }
+      }
+    },
+    "StepFileSchema": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schemas": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "StepEntity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "name": {
+          "type": "string"
+        },
+        "args": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/StepValue"
+          }
+        },
+        "complex": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/StepComplexType"
+          }
+        }
+      }
+    },
+    "StepValue": {
+      "oneOf": [
+        {
+          "type": "string",
+          "const": "unset"
+        },
+        {
+          "type": "string",
+          "const": "derived"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "integer"
+          ],
+          "properties": {
+            "integer": {
+              "type": "integer"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "real"
+          ],
+          "properties": {
+            "real": {
+              "type": "number"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "string"
+          ],
+          "properties": {
+            "string": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "enum"
+          ],
+          "properties": {
+            "enum": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "reference"
+          ],
+          "properties": {
+            "reference": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "aggregate"
+          ],
+          "properties": {
+            "aggregate": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/StepValue"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "typedValue"
+          ],
+          "properties": {
+            "typedValue": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "typeName": {
+                  "type": "string"
+                },
+                "value": {
+                  "$ref": "#/$defs/StepValue"
+                }
+              },
+              "required": [
+                "typeName",
+                "value"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "StepComplexType": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "args": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/StepValue"
+          }
+        }
+      }
+    }
+  }
+}

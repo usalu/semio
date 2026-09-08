@@ -5,7 +5,7 @@
   "displayName": "Create Combination",
   "emoji": "🔗️",
   "aggregateVariant": "CreateCombination",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "create-combination",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

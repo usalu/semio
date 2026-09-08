@@ -1,0 +1,27 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/json/rfc8259/base/mutation/set-member.json",
+  "title": "SetMemberPayload",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "path",
+    "key",
+    "value"
+  ],
+  "properties": {
+    "path": {
+      "type": "array",
+      "items": {
+        "type": [
+          "object",
+          "integer"
+        ]
+      }
+    },
+    "key": {
+      "type": "string"
+    },
+    "value": {}
+  }
+}

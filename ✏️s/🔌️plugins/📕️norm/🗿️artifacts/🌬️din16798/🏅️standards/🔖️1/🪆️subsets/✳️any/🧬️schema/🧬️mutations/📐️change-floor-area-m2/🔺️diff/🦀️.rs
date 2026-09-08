@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeFloorAreaM2, base: &Din16798Snapshot) -> protocol::M
     if base.floor_area_m2 == payload.new_floor_area_m2 {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Floor area is already {}.", payload.new_floor_area_m2));
     }
-    protocol::MutationOutcome::new(Din16798Diff { floor_area_m2: Some(payload.new_floor_area_m2.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(Din16798Diff { floor_area_m2: Some(payload.new_floor_area_m2), ..Default::default() })
 }
 //#endregion 🔖️Diff

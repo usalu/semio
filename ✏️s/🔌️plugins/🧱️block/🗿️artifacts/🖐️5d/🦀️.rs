@@ -153,7 +153,7 @@ mod tests {
 pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
     use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
 
-    let rows: &[(&str, &str, &str, &[(&str, &str)], Option<(&str, &str)>)] = &[
+    let rows: &[semio_framework_plugin::ArtifactCapabilityRow<'_>] = &[
         ("s.block.block5d.standard.v1", "standard", "1", &[], None),
         ("s.block.block5d.standard.v1.profile.any", "profile", "any", &[], None),
         ("s.block.block5d.schema.artifact", "schema", "s.block.block5d", &[("schema", "s.block.block5d")], None),

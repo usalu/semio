@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeCellarAreaM2, base: &Din16798Snapshot) -> protocol::
     if base.cellar_area_m2 == payload.new_cellar_area_m2 {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Cellar area is already {}.", payload.new_cellar_area_m2));
     }
-    protocol::MutationOutcome::new(Din16798Diff { cellar_area_m2: Some(payload.new_cellar_area_m2.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(Din16798Diff { cellar_area_m2: Some(payload.new_cellar_area_m2), ..Default::default() })
 }
 //#endregion 🔖️Diff

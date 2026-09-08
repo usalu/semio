@@ -9,9 +9,9 @@
 //! the auxiliary/application blocks stay put. `DwgDiff` is a per-top-level-field WHOLE-VALUE delta
 //! (no sub-field patching inside `summary`), so the committed diff must be exactly one key.
 
-use crate::artifacts::dwg::schema::diff::DwgDiff;
-use crate::artifacts::dwg::schema::mutations::{apply_dwg_mutation, DwgMutation};
-use crate::artifacts::dwg::schema::snapshot::DwgSnapshot;
+use crate::schema::diff::DwgDiff;
+use crate::schema::mutations::{apply_dwg_mutation, DwgMutation};
+use crate::schema::snapshot::DwgSnapshot;
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");

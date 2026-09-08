@@ -1,21 +1,21 @@
 //! 🧬️ DocxMutation — document mutation dispatch. Every variant's `diff()` is handcrafted (never
 //! apply-and-capture) and every variant's `inverse()` is handcrafted, key/index-aware.
 
-use crate::artifacts::docx::schema::diff::{
+use crate::schema::diff::{
     dec_block, dec_bool, dec_ct_entry, dec_opc_part, dec_rel_owner_entry, dec_str, dec_style, decode_option, enc_block, enc_bool, enc_ct_entry, enc_list, enc_opc_part, enc_rel_owner_entry, enc_str, enc_style, encode_option, hex_decode, hex_encode,
     parse_usize, split_top_level, strip_brackets,
 };
-use crate::artifacts::docx::schema::diff::{
+use crate::schema::diff::{
     diff_insert_block, diff_insert_style, diff_remove_block, diff_remove_part, diff_remove_style, diff_set_block_content, diff_set_part, diff_set_run_formatting, diff_set_run_text, diff_set_snapshot, diff_set_style_based_on, diff_set_style_name,
     resolve_blocks, DocxBlockPath, DocxDiff, DocxPathSegment,
 };
-use crate::artifacts::docx::schema::snapshot::{DocxBlock, DocxDocument, DocxStyle};
+use crate::schema::snapshot::{DocxBlock, DocxDocument, DocxStyle};
 #[cfg(test)]
-use crate::artifacts::docx::schema::snapshot::{DocxParagraph, DocxRun, DocxTable, DocxTableCell, DocxTableRow};
-use crate::artifacts::docx::DocxSnapshot;
-use crate::artifacts::zip::opc::{OpcContentTypes, OpcPackage, OpcRelationship};
+use crate::schema::snapshot::{DocxParagraph, DocxRun, DocxTable, DocxTableCell, DocxTableRow};
+use crate::DocxSnapshot;
+use semio_s_artifact_stdio_zip::opc::{OpcContentTypes, OpcPackage, OpcRelationship};
 #[cfg(test)]
-use crate::artifacts::zip::opc::{OpcTargetMode, RELS_CONTENT_TYPE, REL_TYPE_OFFICE_DOCUMENT};
+use semio_s_artifact_stdio_zip::opc::{OpcTargetMode, RELS_CONTENT_TYPE, REL_TYPE_OFFICE_DOCUMENT};
 use protocol::OpBinary;
 use protocol::{Mutation, OpText};
 use std::collections::HashMap;
@@ -146,7 +146,7 @@ fn style_at<'a>(base: &'a DocxSnapshot, id: &str) -> Option<&'a DocxStyle> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn part_at<'a>(base: &'a DocxSnapshot, path: &str) -> Option<&'a crate::artifacts::zip::opc::OpcPart> {
+fn part_at<'a>(base: &'a DocxSnapshot, path: &str) -> Option<&'a semio_s_artifact_stdio_zip::opc::OpcPart> {
     let p = path.trim_start_matches('/');
     base.opc.parts.iter().find(|part| part.path == p)
 }
@@ -391,7 +391,7 @@ impl OpText for DocxMutation {
 /// `write_str_lp`/`read_str_lp`/`write_bytes_lp`/`read_bytes_lp`/`enc_block_bin`/`dec_block_bin`/
 /// `enc_style_bin`/`dec_style_bin`/`enc_opc_part_bin`/`dec_opc_part_bin`/`enc_rel_bin`/
 /// `dec_rel_bin` (`../🔺️diff/🦀️.rs`, `pub(crate)` to this artifact).
-use crate::artifacts::docx::schema::diff::{dec_block_bin, dec_opc_part_bin, dec_rel_bin, dec_style_bin, enc_block_bin, enc_opc_part_bin, enc_rel_bin, enc_style_bin, read_bytes_lp, read_str_lp, write_bytes_lp, write_str_lp};
+use crate::schema::diff::{dec_block_bin, dec_opc_part_bin, dec_rel_bin, dec_style_bin, enc_block_bin, enc_opc_part_bin, enc_rel_bin, enc_style_bin, read_bytes_lp, read_str_lp, write_bytes_lp, write_str_lp};
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn enc_path_segment_bin(seg: &DocxPathSegment, out: &mut Vec<u8>) {
@@ -687,7 +687,7 @@ impl OpBinary for DocxMutation {
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn fixture() -> DocxSnapshot {
-    crate::artifacts::docx::engine::build_minimal_docx(DocxDocument { body: vec![DocxBlock::paragraph("first"), DocxBlock::paragraph("second")], styles: vec![DocxStyle { id: "Normal".into(), name: "Normal".into(), based_on: None }] })
+    crate::engine::build_minimal_docx(DocxDocument { body: vec![DocxBlock::paragraph("first"), DocxBlock::paragraph("second")], styles: vec![DocxStyle { id: "Normal".into(), name: "Normal".into(), based_on: None }] })
 }
 
 #[cfg(test)]
@@ -821,7 +821,7 @@ pub(crate) fn demo_mutation_cases() -> Vec<DocxMutation> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::docx::schema::diff::{DocxBlockDiff, DocxOpcPartDiff};
+    use crate::schema::diff::{DocxBlockDiff, DocxOpcPartDiff};
     use protocol::command::DiffAlgebra;
     use protocol::MutationDiff;
 
@@ -1001,7 +1001,7 @@ mod tests {
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn body_diff(diff: &DocxDiff) -> &crate::artifacts::docx::schema::diff::DocxBlocksDiff {
+    fn body_diff(diff: &DocxDiff) -> &crate::schema::diff::DocxBlocksDiff {
         diff.document.as_ref().expect("document diff present").body.as_ref().expect("body diff present")
     }
 
@@ -1096,7 +1096,7 @@ mod tests {
         assert_eq!(MutationDiff::apply(&<DocxDiff as DiffAlgebra<DocxSnapshot>>::between(&sample, &sample), &sample).unwrap(), sample);
 
         // "Real" fixture leg: a realistic multi-paragraph document diffed against a mutated variant.
-        let real = crate::artifacts::docx::engine::build_minimal_docx(DocxDocument {
+        let real = crate::engine::build_minimal_docx(DocxDocument {
             body: vec![DocxBlock::paragraph("Chapter One"), DocxBlock::paragraph("Body text goes here.")],
             styles: vec![DocxStyle { id: "Normal".into(), name: "Normal".into(), based_on: None }],
         });
@@ -1111,7 +1111,7 @@ mod tests {
     //#region 🔖️CodecRetentionLaw
     #[semio_framework_async_macros::async_test]
     async fn codec_retention_law() {
-        let snap = crate::artifacts::docx::engine::build_minimal_docx(DocxDocument {
+        let snap = crate::engine::build_minimal_docx(DocxDocument {
             body: vec![DocxBlock::Paragraph(DocxParagraph {
                 runs: vec![DocxRun { text: "Hello".into(), bold: true, italic: true, underline: true, extra_run_properties: Vec::new() }],
                 style: Some("Normal".into()),

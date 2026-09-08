@@ -6,8 +6,8 @@
 //! which renames either the archive comment or one entry's name (see the window's own doc comment
 //! for the honest scope note on what a tree control can and cannot address).
 
-use crate::artifacts::zip::schema::mutations::{rename_entry, set_archive_comment};
-use crate::artifacts::zip::{ZipMutation, ZipSnapshot, STDIO_ZIP_DOCUMENT_SCHEMA};
+use crate::schema::mutations::{rename_entry, set_archive_comment};
+use crate::{ZipMutation, ZipSnapshot, STDIO_ZIP_DOCUMENT_SCHEMA};
 use crate::editor::zip::base::modes::edit;
 use crate::editor::zip::base::modes::edit::windows::main;
 use semio_framework_plugin::{

@@ -5,7 +5,7 @@
   "displayName": "Change Model Version",
   "emoji": "🔢️",
   "aggregateVariant": "ChangeModelVersion",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-model-version",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

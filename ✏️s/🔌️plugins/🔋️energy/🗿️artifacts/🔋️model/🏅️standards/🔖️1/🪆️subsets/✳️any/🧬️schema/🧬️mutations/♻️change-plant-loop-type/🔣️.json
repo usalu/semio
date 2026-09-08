@@ -5,7 +5,7 @@
   "displayName": "Change Plant Loop Type",
   "emoji": "♻️",
   "aggregateVariant": "ChangePlantLoopType",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-plant-loop-type",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

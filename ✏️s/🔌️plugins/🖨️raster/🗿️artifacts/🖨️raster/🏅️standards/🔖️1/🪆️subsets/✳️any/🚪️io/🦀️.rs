@@ -32,12 +32,12 @@ pub fn export_stdio_kinds() -> &'static [&'static str] {
 /// usvg/resvg renderer, whose OUTPUT is then canonicalized through the real png↔semio/image codec.
 use crate::artifacts::raster::{RasterImageAsset, RasterLayerNode, RasterSnapshot, RasterTransform, RASTER_DOCUMENT_SCHEMA};
 use semio_framework::{io::io_compose_via, io_dispatch, resolve_ready, Dialect, ErasedComposeSource, IoDirection, IoKey, IoPayload, StandardId, SubsetId};
-use semio_s_plugin_stdio::artifacts::dwg::{DwgDrawing, DwgGeometry};
-use semio_s_plugin_stdio::artifacts::png::PngSnapshot;
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioPoint3, SemioQuaternion, SemioTransform};
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{DrawCanvas, DrawLayer, DrawNode, PathSegment, SemioDrawingSnapshot, STDIO_SEMIODRAWING_DOCUMENT_SCHEMA};
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::image::schema::snapshot::{SemioColorspace, SemioImageFrame, SemioImageSnapshot, STDIO_SEMIOIMAGE_DOCUMENT_SCHEMA};
-use semio_s_plugin_stdio::artifacts::svg::SvgSnapshot;
+use semio_s_artifact_stdio_dwg::{DwgDrawing, DwgGeometry};
+use semio_s_artifact_stdio_png::PngSnapshot;
+use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioPoint3, SemioQuaternion, SemioTransform};
+use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::{DrawCanvas, DrawLayer, DrawNode, PathSegment, SemioDrawingSnapshot, STDIO_SEMIODRAWING_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_semio::standards::v1::subsets::image::schema::snapshot::{SemioColorspace, SemioImageFrame, SemioImageSnapshot, STDIO_SEMIOIMAGE_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_svg::SvgSnapshot;
 
 const SEMIO_DRAWING_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("drawing") };
 const SEMIO_IMAGE_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("image") };
@@ -67,8 +67,8 @@ pub(crate) const GIF89A_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.gif
 fn ensure_stdio_semio_and_png_registered() {
     static ONCE: std::sync::Once = std::sync::Once::new();
     ONCE.call_once(|| {
-        semio_s_plugin_stdio::artifacts::semio::register();
-        semio_s_plugin_stdio::artifacts::png::register();
+        semio_s_artifact_stdio_semio::register();
+        semio_s_artifact_stdio_png::register();
     });
 }
 
@@ -106,7 +106,7 @@ fn draw_node_for_raster_layer(layer: &RasterLayerNode, assets: &crate::artifacts
             if w <= 0.0 || h <= 0.0 {
                 return None;
             }
-            Some(DrawNode::Group { transform: semio_transform_from_raster(transform), children: vec![DrawNode::Image { at: SemioPoint2 { x: 0.0, y: 0.0 }, width: w, height: h, mime: asset.mime.clone(), bytes: asset.data.clone() }] })
+            Some(DrawNode::Group { transform: semio_transform_from_raster(transform), children: vec![DrawNode::Image { at: SemioPoint2 { x: 0.0, y: 0.0 }, width: w, height: h, mime: asset.mime.clone(), bytes: asset.data }] })
         }
         RasterLayerNode::Group { visible, transform, children, .. } => {
             if !*visible {
@@ -192,7 +192,7 @@ fn dispatch_drawing_to_svg(snapshot: &SemioDrawingSnapshot) -> Result<String, St
     let composed = resolve_ready(io_dispatch(&key, &[ErasedComposeSource { dialect: SEMIO_DRAWING_DIALECT, payload }])).map_err(|error| error.message)?;
     let IoPayload::Binary(svg_bytes) = composed.payload else { return Err("s.stdio.svg composer returned a non-binary payload".into()) };
     let svg_snapshot = <SvgSnapshot as store::ArtifactPack>::decode_pack(&svg_bytes).map_err(|error| format!("{error:?}"))?;
-    Ok(semio_s_plugin_stdio::artifacts::svg::schema::snapshot::write_svg_xml(&svg_snapshot.doc))
+    Ok(semio_s_artifact_stdio_svg::schema::snapshot::write_svg_xml(&svg_snapshot.doc))
 }
 
 /// 🚪️ Dispatches a decoded foreign pixel snapshot (`PngSnapshot`/`BmpSnapshot`/`GifSnapshot`/
@@ -224,7 +224,7 @@ pub(crate) fn semio_image_to_format<T: store::ArtifactPack>(image: &SemioImageSn
 /// (`io_dispatch`) — the honest, structured way to learn a decoded image's real width/height/pixels.
 pub(crate) fn semio_image_from_png_bytes(raw_png_bytes: &[u8]) -> Result<SemioImageSnapshot, String> {
     ensure_stdio_semio_and_png_registered();
-    let png_snapshot: PngSnapshot = semio_s_plugin_stdio::artifacts::png::io::decode_png(raw_png_bytes)?;
+    let png_snapshot: PngSnapshot = semio_s_artifact_stdio_png::io::decode_png(raw_png_bytes)?;
     semio_image_from_format(&png_snapshot, PNG_DIALECT)
 }
 
@@ -232,7 +232,7 @@ pub(crate) fn semio_image_from_png_bytes(raw_png_bytes: &[u8]) -> Result<SemioIm
 /// (`io_dispatch`) plus its own real byte encoder — never a hand-rolled PNG writer.
 pub(crate) fn png_bytes_from_semio_image(image: &SemioImageSnapshot) -> Result<Vec<u8>, String> {
     let png_snapshot: PngSnapshot = semio_image_to_format(image, PNG_DIALECT)?;
-    semio_s_plugin_stdio::artifacts::png::io::encode_png(&png_snapshot)
+    semio_s_artifact_stdio_png::io::encode_png(&png_snapshot)
 }
 
 /// 🧩️ Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM`: real bidirectional CHILD-CONTENT
@@ -260,14 +260,14 @@ pub fn raster_asset_from_semio_image_snapshot(image: &SemioImageSnapshot) -> Res
 /// 🦀️.rs`'s `raster_composite_media` (rule 4: `AppIo`-adjacent behaviour lives in the app).
 pub fn canonicalize_png_bytes(raw_png_bytes: &[u8]) -> Result<Vec<u8>, String> {
     ensure_stdio_semio_and_png_registered();
-    let png_snapshot = semio_s_plugin_stdio::artifacts::png::io::decode_png(raw_png_bytes)?;
+    let png_snapshot = semio_s_artifact_stdio_png::io::decode_png(raw_png_bytes)?;
     let payload = IoPayload::Binary(<PngSnapshot as store::ArtifactPack>::encode_pack(&png_snapshot));
     let hub_key = semio_io_key(&SEMIO_IMAGE_DIALECT, IoDirection::Import, &PNG_DIALECT);
     let target_key = semio_io_key(&SEMIO_IMAGE_DIALECT, IoDirection::Export, &PNG_DIALECT);
     let composed = resolve_ready(io_compose_via(&hub_key, &target_key, &[ErasedComposeSource { dialect: PNG_DIALECT, payload }])).map_err(|error| error.message)?;
     let IoPayload::Binary(bytes) = composed.payload else { return Err("s.stdio.png composer returned a non-binary payload".into()) };
     let png_snapshot = <PngSnapshot as store::ArtifactPack>::decode_pack(&bytes).map_err(|error| format!("{error:?}"))?;
-    semio_s_plugin_stdio::artifacts::png::io::encode_png(&png_snapshot)
+    semio_s_artifact_stdio_png::io::encode_png(&png_snapshot)
 }
 //#endregion 🔖️SemioBridge
 
@@ -396,8 +396,8 @@ fn collect_placements(layers: &[RasterLayerNode], assets: &crate::artifacts::ras
                 }
                 let Some(key) = image_key.as_deref() else { continue };
                 let image = placement_image(assets, key)?;
-                let box_width = width.map(|value| value as f64).unwrap_or(image.width as f64);
-                let box_height = height.map(|value| value as f64).unwrap_or(image.height as f64);
+                let box_width = width.map_or(image.width as f64, |value| value as f64);
+                let box_height = height.map_or(image.height as f64, |value| value as f64);
                 if box_width <= 0.0 || box_height <= 0.0 || image.width == 0 || image.height == 0 {
                     continue;
                 }
@@ -551,8 +551,8 @@ pub fn raster_document_from_semio_image(image: &SemioImageSnapshot, id_prefix: &
 /// `comments`, `app_extensions`) have no on-disk home in an 87a file and are dropped ON PURPOSE —
 /// that is what "this document is GIF87a" means, not a shortcut taken here.
 pub(crate) mod gif87a {
-    use semio_s_plugin_stdio::artifacts::gif::standards::v87a::subsets::any::schema::snapshot::{GifColorTable as Table87a, GifImage as Image87a, GifRgb as Rgb87a, GifSnapshot as Snapshot87a};
-    use semio_s_plugin_stdio::artifacts::gif::standards::v89a::subsets::any::schema::snapshot::{GifColorTable as Table89a, GifFrame as Frame89a, GifRgb as Rgb89a, GifSnapshot as Snapshot89a};
+    use semio_s_artifact_stdio_gif::standards::v87a::subsets::any::schema::snapshot::{GifColorTable as Table87a, GifImage as Image87a, GifRgb as Rgb87a, GifSnapshot as Snapshot87a};
+    use semio_s_artifact_stdio_gif::standards::v89a::subsets::any::schema::snapshot::{GifColorTable as Table89a, GifFrame as Frame89a, GifRgb as Rgb89a, GifSnapshot as Snapshot89a};
 
     fn table_to_87a(table: &Table89a) -> Table87a {
         Table87a { sorted: table.sorted, colors: table.colors.iter().map(|color| Rgb87a { r: color.r, g: color.g, b: color.b }).collect() }
@@ -757,7 +757,7 @@ mod tests {
     const BMP_PARITY_FIXTURES: &[&str] = &[include_str!("🧪️tests/🧫️fixtures/🪟️solid-3x2.json"), include_str!("🧪️tests/🧫️fixtures/🌈️gradient-5x3.json")];
 
     fn parity_fixture(text: &str) -> (u32, u32, Vec<u8>, String) {
-        use semio_s_plugin_stdio::artifacts::json::schema::snapshot::{parse_json_text, JsonValue};
+        use semio_s_artifact_stdio_json::schema::snapshot::{parse_json_text, JsonValue};
         let JsonValue::Object { members } = parse_json_text(text).expect("parity fixture is valid json") else { panic!("parity fixture root must be an object") };
         let member = |key: &str| members.iter().find(|entry| entry.key == key).map(|entry| entry.value.clone()).unwrap_or_else(|| panic!("parity fixture has no {key:?} member"));
         let number = |value: &JsonValue| match value {
@@ -872,8 +872,8 @@ pub mod derived_composition {
             for source in sources {
                 if source.dialect == DIALECT {
                     let native = match &source.payload {
-                        AnalyzeSource::Text(t) => AnalyzeSource::Text(*t),
-                        AnalyzeSource::Binary(b) => AnalyzeSource::Binary(*b),
+                        AnalyzeSource::Text(t) => AnalyzeSource::Text(t),
+                        AnalyzeSource::Binary(b) => AnalyzeSource::Binary(b),
                     };
                     let analysis = RasterAnalyzer::analyze(&[native]);
                     if let Some(snapshot) = analysis.parts.snapshot {
@@ -1010,7 +1010,7 @@ pub mod io_registry {
                 IoPayload::Text(t) => t.as_bytes().to_vec(),
                 IoPayload::Binary(b) => b.clone(),
             };
-            return crate::artifacts::raster::io::import::deserializers::artifacts::json::v_rfc8259::any::deserialize_bytes(&bytes).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() });
+            return crate::artifacts::raster::io::import::deserializers::artifacts::json::v_rfc8259::any::deserialize_bytes(&bytes).map_err(|e| ComposeError { message: e, diagnostics: Vec::new() });
         }
         Err(ComposeError { message: "RasterComposer export: no native or json-bridge source provided".into(), diagnostics: Vec::new() })
     }
@@ -1019,7 +1019,7 @@ pub mod io_registry {
     fn compose_export_gif(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
         Box::pin(async move {
             let snapshot = rebuild_native_snapshot(sources)?;
-            let bytes = crate::artifacts::raster::io::export::serializers::artifacts::gif::v87a::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
+            let bytes = crate::artifacts::raster::io::export::serializers::artifacts::gif::v87a::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e, diagnostics: Vec::new() })?;
             Ok(ComposedArtifact { dialect: EXPORT_GIF_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
         })
     }
@@ -1027,7 +1027,7 @@ pub mod io_registry {
     fn compose_export_svg(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
         Box::pin(async move {
             let snapshot = rebuild_native_snapshot(sources)?;
-            let bytes = crate::artifacts::raster::io::export::serializers::artifacts::svg::v1_1::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
+            let bytes = crate::artifacts::raster::io::export::serializers::artifacts::svg::v1_1::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e, diagnostics: Vec::new() })?;
             Ok(ComposedArtifact { dialect: EXPORT_SVG_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
         })
     }
@@ -1035,7 +1035,7 @@ pub mod io_registry {
     fn compose_export_pdf(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
         Box::pin(async move {
             let snapshot = rebuild_native_snapshot(sources)?;
-            let bytes = crate::artifacts::raster::io::export::serializers::artifacts::pdf::v1_4::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
+            let bytes = crate::artifacts::raster::io::export::serializers::artifacts::pdf::v1_4::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e, diagnostics: Vec::new() })?;
             Ok(ComposedArtifact { dialect: EXPORT_PDF_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
         })
     }
@@ -1043,7 +1043,7 @@ pub mod io_registry {
     fn compose_export_jpg(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
         Box::pin(async move {
             let snapshot = rebuild_native_snapshot(sources)?;
-            let bytes = crate::artifacts::raster::io::export::serializers::artifacts::jpg::v_jfif_1_01::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
+            let bytes = crate::artifacts::raster::io::export::serializers::artifacts::jpg::v_jfif_1_01::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e, diagnostics: Vec::new() })?;
             Ok(ComposedArtifact { dialect: EXPORT_JPG_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
         })
     }
@@ -1051,7 +1051,7 @@ pub mod io_registry {
     fn compose_export_png(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
         Box::pin(async move {
             let snapshot = rebuild_native_snapshot(sources)?;
-            let bytes = crate::artifacts::raster::io::export::serializers::artifacts::png::v1_2::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
+            let bytes = crate::artifacts::raster::io::export::serializers::artifacts::png::v1_2::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e, diagnostics: Vec::new() })?;
             Ok(ComposedArtifact { dialect: EXPORT_PNG_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
         })
     }
@@ -1059,7 +1059,7 @@ pub mod io_registry {
     fn compose_export_json(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
         Box::pin(async move {
             let snapshot = rebuild_native_snapshot(sources)?;
-            let bytes = crate::artifacts::raster::io::export::serializers::artifacts::json::v_rfc8259::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
+            let bytes = crate::artifacts::raster::io::export::serializers::artifacts::json::v_rfc8259::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e, diagnostics: Vec::new() })?;
             Ok(ComposedArtifact { dialect: EXPORT_JSON_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
         })
     }
@@ -1067,7 +1067,7 @@ pub mod io_registry {
     fn compose_export_dwg(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
         Box::pin(async move {
             let snapshot = rebuild_native_snapshot(sources)?;
-            let bytes = crate::artifacts::raster::io::export::serializers::artifacts::dwg::v_ac1018::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
+            let bytes = crate::artifacts::raster::io::export::serializers::artifacts::dwg::v_ac1018::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e, diagnostics: Vec::new() })?;
             Ok(ComposedArtifact { dialect: EXPORT_DWG_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
         })
     }
@@ -1075,7 +1075,7 @@ pub mod io_registry {
     fn compose_export_bmp(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
         Box::pin(async move {
             let snapshot = rebuild_native_snapshot(sources)?;
-            let bytes = crate::artifacts::raster::io::export::serializers::artifacts::bmp::v_v3::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
+            let bytes = crate::artifacts::raster::io::export::serializers::artifacts::bmp::v_v3::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e, diagnostics: Vec::new() })?;
             Ok(ComposedArtifact { dialect: EXPORT_BMP_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
         })
     }
@@ -1083,7 +1083,7 @@ pub mod io_registry {
     fn compose_export_tiff(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
         Box::pin(async move {
             let snapshot = rebuild_native_snapshot(sources)?;
-            let bytes = crate::artifacts::raster::io::export::serializers::artifacts::tiff::v6_0::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
+            let bytes = crate::artifacts::raster::io::export::serializers::artifacts::tiff::v6_0::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e, diagnostics: Vec::new() })?;
             Ok(ComposedArtifact { dialect: EXPORT_TIFF_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
         })
     }
@@ -1117,12 +1117,12 @@ mod dwg_import_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn imports_dwg_polyline_into_raster_document() {
-        let mut drawing = semio_s_plugin_stdio::artifacts::dwg::DwgDrawing::default();
+        let mut drawing = semio_s_artifact_stdio_dwg::DwgDrawing::default();
         let layer = drawing.ensure_layer("0");
-        drawing.entities.push(semio_s_plugin_stdio::artifacts::dwg::DwgEntity {
+        drawing.entities.push(semio_s_artifact_stdio_dwg::DwgEntity {
             layer,
-            color: semio_s_plugin_stdio::artifacts::dwg::DwgColor::ByLayer,
-            geometry: semio_s_plugin_stdio::artifacts::dwg::DwgGeometry::LwPolyline { closed: true, elevation: 0.0, vertices: vec![[0.0, 0.0], [10.0, 0.0], [10.0, 10.0], [0.0, 10.0]], bulges: vec![0.0, 0.0, 0.0, 0.0] },
+            color: semio_s_artifact_stdio_dwg::DwgColor::ByLayer,
+            geometry: semio_s_artifact_stdio_dwg::DwgGeometry::LwPolyline { closed: true, elevation: 0.0, vertices: vec![[0.0, 0.0], [10.0, 0.0], [10.0, 10.0], [0.0, 10.0]], bulges: vec![0.0, 0.0, 0.0, 0.0] },
         });
         drawing.extmin = [0.0, 0.0, 0.0];
         drawing.extmax = [10.0, 10.0, 0.0];
@@ -1140,7 +1140,7 @@ mod dwg_import_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn imports_empty_dwg_into_blank_raster_document() {
-        let drawing = semio_s_plugin_stdio::artifacts::dwg::DwgDrawing::default();
+        let drawing = semio_s_artifact_stdio_dwg::DwgDrawing::default();
         let document = crate::artifacts::raster::io::raster_document_json_from_dwg(&drawing).expect("empty dwg import");
         assert_eq!(document.layers.len(), 1);
         let RasterLayerNode::Pixel { image_key, width, height, .. } = &document.layers[0] else {

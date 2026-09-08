@@ -4249,7 +4249,7 @@ mod tests {
 
     async fn publish_fixture_genesis<S: ArtifactChunkCasStorage>(service: &DirectoryService, user_id: &str, mut descriptor: DocumentDescriptor, storage: Arc<S>, context: &OperationContext<'_>) -> (DocumentDescriptor, ArtifactCheckpoint) {
         use crate::artifact_authority::creation::{artifact_creation_command_digest_v1, ArtifactCreationActorV1, ArtifactCreationFactBodyV1, ArtifactCreationPreparedV1, ARTIFACT_CREATION_DEADLINE_MS};
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("../🗿️artifact-authority/🌱️creation/📚️operation-v1/🔣️.json")).expect("creation fixture");
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../🗿️artifact-authority/🌱️creation/🧫️fixtures/📚️operation-v1/🔣️.json")).expect("creation fixture");
         let mut intent = ArtifactCreationIntentV1::from_value(DslValue::from(fixture["intent"].clone())).expect("creation intent");
         let mut prepared = ArtifactCreationPreparedV1::from_value(DslValue::from(fixture["prepared"].clone())).expect("creation pair");
         let issued = service.dir.issue_auth_session(&AuthSessionIssue { user_id: user_id.into(), identity_provider: "genesis-test".into(), identity_subject_digest: identity_subject_digest("genesis-test", user_id).expect("fixture identity"), ttl_secs: 60, device_instance_id: "genesis-device".into(), session_kind: AuthSessionKind::DevelopmentLocal, correlation_id: "genesis-session".into(), peer_class: "loopback-test".into() }).await.expect("creation session");

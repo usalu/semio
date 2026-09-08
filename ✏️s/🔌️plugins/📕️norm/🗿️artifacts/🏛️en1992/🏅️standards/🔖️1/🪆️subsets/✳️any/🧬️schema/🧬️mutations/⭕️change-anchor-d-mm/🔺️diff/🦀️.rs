@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeAnchorDMm, base: &En1992Snapshot) -> protocol::Mutat
     if base.anchor_d_mm == payload.new_anchor_d_mm {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "Anchor d mm already has this value.");
     }
-    protocol::MutationOutcome::new(En1992Diff { anchor_d_mm: Some(payload.new_anchor_d_mm.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1992Diff { anchor_d_mm: Some(payload.new_anchor_d_mm), ..Default::default() })
 }
 //#endregion 🔖️Diff

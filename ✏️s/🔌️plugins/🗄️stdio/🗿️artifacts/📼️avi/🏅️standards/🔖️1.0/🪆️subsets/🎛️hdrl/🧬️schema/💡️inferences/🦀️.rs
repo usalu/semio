@@ -5,8 +5,8 @@
 //! inference gets its own `<emoji><slug>/` child (currently: `⏱️duration/`, derived from the real
 //! `avih` MainAVIHeader's `dwTotalFrames`/`dwMicroSecPerFrame` fields).
 
-use crate::artifacts::avi::standards::v1_0::subsets::any::schema::snapshot::AviSnapshot;
-use schema::ArtifactSchema;
+use crate::standards::v1_0::subsets::any::schema::snapshot::AviSnapshot;
+use framework_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 
 use super::duration::{compute_avi_duration, AviDuration};
@@ -55,7 +55,7 @@ impl protocol::InferenceSpec<AviSnapshot> for AviInference {
 /// 💡️ No `InferredField`s here — `duration` is a fixed-field read off `main_header` plus a single
 /// `streams.len()` count, already O(1)/O(streams) with no honest per-entity incremental
 /// decomposition worth a merkle dep-chain — the default `infer_cached` passthrough is exact.
-impl ArtifactInferrer for crate::artifacts::avi::standards::v1_0::subsets::any::schema::AviBuilder {
+impl ArtifactInferrer for crate::standards::v1_0::subsets::any::schema::AviBuilder {
     type Snapshot = AviSnapshot;
     type Inference = AviInference;
 }
@@ -65,10 +65,10 @@ impl ArtifactInferrer for crate::artifacts::avi::standards::v1_0::subsets::any::
 /// 💡️ Registers `s.stdio.avi.inference`'s facet leaves into the OS-wide inference catalog — call
 /// once at plugin init, alongside `avi_artifact_schema_descriptor`'s registration.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn avi_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
-    schema::ArtifactInferenceDescriptor {
+pub fn avi_artifact_inference_descriptor() -> framework_schema::ArtifactInferenceDescriptor {
+    framework_schema::ArtifactInferenceDescriptor {
         id: "s.stdio.avi.inference",
-        inference: schema::FacetLeaves {
+        inference: framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),

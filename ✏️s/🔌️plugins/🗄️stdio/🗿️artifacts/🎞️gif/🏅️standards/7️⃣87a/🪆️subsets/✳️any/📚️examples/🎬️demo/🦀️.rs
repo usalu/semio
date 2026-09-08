@@ -31,8 +31,8 @@ mod tests {
     /// `💃️dancing` example (a real 89a fixture).await.
     #[semio_framework_async_macros::async_test]
     async fn inference_determinism_law() {
-        use crate::artifacts::gif::standards::v87a::subsets::any::schema::inferences::GifInference;
-        use crate::artifacts::gif::standards::v87a::subsets::any::schema::snapshot::GifSnapshot;
+        use crate::standards::v87a::subsets::any::schema::inferences::GifInference;
+        use crate::standards::v87a::subsets::any::schema::snapshot::GifSnapshot;
         use protocol::Inference;
         let snapshot = <GifSnapshot as store::ArtifactDsl>::parse_dsl(PRIMARY_TEXT).expect("demo fixture must parse");
         assert_eq!(GifInference::infer(&snapshot), GifInference::infer(&snapshot));
@@ -40,8 +40,8 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn inference_default_law() {
-        use crate::artifacts::gif::standards::v87a::subsets::any::schema::inferences::GifInference;
-        use crate::artifacts::gif::standards::v87a::subsets::any::schema::snapshot::GifSnapshot;
+        use crate::standards::v87a::subsets::any::schema::inferences::GifInference;
+        use crate::standards::v87a::subsets::any::schema::snapshot::GifSnapshot;
         use protocol::Inference;
         assert_eq!(GifInference::infer(&GifSnapshot::default()), GifInference::default());
     }

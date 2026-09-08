@@ -138,7 +138,7 @@
         {
           "id": "insert-entity",
           "capability": "ifc-4-any-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -157,7 +157,7 @@
         {
           "id": "insert-entity-arg",
           "capability": "ifc-4-any-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -176,7 +176,7 @@
         {
           "id": "remove-entity",
           "capability": "ifc-4-any-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -195,7 +195,7 @@
         {
           "id": "remove-entity-arg",
           "capability": "ifc-4-any-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -214,7 +214,7 @@
         {
           "id": "set-entity-arg",
           "capability": "ifc-4-any-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -233,7 +233,7 @@
         {
           "id": "set-entity-name",
           "capability": "ifc-4-any-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -252,7 +252,7 @@
         {
           "id": "set-file-description",
           "capability": "ifc-4-any-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -271,7 +271,7 @@
         {
           "id": "set-file-name",
           "capability": "ifc-4-any-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -290,7 +290,7 @@
         {
           "id": "set-file-schema",
           "capability": "ifc-4-any-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -309,7 +309,7 @@
         {
           "id": "set-snapshot",
           "capability": "ifc-4-any-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],

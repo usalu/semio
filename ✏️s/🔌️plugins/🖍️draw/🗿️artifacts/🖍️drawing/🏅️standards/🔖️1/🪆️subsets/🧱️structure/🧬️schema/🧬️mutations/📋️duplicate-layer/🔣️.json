@@ -5,7 +5,7 @@
   "displayName": "Duplicate Layer",
   "emoji": "📋️",
   "aggregateVariant": "DuplicateLayer",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "duplicate-layer",
   "binaryTag": 11,
   "invertibility": "explicit-mutation",

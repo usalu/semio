@@ -17,7 +17,6 @@ use semio_framework_plugin::{world3d_scene, world3d_selection_json, WorldSunConf
 pub const WINDOW_KIND_ID: &str = "fem3d-view-model";
 /// 📄️ The viewer Model window's sole render body key.
 pub const BODY_KEY: &str = "fem3d.view.model";
-/// 👁️ Read-only counterpart of the editor's `FEM3D_APP_ID` controller id — kept distinct so a viewer
 //#endregion 🔖️Constants
 
 //#region 🔖️PreparedScene

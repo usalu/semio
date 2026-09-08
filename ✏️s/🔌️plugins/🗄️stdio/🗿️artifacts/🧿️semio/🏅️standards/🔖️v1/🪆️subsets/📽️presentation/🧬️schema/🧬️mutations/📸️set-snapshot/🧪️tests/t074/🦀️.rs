@@ -14,9 +14,9 @@
 //! layout" is `Some(None)`, which serde writes as bare `null` and reads back as `None`
 //! (= unchanged), so no committed fixture may express it. This case keeps the layout stable.
 
-use crate::artifacts::semio::standards::v1::subsets::presentation::schema::diff::{SemioPresentationDiff, SlideShapeDiff};
-use crate::artifacts::semio::standards::v1::subsets::presentation::schema::mutations::{apply_semio_presentation_mutation, SemioPresentationMutation};
-use crate::artifacts::semio::standards::v1::subsets::presentation::schema::snapshot::SemioPresentationSnapshot;
+use crate::standards::v1::subsets::presentation::schema::diff::{SemioPresentationDiff, SlideShapeDiff};
+use crate::standards::v1::subsets::presentation::schema::mutations::{apply_semio_presentation_mutation, SemioPresentationMutation};
+use crate::standards::v1::subsets::presentation::schema::snapshot::SemioPresentationSnapshot;
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");

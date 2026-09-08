@@ -1,20 +1,25 @@
 import { act as reactAct, createElement, useState, type ReactElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
+import { flushSync } from "react-dom";
 import { applyPatch } from "fast-json-patch";
-import { Layout } from "@semio-tech/ui-react";
+import { Layout, UIDialog, createTutorialClock, uiI18n } from "@semio-tech/ui-react";
 import { resolvePluginCanvasStatus, type PluginSupervisorState } from "../../../../🧱️elements/🐚️Shell/🟦️.tsx";
 import bootCanvasFixture from "../../../../🧱️elements/🐚️Shell/🧪️fixtures/🔣️.json";
 import {
   dispatchInvokeExtensionEffect,
+  artifactKindChoiceDraftRetirementsV1,
+  captureSpaceArtifactCreationCatalogAuthorityV1,
   mountedGisMapProbeV1,
   runInvokeExtensionEffect,
   spaceArtifactCreationOwnerAcceptsStatus,
   spaceArtifactCreationReadyOpening,
   spaceArtifactCreationRequestFromAction,
+  selectedSpaceArtifactCreationCatalogV1,
   tutorialInteractionSelectionActions,
+  type SpaceArtifactCreationCatalogAuthorityV1,
   type SpaceArtifactCreationOwnerV1,
 } from "../../../../🧱️elements/🏛️ShellHost/🟦️.tsx";
-import { EMPTY_APP_LABELS_OVERLAY, makeEffectDispatchOne, resolveDialogDefinition } from "../../../../🧱️elements/🛠️ShellHelpers/🟦️.tsx";
+import { EMPTY_APP_LABELS_OVERLAY, makeEffectDispatchOne, renderStagedArgControl, resolveDialogDefinition } from "../../../../🧱️elements/🛠️ShellHelpers/🟦️.tsx";
 import type { LoadedProgramState } from "../../../../🧱️elements/🐚️Shell/🟦️.tsx";
 import extensionInvocationFixture from "../../../../🧱️elements/🏛️ShellHost/🧪️fixtures/🔣️extension-invocation.json";
 import extensionInvocationSchema from "../../../../🧱️elements/🏛️ShellHost/🧪️fixtures/🧬️.schema.json";
@@ -30,11 +35,17 @@ import admittedInstanceFixture from "../../../../🧱️elements/🏛️ShellHos
 import admittedInstanceSchema from "../../../../🧱️elements/🏛️ShellHost/🧬️contracts/🗨️dialog-origin/🚪️opening/🧬️.schema.json";
 import artifactCreationProgressFixture from "../../../../🧱️elements/🏛️ShellHost/🧬️contracts/🌱️artifact-creation/🔣️.json";
 import artifactCreationProgressSchema from "../../../../🧱️elements/🏛️ShellHost/🧬️contracts/🌱️artifact-creation/🧬️.schema.json";
+import artifactCreationCatalogAuthorityFixture from "../../../../🧱️elements/🏛️ShellHost/🧬️contracts/🌱️artifact-creation/🪪️catalog-authority/🔣️.json";
+import artifactCreationCatalogAuthoritySchema from "../../../../🧱️elements/🏛️ShellHost/🧬️contracts/🌱️artifact-creation/🪪️catalog-authority/🧬️.schema.json";
 import { ARTIFACT_CREATION_PROGRESS_CAPACITY, ARTIFACT_CREATION_PROGRESS_TEXT_V1, ArtifactCreationCatalogNotice, ArtifactCreationProgressNotice, artifactCreationProgressLocaleV1, artifactCreationProgressRoleV1, artifactCreationProgressTerminalV1, reduceArtifactCreationProgressUiV1, type ArtifactCreationProgressOwnerV1 } from "../../../../🧱️elements/🏛️ShellHost/🧬️contracts/🌱️artifact-creation/🏦️.tsx";
 import { OwnedShellDialog, type OwnedShellDialogProps } from "../../../../🧱️elements/🏛️ShellHost/🧬️contracts/🗨️dialog-origin/🌐️browser/🟦️.tsx";
 import tutorialRunFixture from "../../../../🧱️elements/🏛️ShellHost/🧬️contracts/🗨️dialog-origin/🎥️tutorial/🔣️.json";
 import tutorialRunSchema from "../../../../🧱️elements/🏛️ShellHost/🧬️contracts/🗨️dialog-origin/🎥️tutorial/🧬️.schema.json";
-import { OwnedTutorialRunV1 } from "../../../../🧱️elements/🏛️ShellHost/🧬️contracts/🗨️dialog-origin/🎥️tutorial/🟦️.ts";
+import { OwnedTutorialRunV1, TutorialDriveV1, runPausedTutorialSeekV1 } from "../../../../🧱️elements/🏛️ShellHost/🧬️contracts/🗨️dialog-origin/🎥️tutorial/🟦️.ts";
+import tutorialSeekFixture from "../../../../🧱️elements/🏛️ShellHost/🧬️contracts/🗨️dialog-origin/🎥️tutorial/⏩️seek/🔣️.json";
+import tutorialSeekSchema from "../../../../🧱️elements/🏛️ShellHost/🧬️contracts/🗨️dialog-origin/🎥️tutorial/⏩️seek/🧬️.schema.json";
+import tutorialSerialFixture from "../../../../🧱️elements/🏛️ShellHost/🧬️contracts/🗨️dialog-origin/🎥️tutorial/🧵️serial/🔣️.json";
+import tutorialSerialSchema from "../../../../🧱️elements/🏛️ShellHost/🧬️contracts/🗨️dialog-origin/🎥️tutorial/🧵️serial/🧬️.schema.json";
 import descriptorLoadFixture from "../../../../../../../../../🔨️modules/🎠️kernel/🧫️fixtures/📇️descriptor-load/🔣️.json";
 import descriptorLoadSchema from "../../../../../../../../../🔨️modules/🎠️kernel/🧫️fixtures/📇️descriptor-load/🧬️.schema.json";
 import { createInstance as createTranslationOracle } from "i18next";
@@ -56,10 +67,26 @@ import presenceOverlaySchema from "../../../../../../../../../🔨️modules/�
 import { createRequire } from "node:module";
 import type * as AccessibilityOracle from "dom-accessibility-api" with { "resolution-mode": "require" };
 import { decodeLocalInteractionCaptureJson, LOCAL_INTERACTION_CAPTURE_MAX_BYTES } from "@semio-tech/framework-replication";
+import { unresolvedActionArgs } from "@semio-tech/framework";
+import choiceFixture from "../../../../../../../../../../🧰️framework/🔨️modules/🧩️action-argument-resolution/🧬️contracts/🔽️choices/🔣️.json";
+import choiceSchema from "../../../../../../../../../../🧰️framework/🔨️modules/🧩️action-argument-resolution/🧬️contracts/🔽️choices/🧬️.schema.json";
 
 const { computeAccessibleName }: typeof AccessibilityOracle = createRequire(import.meta.url)("dom-accessibility-api");
 
 describe("catalog-resolved artifact creation kinds", () => {
+  it("matches the independent enum validator for unresolved required and host-resolved choices", () => {
+    const ajv = new Ajv({ strict: true });
+    expect(ajv.compile(choiceSchema)(choiceFixture)).toBe(true);
+    for (const row of choiceFixture.cases) {
+      const def: ActionArgDef = { id: "kindChoice", label: "Kind", required: row.required, schema: { kind: "string", options: row.options.map(value => ({ value, label: value })), ...(row.format === "text" ? {} : { format: row.format === "artifactKind" ? { kind: "artifactKind", roles: ["editor"] } : { kind: "surfaceApp", roles: ["editor"], dialectArg: "dialect" } }) } };
+      const data = row.value === null || row.value === "" ? {} : { kindChoice: row.value };
+      const property = row.options.length > 0 ? { enum: row.options } : row.format === "text" ? {} : false;
+      const oracle = ajv.compile({ type: "object", required: row.required ? ["kindChoice"] : [], properties: { kindChoice: property } });
+      expect(!oracle(data), row.id).toBe(row.unresolved);
+      expect(unresolvedActionArgs([def], data), row.id).toEqual(row.unresolved ? ["kindChoice"] : []);
+    }
+    console.log("[DEBUG] Action choice validation: neutral=12 independent-enum-oracle=12");
+  });
   const localized = (en: string, de: string) => ({ native: { en, de }, reuse: { en, de } });
   const dialog: DialogDefinition = {
     id: "createArtifact",
@@ -79,6 +106,122 @@ describe("catalog-resolved artifact creation kinds", () => {
     workflows: [],
     examples: [],
   }];
+
+  it("keeps unavailable catalog feedback inside the dialog and requires a fresh selection after catalog withdrawal", async () => {
+    for (const locale of ["en", "de"] as const) {
+      await uiI18n.changeLanguage(locale);
+      const ready = resolveDialogDefinition(dialog, EMPTY_APP_LABELS_OVERLAY, "native", locale, manifests);
+      const unavailable = resolveDialogDefinition(dialog, EMPTY_APP_LABELS_OVERLAY, "native", locale, manifests, []);
+      const submit = vi.fn();
+      const kindLabel = locale === "en" ? "Kind" : "Art";
+      const kindName = locale === "en" ? "GIS Map" : "GIS-Karte";
+      const submitLabel = locale === "en" ? "Create" : "Erstellen";
+      const props = (definition: typeof ready, phase: "ready" | "loading" | "unavailable"): OwnedShellDialogProps<ResolvedActionArgDef> => ({
+        owner: { openingId: 1, dialogId: dialog.id, origin: dialogOriginFixture.owner, seedArgs: { kindChoice: "forged" } },
+        dialog: definition, isCurrent: () => true, close: () => true, dispatch: submit,
+        notice: createElement(ArtifactCreationCatalogNotice, { status: { phase }, locale }),
+        renderField: (def, value, change, field) => renderStagedArgControl(def, value, change, false, field),
+      });
+      const view = render(createElement(OwnedShellDialog<ResolvedActionArgDef>, props(ready, "ready")));
+      try {
+        expect(view.getByRole("button", { name: submitLabel }).hasAttribute("disabled")).toBe(true);
+        for (const phase of choiceFixture.catalogTransitions as ("loading" | "unavailable")[]) {
+          fireEvent.click(view.getByRole("combobox", { name: kindLabel }));
+          fireEvent.click(view.getByRole("option", { name: kindName }));
+          expect(view.getByRole("button", { name: submitLabel }).hasAttribute("disabled")).toBe(false);
+          view.rerender(createElement(OwnedShellDialog<ResolvedActionArgDef>, props(unavailable, phase)));
+          expect(view.getByRole("dialog").querySelector("input#kindChoice")).toBeNull();
+          expect(view.getByRole("combobox", { name: kindLabel }).hasAttribute("disabled")).toBe(true);
+          const notice = view.getByRole(phase === "unavailable" ? "alert" : "status");
+          expect(view.getByRole("dialog").contains(notice)).toBe(true);
+          expect(computeAccessibleName(notice)).toBe(ARTIFACT_CREATION_PROGRESS_TEXT_V1[locale].catalog[phase]);
+          expect(notice.closest('[inert],[aria-hidden="true"]')).toBeNull();
+          const button = view.getByRole("button", { name: submitLabel });
+          expect(button.hasAttribute("disabled")).toBe(true);
+          fireEvent.click(button);
+          fireEvent.keyDown(view.getByRole("dialog"), { key: "Enter", ctrlKey: true });
+          expect(submit).not.toHaveBeenCalled();
+          view.rerender(createElement(OwnedShellDialog<ResolvedActionArgDef>, props(ready, "ready")));
+          expect(view.getByRole("button", { name: submitLabel }).hasAttribute("disabled")).toBe(true);
+        }
+        fireEvent.click(view.getByRole("combobox", { name: kindLabel }));
+        fireEvent.click(view.getByRole("option", { name: kindName }));
+        fireEvent.click(view.getByRole("button", { name: submitLabel }));
+        expect(submit).toHaveBeenCalledTimes(1);
+        expect(JSON.parse(submit.mock.calls[0]![2].kindChoice).kindId).toBe("s.gis.gismap");
+      } finally { view.unmount(); }
+    }
+    console.log("[DEBUG] Shell catalog dialog: locales=2 withdrawn-catalog=6 stale-submits=0 fresh-selection=2");
+  });
+
+  it("retires only choices when their catalog generation changes, even if the same tuple returns", async () => {
+    await uiI18n.changeLanguage("en");
+    const resolved = resolveDialogDefinition({ ...dialog, args: [...dialog.args,
+      { id: "name", label: localized("Name", "Name"), required: true, schema: { kind: "string", options: [] } },
+      { id: "color", label: localized("Color", "Farbe"), required: true, schema: { kind: "string", options: [{ value: "blue", label: localized("Blue", "Blau") }] } },
+    ] }, EMPTY_APP_LABELS_OVERLAY, "native", "en", manifests);
+    const props = { dialog: resolved, onSubmit: vi.fn(), onCancel: vi.fn(), renderField: (def: ResolvedActionArgDef, value: unknown, change: (value: unknown) => void, field: Parameters<OwnedShellDialogProps<ResolvedActionArgDef>["renderField"]>[3]) => renderStagedArgControl(def, value, change, false, field) };
+    const view = render(createElement(UIDialog<ResolvedActionArgDef>, { ...props, choiceRevisions: { kindChoice: choiceFixture.generation.before } }));
+    try {
+      fireEvent.change(view.getByRole("textbox", { name: "Name" }), { target: { value: choiceFixture.generation.text } });
+      fireEvent.click(view.getByRole("combobox", { name: "Color" }));
+      fireEvent.click(view.getByRole("option", { name: "Blue" }));
+      fireEvent.click(view.getByRole("combobox", { name: "Kind" }));
+      fireEvent.click(view.getByRole("option", { name: "GIS Map" }));
+      expect(view.getByRole("button", { name: "Create" }).hasAttribute("disabled")).toBe(false);
+      view.rerender(createElement(UIDialog<ResolvedActionArgDef>, { ...props, choiceRevisions: { kindChoice: choiceFixture.generation.after } }));
+      expect((view.getByRole("textbox", { name: "Name" }) as HTMLInputElement).value).toBe(choiceFixture.generation.text);
+      expect(view.getByRole("button", { name: "Create" }).hasAttribute("disabled")).toBe(true);
+      fireEvent.click(view.getByRole("combobox", { name: "Kind" }));
+      fireEvent.click(view.getByRole("option", { name: "GIS Map" }));
+      fireEvent.click(view.getByRole("button", { name: "Create" }));
+      expect(props.onSubmit).toHaveBeenCalledTimes(1);
+      expect(props.onSubmit.mock.calls[0]![0].name).toBe(choiceFixture.generation.text);
+      expect(props.onSubmit.mock.calls[0]![0].color).toBe(choiceFixture.generation.staticChoice);
+    } finally { view.unmount(); }
+    console.log("[DEBUG] Shell catalog dialog: generation-change=1 choices-retired=1 unrelated-text-retained=1");
+  });
+
+  it("rejects an already queued submit handler when capture retires its catalog generation", async () => {
+    await uiI18n.changeLanguage("en");
+    const resolved = resolveDialogDefinition(dialog, EMPTY_APP_LABELS_OVERLAY, "native", "en", manifests);
+    const submit = vi.fn();
+    function Harness(): ReactElement {
+      const [revision, setRevision] = useState(choiceFixture.generation.before);
+      return createElement("div", { onKeyDownCapture: () => flushSync(() => setRevision(choiceFixture.generation.after)) },
+        createElement(UIDialog<ResolvedActionArgDef>, { dialog: resolved, choiceRevisions: { kindChoice: revision }, onSubmit: submit, onCancel: () => {}, renderField: (def, value, change, field) => renderStagedArgControl(def, value, change, false, field) }));
+    }
+    const view = render(createElement(Harness));
+    try {
+      fireEvent.click(view.getByRole("combobox", { name: "Kind" }));
+      fireEvent.click(view.getByRole("option", { name: "GIS Map" }));
+      expect(view.getByRole("button", { name: "Create" }).hasAttribute("disabled")).toBe(false);
+      fireEvent.keyDown(view.getByRole("dialog"), { key: "Enter", ctrlKey: true });
+      expect(submit).toHaveBeenCalledTimes(choiceFixture.generation.staleSubmits);
+      expect(view.getByRole("button", { name: "Create" }).hasAttribute("disabled")).toBe(true);
+    } finally { view.unmount(); }
+  });
+
+  it("names the actual staged kind picker and retains the chosen catalog tuple inside its modal", async () => {
+    await uiI18n.changeLanguage("en");
+    const resolved = resolveDialogDefinition(dialog, EMPTY_APP_LABELS_OVERLAY, "native", "en", manifests);
+    const submit = vi.fn();
+    const cancel = vi.fn();
+    const view = render(createElement(UIDialog<ResolvedActionArgDef>, { dialog: resolved, onSubmit: submit, onCancel: cancel, renderField: (def, value, change, field) => renderStagedArgControl(def, value, change, false, field) }));
+    const picker = view.getByRole("combobox", { name: "Kind" });
+    expect(computeAccessibleName(picker)).toBe("Kind");
+    expect(picker.getAttribute("aria-required")).toBe("true");
+    fireEvent.click(picker);
+    expect(document.activeElement).toBe(view.getByRole("listbox"));
+    fireEvent.click(view.getByRole("option", { name: "GIS Map" }));
+    expect(view.getByRole("button", { name: "Create" }).hasAttribute("disabled")).toBe(false);
+    fireEvent.click(view.getByRole("button", { name: "Create" }));
+    expect(cancel).not.toHaveBeenCalled();
+    expect(submit).toHaveBeenCalledTimes(1);
+    expect(JSON.parse(submit.mock.calls[0]![0].kindChoice).kindId).toBe("s.gis.gismap");
+    console.log("[DEBUG] Shell catalog dialog: named-real-picker=1 modal-selection=1 exact-tuple=s.gis.gismap");
+    view.unmount();
+  });
 
   it("projects only live catalog editor kinds into the ordinary dialog in the requested locale", () => {
     const english = resolveDialogDefinition(dialog, EMPTY_APP_LABELS_OVERLAY, "native", "en", manifests);
@@ -101,6 +244,214 @@ describe("catalog-resolved artifact creation kinds", () => {
 });
 
 describe("Shell dialog origin", () => {
+  it("serializes a seek behind the admitted director write and drains before retirement completes", async () => {
+    expect(new Ajv({ strict: true }).compile(tutorialSerialSchema)(tutorialSerialFixture)).toBe(true);
+    for (const row of tutorialSerialFixture.cases) {
+      const drive = new TutorialDriveV1();
+      let owner = true;
+      let cursor = 0;
+      const writes: string[] = [];
+      let resolve!: () => void;
+      const gate = new Promise<void>(done => { resolve = done; });
+      const director = drive.enqueue(() => owner, async token => {
+        writes.push("M");
+        await gate;
+        if (owner && drive.accepts(token)) cursor = 100;
+      });
+      await Promise.resolve();
+      expect(writes).toEqual(["M"]);
+      const reconcile = async (token: number) => {
+        expect(cursor).toBe(100);
+        if (owner && drive.accepts(token)) { writes.push("inverse-M"); cursor = 0; }
+      };
+      const stale = vi.fn(async () => {});
+      const seek = drive.enqueue(() => owner, row.replace ? stale : reconcile);
+      const latest = row.replace ? drive.enqueue(() => owner, reconcile) : Promise.resolve();
+      if (row.close) { owner = false; drive.retire(); }
+      let drained = false;
+      const drain = drive.drain().then(() => { drained = true; });
+      await Promise.resolve();
+      expect(drained).toBe(false);
+      expect(writes).toEqual(["M"]);
+      expect(cursor).toBe(0);
+      resolve();
+      await drain;
+      expect(deepEqual({ writes, cursor }, { writes: row.writes, cursor: row.cursor })).toBe(true);
+      expect(drive.busy).toBe(false);
+      await Promise.all([director, seek, latest]);
+      expect(stale).not.toHaveBeenCalled();
+      expect(deepEqual({ writes, cursor }, { writes: row.writes, cursor: row.cursor })).toBe(true);
+      expect(drive.busy).toBe(false);
+    }
+    console.log("[DEBUG] Shell tutorial serial drive: neutral=3 inverse-before-forward=0 retire-drains=1 pending-capacity=1");
+  });
+
+  it("restores the original tutorial snapshot only after the admitted write drains", async () => {
+    const drive = new TutorialDriveV1();
+    let documentValue = 0;
+    let resolve!: () => void;
+    const gate = new Promise<void>(done => { resolve = done; });
+    const restore = vi.fn(async () => { documentValue = 0; });
+    const run = new OwnedTutorialRunV1("tour", dialogOriginFixture.owner, () => true, {
+      read: async () => ({ pack: new Uint8Array([0]), spr: new Uint8Array([0]) }), drain: () => drive.drain(), restore,
+    });
+    await run.start();
+    const write = drive.enqueue(() => run.ready, async () => { await gate; documentValue = 1; });
+    await Promise.resolve();
+    drive.retire();
+    const stopping = run.stop();
+    expect(restore).not.toHaveBeenCalled();
+    resolve();
+    await Promise.all([write, stopping]);
+    expect(restore).toHaveBeenCalledTimes(1);
+    expect(documentValue).toBe(0);
+    expect(run.ready).toBe(false);
+  });
+
+  it("drains a promoted delayed successor and rejects direct token replacement of admitted writes", async () => {
+    const drive = new TutorialDriveV1();
+    let finishFirst!: () => void;
+    let finishSecond!: () => void;
+    let startSecond!: () => void;
+    const firstGate = new Promise<void>(resolve => { finishFirst = resolve; });
+    const secondGate = new Promise<void>(resolve => { finishSecond = resolve; });
+    const secondStarted = new Promise<void>(resolve => { startSecond = resolve; });
+    const first = drive.enqueue(() => true, () => firstGate);
+    await Promise.resolve();
+    expect(() => drive.claim()).toThrow("Cannot replace an admitted tutorial document drive");
+    const second = drive.enqueue(() => true, async () => { startSecond(); await secondGate; });
+    let drained = false;
+    const drain = drive.drain().then(() => { drained = true; });
+    finishFirst();
+    await secondStarted;
+    expect(drained).toBe(false);
+    finishSecond();
+    await drain;
+    expect(drive.busy).toBe(false);
+    await Promise.all([first, second]);
+  });
+
+  it("quarantines a failed physical drive until explicit retirement and never runs queued reconciliation", async () => {
+    const drive = new TutorialDriveV1();
+    let reject!: (error: Error) => void;
+    const gate = new Promise<void>((_resolve, fail) => { reject = fail; });
+    const first = drive.enqueue(() => true, () => gate).catch(error => error);
+    await Promise.resolve();
+    const reconcile = vi.fn(async () => {});
+    const second = drive.enqueue(() => true, reconcile).catch(error => error);
+    const failure = new Error("uncertain physical write");
+    reject(failure);
+    expect(await first).toBe(failure);
+    expect(await second).toBe(failure);
+    await expect(drive.enqueue(() => true, reconcile)).rejects.toBe(failure);
+    expect(reconcile).not.toHaveBeenCalled();
+    drive.retire();
+    await drive.enqueue(() => true, reconcile);
+    expect(reconcile).toHaveBeenCalledTimes(1);
+  });
+
+  it("pauses the actual playback clock across a delayed owned seek without replaying its mutation", async () => {
+    expect(new Ajv({ strict: true }).compile(tutorialSeekSchema)(tutorialSeekFixture)).toBe(true);
+    for (const row of tutorialSeekFixture.cases) {
+      let frame: FrameRequestCallback | undefined;
+      vi.stubGlobal("requestAnimationFrame", (next: FrameRequestCallback) => { frame = next; return 1; });
+      vi.stubGlobal("cancelAnimationFrame", () => {});
+      const clock = createTutorialClock(1000);
+      try {
+        if (row.playing) clock.play();
+        const drive = new TutorialDriveV1();
+        let owner = true;
+        let wantsPlaying = row.requested;
+        let mutations = 0;
+        let playhead = 0;
+        let resolve!: () => void;
+        const delayed = new Promise<void>(done => { resolve = done; });
+        clock.subscribe(() => { if (clock.isPlaying() && playhead !== clock.getTimeMs()) mutations++; });
+        const seek = runPausedTutorialSeekV1(clock, drive, () => owner, () => wantsPlaying, async token => {
+          mutations++;
+          await delayed;
+          if (!owner || !drive.accepts(token)) return;
+          playhead = 200;
+          clock.seek(playhead);
+        });
+        expect(clock.isPlaying()).toBe(false);
+        await Promise.resolve();
+        frame?.(100);
+        frame?.(200);
+        expect(mutations).toBe(1);
+        expect(playhead).toBe(0);
+        if (row.interrupt === "pause") wantsPlaying = false;
+        if (row.interrupt === "play") wantsPlaying = true;
+        if (row.interrupt === "close") { owner = false; drive.retire(); }
+        resolve();
+        await seek;
+        const observed = { mutations, playhead, resumed: clock.isPlaying() };
+        expect(deepEqual(observed, { mutations: row.mutations, playhead: row.playhead, resumed: row.resumed })).toBe(true);
+        expect(drive.active).toBe(false);
+      } finally {
+        clock.dispose();
+        vi.unstubAllGlobals();
+      }
+    }
+    console.log("[DEBUG] Shell tutorial seek: neutral=6 real-clock-paused=6 duplicate-mutations=0 requested-play-authority=1");
+  });
+
+  it("carries current Play intent through coalesced seeks without executing their superseded target", async () => {
+    vi.stubGlobal("requestAnimationFrame", () => 1);
+    vi.stubGlobal("cancelAnimationFrame", () => {});
+    const clock = createTutorialClock(1000);
+    const drive = new TutorialDriveV1();
+    const writes: number[] = [];
+    let resolve!: () => void;
+    const gate = new Promise<void>(done => { resolve = done; });
+    try {
+      clock.play();
+      const first = runPausedTutorialSeekV1(clock, drive, () => true, () => true, async () => { writes.push(200); await gate; clock.seek(200); });
+      await Promise.resolve();
+      const obsolete = runPausedTutorialSeekV1(clock, drive, () => true, () => true, async () => { writes.push(300); clock.seek(300); });
+      const latest = runPausedTutorialSeekV1(clock, drive, () => true, () => true, async () => { writes.push(500); clock.seek(500); });
+      expect(clock.isPlaying()).toBe(false);
+      resolve();
+      await Promise.all([first, obsolete, latest]);
+      expect(writes).toEqual([200, 500]);
+      expect(clock.getTimeMs()).toBe(500);
+      expect(clock.isPlaying()).toBe(true);
+      expect(drive.busy).toBe(false);
+    } finally {
+      clock.dispose();
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it("releases cancelled tutorial drive ownership without clearing a newer seek or tween", () => {
+    expect(new Ajv({ strict: true }).compile(tutorialRunSchema)(tutorialRunFixture)).toBe(true);
+    for (const row of tutorialRunFixture.drives) {
+      const drive = new TutorialDriveV1();
+      const tokens = new Map<string, number>();
+      let oracle: string | null = null;
+      const states: boolean[] = [];
+      for (const event of row.events) {
+        if (event === "retire") {
+          drive.retire();
+          oracle = null;
+        } else if (event.startsWith("claim")) {
+          const key = event.slice(-1);
+          tokens.set(key, drive.claim());
+          oracle = key;
+        } else {
+          const key = event.slice(-1);
+          drive.release(tokens.get(key)!);
+          if (oracle === key) oracle = null;
+        }
+        expect(drive.active, row.id).toBe(!deepEqual(oracle, null));
+        states.push(drive.active);
+      }
+      expect(states, row.id).toEqual(row.active);
+      expect(drive.active, row.id).toBe(false);
+    }
+    console.log("[DEBUG] Shell dialog origin: tutorial-drive neutral=3 user-interaction-restored=3");
+  });
+
   it("admits an explicit target handoff once and retires a target created after its source expired", async () => {
     expect(new Ajv({ strict: true }).compile(admittedInstanceSchema)(admittedInstanceFixture)).toBe(true);
     for (const row of admittedInstanceFixture.cases) {
@@ -150,7 +501,7 @@ describe("Shell dialog origin", () => {
       const restore = vi.fn(async () => {});
       let resolve!: (snapshot: { pack: Uint8Array; spr: Uint8Array }) => void;
       const run = new OwnedTutorialRunV1("tour", dialogOriginFixture.owner, () => epoch === 1 && shellDialogOriginIsCurrentV1(dialogOriginFixture.owner, current), {
-        read: () => new Promise((done) => { resolve = done; }), restore,
+        read: () => new Promise((done) => { resolve = done; }), drain: async () => {}, restore,
       });
       const started = run.start();
       let oracleCurrent = true;
@@ -199,7 +550,7 @@ describe("Shell dialog origin", () => {
         args: [{ id: "name", label: { native: { en: "Name", de: "Name" } }, required: true, schema: { kind: "string", options: [] } }],
         submitAction: "createArtifact", submitLabel: { native: { en: "Create", de: "Erstellen" } }, cancelAction: "cancelArtifact",
       },
-      renderField: (def, value, onChange) => createElement("input", { "aria-label": def.id, value: String(value ?? ""), onChange: (event: { target: { value: string } }) => onChange(event.target.value) }),
+      renderField: (_def, value, onChange, field) => createElement("input", { id: field.id, "aria-labelledby": field.labelledBy, required: field.required, value: String(value ?? ""), onChange: (event: { target: { value: string } }) => onChange(event.target.value) }),
       isCurrent: (origin) => shellDialogOriginIsCurrentV1(origin, current),
       close: (openingId) => {
         if (live !== openingId) return false;
@@ -210,12 +561,12 @@ describe("Shell dialog origin", () => {
     });
     const firstCallbacks = OwnedShellDialog(props(a))!.props as { onSubmit: (args: Record<string, unknown>) => void; onCancel: () => void };
     const view = render(createElement(OwnedShellDialog, props(a)));
-    fireEvent.change(view.getByRole("textbox", { name: "name" }), { target: { value: "A staged" } });
-    expect((view.getByRole("textbox", { name: "name" }) as HTMLInputElement).value).toBe("A staged");
+    fireEvent.change(view.getByRole("textbox", { name: "Name" }), { target: { value: "A staged" } });
+    expect((view.getByRole("textbox", { name: "Name" }) as HTMLInputElement).value).toBe("A staged");
     current = b.origin;
     live = b.openingId;
     view.rerender(createElement(OwnedShellDialog, props(b)));
-    expect((view.getByRole("textbox", { name: "name" }) as HTMLInputElement).value).toBe("B seed");
+    expect((view.getByRole("textbox", { name: "Name" }) as HTMLInputElement).value).toBe("B seed");
     firstCallbacks.onSubmit({ name: "A staged" });
     firstCallbacks.onCancel();
     expect(dispatch).not.toHaveBeenCalled();
@@ -282,6 +633,26 @@ describe("Shell dialog origin", () => {
 describe("Space artifact creation host owner", () => {
   const requestId = "1".repeat(32);
   const choice = '{"kindId":"s.gis.gismap","schema":"s.gis.gismap","dialect":{"artifactKind":"s.gis.gismap","standard":"1","subset":"*"},"label":{"en":"GIS Map","de":"GIS-Karte"}}';
+  const catalogOrigin: ShellDialogOriginV1 = {
+    pluginId: "space",
+    appId: "space-editor",
+    controllerId: "space",
+    sessionInstanceId: 7,
+    document: {
+      runtimeKey: artifactCreationCatalogAuthorityFixture.catalog.runtimeKey,
+      clientInstanceId: artifactCreationCatalogAuthorityFixture.catalog.clientInstanceId,
+      scope: { spaceId: artifactCreationCatalogAuthorityFixture.catalog.spaceId, documentId: "index" },
+    },
+  };
+  const catalog = {
+    kind: "space-artifact-creation-catalog" as const,
+    clientInstanceId: artifactCreationCatalogAuthorityFixture.catalog.clientInstanceId,
+    spaceId: artifactCreationCatalogAuthorityFixture.catalog.spaceId,
+    catalogGenerationId: artifactCreationCatalogAuthorityFixture.catalog.catalogGenerationId,
+    kinds: [JSON.parse(choice)],
+  };
+  const catalogStatus = { kind: "space-artifact-creation-catalog-status" as const, clientInstanceId: catalog.clientInstanceId, spaceId: catalog.spaceId, phase: "ready" as const };
+  const catalogAuthority = captureSpaceArtifactCreationCatalogAuthorityV1(catalog, catalogStatus, catalogOrigin)!;
   const owner: SpaceArtifactCreationOwnerV1 = {
     requestId,
     name: "Shared Map",
@@ -295,16 +666,47 @@ describe("Space artifact creation host owner", () => {
   };
 
   it("forwards only the user intent and rejects presentation overposts or mismatched kinds", () => {
-    expect(spaceArtifactCreationRequestFromAction("os.create-space-artifact", { kindChoice: choice, name: "Shared Map" }, "space-a", requestId)).toEqual({
+    expect(spaceArtifactCreationRequestFromAction("os.create-space-artifact", { kindChoice: choice, name: "Shared Map" }, "space-a", requestId, catalogAuthority, catalogAuthority)).toEqual({
       kind: "space-artifact-create",
       requestId,
       spaceId: "space-a",
       kindId: "s.gis.gismap",
       name: "Shared Map",
     });
-    expect(spaceArtifactCreationRequestFromAction("os.create-space-artifact", { kindChoice: choice, name: "Shared Map", documentId: "forged" }, "space-a", requestId)).toBeNull();
-    expect(spaceArtifactCreationRequestFromAction("os.create-space-artifact", { kindChoice: choice.replaceAll("s.gis.gismap", "s.gis.viewer"), name: "Shared Map" }, "space-a", requestId)?.kindId).toBe("s.gis.viewer");
-    expect(spaceArtifactCreationRequestFromAction("os.create-space-artifact", { kindChoice: choice.replace('"kindId":"s.gis.gismap"', '"kindId":"forged"'), name: "Shared Map" }, "space-a", requestId)).toBeNull();
+    expect(spaceArtifactCreationRequestFromAction("os.create-space-artifact", { kindChoice: choice, name: "Shared Map", documentId: "forged" }, "space-a", requestId, catalogAuthority, catalogAuthority)).toBeNull();
+    expect(spaceArtifactCreationRequestFromAction("os.create-space-artifact", { kindChoice: choice.replaceAll("s.gis.gismap", "s.gis.viewer"), name: "Shared Map" }, "space-a", requestId, catalogAuthority, catalogAuthority)).toBeNull();
+    expect(spaceArtifactCreationRequestFromAction("os.create-space-artifact", { kindChoice: choice.replace('"kindId":"s.gis.gismap"', '"kindId":"forged"'), name: "Shared Map" }, "space-a", requestId, catalogAuthority, catalogAuthority)).toBeNull();
+  });
+
+  it("admits only an exact captured and live catalog generation member", () => {
+    expect(new Ajv2020({ strict: true }).compile(artifactCreationCatalogAuthoritySchema)(artifactCreationCatalogAuthorityFixture)).toBe(true);
+    const withoutMember = { ...catalogAuthority, kindChoices: [] };
+    const variants: Readonly<Record<string, SpaceArtifactCreationCatalogAuthorityV1 | null>> = {
+      current: catalogAuthority,
+      "without-member": withoutMember,
+      unavailable: null,
+      "rotated-generation": { ...catalogAuthority, catalogGenerationId: "4".repeat(64) },
+      "replaced-client": { ...catalogAuthority, clientInstanceId: "22222222-2222-4222-8222-222222222222" },
+      "other-space": { ...catalogAuthority, spaceId: "space-b" },
+    };
+    for (const row of artifactCreationCatalogAuthorityFixture.cases) {
+      const selected = row.choice === "member" ? choice : choice.replaceAll("s.gis.gismap", "s.gis.viewer");
+      const request = spaceArtifactCreationRequestFromAction("os.create-space-artifact", { kindChoice: selected, name: "Shared Map" }, "space-a", requestId, variants[row.captured], variants[row.live]);
+      expect(request !== null, row.id).toBe(row.admitted);
+    }
+    const ready = selectedSpaceArtifactCreationCatalogV1(catalog, catalogStatus, catalogOrigin)!;
+    const withdrawn = selectedSpaceArtifactCreationCatalogV1(null, { ...catalogStatus, phase: "unavailable" }, catalogOrigin)!;
+    expect(ready).toMatchObject({ phase: "ready", kinds: catalog.kinds, authority: catalogAuthority });
+    expect(withdrawn).toMatchObject({ phase: "unavailable", kinds: [], authority: null });
+    expect(ready.choiceRevision).not.toBe(withdrawn.choiceRevision);
+    console.log("[DEBUG] Shell creation catalog authority: neutral=8 admitted=1 generation-and-mount-fences=7");
+  });
+
+  it("retires only staged artifact-kind fields on catalog revision", () => {
+    const definitions = artifactCreationCatalogAuthorityFixture.draftCases.map((row) => ({ ownerId: row.id, args: [{ id: "value", artifactKind: row.format === "artifactKind" }] }));
+    const staged = Object.fromEntries(artifactCreationCatalogAuthorityFixture.draftCases.map((row) => [row.id, { value: row.format }]));
+    const retired = new Set(artifactKindChoiceDraftRetirementsV1(staged, definitions).map((row) => row.ownerId));
+    for (const row of artifactCreationCatalogAuthorityFixture.draftCases) expect(retired.has(row.id), row.id).toBe(row.clear);
   });
 
   it("opens only an exact Ready tuple owned by the originating Space mount", () => {
@@ -414,12 +816,13 @@ describe("Space artifact creation host owner", () => {
     for (const row of artifactCreationProgressFixture.catalogCases) {
       const locale = row.locale as "en" | "de";
       const phase = row.phase as "loading" | "ready" | "unavailable";
-      expect(ARTIFACT_CREATION_PROGRESS_TEXT_V1[locale].catalog[phase], row.id).toBe(oracle.t(`catalog.${phase}`, { lng: locale }));
+      const textKey = phase === "ready" && !row.hasChoices ? "empty" : phase;
+      expect(ARTIFACT_CREATION_PROGRESS_TEXT_V1[locale].catalog[textKey], row.id).toBe(oracle.t(`catalog.${textKey}`, { lng: locale }));
       const view = render(createElement(ArtifactCreationCatalogNotice, {
-        status: { kind: "space-artifact-creation-catalog-status", clientInstanceId: "12345678-1234-4123-8123-123456789abc", spaceId: "space-a", phase },
+        status: { phase }, hasChoices: row.hasChoices,
         locale,
       }));
-      const region = view.getByRole(row.role, { name: artifactCreationProgressFixture.locales[locale].catalog[phase] });
+      const region = view.getByRole(row.role, { name: artifactCreationProgressFixture.locales[locale].catalog[textKey] });
       expect(region.getAttribute("aria-live"), row.id).toBe(row.live);
       expect(region.getAttribute("aria-busy"), row.id).toBe(phase === "loading" ? "true" : null);
       view.unmount();

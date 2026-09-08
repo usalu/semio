@@ -1,8 +1,8 @@
 //! playground <- json
 use crate::artifacts::playground::standards::v1::subsets::any::schema::snapshot::PlaygroundSnapshot;
 use crate::artifacts::playground::PLAYGROUND_DOCUMENT_SCHEMA;
-use semio_s_plugin_stdio::artifacts::json::schema::snapshot::parse_json_text;
-use semio_s_plugin_stdio::artifacts::json::JsonSnapshot;
+use semio_s_artifact_stdio_json::schema::snapshot::parse_json_text;
+use semio_s_artifact_stdio_json::JsonSnapshot;
 
 pub fn deserialize(from: &JsonSnapshot) -> Result<PlaygroundSnapshot, store::TextError> {
     let dsl_value = dsl::os_pack::json::to_dsl_value(&from.to_pack_value());

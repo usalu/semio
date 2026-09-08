@@ -1,7 +1,7 @@
 //! 👁️ `mp3` view (any) — Main window: real `MediaWindowKit`
 //! render of the current document (read-only).
 
-use crate::artifacts::mp3::standards::mpeg1_layer3::subsets::any::schema::snapshot::Mp3Snapshot;
+use crate::standards::mpeg1_layer3::subsets::any::schema::snapshot::Mp3Snapshot;
 use semio_framework_plugin::app::{MediaKind, MediaView, MediaWindowKit};
 use semio_framework_plugin::{BuiltNode, WindowKindDefinition, WindowKit};
 

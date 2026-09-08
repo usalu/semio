@@ -338,6 +338,10 @@ pub trait PresentationProjectionAdoptionTarget {
     fn try_adopt(&mut self, value: PresentationSnapshot) -> Result<(), PresentationSnapshot>;
 }
 
+/// 🔐️ The retained presentation projection could not be locked for publication.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct PresentationProjectionAccessFault;
+
 /// 🎫️ Pollable exact-once typed result retained outside the worker job.
 pub struct PresentationProjectionCompletion {
     state: std::sync::Mutex<PresentationProjectionCompletionState>,
@@ -349,8 +353,8 @@ impl PresentationProjectionCompletion {
     }
 
     /// 📤️ Atomically transfers the exact completed owner or retains it on backpressure.
-    pub fn try_publish_to(&self, target: &mut dyn PresentationProjectionAdoptionTarget) -> Result<bool, ()> {
-        let mut state = self.state.try_lock().map_err(|_| ())?;
+    pub fn try_publish_to(&self, target: &mut dyn PresentationProjectionAdoptionTarget) -> Result<bool, PresentationProjectionAccessFault> {
+        let mut state = self.state.try_lock().map_err(|_| PresentationProjectionAccessFault)?;
         let Some(value) = state.value.take() else { return Ok(false) };
         match target.try_adopt(value) {
             Ok(()) => Ok(true),
@@ -1182,7 +1186,7 @@ impl PresentationEnvelopeMaterializeHandle {
     }
 
     /// 📤️ Publishes the exact ready snapshot once. Backpressure leaves it in this handle.
-    pub fn try_publish_to(&mut self, target: &mut dyn PresentationProjectionAdoptionTarget) -> Result<bool, ()> {
+    pub fn try_publish_to(&mut self, target: &mut dyn PresentationProjectionAdoptionTarget) -> Result<bool, PresentationProjectionAccessFault> {
         if self.state != PresentationEnvelopeMaterializeHandleState::WorkerComplete {
             return Ok(false);
         }

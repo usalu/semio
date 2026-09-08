@@ -1167,8 +1167,8 @@ pub fn energy_model_mutation_report_json(base_json: &str, mutation_json: &str, a
     // framework-owned type that has not itself gained `ToValue`/`FromValue` — its two call sites
     // here go through the PRE-EXISTING `protocol::to_dsl_value` serde bridge (framework-internal,
     // exempt) and land in `pack::json::Value` via `pack::json::from_dsl_value`.
-    let messages_json = protocol::to_dsl_value(forward.messages()).map(|value| pack::json::from_dsl_value(&value)).map_err(|error| error.to_string())?;
-    let inverse_messages_json = protocol::to_dsl_value(&inverse_messages).map(|value| pack::json::from_dsl_value(&value)).map_err(|error| error.to_string())?;
+    let messages_json = protocol::to_dsl_value(forward.messages()).map(|value| pack::json::from_dsl_value(&value)).map_err(|error| error)?;
+    let inverse_messages_json = protocol::to_dsl_value(&inverse_messages).map(|value| pack::json::from_dsl_value(&value)).map_err(|error| error)?;
     let report = pack::json::object([
         ("base".to_string(), pack::json::from_dsl_value(&base.to_value())),
         ("expectedSnapshot".to_string(), pack::json::from_dsl_value(&expected.to_value())),
@@ -1737,13 +1737,13 @@ mod structural_correspondence_tests {
             let source = std::fs::read_to_string(owner.join("🦀️.rs")).expect("direct Rust owner");
             let descriptor_source = std::fs::read_to_string(owner.join("🔣️.json")).expect("direct language-neutral descriptor");
             let descriptor: pack::json::Value = pack::json::parse(&descriptor_source).expect("direct descriptor must be valid JSON");
-            let payload_schema_source = std::fs::read_to_string(owner.join("🧬️.schema.json")).expect("direct payload schema");
+            let payload_schema_source = std::fs::read_to_string(owner.join("🧬️schema/🔣️.json")).expect("direct payload schema");
             let payload_schema: pack::json::Value = pack::json::parse(&payload_schema_source).expect("direct payload schema must be valid JSON");
             assert!(source.contains("protocol::MutationKind"), "{kind} owns no MutationKind impl");
             assert!(!source.contains(concat!("::", "mutation::")));
             assert_eq!(descriptor["semanticKind"].as_str(), Some(*kind));
             assert_eq!(descriptor["textOpcode"].as_str(), Some(*kind));
-            assert_eq!(descriptor["payloadSchema"].as_str(), Some("🧬️.schema.json"));
+            assert_eq!(descriptor["payloadSchema"].as_str(), Some("🧬️schema/🔣️.json"));
             assert_eq!(payload_schema["title"].as_str(), descriptor["aggregateVariant"].as_str());
             assert!(owner.join("🔺️diff/🦀️.rs").exists(), "{kind} owns no diff leaf");
             assert!(owner.join("↩️inverse/🦀️.rs").exists(), "{kind} owns no inverse leaf");

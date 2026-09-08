@@ -23,13 +23,13 @@
 //!   (element/spatial) edges implied by the containment tree this bridge walks — other real IFC
 //!   relationship kinds (`IfcRelVoidsElement`/`IfcRelConnectsElements`/…) are not read here.
 
-use crate::artifacts::ifc::engine::spatial::{analyze_spatial, Mat4, PropertySet as IfcPropertySet, SpatialAnalysis, SpatialNode as IfcSpatialNode};
-use crate::artifacts::ifc::IfcSnapshot;
-use crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::{SemioPoint3, SemioQuaternion, SemioTransform};
-use crate::artifacts::semio::standards::v1::subsets::model::schema::snapshot::{
+use semio_s_artifact_stdio_ifc::engine::spatial::{analyze_spatial, Mat4, PropertySet as IfcPropertySet, SpatialAnalysis, SpatialNode as IfcSpatialNode};
+use semio_s_artifact_stdio_ifc::IfcSnapshot;
+use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint3, SemioQuaternion, SemioTransform};
+use crate::standards::v1::subsets::model::schema::snapshot::{
     ElementClass, GeometryRef, ModelRelation, Property, PropertySet, PsetValue, RelationKind, SemioModelElement, SemioModelSnapshot, SpatialKind, SpatialNode, STDIO_SEMIOMODEL_DOCUMENT_SCHEMA,
 };
-use crate::artifacts::step::engine::part21::{Part21Document, Part21Value};
+use semio_s_artifact_stdio_step::engine::part21::{Part21Document, Part21Value};
 use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId};
 
 //#region 🔖️Deserializer
@@ -185,7 +185,7 @@ fn walk(doc: &Part21Document, node: &IfcSpatialNode, parent_spatial_id: Option<&
 //#region 🔖️Entry
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn model_from_ifc(from: &IfcSnapshot) -> SemioModelSnapshot {
-    let doc = crate::artifacts::ifc::schema::snapshot::to_part21_document(from);
+    let doc = semio_s_artifact_stdio_ifc::schema::snapshot::to_part21_document(from);
     let analysis = analyze_spatial(&doc);
     let mut spatial = Vec::new();
     let mut elements = Vec::new();
@@ -208,8 +208,8 @@ mod tests {
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn fixture_snapshot() -> IfcSnapshot {
-        let doc = crate::artifacts::step::engine::part21::parse_part21(FIXTURE).expect("parse fixture");
-        crate::artifacts::ifc::schema::snapshot::from_part21_document(crate::artifacts::ifc::STDIO_IFC_DOCUMENT_SCHEMA, &doc)
+        let doc = semio_s_artifact_stdio_step::engine::part21::parse_part21(FIXTURE).expect("parse fixture");
+        semio_s_artifact_stdio_ifc::schema::snapshot::from_part21_document(semio_s_artifact_stdio_ifc::STDIO_IFC_DOCUMENT_SCHEMA, &doc)
     }
 
     #[semio_framework_async_macros::async_test]

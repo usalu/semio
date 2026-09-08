@@ -5,7 +5,7 @@
   "displayName": "Bind Scene Root Node",
   "emoji": "🔗️",
   "aggregateVariant": "BindSceneRootNode",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

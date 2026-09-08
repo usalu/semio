@@ -1,7 +1,7 @@
 //! 🧩 set_snapshot diff leaf.
 
-use crate::artifacts::step::schema::diff::{diff_set_snapshot, StepDiff};
-use crate::artifacts::step::StepSnapshot;
+use crate::schema::diff::{diff_set_snapshot, StepDiff};
+use crate::StepSnapshot;
 
 /// 🔺️ Diff helper for set-snapshot — the sparse field-by-field `between(base, snapshot)` (no
 /// full-replace slot exists on `StepDiff` to short-circuit into).

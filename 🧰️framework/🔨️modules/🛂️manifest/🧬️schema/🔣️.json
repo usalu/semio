@@ -1,0 +1,399 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/framework/manifest/schema.json",
+  "title": "Manifest Schema Module",
+  "$defs": {
+    "TutorialLocalInteractionFixture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "domainOrder",
+        "cases",
+        "captureIdentityIsHistoricalContent",
+        "restoreUsesCurrentIdentity",
+        "fullRestoreClearsAbsentDomains",
+        "absentCaptureDefaultsToEmpty"
+      ],
+      "properties": {
+        "domainOrder": {
+          "const": "utf16-code-unit-lexicographic"
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 5,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "before",
+              "after",
+              "changes"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "before": {
+                "$ref": "https://semio.tech/schema/framework/replication/wire/local-interaction/schema.json#/$defs/state"
+              },
+              "after": {
+                "$ref": "https://semio.tech/schema/framework/replication/wire/local-interaction/schema.json#/$defs/state"
+              },
+              "changes": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "kind",
+                    "domainId",
+                    "patch"
+                  ],
+                  "properties": {
+                    "kind": {
+                      "const": "localInteractionDomain"
+                    },
+                    "domainId": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "patch": {
+                      "$ref": "https://semio.tech/schema/framework/replication/wire/local-interaction/schema.json#/$defs/domainPatch"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "captureIdentityIsHistoricalContent": {
+          "const": false
+        },
+        "restoreUsesCurrentIdentity": {
+          "const": true
+        },
+        "fullRestoreClearsAbsentDomains": {
+          "const": true
+        },
+        "absentCaptureDefaultsToEmpty": {
+          "const": false
+        }
+      }
+    },
+    "ActionSemanticsFixture": {
+      "type": "array",
+      "minItems": 6,
+      "maxItems": 6,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "kind",
+          "semantics"
+        ],
+        "properties": {
+          "kind": {
+            "enum": [
+              "mutation",
+              "view",
+              "interaction",
+              "history",
+              "clipboard",
+              "shell"
+            ]
+          },
+          "semantics": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "effects",
+              "policy",
+              "execution",
+              "useWhen",
+              "examples"
+            ],
+            "properties": {
+              "effects": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "reads",
+                  "writes",
+                  "external",
+                  "destructive",
+                  "reversible"
+                ],
+                "properties": {
+                  "reads": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "writes": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "external": {
+                    "type": "boolean"
+                  },
+                  "destructive": {
+                    "type": "boolean"
+                  },
+                  "reversible": {
+                    "type": "boolean"
+                  }
+                }
+              },
+              "policy": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "scopes",
+                  "approval"
+                ],
+                "properties": {
+                  "scopes": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "approval": {
+                    "enum": [
+                      "never",
+                      "whenDestructive",
+                      "always"
+                    ]
+                  }
+                }
+              },
+              "execution": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "preview",
+                  "undo",
+                  "idempotency",
+                  "expectedRevision",
+                  "cancellable",
+                  "class",
+                  "interactiveJob"
+                ],
+                "properties": {
+                  "preview": {
+                    "enum": [
+                      "none",
+                      "dryRun",
+                      "diff"
+                    ]
+                  },
+                  "undo": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "kind"
+                    ],
+                    "properties": {
+                      "kind": {
+                        "enum": [
+                          "none",
+                          "inverse"
+                        ]
+                      }
+                    }
+                  },
+                  "idempotency": {
+                    "enum": [
+                      "natural",
+                      "key",
+                      "none"
+                    ]
+                  },
+                  "expectedRevision": {
+                    "type": "boolean"
+                  },
+                  "cancellable": {
+                    "type": "boolean"
+                  },
+                  "class": {
+                    "enum": [
+                      "interactive",
+                      "background",
+                      "job"
+                    ]
+                  },
+                  "interactiveJob": {
+                    "const": "unclassified"
+                  }
+                }
+              },
+              "useWhen": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "examples": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "ArtifactKindFormatsFixture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "sourceFormat",
+        "componentKind",
+        "dimension",
+        "mediaCapability",
+        "mediaType",
+        "schema",
+        "exportFormats",
+        "importFormats",
+        "exportStdioKinds",
+        "importStdioKinds"
+      ],
+      "properties": {
+        "id": {
+          "const": "s.fixture.document"
+        },
+        "name": {
+          "const": "Format Roundtrip"
+        },
+        "sourceFormat": {
+          "const": "fixture.document"
+        },
+        "componentKind": {
+          "const": "fixture"
+        },
+        "dimension": {
+          "const": "2d"
+        },
+        "mediaCapability": {
+          "const": "meshOnly"
+        },
+        "mediaType": {
+          "const": {
+            "class": "twoD",
+            "form": "vector"
+          }
+        },
+        "schema": {
+          "const": "fixture.document"
+        },
+        "exportFormats": {
+          "const": []
+        },
+        "importFormats": {
+          "const": []
+        },
+        "exportStdioKinds": {
+          "const": [
+            "stdio.svg",
+            "stdio.png"
+          ]
+        },
+        "importStdioKinds": {
+          "const": [
+            "stdio.dwg",
+            "stdio.svg"
+          ]
+        }
+      }
+    },
+    "TutorialDocumentTrackFixture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "document",
+        "cases"
+      ],
+      "properties": {
+        "document": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "at",
+              "kind"
+            ],
+            "properties": {
+              "at": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "kind": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "kind",
+                  "documentDsl",
+                  "previousDsl"
+                ],
+                "properties": {
+                  "kind": {
+                    "const": "load"
+                  },
+                  "documentDsl": {
+                    "type": "string"
+                  },
+                  "previousDsl": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "from",
+              "to",
+              "forward",
+              "expectedAt"
+            ],
+            "properties": {
+              "from": {
+                "type": "number",
+                "minimum": 0
+              },
+              "to": {
+                "type": "number",
+                "minimum": 0
+              },
+              "forward": {
+                "type": "boolean"
+              },
+              "expectedAt": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

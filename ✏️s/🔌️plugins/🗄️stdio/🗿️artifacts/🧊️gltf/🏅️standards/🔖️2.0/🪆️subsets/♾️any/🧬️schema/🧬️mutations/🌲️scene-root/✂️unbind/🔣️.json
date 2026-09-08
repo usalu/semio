@@ -5,7 +5,7 @@
   "displayName": "Unbind Scene Root Node",
   "emoji": "✂️",
   "aggregateVariant": "UnbindSceneRootNode",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

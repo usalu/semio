@@ -30,7 +30,7 @@ const RASTER_RETIREMENT_ADMITTED_FRAME_CAPACITY: usize = RASTER_RETIREMENT_LAYER
 const RASTER_RETIREMENT_REJECTED_OWNER_MARGIN: usize = 3;
 const RASTER_RETIREMENT_STACK_CAPACITY: usize = RASTER_RETIREMENT_ADMITTED_FRAME_CAPACITY + RASTER_RETIREMENT_REJECTED_OWNER_MARGIN;
 const RASTER_RETIREMENT_STACK_PAGE_CAPACITY: usize = 8;
-const RASTER_RETIREMENT_STACK_PAGE_COUNT: usize = (RASTER_RETIREMENT_STACK_CAPACITY - 1 + RASTER_RETIREMENT_STACK_PAGE_CAPACITY - 1) / RASTER_RETIREMENT_STACK_PAGE_CAPACITY;
+const RASTER_RETIREMENT_STACK_PAGE_COUNT: usize = (RASTER_RETIREMENT_STACK_CAPACITY - 1).div_ceil(RASTER_RETIREMENT_STACK_PAGE_CAPACITY);
 const RASTER_MAXIMUM_NESTED_ITEMS: usize = store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES;
 const RASTER_MAXIMUM_NESTED_BYTES: usize = store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES;
 const RASTER_CONTROL_BACKING_BYTES: usize = RASTER_OWNED_FIELD_BYTES;
@@ -701,7 +701,6 @@ impl RasterOwnedRetirement {
                 if frame.owner.is_some() {
                     return Err("Raster retirement attempted to release a nonempty frame".into());
                 }
-                drop(frame);
                 self.depth -= 1;
                 if index > 0 {
                     let (page, slot) = Self::page_and_slot(index);
@@ -2702,7 +2701,7 @@ impl RasterLayerLocator {
         }
     }
 
-    fn node_at<'a>(snapshot: &'a RasterSnapshot, address: RasterLayerAddress) -> Option<&'a RasterLayerNode> {
+    fn node_at(snapshot: &RasterSnapshot, address: RasterLayerAddress) -> Option<&RasterLayerNode> {
         let mut value = snapshot.layers.get(address.indices[0])?;
         for index in &address.indices[1..address.length] {
             let RasterLayerNode::Group { children, .. } = value else { return None };
@@ -2711,7 +2710,7 @@ impl RasterLayerLocator {
         Some(value)
     }
 
-    fn node_at_mut<'a>(snapshot: &'a mut RasterSnapshot, address: RasterLayerAddress) -> Option<&'a mut RasterLayerNode> {
+    fn node_at_mut(snapshot: &mut RasterSnapshot, address: RasterLayerAddress) -> Option<&mut RasterLayerNode> {
         fn descend<'a>(value: &'a mut RasterLayerNode, path: &[usize]) -> Option<&'a mut RasterLayerNode> {
             let Some((head, tail)) = path.split_first() else { return Some(value) };
             let RasterLayerNode::Group { children, .. } = value else { return None };
@@ -2720,7 +2719,7 @@ impl RasterLayerLocator {
         descend(snapshot.layers.get_mut(address.indices[0])?, &address.indices[1..address.length])
     }
 
-    fn container_mut<'a>(snapshot: &'a mut RasterSnapshot, parent: Option<RasterLayerAddress>) -> Option<&'a mut Vec<RasterLayerNode>> {
+    fn container_mut(snapshot: &mut RasterSnapshot, parent: Option<RasterLayerAddress>) -> Option<&mut Vec<RasterLayerNode>> {
         match parent {
             None => Some(&mut snapshot.layers),
             Some(address) => match Self::node_at_mut(snapshot, address)? {
@@ -3490,7 +3489,7 @@ impl RasterStoreInitializationAuthority {
             return Ok(true);
         }
         let Some(active) = self.active.as_mut() else { return Ok(false) };
-        if !raster_reserve_granted_unit(cx.as_deref_mut()) {
+        if !raster_reserve_granted_unit(cx) {
             return Ok(true);
         }
         match active.close_step(1, RASTER_OWNED_FIELD_BYTES)? {
@@ -3518,7 +3517,7 @@ impl RasterStoreInitializationAuthority {
             let disposer = self.candidate_disposer.as_mut().expect("Raster candidate disposer remains retained");
             return match disposer.close_step(candidate, 1, RASTER_OWNED_FIELD_BYTES).map_err(|fault| format!("{}: {}", fault.code.0, fault.message))? {
                 semio_framework_plugin::PluginCloseStep::Complete if disposer.terminal_is_empty(candidate) => {
-                    drop(self.candidate_disposer.take());
+                    self.candidate_disposer = None;
                     drop(self.candidate.take());
                     Ok(false)
                 }
@@ -3594,7 +3593,7 @@ impl RasterStoreInitializationAuthority {
             };
         }
         if let Some(control) = self.control_reservation.as_mut() {
-            if !raster_reserve_granted_unit(cx.as_deref_mut()) {
+            if !raster_reserve_granted_unit(cx) {
                 return Ok(false);
             }
             if control.return_one()? {
@@ -3735,7 +3734,7 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<RasterSnapshot
                     }
                     1 => self.phase = RasterStoreInitializationPhase::SeedHistory { edit, lane: 2, index: 0 },
                     2 if index < entry.mutation_meta.len() => {
-                        runtime.observe_timestamp(entry.mutation_meta[index].timestamp.clone());
+                        runtime.observe_timestamp(entry.mutation_meta[index].timestamp);
                         self.phase = RasterStoreInitializationPhase::SeedHistory { edit, lane, index: index + 1 };
                     }
                     _ => self.phase = RasterStoreInitializationPhase::SeedHistory { edit: edit + 1, lane: 0, index: 0 },
@@ -3973,8 +3972,8 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<RasterSnapshot
             RasterStoreInitializationPhase::RetireCancelled | RasterStoreInitializationPhase::RetireFault => match self.pump_terminal_retirement(Some(cx)) {
                 Ok(false) => semio_framework_job::StepOutcome::Yield,
                 Ok(true) => {
-                    drop(self.initial_digest.take());
-                    drop(self.edit_digest.take());
+                    self.initial_digest = None;
+                    self.edit_digest = None;
                     self.terminal_handoff = true;
                     if self.phase == RasterStoreInitializationPhase::RetireCancelled {
                         self.phase = RasterStoreInitializationPhase::Cancelled;
@@ -4027,8 +4026,8 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<RasterSnapshot
         match self.pump_terminal_retirement(None) {
             Ok(false) => Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 1, released_bytes: 0 }),
             Ok(true) => {
-                drop(self.initial_digest.take());
-                drop(self.edit_digest.take());
+                self.initial_digest = None;
+                self.edit_digest = None;
                 self.terminal_handoff = true;
                 Ok(semio_framework_plugin::PluginCloseStep::Complete)
             }
@@ -4041,8 +4040,8 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<RasterSnapshot
             return None;
         }
         let candidate = self.candidate.take()?;
-        drop(self.initial_digest.take());
-        drop(self.edit_digest.take());
+        self.initial_digest = None;
+        self.edit_digest = None;
         self.terminal_handoff = true;
         Some(candidate)
     }

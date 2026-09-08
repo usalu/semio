@@ -4,26 +4,26 @@
 //! 📤️export/🧵️serializers.
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use crate::artifacts::semio::standards::v1::subsets::animation::io::SemioAnimationValidator;
-    use crate::artifacts::semio::standards::v1::subsets::base::schema::snapshot::{SemioSnapshot, SemioSubsetSnapshot};
-    use crate::artifacts::semio::standards::v1::subsets::base::schema::SemioAnalyzer;
-    use crate::artifacts::semio::standards::v1::subsets::audio::io::SemioAudioValidator;
-    use crate::artifacts::semio::standards::v1::subsets::brep::io::SemioBrepValidator;
-    use crate::artifacts::semio::standards::v1::subsets::cad::io::SemioCadValidator;
-    use crate::artifacts::semio::standards::v1::subsets::document::io::SemioDocumentValidator;
-    use crate::artifacts::semio::standards::v1::subsets::drawing::io::SemioDrawingValidator;
-    use crate::artifacts::semio::standards::v1::subsets::flow::io::SemioFlowValidator;
-    use crate::artifacts::semio::standards::v1::subsets::graph::io::SemioGraphValidator;
-    use crate::artifacts::semio::standards::v1::subsets::image::io::SemioImageValidator;
-    use crate::artifacts::semio::standards::v1::subsets::kit::io::SemioKitValidator;
-    use crate::artifacts::semio::standards::v1::subsets::mesh::io::SemioMeshValidator;
-    use crate::artifacts::semio::standards::v1::subsets::model::io::SemioModelValidator;
-    use crate::artifacts::semio::standards::v1::subsets::object::io::SemioObjectValidator;
-    use crate::artifacts::semio::standards::v1::subsets::presentation::io::SemioPresentationValidator;
-    use crate::artifacts::semio::standards::v1::subsets::table::io::SemioTableValidator;
-    use crate::artifacts::semio::standards::v1::subsets::text::io::SemioTextValidator;
-    use crate::artifacts::semio::standards::v1::subsets::value::io::SemioValueValidator;
-    use crate::artifacts::semio::standards::v1::subsets::video::io::SemioVideoValidator;
+    use crate::standards::v1::subsets::animation::io::SemioAnimationValidator;
+    use crate::standards::v1::subsets::base::schema::snapshot::{SemioSnapshot, SemioSubsetSnapshot};
+    use crate::standards::v1::subsets::base::schema::SemioAnalyzer;
+    use crate::standards::v1::subsets::audio::io::SemioAudioValidator;
+    use crate::standards::v1::subsets::brep::io::SemioBrepValidator;
+    use crate::standards::v1::subsets::cad::io::SemioCadValidator;
+    use crate::standards::v1::subsets::document::io::SemioDocumentValidator;
+    use crate::standards::v1::subsets::drawing::io::SemioDrawingValidator;
+    use crate::standards::v1::subsets::flow::io::SemioFlowValidator;
+    use crate::standards::v1::subsets::graph::io::SemioGraphValidator;
+    use crate::standards::v1::subsets::image::io::SemioImageValidator;
+    use crate::standards::v1::subsets::kit::io::SemioKitValidator;
+    use crate::standards::v1::subsets::mesh::io::SemioMeshValidator;
+    use crate::standards::v1::subsets::model::io::SemioModelValidator;
+    use crate::standards::v1::subsets::object::io::SemioObjectValidator;
+    use crate::standards::v1::subsets::presentation::io::SemioPresentationValidator;
+    use crate::standards::v1::subsets::table::io::SemioTableValidator;
+    use crate::standards::v1::subsets::text::io::SemioTextValidator;
+    use crate::standards::v1::subsets::value::io::SemioValueValidator;
+    use crate::standards::v1::subsets::video::io::SemioVideoValidator;
     use dsl::Diagnostic;
     use semio_framework_plugin::{register_subset_validator, subset_validator_entry_of, AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, IoPayload, StandardId, SubsetId, SubsetValidator, SubsetValidatorEntry};
     use std::sync::OnceLock;
@@ -75,28 +75,28 @@ pub mod derived_composition {
     /// reuse of all 13 already-tested invariant checks, never duplicated here.
     async fn dispatch_validate(snapshot: &SemioSnapshot) -> Vec<Diagnostic> {
         match &snapshot.subset {
-            SemioSubsetSnapshot::Brep(s) => SemioBrepValidator::validate(&IoPayload::Binary(<crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot as store::ArtifactPack>::encode_pack(s))).await,
-            SemioSubsetSnapshot::Mesh(s) => SemioMeshValidator::validate(&IoPayload::Binary(<crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot as store::ArtifactPack>::encode_pack(s))).await,
-            SemioSubsetSnapshot::Model(s) => SemioModelValidator::validate(&IoPayload::Binary(<crate::artifacts::semio::standards::v1::subsets::model::schema::snapshot::SemioModelSnapshot as store::ArtifactPack>::encode_pack(s))).await,
-            SemioSubsetSnapshot::Value(s) => SemioValueValidator::validate(&IoPayload::Binary(<crate::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValueSnapshot as store::ArtifactPack>::encode_pack(s))).await,
-            SemioSubsetSnapshot::Document(s) => SemioDocumentValidator::validate(&IoPayload::Binary(<crate::artifacts::semio::standards::v1::subsets::document::schema::snapshot::SemioDocumentSnapshot as store::ArtifactPack>::encode_pack(s))).await,
-            SemioSubsetSnapshot::Cad(s) => SemioCadValidator::validate(&IoPayload::Binary(<crate::artifacts::semio::standards::v1::subsets::cad::schema::snapshot::SemioCadSnapshot as store::ArtifactPack>::encode_pack(s))).await,
-            SemioSubsetSnapshot::Drawing(s) => SemioDrawingValidator::validate(&IoPayload::Binary(<crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot as store::ArtifactPack>::encode_pack(s))).await,
-            SemioSubsetSnapshot::Image(s) => SemioImageValidator::validate(&IoPayload::Binary(<crate::artifacts::semio::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot as store::ArtifactPack>::encode_pack(s))).await,
-            SemioSubsetSnapshot::Video(s) => SemioVideoValidator::validate(&IoPayload::Binary(<crate::artifacts::semio::standards::v1::subsets::video::schema::snapshot::SemioVideoSnapshot as store::ArtifactPack>::encode_pack(s))).await,
-            SemioSubsetSnapshot::Audio(s) => SemioAudioValidator::validate(&IoPayload::Binary(<crate::artifacts::semio::standards::v1::subsets::audio::schema::snapshot::SemioAudioSnapshot as store::ArtifactPack>::encode_pack(s))).await,
+            SemioSubsetSnapshot::Brep(s) => SemioBrepValidator::validate(&IoPayload::Binary(<crate::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot as store::ArtifactPack>::encode_pack(s))).await,
+            SemioSubsetSnapshot::Mesh(s) => SemioMeshValidator::validate(&IoPayload::Binary(<crate::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot as store::ArtifactPack>::encode_pack(s))).await,
+            SemioSubsetSnapshot::Model(s) => SemioModelValidator::validate(&IoPayload::Binary(<crate::standards::v1::subsets::model::schema::snapshot::SemioModelSnapshot as store::ArtifactPack>::encode_pack(s))).await,
+            SemioSubsetSnapshot::Value(s) => SemioValueValidator::validate(&IoPayload::Binary(<crate::standards::v1::subsets::value::schema::snapshot::SemioValueSnapshot as store::ArtifactPack>::encode_pack(s))).await,
+            SemioSubsetSnapshot::Document(s) => SemioDocumentValidator::validate(&IoPayload::Binary(<crate::standards::v1::subsets::document::schema::snapshot::SemioDocumentSnapshot as store::ArtifactPack>::encode_pack(s))).await,
+            SemioSubsetSnapshot::Cad(s) => SemioCadValidator::validate(&IoPayload::Binary(<crate::standards::v1::subsets::cad::schema::snapshot::SemioCadSnapshot as store::ArtifactPack>::encode_pack(s))).await,
+            SemioSubsetSnapshot::Drawing(s) => SemioDrawingValidator::validate(&IoPayload::Binary(<crate::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot as store::ArtifactPack>::encode_pack(s))).await,
+            SemioSubsetSnapshot::Image(s) => SemioImageValidator::validate(&IoPayload::Binary(<crate::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot as store::ArtifactPack>::encode_pack(s))).await,
+            SemioSubsetSnapshot::Video(s) => SemioVideoValidator::validate(&IoPayload::Binary(<crate::standards::v1::subsets::video::schema::snapshot::SemioVideoSnapshot as store::ArtifactPack>::encode_pack(s))).await,
+            SemioSubsetSnapshot::Audio(s) => SemioAudioValidator::validate(&IoPayload::Binary(<crate::standards::v1::subsets::audio::schema::snapshot::SemioAudioSnapshot as store::ArtifactPack>::encode_pack(s))).await,
             SemioSubsetSnapshot::Animation(s) => {
-                SemioAnimationValidator::validate(&IoPayload::Binary(<crate::artifacts::semio::standards::v1::subsets::animation::schema::snapshot::SemioAnimationSnapshot as store::ArtifactPack>::encode_pack(s))).await
+                SemioAnimationValidator::validate(&IoPayload::Binary(<crate::standards::v1::subsets::animation::schema::snapshot::SemioAnimationSnapshot as store::ArtifactPack>::encode_pack(s))).await
             }
             SemioSubsetSnapshot::Presentation(s) => {
-                SemioPresentationValidator::validate(&IoPayload::Binary(<crate::artifacts::semio::standards::v1::subsets::presentation::schema::snapshot::SemioPresentationSnapshot as store::ArtifactPack>::encode_pack(s))).await
+                SemioPresentationValidator::validate(&IoPayload::Binary(<crate::standards::v1::subsets::presentation::schema::snapshot::SemioPresentationSnapshot as store::ArtifactPack>::encode_pack(s))).await
             }
-            SemioSubsetSnapshot::Flow(s) => SemioFlowValidator::validate(&IoPayload::Binary(<crate::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot as store::ArtifactPack>::encode_pack(s))).await,
-            SemioSubsetSnapshot::Text(s) => SemioTextValidator::validate(&IoPayload::Binary(<crate::artifacts::semio::standards::v1::subsets::text::schema::snapshot::SemioTextSnapshot as store::ArtifactPack>::encode_pack(s))).await,
-            SemioSubsetSnapshot::Table(s) => SemioTableValidator::validate(&IoPayload::Binary(<crate::artifacts::semio::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot as store::ArtifactPack>::encode_pack(s))).await,
-            SemioSubsetSnapshot::Graph(s) => SemioGraphValidator::validate(&IoPayload::Binary(<crate::artifacts::semio::standards::v1::subsets::graph::schema::snapshot::SemioGraphSnapshot as store::ArtifactPack>::encode_pack(s))).await,
-            SemioSubsetSnapshot::Object(s) => SemioObjectValidator::validate(&IoPayload::Binary(<crate::artifacts::semio::standards::v1::subsets::object::schema::snapshot::SemioObjectSnapshot as store::ArtifactPack>::encode_pack(s))).await,
-            SemioSubsetSnapshot::Kit(s) => SemioKitValidator::validate(&IoPayload::Binary(<crate::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot as store::ArtifactPack>::encode_pack(s))).await,
+            SemioSubsetSnapshot::Flow(s) => SemioFlowValidator::validate(&IoPayload::Binary(<crate::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot as store::ArtifactPack>::encode_pack(s))).await,
+            SemioSubsetSnapshot::Text(s) => SemioTextValidator::validate(&IoPayload::Binary(<crate::standards::v1::subsets::text::schema::snapshot::SemioTextSnapshot as store::ArtifactPack>::encode_pack(s))).await,
+            SemioSubsetSnapshot::Table(s) => SemioTableValidator::validate(&IoPayload::Binary(<crate::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot as store::ArtifactPack>::encode_pack(s))).await,
+            SemioSubsetSnapshot::Graph(s) => SemioGraphValidator::validate(&IoPayload::Binary(<crate::standards::v1::subsets::graph::schema::snapshot::SemioGraphSnapshot as store::ArtifactPack>::encode_pack(s))).await,
+            SemioSubsetSnapshot::Object(s) => SemioObjectValidator::validate(&IoPayload::Binary(<crate::standards::v1::subsets::object::schema::snapshot::SemioObjectSnapshot as store::ArtifactPack>::encode_pack(s))).await,
+            SemioSubsetSnapshot::Kit(s) => SemioKitValidator::validate(&IoPayload::Binary(<crate::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot as store::ArtifactPack>::encode_pack(s))).await,
         }
     }
 
@@ -135,9 +135,9 @@ pub mod derived_composition {
     /// Called from this artifact's standard-level `engine::register()`.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn register() {
-        ::schema::register_artifact_schema_descriptor(crate::artifacts::semio::standards::v1::subsets::base::schema::semio_artifact_schema_descriptor());
-        store::register_document_codec(store::ArtifactCodec::of::<SemioSnapshot, crate::artifacts::semio::standards::v1::subsets::base::schema::mutations::SemioMutation>(
-            crate::artifacts::semio::standards::v1::subsets::base::schema::snapshot::STDIO_SEMIO_DOCUMENT_SCHEMA,
+        ::framework_schema::register_artifact_schema_descriptor(crate::standards::v1::subsets::base::schema::semio_artifact_schema_descriptor());
+        store::register_document_codec(store::ArtifactCodec::of::<SemioSnapshot, crate::standards::v1::subsets::base::schema::mutations::SemioMutation>(
+            crate::standards::v1::subsets::base::schema::snapshot::STDIO_SEMIO_DOCUMENT_SCHEMA,
         )).expect("static Stdio registration must be available and conflict-free");
         register_subset_validator(validator_entry()).expect("static Stdio registration must be available and conflict-free");
         register_artifact_inferences();
@@ -148,7 +148,7 @@ pub mod derived_composition {
     /// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn register_artifact_inferences() {
-        ::schema::register_artifact_inference_descriptor(crate::artifacts::semio::standards::v1::subsets::base::schema::inferences::semio_artifact_inference_descriptor());
+        ::framework_schema::register_artifact_inference_descriptor(crate::standards::v1::subsets::base::schema::inferences::semio_artifact_inference_descriptor());
     }
     //#endregion 🔖️Register
 
@@ -156,7 +156,7 @@ pub mod derived_composition {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use crate::artifacts::semio::standards::v1::subsets::audio::schema::snapshot::{SemioAudioFormat, SemioAudioSnapshot};
+        use crate::standards::v1::subsets::audio::schema::snapshot::{SemioAudioFormat, SemioAudioSnapshot};
 
         /// 🧪️ A clean, valid audio snapshot delegates to `SemioAudioValidator` and reports no hard
         /// (error-severity) diagnostics.
@@ -197,7 +197,7 @@ pub mod derived_composition {
         /// calls (no test module of its own, and out of this ticket's `✉️base/`-only edit scope anyway).
         mod conformance_laws {
 
-            use crate::artifacts::semio::standards::v1::subsets::base::schema::{diff, mutations, snapshot};
+            use crate::standards::v1::subsets::base::schema::{diff, mutations, snapshot};
             use protocol::{DiffCodec, OpBinary, OpText};
 
             /// ✅️ "committed files parse": all 6 handcrafted `.grammar.semio`/`.protocol.semio` files
@@ -313,25 +313,25 @@ pub use derived_composition::*;
 /// ARTIFACTS-AND-APP-STATE-MACHINES) — pure `ComposerEntry` aggregation across all 19 subsets
 /// (the 13 domain subsets + `text` + this `✉️base` envelope's own), no engine needed.
 pub mod io_registry {
-    use crate::artifacts::semio::standards::v1::subsets::animation::schema::SemioAnimationComposer;
-    use crate::artifacts::semio::standards::v1::subsets::base::schema::SemioComposer as SemioRawAnyComposer;
-    use crate::artifacts::semio::standards::v1::subsets::audio::schema::SemioAudioComposer;
-    use crate::artifacts::semio::standards::v1::subsets::brep::schema::SemioBrepComposer;
-    use crate::artifacts::semio::standards::v1::subsets::cad::schema::SemioCadComposer;
-    use crate::artifacts::semio::standards::v1::subsets::document::schema::SemioDocumentComposer;
-    use crate::artifacts::semio::standards::v1::subsets::drawing::schema::SemioDrawingComposer;
-    use crate::artifacts::semio::standards::v1::subsets::flow::schema::SemioFlowComposer;
-    use crate::artifacts::semio::standards::v1::subsets::graph::schema::SemioGraphComposer;
-    use crate::artifacts::semio::standards::v1::subsets::image::schema::SemioImageComposer;
-    use crate::artifacts::semio::standards::v1::subsets::kit::schema::SemioKitComposer;
-    use crate::artifacts::semio::standards::v1::subsets::mesh::schema::SemioMeshComposer;
-    use crate::artifacts::semio::standards::v1::subsets::model::schema::SemioModelComposer;
-    use crate::artifacts::semio::standards::v1::subsets::object::schema::SemioObjectComposer;
-    use crate::artifacts::semio::standards::v1::subsets::presentation::schema::SemioPresentationComposer;
-    use crate::artifacts::semio::standards::v1::subsets::table::schema::SemioTableComposer;
-    use crate::artifacts::semio::standards::v1::subsets::text::schema::SemioTextComposer;
-    use crate::artifacts::semio::standards::v1::subsets::value::schema::SemioValueComposer;
-    use crate::artifacts::semio::standards::v1::subsets::video::schema::SemioVideoComposer;
+    use crate::standards::v1::subsets::animation::schema::SemioAnimationComposer;
+    use crate::standards::v1::subsets::base::schema::SemioComposer as SemioRawAnyComposer;
+    use crate::standards::v1::subsets::audio::schema::SemioAudioComposer;
+    use crate::standards::v1::subsets::brep::schema::SemioBrepComposer;
+    use crate::standards::v1::subsets::cad::schema::SemioCadComposer;
+    use crate::standards::v1::subsets::document::schema::SemioDocumentComposer;
+    use crate::standards::v1::subsets::drawing::schema::SemioDrawingComposer;
+    use crate::standards::v1::subsets::flow::schema::SemioFlowComposer;
+    use crate::standards::v1::subsets::graph::schema::SemioGraphComposer;
+    use crate::standards::v1::subsets::image::schema::SemioImageComposer;
+    use crate::standards::v1::subsets::kit::schema::SemioKitComposer;
+    use crate::standards::v1::subsets::mesh::schema::SemioMeshComposer;
+    use crate::standards::v1::subsets::model::schema::SemioModelComposer;
+    use crate::standards::v1::subsets::object::schema::SemioObjectComposer;
+    use crate::standards::v1::subsets::presentation::schema::SemioPresentationComposer;
+    use crate::standards::v1::subsets::table::schema::SemioTableComposer;
+    use crate::standards::v1::subsets::text::schema::SemioTextComposer;
+    use crate::standards::v1::subsets::value::schema::SemioValueComposer;
+    use crate::standards::v1::subsets::video::schema::SemioVideoComposer;
     use semio_framework_plugin::{composer_entry_of, ComposerEntry};
     use std::sync::OnceLock;
 

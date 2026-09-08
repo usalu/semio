@@ -8,7 +8,7 @@ use crate::artifacts::writer::WriterSnapshot;
 use semio_framework::io::io_mechanism::Deserializer;
 use semio_framework::io_schema::{IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{Dialect, StandardId, SubsetId};
-use semio_s_plugin_stdio::artifacts::json::JsonSnapshot;
+use semio_s_artifact_stdio_json::JsonSnapshot;
 
 pub const JSON_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId("*") };
 

@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeHrMDotKgS, base: &Din16798Snapshot) -> protocol::Mut
     if base.hr_m_dot_kg_s == payload.new_hr_m_dot_kg_s {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Heat recovery mass flow rate is already {}.", payload.new_hr_m_dot_kg_s));
     }
-    protocol::MutationOutcome::new(Din16798Diff { hr_m_dot_kg_s: Some(payload.new_hr_m_dot_kg_s.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(Din16798Diff { hr_m_dot_kg_s: Some(payload.new_hr_m_dot_kg_s), ..Default::default() })
 }
 //#endregion 🔖️Diff

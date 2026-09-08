@@ -5,7 +5,7 @@
   "displayName": "Change Pv System Module Efficiency",
   "emoji": "🎖️",
   "aggregateVariant": "ChangePvSystemModuleEfficiency",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-pv-system-module-efficiency",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

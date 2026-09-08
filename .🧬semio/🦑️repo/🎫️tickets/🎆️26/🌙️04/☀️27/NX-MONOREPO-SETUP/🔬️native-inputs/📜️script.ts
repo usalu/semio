@@ -30,10 +30,12 @@ console.log("[DEBUG] Native input closure preserves rustc-consumed assets, exclu
 
 if (process.argv.includes("cache")) {
   const copy = (path: string) => { const output = join(root, path); mkdirSync(dirname(output), { recursive: true }); writeFileSync(output, readFileSync(join(workspace, path))); };
-  for (const path of [library + "/🟨️.mjs", library + "/⚡️caching/🔣️policy.json", ...actual.map((path: string) => path.replace("{workspaceRoot}/", ""))]) copy(path);
+  for (const path of [library + "/🟨️.mjs", library + "/⚡️caching/🔣️policy.json", library + "/🕸️dependencies/🧩️runtime/🟨️.mjs", ...actual.map((path: string) => path.replace("{workspaceRoot}/", ""))]) copy(path);
   writeFileSync(join(root, "Cargo.toml"), '[workspace]\nmembers=["domain/📦️packages/🦀️rust"]\nresolver="2"\n');
   writeFileSync(join(root, "Cargo.lock"), 'version = 4\n[[package]]\nname = "native-input-fixture"\nversion = "0.1.0"\n');
-  writeFileSync(join(root, "nx.json"), JSON.stringify({ plugins: [{ plugin: "./" + library + "/🟨️.mjs" }], useDaemonProcess: false, cacheDirectory: ".nx/cache", maxCacheSize: "64MB" }));
+  writeFileSync(join(root, "nx.json"), JSON.stringify({ pluginsConfig: { "@nx/js": { analyzePackageJson: false, analyzeSourceFiles: false, analyzeLockfile: false } }, plugins: [{ plugin: "./" + library + "/🟨️.mjs", options: { analyzeLockfile: true } }], useDaemonProcess: false, cacheDirectory: ".nx/cache", maxCacheSize: "64MB" }));
+  const installedLock = require("nx/src/utils/json").parseJson(readFileSync(join(workspace, "bun.lock"), "utf8"));
+  writeFileSync(join(root, "bun.lock"), JSON.stringify({ lockfileVersion: 1, workspaces: { "": { name: "native-input-fixture" } }, packages: { "@iarna/toml": installedLock.packages["@iarna/toml"] } }));
   symlinkSync(join(workspace, "node_modules"), join(root, "node_modules"), process.platform === "win32" ? "junction" : "dir");
   writeFileSync(join(root, ".gitignore"), "node_modules\n.nx\ntarget\nstate\n**/dist\n*.log\n");
   writeFileSync(join(root, ".nxignore"), "!domain/**/*\n!" + library + "/**/*\n!Cargo.toml\n!Cargo.lock\n!package.json\n");

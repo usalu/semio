@@ -1,0 +1,63 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/step/ap214/cc4/mutation/set-shape-representation.json",
+  "title": "SetShapeRepresentation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id"
+  ],
+  "properties": {
+    "id": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "representation": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ShapeRepresentationRow"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "$defs": {
+    "ShapeRepresentationRow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "typeName",
+        "name",
+        "items"
+      ],
+      "properties": {
+        "typeName": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "context": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    }
+  }
+}

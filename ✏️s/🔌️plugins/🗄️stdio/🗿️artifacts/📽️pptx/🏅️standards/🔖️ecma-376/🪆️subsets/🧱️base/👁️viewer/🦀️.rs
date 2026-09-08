@@ -4,7 +4,7 @@
 //! the sole runtime adapter, so this file can never structurally emit an artifact mutation. Must
 //! not import anything from the sibling mutation-capable surface.
 
-use crate::artifacts::pptx::{PptxMutation, PptxSnapshot, STDIO_PPTX_DOCUMENT_SCHEMA};
+use crate::{PptxMutation, PptxSnapshot, STDIO_PPTX_DOCUMENT_SCHEMA};
 use crate::viewer::pptx::standards::v_ecma_376::subsets::base::modes::view;
 use crate::viewer::pptx::standards::v_ecma_376::subsets::base::modes::view::windows::main;
 use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId, ViewEmit, Viewer};

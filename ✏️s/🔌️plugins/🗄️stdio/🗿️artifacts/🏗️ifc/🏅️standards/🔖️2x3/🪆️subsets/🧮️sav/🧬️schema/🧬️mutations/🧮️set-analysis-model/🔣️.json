@@ -5,7 +5,7 @@
   "displayName": "Set Analysis Model",
   "emoji": "⚙",
   "aggregateVariant": "SetAnalysisModel",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

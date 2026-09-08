@@ -1,0 +1,10 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object", "additionalProperties": false, "required": ["schema", "cases"],
+  "properties": {
+    "schema": { "const": "semio.shell.paused-tutorial-seek-fixture.v1" },
+    "cases": { "type": "array", "minItems": 6, "items": { "type": "object", "additionalProperties": false, "required": ["id", "playing", "requested", "interrupt", "mutations", "playhead", "resumed"], "properties": {
+      "id": { "type": "string", "minLength": 1 }, "playing": { "type": "boolean" }, "requested": { "type": "boolean" }, "interrupt": { "enum": ["none", "pause", "close", "play"] }, "mutations": { "const": 1 }, "playhead": { "enum": [0, 200] }, "resumed": { "type": "boolean" }
+    } } }
+  }
+}

@@ -1,6 +1,8 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/png/1.2/any/mutations.json",
   "title": "PngMutation",
+  "description": "Discriminated union over this module's mutation leaves (adjacently tagged); every payload is the leaf's own schema, referenced, never restated.",
   "oneOf": [
     {
       "type": "object",
@@ -11,58 +13,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "change-header"
+          "const": "change-background"
         },
         "payload": {
-          "$ref": "📐️change-header/🧬️.schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "replace-palette"
-        },
-        "payload": {
-          "$ref": "🎨️replace-palette/🧬️.schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "change-transparency"
-        },
-        "payload": {
-          "$ref": "👁️change-transparency/🧬️.schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "change-gamma"
-        },
-        "payload": {
-          "$ref": "🌗️change-gamma/🧬️.schema.json"
+          "$ref": "./🖼️change-background/🧬️schema/🔣️.json"
         }
       }
     },
@@ -78,7 +32,7 @@
           "const": "change-chromaticities"
         },
         "payload": {
-          "$ref": "🌈️change-chromaticities/🧬️.schema.json"
+          "$ref": "./🌈️change-chromaticities/🧬️schema/🔣️.json"
         }
       }
     },
@@ -91,10 +45,26 @@
       ],
       "properties": {
         "mutation": {
-          "const": "change-srgb-intent"
+          "const": "change-gamma"
         },
         "payload": {
-          "$ref": "🖌️change-srgb-intent/🧬️.schema.json"
+          "$ref": "./🌗️change-gamma/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "change-header"
+        },
+        "payload": {
+          "$ref": "./📐️change-header/🧬️schema/🔣️.json"
         }
       }
     },
@@ -110,7 +80,23 @@
           "const": "change-physical-dims"
         },
         "payload": {
-          "$ref": "📏️change-physical-dims/🧬️.schema.json"
+          "$ref": "./📏️change-physical-dims/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "change-srgb-intent"
+        },
+        "payload": {
+          "$ref": "./🖌️change-srgb-intent/🧬️schema/🔣️.json"
         }
       }
     },
@@ -126,7 +112,7 @@
           "const": "change-timestamp"
         },
         "payload": {
-          "$ref": "🕰️change-timestamp/🧬️.schema.json"
+          "$ref": "./🕰️change-timestamp/🧬️schema/🔣️.json"
         }
       }
     },
@@ -139,10 +125,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "change-background"
+          "const": "change-transparency"
         },
         "payload": {
-          "$ref": "🖼️change-background/🧬️.schema.json"
+          "$ref": "./👁️change-transparency/🧬️schema/🔣️.json"
         }
       }
     },
@@ -158,55 +144,7 @@
           "const": "insert-text-chunk"
         },
         "payload": {
-          "$ref": "📥️insert-text-chunk/🧬️.schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "remove-text-chunk"
-        },
-        "payload": {
-          "$ref": "🗑️remove-text-chunk/🧬️.schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "replace-text-chunk"
-        },
-        "payload": {
-          "$ref": "✏️replace-text-chunk/🧬️.schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "replace-pixels"
-        },
-        "payload": {
-          "$ref": "🔲️replace-pixels/🧬️.schema.json"
+          "$ref": "./📥️insert-text-chunk/🧬️schema/🔣️.json"
         }
       }
     },
@@ -222,7 +160,23 @@
           "const": "insert-unknown-chunk"
         },
         "payload": {
-          "$ref": "📦️insert-unknown-chunk/🧬️.schema.json"
+          "$ref": "./📦️insert-unknown-chunk/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "remove-text-chunk"
+        },
+        "payload": {
+          "$ref": "./🗑️remove-text-chunk/🧬️schema/🔣️.json"
         }
       }
     },
@@ -238,7 +192,55 @@
           "const": "remove-unknown-chunk"
         },
         "payload": {
-          "$ref": "📤️remove-unknown-chunk/🧬️.schema.json"
+          "$ref": "./📤️remove-unknown-chunk/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "replace-palette"
+        },
+        "payload": {
+          "$ref": "./🎨️replace-palette/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "replace-pixels"
+        },
+        "payload": {
+          "$ref": "./🔲️replace-pixels/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "replace-text-chunk"
+        },
+        "payload": {
+          "$ref": "./✏️replace-text-chunk/🧬️schema/🔣️.json"
         }
       }
     }

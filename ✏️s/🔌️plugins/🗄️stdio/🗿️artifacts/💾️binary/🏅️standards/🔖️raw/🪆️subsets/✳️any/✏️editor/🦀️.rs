@@ -6,8 +6,8 @@
 //! bytes and emits a whole-buffer `BinaryMutation::ReplaceByteRange` (see the window's own doc comment for the
 //! honest cap/truncation scope note).
 
-use crate::artifacts::binary::schema::mutations::replace_byte_range;
-use crate::artifacts::binary::{BinaryMutation, BinarySnapshot, STDIO_BINARY_DOCUMENT_SCHEMA};
+use crate::schema::mutations::replace_byte_range;
+use crate::{BinaryMutation, BinarySnapshot, STDIO_BINARY_DOCUMENT_SCHEMA};
 use crate::editor::binary::modes::edit;
 use crate::editor::binary::modes::edit::windows::main;
 #[cfg(test)]

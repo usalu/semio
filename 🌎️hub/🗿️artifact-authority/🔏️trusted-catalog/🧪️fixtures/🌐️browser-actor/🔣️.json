@@ -13,54 +13,498 @@
     "sourceComponentSha256": "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
     "sourceDescriptorByteSha256": "4bf5122f344554c53bde2ebb8cd2b7e3d1600ad631c385a5d7cce23c7785459a",
     "policySha256": "4141414141414141414141414141414141414141414141414141414141414141",
-    "importInterfaces": ["semio:framework/host-async@1.0.0", "semio:framework/pure@1.0.0"]
+    "importInterfaces": [
+      "semio:framework/host-async@1.0.0",
+      "semio:framework/pure@1.0.0"
+    ]
   },
   "rawLengths": [
-    { "token": "3", "accepted": true },
-    { "token": "3.0", "accepted": true },
-    { "token": "3e0", "accepted": true },
-    { "token": "-0.0", "accepted": false },
-    { "token": "3.5", "accepted": false },
-    { "token": "67108864.0", "accepted": true },
-    { "token": "67108865.0", "accepted": false },
-    { "token": "1e100", "accepted": false }
+    {
+      "token": "3",
+      "accepted": true,
+      "expectation": {
+        "stage": "contract",
+        "result": "accepted",
+        "code": "canonical-length"
+      }
+    },
+    {
+      "token": "3.0",
+      "accepted": true,
+      "expectation": {
+        "stage": "contract",
+        "result": "accepted",
+        "code": "canonical-length"
+      }
+    },
+    {
+      "token": "3e0",
+      "accepted": true,
+      "expectation": {
+        "stage": "contract",
+        "result": "accepted",
+        "code": "canonical-length"
+      }
+    },
+    {
+      "token": "-0.0",
+      "accepted": false,
+      "expectation": {
+        "stage": "contract",
+        "result": "rejected",
+        "code": "non-positive-length"
+      }
+    },
+    {
+      "token": "3.5",
+      "accepted": false,
+      "expectation": {
+        "stage": "contract",
+        "result": "rejected",
+        "code": "non-integer-length"
+      }
+    },
+    {
+      "token": "67108864.0",
+      "accepted": true,
+      "expectation": {
+        "stage": "contract",
+        "result": "accepted",
+        "code": "canonical-length"
+      }
+    },
+    {
+      "token": "67108865.0",
+      "accepted": false,
+      "expectation": {
+        "stage": "contract",
+        "result": "rejected",
+        "code": "length-out-of-bounds"
+      }
+    },
+    {
+      "token": "1e100",
+      "accepted": false,
+      "expectation": {
+        "stage": "contract",
+        "result": "rejected",
+        "code": "length-out-of-bounds"
+      }
+    }
   ],
   "loadCases": [
-    { "id": "retained-after-path-replacement", "bodyHex": "616263", "byteLength": 3, "cancelAfterDescriptor": false, "accepted": true },
-    { "id": "altered-byte", "bodyHex": "616264", "byteLength": 3, "cancelAfterDescriptor": false, "accepted": false },
-    { "id": "oversize-body", "bodyHex": "61626364", "byteLength": 3, "cancelAfterDescriptor": false, "accepted": false },
-    { "id": "short-body", "bodyHex": "6162", "byteLength": 3, "cancelAfterDescriptor": false, "accepted": false },
-    { "id": "empty-body", "bodyHex": "", "byteLength": 3, "cancelAfterDescriptor": false, "accepted": false },
-    { "id": "missing-body", "bodyHex": null, "byteLength": 3, "cancelAfterDescriptor": false, "accepted": false },
-    { "id": "altered-length", "bodyHex": "616263", "byteLength": 4, "cancelAfterDescriptor": false, "accepted": false },
-    { "id": "cancel-after-descriptor", "bodyHex": "616263", "byteLength": 3, "cancelAfterDescriptor": true, "accepted": false }
+    {
+      "id": "retained-after-path-replacement",
+      "bodyHex": "616263",
+      "byteLength": 3,
+      "cancelAfterDescriptor": false,
+      "accepted": true
+    },
+    {
+      "id": "altered-byte",
+      "bodyHex": "616264",
+      "byteLength": 3,
+      "cancelAfterDescriptor": false,
+      "accepted": false
+    },
+    {
+      "id": "oversize-body",
+      "bodyHex": "61626364",
+      "byteLength": 3,
+      "cancelAfterDescriptor": false,
+      "accepted": false
+    },
+    {
+      "id": "short-body",
+      "bodyHex": "6162",
+      "byteLength": 3,
+      "cancelAfterDescriptor": false,
+      "accepted": false
+    },
+    {
+      "id": "empty-body",
+      "bodyHex": "",
+      "byteLength": 3,
+      "cancelAfterDescriptor": false,
+      "accepted": false
+    },
+    {
+      "id": "missing-body",
+      "bodyHex": null,
+      "byteLength": 3,
+      "cancelAfterDescriptor": false,
+      "accepted": false
+    },
+    {
+      "id": "altered-length",
+      "bodyHex": "616263",
+      "byteLength": 4,
+      "cancelAfterDescriptor": false,
+      "accepted": false
+    },
+    {
+      "id": "cancel-after-descriptor",
+      "bodyHex": "616263",
+      "byteLength": 3,
+      "cancelAfterDescriptor": true,
+      "accepted": false
+    }
   ],
   "cases": [
-    { "id": "closed-wasm", "kind": "closed-browser-actor", "renderer": "wasm", "set": {}, "shape": true, "accepted": true },
-    { "id": "none-react", "kind": "none", "renderer": "react", "set": {}, "shape": true, "accepted": true },
-    { "id": "none-wgpu", "kind": "none", "renderer": "wgpu", "set": {}, "shape": true, "accepted": true },
-    { "id": "none-wasm", "kind": "none", "renderer": "wasm", "set": {}, "shape": true, "accepted": false },
-    { "id": "closed-react", "kind": "closed-browser-actor", "renderer": "react", "set": {}, "shape": true, "accepted": false },
-    { "id": "closed-wgpu", "kind": "closed-browser-actor", "renderer": "wgpu", "set": {}, "shape": true, "accepted": false },
-    { "id": "missing-kind", "kind": "closed-browser-actor", "renderer": "wasm", "set": {}, "remove": "kind", "shape": false, "accepted": false },
-    { "id": "missing-path", "kind": "closed-browser-actor", "renderer": "wasm", "set": {}, "remove": "path", "shape": false, "accepted": false },
-    { "id": "missing-length", "kind": "closed-browser-actor", "renderer": "wasm", "set": {}, "remove": "byteLength", "shape": false, "accepted": false },
-    { "id": "foreign-source", "kind": "closed-browser-actor", "renderer": "wasm", "set": { "sourceComponentSha256": "4242424242424242424242424242424242424242424242424242424242424242" }, "shape": true, "accepted": false },
-    { "id": "foreign-descriptor", "kind": "closed-browser-actor", "renderer": "wasm", "set": { "sourceDescriptorByteSha256": "4242424242424242424242424242424242424242424242424242424242424242" }, "shape": true, "accepted": false },
-    { "id": "zero-hash", "kind": "closed-browser-actor", "renderer": "wasm", "set": { "sha256": "0000000000000000000000000000000000000000000000000000000000000000" }, "shape": false, "accepted": false },
-    { "id": "zero-policy", "kind": "closed-browser-actor", "renderer": "wasm", "set": { "policySha256": "0000000000000000000000000000000000000000000000000000000000000000" }, "shape": false, "accepted": false },
-    { "id": "foreign-policy", "kind": "closed-browser-actor", "renderer": "wasm", "set": { "codegenPolicy": "untrusted" }, "shape": false, "accepted": false },
-    { "id": "foreign-schema", "kind": "closed-browser-actor", "renderer": "wasm", "set": { "schema": "untrusted" }, "shape": false, "accepted": false },
-    { "id": "private-url", "kind": "closed-browser-actor", "renderer": "wasm", "set": { "url": "https://example.invalid/actor.mjs" }, "shape": false, "accepted": false },
-    { "id": "path-traversal", "kind": "closed-browser-actor", "renderer": "wasm", "set": { "path": "../actor.mjs" }, "shape": false, "accepted": false },
-    { "id": "absolute-path", "kind": "closed-browser-actor", "renderer": "wasm", "set": { "path": "/actor.mjs" }, "shape": false, "accepted": false },
-    { "id": "windows-path", "kind": "closed-browser-actor", "renderer": "wasm", "set": { "path": "C:\\actor.mjs" }, "shape": false, "accepted": false },
-    { "id": "empty-path", "kind": "closed-browser-actor", "renderer": "wasm", "set": { "path": "" }, "shape": false, "accepted": false },
-    { "id": "zero-length", "kind": "closed-browser-actor", "renderer": "wasm", "set": { "byteLength": 0 }, "shape": false, "accepted": false },
-    { "id": "fractional-length", "kind": "closed-browser-actor", "renderer": "wasm", "set": { "byteLength": 1.5 }, "shape": false, "accepted": false },
-    { "id": "oversize-length", "kind": "closed-browser-actor", "renderer": "wasm", "set": { "byteLength": 67108865 }, "shape": false, "accepted": false },
-    { "id": "duplicate-interfaces", "kind": "closed-browser-actor", "renderer": "wasm", "set": { "importInterfaces": ["semio:framework/pure@1.0.0", "semio:framework/pure@1.0.0"] }, "shape": false, "accepted": false },
-    { "id": "reordered-interfaces", "kind": "closed-browser-actor", "renderer": "wasm", "set": { "importInterfaces": ["semio:framework/pure@1.0.0", "semio:framework/host-async@1.0.0"] }, "shape": true, "accepted": false },
-    { "id": "none-with-path", "kind": "none", "renderer": "react", "set": { "path": "actor.mjs" }, "shape": false, "accepted": false }
+    {
+      "id": "closed-wasm",
+      "kind": "closed-browser-actor",
+      "renderer": "wasm",
+      "set": {},
+      "accepted": true,
+      "expectation": {
+        "stage": "contract",
+        "result": "accepted",
+        "code": "closed-wasm"
+      }
+    },
+    {
+      "id": "none-react",
+      "kind": "none",
+      "renderer": "react",
+      "set": {},
+      "accepted": true,
+      "expectation": {
+        "stage": "contract",
+        "result": "accepted",
+        "code": "none-react"
+      }
+    },
+    {
+      "id": "none-wgpu",
+      "kind": "none",
+      "renderer": "wgpu",
+      "set": {},
+      "accepted": true,
+      "expectation": {
+        "stage": "contract",
+        "result": "accepted",
+        "code": "none-wgpu"
+      }
+    },
+    {
+      "id": "none-wasm",
+      "kind": "none",
+      "renderer": "wasm",
+      "set": {},
+      "accepted": false,
+      "expectation": {
+        "stage": "contract",
+        "result": "accepted",
+        "code": "none-wasm"
+      }
+    },
+    {
+      "id": "closed-react",
+      "kind": "closed-browser-actor",
+      "renderer": "react",
+      "set": {},
+      "accepted": false,
+      "expectation": {
+        "stage": "contract",
+        "result": "accepted",
+        "code": "closed-react"
+      }
+    },
+    {
+      "id": "closed-wgpu",
+      "kind": "closed-browser-actor",
+      "renderer": "wgpu",
+      "set": {},
+      "accepted": false,
+      "expectation": {
+        "stage": "contract",
+        "result": "accepted",
+        "code": "closed-wgpu"
+      }
+    },
+    {
+      "id": "missing-kind",
+      "kind": "closed-browser-actor",
+      "renderer": "wasm",
+      "set": {},
+      "remove": "kind",
+      "accepted": false,
+      "expectation": {
+        "stage": "contract",
+        "result": "rejected",
+        "code": "missing-required-field"
+      }
+    },
+    {
+      "id": "missing-path",
+      "kind": "closed-browser-actor",
+      "renderer": "wasm",
+      "set": {},
+      "remove": "path",
+      "accepted": false,
+      "expectation": {
+        "stage": "contract",
+        "result": "rejected",
+        "code": "missing-required-field"
+      }
+    },
+    {
+      "id": "missing-length",
+      "kind": "closed-browser-actor",
+      "renderer": "wasm",
+      "set": {},
+      "remove": "byteLength",
+      "accepted": false,
+      "expectation": {
+        "stage": "contract",
+        "result": "rejected",
+        "code": "missing-required-field"
+      }
+    },
+    {
+      "id": "foreign-source",
+      "kind": "closed-browser-actor",
+      "renderer": "wasm",
+      "set": {
+        "sourceComponentSha256": "4242424242424242424242424242424242424242424242424242424242424242"
+      },
+      "accepted": false,
+      "expectation": {
+        "stage": "contract",
+        "result": "accepted",
+        "code": "foreign-source"
+      }
+    },
+    {
+      "id": "foreign-descriptor",
+      "kind": "closed-browser-actor",
+      "renderer": "wasm",
+      "set": {
+        "sourceDescriptorByteSha256": "4242424242424242424242424242424242424242424242424242424242424242"
+      },
+      "accepted": false,
+      "expectation": {
+        "stage": "contract",
+        "result": "accepted",
+        "code": "foreign-descriptor"
+      }
+    },
+    {
+      "id": "zero-hash",
+      "kind": "closed-browser-actor",
+      "renderer": "wasm",
+      "set": {
+        "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+      },
+      "accepted": false,
+      "expectation": {
+        "stage": "contract",
+        "result": "rejected",
+        "code": "zero-digest"
+      }
+    },
+    {
+      "id": "zero-policy",
+      "kind": "closed-browser-actor",
+      "renderer": "wasm",
+      "set": {
+        "policySha256": "0000000000000000000000000000000000000000000000000000000000000000"
+      },
+      "accepted": false,
+      "expectation": {
+        "stage": "contract",
+        "result": "rejected",
+        "code": "zero-digest"
+      }
+    },
+    {
+      "id": "foreign-policy",
+      "kind": "closed-browser-actor",
+      "renderer": "wasm",
+      "set": {
+        "codegenPolicy": "untrusted"
+      },
+      "accepted": false,
+      "expectation": {
+        "stage": "contract",
+        "result": "rejected",
+        "code": "foreign-codegen-policy"
+      }
+    },
+    {
+      "id": "foreign-schema",
+      "kind": "closed-browser-actor",
+      "renderer": "wasm",
+      "set": {
+        "schema": "untrusted"
+      },
+      "accepted": false,
+      "expectation": {
+        "stage": "contract",
+        "result": "rejected",
+        "code": "foreign-actor-schema"
+      }
+    },
+    {
+      "id": "private-url",
+      "kind": "closed-browser-actor",
+      "renderer": "wasm",
+      "set": {
+        "url": "https://example.invalid/actor.mjs"
+      },
+      "accepted": false,
+      "expectation": {
+        "stage": "contract",
+        "result": "rejected",
+        "code": "unknown-field"
+      }
+    },
+    {
+      "id": "path-traversal",
+      "kind": "closed-browser-actor",
+      "renderer": "wasm",
+      "set": {
+        "path": "../actor.mjs"
+      },
+      "accepted": false,
+      "expectation": {
+        "stage": "contract",
+        "result": "rejected",
+        "code": "path-escape"
+      }
+    },
+    {
+      "id": "absolute-path",
+      "kind": "closed-browser-actor",
+      "renderer": "wasm",
+      "set": {
+        "path": "/actor.mjs"
+      },
+      "accepted": false,
+      "expectation": {
+        "stage": "contract",
+        "result": "rejected",
+        "code": "absolute-path"
+      }
+    },
+    {
+      "id": "windows-path",
+      "kind": "closed-browser-actor",
+      "renderer": "wasm",
+      "set": {
+        "path": "C:\\actor.mjs"
+      },
+      "accepted": false,
+      "expectation": {
+        "stage": "contract",
+        "result": "rejected",
+        "code": "windows-path"
+      }
+    },
+    {
+      "id": "empty-path",
+      "kind": "closed-browser-actor",
+      "renderer": "wasm",
+      "set": {
+        "path": ""
+      },
+      "accepted": false,
+      "expectation": {
+        "stage": "contract",
+        "result": "rejected",
+        "code": "empty-path"
+      }
+    },
+    {
+      "id": "zero-length",
+      "kind": "closed-browser-actor",
+      "renderer": "wasm",
+      "set": {
+        "byteLength": 0
+      },
+      "accepted": false,
+      "expectation": {
+        "stage": "contract",
+        "result": "rejected",
+        "code": "length-out-of-bounds"
+      }
+    },
+    {
+      "id": "fractional-length",
+      "kind": "closed-browser-actor",
+      "renderer": "wasm",
+      "set": {
+        "byteLength": 1.5
+      },
+      "accepted": false,
+      "expectation": {
+        "stage": "contract",
+        "result": "rejected",
+        "code": "non-integer-length"
+      }
+    },
+    {
+      "id": "oversize-length",
+      "kind": "closed-browser-actor",
+      "renderer": "wasm",
+      "set": {
+        "byteLength": 67108865
+      },
+      "accepted": false,
+      "expectation": {
+        "stage": "contract",
+        "result": "rejected",
+        "code": "length-out-of-bounds"
+      }
+    },
+    {
+      "id": "duplicate-interfaces",
+      "kind": "closed-browser-actor",
+      "renderer": "wasm",
+      "set": {
+        "importInterfaces": [
+          "semio:framework/pure@1.0.0",
+          "semio:framework/pure@1.0.0"
+        ]
+      },
+      "accepted": false,
+      "expectation": {
+        "stage": "contract",
+        "result": "rejected",
+        "code": "duplicate-interface"
+      }
+    },
+    {
+      "id": "reordered-interfaces",
+      "kind": "closed-browser-actor",
+      "renderer": "wasm",
+      "set": {
+        "importInterfaces": [
+          "semio:framework/pure@1.0.0",
+          "semio:framework/host-async@1.0.0"
+        ]
+      },
+      "accepted": false,
+      "expectation": {
+        "stage": "contract",
+        "result": "accepted",
+        "code": "reordered-interfaces"
+      }
+    },
+    {
+      "id": "none-with-path",
+      "kind": "none",
+      "renderer": "react",
+      "set": {
+        "path": "actor.mjs"
+      },
+      "accepted": false,
+      "expectation": {
+        "stage": "contract",
+        "result": "rejected",
+        "code": "unknown-field"
+      }
+    }
   ]
 }

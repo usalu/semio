@@ -4,8 +4,8 @@
 //! slug dirs directly — `🦀️.rs` is the sole mounting mechanism, same as mutations); each named
 //! inference gets its own `<emoji><slug>/` child (currently: `📐dimensions/`).
 
-use crate::artifacts::svg::SvgSnapshot;
-use schema::ArtifactSchema;
+use crate::SvgSnapshot;
+use framework_schema::ArtifactSchema;
 
 use super::dimensions::{compute_svg_dimensions, SvgDimensions};
 
@@ -51,7 +51,7 @@ impl protocol::InferenceSpec<SvgSnapshot> for SvgInference {
 //#region 🔖️ArtifactInferrer
 /// 💡️ No `InferredField`s here (a root-element read is already O(1), nothing to incrementally
 /// cache) — the default `infer_cached` passthrough (`ArtifactInferrer::infer_cached`) is exact.
-impl semio_framework_plugin::ArtifactInferrer for crate::artifacts::svg::standards::v1_1::subsets::base::schema::SvgBuilder {
+impl semio_framework_plugin::ArtifactInferrer for crate::standards::v1_1::subsets::base::schema::SvgBuilder {
     type Snapshot = SvgSnapshot;
     type Inference = SvgInference;
 }
@@ -61,10 +61,10 @@ impl semio_framework_plugin::ArtifactInferrer for crate::artifacts::svg::standar
 /// 💡️ Registers `s.stdio.svg.inference`'s facet leaves into the OS-wide inference catalog — call
 /// once at plugin init, alongside `svg_artifact_schema_descriptor`'s registration.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn svg_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
-    schema::ArtifactInferenceDescriptor {
+pub fn svg_artifact_inference_descriptor() -> framework_schema::ArtifactInferenceDescriptor {
+    framework_schema::ArtifactInferenceDescriptor {
         id: "s.stdio.svg.inference",
-        inference: schema::FacetLeaves {
+        inference: framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),

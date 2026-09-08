@@ -10,7 +10,7 @@ use crate::artifacts::program::ProgramSnapshot;
 pub fn diff(payload: &CreateConstraintRecord, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
     let id = payload.constraint_record.header.id.clone();
     if base.constraints.iter().any(|row| row.header.id == id) {
-        return protocol::MutationOutcome::fatal("mutation.duplicate-id", "A constraint record already exists with this id.", [id.0.clone()]);
+        return protocol::MutationOutcome::fatal("mutation.duplicate-id", "A constraint record already exists with this id.", [id.0]);
     }
     protocol::MutationOutcome::new(ProgramDiff { constraints: Some(ProgramConstraintsDelta { added: vec![payload.constraint_record.clone()], ..Default::default() }), ..Default::default() })
 }

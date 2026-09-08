@@ -5,7 +5,7 @@
   "displayName": "Replace Scenario",
   "emoji": "♻️",
   "aggregateVariant": "ReplaceScenario",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

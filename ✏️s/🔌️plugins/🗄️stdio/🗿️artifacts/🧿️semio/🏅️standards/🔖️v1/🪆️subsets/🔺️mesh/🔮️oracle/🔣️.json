@@ -433,7 +433,7 @@
         {
           "id": "change-material-base-color",
           "capability": "semio-v1-mesh-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "rejected",
             "applied"
@@ -470,7 +470,7 @@
         {
           "id": "change-material-metallic",
           "capability": "semio-v1-mesh-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "rejected",
             "applied"
@@ -507,7 +507,7 @@
         {
           "id": "change-material-roughness",
           "capability": "semio-v1-mesh-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "rejected",
             "applied"
@@ -544,7 +544,7 @@
         {
           "id": "change-texture-mime",
           "capability": "semio-v1-mesh-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "rejected",
             "applied"
@@ -581,7 +581,7 @@
         {
           "id": "create-material",
           "capability": "semio-v1-mesh-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -617,7 +617,7 @@
         {
           "id": "create-mesh",
           "capability": "semio-v1-mesh-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -656,7 +656,7 @@
         {
           "id": "create-primitive",
           "capability": "semio-v1-mesh-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "rejected",
             "applied"
@@ -696,7 +696,7 @@
         {
           "id": "create-texture",
           "capability": "semio-v1-mesh-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -732,7 +732,7 @@
         {
           "id": "delete-material",
           "capability": "semio-v1-mesh-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "rejected",
             "applied"
@@ -769,7 +769,7 @@
         {
           "id": "delete-mesh",
           "capability": "semio-v1-mesh-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "rejected",
             "applied"
@@ -809,7 +809,7 @@
         {
           "id": "delete-primitive",
           "capability": "semio-v1-mesh-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "rejected",
             "applied"
@@ -849,7 +849,7 @@
         {
           "id": "delete-texture",
           "capability": "semio-v1-mesh-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "rejected",
             "applied"
@@ -886,7 +886,7 @@
         {
           "id": "move-vertex",
           "capability": "semio-v1-mesh-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "rejected",
             "applied"
@@ -926,7 +926,7 @@
         {
           "id": "replace-primitive-geometry",
           "capability": "semio-v1-mesh-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "rejected",
             "applied"
@@ -966,7 +966,7 @@
         {
           "id": "replace-texture-bytes",
           "capability": "semio-v1-mesh-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "rejected",
             "applied"
@@ -1003,7 +1003,7 @@
         {
           "id": "set-primitive-material",
           "capability": "semio-v1-mesh-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "rejected",
             "applied"
@@ -1040,7 +1040,7 @@
         {
           "id": "set-primitive-topology",
           "capability": "semio-v1-mesh-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "rejected",
             "applied"
@@ -6659,38 +6659,38 @@
     {
       "id": "mesh-exact",
       "description": "📏️ Analytic primitives (a cube, whose eight vertices and six faces have a closed-form volume/area) tessellated by manifold-3d with no boolean or scale operation applied — the tightest mesh floor this subset uses, admitting only IEEE-754 and triangulation-seam noise.",
-      "absoluteLength": 1E-9,
-      "relativeLength": 1E-10,
-      "absoluteArea": 1E-8,
-      "relativeArea": 1E-9,
-      "absoluteVolume": 1E-8,
-      "relativeVolume": 1E-9,
-      "normalizedHausdorffMax": 1E-7,
-      "normalizedCentroidDistanceMax": 1E-8,
+      "absoluteLength": 1e-09,
+      "relativeLength": 1e-10,
+      "absoluteArea": 1e-08,
+      "relativeArea": 1e-09,
+      "absoluteVolume": 1e-08,
+      "relativeVolume": 1e-09,
+      "normalizedHausdorffMax": 1e-07,
+      "normalizedCentroidDistanceMax": 1e-08,
       "maxOverrideFactor": 5
     },
     {
       "id": "mesh-tessellated",
       "description": "📏️ The default for this subset's boolean/primitive/topology corpus: ordinary mechanical solids at millimetre scale re-tessellated by manifold-3d after a boolean or topology edit. Measured against this oracle's own baseline (0.000e+00 round-trip noise, 1.073e-01/9.988e-01 for a genuinely different 5mm-vs-6mm bore) so the floor sits comfortably below any real defect while absorbing ordinary re-tessellation seam noise.",
-      "absoluteLength": 0.000001,
-      "relativeLength": 1E-7,
-      "absoluteArea": 0.00001,
-      "relativeArea": 0.000001,
-      "absoluteVolume": 0.00001,
-      "relativeVolume": 0.000001,
+      "absoluteLength": 1e-06,
+      "relativeLength": 1e-07,
+      "absoluteArea": 1e-05,
+      "relativeArea": 1e-06,
+      "absoluteVolume": 1e-05,
+      "relativeVolume": 1e-06,
       "normalizedHausdorffMax": 0.0001,
-      "normalizedCentroidDistanceMax": 0.00001,
+      "normalizedCentroidDistanceMax": 1e-05,
       "maxOverrideFactor": 8
     },
     {
       "id": "mesh-degenerate",
       "description": "📏️ Slivers, hairline grooves, needle cones and tiny bores at or below manifold's own welding tolerance, where the RESULT CLASS (does the feature survive at all) is the assertion this subset's `degenerate-*` family is making and the metric is secondary — the loosest floor here, mirroring `epsilon-degenerate`'s reasoning but sized to manifold-3d's 1e-7 relative welding grid rather than an analytic kernel's.",
-      "absoluteLength": 0.00001,
-      "relativeLength": 0.000001,
+      "absoluteLength": 1e-05,
+      "relativeLength": 1e-06,
       "absoluteArea": 0.0001,
-      "relativeArea": 0.00001,
+      "relativeArea": 1e-05,
       "absoluteVolume": 0.0001,
-      "relativeVolume": 0.00001,
+      "relativeVolume": 1e-05,
       "normalizedHausdorffMax": 0.001,
       "normalizedCentroidDistanceMax": 0.0001,
       "maxOverrideFactor": 4
@@ -6698,14 +6698,14 @@
     {
       "id": "mesh-scale-relative",
       "description": "📏️ The `scale-bore-boss-*`/`scale-torus-*` family, the SAME geometry re-expressed from 1e-3 to 1e6 length units, where a fixed absolute floor sized for one scale would either swallow the whole model at the small end or reject legitimate noise at the large end. Only the relative terms are meaningful here, mirroring `large-coordinate`'s and `micro-scale`'s reasoning combined into one profile because this family spans both directions from unit scale.",
-      "absoluteLength": 1E-9,
-      "relativeLength": 0.000001,
-      "absoluteArea": 1E-9,
-      "relativeArea": 0.00001,
-      "absoluteVolume": 1E-9,
-      "relativeVolume": 0.00001,
-      "normalizedHausdorffMax": 0.00001,
-      "normalizedCentroidDistanceMax": 0.000001,
+      "absoluteLength": 1e-09,
+      "relativeLength": 1e-06,
+      "absoluteArea": 1e-09,
+      "relativeArea": 1e-05,
+      "absoluteVolume": 1e-09,
+      "relativeVolume": 1e-05,
+      "normalizedHausdorffMax": 1e-05,
+      "normalizedCentroidDistanceMax": 1e-06,
       "maxOverrideFactor": 5
     }
   ]

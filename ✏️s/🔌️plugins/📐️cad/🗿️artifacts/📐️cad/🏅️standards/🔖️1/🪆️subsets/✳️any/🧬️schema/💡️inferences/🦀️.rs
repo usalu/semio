@@ -106,7 +106,7 @@ mod derive_transformation {
     #[cfg(test)]
     use crate::artifacts::cad::standards::v1::subsets::any::io::geometry_import::CadPrimitiveSlot;
 
-    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::{Brep, BrepKernel, GeometryHandle, Vec3};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::engine::{Brep, BrepKernel, GeometryHandle, Vec3};
     #[cfg(test)]
     use std::collections::HashMap;
 
@@ -154,7 +154,7 @@ mod derive_transformation {
         let mut area_sum = 0.0;
         let mut centroid = [0.0, 0.0, 0.0];
         let mut normal = [0.0, 0.0, 0.0];
-        for triangle in mesh.index.chunks_exact(3) {
+        for triangle in mesh.index.as_chunks::<3>().0 {
             let i0 = triangle[0] as usize;
             let i1 = triangle[1] as usize;
             let i2 = triangle[2] as usize;
@@ -705,8 +705,8 @@ mod scene_compute {
     use crate::artifacts::cad::{cad_model_child_handle, CadCamera, CadModelChild, CadNode, CadPaneId, CadProjectionDsl, CadReference, CadSnapshot, CadWorkingScene, CAD_PLAY_DOCUMENT_SCHEMA};
     use semio_framework::parse_contributions;
     use semio_framework_plugin::{mesh_from_kind, MeshData, WorldProjectionConfig};
-    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::mesh_data_from_mesh_transfer;
-    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::{Brep, BrepKernel, GeometryHandle, MeshTransfer};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::engine::mesh_data_from_mesh_transfer;
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::engine::{Brep, BrepKernel, GeometryHandle, MeshTransfer};
     use std::collections::HashSet;
     use std::sync::{Arc, OnceLock};
 
@@ -777,11 +777,11 @@ mod scene_compute {
         let mesh: MeshTransfer = match kernel.tessellate(&handle, 0.1) {
             Ok(mesh) => mesh,
             Err(_) => {
-                let _ = kernel.dispose(&handle);
+                kernel.dispose(&handle);
                 return mesh_from_kind(typology_mesh_kind(typology));
             }
         };
-        let _ = kernel.dispose(&handle);
+        kernel.dispose(&handle);
         let mut mesh_data = mesh_data_from_mesh_transfer(&mesh);
         if let Some(center) = centroid {
             translate_mesh_positions(&mut mesh_data, [center[0] as f32, center[1] as f32, center[2] as f32]);
@@ -967,7 +967,7 @@ mod scene_compute {
             shape_model: cad_model_child_for_pane(CadPaneId::Shape, &shape_objects, scene.clone()),
             building_model: cad_model_child_for_pane(CadPaneId::Building, &building_objects, scene.clone()),
             energy_model: cad_model_child_for_pane(CadPaneId::Energy, &energy_objects, scene.clone()),
-            structure_classic_model: cad_model_child_for_pane(CadPaneId::StructureClassic, &structure_classic_objects, scene.clone()),
+            structure_classic_model: cad_model_child_for_pane(CadPaneId::StructureClassic, &structure_classic_objects, scene),
             drawings: Vec::new(),
             nodes: vec![CadNode { id: "node-root".into(), label: "Concrete Forest Left".into(), kind: "group".into() }],
             references_by_model_definition_id: forest_references_for_model_definitions(CAD_FOREST_REFERENCE_PLANE_Z),

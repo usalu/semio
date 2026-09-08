@@ -1,0 +1,70 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/remodel/remodeling/1/any/mutation/update-geo-params.json",
+  "title": "UpdateGeoParams",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "params"
+  ],
+  "properties": {
+    "params": {
+      "type": "object",
+      "title": "GeoParams",
+      "additionalProperties": false,
+      "required": [
+        "enabled",
+        "originLon",
+        "originLat",
+        "originAlt",
+        "gsdM",
+        "dsmCellM",
+        "dtmFilterRadiusM",
+        "orthoMaxPx"
+      ],
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "originLon": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "format": "double"
+        },
+        "originLat": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "format": "double"
+        },
+        "originAlt": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "format": "double"
+        },
+        "gsdM": {
+          "type": "number",
+          "format": "float"
+        },
+        "dsmCellM": {
+          "type": "number",
+          "format": "float"
+        },
+        "dtmFilterRadiusM": {
+          "type": "number",
+          "format": "float"
+        },
+        "orthoMaxPx": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        }
+      }
+    }
+  }
+}

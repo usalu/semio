@@ -1,375 +1,257 @@
 {
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://semio.tech/schema/s/norm/din16798/mutation.json",
   "title": "Din16798Mutation",
-  "type": "object",
-  "additionalProperties": false,
-  "required": [
-    "annex",
-    "occupancy",
-    "comfortCategory",
-    "tOpC",
-    "rhPercent",
-    "airSpeedMS",
-    "thetaRmC",
-    "co2Ppm",
-    "dfPercent",
-    "lAeqDb",
-    "persons",
-    "idaClass",
-    "ventilationM3H",
-    "floorAreaM2",
-    "bedrooms",
-    "dwellingVentilationM3H",
-    "occupants",
-    "residentialVentilationM3H",
-    "sfpWM3S",
-    "sfpRequiredClass",
-    "heatRecoveryEta",
-    "heatRecoveryEtaMin",
-    "systemType",
-    "yearsSinceInspection",
-    "humidificationRequiredKgH",
-    "humidificationProvidedKgH",
-    "fanQVM3S",
-    "fanTRunH",
-    "fanEnergyReferenceKwh",
-    "nightSetbackK",
-    "hrMDotKgS",
-    "hrCpJKgk",
-    "hrDeltaTC",
-    "hrTH",
-    "hrSavingsReferenceKwh",
-    "n50HInv",
-    "volumeM3",
-    "infiltrationAllowanceM3H",
-    "cellarAreaM2",
-    "cellarVentilationM3H",
-    "hTrWK",
-    "hVeWK",
-    "thetaEC",
-    "thetaSetC",
-    "coolingDeltaTH",
-    "coolingGainsKwh",
-    "coolingUtilizationFactor",
-    "coolingReferenceKwh",
-    "chillerType",
-    "eerActual",
-    "qCKwh",
-    "generationReferenceKwh",
-    "dataCenterSupplyC",
-    "hStWK",
-    "thetaStC",
-    "thetaAmbC",
-    "storageTH",
-    "storageAllowanceKwh",
-    "dhwDeliveryC",
-    "ductClass",
-    "ductTestPressurePa",
-    "ductLeakageM3SM2"
-  ],
-  "properties": {
-    "annex": {
-      "type": "string",
-      "x-semio-state": "artifact"
+  "oneOf": [
+    {
+      "$ref": "./🪁️change-air-speed-ms/🧬️schema/🔣️.json"
     },
-    "occupancy": {
-      "type": "string",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🌍️change-annex/🧬️schema/🔣️.json"
     },
-    "comfortCategory": {
-      "type": "string",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🛏️change-bedrooms/🧬️schema/🔣️.json"
     },
-    "tOpC": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🏚️change-cellar-area-m2/🧬️schema/🔣️.json"
     },
-    "rhPercent": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🪟️change-cellar-ventilation-m3-h/🧬️schema/🔣️.json"
     },
-    "airSpeedMS": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🥶️change-chiller-type/🧬️schema/🔣️.json"
     },
-    "thetaRmC": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🌫️change-co2-ppm/🧬️schema/🔣️.json"
     },
-    "co2Ppm": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🛋️change-comfort-category/🧬️schema/🔣️.json"
     },
-    "dfPercent": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./⌛️change-cooling-delta-th/🧬️schema/🔣️.json"
     },
-    "lAeqDb": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./📈️change-cooling-gains-kwh/🧬️schema/🔣️.json"
     },
-    "persons": {
-      "type": "integer",
-      "format": "uint32",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./📊️change-cooling-reference-kwh/🧬️schema/🔣️.json"
     },
-    "idaClass": {
-      "type": "string",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🎚️change-cooling-utilization-factor/🧬️schema/🔣️.json"
     },
-    "ventilationM3H": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🖥️change-data-center-supply-c/🧬️schema/🔣️.json"
     },
-    "floorAreaM2": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./☀️change-df-percent/🧬️schema/🔣️.json"
     },
-    "bedrooms": {
-      "type": "integer",
-      "format": "uint32",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🚿️change-dhw-delivery-c/🧬️schema/🔣️.json"
     },
-    "dwellingVentilationM3H": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🛡️change-duct-class/🧬️schema/🔣️.json"
     },
-    "occupants": {
-      "type": "integer",
-      "format": "uint32",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🕳️change-duct-leakage-m3-sm2/🧬️schema/🔣️.json"
     },
-    "residentialVentilationM3H": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🧭️change-duct-test-pressure-pa/🧬️schema/🔣️.json"
     },
-    "sfpWM3S": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🏡️change-dwelling-ventilation-m3-h/🧬️schema/🔣️.json"
     },
-    "sfpRequiredClass": {
-      "type": "integer",
-      "format": "uint32",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./✅️change-eer-actual/🧬️schema/🔣️.json"
     },
-    "heatRecoveryEta": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🔌️change-fan-energy-reference-kwh/🧬️schema/🔣️.json"
     },
-    "heatRecoveryEtaMin": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🪭️change-fan-qvm3-s/🧬️schema/🔣️.json"
     },
-    "systemType": {
-      "type": "string",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./⏰️change-fan-t-run-h/🧬️schema/🔣️.json"
     },
-    "yearsSinceInspection": {
-      "type": "integer",
-      "format": "uint32",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./📐️change-floor-area-m2/🧬️schema/🔣️.json"
     },
-    "humidificationRequiredKgH": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./⚡️change-generation-reference-kwh/🧬️schema/🔣️.json"
     },
-    "humidificationProvidedKgH": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🧮️change-h-st-wk/🧬️schema/🔣️.json"
     },
-    "fanQVM3S": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🧱️change-h-tr-wk/🧬️schema/🔣️.json"
     },
-    "fanTRunH": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🔃️change-h-ve-wk/🧬️schema/🔣️.json"
     },
-    "fanEnergyReferenceKwh": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./♻️change-heat-recovery-eta/🧬️schema/🔣️.json"
     },
-    "nightSetbackK": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🚧️change-heat-recovery-eta-min/🧬️schema/🔣️.json"
     },
-    "hrMDotKgS": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🥵️change-hr-cp-j-kgk/🧬️schema/🔣️.json"
     },
-    "hrCpJKgk": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./↕️change-hr-delta-tc/🧬️schema/🔣️.json"
     },
-    "hrDeltaTC": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./⚖️change-hr-m-dot-kg-s/🧬️schema/🔣️.json"
     },
-    "hrTH": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./💡️change-hr-savings-reference-kwh/🧬️schema/🔣️.json"
     },
-    "hrSavingsReferenceKwh": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./⏳️change-hr-th/🧬️schema/🔣️.json"
     },
-    "n50HInv": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./💦️change-humidification-provided-kg-h/🧬️schema/🔣️.json"
     },
-    "volumeM3": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./☁️change-humidification-required-kg-h/🧬️schema/🔣️.json"
     },
-    "infiltrationAllowanceM3H": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🫁️change-ida-class/🧬️schema/🔣️.json"
     },
-    "cellarAreaM2": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🚪️change-infiltration-allowance-m3-h/🧬️schema/🔣️.json"
     },
-    "cellarVentilationM3H": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🔊️change-l-aeq-db/🧬️schema/🔣️.json"
     },
-    "hTrWK": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🏠️change-n50-h-inv/🧬️schema/🔣️.json"
     },
-    "hVeWK": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🌙️change-night-setback-k/🧬️schema/🔣️.json"
     },
-    "thetaEC": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🏢️change-occupancy/🧬️schema/🔣️.json"
     },
-    "thetaSetC": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./👪️change-occupants/🧬️schema/🔣️.json"
     },
-    "coolingDeltaTH": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./👥️change-persons/🧬️schema/🔣️.json"
     },
-    "coolingGainsKwh": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./❄️change-qc-kwh/🧬️schema/🔣️.json"
     },
-    "coolingUtilizationFactor": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🏘️change-residential-ventilation-m3-h/🧬️schema/🔣️.json"
     },
-    "coolingReferenceKwh": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./💧️change-rh-percent/🧬️schema/🔣️.json"
     },
-    "chillerType": {
-      "type": "string",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🏷️change-sfp-required-class/🧬️schema/🔣️.json"
     },
-    "eerActual": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🌀️change-sfp-wm3-s/🧬️schema/🔣️.json"
     },
-    "qCKwh": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./📉️change-storage-allowance-kwh/🧬️schema/🔣️.json"
     },
-    "generationReferenceKwh": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🕒️change-storage-th/🧬️schema/🔣️.json"
     },
-    "dataCenterSupplyC": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./⚙️change-system-type/🧬️schema/🔣️.json"
     },
-    "hStWK": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🌡️change-t-op-c/🧬️schema/🔣️.json"
     },
-    "thetaStC": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🌬️change-theta-amb-c/🧬️schema/🔣️.json"
     },
-    "thetaAmbC": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🌤️change-theta-ec/🧬️schema/🔣️.json"
     },
-    "storageTH": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🔄️change-theta-rm-c/🧬️schema/🔣️.json"
     },
-    "storageAllowanceKwh": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🎯️change-theta-set-c/🧬️schema/🔣️.json"
     },
-    "dhwDeliveryC": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🫙️change-theta-st-c/🧬️schema/🔣️.json"
     },
-    "ductClass": {
-      "type": "string",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./💨️change-ventilation-m3-h/🧬️schema/🔣️.json"
     },
-    "ductTestPressurePa": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🧊️change-volume-m3/🧬️schema/🔣️.json"
     },
-    "ductLeakageM3SM2": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./📅️change-years-since-inspection/🧬️schema/🔣️.json"
     }
-  }
+  ],
+  "x-semio-mutationKinds": [
+    "change-air-speed-ms",
+    "change-annex",
+    "change-bedrooms",
+    "change-cellar-area-m2",
+    "change-cellar-ventilation-m3-h",
+    "change-chiller-type",
+    "change-co2-ppm",
+    "change-comfort-category",
+    "change-cooling-delta-th",
+    "change-cooling-gains-kwh",
+    "change-cooling-reference-kwh",
+    "change-cooling-utilization-factor",
+    "change-data-center-supply-c",
+    "change-df-percent",
+    "change-dhw-delivery-c",
+    "change-duct-class",
+    "change-duct-leakage-m3-sm2",
+    "change-duct-test-pressure-pa",
+    "change-dwelling-ventilation-m3-h",
+    "change-eer-actual",
+    "change-fan-energy-reference-kwh",
+    "change-fan-qvm3-s",
+    "change-fan-t-run-h",
+    "change-floor-area-m2",
+    "change-generation-reference-kwh",
+    "change-h-st-wk",
+    "change-h-tr-wk",
+    "change-h-ve-wk",
+    "change-heat-recovery-eta",
+    "change-heat-recovery-eta-min",
+    "change-hr-cp-j-kgk",
+    "change-hr-delta-tc",
+    "change-hr-m-dot-kg-s",
+    "change-hr-savings-reference-kwh",
+    "change-hr-th",
+    "change-humidification-provided-kg-h",
+    "change-humidification-required-kg-h",
+    "change-ida-class",
+    "change-infiltration-allowance-m3-h",
+    "change-l-aeq-db",
+    "change-n50-h-inv",
+    "change-night-setback-k",
+    "change-occupancy",
+    "change-occupants",
+    "change-persons",
+    "change-qc-kwh",
+    "change-residential-ventilation-m3-h",
+    "change-rh-percent",
+    "change-sfp-required-class",
+    "change-sfp-wm3-s",
+    "change-storage-allowance-kwh",
+    "change-storage-th",
+    "change-system-type",
+    "change-t-op-c",
+    "change-theta-amb-c",
+    "change-theta-ec",
+    "change-theta-rm-c",
+    "change-theta-set-c",
+    "change-theta-st-c",
+    "change-ventilation-m3-h",
+    "change-volume-m3",
+    "change-years-since-inspection"
+  ]
 }

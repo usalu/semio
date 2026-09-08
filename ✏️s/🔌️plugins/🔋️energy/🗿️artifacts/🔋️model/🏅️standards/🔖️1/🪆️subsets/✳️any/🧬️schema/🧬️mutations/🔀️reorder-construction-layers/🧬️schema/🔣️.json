@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/energy/model/1/any/mutation/reorder-construction-layers.json",
+  "title": "ReorderConstructionLayers",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newLayerMaterialIds"
+  ],
+  "properties": {
+    "id": {
+      "type": "integer"
+    },
+    "newLayerMaterialIds": {
+      "type": "array",
+      "items": {
+        "type": "integer"
+      }
+    }
+  }
+}

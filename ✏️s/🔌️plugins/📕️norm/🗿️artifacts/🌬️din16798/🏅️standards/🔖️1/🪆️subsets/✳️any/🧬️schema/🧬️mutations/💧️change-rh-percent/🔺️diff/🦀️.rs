@@ -15,6 +15,6 @@ pub fn diff(payload: &ChangeRhPercent, base: &Din16798Snapshot) -> protocol::Mut
     if base.rh_percent == payload.new_rh_percent {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Relative humidity is already {}.", payload.new_rh_percent));
     }
-    protocol::MutationOutcome::new(Din16798Diff { rh_percent: Some(payload.new_rh_percent.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(Din16798Diff { rh_percent: Some(payload.new_rh_percent), ..Default::default() })
 }
 //#endregion 🔖️Diff

@@ -5,7 +5,7 @@
   "displayName": "Change Asset Url",
   "emoji": "🌐️",
   "aggregateVariant": "ChangeAssetUrl",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

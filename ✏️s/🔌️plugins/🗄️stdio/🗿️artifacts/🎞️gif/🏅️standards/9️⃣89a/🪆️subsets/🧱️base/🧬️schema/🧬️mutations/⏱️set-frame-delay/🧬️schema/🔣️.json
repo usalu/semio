@@ -1,0 +1,26 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/gif/89a/base/mutation/set-frame-delay.json",
+  "title": "SetFrameDelay",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "index",
+    "delay_cs"
+  ],
+  "properties": {
+    "index": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "delay_cs": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 65535
+    },
+    "mutation": {
+      "const": "setFrameDelay",
+      "description": "Aggregate discriminator spliced in by GifMutation; absent when the payload stands alone."
+    }
+  }
+}

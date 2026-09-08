@@ -2,8 +2,8 @@
 
 use crate::artifacts::jack::op::TrinityGraphMutation;
 use crate::editor::jack::config::JackConfigMutation;
-use semio_framework_plugin::{Emit, Fault};
+use semio_framework_plugin::Emit;
 
-pub(crate) fn graph_engagement_input(value: &str) -> Result<Emit<TrinityGraphMutation, JackConfigMutation>, Fault> {
-    Ok(Emit::config(vec![JackConfigMutation::SetGraphEngagementInput(crate::editor::jack::config::SetGraphEngagementInput { value: value.to_string() })]))
+pub(crate) fn graph_engagement_input(value: &str) -> Emit<TrinityGraphMutation, JackConfigMutation> {
+    Emit::config(vec![JackConfigMutation::SetGraphEngagementInput(crate::editor::jack::config::SetGraphEngagementInput { value: value.to_string() })])
 }

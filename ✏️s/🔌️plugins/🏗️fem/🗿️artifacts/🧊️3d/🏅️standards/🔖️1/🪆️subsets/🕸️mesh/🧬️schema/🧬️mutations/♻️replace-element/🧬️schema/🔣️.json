@@ -1,0 +1,89 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/fem/3d/1/mesh/mutation/replace-element.json",
+  "title": "ReplaceElement",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newElement"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "newElement": {
+      "title": "FemElement",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "end",
+            "id",
+            "kind",
+            "materialId",
+            "sectionId",
+            "start"
+          ],
+          "properties": {
+            "kind": {
+              "const": "bar"
+            },
+            "id": {
+              "type": "string"
+            },
+            "start": {
+              "type": "string"
+            },
+            "end": {
+              "type": "string"
+            },
+            "materialId": {
+              "type": "string"
+            },
+            "sectionId": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "end",
+            "id",
+            "kind",
+            "materialId",
+            "roll",
+            "sectionId",
+            "start"
+          ],
+          "properties": {
+            "kind": {
+              "const": "frame"
+            },
+            "id": {
+              "type": "string"
+            },
+            "start": {
+              "type": "string"
+            },
+            "end": {
+              "type": "string"
+            },
+            "materialId": {
+              "type": "string"
+            },
+            "sectionId": {
+              "type": "string"
+            },
+            "roll": {
+              "type": "number"
+            }
+          }
+        }
+      ]
+    }
+  }
+}

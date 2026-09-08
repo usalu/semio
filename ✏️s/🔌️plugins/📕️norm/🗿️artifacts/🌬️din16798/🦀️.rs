@@ -2,7 +2,6 @@
 
 // #region 🔖️Types
 
-/// 📸️ Persisted snapshot — defined in `📸️snapshot/🧬️schema`, re-exported here.
 //#endregion 🔖️Types
 
 //#region 🔖️ArtifactKind

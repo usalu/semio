@@ -7,6 +7,6 @@ use crate::artifacts::din18599::Din18599Snapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(_payload: &ChangeRenewableKwh, base: &Din18599Snapshot) -> Vec<Din18599Mutation> {
-    vec![Din18599Mutation::ChangeRenewableKwh(ChangeRenewableKwh { new_renewable_kwh: base.renewable_kwh.clone() })]
+    vec![Din18599Mutation::ChangeRenewableKwh(ChangeRenewableKwh { new_renewable_kwh: base.renewable_kwh })]
 }
 //#endregion 🔖️Inverse

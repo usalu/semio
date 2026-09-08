@@ -15,10 +15,10 @@ use protocol::Patchable;
 pub fn diff(payload: &ConnectAdjacency, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
     let (a, b) = normalize_pair(&payload.adjacency.element_a_id, &payload.adjacency.element_b_id);
     if !base.elements.iter().any(|row| row.header.id == a) {
-        return protocol::MutationOutcome::error("mutation.target-missing", "No program element exists with this id.", [a.0.clone()]);
+        return protocol::MutationOutcome::error("mutation.target-missing", "No program element exists with this id.", [a.0]);
     }
     if !base.elements.iter().any(|row| row.header.id == b) {
-        return protocol::MutationOutcome::error("mutation.target-missing", "No program element exists with this id.", [b.0.clone()]);
+        return protocol::MutationOutcome::error("mutation.target-missing", "No program element exists with this id.", [b.0]);
     }
     let mut value = payload.adjacency.clone();
     value.element_a_id = a.clone();

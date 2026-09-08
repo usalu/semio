@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeGammaKnM3, base: &En1997Snapshot) -> protocol::Mutat
     if base.gamma_kn_m3 == payload.new_gamma_kn_m3 {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Soil unit weight [kN/m3] is already {}.", payload.new_gamma_kn_m3));
     }
-    protocol::MutationOutcome::new(En1997Diff { gamma_kn_m3: Some(payload.new_gamma_kn_m3.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1997Diff { gamma_kn_m3: Some(payload.new_gamma_kn_m3), ..Default::default() })
 }
 //#endregion 🔖️Diff

@@ -1,6 +1,8 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/tiff/6.0/document/mutations.json",
   "title": "TiffMutation",
+  "description": "Discriminated union over this module's mutation leaves (adjacently tagged); every payload is the leaf's own schema, referenced, never restated.",
   "oneOf": [
     {
       "type": "object",
@@ -14,7 +16,7 @@
           "const": "change-byte-order"
         },
         "payload": {
-          "$ref": "🧭️change-byte-order/🧬️.schema.json"
+          "$ref": "./🧭️change-byte-order/🧬️schema/🔣️.json"
         }
       }
     },
@@ -30,7 +32,7 @@
           "const": "insert-ifd"
         },
         "payload": {
-          "$ref": "📥️insert-ifd/🧬️.schema.json"
+          "$ref": "./📥️insert-ifd/🧬️schema/🔣️.json"
         }
       }
     },
@@ -46,23 +48,7 @@
           "const": "remove-ifd"
         },
         "payload": {
-          "$ref": "📤️remove-ifd/🧬️.schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "replace-tag"
-        },
-        "payload": {
-          "$ref": "🏷️replace-tag/🧬️.schema.json"
+          "$ref": "./📤️remove-ifd/🧬️schema/🔣️.json"
         }
       }
     },
@@ -78,7 +64,7 @@
           "const": "remove-tag"
         },
         "payload": {
-          "$ref": "🗑️remove-tag/🧬️.schema.json"
+          "$ref": "./🗑️remove-tag/🧬️schema/🔣️.json"
         }
       }
     },
@@ -94,7 +80,23 @@
           "const": "replace-pixels"
         },
         "payload": {
-          "$ref": "🔲️replace-pixels/🧬️.schema.json"
+          "$ref": "./🔲️replace-pixels/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "replace-tag"
+        },
+        "payload": {
+          "$ref": "./🏷️replace-tag/🧬️schema/🔣️.json"
         }
       }
     }

@@ -12,8 +12,6 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-#[allow(unused_imports)]
-
 //#region 🔖️Tree
 pub fn remove_layer_from_tree(layers: &mut Vec<RasterLayerNode>, target_id: &str) -> Option<RasterLayerNode> {
     if let Some(index) = layers.iter().position(|layer| layer_node_id(layer) == target_id) {

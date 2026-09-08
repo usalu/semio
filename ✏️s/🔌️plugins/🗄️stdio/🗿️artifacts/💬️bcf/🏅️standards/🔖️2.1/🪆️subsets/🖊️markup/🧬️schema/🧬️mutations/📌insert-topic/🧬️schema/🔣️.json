@@ -1,0 +1,285 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/bcf/2.1/markup/mutation/insert-topic.json",
+  "title": "InsertTopic",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "topic"
+  ],
+  "properties": {
+    "topic": {
+      "$ref": "#/$defs/BcfTopic"
+    }
+  },
+  "$defs": {
+    "BcfTopic": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "guid",
+        "title",
+        "status"
+      ],
+      "properties": {
+        "guid": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string"
+        },
+        "priority": {
+          "type": "string"
+        },
+        "labels": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "creationDate": {
+          "type": "string"
+        },
+        "creationAuthor": {
+          "type": "string"
+        },
+        "comments": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/BcfComment"
+          }
+        },
+        "viewpoints": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/BcfViewpoint"
+          }
+        }
+      }
+    },
+    "BcfComment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "guid",
+        "date",
+        "author",
+        "text"
+      ],
+      "properties": {
+        "guid": {
+          "type": "string"
+        },
+        "date": {
+          "type": "string"
+        },
+        "author": {
+          "type": "string"
+        },
+        "text": {
+          "type": "string"
+        },
+        "viewpointRef": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "BcfViewpoint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "guid"
+      ],
+      "properties": {
+        "guid": {
+          "type": "string"
+        },
+        "camera": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BcfCamera"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "components": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BcfComponents"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "snapshot": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 255
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "BcfCamera": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "viewPoint",
+            "direction",
+            "upVector",
+            "fieldOfView"
+          ],
+          "properties": {
+            "kind": {
+              "const": "perspective"
+            },
+            "viewPoint": {
+              "$ref": "#/$defs/BcfPoint3"
+            },
+            "direction": {
+              "$ref": "#/$defs/BcfPoint3"
+            },
+            "upVector": {
+              "$ref": "#/$defs/BcfPoint3"
+            },
+            "fieldOfView": {
+              "type": "number"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "viewPoint",
+            "direction",
+            "upVector",
+            "viewToWorldScale"
+          ],
+          "properties": {
+            "kind": {
+              "const": "orthogonal"
+            },
+            "viewPoint": {
+              "$ref": "#/$defs/BcfPoint3"
+            },
+            "direction": {
+              "$ref": "#/$defs/BcfPoint3"
+            },
+            "upVector": {
+              "$ref": "#/$defs/BcfPoint3"
+            },
+            "viewToWorldScale": {
+              "type": "number"
+            }
+          }
+        }
+      ]
+    },
+    "BcfPoint3": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y",
+        "z"
+      ],
+      "properties": {
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "z": {
+          "type": "number"
+        }
+      }
+    },
+    "BcfComponents": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "selection": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "visibility": {
+          "$ref": "#/$defs/BcfVisibility"
+        },
+        "coloring": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/BcfColoring"
+          }
+        }
+      }
+    },
+    "BcfVisibility": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "defaultVisibility"
+      ],
+      "properties": {
+        "defaultVisibility": {
+          "type": "boolean"
+        },
+        "exceptions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "BcfColoring": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "color"
+      ],
+      "properties": {
+        "color": {
+          "type": "string"
+        },
+        "components": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

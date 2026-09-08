@@ -402,10 +402,10 @@ fn widget_label(widget: &Widget) -> String {
 
 fn widget_display_meta(widget: &Widget, kind_infos: &HashMap<String, OperatorInfo>) -> (String, String, String) {
     match widget {
-        Widget::Neuron { neuron_kind, .. } => kind_infos.get(neuron_kind).map(|info| (info.name.clone(), info.abbreviation.clone(), info.icon.clone())).unwrap_or_else(|| {
+        Widget::Neuron { neuron_kind, .. } => kind_infos.get(neuron_kind).map_or_else(|| {
             let (name, abbreviation) = normalize_node_display(neuron_kind, neuron_kind);
             (name, abbreviation, String::new())
-        }),
+        }, |info| (info.name.clone(), info.abbreviation.clone(), info.icon.clone())),
         Widget::InputSlider { label, .. } => (label.clone(), label.clone(), "emoji:🎚️".into()),
         Widget::InputNote { .. } => ("Note".into(), "Note".into(), "emoji:📝️".into()),
         Widget::InputImage { .. } => ("Image".into(), "Image".into(), "emoji:🖼️".into()),
@@ -532,7 +532,7 @@ fn build_variadic_output_ports(neuron_kind: &str, output_ports: &[String], kind_
                 entry.id = port_id.clone();
                 entry.label = label.clone();
                 entry.code = label.clone();
-                entry.abbreviation = label.clone();
+                entry.abbreviation = label;
                 entry.full_name = if index == 0 { "IndexValue".into() } else { format!("IndexValuePlus{index}") };
                 entry
             } else {
@@ -726,7 +726,7 @@ pub(crate) fn widget_to_dag_node(widget: &Widget, index: usize, layout: &Ordered
         | Widget::Cluster { id, .. } => id.clone(),
     };
     let (width, height) = widget_node_size(widget, synapses, kind_infos);
-    let (x, y) = layout.get(&id).map(|p| (p.x, p.y)).unwrap_or(((index as f64) * 200.0, 0.0));
+    let (x, y) = layout.get(&id).map_or(((index as f64) * 200.0, 0.0), |p| (p.x, p.y));
     let (name, abbreviation, icon) = widget_display_meta(widget, kind_infos);
     let mut node = match widget {
         Widget::Neuron { id: neuron_id, neuron_kind, params, input_ports, output_ports, .. } => {
@@ -786,7 +786,7 @@ pub(crate) fn widget_to_dag_node(widget: &Widget, index: usize, layout: &Ordered
         }
         Widget::Variable { name, schema, .. } => {
             let (inputs, outputs) = variable_io_ports(name, schema);
-            DagNodeSpec::computation(id, &name, &abbreviation, icon, inputs, outputs, false, false, x, y, width, height)
+            DagNodeSpec::computation(id, name, &abbreviation, icon, inputs, outputs, false, false, x, y, width, height)
         }
         Widget::Cluster { id: cluster_id, name: cluster_name, tree, .. } => {
             let (inputs, outputs) = cluster_io_layout(cluster_id, cluster_name, tree, synapses);
@@ -946,7 +946,7 @@ pub(crate) fn dag_preview_content_from_dict(dict: &Dictionary) -> DagPreviewCont
     if dict.is_empty() {
         return DagPreviewContent::Empty;
     }
-    crate::os_dsl::to_dsl_value(dict).ok().map(|json| DagPreviewContent::Tree { json }).unwrap_or(DagPreviewContent::Empty)
+    crate::os_dsl::to_dsl_value(dict).ok().map_or(DagPreviewContent::Empty, |json| DagPreviewContent::Tree { json })
 }
 
 pub(crate) fn preview_content_summary(content: &DagPreviewContent) -> String {

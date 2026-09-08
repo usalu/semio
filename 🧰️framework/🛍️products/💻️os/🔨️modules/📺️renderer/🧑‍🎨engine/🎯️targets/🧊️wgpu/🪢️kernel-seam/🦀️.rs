@@ -1,26 +1,6 @@
-//! 🪢️ The narrow interface that ends the renderer owning the actor kernel (ticket
-//! `26/08/20/SEMANTIC-UI-CONTRACT-AND-RENDERER-FAMILY`, packet `os-host`). `submit_intents`/
-//! `drain_outcomes`/`set_waker` use the process worker pool and a capacity-bounded owned mailbox.
-//!
-//! **U3 (no `dyn KernelSeam`).** The seam's "one impl per platform" resolves to a SINGLE concrete
-//! type, [`AppKernelSeam`], not a cfg-selected pair. Native continuations run on the process pool;
-//! wasm continuations remain cooperative `spawn_local` tasks.
-//!
-//! **Honest gap — `submit_intents` has no real router yet.** [`ui_contract::UiIntent`] addresses a
-//! `surface: SurfaceId`, not a plugin instance `u32`; the existing `kernel_runtime::KernelClient`
-//! only knows how to exchange events against an instance id, and the surface→instance map lives
-//! privately inside `kernel_runtime::KernelThreadState` on the kernel thread, unreachable from here.
-//! Building the real router means either exposing that map (a `kernel_runtime` change, in scope) or
-//! routing through `🌉️ProgramBridge`'s own dispatch (`🧱️elements/🌉️ProgramBridge/`, **forbidden** — this
-//! packet's OWNS list is new sibling files plus surgical `🦀️.rs` edits only, never a co-location
-//! element dir). [`default_intent_exchange`] is therefore an explicit stub — see its own docstring —
-//! and real routing is deferred to whichever packet lands `Event::UiIntent` on the wire (master plan
-//! §3, "protocol flip"). `AppKernelSeam` itself is fully wired and tested independent of that stub —
-//! see this file's own tests, which pass a fake `exchange` fn.
-//!
-//! **Waker correctness.** Pool futures register their own `Send + Sync` wakers with awaited kernel
-//! work. Completion schedules the next pool turn and the finished outcome wakes winit through the
-//! host callback; no future is ever polled by a UI callback.
+//! 🪢️ Test fixture for a bounded intent/outcome mailbox on the process worker pool.
+//! Its injected exchanges exercise ownership, backpressure and host wakeups.
+//! Production rendering dispatches through RuntimeMailbox; this fixture has no production router.
 
 use std::collections::VecDeque;
 use std::future::Future;

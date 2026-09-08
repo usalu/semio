@@ -4,8 +4,8 @@
 //! never touched this file; see w5b-close-report.md): `JsonSnapshot::from_value`/stdio's own real
 //! `write_json_pretty` do the structural conversion — no hand-rolled bridge needed here.
 use crate::artifacts::generation3d::Generation3dSnapshot;
-use semio_s_plugin_stdio::artifacts::json::schema::snapshot::{write_json_pretty, JsonSnapshot};
-use semio_s_plugin_stdio::artifacts::json::STDIO_JSON_DOCUMENT_SCHEMA;
+use semio_s_artifact_stdio_json::schema::snapshot::{write_json_pretty, JsonSnapshot};
+use semio_s_artifact_stdio_json::STDIO_JSON_DOCUMENT_SCHEMA;
 
 pub fn register() {}
 

@@ -5,7 +5,7 @@
   "displayName": "Create Equipment Gain",
   "emoji": "🖥️",
   "aggregateVariant": "CreateEquipmentGain",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "create-equipment-gain",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

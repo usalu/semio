@@ -1,54 +1,67 @@
 {
-  "$id": "https://semio.tech/schema/s.stdio.csv/mutation.csv",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/csv/rfc4180/any/mutations.json",
   "title": "CsvMutation",
+  "description": "Discriminated union over this module's mutation leaves (externally tagged); every payload is the leaf's own schema, referenced, never restated.",
   "oneOf": [
     {
       "type": "object",
       "additionalProperties": false,
-      "required": ["mutation", "snapshot"],
+      "required": [
+        "InsertRecord"
+      ],
       "properties": {
-        "mutation": { "const": "setSnapshot" },
-        "snapshot": { "$ref": "https://semio.tech/schema/s.stdio.csv/snapshot.csv" }
+        "InsertRecord": {
+          "$ref": "./📥insert-record/🧬️schema/🔣️.json"
+        }
       }
     },
     {
       "type": "object",
       "additionalProperties": false,
-      "required": ["mutation", "hasHeader"],
+      "required": [
+        "RemoveRecord"
+      ],
       "properties": {
-        "mutation": { "const": "setHasHeader" },
-        "hasHeader": { "type": "boolean" }
+        "RemoveRecord": {
+          "$ref": "./📤remove-record/🧬️schema/🔣️.json"
+        }
       }
     },
     {
       "type": "object",
       "additionalProperties": false,
-      "required": ["mutation", "index", "record"],
+      "required": [
+        "SetField"
+      ],
       "properties": {
-        "mutation": { "const": "insertRecord" },
-        "index": { "type": "integer", "minimum": 0 },
-        "record": { "$ref": "https://semio.tech/schema/s.stdio.csv/snapshot.csv#/$defs/CsvRecord" }
+        "SetField": {
+          "$ref": "./✏️set-field/🧬️schema/🔣️.json"
+        }
       }
     },
     {
       "type": "object",
       "additionalProperties": false,
-      "required": ["mutation", "index"],
+      "required": [
+        "SetHasHeader"
+      ],
       "properties": {
-        "mutation": { "const": "removeRecord" },
-        "index": { "type": "integer", "minimum": 0 }
+        "SetHasHeader": {
+          "$ref": "./🧾set-has-header/🧬️schema/🔣️.json"
+        }
       }
     },
     {
       "type": "object",
       "additionalProperties": false,
-      "required": ["mutation", "recordIndex", "fieldIndex", "value", "quoted"],
+      "required": [
+        "SetSnapshot"
+      ],
       "properties": {
-        "mutation": { "const": "setField" },
-        "recordIndex": { "type": "integer", "minimum": 0 },
-        "fieldIndex": { "type": "integer", "minimum": 0 },
-        "value": { "type": "string" },
-        "quoted": { "type": "boolean" }
+        "SetSnapshot": {
+          "$ref": "./📸️set-snapshot/🧬️schema/🔣️.json"
+        }
       }
     }
   ]

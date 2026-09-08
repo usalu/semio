@@ -13,10 +13,12 @@ import { dirname, join, relative, resolve } from "node:path";
 //#endregion 🔌️Adapters
 
 //#region 🔎️WorkspaceRoot
-/** 🔎️Resolves monorepo root (directory containing root package.json named `workspace`). Owned here
+/** 🔎️Uses Nx's execution workspace before standalone hints and workspace-manifest discovery. Owned here
  * rather than in the repository library barrel so a consumer that only needs the root path never pulls
  * the barrel (and its taxonomy discovery walk) into its module graph. */
 export function getWorkspaceRoot(): string {
+  const fromNx = process.env.NX_WORKSPACE_ROOT?.trim();
+  if (fromNx) return resolve(fromNx);
   const fromEnv = process.env.REPO_ROOT?.trim();
   if (fromEnv) return resolve(fromEnv);
   let dir = process.cwd();

@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeUdlKnM, base: &En1992Snapshot) -> protocol::Mutation
     if base.udl_kn_m == payload.new_udl_kn_m {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "Udl kn m already has this value.");
     }
-    protocol::MutationOutcome::new(En1992Diff { udl_kn_m: Some(payload.new_udl_kn_m.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1992Diff { udl_kn_m: Some(payload.new_udl_kn_m), ..Default::default() })
 }
 //#endregion 🔖️Diff

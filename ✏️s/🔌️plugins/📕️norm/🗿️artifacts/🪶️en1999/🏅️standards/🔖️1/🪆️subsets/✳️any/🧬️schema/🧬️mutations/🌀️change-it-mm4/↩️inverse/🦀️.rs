@@ -7,6 +7,6 @@ use crate::artifacts::en1999::En1999Snapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(_payload: &ChangeITMm4, base: &En1999Snapshot) -> Vec<En1999Mutation> {
-    vec![En1999Mutation::ChangeITMm4(ChangeITMm4 { new_i_t_mm4: base.i_t_mm4.clone() })]
+    vec![En1999Mutation::ChangeITMm4(ChangeITMm4 { new_i_t_mm4: base.i_t_mm4 })]
 }
 //#endregion 🔖️Inverse

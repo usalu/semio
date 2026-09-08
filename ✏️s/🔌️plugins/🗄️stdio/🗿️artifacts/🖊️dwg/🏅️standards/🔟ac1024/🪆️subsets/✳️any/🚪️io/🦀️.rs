@@ -1,5 +1,5 @@
 //! 🚪️ IO stdio.dwg (ac1024/✳️any) — registration now flows through the `s.stdio.dwg`
-//! `ArtifactDeclaration` (`crate::artifacts::dwg::declaration`), not per-leaf register().
+//! `ArtifactDeclaration` (`crate::declaration`), not per-leaf register().
 //!
 //! ⚙️ Also home to the real AC1024/R2004+ byte-level decode pipeline (ticket 26/08/10/
 //! ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION, 🖊️dwg D1-D2 wave): file header
@@ -14,7 +14,7 @@
 //! algorithms with no `DwgSnapshot` dependency of their own — kept here per ticket 26/08/12/ENGINELESS-ARTIFACTS-
 //! AND-APP-STATE-MACHINES rule 6 ("keep with the codec in 🚪️io/").
 /// 🗃️ Decoded object records and their common entity mode flags.
-pub type DwgObjectRecords = (Vec<crate::artifacts::dwg::schema::snapshot::DwgLogicalObject>, Vec<(u8, u8)>);
+pub type DwgObjectRecords = (Vec<crate::schema::snapshot::DwgLogicalObject>, Vec<(u8, u8)>);
 
 /// 🗂️ Section metadata with page identifiers, sizes, and offsets.
 pub type DwgSectionInfo = (String, u64, u32, u32, u32, u32, Vec<(i32, u32, u64)>);
@@ -693,7 +693,7 @@ fn write_data_page(output: &mut Vec<u8>, page: &EncodedR2004Page) -> Result<(), 
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn materialize_r2004_ordinary_pages_without_header(snapshot: &crate::artifacts::dwg::DwgSnapshot) -> Result<Vec<EncodedR2004Page>, String> {
+fn materialize_r2004_ordinary_pages_without_header(snapshot: &crate::DwgSnapshot) -> Result<Vec<EncodedR2004Page>, String> {
     let (objects, pairs) = materialize_r2010_objects(&snapshot.drawing.objects)?;
     let handles = materialize_r2004_handles(&pairs)?;
     let sections = [
@@ -859,7 +859,7 @@ fn write_r2004_system_page(output: &mut Vec<u8>, page_type: u32, decoded: &[u8],
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn r2004_section_descriptors(snapshot: &crate::artifacts::dwg::DwgSnapshot, header_size: usize) -> Result<Vec<R2004SectionDescriptor>, String> {
+fn r2004_section_descriptors(snapshot: &crate::DwgSnapshot, header_size: usize) -> Result<Vec<R2004SectionDescriptor>, String> {
     let (objects, pairs) = materialize_r2010_objects(&snapshot.drawing.objects)?;
     let handles = materialize_r2004_handles(&pairs)?;
     let sizes = [
@@ -892,7 +892,7 @@ fn r2004_section_descriptors(snapshot: &crate::artifacts::dwg::DwgSnapshot, head
 /// 🏗️ Materializes a canonical R2004-family directory from logical AC1024 section descriptors.
 /// Section payloads are serialization products and are never retained in the artifact schema.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn encode_r2004_canonical(snapshot: &crate::artifacts::dwg::DwgSnapshot) -> Result<Vec<u8>, String> {
+fn encode_r2004_canonical(snapshot: &crate::DwgSnapshot) -> Result<Vec<u8>, String> {
     if snapshot.version.len() != 6 {
         return Err("version sentinel must contain six bytes".into());
     }
@@ -983,7 +983,7 @@ fn encode_r2004_canonical(snapshot: &crate::artifacts::dwg::DwgSnapshot) -> Resu
 
 /// 🧱️ Deterministically materializes AC1024 from logical drawing and section state.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn encode_r2004_snapshot(snapshot: &crate::artifacts::dwg::DwgSnapshot) -> Result<Vec<u8>, String> {
+pub fn encode_r2004_snapshot(snapshot: &crate::DwgSnapshot) -> Result<Vec<u8>, String> {
     encode_r2004_canonical(snapshot)
 }
 //#endregion 🔖️R2004Writer
@@ -991,8 +991,8 @@ pub fn encode_r2004_snapshot(snapshot: &crate::artifacts::dwg::DwgSnapshot) -> R
 
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use crate::artifacts::dwg::standards::v_ac1024::subsets::any::schema::DwgAnalyzer;
-    use crate::artifacts::dwg::DwgSnapshot;
+    use crate::standards::v_ac1024::subsets::any::schema::DwgAnalyzer;
+    use crate::DwgSnapshot;
     use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.dwg", standard: StandardId("ac1024"), subset: SubsetId("*") };
@@ -2536,8 +2536,8 @@ fn checksum_bytes(value: &str) -> Result<[u8; 16], String> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn decode_summary_info(bytes: &[u8]) -> Result<crate::artifacts::dwg::DwgSummaryInfo, String> {
-    use crate::artifacts::dwg::{DwgCustomProperty, DwgJulianDate, DwgSummaryInfo};
+fn decode_summary_info(bytes: &[u8]) -> Result<crate::DwgSummaryInfo, String> {
+    use crate::{DwgCustomProperty, DwgJulianDate, DwgSummaryInfo};
     let mut cursor = DwgSectionCursor::new(bytes);
     let title = cursor.utf16_z()?;
     let subject = cursor.utf16_z()?;
@@ -2561,7 +2561,7 @@ fn decode_summary_info(bytes: &[u8]) -> Result<crate::artifacts::dwg::DwgSummary
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn encode_summary_info(summary: &crate::artifacts::dwg::DwgSummaryInfo) -> Result<Vec<u8>, String> {
+fn encode_summary_info(summary: &crate::DwgSummaryInfo) -> Result<Vec<u8>, String> {
     let mut output = Vec::new();
     for value in [&summary.title, &summary.subject, &summary.author, &summary.keywords, &summary.comments, &summary.last_saved_by, &summary.revision_number, &summary.hyperlink_base] {
         push_utf16_z(&mut output, value)?;
@@ -2582,7 +2582,7 @@ fn encode_summary_info(summary: &crate::artifacts::dwg::DwgSummaryInfo) -> Resul
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn decode_application_info(bytes: &[u8]) -> Result<crate::artifacts::dwg::DwgApplicationInfo, String> {
+fn decode_application_info(bytes: &[u8]) -> Result<crate::DwgApplicationInfo, String> {
     let mut cursor = DwgSectionCursor::new(bytes);
     let _format = cursor.u32()?;
     let name = cursor.utf16_z()?;
@@ -2594,11 +2594,11 @@ fn decode_application_info(bytes: &[u8]) -> Result<crate::artifacts::dwg::DwgApp
     let product_checksum = checksum_text(cursor.take(16)?);
     let product = cursor.utf16_z()?;
     let application_version = if cursor.has_more() { cursor.bytes_z()? } else { String::new() };
-    Ok(crate::artifacts::dwg::DwgApplicationInfo { name, version_checksum, version, comment_checksum, comment, product_checksum, product, application_version })
+    Ok(crate::DwgApplicationInfo { name, version_checksum, version, comment_checksum, comment, product_checksum, product, application_version })
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn encode_application_info(application: &crate::artifacts::dwg::DwgApplicationInfo) -> Result<Vec<u8>, String> {
+fn encode_application_info(application: &crate::DwgApplicationInfo) -> Result<Vec<u8>, String> {
     let mut output = Vec::new();
     push_u32(&mut output, 3);
     push_utf16_z(&mut output, &application.name)?;
@@ -2616,7 +2616,7 @@ fn encode_application_info(application: &crate::artifacts::dwg::DwgApplicationIn
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn decode_dependencies(bytes: &[u8]) -> Result<Vec<crate::artifacts::dwg::DwgDependency>, String> {
+fn decode_dependencies(bytes: &[u8]) -> Result<Vec<crate::DwgDependency>, String> {
     let mut cursor = DwgSectionCursor::new(bytes);
     let feature_count = cursor.u32()? as usize;
     let mut features = Vec::with_capacity(feature_count);
@@ -2636,13 +2636,13 @@ fn decode_dependencies(bytes: &[u8]) -> Result<Vec<crate::artifacts::dwg::DwgDep
         let affects_graphics = cursor.u16()? != 0;
         let reference_count = cursor.u32()?;
         let feature = features.get(feature_index).cloned().ok_or("DWG dependency feature index is out of bounds")?;
-        dependencies.push(crate::artifacts::dwg::DwgDependency { feature, full_path, relative_path, fingerprint, version, timestamp, file_size, affects_graphics, reference_count });
+        dependencies.push(crate::DwgDependency { feature, full_path, relative_path, fingerprint, version, timestamp, file_size, affects_graphics, reference_count });
     }
     Ok(dependencies)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn encode_dependencies(dependencies: &[crate::artifacts::dwg::DwgDependency]) -> Result<Vec<u8>, String> {
+fn encode_dependencies(dependencies: &[crate::DwgDependency]) -> Result<Vec<u8>, String> {
     let mut features = Vec::<String>::new();
     for dependency in dependencies {
         if !features.contains(&dependency.feature) {
@@ -2670,34 +2670,34 @@ fn encode_dependencies(dependencies: &[crate::artifacts::dwg::DwgDependency]) ->
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn decode_template(bytes: &[u8]) -> Result<crate::artifacts::dwg::DwgTemplate, String> {
+fn decode_template(bytes: &[u8]) -> Result<crate::DwgTemplate, String> {
     let mut cursor = DwgSectionCursor::new(bytes);
     let description = cursor.utf16_z()?;
     let measurement = match cursor.u16()? {
-        0 => crate::artifacts::dwg::DwgMeasurement::English,
-        1 => crate::artifacts::dwg::DwgMeasurement::Metric,
+        0 => crate::DwgMeasurement::English,
+        1 => crate::DwgMeasurement::Metric,
         value => return Err(format!("unsupported DWG measurement value {value}")),
     };
-    Ok(crate::artifacts::dwg::DwgTemplate { description, measurement })
+    Ok(crate::DwgTemplate { description, measurement })
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn encode_template(template: &crate::artifacts::dwg::DwgTemplate) -> Result<Vec<u8>, String> {
+fn encode_template(template: &crate::DwgTemplate) -> Result<Vec<u8>, String> {
     let mut output = Vec::new();
     push_utf16_z(&mut output, &template.description)?;
     push_u16(
         &mut output,
         match template.measurement {
-            crate::artifacts::dwg::DwgMeasurement::English => 0,
-            crate::artifacts::dwg::DwgMeasurement::Metric => 1,
+            crate::DwgMeasurement::English => 0,
+            crate::DwgMeasurement::Metric => 1,
         },
     );
     Ok(output)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn decode_auxiliary_header(bytes: &[u8]) -> Result<crate::artifacts::dwg::schema::snapshot::DwgAuxiliaryHeader, String> {
-    use crate::artifacts::dwg::schema::snapshot::{DwgAuxiliaryHeader, DwgCompatibilityProfile, DwgJulianDate, DwgVersionStamp};
+fn decode_auxiliary_header(bytes: &[u8]) -> Result<crate::schema::snapshot::DwgAuxiliaryHeader, String> {
+    use crate::schema::snapshot::{DwgAuxiliaryHeader, DwgCompatibilityProfile, DwgJulianDate, DwgVersionStamp};
     let mut cursor = DwgSectionCursor::new(bytes);
     if [cursor.u8()?, cursor.u8()?, cursor.u8()?] != [255, 119, 1] {
         return Err("unsupported auxiliary-header intro".into());
@@ -2749,8 +2749,8 @@ fn decode_auxiliary_header(bytes: &[u8]) -> Result<crate::artifacts::dwg::schema
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn encode_auxiliary_header(value: &crate::artifacts::dwg::schema::snapshot::DwgAuxiliaryHeader) -> Result<Vec<u8>, String> {
-    use crate::artifacts::dwg::schema::snapshot::DwgCompatibilityProfile;
+fn encode_auxiliary_header(value: &crate::schema::snapshot::DwgAuxiliaryHeader) -> Result<Vec<u8>, String> {
+    use crate::schema::snapshot::DwgCompatibilityProfile;
     if value.compatibility_profile != DwgCompatibilityProfile::Autocad2009 {
         return Err("unsupported auxiliary-header compatibility profile".into());
     }
@@ -2789,7 +2789,7 @@ fn encode_auxiliary_header(value: &crate::artifacts::dwg::schema::snapshot::DwgA
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn decode_revision_history(bytes: &[u8]) -> Result<crate::artifacts::dwg::schema::snapshot::DwgRevisionHistory, String> {
+fn decode_revision_history(bytes: &[u8]) -> Result<crate::schema::snapshot::DwgRevisionHistory, String> {
     let mut cursor = DwgSectionCursor::new(bytes);
     let format_major = cursor.u32()?;
     let format_minor = cursor.u32()?;
@@ -2799,11 +2799,11 @@ fn decode_revision_history(bytes: &[u8]) -> Result<crate::artifacts::dwg::schema
         revisions.push(cursor.u32()?);
     }
     cursor.finish("AcDb:RevHistory")?;
-    Ok(crate::artifacts::dwg::schema::snapshot::DwgRevisionHistory { format_major, format_minor, revisions })
+    Ok(crate::schema::snapshot::DwgRevisionHistory { format_major, format_minor, revisions })
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn encode_revision_history(value: &crate::artifacts::dwg::schema::snapshot::DwgRevisionHistory) -> Result<Vec<u8>, String> {
+fn encode_revision_history(value: &crate::schema::snapshot::DwgRevisionHistory) -> Result<Vec<u8>, String> {
     let mut output = Vec::new();
     push_u32(&mut output, value.format_major);
     push_u32(&mut output, value.format_minor);
@@ -2818,8 +2818,8 @@ const DWG_PREVIEW_BEGIN: [u8; 16] = [0x1f, 0x25, 0x6d, 0x07, 0xd4, 0x36, 0x28, 0
 const DWG_PREVIEW_END: [u8; 16] = [0xe0, 0xda, 0x92, 0xf8, 0x2b, 0xc9, 0xd7, 0xd7, 0x62, 0xa8, 0x35, 0xc0, 0x62, 0xbb, 0xef, 0xd4];
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn decode_indexed_preview(bytes: &[u8]) -> Result<crate::artifacts::dwg::schema::snapshot::DwgIndexedPreview, String> {
-    use crate::artifacts::dwg::schema::snapshot::{DwgIndexedPreview, DwgPreviewOrigin, DwgRgba};
+fn decode_indexed_preview(bytes: &[u8]) -> Result<crate::schema::snapshot::DwgIndexedPreview, String> {
+    use crate::schema::snapshot::{DwgIndexedPreview, DwgPreviewOrigin, DwgRgba};
     let mut cursor = DwgSectionCursor::new(bytes);
     if cursor.take(16)? != DWG_PREVIEW_BEGIN {
         return Err("preview start sentinel changed".into());
@@ -2885,8 +2885,8 @@ fn decode_indexed_preview(bytes: &[u8]) -> Result<crate::artifacts::dwg::schema:
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn encode_indexed_preview(value: &crate::artifacts::dwg::schema::snapshot::DwgIndexedPreview, payload_address: u32) -> Result<Vec<u8>, String> {
-    use crate::artifacts::dwg::schema::snapshot::DwgPreviewOrigin;
+fn encode_indexed_preview(value: &crate::schema::snapshot::DwgIndexedPreview, payload_address: u32) -> Result<Vec<u8>, String> {
+    use crate::schema::snapshot::DwgPreviewOrigin;
     if value.origin != DwgPreviewOrigin::BottomUp || value.palette.len() != 256 {
         return Err("AC1024 preview requires a bottom-up 256-color indexed bitmap".into());
     }
@@ -2950,8 +2950,8 @@ fn encode_digest128(value: &str) -> Result<[u8; 16], String> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn render_application_properties(format_identifier: &str, properties: &[crate::artifacts::dwg::schema::snapshot::DwgApplicationProperty]) -> String {
-    use crate::artifacts::dwg::schema::snapshot::DwgApplicationPropertyKind;
+fn render_application_properties(format_identifier: &str, properties: &[crate::schema::snapshot::DwgApplicationProperty]) -> String {
+    use crate::schema::snapshot::DwgApplicationPropertyKind;
     let mut output = format!("<prop_set fmt_id=\"{{{format_identifier}}}\">");
     for property in properties {
         let tag = match property.kind {
@@ -2965,7 +2965,7 @@ fn render_application_properties(format_identifier: &str, properties: &[crate::a
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn render_product_information(value: &crate::artifacts::dwg::schema::snapshot::DwgProductInformation) -> String {
+fn render_product_information(value: &crate::schema::snapshot::DwgProductInformation) -> String {
     format!(
         "\"<ProductInformation name =\\\"{}\\\" build_version=\\\"{}\\\" registry_version=\\\"{}\\\" install_id_string=\\\"{}\\\" registry_localeID=\\\"{}\\\"/>\"",
         value.name, value.build_version, value.registry_version, value.install_id, value.locale_id
@@ -2973,8 +2973,8 @@ fn render_product_information(value: &crate::artifacts::dwg::schema::snapshot::D
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn decode_application_history(bytes: &[u8]) -> Result<crate::artifacts::dwg::schema::snapshot::DwgApplicationHistory, String> {
-    use crate::artifacts::dwg::schema::snapshot::{DwgApplicationHistory, DwgApplicationProperty, DwgApplicationPropertyKind, DwgProductInformation};
+fn decode_application_history(bytes: &[u8]) -> Result<crate::schema::snapshot::DwgApplicationHistory, String> {
+    use crate::schema::snapshot::{DwgApplicationHistory, DwgApplicationProperty, DwgApplicationPropertyKind, DwgProductInformation};
     let mut cursor = DwgSectionCursor::new(bytes);
     let history_identifier_one = decode_digest128(cursor.take(16)?);
     let history_identifier_two = decode_digest128(cursor.take(16)?);
@@ -3023,7 +3023,7 @@ fn decode_application_history(bytes: &[u8]) -> Result<crate::artifacts::dwg::sch
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn encode_application_history(value: &crate::artifacts::dwg::schema::snapshot::DwgApplicationHistory) -> Result<Vec<u8>, String> {
+fn encode_application_history(value: &crate::schema::snapshot::DwgApplicationHistory) -> Result<Vec<u8>, String> {
     let mut output = Vec::new();
     output.extend_from_slice(&encode_digest128(&value.history_identifier_one)?);
     output.extend_from_slice(&encode_digest128(&value.history_identifier_two)?);
@@ -3043,7 +3043,7 @@ fn encode_application_history(value: &crate::artifacts::dwg::schema::snapshot::D
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn encode_object_free_space(updated: &crate::artifacts::dwg::DwgJulianDate) -> Vec<u8> {
+fn encode_object_free_space(updated: &crate::DwgJulianDate) -> Vec<u8> {
     let mut output = Vec::with_capacity(89);
     push_u64(&mut output, 0);
     push_u64(&mut output, 679);
@@ -3071,14 +3071,14 @@ fn header_point2(value: &[f64], name: &str) -> Result<[f64; 2], String> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn write_header_time(writer: &mut DwgBitWriter, value: &crate::artifacts::dwg::DwgJulianDate) {
+fn write_header_time(writer: &mut DwgBitWriter, value: &crate::DwgJulianDate) {
     writer.write_bl(value.days);
     writer.write_bl(value.milliseconds);
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn read_header_time(reader: &mut DwgBitReader<'_>) -> Result<crate::artifacts::dwg::DwgJulianDate, String> {
-    Ok(crate::artifacts::dwg::DwgJulianDate { days: reader.read_bl()?, milliseconds: reader.read_bl()? })
+fn read_header_time(reader: &mut DwgBitReader<'_>) -> Result<crate::DwgJulianDate, String> {
+    Ok(crate::DwgJulianDate { days: reader.read_bl()?, milliseconds: reader.read_bl()? })
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -3100,7 +3100,7 @@ fn read_header_color(reader: &mut DwgBitReader<'_>, expected_rgb: u32, name: &st
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn write_header_space(writer: &mut DwgBitWriter, value: &crate::artifacts::dwg::schema::snapshot::DwgHeaderSpaceGeometry, name: &str) -> Result<(), String> {
+fn write_header_space(writer: &mut DwgBitWriter, value: &crate::schema::snapshot::DwgHeaderSpaceGeometry, name: &str) -> Result<(), String> {
     writer.write_3bd(header_point3(&value.insertion_base, &format!("{name} insertion base"))?);
     writer.write_3bd(header_point3(&value.extents_minimum, &format!("{name} extents minimum"))?);
     writer.write_3bd(header_point3(&value.extents_maximum, &format!("{name} extents maximum"))?);
@@ -3118,8 +3118,8 @@ fn write_header_space(writer: &mut DwgBitWriter, value: &crate::artifacts::dwg::
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn read_header_space(reader: &mut DwgBitReader<'_>) -> Result<crate::artifacts::dwg::schema::snapshot::DwgHeaderSpaceGeometry, String> {
-    use crate::artifacts::dwg::schema::snapshot::DwgHeaderSpaceGeometry;
+fn read_header_space(reader: &mut DwgBitReader<'_>) -> Result<crate::schema::snapshot::DwgHeaderSpaceGeometry, String> {
+    use crate::schema::snapshot::DwgHeaderSpaceGeometry;
     Ok(DwgHeaderSpaceGeometry {
         insertion_base: reader.read_3bd().map_err(|error| format!("insertion base: {error}"))?.to_vec(),
         extents_minimum: reader.read_3bd().map_err(|error| format!("extents minimum: {error}"))?.to_vec(),
@@ -3141,7 +3141,7 @@ fn read_header_space(reader: &mut DwgBitReader<'_>) -> Result<crate::artifacts::
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn encode_r2010_header_section(value: &crate::artifacts::dwg::DwgHeaderVariables) -> Result<Vec<u8>, String> {
+fn encode_r2010_header_section(value: &crate::DwgHeaderVariables) -> Result<Vec<u8>, String> {
     let mut main = DwgBitWriter::new();
     let u = &value.units;
     for number in [u.unit1_conversion, u.unit2_conversion, u.unit3_conversion, u.unit4_conversion] {
@@ -3423,8 +3423,8 @@ fn read_optional_header_relation(reader: &mut DwgBitReader<'_>, name: &str) -> R
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn decode_r2010_header_section(bytes: &[u8]) -> Result<crate::artifacts::dwg::DwgHeaderVariables, String> {
-    use crate::artifacts::dwg::schema::snapshot::DwgHeaderVariables;
+fn decode_r2010_header_section(bytes: &[u8]) -> Result<crate::DwgHeaderVariables, String> {
+    use crate::schema::snapshot::DwgHeaderVariables;
     if bytes.len() != 896 || bytes[..16] != DWG_HEADER_BEGIN || bytes[880..] != DWG_HEADER_END {
         return Err("AC1024 Header framing changed".into());
     }
@@ -3774,15 +3774,15 @@ fn decode_r2010_header_section(bytes: &[u8]) -> Result<crate::artifacts::dwg::Dw
 }
 
 pub(crate) struct DwgDocumentSections {
-    pub header: crate::artifacts::dwg::DwgHeaderVariables,
-    pub dependencies: Vec<crate::artifacts::dwg::DwgDependency>,
-    pub summary: crate::artifacts::dwg::DwgSummaryInfo,
-    pub application: crate::artifacts::dwg::DwgApplicationInfo,
-    pub template: crate::artifacts::dwg::DwgTemplate,
-    pub auxiliary_header: crate::artifacts::dwg::schema::snapshot::DwgAuxiliaryHeader,
-    pub revision_history: crate::artifacts::dwg::schema::snapshot::DwgRevisionHistory,
-    pub preview: crate::artifacts::dwg::schema::snapshot::DwgIndexedPreview,
-    pub application_history: crate::artifacts::dwg::schema::snapshot::DwgApplicationHistory,
+    pub header: crate::DwgHeaderVariables,
+    pub dependencies: Vec<crate::DwgDependency>,
+    pub summary: crate::DwgSummaryInfo,
+    pub application: crate::DwgApplicationInfo,
+    pub template: crate::DwgTemplate,
+    pub auxiliary_header: crate::schema::snapshot::DwgAuxiliaryHeader,
+    pub revision_history: crate::schema::snapshot::DwgRevisionHistory,
+    pub preview: crate::schema::snapshot::DwgIndexedPreview,
+    pub application_history: crate::schema::snapshot::DwgApplicationHistory,
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -3858,8 +3858,8 @@ fn decode_r2004_handle_map(bytes: &[u8]) -> Result<Vec<(u64, usize)>, String> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn decode_r2010_eed(reader: &mut DwgBitReader<'_>, _base: u64) -> Result<Vec<crate::artifacts::dwg::schema::snapshot::DwgExtendedEntityData>, String> {
-    use crate::artifacts::dwg::schema::snapshot::{DwgExtendedEntityData, DwgXRecordValue};
+fn decode_r2010_eed(reader: &mut DwgBitReader<'_>, _base: u64) -> Result<Vec<crate::schema::snapshot::DwgExtendedEntityData>, String> {
+    use crate::schema::snapshot::{DwgExtendedEntityData, DwgXRecordValue};
     let mut records = Vec::new();
     loop {
         let size = reader.read_bs()? as usize;
@@ -4036,8 +4036,8 @@ fn fixed_object_name(object_type: u16) -> &'static str {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn object_category(object_type: u16) -> crate::artifacts::dwg::schema::snapshot::DwgObjectCategory {
-    use crate::artifacts::dwg::schema::snapshot::DwgObjectCategory;
+fn object_category(object_type: u16) -> crate::schema::snapshot::DwgObjectCategory {
+    use crate::schema::snapshot::DwgObjectCategory;
     match object_type {
         1..=41 | 43..=47 | 77 | 78 | 498 => DwgObjectCategory::Entity,
         48 | 50 | 52 | 56 | 60 | 62 | 64 | 66 | 68 | 70 => DwgObjectCategory::TableControl,
@@ -4113,8 +4113,8 @@ fn xrecord_value_kind(group_code: i16) -> Option<XRecordStorageKind> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn decode_xrecord_values(data: &mut DwgBitReader<'_>, byte_count: usize, main_end_bit: usize) -> Result<Vec<crate::artifacts::dwg::schema::snapshot::DwgXRecordValue>, String> {
-    use crate::artifacts::dwg::schema::snapshot::DwgXRecordValue;
+fn decode_xrecord_values(data: &mut DwgBitReader<'_>, byte_count: usize, main_end_bit: usize) -> Result<Vec<crate::schema::snapshot::DwgXRecordValue>, String> {
+    use crate::schema::snapshot::DwgXRecordValue;
     let end_bit = data.bit_position().checked_add(byte_count.checked_mul(8).ok_or("XRECORD value size overflow")?).ok_or("XRECORD value boundary overflow")?;
     if end_bit > main_end_bit {
         return Err("XRECORD values exceed bounded class-main data".into());
@@ -4173,8 +4173,8 @@ fn decode_xrecord_values(data: &mut DwgBitReader<'_>, byte_count: usize, main_en
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn encode_xrecord_values(values: &[crate::artifacts::dwg::schema::snapshot::DwgXRecordValue]) -> Result<DwgBitWriter, String> {
-    use crate::artifacts::dwg::schema::snapshot::DwgXRecordValue;
+fn encode_xrecord_values(values: &[crate::schema::snapshot::DwgXRecordValue]) -> Result<DwgBitWriter, String> {
+    use crate::schema::snapshot::DwgXRecordValue;
     let mut data = DwgBitWriter::new();
     for value in values {
         value.validate()?;
@@ -4224,8 +4224,8 @@ fn encode_xrecord_values(values: &[crate::artifacts::dwg::schema::snapshot::DwgX
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn encode_r2010_eed(writer: &mut DwgBitWriter, _base: u64, records: &[crate::artifacts::dwg::schema::snapshot::DwgExtendedEntityData]) -> Result<(), String> {
-    use crate::artifacts::dwg::schema::snapshot::DwgXRecordValue;
+fn encode_r2010_eed(writer: &mut DwgBitWriter, _base: u64, records: &[crate::schema::snapshot::DwgExtendedEntityData]) -> Result<(), String> {
+    use crate::schema::snapshot::DwgXRecordValue;
     for record in records {
         let mut values = DwgBitWriter::new();
         for value in &record.values {
@@ -4319,8 +4319,8 @@ fn finish_r2010_object_frame(data: &DwgBitWriter, mut handles: DwgBitWriter) -> 
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn encode_r2010_xrecord_frame(object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
-    let crate::artifacts::dwg::schema::snapshot::DwgLogicalObjectBody::XRecord(xrecord) = object.body.as_ref().ok_or_else(|| format!("XRECORD {:#x} body missing", object.handle))? else {
+fn encode_r2010_xrecord_frame(object: &crate::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
+    let crate::schema::snapshot::DwgLogicalObjectBody::XRecord(xrecord) = object.body.as_ref().ok_or_else(|| format!("XRECORD {:#x} body missing", object.handle))? else {
         return Err(format!("object {:#x} is not an XRECORD body", object.handle));
     };
     let xdata = encode_xrecord_values(&xrecord.values)?;
@@ -4350,8 +4350,8 @@ fn encode_r2010_xrecord_frame(object: &crate::artifacts::dwg::schema::snapshot::
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn encode_r2010_dictionary_frame(object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
-    let crate::artifacts::dwg::schema::snapshot::DwgLogicalObjectBody::Dictionary(dictionary) = object.body.as_ref().ok_or_else(|| format!("dictionary {:#x} body missing", object.handle))? else {
+fn encode_r2010_dictionary_frame(object: &crate::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
+    let crate::schema::snapshot::DwgLogicalObjectBody::Dictionary(dictionary) = object.body.as_ref().ok_or_else(|| format!("dictionary {:#x} body missing", object.handle))? else {
         return Err(format!("object {:#x} is not a dictionary body", object.handle));
     };
     if dictionary.cloning_flag > 5 {
@@ -4400,9 +4400,9 @@ fn encode_r2010_dictionary_frame(object: &crate::artifacts::dwg::schema::snapsho
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn encode_r2010_table_control_frame(object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
-    use crate::artifacts::dwg::schema::snapshot::DwgTableControlBody;
-    let crate::artifacts::dwg::schema::snapshot::DwgLogicalObjectBody::TableControl(control) = object.body.as_ref().ok_or_else(|| format!("table control {:#x} body missing", object.handle))? else {
+fn encode_r2010_table_control_frame(object: &crate::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
+    use crate::schema::snapshot::DwgTableControlBody;
+    let crate::schema::snapshot::DwgLogicalObjectBody::TableControl(control) = object.body.as_ref().ok_or_else(|| format!("table control {:#x} body missing", object.handle))? else {
         return Err(format!("object {:#x} is not a table control", object.handle));
     };
     let expected_type = match control {
@@ -4469,10 +4469,10 @@ fn encode_r2010_table_control_frame(object: &crate::artifacts::dwg::schema::snap
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn encode_r2010_table_record_frame(object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
-    use crate::artifacts::dwg::schema::snapshot::DwgTableRecordBody;
+fn encode_r2010_table_record_frame(object: &crate::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
+    use crate::schema::snapshot::DwgTableRecordBody;
     let body = match object.body.as_ref() {
-        Some(crate::artifacts::dwg::schema::snapshot::DwgLogicalObjectBody::TableRecord(value)) => value,
+        Some(crate::schema::snapshot::DwgLogicalObjectBody::TableRecord(value)) => value,
         _ => return Err(format!("table record {:#x} body missing", object.handle)),
     };
     let (common, expected_type) = match body {
@@ -4643,7 +4643,7 @@ fn encode_r2010_table_record_frame(object: &crate::artifacts::dwg::schema::snaps
             data.write_bs(value.grid_major);
         }
         DwgTableRecordBody::DimensionStyle(value) => {
-            let write_color = |data: &mut DwgBitWriter, strings: &mut DwgBitWriter, color: &crate::artifacts::dwg::schema::snapshot::DwgComplexColor| {
+            let write_color = |data: &mut DwgBitWriter, strings: &mut DwgBitWriter, color: &crate::schema::snapshot::DwgComplexColor| {
                 data.write_bs(color.index);
                 data.write_bl(encode_complex_color_value(&color.value));
                 data.write_rc(u8::from(color.name.is_some()) | (u8::from(color.book_name.is_some()) << 1));
@@ -4791,8 +4791,8 @@ fn encode_r2010_table_record_frame(object: &crate::artifacts::dwg::schema::snaps
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn entity_mode_bits(value: crate::artifacts::dwg::schema::snapshot::DwgEntityMode) -> u8 {
-    use crate::artifacts::dwg::schema::snapshot::DwgEntityMode;
+fn entity_mode_bits(value: crate::schema::snapshot::DwgEntityMode) -> u8 {
+    use crate::schema::snapshot::DwgEntityMode;
     match value {
         DwgEntityMode::ExplicitOwner => 0,
         DwgEntityMode::PaperSpace => 1,
@@ -4802,8 +4802,8 @@ fn entity_mode_bits(value: crate::artifacts::dwg::schema::snapshot::DwgEntityMod
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn entity_reference_bits(value: crate::artifacts::dwg::schema::snapshot::DwgEntityReferenceMode) -> u8 {
-    use crate::artifacts::dwg::schema::snapshot::DwgEntityReferenceMode;
+fn entity_reference_bits(value: crate::schema::snapshot::DwgEntityReferenceMode) -> u8 {
+    use crate::schema::snapshot::DwgEntityReferenceMode;
     match value {
         DwgEntityReferenceMode::ByLayer => 0,
         DwgEntityReferenceMode::ByBlock => 1,
@@ -4813,8 +4813,8 @@ fn entity_reference_bits(value: crate::artifacts::dwg::schema::snapshot::DwgEnti
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn encode_r2010_entity_common_main(data: &mut DwgBitWriter, object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject, common: &crate::artifacts::dwg::schema::snapshot::DwgEntityCommon) -> Result<(), String> {
-    use crate::artifacts::dwg::schema::snapshot::DwgEntityColorKind;
+fn encode_r2010_entity_common_main(data: &mut DwgBitWriter, object: &crate::schema::snapshot::DwgLogicalObject, common: &crate::schema::snapshot::DwgEntityCommon) -> Result<(), String> {
+    use crate::schema::snapshot::DwgEntityColorKind;
     data.write_b(false);
     data.write_bb(entity_mode_bits(common.mode));
     data.write_bl(object.reactor_handles.len() as u32);
@@ -4840,8 +4840,8 @@ fn encode_r2010_entity_common_main(data: &mut DwgBitWriter, object: &crate::arti
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn encode_r2010_entity_common_handles(handles: &mut DwgBitWriter, object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject, common: &crate::artifacts::dwg::schema::snapshot::DwgEntityCommon) -> Result<(), String> {
-    use crate::artifacts::dwg::schema::snapshot::{DwgEntityColorKind, DwgEntityMode, DwgEntityReferenceMode};
+fn encode_r2010_entity_common_handles(handles: &mut DwgBitWriter, object: &crate::schema::snapshot::DwgLogicalObject, common: &crate::schema::snapshot::DwgEntityCommon) -> Result<(), String> {
+    use crate::schema::snapshot::{DwgEntityColorKind, DwgEntityMode, DwgEntityReferenceMode};
     if common.color.kind == DwgEntityColorKind::TrueColor {
         handles.write_handle(5, common.color.color_handle.unwrap_or_default());
     }
@@ -4898,8 +4898,8 @@ fn logical_point2(values: &[f64], name: &str) -> Result<[f64; 2], String> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dimension_attachment_wire(value: crate::artifacts::dwg::schema::snapshot::DwgDimensionTextAttachment) -> u16 {
-    use crate::artifacts::dwg::schema::snapshot::DwgDimensionTextAttachment::*;
+fn dimension_attachment_wire(value: crate::schema::snapshot::DwgDimensionTextAttachment) -> u16 {
+    use crate::schema::snapshot::DwgDimensionTextAttachment::*;
     match value {
         TopCenter => 1,
         TopLeft => 2,
@@ -4914,8 +4914,8 @@ fn dimension_attachment_wire(value: crate::artifacts::dwg::schema::snapshot::Dwg
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dimension_attachment_logical(value: u16) -> Result<crate::artifacts::dwg::schema::snapshot::DwgDimensionTextAttachment, String> {
-    use crate::artifacts::dwg::schema::snapshot::DwgDimensionTextAttachment::*;
+fn dimension_attachment_logical(value: u16) -> Result<crate::schema::snapshot::DwgDimensionTextAttachment, String> {
+    use crate::schema::snapshot::DwgDimensionTextAttachment::*;
     match value {
         1 => Ok(TopCenter),
         2 => Ok(TopLeft),
@@ -4931,25 +4931,25 @@ fn dimension_attachment_logical(value: u16) -> Result<crate::artifacts::dwg::sch
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dimension_spacing_wire(value: crate::artifacts::dwg::schema::snapshot::DwgDimensionLineSpacingStyle) -> u16 {
+fn dimension_spacing_wire(value: crate::schema::snapshot::DwgDimensionLineSpacingStyle) -> u16 {
     match value {
-        crate::artifacts::dwg::schema::snapshot::DwgDimensionLineSpacingStyle::AtLeast => 1,
-        crate::artifacts::dwg::schema::snapshot::DwgDimensionLineSpacingStyle::Exact => 2,
+        crate::schema::snapshot::DwgDimensionLineSpacingStyle::AtLeast => 1,
+        crate::schema::snapshot::DwgDimensionLineSpacingStyle::Exact => 2,
     }
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dimension_spacing_logical(value: u16) -> Result<crate::artifacts::dwg::schema::snapshot::DwgDimensionLineSpacingStyle, String> {
+fn dimension_spacing_logical(value: u16) -> Result<crate::schema::snapshot::DwgDimensionLineSpacingStyle, String> {
     match value {
-        1 => Ok(crate::artifacts::dwg::schema::snapshot::DwgDimensionLineSpacingStyle::AtLeast),
-        2 => Ok(crate::artifacts::dwg::schema::snapshot::DwgDimensionLineSpacingStyle::Exact),
+        1 => Ok(crate::schema::snapshot::DwgDimensionLineSpacingStyle::AtLeast),
+        2 => Ok(crate::schema::snapshot::DwgDimensionLineSpacingStyle::Exact),
         _ => Err(format!("dimension line-spacing style {value} is invalid")),
     }
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn encode_r2010_block_begin_frame(object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject, name: &str) -> Result<Vec<u8>, String> {
-    let Some(crate::artifacts::dwg::schema::snapshot::DwgLogicalObjectBody::Entity(crate::artifacts::dwg::schema::snapshot::DwgEntityBody::BlockBegin(block))) = object.body.as_ref() else {
+fn encode_r2010_block_begin_frame(object: &crate::schema::snapshot::DwgLogicalObject, name: &str) -> Result<Vec<u8>, String> {
+    let Some(crate::schema::snapshot::DwgLogicalObjectBody::Entity(crate::schema::snapshot::DwgEntityBody::BlockBegin(block))) = object.body.as_ref() else {
         return Err(format!("BLOCK {:#x} typed body missing", object.handle));
     };
     let mut data = DwgBitWriter::new();
@@ -4966,8 +4966,8 @@ fn encode_r2010_block_begin_frame(object: &crate::artifacts::dwg::schema::snapsh
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn encode_r2010_block_end_frame(object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
-    let Some(crate::artifacts::dwg::schema::snapshot::DwgLogicalObjectBody::Entity(crate::artifacts::dwg::schema::snapshot::DwgEntityBody::BlockEnd(block))) = object.body.as_ref() else {
+fn encode_r2010_block_end_frame(object: &crate::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
+    let Some(crate::schema::snapshot::DwgLogicalObjectBody::Entity(crate::schema::snapshot::DwgEntityBody::BlockEnd(block))) = object.body.as_ref() else {
         return Err(format!("ENDBLK {:#x} typed body missing", object.handle));
     };
     let mut data = DwgBitWriter::new();
@@ -4982,8 +4982,8 @@ fn encode_r2010_block_end_frame(object: &crate::artifacts::dwg::schema::snapshot
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn encode_r2010_insert_frame(object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
-    let Some(crate::artifacts::dwg::schema::snapshot::DwgLogicalObjectBody::Entity(crate::artifacts::dwg::schema::snapshot::DwgEntityBody::Insert(insert))) = object.body.as_ref() else {
+fn encode_r2010_insert_frame(object: &crate::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
+    let Some(crate::schema::snapshot::DwgLogicalObjectBody::Entity(crate::schema::snapshot::DwgEntityBody::Insert(insert))) = object.body.as_ref() else {
         return Err(format!("INSERT {:#x} typed body missing", object.handle));
     };
     let insertion = logical_point3(&insert.insertion, "INSERT insertion")?;
@@ -5037,8 +5037,8 @@ fn encode_r2010_insert_frame(object: &crate::artifacts::dwg::schema::snapshot::D
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn encode_r2010_dimension_linear_frame(object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
-    let Some(crate::artifacts::dwg::schema::snapshot::DwgLogicalObjectBody::Entity(crate::artifacts::dwg::schema::snapshot::DwgEntityBody::DimensionLinear(linear))) = object.body.as_ref() else {
+fn encode_r2010_dimension_linear_frame(object: &crate::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
+    let Some(crate::schema::snapshot::DwgLogicalObjectBody::Entity(crate::schema::snapshot::DwgEntityBody::DimensionLinear(linear))) = object.body.as_ref() else {
         return Err(format!("DIMENSION_LINEAR {:#x} typed body missing", object.handle));
     };
     let dimension = &linear.dimension;
@@ -5097,8 +5097,8 @@ fn encode_r2010_dimension_linear_frame(object: &crate::artifacts::dwg::schema::s
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn viewport_status_mask(flags: &[crate::artifacts::dwg::schema::snapshot::DwgViewportStatusFlag]) -> Result<u32, String> {
-    use crate::artifacts::dwg::schema::snapshot::DwgViewportStatusFlag::*;
+fn viewport_status_mask(flags: &[crate::schema::snapshot::DwgViewportStatusFlag]) -> Result<u32, String> {
+    use crate::schema::snapshot::DwgViewportStatusFlag::*;
     let mut mask = 0u32;
     for flag in flags {
         let bit = match flag {
@@ -5134,8 +5134,8 @@ fn viewport_status_mask(flags: &[crate::artifacts::dwg::schema::snapshot::DwgVie
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn viewport_status_flags(mask: u32) -> Result<Vec<crate::artifacts::dwg::schema::snapshot::DwgViewportStatusFlag>, String> {
-    use crate::artifacts::dwg::schema::snapshot::DwgViewportStatusFlag::*;
+fn viewport_status_flags(mask: u32) -> Result<Vec<crate::schema::snapshot::DwgViewportStatusFlag>, String> {
+    use crate::schema::snapshot::DwgViewportStatusFlag::*;
     if mask & !0x003f_ffff != 0 {
         return Err(format!("VIEWPORT status contains unsupported bits {:#x}", mask & !0x003f_ffff));
     }
@@ -5167,8 +5167,8 @@ fn viewport_status_flags(mask: u32) -> Result<Vec<crate::artifacts::dwg::schema:
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn encode_r2010_viewport_frame(object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
-    use crate::artifacts::dwg::schema::snapshot::{DwgDefaultLightingType, DwgEntityBody, DwgLogicalObjectBody, DwgOrthographicView, DwgShadePlotMode, DwgViewportRenderMode};
+fn encode_r2010_viewport_frame(object: &crate::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
+    use crate::schema::snapshot::{DwgDefaultLightingType, DwgEntityBody, DwgLogicalObjectBody, DwgOrthographicView, DwgShadePlotMode, DwgViewportRenderMode};
     let Some(DwgLogicalObjectBody::Entity(DwgEntityBody::Viewport(viewport))) = object.body.as_ref() else {
         return Err(format!("VIEWPORT {:#x} body missing", object.handle));
     };
@@ -5258,8 +5258,8 @@ fn encode_r2010_viewport_frame(object: &crate::artifacts::dwg::schema::snapshot:
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn encode_r2010_line_frame(object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
-    let Some(crate::artifacts::dwg::schema::snapshot::DwgLogicalObjectBody::Entity(crate::artifacts::dwg::schema::snapshot::DwgEntityBody::Line(line))) = object.body.as_ref() else {
+fn encode_r2010_line_frame(object: &crate::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
+    let Some(crate::schema::snapshot::DwgLogicalObjectBody::Entity(crate::schema::snapshot::DwgEntityBody::Line(line))) = object.body.as_ref() else {
         return Err(format!("LINE {:#x} typed body missing", object.handle));
     };
     let start = logical_point3(&line.start, "LINE start")?;
@@ -5292,8 +5292,8 @@ fn encode_r2010_line_frame(object: &crate::artifacts::dwg::schema::snapshot::Dwg
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn encode_r2010_arc_frame(object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
-    let Some(crate::artifacts::dwg::schema::snapshot::DwgLogicalObjectBody::Entity(crate::artifacts::dwg::schema::snapshot::DwgEntityBody::Arc(arc))) = object.body.as_ref() else {
+fn encode_r2010_arc_frame(object: &crate::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
+    let Some(crate::schema::snapshot::DwgLogicalObjectBody::Entity(crate::schema::snapshot::DwgEntityBody::Arc(arc))) = object.body.as_ref() else {
         return Err(format!("ARC {:#x} typed body missing", object.handle));
     };
     let center = logical_point3(&arc.center, "ARC center")?;
@@ -5319,8 +5319,8 @@ fn encode_r2010_arc_frame(object: &crate::artifacts::dwg::schema::snapshot::DwgL
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn encode_r2010_lwpolyline_frame(object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
-    let Some(crate::artifacts::dwg::schema::snapshot::DwgLogicalObjectBody::Entity(crate::artifacts::dwg::schema::snapshot::DwgEntityBody::LwPolyline(polyline))) = object.body.as_ref() else {
+fn encode_r2010_lwpolyline_frame(object: &crate::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
+    let Some(crate::schema::snapshot::DwgLogicalObjectBody::Entity(crate::schema::snapshot::DwgEntityBody::LwPolyline(polyline))) = object.body.as_ref() else {
         return Err(format!("LWPOLYLINE {:#x} typed body missing", object.handle));
     };
     if polyline.vertices.is_empty() || polyline.vertices.len() > 20_000 {
@@ -5426,8 +5426,8 @@ fn append_r2010_string_stream(data: &mut DwgBitWriter, strings: &DwgBitWriter, c
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn write_visual_style_operation(data: &mut DwgBitWriter, operation: crate::artifacts::dwg::schema::snapshot::DwgVisualStylePropertyOperation) {
-    use crate::artifacts::dwg::schema::snapshot::DwgVisualStylePropertyOperation;
+fn write_visual_style_operation(data: &mut DwgBitWriter, operation: crate::schema::snapshot::DwgVisualStylePropertyOperation) {
+    use crate::schema::snapshot::DwgVisualStylePropertyOperation;
     data.write_bs(match operation {
         DwgVisualStylePropertyOperation::Inherit => 0,
         DwgVisualStylePropertyOperation::Set => 1,
@@ -5437,8 +5437,8 @@ fn write_visual_style_operation(data: &mut DwgBitWriter, operation: crate::artif
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn read_visual_style_operation(data: &mut DwgBitReader<'_>) -> Result<crate::artifacts::dwg::schema::snapshot::DwgVisualStylePropertyOperation, String> {
-    use crate::artifacts::dwg::schema::snapshot::DwgVisualStylePropertyOperation;
+fn read_visual_style_operation(data: &mut DwgBitReader<'_>) -> Result<crate::schema::snapshot::DwgVisualStylePropertyOperation, String> {
+    use crate::schema::snapshot::DwgVisualStylePropertyOperation;
     match data.read_bs()? {
         0 => Ok(DwgVisualStylePropertyOperation::Inherit),
         1 => Ok(DwgVisualStylePropertyOperation::Set),
@@ -5449,14 +5449,14 @@ fn read_visual_style_operation(data: &mut DwgBitReader<'_>) -> Result<crate::art
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn read_visual_style_color(data: &mut DwgBitReader<'_>) -> Result<(crate::artifacts::dwg::schema::snapshot::DwgVisualStyleProperty<crate::artifacts::dwg::schema::snapshot::DwgComplexColor>, u8), String> {
+fn read_visual_style_color(data: &mut DwgBitReader<'_>) -> Result<(crate::schema::snapshot::DwgVisualStyleProperty<crate::schema::snapshot::DwgComplexColor>, u8), String> {
     let (value, flags) = read_r2010_cmc_main(data)?;
     let operation = read_visual_style_operation(data)?;
-    Ok((crate::artifacts::dwg::schema::snapshot::DwgVisualStyleProperty { value, operation }, flags))
+    Ok((crate::schema::snapshot::DwgVisualStyleProperty { value, operation }, flags))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn write_visual_style_color(data: &mut DwgBitWriter, strings: &mut DwgBitWriter, property: &crate::artifacts::dwg::schema::snapshot::DwgVisualStyleProperty<crate::artifacts::dwg::schema::snapshot::DwgComplexColor>) {
+fn write_visual_style_color(data: &mut DwgBitWriter, strings: &mut DwgBitWriter, property: &crate::schema::snapshot::DwgVisualStyleProperty<crate::schema::snapshot::DwgComplexColor>) {
     data.write_bs(property.value.index);
     data.write_bl(encode_complex_color_value(&property.value.value));
     let flags = u8::from(property.value.name.is_some()) | (u8::from(property.value.book_name.is_some()) << 1);
@@ -5471,8 +5471,8 @@ fn write_visual_style_color(data: &mut DwgBitWriter, strings: &mut DwgBitWriter,
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn encode_r2010_visual_style_frame(object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
-    use crate::artifacts::dwg::schema::snapshot::DwgLogicalObjectBody;
+fn encode_r2010_visual_style_frame(object: &crate::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
+    use crate::schema::snapshot::DwgLogicalObjectBody;
     let Some(DwgLogicalObjectBody::VisualStyle(style)) = object.body.as_ref() else { return Err(format!("VISUALSTYLE {:#x} body missing", object.handle)) };
     if style.style_type > 22 || matches!(style.style_type, 10 | 17..=19) || style.extension_lighting_model > 3 {
         return Err(format!("VISUALSTYLE {:#x} style or lighting type is invalid", object.handle));
@@ -5572,8 +5572,8 @@ fn encode_r2010_visual_style_frame(object: &crate::artifacts::dwg::schema::snaps
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn encode_r2010_associative_dependency_frame(object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
-    let Some(crate::artifacts::dwg::schema::snapshot::DwgLogicalObjectBody::AssociativeDependency(dependency)) = object.body.as_ref() else {
+fn encode_r2010_associative_dependency_frame(object: &crate::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
+    let Some(crate::schema::snapshot::DwgLogicalObjectBody::AssociativeDependency(dependency)) = object.body.as_ref() else {
         return Err(format!("ACDBASSOCDEPENDENCY {:#x} body missing", object.handle));
     };
     let mut data = DwgBitWriter::new();
@@ -5612,8 +5612,8 @@ fn encode_r2010_associative_dependency_frame(object: &crate::artifacts::dwg::sch
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn encode_r2010_associative_value_dependency_frame(object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
-    let Some(crate::artifacts::dwg::schema::snapshot::DwgLogicalObjectBody::AssociativeValueDependency(value)) = object.body.as_ref() else {
+fn encode_r2010_associative_value_dependency_frame(object: &crate::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
+    let Some(crate::schema::snapshot::DwgLogicalObjectBody::AssociativeValueDependency(value)) = object.body.as_ref() else {
         return Err(format!("ACDBASSOCVALUEDEPENDENCY {:#x} body missing", object.handle));
     };
     let dependency = &value.dependency;
@@ -5634,7 +5634,7 @@ fn encode_r2010_associative_value_dependency_frame(object: &crate::artifacts::dw
     data.write_bl(dependency.dependency_body_id as u32);
     data.write_bs(0);
     match value.cached_value {
-        crate::artifacts::dwg::schema::snapshot::DwgEvaluationVariant::Integer32(cached) => {
+        crate::schema::snapshot::DwgEvaluationVariant::Integer32(cached) => {
             data.write_bs(90);
             data.write_bl(cached as u32);
         }
@@ -5661,8 +5661,8 @@ fn encode_r2010_associative_value_dependency_frame(object: &crate::artifacts::dw
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn encode_r2010_associative_geometry_dependency_frame(object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
-    let Some(crate::artifacts::dwg::schema::snapshot::DwgLogicalObjectBody::AssociativeGeometryDependency(geometry)) = object.body.as_ref() else {
+fn encode_r2010_associative_geometry_dependency_frame(object: &crate::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
+    let Some(crate::schema::snapshot::DwgLogicalObjectBody::AssociativeGeometryDependency(geometry)) = object.body.as_ref() else {
         return Err(format!("ACDBASSOCGEOMDEPENDENCY {:#x} body missing", object.handle));
     };
     let dependency = &geometry.dependency;
@@ -5706,8 +5706,8 @@ fn encode_r2010_associative_geometry_dependency_frame(object: &crate::artifacts:
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn encode_r2010_block_grip_location_component_frame(object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
-    use crate::artifacts::dwg::schema::snapshot::{DwgEvaluationExpressionValue, DwgLogicalObjectBody};
+fn encode_r2010_block_grip_location_component_frame(object: &crate::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
+    use crate::schema::snapshot::{DwgEvaluationExpressionValue, DwgLogicalObjectBody};
     let Some(DwgLogicalObjectBody::BlockGripLocationComponent(grip)) = object.body.as_ref() else {
         return Err(format!("BLOCKGRIPLOCATIONCOMPONENT {:#x} body missing", object.handle));
     };
@@ -5772,8 +5772,8 @@ fn encode_r2010_block_grip_location_component_frame(object: &crate::artifacts::d
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn encode_r2010_dynamic_block_proxy_node_frame(object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
-    use crate::artifacts::dwg::schema::snapshot::{DwgEvaluationExpressionValue, DwgLogicalObjectBody};
+fn encode_r2010_dynamic_block_proxy_node_frame(object: &crate::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
+    use crate::schema::snapshot::{DwgEvaluationExpressionValue, DwgLogicalObjectBody};
     let Some(DwgLogicalObjectBody::DynamicBlockProxyNode(proxy)) = object.body.as_ref() else {
         return Err(format!("ACDB_DYNAMICBLOCKPROXYNODE {:#x} body missing", object.handle));
     };
@@ -5839,8 +5839,8 @@ fn encode_r2010_dynamic_block_proxy_node_frame(object: &crate::artifacts::dwg::s
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn encode_r2010_associative_variable_frame(object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
-    use crate::artifacts::dwg::schema::snapshot::{DwgEvaluationVariant, DwgLogicalObjectBody};
+fn encode_r2010_associative_variable_frame(object: &crate::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
+    use crate::schema::snapshot::{DwgEvaluationVariant, DwgLogicalObjectBody};
     let Some(DwgLogicalObjectBody::AssociativeVariable(variable)) = object.body.as_ref() else {
         return Err(format!("ACDBASSOCVARIABLE {:#x} body missing", object.handle));
     };
@@ -5906,8 +5906,8 @@ fn encode_r2010_associative_variable_frame(object: &crate::artifacts::dwg::schem
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn encode_r2010_associative_dimension_dependency_body_frame(object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
-    let Some(crate::artifacts::dwg::schema::snapshot::DwgLogicalObjectBody::AssociativeDimensionDependencyBody(body)) = object.body.as_ref() else {
+fn encode_r2010_associative_dimension_dependency_body_frame(object: &crate::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
+    let Some(crate::schema::snapshot::DwgLogicalObjectBody::AssociativeDimensionDependencyBody(body)) = object.body.as_ref() else {
         return Err(format!("ASSOCDIMDEPENDENCYBODY {:#x} body missing", object.handle));
     };
     let mut data = DwgBitWriter::new();
@@ -5934,8 +5934,8 @@ fn encode_r2010_associative_dimension_dependency_body_frame(object: &crate::arti
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn encode_r2010_block_parameter_dependency_body_frame(object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
-    let Some(crate::artifacts::dwg::schema::snapshot::DwgLogicalObjectBody::BlockParameterDependencyBody(body)) = object.body.as_ref() else {
+fn encode_r2010_block_parameter_dependency_body_frame(object: &crate::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
+    let Some(crate::schema::snapshot::DwgLogicalObjectBody::BlockParameterDependencyBody(body)) = object.body.as_ref() else {
         return Err(format!("BLOCKPARAMDEPENDENCYBODY {:#x} body missing", object.handle));
     };
     if !object.extended_data.is_empty() || !object.reactor_handles.is_empty() || object.extension_dictionary_handle.is_some() {
@@ -5959,8 +5959,8 @@ fn encode_r2010_block_parameter_dependency_body_frame(object: &crate::artifacts:
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn encode_r2010_block_representation_data_frame(object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
-    let Some(crate::artifacts::dwg::schema::snapshot::DwgLogicalObjectBody::BlockRepresentationData(body)) = object.body.as_ref() else {
+fn encode_r2010_block_representation_data_frame(object: &crate::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
+    let Some(crate::schema::snapshot::DwgLogicalObjectBody::BlockRepresentationData(body)) = object.body.as_ref() else {
         return Err(format!("ACDB_BLOCKREPRESENTATION_DATA {:#x} body missing", object.handle));
     };
     if !object.extended_data.is_empty() || object.extension_dictionary_handle.is_some() || object.owner_handle != Some(object.handle - 1) || object.reactor_handles.as_slice() != [object.handle - 1] || body.represented_block_header_handle == 0 {
@@ -5982,8 +5982,8 @@ fn encode_r2010_block_representation_data_frame(object: &crate::artifacts::dwg::
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn encode_r2010_dynamic_block_purge_preventer_frame(object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
-    let Some(crate::artifacts::dwg::schema::snapshot::DwgLogicalObjectBody::DynamicBlockPurgePreventer(body)) = object.body.as_ref() else {
+fn encode_r2010_dynamic_block_purge_preventer_frame(object: &crate::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
+    let Some(crate::schema::snapshot::DwgLogicalObjectBody::DynamicBlockPurgePreventer(body)) = object.body.as_ref() else {
         return Err(format!("ACDB_DYNAMICBLOCKPURGEPREVENTER_VERSION {:#x} body missing", object.handle));
     };
     if !object.extended_data.is_empty() || object.extension_dictionary_handle.is_some() || object.owner_handle.is_none() || object.reactor_handles.as_slice() != [object.owner_handle.unwrap_or_default()] || body.protected_block_header_handle == 0 {
@@ -6005,7 +6005,7 @@ fn encode_r2010_dynamic_block_purge_preventer_frame(object: &crate::artifacts::d
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn evaluation_graph_indexes(graph: &crate::artifacts::dwg::schema::snapshot::DwgEvaluationGraph) -> Result<DwgEvaluationGraphIndexes, String> {
+fn evaluation_graph_indexes(graph: &crate::schema::snapshot::DwgEvaluationGraph) -> Result<DwgEvaluationGraphIndexes, String> {
     let mut node_indexes = std::collections::BTreeMap::new();
     for (index, node) in graph.nodes.iter().enumerate() {
         if node.id == 0 || node.expression_handle == 0 || node_indexes.insert(node.id, index).is_some() {
@@ -6064,8 +6064,8 @@ fn evaluation_graph_indexes(graph: &crate::artifacts::dwg::schema::snapshot::Dwg
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn encode_r2010_evaluation_graph_frame(object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
-    let Some(crate::artifacts::dwg::schema::snapshot::DwgLogicalObjectBody::EvaluationGraph(graph)) = object.body.as_ref() else {
+fn encode_r2010_evaluation_graph_frame(object: &crate::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
+    let Some(crate::schema::snapshot::DwgLogicalObjectBody::EvaluationGraph(graph)) = object.body.as_ref() else {
         return Err(format!("ACAD_EVALUATION_GRAPH {:#x} body missing", object.handle));
     };
     if !object.extended_data.is_empty() || object.extension_dictionary_handle.is_some() || object.owner_handle.is_none() || object.reactor_handles.as_slice() != [object.owner_handle.unwrap_or_default()] || graph.nodes.is_empty() {
@@ -6112,8 +6112,8 @@ fn encode_r2010_evaluation_graph_frame(object: &crate::artifacts::dwg::schema::s
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn encode_r2010_block_flip_parameter_frame(object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
-    use crate::artifacts::dwg::schema::snapshot::{DwgBlockParameterBaseLocation, DwgEvaluationExpressionValue, DwgLogicalObjectBody};
+fn encode_r2010_block_flip_parameter_frame(object: &crate::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
+    use crate::schema::snapshot::{DwgBlockParameterBaseLocation, DwgEvaluationExpressionValue, DwgLogicalObjectBody};
     let Some(DwgLogicalObjectBody::BlockFlipParameter(body)) = object.body.as_ref() else {
         return Err(format!("BLOCKFLIPPARAMETER {:#x} body missing", object.handle));
     };
@@ -6208,8 +6208,8 @@ fn encode_r2010_block_flip_parameter_frame(object: &crate::artifacts::dwg::schem
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn encode_r2010_block_visibility_parameter_frame(object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
-    use crate::artifacts::dwg::schema::snapshot::{DwgEvaluationExpressionValue, DwgLogicalObjectBody, DwgVisibilityEvaluationHistory};
+fn encode_r2010_block_visibility_parameter_frame(object: &crate::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
+    use crate::schema::snapshot::{DwgEvaluationExpressionValue, DwgLogicalObjectBody, DwgVisibilityEvaluationHistory};
     let Some(DwgLogicalObjectBody::BlockVisibilityParameter(body)) = object.body.as_ref() else {
         return Err(format!("BLOCKVISIBILITYPARAMETER {:#x} body missing", object.handle));
     };
@@ -6313,8 +6313,8 @@ fn encode_r2010_block_visibility_parameter_frame(object: &crate::artifacts::dwg:
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn encode_r2010_placeholder_frame(object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
-    use crate::artifacts::dwg::schema::snapshot::DwgLogicalObjectBody;
+fn encode_r2010_placeholder_frame(object: &crate::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
+    use crate::schema::snapshot::DwgLogicalObjectBody;
     if !matches!(object.body, Some(DwgLogicalObjectBody::Placeholder(_)))
         || !object.extended_data.is_empty()
         || object.owner_handle.is_none()
@@ -6337,8 +6337,8 @@ fn encode_r2010_placeholder_frame(object: &crate::artifacts::dwg::schema::snapsh
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn encode_r2010_dictionary_variable_frame(object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
-    use crate::artifacts::dwg::schema::snapshot::DwgLogicalObjectBody;
+fn encode_r2010_dictionary_variable_frame(object: &crate::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
+    use crate::schema::snapshot::DwgLogicalObjectBody;
     let Some(DwgLogicalObjectBody::DictionaryVariable(body)) = object.body.as_ref() else {
         return Err(format!("DICTIONARYVAR {:#x} body missing", object.handle));
     };
@@ -6362,8 +6362,8 @@ fn encode_r2010_dictionary_variable_frame(object: &crate::artifacts::dwg::schema
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn encode_r2010_annotation_scale_frame(object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
-    use crate::artifacts::dwg::schema::snapshot::DwgLogicalObjectBody;
+fn encode_r2010_annotation_scale_frame(object: &crate::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
+    use crate::schema::snapshot::DwgLogicalObjectBody;
     let Some(DwgLogicalObjectBody::AnnotationScale(body)) = object.body.as_ref() else {
         return Err(format!("SCALE {:#x} body missing", object.handle));
     };
@@ -6400,8 +6400,8 @@ fn encode_r2010_annotation_scale_frame(object: &crate::artifacts::dwg::schema::s
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn encode_r2010_sort_entities_table_frame(object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
-    use crate::artifacts::dwg::schema::snapshot::DwgLogicalObjectBody;
+fn encode_r2010_sort_entities_table_frame(object: &crate::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
+    use crate::schema::snapshot::DwgLogicalObjectBody;
     let Some(DwgLogicalObjectBody::SortEntitiesTable(body)) = object.body.as_ref() else {
         return Err(format!("SORTENTSTABLE {:#x} body missing", object.handle));
     };
@@ -6441,7 +6441,7 @@ fn encode_r2010_sort_entities_table_frame(object: &crate::artifacts::dwg::schema
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn write_table_style_color(data: &mut DwgBitWriter, color: &crate::artifacts::dwg::schema::snapshot::DwgComplexColor) -> Result<(), String> {
+fn write_table_style_color(data: &mut DwgBitWriter, color: &crate::schema::snapshot::DwgComplexColor) -> Result<(), String> {
     if color.name.is_some() || color.book_name.is_some() {
         return Err("TABLESTYLE named colors are unsupported".into());
     }
@@ -6452,12 +6452,12 @@ fn write_table_style_color(data: &mut DwgBitWriter, color: &crate::artifacts::dw
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn table_style_borders(borders: &crate::artifacts::dwg::schema::snapshot::DwgCellBorders) -> [(u32, Option<&crate::artifacts::dwg::schema::snapshot::DwgCellBorder>); 6] {
+fn table_style_borders(borders: &crate::schema::snapshot::DwgCellBorders) -> [(u32, Option<&crate::schema::snapshot::DwgCellBorder>); 6] {
     [(1, borders.top.as_ref()), (2, borders.horizontal_inside.as_ref()), (4, borders.bottom.as_ref()), (8, borders.left.as_ref()), (16, borders.vertical_inside.as_ref()), (32, borders.right.as_ref())]
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn encode_r2010_cell_style(data: &mut DwgBitWriter, strings: &mut DwgBitWriter, handles: &mut DwgBitWriter, style: &crate::artifacts::dwg::schema::snapshot::DwgCellStyle) -> Result<(), String> {
+fn encode_r2010_cell_style(data: &mut DwgBitWriter, strings: &mut DwgBitWriter, handles: &mut DwgBitWriter, style: &crate::schema::snapshot::DwgCellStyle) -> Result<(), String> {
     data.write_bl(5);
     data.write_bs(1);
     data.write_bl(style.property_override_flags);
@@ -6499,8 +6499,8 @@ fn encode_r2010_cell_style(data: &mut DwgBitWriter, strings: &mut DwgBitWriter, 
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn encode_r2010_table_style_frame(object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
-    use crate::artifacts::dwg::schema::snapshot::DwgLogicalObjectBody;
+fn encode_r2010_table_style_frame(object: &crate::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
+    use crate::schema::snapshot::DwgLogicalObjectBody;
     let Some(DwgLogicalObjectBody::TableStyle(body)) = object.body.as_ref() else {
         return Err(format!("TABLESTYLE {:#x} body missing", object.handle));
     };
@@ -6540,8 +6540,8 @@ fn encode_r2010_table_style_frame(object: &crate::artifacts::dwg::schema::snapsh
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn encode_r2010_mline_style_frame(object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
-    use crate::artifacts::dwg::schema::snapshot::{DwgLogicalObjectBody, DwgMlineLinetype};
+fn encode_r2010_mline_style_frame(object: &crate::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
+    use crate::schema::snapshot::{DwgLogicalObjectBody, DwgMlineLinetype};
     let Some(DwgLogicalObjectBody::MlineStyle(body)) = object.body.as_ref() else { return Err(format!("MLINESTYLE {:#x} body missing", object.handle)) };
     if body.name.is_empty()
         || body.elements.is_empty()
@@ -6594,8 +6594,8 @@ fn encode_r2010_mline_style_frame(object: &crate::artifacts::dwg::schema::snapsh
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn encode_r2010_mleader_style_frame(object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
-    use crate::artifacts::dwg::schema::snapshot::*;
+fn encode_r2010_mleader_style_frame(object: &crate::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
+    use crate::schema::snapshot::*;
     let Some(DwgLogicalObjectBody::MLeaderStyle(body)) = object.body.as_ref() else { return Err(format!("MLEADERSTYLE {:#x} body missing", object.handle)) };
     if body.leader.linetype_style_handle == 0
         || body.text.style_handle == 0
@@ -6688,7 +6688,7 @@ fn encode_r2010_mleader_style_frame(object: &crate::artifacts::dwg::schema::snap
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn write_material_color(data: &mut DwgBitWriter, color: &crate::artifacts::dwg::schema::snapshot::DwgMaterialColor) {
+fn write_material_color(data: &mut DwgBitWriter, color: &crate::schema::snapshot::DwgMaterialColor) {
     data.write_rc(u8::from(color.override_rgb.is_some()));
     data.write_bd(color.factor);
     if let Some(rgb) = color.override_rgb {
@@ -6697,8 +6697,8 @@ fn write_material_color(data: &mut DwgBitWriter, color: &crate::artifacts::dwg::
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn write_material_map(data: &mut DwgBitWriter, strings: &mut DwgBitWriter, map: &crate::artifacts::dwg::schema::snapshot::DwgMaterialMap) -> Result<(), String> {
-    use crate::artifacts::dwg::schema::snapshot::{DwgMaterialMapSource, DwgMaterialProjection, DwgMaterialTiling};
+fn write_material_map(data: &mut DwgBitWriter, strings: &mut DwgBitWriter, map: &crate::schema::snapshot::DwgMaterialMap) -> Result<(), String> {
+    use crate::schema::snapshot::{DwgMaterialMapSource, DwgMaterialProjection, DwgMaterialTiling};
     if map.transform.len() != 16 || map.transform.iter().any(|value| !value.is_finite()) {
         return Err("MATERIAL mapper transform must contain sixteen finite values".into());
     }
@@ -6732,8 +6732,8 @@ fn write_material_map(data: &mut DwgBitWriter, strings: &mut DwgBitWriter, map: 
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn encode_r2010_material_frame(object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
-    use crate::artifacts::dwg::schema::snapshot::DwgLogicalObjectBody;
+fn encode_r2010_material_frame(object: &crate::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
+    use crate::schema::snapshot::DwgLogicalObjectBody;
     let Some(DwgLogicalObjectBody::Material(body)) = object.body.as_ref() else { return Err(format!("MATERIAL {:#x} body missing", object.handle)) };
     if body.name.is_empty() || object.owner_handle.is_none() || object.reactor_handles.as_slice() != [object.owner_handle.unwrap_or_default()] {
         return Err(format!("MATERIAL {:#x} logical state is invalid", object.handle));
@@ -6777,8 +6777,8 @@ fn encode_r2010_material_frame(object: &crate::artifacts::dwg::schema::snapshot:
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn encode_r2010_block_move_action_frame(object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
-    use crate::artifacts::dwg::schema::snapshot::{DwgBlockMoveCoordinateMode, DwgEvaluationExpressionValue, DwgLogicalObjectBody};
+fn encode_r2010_block_move_action_frame(object: &crate::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
+    use crate::schema::snapshot::{DwgBlockMoveCoordinateMode, DwgEvaluationExpressionValue, DwgLogicalObjectBody};
     let Some(DwgLogicalObjectBody::BlockMoveAction(body)) = object.body.as_ref() else { return Err(format!("BLOCKMOVEACTION {:#x} body missing", object.handle)) };
     let action = &body.action;
     let expression = &action.evaluation_expression;
@@ -6839,8 +6839,8 @@ fn encode_r2010_block_move_action_frame(object: &crate::artifacts::dwg::schema::
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn encode_r2010_assoc_network_frame(object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
-    use crate::artifacts::dwg::schema::snapshot::{DwgAssocNetworkMemberKind, DwgAssociativeActionStatus, DwgLogicalObjectBody};
+fn encode_r2010_assoc_network_frame(object: &crate::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
+    use crate::schema::snapshot::{DwgAssocNetworkMemberKind, DwgAssociativeActionStatus, DwgLogicalObjectBody};
     let Some(DwgLogicalObjectBody::AssocNetwork(network)) = object.body.as_ref() else { return Err(format!("ACDBASSOCNETWORK {:#x} body missing", object.handle)) };
     let action = &network.action;
     if !matches!(action.status, DwgAssociativeActionStatus::UpToDate)
@@ -6893,10 +6893,10 @@ fn constraint_point3(values: &[f64], role: &str) -> Result<[f64; 3], String> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn encode_r2010_constraint_node(node: &crate::artifacts::dwg::schema::snapshot::DwgConstraintNode, data: &mut DwgBitWriter, strings: &mut DwgBitWriter, handles: &mut DwgBitWriter) -> Result<(), String> {
-    use crate::artifacts::dwg::schema::snapshot::DwgConstraintNode;
+fn encode_r2010_constraint_node(node: &crate::schema::snapshot::DwgConstraintNode, data: &mut DwgBitWriter, strings: &mut DwgBitWriter, handles: &mut DwgBitWriter) -> Result<(), String> {
+    use crate::schema::snapshot::DwgConstraintNode;
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn core(data: &mut DwgBitWriter, node: &crate::artifacts::dwg::schema::snapshot::DwgConstraintNodeCore) -> Result<(), String> {
+    fn core(data: &mut DwgBitWriter, node: &crate::schema::snapshot::DwgConstraintNodeCore) -> Result<(), String> {
         if node.id < 0 || node.connected_node_ids.len() > 10_000 {
             return Err("constraint node ID or connection count is invalid".into());
         }
@@ -6908,7 +6908,7 @@ fn encode_r2010_constraint_node(node: &crate::artifacts::dwg::schema::snapshot::
         Ok(())
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn geometric(data: &mut DwgBitWriter, value: &crate::artifacts::dwg::schema::snapshot::DwgGeometricConstraint) -> Result<(), String> {
+    fn geometric(data: &mut DwgBitWriter, value: &crate::schema::snapshot::DwgGeometricConstraint) -> Result<(), String> {
         if !value.active {
             return Err("AC1024 geometric constraint must be active".into());
         }
@@ -6918,14 +6918,14 @@ fn encode_r2010_constraint_node(node: &crate::artifacts::dwg::schema::snapshot::
         Ok(())
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn geometry(data: &mut DwgBitWriter, handles: &mut DwgBitWriter, value: &crate::artifacts::dwg::schema::snapshot::DwgConstraintGeometry) -> Result<(), String> {
+    fn geometry(data: &mut DwgBitWriter, handles: &mut DwgBitWriter, value: &crate::schema::snapshot::DwgConstraintGeometry) -> Result<(), String> {
         core(data, &value.node)?;
         handles.write_handle(4, value.geometry_dependency_handle.unwrap_or_default());
         data.write_bl(value.geometry_node_id);
         Ok(())
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn explicit(data: &mut DwgBitWriter, handles: &mut DwgBitWriter, value: &crate::artifacts::dwg::schema::snapshot::DwgExplicitConstraint) -> Result<(), String> {
+    fn explicit(data: &mut DwgBitWriter, handles: &mut DwgBitWriter, value: &crate::schema::snapshot::DwgExplicitConstraint) -> Result<(), String> {
         geometric(data, &value.geometric)?;
         if value.value_dependency_handle == 0 || value.dimension_dependency_handle == 0 {
             return Err("explicit constraint dependency handles must be nonnull".into());
@@ -7023,8 +7023,8 @@ fn encode_r2010_constraint_node(node: &crate::artifacts::dwg::schema::snapshot::
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn constraint_node_id(node: &crate::artifacts::dwg::schema::snapshot::DwgConstraintNode) -> i32 {
-    use crate::artifacts::dwg::schema::snapshot::DwgConstraintNode;
+fn constraint_node_id(node: &crate::schema::snapshot::DwgConstraintNode) -> i32 {
+    use crate::schema::snapshot::DwgConstraintNode;
     match node {
         DwgConstraintNode::ConstrainedImplicitPoint(value) => value.geometry.node.id,
         DwgConstraintNode::PointCurveConstraint(value)
@@ -7043,8 +7043,8 @@ fn constraint_node_id(node: &crate::artifacts::dwg::schema::snapshot::DwgConstra
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn encode_r2010_assoc_2d_constraint_group_frame(object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
-    use crate::artifacts::dwg::schema::snapshot::{DwgAssociativeActionStatus, DwgLogicalObjectBody};
+fn encode_r2010_assoc_2d_constraint_group_frame(object: &crate::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
+    use crate::schema::snapshot::{DwgAssociativeActionStatus, DwgLogicalObjectBody};
     let Some(DwgLogicalObjectBody::Assoc2dConstraintGroup(group)) = object.body.as_ref() else { return Err(format!("ACDBASSOC2DCONSTRAINTGROUP {:#x} body missing", object.handle)) };
     if !matches!(group.action.status, DwgAssociativeActionStatus::UpToDate)
         || object.owner_handle.is_none()
@@ -7103,8 +7103,8 @@ fn encode_r2010_assoc_2d_constraint_group_frame(object: &crate::artifacts::dwg::
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn encode_r2010_block_element(data: &mut DwgBitWriter, strings: &mut DwgBitWriter, element: &crate::artifacts::dwg::schema::snapshot::DwgBlockElement, class_name: &str) -> Result<(), String> {
-    use crate::artifacts::dwg::schema::snapshot::DwgEvaluationExpressionValue;
+fn encode_r2010_block_element(data: &mut DwgBitWriter, strings: &mut DwgBitWriter, element: &crate::schema::snapshot::DwgBlockElement, class_name: &str) -> Result<(), String> {
+    use crate::schema::snapshot::DwgEvaluationExpressionValue;
     let expression = &element.evaluation_expression;
     if expression.parent_id != -1 || expression.major_version != 29 || expression.minor_version != 2 || !matches!(expression.value, DwgEvaluationExpressionValue::Empty) || element.name.is_empty() {
         return Err(format!("{class_name} block-element state is invalid"));
@@ -7122,7 +7122,7 @@ fn encode_r2010_block_element(data: &mut DwgBitWriter, strings: &mut DwgBitWrite
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn encode_r2010_block_grip(data: &mut DwgBitWriter, strings: &mut DwgBitWriter, grip: &crate::artifacts::dwg::schema::snapshot::DwgBlockGrip, x_role: &str, y_role: &str, class_name: &str) -> Result<(), String> {
+fn encode_r2010_block_grip(data: &mut DwgBitWriter, strings: &mut DwgBitWriter, grip: &crate::schema::snapshot::DwgBlockGrip, x_role: &str, y_role: &str, class_name: &str) -> Result<(), String> {
     if grip.location.len() != 3 || grip.location.iter().any(|value| !value.is_finite()) || grip.updated_x.expression_name != x_role || grip.updated_y.expression_name != y_role {
         return Err(format!("{class_name} grip state is invalid"));
     }
@@ -7136,8 +7136,8 @@ fn encode_r2010_block_grip(data: &mut DwgBitWriter, strings: &mut DwgBitWriter, 
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn encode_r2010_dynamic_block_frame(object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
-    use crate::artifacts::dwg::schema::snapshot::{DwgBlockParameterBaseLocation, DwgLogicalObjectBody};
+fn encode_r2010_dynamic_block_frame(object: &crate::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
+    use crate::schema::snapshot::{DwgBlockParameterBaseLocation, DwgLogicalObjectBody};
     if !object.extended_data.is_empty() || object.owner_handle.is_none() || !object.reactor_handles.is_empty() || object.extension_dictionary_handle.is_some() {
         return Err(format!("{} {:#x} common state is invalid", object.class_name, object.handle));
     }
@@ -7222,8 +7222,8 @@ fn encode_r2010_dynamic_block_frame(object: &crate::artifacts::dwg::schema::snap
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn decode_r2010_block_element(data: &mut DwgBitReader<'_>, strings: &mut DwgBitReader<'_>, class_name: &str) -> Result<crate::artifacts::dwg::schema::snapshot::DwgBlockElement, String> {
-    use crate::artifacts::dwg::schema::snapshot::{DwgBlockElement, DwgEvaluationExpression, DwgEvaluationExpressionValue};
+fn decode_r2010_block_element(data: &mut DwgBitReader<'_>, strings: &mut DwgBitReader<'_>, class_name: &str) -> Result<crate::schema::snapshot::DwgBlockElement, String> {
+    use crate::schema::snapshot::{DwgBlockElement, DwgEvaluationExpression, DwgEvaluationExpressionValue};
     let parent_id = data.read_bl()? as i32;
     let major_version = data.read_bl()?;
     let minor_version = data.read_bl()?;
@@ -7240,8 +7240,8 @@ fn decode_r2010_block_element(data: &mut DwgBitReader<'_>, strings: &mut DwgBitR
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn decode_r2010_block_grip(data: &mut DwgBitReader<'_>, strings: &mut DwgBitReader<'_>, x_role: &str, y_role: &str, class_name: &str) -> Result<crate::artifacts::dwg::schema::snapshot::DwgBlockGrip, String> {
-    use crate::artifacts::dwg::schema::snapshot::{DwgBlockGrip, DwgNamedEvaluationNodeReference};
+fn decode_r2010_block_grip(data: &mut DwgBitReader<'_>, strings: &mut DwgBitReader<'_>, x_role: &str, y_role: &str, class_name: &str) -> Result<crate::schema::snapshot::DwgBlockGrip, String> {
+    use crate::schema::snapshot::{DwgBlockGrip, DwgNamedEvaluationNodeReference};
     let element = decode_r2010_block_element(data, strings, class_name)?;
     let updated_x = DwgNamedEvaluationNodeReference { node_id: data.read_bl()?, expression_name: x_role.into() };
     let updated_y = DwgNamedEvaluationNodeReference { node_id: data.read_bl()?, expression_name: y_role.into() };
@@ -7255,8 +7255,8 @@ fn decode_r2010_block_grip(data: &mut DwgBitReader<'_>, strings: &mut DwgBitRead
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn encode_r2010_two_point_parameter(data: &mut DwgBitWriter, strings: &mut DwgBitWriter, parameter: &crate::artifacts::dwg::schema::snapshot::DwgBlockTwoPointParameter, property_node_ids: [u32; 4], class_name: &str) -> Result<(), String> {
-    use crate::artifacts::dwg::schema::snapshot::DwgBlockParameterBaseLocation;
+fn encode_r2010_two_point_parameter(data: &mut DwgBitWriter, strings: &mut DwgBitWriter, parameter: &crate::schema::snapshot::DwgBlockTwoPointParameter, property_node_ids: [u32; 4], class_name: &str) -> Result<(), String> {
+    use crate::schema::snapshot::DwgBlockParameterBaseLocation;
     if parameter.definition_base.len() != 3 || parameter.definition_end.len() != 3 || parameter.properties.len() != 4 || parameter.definition_base.iter().chain(&parameter.definition_end).any(|value| !value.is_finite()) {
         return Err(format!("{class_name} two-point parameter is invalid"));
     }
@@ -7283,8 +7283,8 @@ fn encode_r2010_two_point_parameter(data: &mut DwgBitWriter, strings: &mut DwgBi
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn decode_r2010_two_point_parameter(data: &mut DwgBitReader<'_>, strings: &mut DwgBitReader<'_>, class_name: &str) -> Result<(crate::artifacts::dwg::schema::snapshot::DwgBlockTwoPointParameter, [u32; 4]), String> {
-    use crate::artifacts::dwg::schema::snapshot::{DwgBlockParameterBaseLocation, DwgBlockParameterConnection, DwgBlockParameterProperty, DwgBlockTwoPointParameter};
+fn decode_r2010_two_point_parameter(data: &mut DwgBitReader<'_>, strings: &mut DwgBitReader<'_>, class_name: &str) -> Result<(crate::schema::snapshot::DwgBlockTwoPointParameter, [u32; 4]), String> {
+    use crate::schema::snapshot::{DwgBlockParameterBaseLocation, DwgBlockParameterConnection, DwgBlockParameterProperty, DwgBlockTwoPointParameter};
     let element = decode_r2010_block_element(data, strings, class_name)?;
     let show_properties = data.read_b()?;
     let chain_actions = data.read_b()?;
@@ -7310,8 +7310,8 @@ fn decode_r2010_two_point_parameter(data: &mut DwgBitReader<'_>, strings: &mut D
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn encode_r2010_block_action(data: &mut DwgBitWriter, strings: &mut DwgBitWriter, handles: &mut DwgBitWriter, action: &crate::artifacts::dwg::schema::snapshot::DwgBlockAction, class_name: &str) -> Result<(), String> {
-    use crate::artifacts::dwg::schema::snapshot::DwgBlockElement;
+fn encode_r2010_block_action(data: &mut DwgBitWriter, strings: &mut DwgBitWriter, handles: &mut DwgBitWriter, action: &crate::schema::snapshot::DwgBlockAction, class_name: &str) -> Result<(), String> {
+    use crate::schema::snapshot::DwgBlockElement;
     if action.display_location.len() != 3 || action.display_location.iter().any(|value| !value.is_finite()) || action.name.is_empty() {
         return Err(format!("{class_name} action is invalid"));
     }
@@ -7332,8 +7332,8 @@ fn encode_r2010_block_action(data: &mut DwgBitWriter, strings: &mut DwgBitWriter
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn decode_r2010_block_action(data: &mut DwgBitReader<'_>, strings: &mut DwgBitReader<'_>, handles: &mut DwgBitReader<'_>, base: u64, class_name: &str) -> Result<crate::artifacts::dwg::schema::snapshot::DwgBlockAction, String> {
-    use crate::artifacts::dwg::schema::snapshot::{DwgBlockAction, DwgBlockActionDependency};
+fn decode_r2010_block_action(data: &mut DwgBitReader<'_>, strings: &mut DwgBitReader<'_>, handles: &mut DwgBitReader<'_>, base: u64, class_name: &str) -> Result<crate::schema::snapshot::DwgBlockAction, String> {
+    use crate::schema::snapshot::{DwgBlockAction, DwgBlockActionDependency};
     let element = decode_r2010_block_element(data, strings, class_name)?;
     let display_location = data.read_3bd()?.to_vec();
     let dependency_count = data.read_bl()? as usize;
@@ -7347,7 +7347,7 @@ fn decode_r2010_block_action(data: &mut DwgBitReader<'_>, strings: &mut DwgBitRe
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn write_r2010_action_connection(data: &mut DwgBitWriter, strings: &mut DwgBitWriter, connection: &crate::artifacts::dwg::schema::snapshot::DwgBlockActionConnection) -> Result<(), String> {
+fn write_r2010_action_connection(data: &mut DwgBitWriter, strings: &mut DwgBitWriter, connection: &crate::schema::snapshot::DwgBlockActionConnection) -> Result<(), String> {
     if connection.name.is_empty() {
         return Err("block-action connection name is empty".into());
     }
@@ -7357,8 +7357,8 @@ fn write_r2010_action_connection(data: &mut DwgBitWriter, strings: &mut DwgBitWr
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn encode_r2010_alignment_action_frame(object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
-    use crate::artifacts::dwg::schema::snapshot::{DwgBlockActionCoordinateMode, DwgBlockScaleMode, DwgLogicalObjectBody};
+fn encode_r2010_alignment_action_frame(object: &crate::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
+    use crate::schema::snapshot::{DwgBlockActionCoordinateMode, DwgBlockScaleMode, DwgLogicalObjectBody};
     if !object.extended_data.is_empty() || object.owner_handle.is_none() || !object.reactor_handles.is_empty() || object.extension_dictionary_handle.is_some() {
         return Err(format!("{} {:#x} common state is invalid", object.class_name, object.handle));
     }
@@ -7463,8 +7463,8 @@ fn encode_r2010_alignment_action_frame(object: &crate::artifacts::dwg::schema::s
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn encode_r2010_final_parameter_frame(object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
-    use crate::artifacts::dwg::schema::snapshot::DwgLogicalObjectBody;
+fn encode_r2010_final_parameter_frame(object: &crate::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
+    use crate::schema::snapshot::DwgLogicalObjectBody;
     if !object.extended_data.is_empty() || object.owner_handle.is_none() || object.extension_dictionary_handle.is_some() {
         return Err(format!("{} {:#x} common state is invalid", object.class_name, object.handle));
     }
@@ -7549,8 +7549,8 @@ fn encode_r2010_final_parameter_frame(object: &crate::artifacts::dwg::schema::sn
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn encode_r2010_layout_frame(object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
-    use crate::artifacts::dwg::schema::snapshot::{DwgLogicalObjectBody, DwgOrthographicView, DwgPlotArea, DwgPlotPaperUnit, DwgPlotRotation, DwgShadePlot, DwgShadePlotResolution, DwgStandardScale};
+fn encode_r2010_layout_frame(object: &crate::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
+    use crate::schema::snapshot::{DwgLogicalObjectBody, DwgOrthographicView, DwgPlotArea, DwgPlotPaperUnit, DwgPlotRotation, DwgShadePlot, DwgShadePlotResolution, DwgStandardScale};
     let Some(DwgLogicalObjectBody::Layout(layout)) = object.body.as_ref() else { return Err(format!("LAYOUT {:#x} body missing", object.handle)) };
     let dimensions = [
         (&layout.margins, 4),
@@ -7684,8 +7684,8 @@ fn encode_r2010_layout_frame(object: &crate::artifacts::dwg::schema::snapshot::D
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn encode_r2010_object_frame(object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject, block_names: &std::collections::BTreeMap<u64, String>) -> Result<Vec<u8>, String> {
-    use crate::artifacts::dwg::schema::snapshot::{DwgEntityBody, DwgLogicalObjectBody};
+fn encode_r2010_object_frame(object: &crate::schema::snapshot::DwgLogicalObject, block_names: &std::collections::BTreeMap<u64, String>) -> Result<Vec<u8>, String> {
+    use crate::schema::snapshot::{DwgEntityBody, DwgLogicalObjectBody};
     match object.body.as_ref().ok_or_else(|| format!("object {:#x} has no typed body", object.handle))? {
         DwgLogicalObjectBody::Dictionary(_) => encode_r2010_dictionary_frame(object),
         DwgLogicalObjectBody::TableControl(_) => encode_r2010_table_control_frame(object),
@@ -7799,8 +7799,8 @@ fn materialize_r2004_handles(pairs: &[(u64, usize)]) -> Result<Vec<u8>, String> 
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn materialize_r2010_objects(objects: &[crate::artifacts::dwg::schema::snapshot::DwgLogicalObject]) -> Result<DwgObjectFrame, String> {
-    use crate::artifacts::dwg::schema::snapshot::{DwgLogicalObjectBody, DwgTableRecordBody};
+fn materialize_r2010_objects(objects: &[crate::schema::snapshot::DwgLogicalObject]) -> Result<DwgObjectFrame, String> {
+    use crate::schema::snapshot::{DwgLogicalObjectBody, DwgTableRecordBody};
     let mut seen = std::collections::BTreeSet::new();
     if objects.iter().any(|object| object.handle == 0 || !seen.insert(object.handle)) {
         return Err("AcDbObjects requires unique nonzero handles".into());
@@ -7832,8 +7832,8 @@ fn decode_object_common_relations(data: &mut DwgBitReader<'_>, handles: &mut Dwg
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn decode_r2010_constraint_node(class: &str, data: &mut DwgBitReader<'_>, handles: &mut DwgBitReader<'_>, base: u64) -> Result<crate::artifacts::dwg::schema::snapshot::DwgConstraintNode, String> {
-    use crate::artifacts::dwg::schema::snapshot::{
+fn decode_r2010_constraint_node(class: &str, data: &mut DwgBitReader<'_>, handles: &mut DwgBitReader<'_>, base: u64) -> Result<crate::schema::snapshot::DwgConstraintNode, String> {
+    use crate::schema::snapshot::{
         DwgAxisConstraint, DwgConstrainedBoundedLine, DwgConstrainedDatumLine, DwgConstrainedImplicitPoint, DwgConstraintGeometry, DwgConstraintNode, DwgConstraintNodeCore, DwgDistanceConstraint, DwgExplicitConstraint, DwgGeometricConstraint,
     };
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -7903,14 +7903,14 @@ fn decode_r2010_constraint_node(class: &str, data: &mut DwgBitReader<'_>, handle
 }
 
 struct DwgDecodedEntityCommon {
-    logical: crate::artifacts::dwg::schema::snapshot::DwgEntityCommon,
+    logical: crate::schema::snapshot::DwgEntityCommon,
     reactor_count: usize,
     extension_dictionary_missing: bool,
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn entity_mode(value: u8) -> crate::artifacts::dwg::schema::snapshot::DwgEntityMode {
-    use crate::artifacts::dwg::schema::snapshot::DwgEntityMode;
+fn entity_mode(value: u8) -> crate::schema::snapshot::DwgEntityMode {
+    use crate::schema::snapshot::DwgEntityMode;
     match value {
         0 => DwgEntityMode::ExplicitOwner,
         1 => DwgEntityMode::PaperSpace,
@@ -7920,8 +7920,8 @@ fn entity_mode(value: u8) -> crate::artifacts::dwg::schema::snapshot::DwgEntityM
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn entity_reference_mode(value: u8) -> crate::artifacts::dwg::schema::snapshot::DwgEntityReferenceMode {
-    use crate::artifacts::dwg::schema::snapshot::DwgEntityReferenceMode;
+fn entity_reference_mode(value: u8) -> crate::schema::snapshot::DwgEntityReferenceMode {
+    use crate::schema::snapshot::DwgEntityReferenceMode;
     match value {
         0 => DwgEntityReferenceMode::ByLayer,
         1 => DwgEntityReferenceMode::ByBlock,
@@ -7948,7 +7948,7 @@ fn decode_r2010_entity_common_main(data: &mut DwgBitReader<'_>) -> Result<DwgDec
 /// Off by those two bits, every subsequent field of a real AutoCAD entity decodes as noise.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn decode_r2010_entity_common_fields(data: &mut DwgBitReader<'_>) -> Result<DwgDecodedEntityCommon, String> {
-    use crate::artifacts::dwg::schema::snapshot::{DwgEntityColor, DwgEntityColorKind, DwgEntityCommon};
+    use crate::schema::snapshot::{DwgEntityColor, DwgEntityColorKind, DwgEntityCommon};
     let mode = data.read_bb()?;
     let reactor_count = data.read_bl()? as usize;
     let extension_dictionary_missing = data.read_b()?;
@@ -8009,7 +8009,7 @@ fn decode_r2010_entity_common_fields(data: &mut DwgBitReader<'_>) -> Result<DwgD
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn decode_r2010_entity_common_handles(decoded: &mut DwgDecodedEntityCommon, handles: &mut DwgBitReader<'_>, base: u64) -> Result<DwgObjectRelations, String> {
-    use crate::artifacts::dwg::schema::snapshot::{DwgEntityColorKind, DwgEntityMode, DwgEntityReferenceMode};
+    use crate::schema::snapshot::{DwgEntityColorKind, DwgEntityMode, DwgEntityReferenceMode};
     if decoded.logical.color.kind == DwgEntityColorKind::TrueColor && decoded.logical.color.rgb == 0 {
         decoded.logical.color.color_handle = read_object_handle(handles, base)?;
     }
@@ -8059,18 +8059,18 @@ fn validate_entity_terminal_fill(reader: &mut DwgBitReader<'_>, end_bit: usize, 
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn read_r2010_cmc_main(data: &mut DwgBitReader<'_>) -> Result<(crate::artifacts::dwg::schema::snapshot::DwgComplexColor, u8), String> {
+fn read_r2010_cmc_main(data: &mut DwgBitReader<'_>) -> Result<(crate::schema::snapshot::DwgComplexColor, u8), String> {
     let index = data.read_bs()?;
     let value = decode_complex_color_value(data.read_bl()?)?;
     let flags = data.read_rc()?;
     if flags > 3 {
         return Err(format!("CMC flags {flags:#x} are invalid"));
     }
-    Ok((crate::artifacts::dwg::schema::snapshot::DwgComplexColor { index, value, name: None, book_name: None }, flags))
+    Ok((crate::schema::snapshot::DwgComplexColor { index, value, name: None, book_name: None }, flags))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn read_table_style_color(data: &mut DwgBitReader<'_>, handle: u64) -> Result<crate::artifacts::dwg::schema::snapshot::DwgComplexColor, String> {
+fn read_table_style_color(data: &mut DwgBitReader<'_>, handle: u64) -> Result<crate::schema::snapshot::DwgComplexColor, String> {
     let (color, flags) = read_r2010_cmc_main(data)?;
     if flags != 0 {
         return Err(format!("TABLESTYLE {handle:#x} named colors are unsupported"));
@@ -8079,17 +8079,17 @@ fn read_table_style_color(data: &mut DwgBitReader<'_>, handle: u64) -> Result<cr
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn read_material_color(data: &mut DwgBitReader<'_>, handle: u64) -> Result<crate::artifacts::dwg::schema::snapshot::DwgMaterialColor, String> {
+fn read_material_color(data: &mut DwgBitReader<'_>, handle: u64) -> Result<crate::schema::snapshot::DwgMaterialColor, String> {
     let source = data.read_rc()?;
     if source > 1 {
         return Err(format!("MATERIAL {handle:#x} color source {source} is unsupported"));
     }
-    Ok(crate::artifacts::dwg::schema::snapshot::DwgMaterialColor { factor: data.read_bd()?, override_rgb: if source == 1 { Some(data.read_bl()?) } else { None } })
+    Ok(crate::schema::snapshot::DwgMaterialColor { factor: data.read_bd()?, override_rgb: if source == 1 { Some(data.read_bl()?) } else { None } })
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn read_material_map(data: &mut DwgBitReader<'_>, strings: &mut DwgBitReader<'_>, handle: u64) -> Result<crate::artifacts::dwg::schema::snapshot::DwgMaterialMap, String> {
-    use crate::artifacts::dwg::schema::snapshot::{DwgMaterialMap, DwgMaterialMapSource, DwgMaterialProjection, DwgMaterialTiling};
+fn read_material_map(data: &mut DwgBitReader<'_>, strings: &mut DwgBitReader<'_>, handle: u64) -> Result<crate::schema::snapshot::DwgMaterialMap, String> {
+    use crate::schema::snapshot::{DwgMaterialMap, DwgMaterialMapSource, DwgMaterialProjection, DwgMaterialTiling};
     let blend_factor = data.read_bd()?;
     let projection = match data.read_rc()? {
         0 => DwgMaterialProjection::Inherit,
@@ -8128,8 +8128,8 @@ fn read_material_map(data: &mut DwgBitReader<'_>, strings: &mut DwgBitReader<'_>
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn decode_r2010_cell_style(data: &mut DwgBitReader<'_>, strings: &mut DwgBitReader<'_>, handles: &mut DwgBitReader<'_>, base: u64) -> Result<crate::artifacts::dwg::schema::snapshot::DwgCellStyle, String> {
-    use crate::artifacts::dwg::schema::snapshot::{DwgCellBorder, DwgCellBorders, DwgCellContentFormat, DwgCellMargins, DwgCellStyle};
+fn decode_r2010_cell_style(data: &mut DwgBitReader<'_>, strings: &mut DwgBitReader<'_>, handles: &mut DwgBitReader<'_>, base: u64) -> Result<crate::schema::snapshot::DwgCellStyle, String> {
+    use crate::schema::snapshot::{DwgCellBorder, DwgCellBorders, DwgCellContentFormat, DwgCellMargins, DwgCellStyle};
     if data.read_bl()? != 5 || data.read_bs()? != 1 {
         return Err(format!("TABLESTYLE {base:#x} cell type or data flag is unsupported"));
     }
@@ -8205,8 +8205,8 @@ fn decode_r2010_cell_style(data: &mut DwgBitReader<'_>, strings: &mut DwgBitRead
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn decode_complex_color_value(word: u32) -> Result<crate::artifacts::dwg::schema::snapshot::DwgComplexColorValue, String> {
-    use crate::artifacts::dwg::schema::snapshot::DwgComplexColorValue;
+fn decode_complex_color_value(word: u32) -> Result<crate::schema::snapshot::DwgComplexColorValue, String> {
+    use crate::schema::snapshot::DwgComplexColorValue;
     let value = word & 0x00ff_ffff;
     match word >> 24 {
         0xc0 => Ok(DwgComplexColorValue::ByLayer),
@@ -8223,8 +8223,8 @@ fn decode_complex_color_value(word: u32) -> Result<crate::artifacts::dwg::schema
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn encode_complex_color_value(value: &crate::artifacts::dwg::schema::snapshot::DwgComplexColorValue) -> u32 {
-    use crate::artifacts::dwg::schema::snapshot::DwgComplexColorValue;
+fn encode_complex_color_value(value: &crate::schema::snapshot::DwgComplexColorValue) -> u32 {
+    use crate::schema::snapshot::DwgComplexColorValue;
     match value {
         DwgComplexColorValue::ByLayer => 0xc000_0000,
         DwgComplexColorValue::ByBlock => 0xc100_0000,
@@ -8239,7 +8239,7 @@ fn encode_complex_color_value(value: &crate::artifacts::dwg::schema::snapshot::D
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn decode_r2004_object_records(bytes: &[u8], classes: &[crate::artifacts::dwg::DwgClass]) -> Result<DwgObjectRecords, String> {
+fn decode_r2004_object_records(bytes: &[u8], classes: &[crate::DwgClass]) -> Result<DwgObjectRecords, String> {
     let sections = decode_r2004_sections(bytes)?;
     let handles_section = sections.iter().find(|section| section.name == "AcDb:Handles").ok_or("R2004 Handles section missing")?;
     let objects_section = sections.iter().find(|section| section.name == "AcDb:AcDbObjects").ok_or("R2004 AcDbObjects section missing")?;
@@ -8274,8 +8274,8 @@ fn decode_r2004_object_records(bytes: &[u8], classes: &[crate::artifacts::dwg::D
         let class_name = if fixed == "UNKNOWN" { classes.iter().find(|class| class.number == type_code).map_or_else(|| format!("CLASS_{type_code}"), |class| class.dxf_name.clone()) } else { fixed.to_string() };
         let category = object_category(type_code);
         let extended_data = decode_r2010_eed(&mut data, handle).map_err(|error| format!("object {handle:#x} EED: {error}"))?;
-        let mut object = crate::artifacts::dwg::schema::snapshot::DwgLogicalObject { handle, type_code, class_name, category, extended_data, ..Default::default() };
-        if category == crate::artifacts::dwg::schema::snapshot::DwgObjectCategory::Entity {
+        let mut object = crate::schema::snapshot::DwgLogicalObject { handle, type_code, class_name, category, extended_data, ..Default::default() };
+        if category == crate::schema::snapshot::DwgObjectCategory::Entity {
             if type_code == DWG_TYPE_BLOCK || type_code == DWG_TYPE_ENDBLK {
                 let (mut strings, class_main_end) = r2010_string_stream(payload, data_end_bit).map_err(|error| format!("{} {handle:#x} string stream: {error}", if type_code == DWG_TYPE_BLOCK { "BLOCK" } else { "ENDBLK" }))?;
                 let mut common = decode_r2010_entity_common_main(&mut data).map_err(|error| format!("{} {handle:#x} common data: {error}", if type_code == DWG_TYPE_BLOCK { "BLOCK" } else { "ENDBLK" }))?;
@@ -8298,10 +8298,10 @@ fn decode_r2004_object_records(bytes: &[u8], classes: &[crate::artifacts::dwg::D
                 object.owner_handle = owner;
                 object.reactor_handles = reactors;
                 object.extension_dictionary_handle = extension_dictionary;
-                object.body = Some(crate::artifacts::dwg::schema::snapshot::DwgLogicalObjectBody::Entity(if type_code == DWG_TYPE_BLOCK {
-                    crate::artifacts::dwg::schema::snapshot::DwgEntityBody::BlockBegin(crate::artifacts::dwg::schema::snapshot::DwgBlockBeginEntity { common: common.logical })
+                object.body = Some(crate::schema::snapshot::DwgLogicalObjectBody::Entity(if type_code == DWG_TYPE_BLOCK {
+                    crate::schema::snapshot::DwgEntityBody::BlockBegin(crate::schema::snapshot::DwgBlockBeginEntity { common: common.logical })
                 } else {
-                    crate::artifacts::dwg::schema::snapshot::DwgEntityBody::BlockEnd(crate::artifacts::dwg::schema::snapshot::DwgBlockEndEntity { common: common.logical })
+                    crate::schema::snapshot::DwgEntityBody::BlockEnd(crate::schema::snapshot::DwgBlockEndEntity { common: common.logical })
                 }));
             } else if type_code == DWG_TYPE_INSERT {
                 let mut common = decode_r2010_entity_common_main(&mut data).map_err(|error| format!("INSERT {handle:#x} common data: {error}"))?;
@@ -8340,7 +8340,7 @@ fn decode_r2004_object_records(bytes: &[u8], classes: &[crate::artifacts::dwg::D
                 object.owner_handle = owner;
                 object.reactor_handles = reactors;
                 object.extension_dictionary_handle = extension_dictionary;
-                object.body = Some(crate::artifacts::dwg::schema::snapshot::DwgLogicalObjectBody::Entity(crate::artifacts::dwg::schema::snapshot::DwgEntityBody::Insert(crate::artifacts::dwg::schema::snapshot::DwgInsertEntity {
+                object.body = Some(crate::schema::snapshot::DwgLogicalObjectBody::Entity(crate::schema::snapshot::DwgEntityBody::Insert(crate::schema::snapshot::DwgInsertEntity {
                     common: common.logical,
                     insertion: insertion.to_vec(),
                     scale: scale.to_vec(),
@@ -8401,13 +8401,13 @@ fn decode_r2004_object_records(bytes: &[u8], classes: &[crate::artifacts::dwg::D
                 object.owner_handle = owner;
                 object.reactor_handles = reactors;
                 object.extension_dictionary_handle = extension_dictionary;
-                object.body = Some(crate::artifacts::dwg::schema::snapshot::DwgLogicalObjectBody::Entity(crate::artifacts::dwg::schema::snapshot::DwgEntityBody::DimensionLinear(crate::artifacts::dwg::schema::snapshot::DwgLinearDimensionEntity {
-                    dimension: crate::artifacts::dwg::schema::snapshot::DwgDimensionEntityCommon {
+                object.body = Some(crate::schema::snapshot::DwgLogicalObjectBody::Entity(crate::schema::snapshot::DwgEntityBody::DimensionLinear(crate::schema::snapshot::DwgLinearDimensionEntity {
+                    dimension: crate::schema::snapshot::DwgDimensionEntityCommon {
                         common: common.logical,
                         extrusion: extrusion.to_vec(),
                         text_midpoint: text_midpoint.to_vec(),
                         elevation,
-                        status: crate::artifacts::dwg::schema::snapshot::DwgDimensionStatus { block_reference_is_exclusive, user_positioned_text },
+                        status: crate::schema::snapshot::DwgDimensionStatus { block_reference_is_exclusive, user_positioned_text },
                         user_text,
                         text_rotation,
                         horizontal_direction,
@@ -8430,7 +8430,7 @@ fn decode_r2004_object_records(bytes: &[u8], classes: &[crate::artifacts::dwg::D
                     dimension_rotation,
                 })));
             } else if type_code == DWG_TYPE_VIEWPORT {
-                use crate::artifacts::dwg::schema::snapshot::{DwgComplexColor, DwgDefaultLightingType, DwgEntityBody, DwgLogicalObjectBody, DwgOrthographicView, DwgShadePlotMode, DwgViewportEntity, DwgViewportRenderMode};
+                use crate::schema::snapshot::{DwgComplexColor, DwgDefaultLightingType, DwgEntityBody, DwgLogicalObjectBody, DwgOrthographicView, DwgShadePlotMode, DwgViewportEntity, DwgViewportRenderMode};
                 let (mut strings, class_main_end) = r2010_string_stream(payload, data_end_bit).map_err(|error| format!("VIEWPORT {handle:#x} string stream: {error}"))?;
                 let mut common = decode_r2010_entity_common_main(&mut data).map_err(|error| format!("VIEWPORT {handle:#x} common data: {error}"))?;
                 let center = data.read_3bd()?;
@@ -8603,7 +8603,7 @@ fn decode_r2004_object_records(bytes: &[u8], classes: &[crate::artifacts::dwg::D
                 object.owner_handle = owner;
                 object.reactor_handles = reactors;
                 object.extension_dictionary_handle = extension_dictionary;
-                object.body = Some(crate::artifacts::dwg::schema::snapshot::DwgLogicalObjectBody::Entity(crate::artifacts::dwg::schema::snapshot::DwgEntityBody::Line(crate::artifacts::dwg::schema::snapshot::DwgLineEntity {
+                object.body = Some(crate::schema::snapshot::DwgLogicalObjectBody::Entity(crate::schema::snapshot::DwgEntityBody::Line(crate::schema::snapshot::DwgLineEntity {
                     common: common.logical,
                     start: vec![start_x, start_y, start_z],
                     end: vec![end_x, end_y, end_z],
@@ -8626,7 +8626,7 @@ fn decode_r2004_object_records(bytes: &[u8], classes: &[crate::artifacts::dwg::D
                 object.owner_handle = owner;
                 object.reactor_handles = reactors;
                 object.extension_dictionary_handle = extension_dictionary;
-                object.body = Some(crate::artifacts::dwg::schema::snapshot::DwgLogicalObjectBody::Entity(crate::artifacts::dwg::schema::snapshot::DwgEntityBody::Arc(crate::artifacts::dwg::schema::snapshot::DwgArcEntity {
+                object.body = Some(crate::schema::snapshot::DwgLogicalObjectBody::Entity(crate::schema::snapshot::DwgEntityBody::Arc(crate::schema::snapshot::DwgArcEntity {
                     common: common.logical,
                     center: center.to_vec(),
                     radius,
@@ -8671,7 +8671,7 @@ fn decode_r2004_object_records(bytes: &[u8], classes: &[crate::artifacts::dwg::D
                 let vertices = points
                     .into_iter()
                     .enumerate()
-                    .map(|(index, point)| crate::artifacts::dwg::schema::snapshot::DwgLwPolylineVertex {
+                    .map(|(index, point)| crate::schema::snapshot::DwgLwPolylineVertex {
                         point: point.to_vec(),
                         bulge: bulges.get(index).copied().unwrap_or_default(),
                         vertex_id: vertex_ids.get(index).copied(),
@@ -8682,7 +8682,7 @@ fn decode_r2004_object_records(bytes: &[u8], classes: &[crate::artifacts::dwg::D
                 object.owner_handle = owner;
                 object.reactor_handles = reactors;
                 object.extension_dictionary_handle = extension_dictionary;
-                object.body = Some(crate::artifacts::dwg::schema::snapshot::DwgLogicalObjectBody::Entity(crate::artifacts::dwg::schema::snapshot::DwgEntityBody::LwPolyline(crate::artifacts::dwg::schema::snapshot::DwgLwPolylineEntity {
+                object.body = Some(crate::schema::snapshot::DwgLogicalObjectBody::Entity(crate::schema::snapshot::DwgEntityBody::LwPolyline(crate::schema::snapshot::DwgLwPolylineEntity {
                     common: common.logical,
                     closed: flags & 512 != 0,
                     constant_width,
@@ -8772,7 +8772,7 @@ fn decode_r2004_object_records(bytes: &[u8], classes: &[crate::artifacts::dwg::D
         let mut strings = string_stream.map(|(reader, _)| reader);
 
         if type_code == 82 || object.class_name == "LAYOUT" {
-            use crate::artifacts::dwg::schema::snapshot::{
+            use crate::schema::snapshot::{
                 DwgLayout, DwgLayoutOptions, DwgLogicalObjectBody, DwgOrthographicView, DwgPlotArea, DwgPlotOptions, DwgPlotPaperUnit, DwgPlotRotation, DwgShadePlot, DwgShadePlotResolution, DwgStandardScale,
             };
             let strings = strings.as_mut().ok_or_else(|| format!("LAYOUT {handle:#x} string stream missing"))?;
@@ -8912,7 +8912,7 @@ fn decode_r2004_object_records(bytes: &[u8], classes: &[crate::artifacts::dwg::D
                 viewport_handles,
             }));
         } else if type_code == 527 || object.class_name == "BLOCKLINEARPARAMETER" {
-            use crate::artifacts::dwg::schema::snapshot::{
+            use crate::schema::snapshot::{
                 DwgBlockLinearParameter, DwgBlockParameterBaseLocation, DwgBlockParameterConnection, DwgBlockParameterProperty, DwgBlockTwoPointParameter, DwgLogicalObjectBody, DwgPropertyExpressionReference,
             };
             let strings = strings.as_mut().ok_or_else(|| format!("BLOCKLINEARPARAMETER {handle:#x} string stream missing"))?;
@@ -8966,7 +8966,7 @@ fn decode_r2004_object_records(bytes: &[u8], classes: &[crate::artifacts::dwg::D
                 allowed_values,
             }));
         } else if matches!(type_code, 528 | 530 | 532) || matches!(object.class_name.as_str(), "BLOCKLINEARGRIP" | "BLOCKFLIPGRIP" | "BLOCKVISIBILITYGRIP") {
-            use crate::artifacts::dwg::schema::snapshot::{DwgBlockFlipGrip, DwgBlockLinearGrip, DwgBlockVisibilityGrip, DwgLogicalObjectBody, DwgNamedEvaluationNodeReference};
+            use crate::schema::snapshot::{DwgBlockFlipGrip, DwgBlockLinearGrip, DwgBlockVisibilityGrip, DwgLogicalObjectBody, DwgNamedEvaluationNodeReference};
             let strings = strings.as_mut().ok_or_else(|| format!("{} {handle:#x} string stream missing", object.class_name))?;
             object.body = Some(match type_code {
                 528 => {
@@ -8997,7 +8997,7 @@ fn decode_r2004_object_records(bytes: &[u8], classes: &[crate::artifacts::dwg::D
             }
             validate_entity_terminal_fill(&mut handle_reader, payload_size * 8, handle, &object.class_name)?;
         } else if matches!(type_code, 533..=537) || matches!(object.class_name.as_str(), "BLOCKALIGNMENTPARAMETER" | "BLOCKALIGNMENTGRIP" | "BLOCKSTRETCHACTION" | "BLOCKSCALEACTION" | "BLOCKFLIPACTION") {
-            use crate::artifacts::dwg::schema::snapshot::{
+            use crate::schema::snapshot::{
                 DwgBlockActionConnection, DwgBlockActionCoordinateMode, DwgBlockActionWithBasePoint, DwgBlockAlignmentGrip, DwgBlockAlignmentParameter, DwgBlockFlipAction, DwgBlockScaleAction, DwgBlockScaleMode, DwgBlockStretchAction,
                 DwgLogicalObjectBody, DwgStretchSelection, DwgStretchSelector,
             };
@@ -9114,7 +9114,7 @@ fn decode_r2004_object_records(bytes: &[u8], classes: &[crate::artifacts::dwg::D
             }
             validate_entity_terminal_fill(&mut handle_reader, payload_size * 8, handle, &object.class_name)?;
         } else if matches!(type_code, 538 | 546 | 548) || matches!(object.class_name.as_str(), "BLOCKBASEPOINTPARAMETER" | "BLOCKVERTICALCONSTRAINTPARAMETER" | "BLOCKHORIZONTALCONSTRAINTPARAMETER") {
-            use crate::artifacts::dwg::schema::snapshot::{
+            use crate::schema::snapshot::{
                 DwgBlockBasePointParameter, DwgBlockLinearConstraintParameter, DwgBlockOnePointParameter, DwgBlockParameterAllowedValues, DwgBlockParameterConnection, DwgBlockParameterProperty, DwgLogicalObjectBody,
             };
             let strings = strings.as_mut().ok_or_else(|| format!("{} {handle:#x} string stream missing", object.class_name))?;
@@ -9168,7 +9168,7 @@ fn decode_r2004_object_records(bytes: &[u8], classes: &[crate::artifacts::dwg::D
             }
             validate_entity_terminal_fill(&mut handle_reader, payload_size * 8, handle, &object.class_name)?;
         } else if type_code == 539 || object.class_name == "ACDBASSOCNETWORK" {
-            use crate::artifacts::dwg::schema::snapshot::{DwgAssocNetwork, DwgAssocNetworkMember, DwgAssocNetworkMemberKind, DwgAssociativeAction, DwgAssociativeActionDependency, DwgAssociativeActionStatus, DwgLogicalObjectBody};
+            use crate::schema::snapshot::{DwgAssocNetwork, DwgAssocNetworkMember, DwgAssocNetworkMemberKind, DwgAssociativeAction, DwgAssociativeActionDependency, DwgAssociativeActionStatus, DwgLogicalObjectBody};
             let action_version = data.read_bs()?;
             let action_status = data.read_bl()?;
             if action_version != 1 || action_status != 0 {
@@ -9207,7 +9207,7 @@ fn decode_r2004_object_records(bytes: &[u8], classes: &[crate::artifacts::dwg::D
                 actions,
             }));
         } else if type_code == 540 || object.class_name == "ACDBASSOC2DCONSTRAINTGROUP" {
-            use crate::artifacts::dwg::schema::snapshot::{DwgAssoc2dConstraintGroup, DwgAssociativeAction, DwgAssociativeActionDependency, DwgAssociativeActionStatus, DwgLogicalObjectBody};
+            use crate::schema::snapshot::{DwgAssoc2dConstraintGroup, DwgAssociativeAction, DwgAssociativeActionDependency, DwgAssociativeActionStatus, DwgLogicalObjectBody};
             let strings = strings.as_mut().ok_or_else(|| format!("ACDBASSOC2DCONSTRAINTGROUP {handle:#x} class stream missing"))?;
             let action_version = data.read_bs()?;
             let action_status = data.read_bl()?;
@@ -9265,7 +9265,7 @@ fn decode_r2004_object_records(bytes: &[u8], classes: &[crate::artifacts::dwg::D
                 nodes,
             }));
         } else if type_code == 505 || object.class_name == "MATERIAL" {
-            use crate::artifacts::dwg::schema::snapshot::{DwgLogicalObjectBody, DwgMaterial, DwgMaterialChannels};
+            use crate::schema::snapshot::{DwgLogicalObjectBody, DwgMaterial, DwgMaterialChannels};
             let strings = strings.as_mut().ok_or_else(|| format!("MATERIAL {handle:#x} string stream missing"))?;
             let name = strings.read_tu()?;
             let description = strings.read_tu()?;
@@ -9316,7 +9316,7 @@ fn decode_r2004_object_records(bytes: &[u8], classes: &[crate::artifacts::dwg::D
                 enabled_channels: DwgMaterialChannels { diffuse: channels & 1 != 0, specular: channels & 2 != 0, reflection: channels & 4 != 0, opacity: channels & 8 != 0, bump: channels & 16 != 0, refraction: channels & 32 != 0 },
             }));
         } else if type_code == 521 || object.class_name == "BLOCKMOVEACTION" {
-            use crate::artifacts::dwg::schema::snapshot::{
+            use crate::schema::snapshot::{
                 DwgBlockAction, DwgBlockActionConnection, DwgBlockActionDependency, DwgBlockMoveAction, DwgBlockMoveCoordinateMode, DwgEvaluationExpression, DwgEvaluationExpressionValue, DwgLogicalObjectBody,
             };
             let parent_id = data.read_bl()? as i32;
@@ -9368,7 +9368,7 @@ fn decode_r2004_object_records(bytes: &[u8], classes: &[crate::artifacts::dwg::D
                 coordinate_mode,
             }));
         } else if type_code == 73 || object.class_name == "MLINESTYLE" {
-            use crate::artifacts::dwg::schema::snapshot::{DwgLogicalObjectBody, DwgMlineCaps, DwgMlineLinetype, DwgMlineStyle, DwgMlineStyleElement};
+            use crate::schema::snapshot::{DwgLogicalObjectBody, DwgMlineCaps, DwgMlineLinetype, DwgMlineStyle, DwgMlineStyleElement};
             let flags = data.read_bs()?;
             if flags & !0x0773 != 0 {
                 return Err(format!("MLINESTYLE {handle:#x} flags {flags:#x} contain unknown concepts"));
@@ -9415,7 +9415,7 @@ fn decode_r2004_object_records(bytes: &[u8], classes: &[crate::artifacts::dwg::D
                 elements,
             }));
         } else if type_code == 508 || object.class_name == "MLEADERSTYLE" {
-            use crate::artifacts::dwg::schema::snapshot::*;
+            use crate::schema::snapshot::*;
             if data.read_bs()? != 2 {
                 return Err(format!("MLEADERSTYLE {handle:#x} class version is unsupported"));
             }
@@ -9553,7 +9553,7 @@ fn decode_r2004_object_records(bytes: &[u8], classes: &[crate::artifacts::dwg::D
                 break_size,
             }));
         } else if type_code == 504 || object.class_name == "TABLESTYLE" {
-            use crate::artifacts::dwg::schema::snapshot::{DwgLogicalObjectBody, DwgTableStyle};
+            use crate::schema::snapshot::{DwgLogicalObjectBody, DwgTableStyle};
             if data.read_rc()? != 0 {
                 return Err(format!("TABLESTYLE {handle:#x} native discriminator is unsupported"));
             }
@@ -9589,7 +9589,7 @@ fn decode_r2004_object_records(bytes: &[u8], classes: &[crate::artifacts::dwg::D
             let mut overrides = overrides.into_iter();
             object.body = Some(DwgLogicalObjectBody::TableStyle(Box::new(DwgTableStyle { description, bit_flags, template_style_handle, table, title: overrides.next().unwrap(), header: overrides.next().unwrap(), data: overrides.next().unwrap() })));
         } else if type_code == 516 || object.class_name == "SORTENTSTABLE" {
-            use crate::artifacts::dwg::schema::snapshot::{DwgDrawOrderEntry, DwgLogicalObjectBody, DwgSortEntitiesTable};
+            use crate::schema::snapshot::{DwgDrawOrderEntry, DwgLogicalObjectBody, DwgSortEntitiesTable};
             let count = data.read_bl()? as usize;
             if count > 50_000 {
                 return Err(format!("SORTENTSTABLE {handle:#x} entry count {count} is invalid"));
@@ -9620,7 +9620,7 @@ fn decode_r2004_object_records(bytes: &[u8], classes: &[crate::artifacts::dwg::D
             validate_entity_terminal_fill(&mut handle_reader, payload_size * 8, handle, "SORTENTSTABLE")?;
             object.body = Some(DwgLogicalObjectBody::SortEntitiesTable(DwgSortEntitiesTable { block_header_handle, entries }));
         } else if type_code == 507 || object.class_name == "SCALE" {
-            use crate::artifacts::dwg::schema::snapshot::{DwgAnnotationScale, DwgLogicalObjectBody};
+            use crate::schema::snapshot::{DwgAnnotationScale, DwgLogicalObjectBody};
             if data.read_bs()? != 0 {
                 return Err(format!("SCALE {handle:#x} native format flag is unsupported"));
             }
@@ -9648,7 +9648,7 @@ fn decode_r2004_object_records(bytes: &[u8], classes: &[crate::artifacts::dwg::D
             validate_entity_terminal_fill(&mut handle_reader, payload_size * 8, handle, "SCALE")?;
             object.body = Some(DwgLogicalObjectBody::AnnotationScale(DwgAnnotationScale { name, paper_units, drawing_units, is_unit_scale }));
         } else if type_code == 80 || object.class_name == "ACDBPLACEHOLDER" {
-            use crate::artifacts::dwg::schema::snapshot::{DwgLogicalObjectBody, DwgPlaceholder};
+            use crate::schema::snapshot::{DwgLogicalObjectBody, DwgPlaceholder};
             if data.bit_position() != main_end_bit
                 || main_end_bit + 1 != data_end_bit
                 || object.owner_handle.is_none()
@@ -9661,7 +9661,7 @@ fn decode_r2004_object_records(bytes: &[u8], classes: &[crate::artifacts::dwg::D
             validate_entity_terminal_fill(&mut handle_reader, payload_size * 8, handle, "ACDBPLACEHOLDER")?;
             object.body = Some(DwgLogicalObjectBody::Placeholder(DwgPlaceholder {}));
         } else if type_code == 503 || object.class_name == "DICTIONARYVAR" {
-            use crate::artifacts::dwg::schema::snapshot::{DwgDictionaryVariable, DwgLogicalObjectBody};
+            use crate::schema::snapshot::{DwgDictionaryVariable, DwgLogicalObjectBody};
             if data.read_rc()? != 0 || data.bit_position() != main_end_bit {
                 return Err(format!("DICTIONARYVAR {handle:#x} schema revision or main boundary is invalid"));
             }
@@ -9676,7 +9676,7 @@ fn decode_r2004_object_records(bytes: &[u8], classes: &[crate::artifacts::dwg::D
             validate_entity_terminal_fill(&mut handle_reader, payload_size * 8, handle, "DICTIONARYVAR")?;
             object.body = Some(DwgLogicalObjectBody::DictionaryVariable(DwgDictionaryVariable { value }));
         } else if type_code == 531 || object.class_name == "BLOCKVISIBILITYPARAMETER" {
-            use crate::artifacts::dwg::schema::snapshot::{
+            use crate::schema::snapshot::{
                 DwgBlockParameterConnection, DwgBlockParameterProperty, DwgBlockVisibilityParameter, DwgEvaluationExpression, DwgEvaluationExpressionValue, DwgLogicalObjectBody, DwgVisibilityEvaluationHistory, DwgVisibilityState,
             };
             let parent_id = data.read_bl()? as i32;
@@ -9765,7 +9765,7 @@ fn decode_r2004_object_records(bytes: &[u8], classes: &[crate::artifacts::dwg::D
                 states,
             }));
         } else if type_code == 529 || object.class_name == "BLOCKFLIPPARAMETER" {
-            use crate::artifacts::dwg::schema::snapshot::{
+            use crate::schema::snapshot::{
                 DwgBlockFlipParameter, DwgBlockFlipValueSet, DwgBlockParameterBaseLocation, DwgBlockParameterConnection, DwgBlockParameterProperty, DwgEvaluationExpression, DwgEvaluationExpressionValue, DwgLogicalObjectBody,
                 DwgNamedEvaluationNodeReference,
             };
@@ -9849,7 +9849,7 @@ fn decode_r2004_object_records(bytes: &[u8], classes: &[crate::artifacts::dwg::D
                 updated_flip: DwgNamedEvaluationNodeReference { node_id: updated_node_id, expression_name },
             }));
         } else if type_code == 517 || object.class_name == "ACAD_EVALUATION_GRAPH" {
-            use crate::artifacts::dwg::schema::snapshot::{DwgEvaluationGraph, DwgEvaluationGraphEdge, DwgEvaluationGraphNode, DwgLogicalObjectBody};
+            use crate::schema::snapshot::{DwgEvaluationGraph, DwgEvaluationGraphEdge, DwgEvaluationGraphNode, DwgLogicalObjectBody};
             let watermark = data.read_bl()?;
             let watermark_copy = data.read_bl()?;
             if watermark != watermark_copy {
@@ -9920,7 +9920,7 @@ fn decode_r2004_object_records(bytes: &[u8], classes: &[crate::artifacts::dwg::D
             }
             let protected_block_header_handle = read_object_handle(&mut handle_reader, handle)?.ok_or_else(|| format!("ACDB_DYNAMICBLOCKPURGEPREVENTER_VERSION {handle:#x} protected block header is null"))?;
             validate_entity_terminal_fill(&mut handle_reader, payload_size * 8, handle, "ACDB_DYNAMICBLOCKPURGEPREVENTER_VERSION")?;
-            object.body = Some(crate::artifacts::dwg::schema::snapshot::DwgLogicalObjectBody::DynamicBlockPurgePreventer(crate::artifacts::dwg::schema::snapshot::DwgDynamicBlockPurgePreventer { protected_block_header_handle }));
+            object.body = Some(crate::schema::snapshot::DwgLogicalObjectBody::DynamicBlockPurgePreventer(crate::schema::snapshot::DwgDynamicBlockPurgePreventer { protected_block_header_handle }));
         } else if type_code == 559 || object.class_name == "ACDB_BLOCKREPRESENTATION_DATA" {
             let marker = data.read_bs()?;
             if marker != 1 {
@@ -9934,9 +9934,9 @@ fn decode_r2004_object_records(bytes: &[u8], classes: &[crate::artifacts::dwg::D
             }
             let represented_block_header_handle = read_object_handle(&mut handle_reader, handle)?.ok_or_else(|| format!("ACDB_BLOCKREPRESENTATION_DATA {handle:#x} represented block header is null"))?;
             validate_entity_terminal_fill(&mut handle_reader, payload_size * 8, handle, "ACDB_BLOCKREPRESENTATION_DATA")?;
-            object.body = Some(crate::artifacts::dwg::schema::snapshot::DwgLogicalObjectBody::BlockRepresentationData(crate::artifacts::dwg::schema::snapshot::DwgBlockRepresentationData { represented_block_header_handle }));
+            object.body = Some(crate::schema::snapshot::DwgLogicalObjectBody::BlockRepresentationData(crate::schema::snapshot::DwgBlockRepresentationData { represented_block_header_handle }));
         } else if type_code == 506 || object.class_name == "VISUALSTYLE" {
-            use crate::artifacts::dwg::schema::snapshot::{DwgLogicalObjectBody, DwgVisualStyle, DwgVisualStyleProperties, DwgVisualStyleProperty};
+            use crate::schema::snapshot::{DwgLogicalObjectBody, DwgVisualStyle, DwgVisualStyleProperties, DwgVisualStyleProperty};
             let style_type = data.read_bl()?;
             let extension_lighting_model = data.read_bs()?;
             let internal_only = data.read_b()?;
@@ -10024,7 +10024,7 @@ fn decode_r2004_object_records(bytes: &[u8], classes: &[crate::artifacts::dwg::D
                 display_brightness,
                 display_shadow_type,
             };
-            let mut read_color_strings = |color: &mut crate::artifacts::dwg::schema::snapshot::DwgComplexColor, flags: u8| -> Result<(), String> {
+            let mut read_color_strings = |color: &mut crate::schema::snapshot::DwgComplexColor, flags: u8| -> Result<(), String> {
                 if flags & 1 != 0 {
                     color.name = Some(strings.read_tu()?);
                 }
@@ -10061,7 +10061,7 @@ fn decode_r2004_object_records(bytes: &[u8], classes: &[crate::artifacts::dwg::D
                 return Err(format!("BLOCKPARAMDEPENDENCYBODY {handle:#x} string stream is not exactly consumed"));
             }
             validate_entity_terminal_fill(&mut handle_reader, payload_size * 8, handle, "BLOCKPARAMDEPENDENCYBODY")?;
-            object.body = Some(crate::artifacts::dwg::schema::snapshot::DwgLogicalObjectBody::BlockParameterDependencyBody(crate::artifacts::dwg::schema::snapshot::DwgBlockParameterDependencyBody { name }));
+            object.body = Some(crate::schema::snapshot::DwgLogicalObjectBody::BlockParameterDependencyBody(crate::schema::snapshot::DwgBlockParameterDependencyBody { name }));
         } else if type_code == 549 || object.class_name == "ASSOCDIMDEPENDENCYBODY" {
             let dependency_version = data.read_bs()?;
             let dimension_base_version = data.read_bs()?;
@@ -10079,9 +10079,9 @@ fn decode_r2004_object_records(bytes: &[u8], classes: &[crate::artifacts::dwg::D
                 return Err(format!("ASSOCDIMDEPENDENCYBODY {handle:#x} string stream is not exactly consumed"));
             }
             validate_entity_terminal_fill(&mut handle_reader, payload_size * 8, handle, "ASSOCDIMDEPENDENCYBODY")?;
-            object.body = Some(crate::artifacts::dwg::schema::snapshot::DwgLogicalObjectBody::AssociativeDimensionDependencyBody(crate::artifacts::dwg::schema::snapshot::DwgAssociativeDimensionDependencyBody { name }));
+            object.body = Some(crate::schema::snapshot::DwgLogicalObjectBody::AssociativeDimensionDependencyBody(crate::schema::snapshot::DwgAssociativeDimensionDependencyBody { name }));
         } else if type_code == 545 || object.class_name == "ACDBASSOCVARIABLE" {
-            use crate::artifacts::dwg::schema::snapshot::{DwgAssociativeAction, DwgAssociativeActionDependency, DwgAssociativeActionStatus, DwgAssociativeVariable, DwgEvaluationVariant, DwgLogicalObjectBody};
+            use crate::schema::snapshot::{DwgAssociativeAction, DwgAssociativeActionDependency, DwgAssociativeActionStatus, DwgAssociativeVariable, DwgEvaluationVariant, DwgLogicalObjectBody};
             let action_version = data.read_bs()?;
             let action_status = data.read_bl()?;
             if action_version != 1 || action_status != 0 {
@@ -10138,7 +10138,7 @@ fn decode_r2004_object_records(bytes: &[u8], classes: &[crate::artifacts::dwg::D
                 referenced_value_dependency_handles,
             }));
         } else if type_code == 547 || object.class_name == "ACDB_DYNAMICBLOCKPROXYNODE" {
-            use crate::artifacts::dwg::schema::snapshot::{DwgDynamicBlockProxyNode, DwgEvaluationExpression, DwgEvaluationExpressionValue, DwgLogicalObjectBody};
+            use crate::schema::snapshot::{DwgDynamicBlockProxyNode, DwgEvaluationExpression, DwgEvaluationExpressionValue, DwgLogicalObjectBody};
             let parent_id = data.read_bl()? as i32;
             let major_version = data.read_bl()?;
             let minor_version = data.read_bl()?;
@@ -10173,7 +10173,7 @@ fn decode_r2004_object_records(bytes: &[u8], classes: &[crate::artifacts::dwg::D
             validate_entity_terminal_fill(&mut handle_reader, payload_size * 8, handle, "ACDB_DYNAMICBLOCKPROXYNODE")?;
             object.body = Some(DwgLogicalObjectBody::DynamicBlockProxyNode(DwgDynamicBlockProxyNode { evaluation_expression: DwgEvaluationExpression { parent_id, major_version, minor_version, value, node_id } }));
         } else if type_code == 520 || object.class_name == "ACDB_BLOCKGRIPLOCATIONCOMPONENT" {
-            use crate::artifacts::dwg::schema::snapshot::{DwgBlockGripLocationComponent, DwgEvaluationExpression, DwgEvaluationExpressionValue, DwgLogicalObjectBody};
+            use crate::schema::snapshot::{DwgBlockGripLocationComponent, DwgEvaluationExpression, DwgEvaluationExpressionValue, DwgLogicalObjectBody};
             let parent_id = data.read_bl()? as i32;
             let major_version = data.read_bl()?;
             let minor_version = data.read_bl()?;
@@ -10242,9 +10242,9 @@ fn decode_r2004_object_records(bytes: &[u8], classes: &[crate::artifacts::dwg::D
             let dependency_node_handle = read_object_handle(&mut handle_reader, handle)?;
             let dependency_body_handle = read_object_handle(&mut handle_reader, handle)?;
             validate_entity_terminal_fill(&mut handle_reader, payload_size * 8, handle, "ACDBASSOCGEOMDEPENDENCY")?;
-            object.body = Some(crate::artifacts::dwg::schema::snapshot::DwgLogicalObjectBody::AssociativeGeometryDependency(crate::artifacts::dwg::schema::snapshot::DwgAssociativeGeometryDependency {
-                dependency: crate::artifacts::dwg::schema::snapshot::DwgAssociativeDependency {
-                    status: crate::artifacts::dwg::schema::snapshot::DwgAssociativeDependencyStatus::UpToDate,
+            object.body = Some(crate::schema::snapshot::DwgLogicalObjectBody::AssociativeGeometryDependency(crate::schema::snapshot::DwgAssociativeGeometryDependency {
+                dependency: crate::schema::snapshot::DwgAssociativeDependency {
+                    status: crate::schema::snapshot::DwgAssociativeDependencyStatus::UpToDate,
                     is_read_dependency,
                     is_write_dependency,
                     is_attached_to_object,
@@ -10279,7 +10279,7 @@ fn decode_r2004_object_records(bytes: &[u8], classes: &[crate::artifacts::dwg::D
             if value_dependency_version != 0 || cached_value_code != 90 {
                 return Err(format!("ACDBASSOCVALUEDEPENDENCY {handle:#x} has unsupported value version/code {value_dependency_version}/{cached_value_code}"));
             }
-            let cached_value = crate::artifacts::dwg::schema::snapshot::DwgEvaluationVariant::Integer32(data.read_bl()? as i32);
+            let cached_value = crate::schema::snapshot::DwgEvaluationVariant::Integer32(data.read_bl()? as i32);
             if data.bit_position() != main_end_bit {
                 return Err(format!("ACDBASSOCVALUEDEPENDENCY {handle:#x} main stream is not exactly consumed: {} != {main_end_bit}", data.bit_position()));
             }
@@ -10295,9 +10295,9 @@ fn decode_r2004_object_records(bytes: &[u8], classes: &[crate::artifacts::dwg::D
             let dependency_node_handle = read_object_handle(&mut handle_reader, handle)?;
             let dependency_body_handle = read_object_handle(&mut handle_reader, handle)?;
             validate_entity_terminal_fill(&mut handle_reader, payload_size * 8, handle, "ACDBASSOCVALUEDEPENDENCY")?;
-            object.body = Some(crate::artifacts::dwg::schema::snapshot::DwgLogicalObjectBody::AssociativeValueDependency(crate::artifacts::dwg::schema::snapshot::DwgAssociativeValueDependency {
-                dependency: crate::artifacts::dwg::schema::snapshot::DwgAssociativeDependency {
-                    status: crate::artifacts::dwg::schema::snapshot::DwgAssociativeDependencyStatus::UpToDate,
+            object.body = Some(crate::schema::snapshot::DwgLogicalObjectBody::AssociativeValueDependency(crate::schema::snapshot::DwgAssociativeValueDependency {
+                dependency: crate::schema::snapshot::DwgAssociativeDependency {
+                    status: crate::schema::snapshot::DwgAssociativeDependencyStatus::UpToDate,
                     is_read_dependency,
                     is_write_dependency,
                     is_attached_to_object,
@@ -10341,8 +10341,8 @@ fn decode_r2004_object_records(bytes: &[u8], classes: &[crate::artifacts::dwg::D
             let dependency_node_handle = read_object_handle(&mut handle_reader, handle)?;
             let dependency_body_handle = read_object_handle(&mut handle_reader, handle)?;
             validate_entity_terminal_fill(&mut handle_reader, payload_size * 8, handle, "ACDBASSOCDEPENDENCY")?;
-            object.body = Some(crate::artifacts::dwg::schema::snapshot::DwgLogicalObjectBody::AssociativeDependency(crate::artifacts::dwg::schema::snapshot::DwgAssociativeDependency {
-                status: crate::artifacts::dwg::schema::snapshot::DwgAssociativeDependencyStatus::UpToDate,
+            object.body = Some(crate::schema::snapshot::DwgLogicalObjectBody::AssociativeDependency(crate::schema::snapshot::DwgAssociativeDependency {
+                status: crate::schema::snapshot::DwgAssociativeDependencyStatus::UpToDate,
                 is_read_dependency,
                 is_write_dependency,
                 is_attached_to_object,
@@ -10363,12 +10363,12 @@ fn decode_r2004_object_records(bytes: &[u8], classes: &[crate::artifacts::dwg::D
             let mut entries = Vec::with_capacity(item_count);
             for name in names {
                 let reference = read_object_handle(&mut handle_reader, handle).map_err(|error| format!("dictionary {handle:#x} entry {name} handle: {error}"))?.ok_or_else(|| format!("dictionary {handle:#x} entry {name} has a null handle"))?;
-                entries.push(crate::artifacts::dwg::schema::snapshot::DwgNamedReference { name, handle: reference });
+                entries.push(crate::schema::snapshot::DwgNamedReference { name, handle: reference });
             }
             let default_entry_handle = if object.class_name == "ACDBDICTIONARYWDFLT" { read_object_handle(&mut handle_reader, handle).map_err(|error| format!("dictionary {handle:#x} default entry handle: {error}"))? } else { None };
-            object.body = Some(crate::artifacts::dwg::schema::snapshot::DwgLogicalObjectBody::Dictionary(crate::artifacts::dwg::schema::snapshot::DwgDictionaryBody { entries, cloning_flag, hard_owner, default_entry_handle }));
+            object.body = Some(crate::schema::snapshot::DwgLogicalObjectBody::Dictionary(crate::schema::snapshot::DwgDictionaryBody { entries, cloning_flag, hard_owner, default_entry_handle }));
         } else if matches!(type_code, 48 | 50 | 52 | 56 | 60 | 62 | 64 | 66 | 68 | 70) {
-            use crate::artifacts::dwg::schema::snapshot::{DwgBlockTableControl, DwgDimensionStyleTableControl, DwgLinetypeTableControl, DwgLogicalObjectBody, DwgTableControlBody, DwgTableControlEntries, DwgTableControlEntry};
+            use crate::schema::snapshot::{DwgBlockTableControl, DwgDimensionStyleTableControl, DwgLinetypeTableControl, DwgLogicalObjectBody, DwgTableControlBody, DwgTableControlEntries, DwgTableControlEntry};
             let entry_count = match type_code {
                 48 | 50 | 52 | 60 => data.read_bl().map(|value| value as usize),
                 _ => data.read_bs().map(|value| value as usize),
@@ -10451,7 +10451,7 @@ fn decode_r2004_object_records(bytes: &[u8], classes: &[crate::artifacts::dwg::D
                     return Err(format!("viewport table {handle:#x} ambient color flags {ambient_flags:#x} are invalid"));
                 }
                 Some((
-                    crate::artifacts::dwg::schema::snapshot::DwgViewportTableRecord {
+                    crate::schema::snapshot::DwgViewportTableRecord {
                         common: Default::default(),
                         view_height,
                         view_width,
@@ -10468,7 +10468,7 @@ fn decode_r2004_object_records(bytes: &[u8], classes: &[crate::artifacts::dwg::D
                         default_lighting_type,
                         brightness,
                         contrast,
-                        ambient_color: crate::artifacts::dwg::schema::snapshot::DwgComplexColor { index: ambient_index, value: decode_complex_color_value(ambient_rgb)?, name: None, book_name: None },
+                        ambient_color: crate::schema::snapshot::DwgComplexColor { index: ambient_index, value: decode_complex_color_value(ambient_rgb)?, name: None, book_name: None },
                         lower_left: data.read_2rd()?,
                         upper_right: data.read_2rd()?,
                         ucs_follow: data.read_b()?,
@@ -10504,7 +10504,7 @@ fn decode_r2004_object_records(bytes: &[u8], classes: &[crate::artifacts::dwg::D
                 None
             };
             let dimension_style = if type_code == 69 {
-                use crate::artifacts::dwg::schema::snapshot::{DwgDimensionBehavior, DwgDimensionGeometry, DwgDimensionR2010, DwgDimensionStyleTableRecord, DwgDimensionText, DwgDimensionUnits};
+                use crate::schema::snapshot::{DwgDimensionBehavior, DwgDimensionGeometry, DwgDimensionR2010, DwgDimensionStyleTableRecord, DwgDimensionText, DwgDimensionUnits};
                 let geometry = DwgDimensionGeometry {
                     scale: data.read_bd()?,
                     arrow_size: data.read_bd()?,
@@ -10683,12 +10683,12 @@ fn decode_r2004_object_records(bytes: &[u8], classes: &[crate::artifacts::dwg::D
             let strings = strings.as_mut().ok_or_else(|| format!("table record {handle:#x} string stream missing"))?;
             let name = strings.read_tu().map_err(|error| format!("table record {handle:#x} name: {error}"))?;
             let xref_handle = read_object_handle(&mut handle_reader, handle).map_err(|error| format!("table record {handle:#x} xref handle: {error}"))?;
-            let common = crate::artifacts::dwg::schema::snapshot::DwgTableRecordCommon { name, xref_resolution, xref_handle };
+            let common = crate::schema::snapshot::DwgTableRecordCommon { name, xref_resolution, xref_handle };
             let body = if let Some((mut value, color_flags)) = dimension_style {
                 value.common = common;
                 value.dimension_postfix = strings.read_tu()?;
                 value.alternate_postfix = strings.read_tu()?;
-                let mut read_color_strings = |color: &mut crate::artifacts::dwg::schema::snapshot::DwgComplexColor, flags: u8| -> Result<(), String> {
+                let mut read_color_strings = |color: &mut crate::schema::snapshot::DwgComplexColor, flags: u8| -> Result<(), String> {
                     if flags & 1 != 0 {
                         color.name = Some(strings.read_tu()?);
                     }
@@ -10711,7 +10711,7 @@ fn decode_r2004_object_records(bytes: &[u8], classes: &[crate::artifacts::dwg::D
                 value.dimension_linetype_handle = read_object_handle(&mut handle_reader, handle)?;
                 value.extension_1_linetype_handle = read_object_handle(&mut handle_reader, handle)?;
                 value.extension_2_linetype_handle = read_object_handle(&mut handle_reader, handle)?;
-                crate::artifacts::dwg::schema::snapshot::DwgTableRecordBody::DimensionStyle(value)
+                crate::schema::snapshot::DwgTableRecordBody::DimensionStyle(value)
             } else if let Some((mut value, ambient_flags)) = viewport {
                 value.common = common;
                 if ambient_flags & 1 != 0 {
@@ -10725,7 +10725,7 @@ fn decode_r2004_object_records(bytes: &[u8], classes: &[crate::artifacts::dwg::D
                 value.sun_handle = read_object_handle(&mut handle_reader, handle)?;
                 value.named_ucs_handle = read_object_handle(&mut handle_reader, handle)?;
                 value.base_ucs_handle = read_object_handle(&mut handle_reader, handle)?;
-                crate::artifacts::dwg::schema::snapshot::DwgTableRecordBody::Viewport(value)
+                crate::schema::snapshot::DwgTableRecordBody::Viewport(value)
             } else if let Some((anonymous, has_attributes, is_xref, xref_overlaid, xref_loaded, owned_count, base_point, insert_count, insert_units, explodable, block_scaling)) = block_header {
                 let xref_path = strings.read_tu().map_err(|error| format!("block header {handle:#x} xref path: {error}"))?;
                 let description = strings.read_tu().map_err(|error| format!("block header {handle:#x} description: {error}"))?;
@@ -10746,7 +10746,7 @@ fn decode_r2004_object_records(bytes: &[u8], classes: &[crate::artifacts::dwg::D
                     );
                 }
                 let layout_handle = read_object_handle(&mut handle_reader, handle).map_err(|error| format!("block header {handle:#x} layout: {error}"))?;
-                crate::artifacts::dwg::schema::snapshot::DwgTableRecordBody::BlockHeader(crate::artifacts::dwg::schema::snapshot::DwgBlockHeaderTableRecord {
+                crate::schema::snapshot::DwgTableRecordBody::BlockHeader(crate::schema::snapshot::DwgBlockHeaderTableRecord {
                     common,
                     anonymous,
                     has_attributes,
@@ -10770,16 +10770,16 @@ fn decode_r2004_object_records(bytes: &[u8], classes: &[crate::artifacts::dwg::D
                 let mut dashes = Vec::with_capacity(dash_values.len());
                 for (index, (length, complex_shape_code, x_offset, y_offset, scale, rotation, shape_flags)) in dash_values.into_iter().enumerate() {
                     let style_handle = read_object_handle(&mut handle_reader, handle).map_err(|error| format!("linetype {handle:#x} dash {index} style: {error}"))?;
-                    dashes.push(crate::artifacts::dwg::schema::snapshot::DwgLinetypeDash { length, complex_shape_code, style_handle, x_offset, y_offset, scale, rotation, shape_flags, text: None });
+                    dashes.push(crate::schema::snapshot::DwgLinetypeDash { length, complex_shape_code, style_handle, x_offset, y_offset, scale, rotation, shape_flags, text: None });
                 }
-                crate::artifacts::dwg::schema::snapshot::DwgTableRecordBody::Linetype(crate::artifacts::dwg::schema::snapshot::DwgLinetypeTableRecord { common, description, pattern_length, alignment, dashes })
+                crate::schema::snapshot::DwgTableRecordBody::Linetype(crate::schema::snapshot::DwgLinetypeTableRecord { common, description, pattern_length, alignment, dashes })
             } else if let Some((flag0, color_index, color_rgb, color_flags)) = layer {
                 let color_name = if color_flags & 1 != 0 { Some(strings.read_tu().map_err(|error| format!("layer {handle:#x} color name: {error}"))?) } else { None };
                 let color_book_name = if color_flags & 2 != 0 { Some(strings.read_tu().map_err(|error| format!("layer {handle:#x} color book name: {error}"))?) } else { None };
                 let plot_style_handle = read_object_handle(&mut handle_reader, handle).map_err(|error| format!("layer {handle:#x} plot-style handle: {error}"))?;
                 let material_handle = read_object_handle(&mut handle_reader, handle).map_err(|error| format!("layer {handle:#x} material handle: {error}"))?;
                 let linetype_handle = read_object_handle(&mut handle_reader, handle).map_err(|error| format!("layer {handle:#x} linetype handle: {error}"))?;
-                crate::artifacts::dwg::schema::snapshot::DwgTableRecordBody::Layer(crate::artifacts::dwg::schema::snapshot::DwgLayerTableRecord {
+                crate::schema::snapshot::DwgTableRecordBody::Layer(crate::schema::snapshot::DwgLayerTableRecord {
                     common,
                     frozen: flag0 & 1 != 0,
                     off: flag0 & 2 != 0,
@@ -10787,7 +10787,7 @@ fn decode_r2004_object_records(bytes: &[u8], classes: &[crate::artifacts::dwg::D
                     locked: flag0 & 8 != 0,
                     plottable: flag0 & 16 != 0,
                     lineweight: ((flag0 & 0x03e0) >> 5) as u8,
-                    color: crate::artifacts::dwg::schema::snapshot::DwgComplexColor { index: color_index, value: decode_complex_color_value(color_rgb)?, name: color_name, book_name: color_book_name },
+                    color: crate::schema::snapshot::DwgComplexColor { index: color_index, value: decode_complex_color_value(color_rgb)?, name: color_name, book_name: color_book_name },
                     plot_style_handle,
                     material_handle,
                     linetype_handle,
@@ -10795,7 +10795,7 @@ fn decode_r2004_object_records(bytes: &[u8], classes: &[crate::artifacts::dwg::D
             } else if let Some((is_shape, is_vertical, text_size, width_factor, oblique_angle, generation, last_height)) = text_style {
                 let font_file = strings.read_tu().map_err(|error| format!("text style {handle:#x} font file: {error}"))?;
                 let big_font_file = strings.read_tu().map_err(|error| format!("text style {handle:#x} big-font file: {error}"))?;
-                crate::artifacts::dwg::schema::snapshot::DwgTableRecordBody::TextStyle(crate::artifacts::dwg::schema::snapshot::DwgTextStyleTableRecord {
+                crate::schema::snapshot::DwgTableRecordBody::TextStyle(crate::schema::snapshot::DwgTextStyleTableRecord {
                     common,
                     is_shape,
                     is_vertical,
@@ -10808,9 +10808,9 @@ fn decode_r2004_object_records(bytes: &[u8], classes: &[crate::artifacts::dwg::D
                     big_font_file,
                 })
             } else {
-                crate::artifacts::dwg::schema::snapshot::DwgTableRecordBody::RegisteredApplication(crate::artifacts::dwg::schema::snapshot::DwgRegisteredApplicationTableRecord { common, group_71: group_71.unwrap() })
+                crate::schema::snapshot::DwgTableRecordBody::RegisteredApplication(crate::schema::snapshot::DwgRegisteredApplicationTableRecord { common, group_71: group_71.unwrap() })
             };
-            object.body = Some(crate::artifacts::dwg::schema::snapshot::DwgLogicalObjectBody::TableRecord(body));
+            object.body = Some(crate::schema::snapshot::DwgLogicalObjectBody::TableRecord(body));
         } else if type_code == 79 || object.class_name == "XRECORD" {
             let data_byte_count = data.read_bl().map_err(|error| format!("XRECORD {handle:#x} value byte count: {error}"))? as usize;
             let values = decode_xrecord_values(&mut data, data_byte_count, main_end_bit).map_err(|error| format!("XRECORD {handle:#x}: {error}"))?;
@@ -10844,7 +10844,7 @@ fn decode_r2004_object_records(bytes: &[u8], classes: &[crate::artifacts::dwg::D
                 return Err(format!("XRECORD {handle:#x} terminal handle-stream fill is {padding_value:#x}, expected {expected_padding:#x}"));
             }
             xrecord_terminal_fills.push((terminal_padding as u8, padding_value));
-            object.body = Some(crate::artifacts::dwg::schema::snapshot::DwgLogicalObjectBody::XRecord(crate::artifacts::dwg::schema::snapshot::DwgXRecordBody { values, object_id_handles, cloning_flag }));
+            object.body = Some(crate::schema::snapshot::DwgLogicalObjectBody::XRecord(crate::schema::snapshot::DwgXRecordBody { values, object_id_handles, cloning_flag }));
         }
         objects.push(object);
     }
@@ -10853,7 +10853,7 @@ fn decode_r2004_object_records(bytes: &[u8], classes: &[crate::artifacts::dwg::D
             .iter()
             .enumerate()
             .filter_map(|(index, object)| match object.body.as_ref() {
-                Some(crate::artifacts::dwg::schema::snapshot::DwgLogicalObjectBody::TableRecord(crate::artifacts::dwg::schema::snapshot::DwgTableRecordBody::BlockHeader(header))) if header.block_entity_handle == block_handle => Some(index),
+                Some(crate::schema::snapshot::DwgLogicalObjectBody::TableRecord(crate::schema::snapshot::DwgTableRecordBody::BlockHeader(header))) if header.block_entity_handle == block_handle => Some(index),
                 _ => None,
             })
             .collect::<Vec<_>>();
@@ -10864,12 +10864,12 @@ fn decode_r2004_object_records(bytes: &[u8], classes: &[crate::artifacts::dwg::D
         let marker_owner = objects.iter().find(|object| object.handle == block_handle).and_then(|object| object.owner_handle);
         let header_handle = objects[header_index].handle;
         let ordinary_index = objects.iter().find_map(|object| match object.body.as_ref() {
-            Some(crate::artifacts::dwg::schema::snapshot::DwgLogicalObjectBody::TableControl(crate::artifacts::dwg::schema::snapshot::DwgTableControlBody::Block(control))) => {
+            Some(crate::schema::snapshot::DwgLogicalObjectBody::TableControl(crate::schema::snapshot::DwgTableControlBody::Block(control))) => {
                 control.entry_handles.iter().position(|entry| entry.handle == Some(header_handle))
             }
             _ => None,
         });
-        let Some(crate::artifacts::dwg::schema::snapshot::DwgLogicalObjectBody::TableRecord(crate::artifacts::dwg::schema::snapshot::DwgTableRecordBody::BlockHeader(header))) = objects[header_index].body.as_mut() else { unreachable!() };
+        let Some(crate::schema::snapshot::DwgLogicalObjectBody::TableRecord(crate::schema::snapshot::DwgTableRecordBody::BlockHeader(header))) = objects[header_index].body.as_mut() else { unreachable!() };
         if let Some(owner) = marker_owner {
             if owner != header_handle {
                 return Err(format!("BLOCK {block_handle:#x} owner {owner:#x} differs from block header {header_handle:#x}"));
@@ -10893,7 +10893,7 @@ fn decode_r2004_object_records(bytes: &[u8], classes: &[crate::artifacts::dwg::D
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn decode_r2004_object_identities(bytes: &[u8], classes: &[crate::artifacts::dwg::DwgClass]) -> Result<Vec<crate::artifacts::dwg::schema::snapshot::DwgLogicalObject>, String> {
+pub(crate) fn decode_r2004_object_identities(bytes: &[u8], classes: &[crate::DwgClass]) -> Result<Vec<crate::schema::snapshot::DwgLogicalObject>, String> {
     decode_r2004_object_records(bytes, classes).map(|(objects, _)| objects)
 }
 
@@ -10933,7 +10933,7 @@ fn r2010_string_content_end_bit(bytes: &[u8], end_bit: usize) -> Result<usize, S
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn decode_r2010_classes_section(bytes: &[u8]) -> Result<Vec<crate::artifacts::dwg::DwgClass>, String> {
+fn decode_r2010_classes_section(bytes: &[u8]) -> Result<Vec<crate::DwgClass>, String> {
     if bytes.len() < 24 || bytes[..16] != DWG_SENTINEL_CLASSES_BEGIN {
         return Err("R2010 classes section sentinel is missing".into());
     }
@@ -10959,20 +10959,20 @@ fn decode_r2010_classes_section(bytes: &[u8]) -> Result<Vec<crate::artifacts::dw
         let dwg_version = data.read_bl()?;
         let maintenance_version = data.read_bl()?;
         let reserved_values = vec![data.read_bl()?, data.read_bl()?];
-        classes.push(crate::artifacts::dwg::DwgClass { number, proxy_flags, application_name, cpp_class_name, dxf_name, was_zombie, item_class_id, object_count, dwg_version, maintenance_version, reserved_values });
+        classes.push(crate::DwgClass { number, proxy_flags, application_name, cpp_class_name, dxf_name, was_zombie, item_class_id, object_count, dwg_version, maintenance_version, reserved_values });
     }
     Ok(classes)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn decode_r2004_classes(bytes: &[u8]) -> Result<Vec<crate::artifacts::dwg::DwgClass>, String> {
+pub(crate) fn decode_r2004_classes(bytes: &[u8]) -> Result<Vec<crate::DwgClass>, String> {
     let sections = decode_r2004_sections(bytes)?;
     let classes = sections.iter().find(|section| section.name == "AcDb:Classes").ok_or("R2004 Classes section missing")?;
     decode_r2010_classes_section(&r2004_section_data(classes)?)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn encode_r2010_classes_section(classes: &[crate::artifacts::dwg::DwgClass]) -> Result<Vec<u8>, String> {
+fn encode_r2010_classes_section(classes: &[crate::DwgClass]) -> Result<Vec<u8>, String> {
     let mut data = DwgBitWriter::new();
     let maximum_class = classes.iter().map(|class| class.number).max().unwrap_or(499);
     data.write_bl(u32::from(maximum_class));
@@ -11435,19 +11435,19 @@ pub fn dwg_drawing_to_paths(drawing: &DwgDrawing) -> Vec<Vec<DwgPathSegment>> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::dwg::DwgSnapshot;
-    use crate::artifacts::dwg::STDIO_DWG_DOCUMENT_SCHEMA;
+    use crate::DwgSnapshot;
+    use crate::STDIO_DWG_DOCUMENT_SCHEMA;
 
     #[semio_framework_async_macros::async_test]
     async fn empty_snapshot_matches_schema() {
-        let snapshot = crate::artifacts::dwg::standards::v_ac1024::engine::empty_dwg_snapshot();
+        let snapshot = crate::standards::v_ac1024::engine::empty_dwg_snapshot();
         assert_eq!(snapshot.schema, STDIO_DWG_DOCUMENT_SCHEMA);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn codec_round_trip() {
         let bytes = dwg_to_bytes(&DwgDrawing::default()).expect("encode empty drawing");
-        let snap = crate::artifacts::dwg::schema::snapshot::decode_dwg(&bytes).expect("decode structural drawing");
+        let snap = crate::schema::snapshot::decode_dwg(&bytes).expect("decode structural drawing");
         let text = store::ArtifactDsl::print_dsl(&snap);
         let parsed = <DwgSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
         assert_eq!(parsed.version, "AC1015");
@@ -11801,21 +11801,21 @@ mod tests {
     /// 🔁 Exact imported bytes survive every persisted snapshot/diff/mutation/raw-I/O route.
     #[semio_framework_async_macros::async_test]
     async fn well_known_fixture_lossless_system_roundtrip() {
-        use crate::artifacts::binary::{BinarySnapshot, STDIO_BINARY_DOCUMENT_SCHEMA};
-        use crate::artifacts::dwg::schema::diff::DwgDiff;
-        use crate::artifacts::dwg::schema::mutations::{apply_dwg_mutation, set_snapshot, set_version_info, DwgMutation};
-        use crate::artifacts::dwg::schema::snapshot::encode_dwg;
+        use semio_s_artifact_stdio_binary::{BinarySnapshot, STDIO_BINARY_DOCUMENT_SCHEMA};
+        use crate::schema::diff::DwgDiff;
+        use crate::schema::mutations::{apply_dwg_mutation, set_snapshot, set_version_info, DwgMutation};
+        use crate::schema::snapshot::encode_dwg;
         use protocol::command::DiffAlgebra;
         use protocol::{DiffCodec, Mutation, MutationDiff, OpBinary, OpText};
 
         assert_eq!(ARCHITECTURAL_FIXTURE.len(), 148_638);
         assert_eq!(&ARCHITECTURAL_FIXTURE[..6], b"AC1024");
-        let snapshot = crate::artifacts::dwg::schema::snapshot::decode_dwg(ARCHITECTURAL_FIXTURE).expect("import fixture");
+        let snapshot = crate::schema::snapshot::decode_dwg(ARCHITECTURAL_FIXTURE).expect("import fixture");
         assert_eq!(encode_dwg(&snapshot).expect("direct export"), ARCHITECTURAL_FIXTURE);
 
         let raw = BinarySnapshot { schema: STDIO_BINARY_DOCUMENT_SCHEMA.into(), bytes: ARCHITECTURAL_FIXTURE.to_vec() };
-        let raw_snapshot = crate::artifacts::dwg::standards::v_ac1024::subsets::any::io::import::deserializers::artifacts::binary::v_raw::any::deserialize(&raw).expect("raw deserialize");
-        let raw_export = crate::artifacts::dwg::standards::v_ac1024::subsets::any::io::export::serializers::artifacts::binary::v_raw::any::serialize(&raw_snapshot).expect("raw serialize");
+        let raw_snapshot = crate::standards::v_ac1024::subsets::any::io::import::deserializers::artifacts::binary::v_raw::any::deserialize(&raw).expect("raw deserialize");
+        let raw_export = crate::standards::v_ac1024::subsets::any::io::export::serializers::artifacts::binary::v_raw::any::serialize(&raw_snapshot).expect("raw serialize");
         assert_eq!(raw_export.bytes, ARCHITECTURAL_FIXTURE);
 
         let dsl = store::ArtifactDsl::print_dsl(&snapshot);
@@ -11886,8 +11886,8 @@ mod tests {
     /// — mirrors `stdio.binary`/`stdio.txt`'s own `conformance_laws` module shape exactly.
     mod conformance_laws {
         use super::*;
-        use crate::artifacts::dwg::schema::{diff, mutations, snapshot};
-        use crate::artifacts::dwg::standards::v_ac1024::subsets::any::schema::inferences;
+        use crate::schema::{diff, mutations, snapshot};
+        use crate::standards::v_ac1024::subsets::any::schema::inferences;
         use protocol::{DiffCodec, OpBinary, OpText};
 
         /// ✅️ "committed files parse": all 6 handcrafted `.grammar.semio`/`.protocol.semio` files
@@ -11915,7 +11915,7 @@ mod tests {
 
         #[semio_framework_async_macros::async_test]
         async fn schema_facets_contain_no_container_shadow_state() {
-            let descriptor = crate::artifacts::dwg::schema::dwg_artifact_schema_descriptor();
+            let descriptor = crate::schema::dwg_artifact_schema_descriptor();
             let inference_descriptor = inferences::dwg_artifact_inference_descriptor();
             let leaves = [&descriptor.artifact, &descriptor.snapshot, &descriptor.diff, &descriptor.mutations, &inference_descriptor.inference];
             let forbidden = [
@@ -11977,12 +11977,12 @@ mod tests {
         async fn grammar_conformance_law() {
             let grammar = dsl::parse_grammar(snapshot::text::COMPONENT_GRAMMAR_SEMIO).expect("parse snapshot grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
-            let text = store::ArtifactDsl::print_dsl(&crate::artifacts::dwg::standards::v_ac1024::engine::demo_dwg_snapshot());
+            let text = store::ArtifactDsl::print_dsl(&crate::standards::v_ac1024::engine::demo_dwg_snapshot());
             let (envelope, body) = store::semio_format::split_text_preamble(&text).expect("split preamble");
             let reconstructed = format!("{}\n{body}", envelope.envelope_id());
             assert!(recognizer.recognize(&reconstructed).expect("recognize"), "grammar did not recognize demo dsl body:\n{reconstructed}");
 
-            let real_snap = snapshot::decode_dwg(crate::artifacts::dwg::examples::architectural::FIXTURE_BYTES).expect("decode real fixture");
+            let real_snap = snapshot::decode_dwg(crate::examples::architectural::FIXTURE_BYTES).expect("decode real fixture");
             let real_text = store::ArtifactDsl::print_dsl(&real_snap);
             let (real_envelope, real_body) = store::semio_format::split_text_preamble(&real_text).expect("split preamble");
             let real_reconstructed = format!("{}\n{real_body}", real_envelope.envelope_id());
@@ -12021,12 +12021,12 @@ mod tests {
         #[semio_framework_async_macros::async_test]
         async fn protocol_walk_law() {
             let pack_spec = dsl::parse_protocol(snapshot::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse snapshot protocol");
-            let packed = store::ArtifactPack::encode_pack(&crate::artifacts::dwg::standards::v_ac1024::engine::demo_dwg_snapshot());
+            let packed = store::ArtifactPack::encode_pack(&crate::standards::v_ac1024::engine::demo_dwg_snapshot());
             let (_, inner) = store::semio_format::unwrap_binary(&packed).expect("unwrap semio envelope");
             let trace = dsl::walk_protocol(&pack_spec, &inner).unwrap_or_else(|e| panic!("walk_protocol(pack) failed @{}: {}", e.offset, e.message));
             assert_eq!(trace.consumed, inner.len(), "pack walk did not consume every byte");
 
-            let real_snap = snapshot::decode_dwg(crate::artifacts::dwg::examples::architectural::FIXTURE_BYTES).expect("decode real fixture");
+            let real_snap = snapshot::decode_dwg(crate::examples::architectural::FIXTURE_BYTES).expect("decode real fixture");
             let real_packed = store::ArtifactPack::encode_pack(&real_snap);
             let (_, real_inner) = store::semio_format::unwrap_binary(&real_packed).expect("unwrap semio envelope (real fixture)");
             let real_trace = dsl::walk_protocol(&pack_spec, &real_inner).unwrap_or_else(|e| panic!("walk_protocol(pack, real fixture) failed @{}: {}", e.offset, e.message));
@@ -12054,7 +12054,7 @@ mod tests {
             const FIXTURE_DSL: &str = include_str!("../../../../4️⃣ac1018/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio");
             const FIXTURE_PACK: &[u8] = include_bytes!("../../../../4️⃣ac1018/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🎒️.pack.semio");
 
-            let demo = crate::artifacts::dwg::standards::v_ac1024::engine::demo_dwg_snapshot();
+            let demo = crate::standards::v_ac1024::engine::demo_dwg_snapshot();
 
             let parsed = <DwgSnapshot as store::ArtifactDsl>::parse_dsl(FIXTURE_DSL).expect("parse shipped .dsl.semio fixture");
             assert_eq!(parsed, demo, "shipped .dsl.semio fixture does not parse back to demo_dwg_snapshot()");
@@ -12071,10 +12071,10 @@ mod tests {
 
 //#region 🚪️DerivedIoRegistry
 /// 🚪️ Dissolved out of `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) —
-/// unioned with ac1018's own `io_registry::entries()` by the root `crate::artifacts::dwg::
+/// unioned with ac1018's own `io_registry::entries()` by the root `crate::
 /// declaration()`'s `dwg_combined_composer_entries()`.
 pub mod io_registry {
-    use crate::artifacts::dwg::standards::v_ac1024::subsets::any::schema::DwgComposer as DwgRawAnyComposer;
+    use crate::standards::v_ac1024::subsets::any::schema::DwgComposer as DwgRawAnyComposer;
     use semio_framework_plugin::{composer_entry_of, ComposerEntry};
     use std::sync::OnceLock;
 

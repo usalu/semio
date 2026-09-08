@@ -5,7 +5,7 @@
   "displayName": "Change Infiltration Flow Per Exterior Area",
   "emoji": "🌫️",
   "aggregateVariant": "ChangeInfiltrationFlowPerExteriorArea",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-infiltration-flow-per-exterior-area",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

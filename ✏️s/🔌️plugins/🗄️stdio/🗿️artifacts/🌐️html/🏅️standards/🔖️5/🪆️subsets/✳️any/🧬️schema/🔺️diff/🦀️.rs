@@ -11,10 +11,10 @@
 //! `DslRecord`-derived structs and `DslScalar`-derived UNIT-only enums implement it). `DiffCodec`
 //! is hand-rolled below, grammar template copied from `SvgDiff`'s.
 
-use crate::artifacts::html::standards::v5::subsets::any::schema::snapshot::{HtmlAttr, HtmlNode, HtmlSnapshot, RawTextKind};
+use crate::standards::v5::subsets::any::schema::snapshot::{HtmlAttr, HtmlNode, HtmlSnapshot, RawTextKind};
 use protocol::command::DiffAlgebra;
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
-use schema::ArtifactSchema;
+use framework_schema::ArtifactSchema;
 
 //#region 🔖️Diff
 /// 🔺️ Diff for `stdio.html`. No `snapshot: Option<HtmlSnapshot>` full-replace slot — even
@@ -140,7 +140,7 @@ pub struct HtmlChildAdded {
 
 //#region 🔖️DiffAtPath
 /// 🧭️ Lowers a `leaf` diff targeting the node addressed by `path` (a chain of child indices from
-/// the document root — mirrors `crate::artifacts::html::standards::v5::subsets::any::schema::snapshot::NodePath`,
+/// the document root — mirrors `crate::standards::v5::subsets::any::schema::snapshot::NodePath`,
 /// kept as a bare `&[usize]` here so this module never needs to depend on the mutations module)
 /// into a full `HtmlDiff` by nesting it through `HtmlChildModified` entries from the root down to
 /// that depth. `path == []` addresses the root itself, so `leaf` becomes `HtmlDiff.root` directly.
@@ -1014,7 +1014,7 @@ mod handcrafted_diff_codec_tests {
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn snapshot(doctype: Option<&str>, root: HtmlNode) -> HtmlSnapshot {
-        HtmlSnapshot { schema: crate::artifacts::html::standards::v5::subsets::any::schema::snapshot::STDIO_HTML_DOCUMENT_SCHEMA.into(), doctype: doctype.map(|s| s.to_string()), root }
+        HtmlSnapshot { schema: crate::standards::v5::subsets::any::schema::snapshot::STDIO_HTML_DOCUMENT_SCHEMA.into(), doctype: doctype.map(|s| s.to_string()), root }
     }
 
     /// 🧪️ diff_codec_text_binary_roundtrip_law: exercises the recursive enum tree (`Element`/

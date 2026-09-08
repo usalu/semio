@@ -1,19 +1,243 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema#", "$id": "semio:local-interaction-query-transport",
-  "oneOf": [{"$ref": "#/$defs/command"}, {"$ref": "#/$defs/reply"}],
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/framework/replication/wire/local-interaction/transport/schema.json",
+  "title": "Replication Wire Local-interaction Transport Schema Module",
+  "definitions": {
+    "token": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "requestId",
+        "queryGeneration",
+        "identity",
+        "ordinal"
+      ],
+      "properties": {
+        "requestId": {
+          "$ref": "https://semio.tech/schema/framework/replication/wire/local-interaction/schema.json#/$defs/generation"
+        },
+        "queryGeneration": {
+          "$ref": "https://semio.tech/schema/framework/replication/wire/local-interaction/schema.json#/$defs/generation"
+        },
+        "identity": {
+          "$ref": "https://semio.tech/schema/framework/replication/wire/local-interaction/schema.json#/$defs/identity"
+        },
+        "ordinal": {
+          "$ref": "https://semio.tech/schema/framework/replication/wire/local-interaction/schema.json#/$defs/generation"
+        }
+      }
+    },
+    "command": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "requestId"
+          ],
+          "properties": {
+            "kind": {
+              "const": "read"
+            },
+            "requestId": {
+              "$ref": "https://semio.tech/schema/framework/replication/wire/local-interaction/schema.json#/$defs/generation"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "token"
+          ],
+          "properties": {
+            "kind": {
+              "enum": [
+                "acknowledge",
+                "cancel"
+              ]
+            },
+            "token": {
+              "$ref": "#/definitions/token"
+            }
+          }
+        }
+      ]
+    },
+    "reply": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "token"
+          ],
+          "properties": {
+            "kind": {
+              "const": "started"
+            },
+            "token": {
+              "$ref": "#/definitions/token"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "page"
+          ],
+          "properties": {
+            "kind": {
+              "const": "page"
+            },
+            "page": {
+              "$ref": "https://semio.tech/schema/framework/replication/wire/local-interaction/schema.json#/$defs/page"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "token",
+            "cancelled"
+          ],
+          "properties": {
+            "kind": {
+              "const": "closed"
+            },
+            "token": {
+              "$ref": "#/definitions/token"
+            },
+            "cancelled": {
+              "type": "boolean"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "requestId",
+            "code"
+          ],
+          "properties": {
+            "kind": {
+              "const": "rejected"
+            },
+            "requestId": {
+              "$ref": "https://semio.tech/schema/framework/replication/wire/local-interaction/schema.json#/$defs/generation"
+            },
+            "code": {
+              "enum": [
+                "busy",
+                "closed",
+                "generation-exhausted",
+                "source-failed"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  },
   "$defs": {
-    "token": {"type": "object", "additionalProperties": false, "required": ["requestId", "queryGeneration", "identity", "ordinal"], "properties": {
-      "requestId": {"$ref": "semio:local-interaction#/$defs/generation"}, "queryGeneration": {"$ref": "semio:local-interaction#/$defs/generation"}, "identity": {"$ref": "semio:local-interaction#/$defs/identity"}, "ordinal": {"$ref": "semio:local-interaction#/$defs/generation"}
-    }},
-    "command": {"oneOf": [
-      {"type": "object", "additionalProperties": false, "required": ["kind", "requestId"], "properties": {"kind": {"const": "read"}, "requestId": {"$ref": "semio:local-interaction#/$defs/generation"}}},
-      {"type": "object", "additionalProperties": false, "required": ["kind", "token"], "properties": {"kind": {"enum": ["acknowledge", "cancel"]}, "token": {"$ref": "#/$defs/token"}}}
-    ]},
-    "reply": {"oneOf": [
-      {"type": "object", "additionalProperties": false, "required": ["kind", "token"], "properties": {"kind": {"const": "started"}, "token": {"$ref": "#/$defs/token"}}},
-      {"type": "object", "additionalProperties": false, "required": ["kind", "page"], "properties": {"kind": {"const": "page"}, "page": {"$ref": "semio:local-interaction#/$defs/page"}}},
-      {"type": "object", "additionalProperties": false, "required": ["kind", "token", "cancelled"], "properties": {"kind": {"const": "closed"}, "token": {"$ref": "#/$defs/token"}, "cancelled": {"type": "boolean"}}},
-      {"type": "object", "additionalProperties": false, "required": ["kind", "requestId", "code"], "properties": {"kind": {"const": "rejected"}, "requestId": {"$ref": "semio:local-interaction#/$defs/generation"}, "code": {"enum": ["busy", "closed", "generation-exhausted", "source-failed"]}}}
-    ]}
+    "Transport": {
+      "oneOf": [
+        {
+          "$ref": "#/definitions/command"
+        },
+        {
+          "$ref": "#/definitions/reply"
+        }
+      ]
+    },
+    "TransportFixture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "appCommandTag",
+        "appFrameTag",
+        "unsigned",
+        "malformedUnsigned",
+        "commandKinds",
+        "replyKinds",
+        "maximumPageBytes",
+        "requestReuseNeedsNewGeneration",
+        "lateAcknowledgementAfterCloseAccepted"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "appCommandTag": {
+          "const": 29
+        },
+        "appFrameTag": {
+          "const": 23
+        },
+        "unsigned": {
+          "type": "array",
+          "minItems": 5,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "decimal",
+              "hex"
+            ],
+            "properties": {
+              "decimal": {
+                "$ref": "https://semio.tech/schema/framework/replication/wire/local-interaction/schema.json#/$defs/generation"
+              },
+              "hex": {
+                "type": "string",
+                "pattern": "^([0-9a-f]{2}){1,10}$"
+              }
+            }
+          }
+        },
+        "malformedUnsigned": {
+          "type": "array",
+          "minItems": 3,
+          "items": {
+            "type": "string",
+            "pattern": "^([0-9a-f]{2}){1,10}$"
+          }
+        },
+        "commandKinds": {
+          "const": [
+            "read",
+            "acknowledge",
+            "cancel"
+          ]
+        },
+        "replyKinds": {
+          "const": [
+            "started",
+            "page",
+            "closed",
+            "rejected"
+          ]
+        },
+        "maximumPageBytes": {
+          "const": 4096
+        },
+        "requestReuseNeedsNewGeneration": {
+          "const": true
+        },
+        "lateAcknowledgementAfterCloseAccepted": {
+          "const": false
+        }
+      }
+    }
   }
 }

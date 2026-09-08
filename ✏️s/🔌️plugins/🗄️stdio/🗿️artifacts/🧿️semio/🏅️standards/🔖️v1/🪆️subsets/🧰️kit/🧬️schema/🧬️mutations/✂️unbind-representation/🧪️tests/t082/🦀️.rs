@@ -5,9 +5,9 @@
 //! otherwise the list is rebuilt with that position removed. Unbinding index 0 out of two is the
 //! case that renumbers what is left, which is what makes the inverse's index handling observable.
 
-use crate::artifacts::semio::standards::v1::subsets::kit::schema::diff::SemioKitDiff;
-use crate::artifacts::semio::standards::v1::subsets::kit::schema::mutations::SemioKitMutation;
-use crate::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
+use crate::standards::v1::subsets::kit::schema::diff::SemioKitDiff;
+use crate::standards::v1::subsets::kit::schema::mutations::SemioKitMutation;
+use crate::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
 use protocol::{Mutation, MutationDiff};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");

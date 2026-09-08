@@ -3872,20 +3872,14 @@ parameter, including refresh, recursive file/delayed/media dispatch, URI,
 utility/tool/general action and command. This is a source audit only; the
 focused helper test does not exercise the full host-effect lifecycle.
 
-**P0 — same-plugin spawned effects are now admitted but committed as the
-wrong kind of session.** A valid spawned source is admitted by the exact
-membership predicate, but the final state/refresh branch still calls it
-spawned only when its `pluginId` differs from the primary’s
-([`ShellHost:4288`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx:4288>)).
-Two apps or instances of the same plugin are validly distinct according to
-the identity contract. For that valid case, the primary-only branch rejects
-the different instance with `shellDialogSessionIsCurrentV1`, drops the
-view-state update, and subsequently calls `refreshUi(nextSession)` rather
-than `refreshSpawnedUi`. Derive this branch from exact session inequality
-(`!shellDialogSessionIsCurrentV1(baseSession, currentPrimary)`), not plugin
-inequality. Add one controlled row with primary and spawned sharing
-`pluginId` but differing app and instance; its effect must update only the
-primary-held panel state and issue only the spawned refresh.
+**Resolved in current source, still source-only — same-plugin spawned effects
+are classified by full session identity.** The final branch now uses
+`!shellDialogSessionIsCurrentV1(baseSession, currentPrimary)`, rather than a
+plugin-id inequality, before taking the spawned-state/refresh path
+([`ShellHost:4306`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx:4306>)). The required controlled row remains a primary and spawned
+instance sharing `pluginId` but differing app/instance: it must update only
+the spawned panel and use `refreshSpawnedUi`. No browser/runtime acceptance is
+implied by the focused source result.
 
 **P0 — artifact opening needs admission *before* its intentional primary
 handoff, not an old-source check after it.** `openArtifactWithAppRef` creates
@@ -3951,3 +3945,142 @@ starting either browser. It must not be inferred from the trusted GIS/stdio
 current: Space is the ordinary host UI artifact and is outside that selected
 two-package current. Until that preflight is native-qualified, creation and
 mount are unproven.
+
+#### Current Two-Author Shell Process Preflight
+
+The current `--two-author-shell` route is strong at the selected GIS boundary:
+it builds Hub and MCP with the test-support feature, seeds one native verified
+checkpoint pair, materializes and validates one owned GIS/stdio current, runs
+the retained closed-actor proof, and gives Hub that same data root
+([`Hub script:12083`](</Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/📜️script.ts:12083>),
+[`Hub script:12113`](</Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/📜️script.ts:12113>),
+[`Hub script:12119`](</Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/📜️script.ts:12119>)). The eventual process owner is also correctly fail-closed: it checks the retained current before opening peers and after durable changes, compares each mounted probe’s GIS component,
+descriptor, browser actor and generation to that selected current, observes a
+real MCP-owned cancellation, drives ordinary Shell proposal/approval/Undo,
+and repeats the two-peer observations after a same-root Hub restart
+([`Hub script:11139`](</Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/📜️script.ts:11139>),
+[`Hub script:11222`](</Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/📜️script.ts:11222>),
+[`Hub script:11294`](</Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/📜️script.ts:11294>)). Those are source-path facts; the process has not been accepted here.
+
+**P0 preflight blocker — browser host bytes are neither ticket-owned nor
+bound to the prepared current.** Each peer invokes `bun … dev` with
+`SKIP_PLUGIN_BUILD=1`, but React `ServeScript` accepts the shared development
+activation receipt and Vite reads the fixed repository browser-module root;
+neither uses `prepared.artifactRoot` or the selected current
+([`Hub script:10943`](</Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/📜️script.ts:10943>),
+[`dev script:1293`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts:1293>),
+[`Vite config:25`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/⚙️vite.config.ts:25>),
+[`Vite config:120`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/⚙️vite.config.ts:120>)). `S_DATA_DIR` is only an injected browser environment value, not a module-root selector. The mounted GIS probe rejects a byte mismatch, so this is fail-closed rather than a false selected-GIS acceptance; nevertheless a stale Space host can run, and a passing run would not prove current-source host behavior.
+
+The smallest coherent harness boundary is an explicitly test-only pair of
+absolute, ticket-owned paths for the browser module root and activation root.
+Require both below `SEMIO_TEST_ARTIFACT_DIR`, as regular non-link directories,
+or retain today’s normal defaults; never silently fall back. Build/materialize
+the exact `s` host and support/shard bytes into
+`<artifactRoot>/browser-host/modules`, activate that exact staged session into
+`<artifactRoot>/browser-host/activation`, and verify a closed receipt before
+each peer starts. The receipt should bind the `s` component and descriptor
+digests, complete activation-receipt digest, selected GIS current SHA and
+generation. Pass both roots to Vite only for this test harness and record that
+receipt in the final process observation. A substituted host module,
+descriptor, activation receipt, or a missing override must refuse before
+Chromium starts. Existing `collabPrebuildPlugins` proves the necessary
+component-presence shape but writes the same shared global root, so it cannot
+be used directly for a concurrent ticket-owned process law
+([`dev script:2415`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts:2415>)).
+
+#### Tutorial Invalidation Re-Audit
+
+`OwnedTutorialRunV1.stop()` closes synchronously before returning its restore
+promise, so document close’s post-removal stop intentionally discards rather
+than restores a snapshot into a closed/replaced mount
+([`tutorial run:31`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🧬️contracts/🗨️dialog-origin/🎥️tutorial/🟦️.ts:31>),
+[`ShellHost:4547`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx:4547>)). That part does not admit a late document write.
+
+**P1 — close/replace can strand the global tutorial-driven suppression bit.**
+Seek sets `tutorialDrivenRef` then returns early if its run is retired, without
+clearing it; the convergence animation does the same on an invalid run
+([`ShellHost:5188`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx:5188>),
+[`ShellHost:5195`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx:5195>),
+[`ShellHost:5253`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx:5253>)). That leaves later ordinary actions invisible to both deviation auto-pause and recording. Do not add indiscriminate `finally { false }`: director, seek, convergence and start can overlap. Give each driven async operation a monotonic token tied to its exact run and transition epoch; completion or early return clears only its own still-current token, while close/stop/start invalidates the epoch/token synchronously. Also make the missing-definition branch stop the run before clearing UI state (`ShellHost:5073`). Add paused-seek and paused-convergence close/replacement rows, then a normal user action proving recording/deviation observation was restored.
+
+#### Tutorial Drive Token Re-Audit (Current Source)
+
+**Resolved source-only:** `TutorialDriveV1` now holds a monotonic active token
+instead of the shared suppression boolean
+([`tutorial:4`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🧬️contracts/🗨️dialog-origin/🎥️tutorial/🟦️.ts:4>)). Stale completion can release only its own still-active token;
+`retire()` invalidates all old work. Initialization, director slices, seek, and
+convergence test exact run/readiness/token before post-await UI or document
+work; close, stop, unmount, and successor start retire synchronously
+([`ShellHost:5068`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx:5068>),
+[`ShellHost:5113`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx:5113>),
+[`ShellHost:5205`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx:5205>),
+[`ShellHost:5262`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx:5262>)). The prior restore rejection is now caught/logged before successor
+admission ([`ShellHost:5303`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx:5303>)). I found no stale-release or stale-run write bypass.
+
+**P1 — a live seek can duplicate its first mutation.** Seek claims the token,
+composes UI, and awaits its first `applyMutations` while leaving both the
+clock playing and `tutorialLastAppliedMsRef` at the old frontier
+([`ShellHost:5196`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx:5196>),
+[`ShellHost:5210`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx:5210>)). A 90-ms director turn consequently builds the same
+`oldFrontier→liveTime` slice, claims a newer token, and submits the same
+mutation before token invalidation can stop the paused seek
+([`ShellHost:5163`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx:5163>),
+[`ShellHost:5174`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx:5174>)). This is a real duplicate mutation, not merely a stale UI completion.
+
+The smallest repair is to capture `wasPlaying` and pause the clock before
+claiming seek ownership; after exact seek mutations, `lastApplied`, clock seek,
+refresh, and a final exact token/run check, resume only when `wasPlaying`.
+Test with deferred mutation M: begin live playback at applied time zero, seek
+across M, advance clock past the heavy director threshold while M is paused,
+and assert exactly one M submission plus no competing frontier change; release
+M, then assert selected playhead/camera and a single resume. This belongs beside
+the neutral drive corpus and a controlled renderer law; the current three
+token rows do not exercise it.
+
+#### UIDialog Accessible-Modal Reuse Packet
+
+**P0 accessibility gap:** `UIDialog` hand-rolls a sibling veil and glass
+surface, without `role=dialog`, `aria-modal`, title/description associations,
+focus initialisation/trap/return, scroll isolation, or topmost nested-dialog
+dismissal ([`UIDialog:35`](</Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧱️elements/📨️UIDialog/🟦️.tsx:35>)). Recompose it using the existing owned
+`Dialog`, `DialogContent`, `DialogTitle`, optional `DialogDescription`, and
+`DialogFooter`; that primitive already owns portal isolation, focus behavior,
+topmost Escape/outside handling, and semantic associations
+([`Dialog:310`](</Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧱️elements/💬️Dialog/🟦️.tsx:310>),
+[`Dialog:353`](</Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧱️elements/💬️Dialog/🟦️.tsx:353>)). Keep
+`OwnedShellDialog.settle` outside it: exact `openingId` close before dispatch
+remains the only Shell action authority
+([`OwnedShellDialog:16`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🧬️contracts/🗨️dialog-origin/🌐️browser/🟦️.tsx:16>)).
+
+Pitfalls:
+
+1. Drop UIDialog's global cancel keybinding when `DialogContent` owns Escape;
+   two document listeners otherwise call `onCancel` twice for standalone
+   callers. Keep submit only as a scoped chord. Do not add an `aria-label`
+   which suppresses the localized `DialogTitle` association.
+2. `DialogContent` owns `data-slot="dialog-content"`; existing UIDialog CSS
+   selects `data-slot="dialog-box"` ([`ui.css:7070`](</Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🎨️styling/🖌️ui.css:7070>)). Update that CSS contract rather than
+   trying to override the primitive's slot.
+3. Current field labels are visual spans only. The real renderer returns
+   controls keyed by `def.id` ([`UIDialog:62`](</Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧱️elements/📨️UIDialog/🟦️.tsx:62>),
+   [`ShellHelpers:2835`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛠️ShellHelpers/🟦️.tsx:2835>)); text labels alone do not name injected
+   select/slider/toggle controls. Pass generated label/description ids to
+   `renderField` and require its focusable control to attach
+   `aria-labelledby`/`aria-describedby`; `kindChoice` must not rely on a
+   placeholder as its accessible name.
+
+Reuse the language-neutral dialog composite expectation
+([`dialog expect`](</Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧬️contract/📚️examples/🧪️conformance/🖥️composite/💭️dialog/🎯️expect.json>))
+and the registered primitive matrix
+([`Dialog tests`](</Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧱️elements/💬️Dialog/🧪️tests/🟦️.tsx>),
+[`ui-react registry`](</Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/🧪️tests/🟦️.ts:25>)). Add UIDialog rows for
+localized dialog name/description and field name; first focus, Tab/Shift+Tab
+containment and restoration; Escape/veil exact-once cancel; scoped submit only
+when required args exist; and `openingId` replacement while old focus is active.
+
+**P1 — a restore failure must not prevent a successor tutorial from being
+admitted.** `OwnedTutorialRunV1.stop()` memoizes the restore promise, including
+its rejection, while `startTutorial` awaits the old run without handling that
+rejection ([`tutorial run:31`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🧬️contracts/🗨️dialog-origin/🎥️tutorial/🟦️.ts:31>),
+[`ShellHost:5291`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx:5291>)). The old run is already closed, so a failed restore must be logged and disowned by exact reference, not block an otherwise-current successor. Catch the old terminalization locally, clear only if the ref still denotes that old run, then perform the transition epoch/owner check and create the new run. Add a restore-reject → immediate new tutorial row; it must produce one logged old failure and a live new run, never clear a replacement.

@@ -5,7 +5,7 @@
   "displayName": "Change Outdoor Air System Min Oa Flow",
   "emoji": "🦋️",
   "aggregateVariant": "ChangeOutdoorAirSystemMinOaFlow",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-outdoor-air-system-min-oa-flow",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

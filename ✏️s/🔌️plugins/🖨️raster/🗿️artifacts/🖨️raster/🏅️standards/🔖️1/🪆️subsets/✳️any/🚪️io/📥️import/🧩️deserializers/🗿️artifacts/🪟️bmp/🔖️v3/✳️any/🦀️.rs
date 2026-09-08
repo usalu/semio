@@ -8,7 +8,7 @@ use crate::artifacts::raster::io::{raster_document_from_semio_image, semio_image
 use crate::artifacts::raster::RasterSnapshot;
 pub fn register() {}
 pub fn deserialize_bytes(bytes: &[u8]) -> Result<RasterSnapshot, String> {
-    let decoded = semio_s_plugin_stdio::artifacts::bmp::io::decode_bmp(bytes)?;
+    let decoded = semio_s_artifact_stdio_bmp::io::decode_bmp(bytes)?;
     let image = semio_image_from_format(&decoded, BMP_DIALECT)?;
     raster_document_from_semio_image(&image, "bmp-import", "Imported bmp")
 }

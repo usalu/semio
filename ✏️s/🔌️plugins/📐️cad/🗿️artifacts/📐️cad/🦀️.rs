@@ -3,8 +3,8 @@
 //! The declarative `spatial.interaction` spec types live beside this file in
 //! `🎬️interaction-spec/🦀️.rs`.
 
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot;
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::model::schema::snapshot::SemioModelSnapshot;
+use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot;
+use semio_s_artifact_stdio_semio::standards::v1::subsets::model::schema::snapshot::SemioModelSnapshot;
 use semio_framework_value_derive::{FromValue, ToValue};
 use std::collections::BTreeMap;
 
@@ -414,7 +414,7 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
 /// contributions before plugin assembly.
 pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
     use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
-    let rows: &[(&str, &str, &str, &[(&str, &str)], Option<(&str, &str)>)] = &[
+    let rows: &[semio_framework_plugin::ArtifactCapabilityRow<'_>] = &[
         ("s.cad.cad.standard.v1", "standard", "1", &[], None),
         ("s.cad.cad.standard.v1.profile.any", "profile", "any", &[], None),
         ("s.cad.cad.schema.artifact", "schema", "s.cad.cad", &[("schema", "s.cad.cad")], None),

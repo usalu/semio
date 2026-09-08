@@ -169,7 +169,7 @@
         {
           "id": "create-column",
           "capability": "semio-v1-table-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -188,7 +188,7 @@
         {
           "id": "delete-column",
           "capability": "semio-v1-table-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "rejected",
             "applied"
@@ -208,7 +208,7 @@
         {
           "id": "edit-cell",
           "capability": "semio-v1-table-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "rejected",
             "applied"
@@ -228,7 +228,7 @@
         {
           "id": "insert-row",
           "capability": "semio-v1-table-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -247,7 +247,7 @@
         {
           "id": "remove-row",
           "capability": "semio-v1-table-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "rejected",
             "applied"
@@ -267,7 +267,7 @@
         {
           "id": "rename-column",
           "capability": "semio-v1-table-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "rejected",
             "applied"
@@ -287,7 +287,7 @@
         {
           "id": "reorder-columns",
           "capability": "semio-v1-table-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "rejected",
             "applied"
@@ -307,7 +307,7 @@
         {
           "id": "reorder-rows",
           "capability": "semio-v1-table-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "rejected",
             "applied"

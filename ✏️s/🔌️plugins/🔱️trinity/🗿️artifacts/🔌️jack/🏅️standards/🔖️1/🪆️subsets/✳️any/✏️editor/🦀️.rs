@@ -349,14 +349,14 @@ fn jack_retained_config_reduce(
     _operation: &AppOperationContext,
 ) -> Result<Emit<TrinityGraphMutation, JackConfigMutation, NoDraftMutation>, Fault> {
     match command {
-        TrinityJackCommand::SetViewport { viewport_json } => crate::editor::jack::commands::set_viewport(viewport_json),
-        TrinityJackCommand::TextEdit { text } => crate::editor::jack::commands::text_edit(text),
-        TrinityJackCommand::TextSelect { start, end } => crate::editor::jack::commands::text_select(*start, *end),
-        TrinityJackCommand::RequestCompletions => crate::editor::jack::commands::request_completions(config.revision),
-        TrinityJackCommand::SetLodMode { window_id, value } => crate::editor::jack::commands::set_lod_mode(window_id, value),
-        TrinityJackCommand::EditorEngagementInput { value } => crate::editor::jack::commands::editor_engagement_input(value),
-        TrinityJackCommand::GraphEngagementInput { value } => crate::editor::jack::commands::graph_engagement_input(value),
-        TrinityJackCommand::ResultsEngagementInput { value } => crate::editor::jack::commands::results_engagement_input(value),
+        TrinityJackCommand::SetViewport { viewport_json } => Ok(crate::editor::jack::commands::set_viewport(viewport_json)),
+        TrinityJackCommand::TextEdit { text } => Ok(crate::editor::jack::commands::text_edit(text)),
+        TrinityJackCommand::TextSelect { start, end } => Ok(crate::editor::jack::commands::text_select(*start, *end)),
+        TrinityJackCommand::RequestCompletions => Ok(crate::editor::jack::commands::request_completions(config.revision)),
+        TrinityJackCommand::SetLodMode { window_id, value } => Ok(crate::editor::jack::commands::set_lod_mode(window_id, value)),
+        TrinityJackCommand::EditorEngagementInput { value } => Ok(crate::editor::jack::commands::editor_engagement_input(value)),
+        TrinityJackCommand::GraphEngagementInput { value } => Ok(crate::editor::jack::commands::graph_engagement_input(value)),
+        TrinityJackCommand::ResultsEngagementInput { value } => Ok(crate::editor::jack::commands::results_engagement_input(value)),
         _ => Err(Fault::from("jack-retained-config-route-mismatch")),
     }
 }
@@ -626,7 +626,7 @@ impl ArtifactEditor for TrinityJackPlayApp {
     ) -> Result<Emit<TrinityGraphMutation, JackConfigMutation, Self::DraftMutation>, Fault> {
         let fixture = doc.snapshot;
         let config = cfg.snapshot;
-        match command {
+        Ok(match command {
             TrinityJackCommand::SetFixtureJson { json } => crate::editor::jack::commands::set_fixture_json(json),
             TrinityJackCommand::DeleteSelection => crate::editor::jack::commands::delete_selection(fixture, &interaction.selection("ast").ids),
             TrinityJackCommand::PatchNodes { node_ids, field, value } => crate::editor::jack::commands::patch_nodes(fixture, node_ids, field, value),
@@ -644,7 +644,7 @@ impl ArtifactEditor for TrinityJackPlayApp {
             TrinityJackCommand::GraphEngagementInput { value } => crate::editor::jack::commands::graph_engagement_input(value),
             TrinityJackCommand::ResultsEngagementInput { value } => crate::editor::jack::commands::results_engagement_input(value),
             TrinityJackCommand::SetLocale { value } => crate::editor::jack::commands::set_locale(value),
-        }
+        })
     }
 
     fn render(body_key: &str, doc: &ArtifactView<'_, JackSnapshot>, cfg: &ConfigView<'_, JackConfig>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {

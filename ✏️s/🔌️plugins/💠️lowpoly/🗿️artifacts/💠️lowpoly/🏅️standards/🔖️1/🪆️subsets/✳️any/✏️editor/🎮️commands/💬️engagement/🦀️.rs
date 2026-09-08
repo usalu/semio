@@ -20,7 +20,7 @@ fn engagement_token_matches(raw: &str, command: &str) -> bool {
     let raw_bytes = raw.as_bytes();
     let mut raw_index = 0usize;
     let mut command_chars = command.chars().filter(|ch| ch.is_alphanumeric());
-    while let Some(expected) = command_chars.next() {
+    for expected in command_chars {
         while raw_index < raw_bytes.len() {
             let ch = raw[raw_index..].chars().next().unwrap();
             if ch.is_alphanumeric() {

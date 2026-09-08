@@ -1,0 +1,32 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/mp4/isobmff/any/mutation/set-track-dimensions.json",
+  "title": "SetTrackDimensions",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "track_index",
+    "width",
+    "height"
+  ],
+  "properties": {
+    "track_index": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "width": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 4294967295
+    },
+    "height": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 4294967295
+    },
+    "mutation": {
+      "const": "setTrackDimensions",
+      "description": "Aggregate discriminator spliced in by Mp4Mutation; absent when the payload stands alone."
+    }
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/kit/mutation/delete-object.json",
+  "title": "DeleteObject",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "childId"
+  ],
+  "properties": {
+    "childId": {
+      "type": "string"
+    }
+  }
+}

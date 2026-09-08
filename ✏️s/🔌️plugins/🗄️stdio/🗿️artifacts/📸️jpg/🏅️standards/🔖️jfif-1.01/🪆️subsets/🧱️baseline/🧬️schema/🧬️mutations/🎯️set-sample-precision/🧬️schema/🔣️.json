@@ -1,0 +1,17 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/jpg/jfif-1.01/baseline/mutation/set-sample-precision.json",
+  "title": "SetSamplePrecision",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "precision"
+  ],
+  "properties": {
+    "precision": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 255
+    }
+  }
+}

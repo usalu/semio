@@ -1,0 +1,120 @@
+{
+  "cases": [
+    {
+      "id": "required-missing",
+      "format": "text",
+      "options": [],
+      "required": true,
+      "value": null,
+      "unresolved": true
+    },
+    {
+      "id": "optional-missing",
+      "format": "artifactKind",
+      "options": [],
+      "required": false,
+      "value": null,
+      "unresolved": false
+    },
+    {
+      "id": "free-text",
+      "format": "text",
+      "options": [],
+      "required": true,
+      "value": "anything",
+      "unresolved": false
+    },
+    {
+      "id": "selected-member",
+      "format": "artifactKind",
+      "options": [
+        "map"
+      ],
+      "required": true,
+      "value": "map",
+      "unresolved": false
+    },
+    {
+      "id": "hostile-member",
+      "format": "artifactKind",
+      "options": [
+        "map"
+      ],
+      "required": true,
+      "value": "forged",
+      "unresolved": true
+    },
+    {
+      "id": "catalog-withdrawn",
+      "format": "artifactKind",
+      "options": [],
+      "required": true,
+      "value": "map",
+      "unresolved": true
+    },
+    {
+      "id": "optional-hostile",
+      "format": "artifactKind",
+      "options": [
+        "map"
+      ],
+      "required": false,
+      "value": "forged",
+      "unresolved": true
+    },
+    {
+      "id": "wrong-value-type",
+      "format": "artifactKind",
+      "options": [
+        "map"
+      ],
+      "required": true,
+      "value": 7,
+      "unresolved": true
+    },
+    {
+      "id": "empty-surface-catalog",
+      "format": "surfaceApp",
+      "options": [],
+      "required": true,
+      "value": "editor",
+      "unresolved": true
+    },
+    {
+      "id": "static-member",
+      "format": "text",
+      "options": [
+        "map"
+      ],
+      "required": true,
+      "value": "map",
+      "unresolved": false
+    },
+    {
+      "id": "static-nonmember",
+      "format": "text",
+      "options": [
+        "map"
+      ],
+      "required": false,
+      "value": "other",
+      "unresolved": true
+    },
+    {
+      "id": "empty-required",
+      "format": "artifactKind",
+      "options": [
+        "map"
+      ],
+      "required": true,
+      "value": "",
+      "unresolved": true
+    }
+  ],
+  "generation": { "before": "generation-a", "after": "generation-b", "text": "Retained name", "staticChoice": "blue", "staleSubmits": 0 },
+  "catalogTransitions": [
+    "loading",
+    "unavailable",
+    "loading"
+  ]
+}

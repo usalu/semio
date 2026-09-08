@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/layout/layout/1/any/mutation/change-page-width.json",
+  "title": "ChangePageWidth",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newWidth"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "newWidth": {
+      "type": "number"
+    }
+  }
+}

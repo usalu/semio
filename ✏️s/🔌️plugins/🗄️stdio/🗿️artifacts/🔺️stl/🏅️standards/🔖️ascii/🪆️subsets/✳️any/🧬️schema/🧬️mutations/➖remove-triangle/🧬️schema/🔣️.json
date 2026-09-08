@@ -1,0 +1,20 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/stl/ascii/any/mutation/remove-triangle.json",
+  "title": "RemoveTriangle",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "index"
+  ],
+  "properties": {
+    "index": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "mutation": {
+      "const": "removeTriangle",
+      "description": "Aggregate discriminator spliced in by StlMutation; absent when the payload stands alone."
+    }
+  }
+}

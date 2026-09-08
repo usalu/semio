@@ -11,7 +11,7 @@ pub fn inverse(payload: &super::DisconnectNodes, base: &WiresSnapshot) -> Vec<Wi
     find_board_edge(base, &payload.edge_id)
         .map(|edge| {
             let relationship = find_relationship(base, &payload.edge_id).cloned().unwrap_or(DslValue::Null);
-            crate::artifacts::wires::mutations::connect_nodes::connect_nodes(edge.clone(), relationship)
+            crate::artifacts::wires::mutations::connect_nodes::connect_nodes(edge, relationship)
         })
         .into_iter()
         .collect()

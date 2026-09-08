@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/avi/1.0/hdrl/mutation/set-idx1-present.json",
+  "title": "SetIdx1Present",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "idx1_present"
+  ],
+  "properties": {
+    "idx1_present": {
+      "type": "boolean"
+    },
+    "mutation": {
+      "const": "setIdx1Present",
+      "description": "Aggregate discriminator spliced in by AviMutation; absent when the payload stands alone."
+    }
+  }
+}

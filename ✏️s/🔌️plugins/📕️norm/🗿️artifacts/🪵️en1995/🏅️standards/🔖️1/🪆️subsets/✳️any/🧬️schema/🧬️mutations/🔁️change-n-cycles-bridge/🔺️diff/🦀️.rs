@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeNCyclesBridge, base: &En1995Snapshot) -> protocol::M
     if base.n_cycles_bridge == payload.new_n_cycles_bridge {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "N cycles bridge already has this value.");
     }
-    protocol::MutationOutcome::new(En1995Diff { n_cycles_bridge: Some(payload.new_n_cycles_bridge.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1995Diff { n_cycles_bridge: Some(payload.new_n_cycles_bridge), ..Default::default() })
 }
 //#endregion 🔖️Diff

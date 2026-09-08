@@ -1,0 +1,324 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/las/1.0/header/mutation/set-snapshot.json",
+  "title": "SetSnapshot",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "snapshot"
+  ],
+  "properties": {
+    "snapshot": {
+      "$ref": "#/$defs/LasSnapshot"
+    },
+    "mutation": {
+      "const": "setSnapshot",
+      "description": "Aggregate discriminator spliced in by LasMutation; absent when the payload stands alone."
+    }
+  },
+  "$defs": {
+    "LasSnapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema"
+      ],
+      "properties": {
+        "schema": {
+          "type": "string"
+        },
+        "header": {
+          "$ref": "#/$defs/LasHeader"
+        },
+        "vlrs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/LasVlr"
+          }
+        },
+        "points": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/LasPoint"
+          }
+        }
+      }
+    },
+    "LasHeader": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "versionMajor",
+        "versionMinor",
+        "systemIdentifier",
+        "generatingSoftware",
+        "creationDayOfYear",
+        "creationYear",
+        "headerSize",
+        "offsetToPointData",
+        "numberOfVlrs",
+        "pointDataFormatId",
+        "pointDataRecordLength",
+        "numberOfPointRecords",
+        "pointsByReturn",
+        "xScale",
+        "yScale",
+        "zScale",
+        "xOffset",
+        "yOffset",
+        "zOffset",
+        "maxX",
+        "minX",
+        "maxY",
+        "minY",
+        "maxZ",
+        "minZ"
+      ],
+      "properties": {
+        "versionMajor": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "versionMinor": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "systemIdentifier": {
+          "type": "string"
+        },
+        "generatingSoftware": {
+          "type": "string"
+        },
+        "creationDayOfYear": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "creationYear": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "headerSize": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "offsetToPointData": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "numberOfVlrs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "pointDataFormatId": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "pointDataRecordLength": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "numberOfPointRecords": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "pointsByReturn": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4294967295
+          },
+          "minItems": 5,
+          "maxItems": 5
+        },
+        "xScale": {
+          "type": "number"
+        },
+        "yScale": {
+          "type": "number"
+        },
+        "zScale": {
+          "type": "number"
+        },
+        "xOffset": {
+          "type": "number"
+        },
+        "yOffset": {
+          "type": "number"
+        },
+        "zOffset": {
+          "type": "number"
+        },
+        "maxX": {
+          "type": "number"
+        },
+        "minX": {
+          "type": "number"
+        },
+        "maxY": {
+          "type": "number"
+        },
+        "minY": {
+          "type": "number"
+        },
+        "maxZ": {
+          "type": "number"
+        },
+        "minZ": {
+          "type": "number"
+        }
+      }
+    },
+    "LasVlr": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "userId",
+        "recordId",
+        "description",
+        "data"
+      ],
+      "properties": {
+        "userId": {
+          "type": "string"
+        },
+        "recordId": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "description": {
+          "type": "string"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          }
+        }
+      }
+    },
+    "LasPoint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y",
+        "z",
+        "intensity",
+        "returnNumber",
+        "numberOfReturns",
+        "scanDirectionFlag",
+        "edgeOfFlightLine",
+        "classification",
+        "scanAngleRank",
+        "userData",
+        "pointSourceId"
+      ],
+      "properties": {
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "z": {
+          "type": "number"
+        },
+        "intensity": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "returnNumber": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "numberOfReturns": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "scanDirectionFlag": {
+          "type": "boolean"
+        },
+        "edgeOfFlightLine": {
+          "type": "boolean"
+        },
+        "classification": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "scanAngleRank": {
+          "type": "integer",
+          "minimum": -128,
+          "maximum": 127
+        },
+        "userData": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "pointSourceId": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "gpsTime": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "rgb": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": [
+                {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 65535
+                },
+                {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 65535
+                },
+                {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 65535
+                }
+              ],
+              "additionalItems": false,
+              "minItems": 3,
+              "maxItems": 3
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    }
+  }
+}

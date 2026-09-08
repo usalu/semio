@@ -1,0 +1,12 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/forms/forms/1/any/mutation/change-form-title.json",
+  "title": "ChangeFormTitle",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "newTitle": {
+      "type": "string"
+    }
+  }
+}

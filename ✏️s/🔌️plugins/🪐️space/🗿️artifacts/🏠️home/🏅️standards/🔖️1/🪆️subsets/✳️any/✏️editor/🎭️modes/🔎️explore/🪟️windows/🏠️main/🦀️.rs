@@ -139,8 +139,8 @@ fn render_rows(rows: &[crate::HomeSpaceRow], table: &HomeTableLabels, actions: &
 /// hosts already get it. Two empty separators (measured: ~6.4px of clearance each from the stack's own
 /// `gap-double`) reliably clear the dead-line with margin; confirmed live via Playwright-style
 /// `elementFromPoint` hit-testing at the button's own center before/after.
-fn window_content_dead_line_spacer() -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    Ok(semio_framework_ui_contract::BuiltNode::empty_separator())
+fn window_content_dead_line_spacer() -> semio_framework_plugin::BuiltNode {
+    semio_framework_ui_contract::BuiltNode::empty_separator()
 }
 
 fn create_space_button(actions: &SHomeLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
@@ -161,7 +161,7 @@ fn create_space_button(actions: &SHomeLabels) -> semio_framework_plugin::UiAssem
 fn render_rows_wrapped(rows: &[crate::HomeSpaceRow], table: &HomeTableLabels, actions: &SHomeLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let table_node = render_rows(rows, table, actions)?;
     let mut children: semio_framework_plugin::UiFixedList<semio_framework_plugin::BuiltNode> = semio_framework_plugin::UiFixedList::default();
-    for child in [window_content_dead_line_spacer()?, window_content_dead_line_spacer()?, create_space_button(actions)?, table_node] {
+    for child in [window_content_dead_line_spacer(), window_content_dead_line_spacer(), create_space_button(actions)?, table_node] {
         children.try_push(child).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.window.children", "fixed window child admission failed"))?;
     }
     semio_framework_ui_contract::column()

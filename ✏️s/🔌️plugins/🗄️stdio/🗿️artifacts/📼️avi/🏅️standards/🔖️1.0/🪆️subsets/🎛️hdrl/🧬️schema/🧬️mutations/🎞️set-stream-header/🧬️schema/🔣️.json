@@ -1,0 +1,145 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/avi/1.0/hdrl/mutation/set-stream-header.json",
+  "title": "SetStreamHeader",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "stream_index",
+    "strh"
+  ],
+  "properties": {
+    "stream_index": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "strh": {
+      "$ref": "#/$defs/AviStreamHeader"
+    },
+    "mutation": {
+      "const": "setStreamHeader",
+      "description": "Aggregate discriminator spliced in by AviMutation; absent when the payload stands alone."
+    }
+  },
+  "$defs": {
+    "AviStreamHeader": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "fccType",
+        "fccHandler",
+        "flags",
+        "priority",
+        "language",
+        "initialFrames",
+        "scale",
+        "rate",
+        "start",
+        "length",
+        "suggestedBufferSize",
+        "quality",
+        "sampleSize",
+        "rcFrameLeft",
+        "rcFrameTop",
+        "rcFrameRight",
+        "rcFrameBottom"
+      ],
+      "properties": {
+        "fccType": {
+          "type": "string"
+        },
+        "fccHandler": {
+          "type": "string"
+        },
+        "flags": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "priority": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "language": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "initialFrames": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "scale": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "rate": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "start": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "length": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "suggestedBufferSize": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "quality": {
+          "type": "integer",
+          "minimum": -2147483648,
+          "maximum": 2147483647
+        },
+        "sampleSize": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "rcFrameLeft": {
+          "type": "integer",
+          "minimum": -2147483648,
+          "maximum": 2147483647
+        },
+        "rcFrameTop": {
+          "type": "integer",
+          "minimum": -2147483648,
+          "maximum": 2147483647
+        },
+        "rcFrameRight": {
+          "type": "integer",
+          "minimum": -2147483648,
+          "maximum": 2147483647
+        },
+        "rcFrameBottom": {
+          "type": "integer",
+          "minimum": -2147483648,
+          "maximum": 2147483647
+        },
+        "rcFrameWidth": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "strhExtra": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          }
+        }
+      }
+    }
+  }
+}

@@ -11,13 +11,13 @@
 //! wire codecs (`enc_indexed_triple`/`dec_indexed_triple`) come from the shared
 //! `engine::triples` module per the ticket's explicit instruction — not re-derived here.
 
-use crate::artifacts::semio::standards::v1::subsets::animation::schema::snapshot::{AnimChannel, AnimInterpolation, AnimKeyframe, AnimTarget, AnimTargetProperty, AnimTimeline, AnimValue, SemioAnimationSnapshot};
-use crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::{SemioPoint3, SemioQuaternion};
-use crate::artifacts::semio::standards::v1::subsets::base::schema::triples::{dec_indexed_triple, enc_indexed_triple, split_top_level, strip_brackets, IndexAdded, IndexModified, IndexedTripleDiff};
+use crate::standards::v1::subsets::animation::schema::snapshot::{AnimChannel, AnimInterpolation, AnimKeyframe, AnimTarget, AnimTargetProperty, AnimTimeline, AnimValue, SemioAnimationSnapshot};
+use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint3, SemioQuaternion};
+use crate::standards::v1::subsets::base::schema::triples::{dec_indexed_triple, enc_indexed_triple, split_top_level, strip_brackets, IndexAdded, IndexModified, IndexedTripleDiff};
 use protocol::command::DiffAlgebra;
 use protocol::DiffCodec;
 use protocol::MutationDiff;
-use schema::ArtifactSchema;
+use framework_schema::ArtifactSchema;
 
 //#region 🔖️IndexedCollectionAlgebra
 /// 📐️ Shared rank/unrank arithmetic for index-keyed collection diffs — see `🧬️schema-design.md`
@@ -658,7 +658,7 @@ impl MutationDiff<SemioAnimationSnapshot> for SemioAnimationDiff {
     fn apply(&self, base: &SemioAnimationSnapshot) -> protocol::MutationApplyResult<SemioAnimationSnapshot> {
         let mut next = base.clone();
         if let Some(d) = &self.timelines {
-            crate::artifacts::semio::standards::v1::subsets::base::schema::triples::validate_indexed_triple(d, next.timelines.len(), ["timelines"])?;
+            crate::standards::v1::subsets::base::schema::triples::validate_indexed_triple(d, next.timelines.len(), ["timelines"])?;
             next.timelines = apply_indexed(d, &next.timelines, |d, item| d.apply(item));
         }
         Ok(next)

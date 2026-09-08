@@ -1,0 +1,34 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/material/change-alpha.json",
+  "title": "GltfChangeMaterialAlphaModeRejection",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "material",
+    "alphaMode"
+  ],
+  "properties": {
+    "material": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "alphaMode": {
+      "type": "string",
+      "enum": [
+        "OPAQUE",
+        "MASK",
+        "BLEND"
+      ]
+    }
+  },
+  "x-semio": {
+    "id": "s.stdio.gltf.mutation.change-material-alpha-mode.v1",
+    "version": 1,
+    "phase": "mutation",
+    "touchedPaths": [
+      "document/materials/{material}/alphaMode"
+    ]
+  },
+  "x-semio-mutation": "change-material-alpha-mode"
+}

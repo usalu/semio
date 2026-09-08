@@ -85,16 +85,16 @@ impl En1990Mutation {
         let base_q_k = crate::artifacts::en1990::en1990_qk(base);
         let target_q_k = crate::artifacts::en1990::en1990_qk(target);
         let mut mutations = Vec::with_capacity(5 + base_q_k.len() + target_q_k.len());
-        mutations.push(En1990Mutation::ChangeAnnex(change_annex::ChangeAnnex { new_annex: target.annex.clone() }));
-        mutations.push(En1990Mutation::ChangePermanentAction(change_permanent_action::ChangePermanentAction { new_g_k: target.g_k.clone() }));
-        mutations.push(En1990Mutation::ChangeResistance(change_resistance::ChangeResistance { new_resistance_kn: target.resistance_kn.clone() }));
-        mutations.push(En1990Mutation::ChangeConsequenceClass(change_consequence_class::ChangeConsequenceClass { new_consequence_class: target.consequence_class.clone() }));
-        mutations.push(En1990Mutation::ChangeSeismicAction(change_seismic_action::ChangeSeismicAction { new_seismic_a_ed_kn: target.seismic_a_ed_kn.clone() }));
+        mutations.push(En1990Mutation::ChangeAnnex(change_annex::ChangeAnnex { new_annex: target.annex }));
+        mutations.push(En1990Mutation::ChangePermanentAction(change_permanent_action::ChangePermanentAction { new_g_k: target.g_k }));
+        mutations.push(En1990Mutation::ChangeResistance(change_resistance::ChangeResistance { new_resistance_kn: target.resistance_kn }));
+        mutations.push(En1990Mutation::ChangeConsequenceClass(change_consequence_class::ChangeConsequenceClass { new_consequence_class: target.consequence_class }));
+        mutations.push(En1990Mutation::ChangeSeismicAction(change_seismic_action::ChangeSeismicAction { new_seismic_a_ed_kn: target.seismic_a_ed_kn }));
         for index in (0..base_q_k.len()).rev() {
             mutations.push(En1990Mutation::RemoveVariableAction(remove_variable_action::RemoveVariableAction { index }));
         }
         for (index, entry) in target_q_k.iter().enumerate() {
-            mutations.push(En1990Mutation::InsertVariableAction(insert_variable_action::InsertVariableAction { index, category: entry.category.clone(), value: entry.value.clone() }));
+            mutations.push(En1990Mutation::InsertVariableAction(insert_variable_action::InsertVariableAction { index, category: entry.category.clone(), value: entry.value }));
         }
         mutations
     }

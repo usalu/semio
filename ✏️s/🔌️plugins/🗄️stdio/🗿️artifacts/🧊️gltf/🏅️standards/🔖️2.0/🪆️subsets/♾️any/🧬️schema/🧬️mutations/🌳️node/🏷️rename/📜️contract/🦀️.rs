@@ -1,8 +1,8 @@
 //! 🧪️ Rust executor for the shared change-node-name vector.
 #[cfg(test)]
 mod tests {
-    use crate::artifacts::gltf::schema::mutations::change_node_name::{diff, inverse, mutation};
-    use crate::artifacts::gltf::GltfSnapshot;
+    use crate::schema::mutations::change_node_name::{diff, inverse, mutation};
+    use crate::GltfSnapshot;
 
     #[derive(value_derive::FromValue)]
     struct Vector { base: GltfSnapshot, mutation: mutation::GltfChangeNodeNamePayload, diff: diff::GltfChangeNodeNameDiff, inverse: inverse::GltfChangeNodeNameInverse, after: GltfSnapshot }

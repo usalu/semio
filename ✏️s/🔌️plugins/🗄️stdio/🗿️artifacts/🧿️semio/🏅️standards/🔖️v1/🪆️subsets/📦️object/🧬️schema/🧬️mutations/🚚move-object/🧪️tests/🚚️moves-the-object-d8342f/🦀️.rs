@@ -6,9 +6,9 @@
 //! independent `Option` slots, so the committed diff must populate `transform` and leave
 //! `brep`/`mesh`/`properties` absent entirely.
 
-use crate::artifacts::semio::standards::v1::subsets::object::schema::diff::SemioObjectDiff;
-use crate::artifacts::semio::standards::v1::subsets::object::schema::mutations::SemioObjectMutation;
-use crate::artifacts::semio::standards::v1::subsets::object::schema::snapshot::SemioObjectSnapshot;
+use crate::standards::v1::subsets::object::schema::diff::SemioObjectDiff;
+use crate::standards::v1::subsets::object::schema::mutations::SemioObjectMutation;
+use crate::standards::v1::subsets::object::schema::snapshot::SemioObjectSnapshot;
 use protocol::{Mutation, MutationDiff};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");

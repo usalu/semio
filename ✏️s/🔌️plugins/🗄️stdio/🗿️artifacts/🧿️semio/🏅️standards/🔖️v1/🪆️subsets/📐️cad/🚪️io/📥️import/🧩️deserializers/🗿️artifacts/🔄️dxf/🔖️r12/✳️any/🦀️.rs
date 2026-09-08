@@ -19,12 +19,12 @@
 //!   `unknown_group_codes` when present) — `CadEntityRecord.handle` is synthesized sequentially
 //!   (`"E{n}"` top-level, `"B{block}#{n}"` inside a block), a documented synthetic identity.
 
-use crate::artifacts::dxf::{
+use semio_s_artifact_stdio_dxf::{
     schema::snapshot::{DxfBlock, DxfEntity, DxfLayer, DxfValue, DxfVertex},
     DxfSnapshot,
 };
-use crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioPoint2;
-use crate::artifacts::semio::standards::v1::subsets::cad::schema::snapshot::{CadBlock, CadEntity, CadEntityRecord, CadLayer, SemioCadSnapshot, STDIO_SEMIOCAD_DOCUMENT_SCHEMA};
+use crate::standards::v1::subsets::base::schema::geometry::SemioPoint2;
+use crate::standards::v1::subsets::cad::schema::snapshot::{CadBlock, CadEntity, CadEntityRecord, CadLayer, SemioCadSnapshot, STDIO_SEMIOCAD_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId};
 
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.dxf", standard: StandardId("r12"), subset: SubsetId::ANY };
@@ -160,7 +160,7 @@ mod tests {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn sample_dxf() -> DxfSnapshot {
         DxfSnapshot {
-            tables: crate::artifacts::dxf::schema::snapshot::DxfTables { layers: vec![DxfLayer { name: "0".into(), color: 7, linetype: "CONTINUOUS".into(), flags: 0, ..Default::default() }], ..Default::default() },
+            tables: semio_s_artifact_stdio_dxf::schema::snapshot::DxfTables { layers: vec![DxfLayer { name: "0".into(), color: 7, linetype: "CONTINUOUS".into(), flags: 0, ..Default::default() }], ..Default::default() },
             blocks: vec![DxfBlock { name: "door".into(), base_point: [0.0, 0.0, 0.0], entities: vec![DxfEntity::Line { start: [0.0, 0.0, 0.0], end: [1.0, 0.0, 0.0], layer: "0".into(), unknown_group_codes: vec![] }], unknown_group_codes: vec![] }],
             entities: vec![
                 DxfEntity::Circle { center: [2.0, 2.0, 0.0], radius: 1.5, layer: "0".into(), unknown_group_codes: vec![] },

@@ -2,7 +2,7 @@
 //! of already-decoded header fields — nothing here is per-entity/incremental, so this holds only
 //! the value type + its pure `compute` fn (no `InferredField`).
 
-use crate::artifacts::jpg::JpgSnapshot;
+use crate::JpgSnapshot;
 
 //#region 🔖️Dimensions
 /// 📐️ JPEG canonical raster geometry. `bit_depth` reads the SOF (T.81 §B.2.2) `precision` field

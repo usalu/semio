@@ -393,12 +393,12 @@ fn bridge_step(snapshot: &RasterSnapshot, mutation: &RasterMutation) -> Result<(
 /// 📤️ The bridge's answer shape: the resulting document beside the codes it raised, so a caller
 /// that cannot name `protocol::MutationOutcome` can still tell an application from a refusal.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn bridge_render(snapshot: &RasterSnapshot, messages: Vec<String>) -> Result<String, String> {
+fn bridge_render(snapshot: &RasterSnapshot, messages: Vec<String>) -> String {
     let value = dsl::os_pack::json::object([
         ("snapshot".to_string(), dsl::os_pack::json::from_dsl_value(&dsl::ToValue::to_value(snapshot))),
         ("messages".to_string(), dsl::os_pack::json::Value::Array(messages.into_iter().map(dsl::os_pack::json::Value::from).collect())),
     ]);
-    Ok(dsl::os_pack::json::to_string(&value))
+    dsl::os_pack::json::to_string(&value)
 }
 
 /// 🌉️ Applies one committed mutation payload to one committed before-document and answers
@@ -412,7 +412,7 @@ fn bridge_render(snapshot: &RasterSnapshot, messages: Vec<String>) -> Result<Str
 pub fn apply_raster_mutation_json(snapshot_json: &str, mutation_json: &str) -> Result<String, String> {
     let (snapshot, mutation) = bridge_decode_pair(snapshot_json, mutation_json)?;
     let (applied, messages) = bridge_step(&snapshot, &mutation)?;
-    bridge_render(&applied, messages)
+    Ok(bridge_render(&applied, messages))
 }
 
 /// ↩️ Applies one committed mutation payload and then EVERY step of its own computed inverse,
@@ -429,7 +429,7 @@ pub fn undo_raster_mutation_json(snapshot_json: &str, mutation_json: &str) -> Re
         current = next;
         messages.extend(raised);
     }
-    bridge_render(&current, messages)
+    Ok(bridge_render(&current, messages))
 }
 
 /// 🔁️ Parses the committed `.dsl.semio` example, prints it back and parses that, answering

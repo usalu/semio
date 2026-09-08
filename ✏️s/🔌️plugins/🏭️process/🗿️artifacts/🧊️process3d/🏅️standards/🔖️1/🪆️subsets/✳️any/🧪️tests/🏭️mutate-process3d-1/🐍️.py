@@ -4,7 +4,7 @@ vocabulary.
 `process.process3d` is a semio-NATIVE artifact and nothing outside this repository reads
 `.dsl.semio` — G-code parsers and STEP/BREP kernels were surveyed and DECLINED (kept verbatim below
 in this history). The reference is therefore a second IMPLEMENTATION, written from this subset's own
-committed `../../🧬️schema/📸️snapshot/🔣️.json` and each mutation's `🧬️.schema.json`, and from
+committed `../../🧬️schema/📸️snapshot/🔣️.json` and each mutation's `🧬️schema/🔣️.json`, and from
 `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-DIRECT-LEAF-OVERHAUL/📓️taxonomy.md`'s
 `create`/`delete`/`rename`/`change`/`replace`/`move`/`reorder` verb entries and
 `📓️derivation-rules.md`'s recipes for an id-keyed ordered timeline (`steps`), an id-keyed unordered

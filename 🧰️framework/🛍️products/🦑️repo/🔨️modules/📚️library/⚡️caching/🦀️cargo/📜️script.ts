@@ -72,6 +72,33 @@ export async function buildCargoArtifacts(manifest: string, args: string[] = [],
   console.log(`[nx-native] staged ${files.size} deliverables in ${slash(relative(repoRoot, staging))}`);
 }
 
+/** 📦️ Runs an independently owned Rust artifact package through the shared Nx-native contract. */
+export async function runArtifactRustPackageMain(packageRoot: string, cargoName: string): Promise<void> {
+  class BuildScript extends BundleScript {
+    async run(segments: string[]): Promise<void> {
+      await buildCargoArtifacts(relative(this.repoRoot, resolve(this.root, "Cargo.toml")), segments, this.repoRoot);
+    }
+  }
+  class CheckScript extends BundleScript {
+    run(segments: string[]): void {
+      const status = runCmdStatus("cargo", ["check", "--locked", "--manifest-path", resolve(this.root, "Cargo.toml"), ...segments], { cwd: this.repoRoot });
+      if (status) throw new Error(`cargo check failed (${status})`);
+    }
+  }
+  class TestScript extends BundleScript {
+    run(segments: string[]): void {
+      const levels = new Set(["fundamental", "quick", "long", "exhaustive"]), [first, ...rest] = segments;
+      const extra = first && levels.has(first) ? rest : segments;
+      if (first && levels.has(first)) process.env.SEMIO_TEST_LEVEL = first;
+      const status = runCmdStatus("cargo", ["test", "--locked", "-p", cargoName, ...extra], { cwd: this.repoRoot, env: process.env });
+      if (status) throw new Error(`cargo test failed (${status})`);
+    }
+  }
+  const packageRouter = new ScriptRouter(packageRoot).register("build", BuildScript).register("check", CheckScript).register("test", TestScript);
+  const segments = process.argv.slice(2);
+  await packageRouter.run(segments.length ? segments : ["test"]);
+}
+
 class NativeScript extends BundleScript {
   async run(args: string[]): Promise<void> {
     const [tool, operation] = args;

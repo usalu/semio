@@ -1,5 +1,5 @@
-use crate::artifacts::tsv::standards::iana::subsets::any::schema::mutations::{apply_tsv_mutation, TsvMutation};
-use crate::artifacts::tsv::standards::iana::subsets::any::schema::snapshot::TsvSnapshot;
+use crate::standards::iana::subsets::any::schema::mutations::{apply_tsv_mutation, TsvMutation};
+use crate::standards::iana::subsets::any::schema::snapshot::TsvSnapshot;
 
 /// ▶️ Applies a set-snapshot mutation.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

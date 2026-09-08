@@ -11,9 +11,6 @@ pub fn flow_to_wire(from: &crate::artifacts::flow::FlowSnapshot) -> Vec<u8> {
 pub fn flow_from_wire(bytes: &[u8]) -> Result<crate::artifacts::flow::FlowSnapshot, store::PackError> {
     <crate::artifacts::flow::FlowSnapshot as store::ArtifactPack>::decode_pack(bytes)
 }
-pub fn pack_err_as_text(err: store::PackError) -> store::TextError {
-    store::TextError::new(err.to_string(), dsl::TextSpan::at(1, 1))
-}
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
     use crate::artifacts::flow::standards::v1::subsets::any::schema::FlowAnalyzer;

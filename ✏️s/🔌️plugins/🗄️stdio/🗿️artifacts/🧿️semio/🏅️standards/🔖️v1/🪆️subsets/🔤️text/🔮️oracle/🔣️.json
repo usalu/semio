@@ -157,7 +157,7 @@
         {
           "id": "add-mark",
           "capability": "semio-v1-text-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "rejected",
             "applied"
@@ -177,7 +177,7 @@
         {
           "id": "change-run-language",
           "capability": "semio-v1-text-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "rejected",
             "applied"
@@ -197,7 +197,7 @@
         {
           "id": "edit-run",
           "capability": "semio-v1-text-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "rejected",
             "applied"
@@ -217,7 +217,7 @@
         {
           "id": "insert-run",
           "capability": "semio-v1-text-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -236,7 +236,7 @@
         {
           "id": "remove-mark",
           "capability": "semio-v1-text-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "rejected",
             "applied"
@@ -256,7 +256,7 @@
         {
           "id": "remove-run",
           "capability": "semio-v1-text-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "rejected",
             "applied"
@@ -276,7 +276,7 @@
         {
           "id": "reorder-runs",
           "capability": "semio-v1-text-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "rejected",
             "applied"

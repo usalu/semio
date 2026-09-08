@@ -1,8 +1,8 @@
 //! 🧬️ Direct set-attribute mutation owner.
-use crate::artifacts::xml::schema::diff::{diff_at_path, XmlAttrAdded, XmlAttrModified, XmlAttributesDiff, XmlDiff, XmlElementDiff, XmlNodeDiff};
-use crate::artifacts::xml::schema::mutation_support::XmlNodePath;
-use crate::artifacts::xml::schema::snapshot::XmlNode;
-use crate::artifacts::xml::XmlSnapshot;
+use crate::schema::diff::{diff_at_path, XmlAttrAdded, XmlAttrModified, XmlAttributesDiff, XmlDiff, XmlElementDiff, XmlNodeDiff};
+use crate::schema::mutation_support::XmlNodePath;
+use crate::schema::snapshot::XmlNode;
+use crate::XmlSnapshot;
 
 #[path = "📝️text/🦀️.rs"]
 pub mod text;

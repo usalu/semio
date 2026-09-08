@@ -5,7 +5,7 @@
   "displayName": "Delete People Gain",
   "emoji": "🚷️",
   "aggregateVariant": "DeletePeopleGain",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "delete-people-gain",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

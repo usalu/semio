@@ -9,10 +9,10 @@
 //! leaf's own oracle. The derived `.op.semio`/`.spr.semio`/`.dsl.semio`/`.pack.semio`/
 //! `.patch.semio` encodings come from `fixtures generate`, not from here.
 
-use crate::artifacts::gltf::schema::mutations::delete_animation::diff::GltfDeleteAnimationDiff;
-use crate::artifacts::gltf::schema::mutations::delete_animation::GltfDeleteAnimationPayload;
-use crate::artifacts::gltf::schema::mutations::delete_animation::{diff, inverse, mutation};
-use crate::artifacts::gltf::GltfSnapshot;
+use crate::schema::mutations::delete_animation::diff::GltfDeleteAnimationDiff;
+use crate::schema::mutations::delete_animation::GltfDeleteAnimationPayload;
+use crate::schema::mutations::delete_animation::{diff, inverse, mutation};
+use crate::GltfSnapshot;
 
 const CASE: &str = "delete-animation/removes-the-bob-clip-and-leaves-spin-in-place";
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");

@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeCo2Ppm, base: &Din16798Snapshot) -> protocol::Mutati
     if base.co2_ppm == payload.new_co2_ppm {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("CO2 concentration is already {}.", payload.new_co2_ppm));
     }
-    protocol::MutationOutcome::new(Din16798Diff { co2_ppm: Some(payload.new_co2_ppm.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(Din16798Diff { co2_ppm: Some(payload.new_co2_ppm), ..Default::default() })
 }
 //#endregion 🔖️Diff

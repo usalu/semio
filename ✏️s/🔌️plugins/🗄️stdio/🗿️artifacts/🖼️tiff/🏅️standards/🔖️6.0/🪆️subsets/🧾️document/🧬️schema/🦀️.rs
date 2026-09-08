@@ -1,9 +1,9 @@
 //! 🧬️ TiffArtifact schema — full artifact state (mirrors `TiffSnapshot` field-for-field; see
 //! `png_artifact_schema_descriptor`/`PngArtifact` for the established repo pattern this follows).
 
-use crate::artifacts::tiff::schema::snapshot::{TiffByteOrder, TiffIfd};
-use crate::artifacts::tiff::TiffSnapshot;
-use schema::ArtifactSchema;
+use crate::schema::snapshot::{TiffByteOrder, TiffIfd};
+use crate::TiffSnapshot;
+use framework_schema::ArtifactSchema;
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
@@ -43,31 +43,31 @@ impl TiffArtifact {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn tiff_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
-    schema::ArtifactSchemaDescriptor {
+pub fn tiff_artifact_schema_descriptor() -> framework_schema::ArtifactSchemaDescriptor {
+    framework_schema::ArtifactSchemaDescriptor {
         id: "s.stdio.tiff",
-        artifact: schema::FacetLeaves {
+        artifact: framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),
             json_schema: include_str!("🔣️.json"),
             proto: include_str!("🛰️.proto"),
         },
-        snapshot: schema::FacetLeaves {
+        snapshot: framework_schema::FacetLeaves {
             rust: include_str!("📸️snapshot/🦀️.rs"),
             typescript: include_str!("📸️snapshot/🟦️.ts"),
             graphql: include_str!("📸️snapshot/🔗️.graphql"),
             json_schema: include_str!("📸️snapshot/🔣️.json"),
             proto: include_str!("📸️snapshot/🛰️.proto"),
         },
-        diff: schema::FacetLeaves {
+        diff: framework_schema::FacetLeaves {
             rust: include_str!("🔺️diff/🦀️.rs"),
             typescript: include_str!("🔺️diff/🟦️.ts"),
             graphql: include_str!("🔺️diff/🔗️.graphql"),
             json_schema: include_str!("🔺️diff/🔣️.json"),
             proto: include_str!("🔺️diff/🛰️.proto"),
         },
-        mutations: schema::FacetLeaves {
+        mutations: framework_schema::FacetLeaves {
             rust: include_str!("🧬️mutations/🦀️.rs"),
             typescript: include_str!("🧬️mutations/🟦️.ts"),
             graphql: include_str!("🧬️mutations/🔗️.graphql"),
@@ -78,7 +78,7 @@ pub fn tiff_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
 }
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use crate::artifacts::tiff::{TiffDiff, TiffMutation, TiffSnapshot};
+    use crate::{TiffDiff, TiffMutation, TiffSnapshot};
     use semio_framework_plugin::ArtifactBuilder;
 
     //#region 🔖️Builder
@@ -106,7 +106,7 @@ pub mod derived_construction {
             Ok(Self::from_snapshot(<TiffSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
         fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
-            let diff = crate::artifacts::tiff::schema::mutations::apply_tiff_mutation(&mut self.snapshot, &mutation);
+            let diff = crate::schema::mutations::apply_tiff_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
         fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
@@ -128,7 +128,7 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use crate::artifacts::tiff::TiffSnapshot;
+    use crate::TiffSnapshot;
     use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     //#region 🔖️Parts
@@ -257,11 +257,11 @@ pub fn empty_tiff_snapshot() -> TiffSnapshot {
 /// exactly the canonical shape a second `encode_tiff`/`decode_tiff` pass reproduces byte-for-byte.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn demo_tiff_snapshot() -> TiffSnapshot {
-    use crate::artifacts::tiff::standards::v6_0::subsets::document::io::{decode_tiff, encode_tiff};
-    use crate::artifacts::tiff::standards::v6_0::subsets::document::schema::snapshot::{TiffByteOrder, TiffFieldType, TiffIfd, TiffTag, TiffValues};
-    use crate::artifacts::tiff::standards::v6_0::subsets::document::schema::snapshot::{TAG_IMAGE_LENGTH, TAG_IMAGE_WIDTH};
-    use crate::artifacts::tiff::TiffSnapshot;
-    use crate::artifacts::tiff::STDIO_TIFF_DOCUMENT_SCHEMA;
+    use crate::standards::v6_0::subsets::document::io::{decode_tiff, encode_tiff};
+    use crate::standards::v6_0::subsets::document::schema::snapshot::{TiffByteOrder, TiffFieldType, TiffIfd, TiffTag, TiffValues};
+    use crate::standards::v6_0::subsets::document::schema::snapshot::{TAG_IMAGE_LENGTH, TAG_IMAGE_WIDTH};
+    use crate::TiffSnapshot;
+    use crate::STDIO_TIFF_DOCUMENT_SCHEMA;
     let (w, h) = (3u32, 2u32);
     let mut pixels = Vec::with_capacity((w * h * 4) as usize);
     for y in 0..h {

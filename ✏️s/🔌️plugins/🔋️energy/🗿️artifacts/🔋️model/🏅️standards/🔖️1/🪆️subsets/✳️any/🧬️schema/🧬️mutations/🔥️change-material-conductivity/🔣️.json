@@ -5,7 +5,7 @@
   "displayName": "Change Material Conductivity",
   "emoji": "🔥️",
   "aggregateVariant": "ChangeMaterialConductivity",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-material-conductivity",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

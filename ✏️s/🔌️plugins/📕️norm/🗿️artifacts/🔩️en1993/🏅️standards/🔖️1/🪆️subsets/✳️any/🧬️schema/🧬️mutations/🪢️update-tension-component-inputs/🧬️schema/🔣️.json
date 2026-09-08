@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/norm/en1993/1/any/mutation/update-tension-component-inputs.json",
+  "title": "UpdateTensionComponentInputs",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newTensionComponentFKKn",
+    "newTensionComponentFUkKn",
+    "newTensionComponentNEdKn"
+  ],
+  "properties": {
+    "newTensionComponentFUkKn": {
+      "type": "number"
+    },
+    "newTensionComponentFKKn": {
+      "type": "number"
+    },
+    "newTensionComponentNEdKn": {
+      "type": "number"
+    }
+  }
+}

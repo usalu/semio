@@ -1,7 +1,7 @@
 //! 📝️ Direct set-page-text payload, sparse diff, concrete inverse, and laws.
 
 use super::PdfA1Mutation;
-use crate::artifacts::pdf::standards::v1_4::subsets::base::schema::{
+use crate::standards::v1_4::subsets::base::schema::{
     diff::{PdfDiff, PdfPageDiff, PdfPageModified, PdfPagesDiff},
     snapshot::PdfSnapshot,
 };

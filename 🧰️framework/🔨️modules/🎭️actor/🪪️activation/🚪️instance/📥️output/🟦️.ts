@@ -168,8 +168,8 @@ if (import.meta.vitest) {
   }
   describe("OwnedActorTurnOutput", () => {
     it("ActorResponseAdmission declares conserved metadata and separate grants without receiver or refund authority", async () => {
-      const { default: contract } = await import("./🏘️admission/🤝️contract.json"); const { default: schema } = await import("./🏘️admission/🧬️schema.json"); const { default: fixture } = await import("./🏘️admission/🧪️fixture/🔣️.json"); const { default: fixtureSchema } = await import("./🏘️admission/📐️schema/🔣️.json"); const { default: Ajv } = await import("ajv"); const { produce } = await import("immer");
-      const ajv = new Ajv({ strict: true }); expect(ajv.validate(schema, contract)).toBe(true); expect(ajv.validate(fixtureSchema, fixture)).toBe(true);
+      const { default: contract } = await import("./🏘️admission/🤝️contract.json"); const { default: schema } = await import("./🏘️admission/🧬️schema/🔣️.json"); const { default: fixture } = await import("./🏘️admission/🧪️fixture/🔣️.json"); const fixtureSchema = schema; const { default: Ajv } = await import("ajv"); const { produce } = await import("immer");
+      const ajv = new Ajv({ strict: true }); expect(ajv.addSchema(schema).getSchema(`${schema.$id}#/$defs/Admission`)!(contract)).toBe(true); expect(ajv.getSchema(`${schema.$id}#/$defs/AdmissionFixture`)!(fixture)).toBe(true);
       const domain = [contract.slotFields, contract.facadeFields, contract.outcomeFields].reduce((total, fields) => produce(total, value => { value.bytes += contract.model.recordBytes + fields.length * contract.model.fieldBytes; value.slots++; value.owners++; }), { bytes: 0, slots: 0, owners: 0 }); expect(domain).toEqual(contract.domain);
       const retained = [domain, contract.intrinsicRecord, contract.admissionCell].reduce((total, charge) => produce(total, value => { value.bytes += charge.bytes; value.slots += charge.slots; value.owners += charge.owners; }), { bytes: 0, slots: 0, owners: 0 }); expect(retained).toEqual(contract.retained);
       expect(contract.model.recordBytes + contract.rosterFields.length * contract.model.fieldBytes).toBe(contract.parentRoster.bytes); expect(fixture.phases.map(row => row.phase)).toEqual(contract.phases); expect(fixture.phases.map(row => row.grant)).toEqual(contract.grants);
@@ -202,8 +202,8 @@ if (import.meta.vitest) {
       }
     });
     it("ActorOutputFault retains exact constructor failures and rejects empty cancellation or dispatch", async () => {
-      const { default: fixture } = await import("./🧯️fault/🧪️fixture/🔣️.json"); const { default: schema } = await import("./🧯️fault/🧬️schema.json"); const { default: Ajv } = await import("ajv"); const { produce } = await import("immer");
-      expect(new Ajv({ strict: true }).validate(schema, fixture)).toBe(true); const matches = Reflect.get(OwnedActorTurnOutput, "matchesFault"); expect(typeof matches).toBe("function");
+      const { default: fixture } = await import("./🧯️fault/🧪️fixture/🔣️.json"); const { default: schema } = await import("./🧯️fault/🧬️schema/🔣️.json"); const { default: Ajv } = await import("ajv"); const { produce } = await import("immer");
+      expect(new Ajv({ strict: true }).addSchema(schema).getSchema(`${schema.$id}#/$defs/Admission`)!(fixture)).toBe(true); const matches = Reflect.get(OwnedActorTurnOutput, "matchesFault"); expect(typeof matches).toBe("function");
       for (const boundary of fixture.boundaries) for (const kind of fixture.values) {
         const queue = new OwnedActorTurnOutputs({}, 1, fixtureLedger()); let reads = 0; const fault = kind === "null" ? null : kind === "undefined" ? undefined : kind === "false" ? false : kind === "zero" ? 0 : { payload: new Uint8Array(fixture.unknownBytes), get message() { reads++; throw new Error("Foreign constructor fault getter"); } };
         const original = Object.freeze; const spy = vi.spyOn(Object, "freeze").mockImplementation(value => { if (value === queue.peek() && value !== null) { if (boundary === "after-finalize") original(value); throw fault; } return original(value); }); let threw = false;
@@ -226,11 +226,11 @@ if (import.meta.vitest) {
     });
     it("pre-admits a strong exact output owner before dispatch and retains it across caller faults", async () => {
       const { default: fixture } = await import("./🧪️fixture/🔣️.json");
-      const { default: schema } = await import("./🧬️schema.json");
-      const { default: lifetimeSchema } = await import("../../../🚪️lifetime/🧬️schema.json");
+      const { default: schema } = await import("./🧬️schema/🔣️.json");
+      const { default: lifetimeSchema } = await import("../../../🚪️lifetime/🧬️schema/🔣️.json");
       const { default: Ajv } = await import("ajv");
       const { produce } = await import("immer");
-      const validate = new Ajv({ strict: true }).addSchema(lifetimeSchema).compile(schema);
+      const validate = new Ajv({ strict: true }).addSchema(lifetimeSchema).addSchema(schema).getSchema(`${schema.$id}#/$defs/Admission`)!;
       const owner = Object.freeze({});
       const queue = new OwnedActorTurnOutputs(owner, fixture.capacity, fixtureLedger());
       const output = (await fixtureOutput(queue))!;
@@ -276,11 +276,11 @@ if (import.meta.vitest) {
     });
     it("captures the original response envelope before settlement or failure extraction can throw", async () => {
       const { default: fixture } = await import("./🧪️fixture/🔣️.json");
-      const { default: schema } = await import("./🧬️schema.json");
-      const { default: lifetimeSchema } = await import("../../../🚪️lifetime/🧬️schema.json");
+      const { default: schema } = await import("./🧬️schema/🔣️.json");
+      const { default: lifetimeSchema } = await import("../../../🚪️lifetime/🧬️schema/🔣️.json");
       const { default: Ajv } = await import("ajv");
       const { produce } = await import("immer");
-      const validate = new Ajv({ strict: true }).addSchema(lifetimeSchema).compile(schema);
+      const validate = new Ajv({ strict: true }).addSchema(lifetimeSchema).addSchema(schema).getSchema(`${schema.$id}#/$defs/Admission`)!;
       for (const kind of fixture.responseSettlement.outcomes) {
         const owner = Object.freeze({}); const queue = new OwnedActorTurnOutputs(owner, fixture.capacity, fixtureLedger()); const output = (await fixtureOutput(queue))!;
         const raw = { kind: "result", ok: kind === "success", value: { uiPatches: [] }, framesBytes: new Uint8Array(fixture.responseSettlement.unknownPayloadBytes), unknown: { retained: true } };

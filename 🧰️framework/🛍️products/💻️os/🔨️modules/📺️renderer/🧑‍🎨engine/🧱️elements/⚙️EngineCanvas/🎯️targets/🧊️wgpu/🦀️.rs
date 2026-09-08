@@ -11,9 +11,9 @@ use crate::interpreter::FrameworkWidgetContext;
 use flow::{dag::dag_screen_to_world, FlowHost};
 use framework_editor::EditorHost;
 use framework_surface_node_graph::node_graph::GraphHost;
-use framework_surface_tiled_map::tiled_map::{tiles::VisibleTileCursor, MapHost, MapInteractionIntent};
+use framework_surface_tiled_map::tiled_map::{MapHost, MapInteractionIntent};
 use infinite_canvas as canvas;
-use infinite_world::world::{WorldAssetFault, WorldAssetRequestKind, WORLD_ASSET_URL_BYTE_CAPACITY};
+use infinite_world::world::{WorldAssetFault, WorldAssetRequestKind};
 use serde_json::{json, Value};
 use std::collections::{HashMap, HashSet};
 use std::mem::ManuallyDrop;
@@ -56,7 +56,6 @@ struct EngineSurface {
     sync_cache: NodeGraphSyncCache,
     map_host: Option<MapHost>,
     map_sync_cache: MapSyncCache,
-    map_tile_requests: Option<MapTileRequestCursor>,
     board_host: Option<ManuallyDrop<puzzle::editor::puzzle2d::engine::BoardHost>>,
     board_sync_cache: BoardSyncCache,
     board_pending_events: puzzle::editor::puzzle2d::engine::BoardEventQueue,
@@ -313,7 +312,6 @@ enum EngineSurfaceClosePhase {
     MapSync,
     Editor,
     EditorPack,
-    TileRequests,
     Board,
     BoardSync,
     Scalars,
@@ -347,7 +345,6 @@ struct EngineSurfaceRetirement {
     sync_cache: NodeGraphSyncCache,
     map_source: Option<MapHost>,
     map_sync_cache: MapSyncCache,
-    map_tile_requests: Option<MapTileRequestCursor>,
     board_source: Option<ManuallyDrop<puzzle::editor::puzzle2d::engine::BoardHost>>,
     board_sync_cache: BoardSyncCache,
     board_pending_events: puzzle::editor::puzzle2d::engine::BoardEventQueue,
@@ -372,7 +369,6 @@ impl EngineSurfaceRetirement {
             sync_cache,
             map_host: map_source,
             map_sync_cache,
-            map_tile_requests,
             board_host: board_source,
             board_sync_cache,
             board_pending_events,
@@ -394,7 +390,6 @@ impl EngineSurfaceRetirement {
             sync_cache,
             map_source,
             map_sync_cache,
-            map_tile_requests,
             board_source,
             board_sync_cache,
             board_pending_events,
@@ -583,11 +578,6 @@ impl EngineSurfaceRetirement {
             }
             EngineSurfaceClosePhase::EditorPack => {
                 if !Self::close_bytes(&mut self.editor_scene_pack) {
-                    self.phase = EngineSurfaceClosePhase::TileRequests;
-                }
-            }
-            EngineSurfaceClosePhase::TileRequests => {
-                if self.map_tile_requests.take().is_none() {
                     self.phase = EngineSurfaceClosePhase::Board;
                 }
             }
@@ -627,7 +617,6 @@ impl EngineSurfaceRetirement {
                     || self.editor_source.is_some()
                     || self.board_source.is_some()
                     || self.editor_scene_pack.is_some()
-                    || self.map_tile_requests.is_some()
                     || self.board_pointer_claim.is_some()
                     || self.board_pointer_controller_id.is_some()
                     || self.board_retiring_events.is_some()
@@ -658,7 +647,6 @@ impl EngineSurfaceRetirement {
             && node_graph_sync_terminal(&self.sync_cache)
             && self.map_source.is_none()
             && map_sync_terminal(&self.map_sync_cache)
-            && self.map_tile_requests.is_none()
             && self.board_source.is_none()
             && board_sync_terminal(&self.board_sync_cache)
             && self.board_pending_events.terminal_is_empty()
@@ -755,8 +743,9 @@ struct EngineCanvasPacketReservation {
 
 /// 🧰️ Worker-owned fixed resource sink threaded through chrome/scene traversal.
 pub(crate) struct EngineCanvasBuildContext {
-    dpr: f64,
+    #[cfg(test)]
     document_generation: u64,
+    #[cfg(test)]
     scene_revision: u64,
     packets: Box<[Option<EngineCanvasPacket>; ENGINE_CANVAS_FRAME_PACKET_CAPACITY]>,
     rejected: Box<[Option<EngineCanvasPacket>; ENGINE_CANVAS_FRAME_PACKET_CAPACITY]>,
@@ -770,8 +759,9 @@ pub(crate) struct EngineCanvasBuildContext {
 impl Default for EngineCanvasBuildContext {
     fn default() -> Self {
         Self {
-            dpr: 0.0,
+            #[cfg(test)]
             document_generation: 0,
+            #[cfg(test)]
             scene_revision: 0,
             packets: Box::new([const { None }; ENGINE_CANVAS_FRAME_PACKET_CAPACITY]),
             rejected: Box::new([const { None }; ENGINE_CANVAS_FRAME_PACKET_CAPACITY]),
@@ -785,12 +775,9 @@ impl Default for EngineCanvasBuildContext {
 }
 
 impl EngineCanvasBuildContext {
-    pub(crate) fn new(dpr: f64, document_generation: u64, scene_revision: u64) -> Self {
-        Self { dpr, document_generation, scene_revision, ..Self::default() }
-    }
-
-    pub(crate) fn dpr(&self) -> f64 {
-        self.dpr
+    #[cfg(test)]
+    fn new(document_generation: u64, scene_revision: u64) -> Self {
+        Self { document_generation, scene_revision, ..Self::default() }
     }
 
     pub(crate) fn take_packet_step(&mut self) -> Result<Option<EngineCanvasPacket>, EngineCanvasPacket> {
@@ -877,8 +864,6 @@ struct EngineGpuSurface {
     vello: Renderer,
     texture: wgpu::Texture,
     view: wgpu::TextureView,
-    width: u32,
-    height: u32,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -1108,7 +1093,7 @@ impl EngineGpuSlot {
             self.candidate = Some(candidate);
             return Err("engine GPU publication owner transfer was incomplete".to_string());
         };
-        let published = EngineGpuSurface { vello: renderer, texture, view, width: candidate.width, height: candidate.height };
+        let published = EngineGpuSurface { vello: renderer, texture, view };
         if let Some(displaced) = self.live.replace(published) {
             self.retirement = Some(EngineGpuRetirement::new(displaced));
         }
@@ -1512,21 +1497,9 @@ static MAP_TILE_ASSET_FAULT: WorkerCell<Option<WorldAssetFault>> = WorkerCell::n
 
 
 
-#[cfg(test)]
-pub(crate) fn theme_is_dark(theme: &Theme) -> bool {
-    let c = theme.canvas_clear;
-    let lum = f64::from(linear_to_rgba8_channel(c.r)) * 0.299 + f64::from(linear_to_rgba8_channel(c.g)) * 0.587 + f64::from(linear_to_rgba8_channel(c.b)) * 0.114;
-    lum < 128.0
-}
 
-#[cfg(test)]
-fn linear_to_rgba8_channel(linear: f32) -> u8 {
-    if linear <= 0.0031308 {
-        (linear * 12.92 * 255.0).round() as u8
-    } else {
-        (1.055 * linear.powf(1.0 / 2.4) - 0.055).mul_add(255.0, 0.0).round() as u8
-    }
-}
+
+
 
 
 
@@ -1577,7 +1550,7 @@ fn engine_packet_capacity_plus_one_returns_the_exact_snapshot_before_scene_trans
         panic!("bounded packet identity");
     };
     let snapshot = EngineSurfaceSnapshot { identity: EngineSurfaceIdentity { token: EngineSurfaceToken { slot: 7, generation: 11 }, id }, metrics_generation: 13 };
-    let mut context = EngineCanvasBuildContext::new(17.0, 19, 23);
+    let mut context = EngineCanvasBuildContext::new(19, 23);
     for index in 0..(ENGINE_CANVAS_FRAME_PACKET_CAPACITY * 2) {
         let Ok(reservation) = context.try_reserve_fresh_packet(snapshot) else {
             panic!("fixed packet and rejection authorities admit their declared capacity");
@@ -1599,7 +1572,7 @@ fn engine_packet_capacity_plus_one_returns_the_exact_snapshot_before_scene_trans
 fn engine_packet_close_retains_opaque_scene_until_exact_terminal_release() {
     let id = EngineSurfaceId::try_from_str("packet-retirement").expect("bounded packet identity");
     let snapshot = EngineSurfaceSnapshot { identity: EngineSurfaceIdentity { token: EngineSurfaceToken { slot: 5, generation: 7 }, id }, metrics_generation: 11 };
-    let mut context = EngineCanvasBuildContext::new(1.0, 13, 17);
+    let mut context = EngineCanvasBuildContext::new(13, 17);
     let reservation = context.try_reserve_fresh_packet(snapshot).expect("fixed packet retirement authority");
     let mut scene = canvas::Scene::new();
     for _ in 0..128 {
@@ -1741,6 +1714,7 @@ fn populated_flow_surface_closes_history_and_cache_before_slot_reuse() {
 
 
 
+#[cfg(test)]
 fn scene_action(scene: &UiComponentSceneNode, action: &str, args: Value) -> ActionDescriptor {
     ActionDescriptor { controller_id: scene.controller_id.clone(), action: action.to_string(), args: semio_framework::optional_json_to_dsl(Some(args)) }
 }
@@ -1751,7 +1725,6 @@ fn empty_engine_surface(pw: u32, ph: u32) -> EngineSurface {
         sync_cache: NodeGraphSyncCache::default(),
         map_host: None,
         map_sync_cache: MapSyncCache::default(),
-        map_tile_requests: None,
         board_host: None,
         board_sync_cache: BoardSyncCache::default(),
         board_pending_events: puzzle::editor::puzzle2d::engine::BoardEventQueue::default(),
@@ -1866,15 +1839,6 @@ fn create_target_texture(device: &wgpu::Device, width: u32, height: u32) -> wgpu
 //#region NodeGraph
 
 
-#[cfg(target_arch = "wasm32")]
-fn engine_now_ms() -> f64 {
-    js_sys::Date::now()
-}
-
-#[cfg(not(target_arch = "wasm32"))]
-fn engine_now_ms() -> f64 {
-    std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|duration| duration.as_secs_f64() * 1000.0).unwrap_or(0.0)
-}
 
 pub fn node_graph_apply_note_edit_key(action: KeyAction, modifiers: &PointerModifiers) -> bool {
     ENGINE_SURFACES.with(|cell| {
@@ -2644,75 +2608,6 @@ pub fn take_map_tile_asset_fault() -> Option<WorldAssetFault> {
 }
 
 
-
-#[derive(Clone, Copy)]
-enum MapTileRequestPhase {
-    Raster,
-    Vector,
-    Terminal,
-}
-
-#[derive(Clone, Copy)]
-struct MapTileRequestCursor {
-    revision: u64,
-    raster_template: u64,
-    vector_template: u64,
-    raster: Option<VisibleTileCursor>,
-    vector: Option<VisibleTileCursor>,
-    phase: MapTileRequestPhase,
-}
-
-fn bounded_map_template_witness(template: &str) -> Result<u64, WorldAssetFault> {
-    if template.len().checked_add(30).is_none_or(|bytes| bytes > WORLD_ASSET_URL_BYTE_CAPACITY) {
-        return Err(WorldAssetFault::UrlCapacity);
-    }
-    Ok(template.bytes().fold(0xcbf29ce484222325u64, |hash, byte| hash.wrapping_mul(0x100000001b3) ^ u64::from(byte)))
-}
-
-impl MapTileRequestCursor {
-    fn new(scene: &ui_wgpu::wgpu::TiledMapScene, host: &MapHost) -> Result<Self, WorldAssetFault> {
-        let raster_template = bounded_map_template_witness(&scene.tile_url_template)?;
-        let vector_template = bounded_map_template_witness(&scene.vector_tile_url_template)?;
-        let raster = (scene.render_mode == "image" || scene.render_mode == "combined").then(|| host.visible_raster_tile_cursor());
-        let vector = (scene.render_mode == "vector" || scene.render_mode == "combined").then(|| host.visible_vector_tile_cursor()).flatten();
-        let phase = if raster.is_some() {
-            MapTileRequestPhase::Raster
-        } else if vector.is_some() {
-            MapTileRequestPhase::Vector
-        } else {
-            MapTileRequestPhase::Terminal
-        };
-        Ok(Self { revision: host.interaction_revision(), raster_template, vector_template, raster, vector, phase })
-    }
-
-    fn matches(&self, scene: &ui_wgpu::wgpu::TiledMapScene, host: &MapHost) -> bool {
-        self.revision == host.interaction_revision() && bounded_map_template_witness(&scene.tile_url_template).ok() == Some(self.raster_template) && bounded_map_template_witness(&scene.vector_tile_url_template).ok() == Some(self.vector_template)
-    }
-
-    fn current(&self) -> Option<(bool, framework_surface_tiled_map::tiled_map::tiles::VisibleTile)> {
-        match self.phase {
-            MapTileRequestPhase::Raster => self.raster.as_ref()?.peek().map(|tile| (false, tile)),
-            MapTileRequestPhase::Vector => self.vector.as_ref()?.peek().map(|tile| (true, tile)),
-            MapTileRequestPhase::Terminal => None,
-        }
-    }
-
-    fn advance(&mut self) {
-        match self.phase {
-            MapTileRequestPhase::Raster => {
-                if self.raster.as_mut().is_none_or(|cursor| !cursor.advance() || cursor.remaining() == 0) {
-                    self.phase = if self.vector.as_ref().is_some_and(|cursor| cursor.remaining() != 0) { MapTileRequestPhase::Vector } else { MapTileRequestPhase::Terminal };
-                }
-            }
-            MapTileRequestPhase::Vector => {
-                if self.vector.as_mut().is_none_or(|cursor| !cursor.advance() || cursor.remaining() == 0) {
-                    self.phase = MapTileRequestPhase::Terminal;
-                }
-            }
-            MapTileRequestPhase::Terminal => {}
-        }
-    }
-}
 
 
 pub fn apply_map_tile_bytes(kind: WorldAssetRequestKind, bytes: &[u8]) {

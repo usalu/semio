@@ -6,8 +6,8 @@
 //! text representation, so real payload editing is out of this first pass's scope (documented,
 //! matching the ticket brief's own container/opaque framing for this kind).
 
-use crate::artifacts::deflate::schema::snapshot::DeflateLevelHint;
-use crate::artifacts::deflate::DeflateSnapshot;
+use crate::schema::snapshot::DeflateLevelHint;
+use crate::DeflateSnapshot;
 use semio_framework_plugin::app::{TextView, TextWindowKit, WindowKit};
 use semio_framework_plugin::{BuiltNode, LocalizedLabel, WindowKindDefinition};
 

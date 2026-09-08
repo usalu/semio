@@ -6,13 +6,13 @@
 //! `Some(Some(handle))` = "set it to this handle" — each triad's own `🔺️diff` leaf builds this
 //! directly from `(payload, base)`, never apply-then-capture.
 
-use crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioTransform;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
-use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
-use crate::artifacts::semio::standards::v1::subsets::object::schema::snapshot::SemioObjectSnapshot;
-use crate::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValueSnapshot;
+use crate::standards::v1::subsets::base::schema::geometry::SemioTransform;
+use crate::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
+use crate::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
+use crate::standards::v1::subsets::object::schema::snapshot::SemioObjectSnapshot;
+use crate::standards::v1::subsets::value::schema::snapshot::SemioValueSnapshot;
 use protocol::MutationDiff;
-use schema::ArtifactSchema;
+use framework_schema::ArtifactSchema;
 
 //#region 🔖️Diff
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
@@ -99,7 +99,7 @@ impl protocol::command::DiffAlgebra<SemioObjectSnapshot> for SemioObjectDiff {
 //#endregion 🔖️Diff
 
 //#region 🔖️HandcraftedDiffCodec
-use crate::artifacts::semio::standards::v1::subsets::object::schema::snapshot::{dec_child_opt, dec_transform, enc_child_opt, enc_transform};
+use crate::standards::v1::subsets::object::schema::snapshot::{dec_child_opt, dec_transform, enc_child_opt, enc_transform};
 
 /// 🧾️ `<hex-flag><line>` per field, `\n`-joined, empty string = no-op diff — real, not decorative.
 /// `t=`/`b=`/`m=`/`p=` prefixes; a field absent from the diff simply has no line.
@@ -150,7 +150,7 @@ impl protocol::DiffCodec for SemioObjectDiff {
     /// ⚡️ Real binary diff frame: `format u8` + `presence u8` (bit0=transform, bit1=brep,
     /// bit2=mesh, bit3=properties), then each present field's own real encoding in bit order.
     fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        use crate::artifacts::semio::standards::v1::subsets::object::schema::snapshot::{write_child_opt, write_transform};
+        use crate::standards::v1::subsets::object::schema::snapshot::{write_child_opt, write_transform};
         const DIFF_BINARY_FORMAT: u8 = 1;
         let mut presence: u8 = 0;
         if self.transform.is_some() {
@@ -181,7 +181,7 @@ impl protocol::DiffCodec for SemioObjectDiff {
         Ok(out)
     }
     fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        use crate::artifacts::semio::standards::v1::subsets::object::schema::snapshot::{read_child_opt, read_transform};
+        use crate::standards::v1::subsets::object::schema::snapshot::{read_child_opt, read_transform};
         const DIFF_BINARY_FORMAT: u8 = 1;
         if bytes.len() < 2 {
             return Err(protocol::ProtocolError::Malformed { what: "diff header", offset: 0, detail: "truncated".to_string() });
@@ -207,7 +207,7 @@ impl protocol::DiffCodec for SemioObjectDiff {
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_diff_cases() -> Vec<SemioObjectDiff> {
-    use crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioPoint3;
+    use crate::standards::v1::subsets::base::schema::geometry::SemioPoint3;
     vec![
         SemioObjectDiff::default(),
         SemioObjectDiff { transform: Some(SemioTransform { translation: SemioPoint3 { x: 5.0, y: 0.0, z: 0.0 }, ..SemioTransform::identity() }), ..Default::default() },
@@ -227,7 +227,7 @@ pub(crate) fn demo_diff_cases() -> Vec<SemioObjectDiff> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::semio::standards::v1::subsets::object::schema::snapshot::demo_object_snapshot;
+    use crate::standards::v1::subsets::object::schema::snapshot::demo_object_snapshot;
     use protocol::DiffCodec;
 
     #[semio_framework_async_macros::async_test]

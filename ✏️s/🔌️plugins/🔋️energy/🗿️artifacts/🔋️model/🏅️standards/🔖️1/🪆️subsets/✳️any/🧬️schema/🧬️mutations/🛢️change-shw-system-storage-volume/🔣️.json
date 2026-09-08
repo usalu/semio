@@ -5,7 +5,7 @@
   "displayName": "Change Shw System Storage Volume",
   "emoji": "🛢️",
   "aggregateVariant": "ChangeShwSystemStorageVolume",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-shw-system-storage-volume",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

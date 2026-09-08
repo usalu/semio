@@ -1,7 +1,7 @@
 //! ↩️ Inverse for `set-snapshot`.
 
-use crate::artifacts::semio::standards::v1::subsets::audio::schema::mutations::{SemioAudioMutation, apply_semio_audio_mutation};
-use crate::artifacts::semio::standards::v1::subsets::audio::schema::snapshot::SemioAudioSnapshot;
+use crate::standards::v1::subsets::audio::schema::mutations::{SemioAudioMutation, apply_semio_audio_mutation};
+use crate::standards::v1::subsets::audio::schema::snapshot::SemioAudioSnapshot;
 use protocol::Mutation;
 
 /// ↩️ Inverse of set-snapshot.

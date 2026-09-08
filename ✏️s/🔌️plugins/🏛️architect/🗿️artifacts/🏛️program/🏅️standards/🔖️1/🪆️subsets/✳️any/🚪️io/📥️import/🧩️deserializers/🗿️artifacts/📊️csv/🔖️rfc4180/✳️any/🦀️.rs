@@ -6,7 +6,7 @@
 //! grid can reconstruct a ~78-register program artifact, so this returns a structurally valid
 //! empty snapshot rather than fabricating one.
 use crate::artifacts::program::schema::snapshot::ProgramSnapshot;
-use semio_s_plugin_stdio::artifacts::csv::{CsvSnapshot, STDIO_CSV_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_csv::{CsvSnapshot, STDIO_CSV_DOCUMENT_SCHEMA};
 
 pub fn register() {}
 

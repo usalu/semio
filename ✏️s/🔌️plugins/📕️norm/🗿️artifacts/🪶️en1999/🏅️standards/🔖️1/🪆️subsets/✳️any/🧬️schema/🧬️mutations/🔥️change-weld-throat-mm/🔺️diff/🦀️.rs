@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeWeldThroatMm, base: &En1999Snapshot) -> protocol::Mu
     if base.weld_throat_mm == payload.new_weld_throat_mm {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Weld throat thickness [mm] is already {}.", payload.new_weld_throat_mm));
     }
-    protocol::MutationOutcome::new(En1999Diff { weld_throat_mm: Some(payload.new_weld_throat_mm.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1999Diff { weld_throat_mm: Some(payload.new_weld_throat_mm), ..Default::default() })
 }
 //#endregion 🔖️Diff

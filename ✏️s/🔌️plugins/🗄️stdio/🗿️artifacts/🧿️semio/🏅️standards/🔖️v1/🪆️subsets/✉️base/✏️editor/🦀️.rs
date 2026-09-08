@@ -2,8 +2,8 @@
 //! 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §2.1). `SemioAnyEditor`
 //! implements `ArtifactEditor`, wiring the shared `MeshWindowKit` to a single Main window.
 
-use crate::artifacts::semio::standards::v1::subsets::base::schema::mutations::SemioMutation;
-use crate::artifacts::semio::standards::v1::subsets::base::schema::snapshot::SemioSnapshot;
+use crate::standards::v1::subsets::base::schema::mutations::SemioMutation;
+use crate::standards::v1::subsets::base::schema::snapshot::SemioSnapshot;
 use crate::editor::semio_base::modes::edit;
 use crate::editor::semio_base::modes::edit::windows::main;
 use semio_framework_plugin::app::InteractionView;

@@ -3,7 +3,7 @@
 /// 📦 Encodes a recognized mutation payload or declines another variant.
 pub type TxtMutationPayloadEncoder = fn(&TxtMutation) -> Option<Result<Vec<u8>, String>>;
 
-use crate::artifacts::txt::schema::mutations::{TxtMutation, insert_line, remove_line, set_line, set_line_ending, set_trailing_newline};
+use crate::schema::mutations::{TxtMutation, insert_line, remove_line, set_line, set_line_ending, set_trailing_newline};
 pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio");
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.protocol.semio");
 struct BinaryCodec {
@@ -54,7 +54,7 @@ impl protocol::OpBinary for TxtMutation {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::txt::schema::snapshot::LineEnding;
+    use crate::schema::snapshot::LineEnding;
     use protocol::OpBinary;
 
     #[test]

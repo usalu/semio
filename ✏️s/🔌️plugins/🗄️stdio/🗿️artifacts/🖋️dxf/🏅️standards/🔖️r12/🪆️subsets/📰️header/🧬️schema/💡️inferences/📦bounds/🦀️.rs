@@ -11,7 +11,7 @@
 //! contributes nothing to the fold — never fabricated. A pure whole-snapshot scalar (one min/max
 //! fold) — no `InferredField` needed.
 
-use crate::artifacts::dxf::schema::snapshot::{DxfEntity, DxfSnapshot};
+use crate::schema::snapshot::{DxfEntity, DxfSnapshot};
 
 //#region 🔖️Bounds
 /// 📦️ Dxf's entity-derived 3D bounding box.
@@ -103,7 +103,7 @@ pub fn compute_dxf_bounds(snapshot: &DxfSnapshot) -> DxfBounds {
 //#region 🧪️Tests
 mod tests {
     use super::*;
-    use crate::artifacts::dxf::schema::snapshot::DxfBlock;
+    use crate::schema::snapshot::DxfBlock;
 
     #[semio_framework_async_macros::async_test]
     async fn bounds_matches_hand_built_entity_extent() {

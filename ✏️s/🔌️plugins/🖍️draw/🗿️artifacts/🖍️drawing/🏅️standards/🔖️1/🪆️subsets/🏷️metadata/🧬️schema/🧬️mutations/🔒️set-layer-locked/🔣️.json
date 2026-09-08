@@ -5,7 +5,7 @@
   "displayName": "Set Layer Locked",
   "emoji": "🔒️",
   "aggregateVariant": "SetLayerLocked",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "set-layer-locked",
   "binaryTag": 1,
   "invertibility": "explicit-mutation",

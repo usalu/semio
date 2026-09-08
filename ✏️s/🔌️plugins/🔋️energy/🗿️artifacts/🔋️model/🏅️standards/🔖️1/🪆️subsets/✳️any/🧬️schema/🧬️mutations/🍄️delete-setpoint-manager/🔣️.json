@@ -5,7 +5,7 @@
   "displayName": "Delete Setpoint Manager",
   "emoji": "🍄️",
   "aggregateVariant": "DeleteSetpointManager",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "delete-setpoint-manager",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

@@ -371,7 +371,7 @@
       "outputs": [],
       "options": {
         "cwd": "♻️mit-bestand/📋️bericht/📦️packages/🟦️typescript",
-        "command": "bun ../../🔨️modules/👥️actor-network/📜️script.ts akteursnetz preview",
+        "command": "bun ./📜️script.ts preview-generated",
         "forwardAllArgs": false
       }
     },

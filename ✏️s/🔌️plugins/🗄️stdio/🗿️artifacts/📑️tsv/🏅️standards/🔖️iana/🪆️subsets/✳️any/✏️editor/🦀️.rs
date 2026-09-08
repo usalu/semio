@@ -3,8 +3,8 @@
 //! (`TableWindowKit`), directly editing `TsvSnapshot.records` through the artifact's own
 //! `TsvMutation::SetCell`.
 
-use crate::artifacts::tsv::standards::iana::subsets::any::schema::mutations::set_cell;
-use crate::artifacts::tsv::{TsvMutation, TsvSnapshot, STDIO_TSV_DOCUMENT_SCHEMA};
+use crate::standards::iana::subsets::any::schema::mutations::set_cell;
+use crate::{TsvMutation, TsvSnapshot, STDIO_TSV_DOCUMENT_SCHEMA};
 use crate::editor::tsv::modes::edit;
 use crate::editor::tsv::modes::edit::windows::main;
 use semio_framework_plugin::{

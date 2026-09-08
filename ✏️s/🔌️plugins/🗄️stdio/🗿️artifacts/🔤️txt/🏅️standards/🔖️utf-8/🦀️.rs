@@ -6,7 +6,7 @@
 //! (`mimes: ["text/plain"], extensions: [".txt"]`) — not invented.
 
 #[cfg(feature = "component-app-assembly")]
-use crate::artifacts::txt::standards::v_utf_8::subsets;
+use crate::standards::v_utf_8::subsets;
 #[cfg(feature = "component-app-assembly")]
 use semio_framework_plugin::app::declarations::{MediaDeclaration, StandardDeclaration};
 #[cfg(feature = "component-app-assembly")]
@@ -15,6 +15,6 @@ use semio_framework_plugin::StandardId;
 /// 🌳️ `standard "utf-8"`'s complete declaration — one subset, `any`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 #[cfg(feature = "component-app-assembly")]
-pub fn standard() -> StandardDeclaration<crate::plugin::StdioApps> {
+pub fn standard() -> StandardDeclaration<crate::TxtApps> {
     StandardDeclaration { id: StandardId("utf-8"), media: MediaDeclaration { mimes: &["text/plain"], extensions: &["txt"] }, subsets: vec![subsets::any::subset()] }
 }

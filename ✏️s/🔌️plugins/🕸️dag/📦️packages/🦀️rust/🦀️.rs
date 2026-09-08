@@ -1,6 +1,5 @@
 //! 🔀️ DAG plugin — declarative DAG play app bundled as a hot-swappable WASM component.
 
-#[allow(clippy::result_large_err)]
 extern crate infinite_canvas as infinite_board_port_directed_dag;
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;
@@ -628,8 +627,6 @@ semio_framework_plugin::plugin_exports!(plugin::plugin, DagApps);
 pub mod examples {
     #[path = "../../🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🦀️.rs"]
     pub mod app_dag_demo_session;
-    #[path = "../../🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️.rs"]
-    pub mod art_dag_demo;
     #[cfg(test)]
     #[path = "../../🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🦀️.rs"]
     mod art_dag_demo_tests;

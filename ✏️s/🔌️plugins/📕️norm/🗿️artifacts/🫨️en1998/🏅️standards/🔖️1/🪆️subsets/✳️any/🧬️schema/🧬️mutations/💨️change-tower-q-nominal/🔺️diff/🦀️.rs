@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeTowerQNominal, base: &En1998Snapshot) -> protocol::M
     if base.tower_q_nominal == payload.new_tower_q_nominal {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Tower nominal behaviour factor q is already {}.", payload.new_tower_q_nominal));
     }
-    protocol::MutationOutcome::new(En1998Diff { tower_q_nominal: Some(payload.new_tower_q_nominal.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1998Diff { tower_q_nominal: Some(payload.new_tower_q_nominal), ..Default::default() })
 }
 //#endregion 🔖️Diff

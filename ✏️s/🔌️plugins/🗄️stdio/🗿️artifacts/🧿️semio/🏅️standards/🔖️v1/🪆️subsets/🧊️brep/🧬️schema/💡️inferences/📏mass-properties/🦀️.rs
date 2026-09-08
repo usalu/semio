@@ -5,19 +5,19 @@
 //! Moved from `🧰️framework/🔨️modules/🧊️3d/📐️brep/{📏️measure,🔮️oracle}/🦀️.rs` in ticket
 //! 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS wave PEEL2.
 
-// 📏 Divergence-theorem mass properties, axis-aligned bounds, and solid distance queries on [`crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::Body`].
+// 📏 Divergence-theorem mass properties, axis-aligned bounds, and solid distance queries on [`crate::standards::v1::subsets::brep::schema::snapshot::topology::Body`].
 
 #[cfg(test)]
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::{CoedgeId, VertexId};
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::{EdgeId, FaceId, ShellId, SolidId};
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::curve_ops;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::Curve3;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::error::KernelError;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::surface::surface_ops;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::surface::Surface;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::Body;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::predicates::{orient2d, Orient};
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::{Pnt2, Pnt3, Vec3};
+use crate::standards::v1::subsets::brep::schema::snapshot::arena::{CoedgeId, VertexId};
+use crate::standards::v1::subsets::brep::schema::snapshot::arena::{EdgeId, FaceId, ShellId, SolidId};
+use crate::standards::v1::subsets::brep::schema::snapshot::curve::curve_ops;
+use crate::standards::v1::subsets::brep::schema::snapshot::curve::Curve3;
+use crate::standards::v1::subsets::brep::schema::snapshot::error::KernelError;
+use crate::standards::v1::subsets::brep::schema::snapshot::surface::surface_ops;
+use crate::standards::v1::subsets::brep::schema::snapshot::surface::Surface;
+use crate::standards::v1::subsets::brep::schema::snapshot::topology::Body;
+use crate::standards::v1::subsets::brep::schema::snapshot::vector::predicates::{orient2d, Orient};
+use crate::standards::v1::subsets::brep::schema::snapshot::vector::{Pnt2, Pnt3, Vec3};
 
 // #region 🔖️Types
 
@@ -443,8 +443,8 @@ pub fn distance_solid_solid(body: &Body, a: SolidId, b: SolidId) -> Result<f64, 
 /// the one authoritative classifier — not a bounding-box or sample-distance proxy for overlap.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn solids_overlap(body: &Body, a: SolidId, b: SolidId) -> Result<bool, KernelError> {
-    use crate::artifacts::semio::standards::v1::subsets::brep::schema::engine::PointClassification;
-    use crate::artifacts::semio::standards::v1::subsets::brep::schema::inferences::classification::point_in_solid;
+    use crate::standards::v1::subsets::brep::schema::engine::PointClassification;
+    use crate::standards::v1::subsets::brep::schema::inferences::classification::point_in_solid;
     for face in body.solid_faces(a) {
         for p in face_sample_points(body, face)? {
             if matches!(point_in_solid(body, b, p, 1e-9)?, PointClassification::Inside) {
@@ -779,7 +779,7 @@ fn gap_1d(a0: f64, a1: f64, b0: f64, b1: f64) -> f64 {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn loop_area(body: &Body, face: FaceId, loop_id: crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::LoopId, chord_tol: f64) -> Result<f64, KernelError> {
+fn loop_area(body: &Body, face: FaceId, loop_id: crate::standards::v1::subsets::brep::schema::snapshot::arena::LoopId, chord_tol: f64) -> Result<f64, KernelError> {
     let surface = face_surface(body, face)?;
     let flipped = body.faces.get(face).is_some_and(|f| f.flipped);
     match surface {
@@ -806,7 +806,7 @@ fn loop_area(body: &Body, face: FaceId, loop_id: crate::artifacts::semio::standa
 /// (`face_moments_general`'s own doc already notes the general quadrature is exact on a flat facet
 /// too, so this loses nothing but the fast path's cheapness).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn loop_has_only_straight_edges(body: &Body, loop_id: crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::LoopId) -> bool {
+fn loop_has_only_straight_edges(body: &Body, loop_id: crate::standards::v1::subsets::brep::schema::snapshot::arena::LoopId) -> bool {
     body.loop_coedges(loop_id).into_iter().all(|coedge| {
         body.coedges
             .get(coedge)
@@ -858,13 +858,13 @@ fn face_volume_moments(body: &Body, face: FaceId, chord_tol: f64) -> Result<(f64
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn loop_volume_contribution(body: &Body, face: FaceId, loop_id: crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::LoopId, chord_tol: f64) -> Result<f64, KernelError> {
+fn loop_volume_contribution(body: &Body, face: FaceId, loop_id: crate::standards::v1::subsets::brep::schema::snapshot::arena::LoopId, chord_tol: f64) -> Result<f64, KernelError> {
     let (sv, _, _, _) = loop_volume_moments(body, face, loop_id, chord_tol)?;
     Ok(sv / 6.0)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn loop_volume_moments(body: &Body, face: FaceId, loop_id: crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::LoopId, chord_tol: f64) -> Result<(f64, f64, f64, f64), KernelError> {
+fn loop_volume_moments(body: &Body, face: FaceId, loop_id: crate::standards::v1::subsets::brep::schema::snapshot::arena::LoopId, chord_tol: f64) -> Result<(f64, f64, f64, f64), KernelError> {
     let surface = face_surface(body, face)?;
     let flipped = body.faces.get(face).is_some_and(|f| f.flipped);
     match surface {
@@ -914,7 +914,7 @@ fn signed_tetra_sum(pts: &[Pnt3]) -> (f64, f64, f64, f64) {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn loop_positions(body: &Body, loop_id: crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::LoopId) -> Result<Vec<Pnt3>, KernelError> {
+fn loop_positions(body: &Body, loop_id: crate::standards::v1::subsets::brep::schema::snapshot::arena::LoopId) -> Result<Vec<Pnt3>, KernelError> {
     let mut pts = Vec::new();
     for coedge in body.loop_coedges(loop_id) {
         let (v0, _) = body.coedge_endpoints(coedge).ok_or_else(|| KernelError::InvalidInput("open coedge".into()))?;
@@ -931,7 +931,7 @@ fn face_surface(body: &Body, face: FaceId) -> Result<&Surface, KernelError> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn outward_plane_normal(frame: &crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Frame3, flipped: bool) -> Vec3 {
+fn outward_plane_normal(frame: &crate::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Frame3, flipped: bool) -> Vec3 {
     let mut n = frame.z;
     if flipped {
         n = -n;
@@ -979,7 +979,7 @@ fn newell_area(pts: &[Pnt3], normal: Vec3) -> f64 {
 /// reversing only when `forward == false` (W1-E's binding convention, fixed alongside this pass —
 /// see [`coedge_uv_sample`]'s own doc); the 3D-curve fallback already reverses via `t`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn loop_uv_polygon(body: &Body, loop_id: crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::LoopId, surface: &Surface, chord_tol: f64) -> Result<Vec<Pnt2>, KernelError> {
+fn loop_uv_polygon(body: &Body, loop_id: crate::standards::v1::subsets::brep::schema::snapshot::arena::LoopId, surface: &Surface, chord_tol: f64) -> Result<Vec<Pnt2>, KernelError> {
     let mut poly: Vec<Pnt2> = Vec::new();
     let mut prev_u: Option<f64> = None;
     let mut prev_was_pole = false;
@@ -1028,7 +1028,7 @@ fn loop_uv_polygon(body: &Body, loop_id: crate::artifacts::semio::standards::v1:
 /// quadrature is not performance-critical enough to warrant the recursive bisection tessellation's
 /// `sample_curve_adaptive` uses).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn coedge_sample_count(body: &Body, co: &crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::Coedge, chord_tol: f64) -> usize {
+fn coedge_sample_count(body: &Body, co: &crate::standards::v1::subsets::brep::schema::snapshot::topology::Coedge, chord_tol: f64) -> usize {
     let Some(edge) = body.edges.get(co.edge) else { return 8 };
     let Some(curve) = body.curves3.get(edge.curve) else { return 8 };
     let (t0, t1) = edge.range;
@@ -1073,7 +1073,7 @@ fn segments_for_chord_deviation(radius: f64, arc_range: f64, deflection: f64) ->
 /// UV boundary polygon whose shoelace/ear-clip quadrature integrates the wrong region — this is
 /// what made the cylinder's general-path volume come out at ~24% of the closed-form value.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn coedge_uv_sample(body: &Body, co: &crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::Coedge, surface: &Surface, s: f64) -> Result<Pnt2, KernelError> {
+fn coedge_uv_sample(body: &Body, co: &crate::standards::v1::subsets::brep::schema::snapshot::topology::Coedge, surface: &Surface, s: f64) -> Result<Pnt2, KernelError> {
     if let Some(pcurve_id) = co.pcurve {
         let pcurve = body.curves2.get(pcurve_id).ok_or_else(|| KernelError::MissingEntity("pcurve".into()))?;
         let (p0, p1) = co.prange;
@@ -1331,10 +1331,10 @@ fn point_in_face_plane(body: &Body, face: FaceId, point: Pnt3) -> Result<bool, K
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::ArenaId;
-    use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::tolerance::Tol;
-    use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::{Body, Coedge, Edge, Face, Loop, Shell, Solid, Vertex};
-    use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Frame3;
+    use crate::standards::v1::subsets::brep::schema::snapshot::arena::ArenaId;
+    use crate::standards::v1::subsets::brep::schema::snapshot::tolerance::Tol;
+    use crate::standards::v1::subsets::brep::schema::snapshot::topology::{Body, Coedge, Edge, Face, Loop, Shell, Solid, Vertex};
+    use crate::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Frame3;
     use std::f64::consts::PI;
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -1349,13 +1349,13 @@ mod tests {
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn insert_edge(body: &mut Body, curve: crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::Curve3Id, range: (f64, f64), v0: VertexId, v1: VertexId) -> EdgeId {
+    fn insert_edge(body: &mut Body, curve: crate::standards::v1::subsets::brep::schema::snapshot::arena::Curve3Id, range: (f64, f64), v0: VertexId, v1: VertexId) -> EdgeId {
         let label = body.new_label();
         body.edges.insert(Edge { curve, range, v0, v1, tol: Tol::DEFAULT, label })
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn make_quad_loop(body: &mut Body, face: FaceId, corners: [Pnt3; 4]) -> crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::LoopId {
+    fn make_quad_loop(body: &mut Body, face: FaceId, corners: [Pnt3; 4]) -> crate::standards::v1::subsets::brep::schema::snapshot::arena::LoopId {
         let verts: Vec<_> = corners.iter().map(|&p| insert_vertex(body, p)).collect();
         let curves: Vec<_> = (0..4)
             .map(|i| {
@@ -1500,8 +1500,8 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn box_classifies_via_the_one_authoritative_classifier() {
-        use crate::artifacts::semio::standards::v1::subsets::brep::schema::engine::PointClassification;
-        use crate::artifacts::semio::standards::v1::subsets::brep::schema::inferences::classification::point_in_solid;
+        use crate::standards::v1::subsets::brep::schema::engine::PointClassification;
+        use crate::standards::v1::subsets::brep::schema::inferences::classification::point_in_solid;
         let mut body = Body::new();
         let solid = make_box_solid(&mut body, Pnt3::new(0.0, 0.0, 0.0), 1.0, 1.0, 1.0);
         assert_eq!(point_in_solid(&body, solid, Pnt3::new(0.5, 0.5, 0.5), 1e-9).unwrap(), PointClassification::Inside);
@@ -1545,8 +1545,8 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn solid_mass_properties_cylinder_general_path_matches_closed_form_within_error_estimate() {
-        use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::primitives::make_cylinder;
-        use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::history::OpRecorder;
+        use crate::standards::v1::subsets::brep::schema::diff::primitives::make_cylinder;
+        use crate::standards::v1::subsets::brep::schema::snapshot::topology::history::OpRecorder;
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
         let radius = 1.0;
@@ -1578,9 +1578,9 @@ pub mod oracle {
     //! primitives it can already describe; mass-property, watertightness and shape-generator oracles
     //! land in the phases that need them.
 
-    use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::Body;
-    use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Trsf;
-    use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::Pnt3;
+    use crate::standards::v1::subsets::brep::schema::snapshot::topology::Body;
+    use crate::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Trsf;
+    use crate::standards::v1::subsets::brep::schema::snapshot::vector::Pnt3;
 
     // #region 🔖️Sdf
 
@@ -1848,8 +1848,8 @@ pub mod oracle {
 
         #[semio_framework_async_macros::async_test]
         async fn union_is_the_min_and_matches_containment_of_either_operand() {
-            let a = Sdf::Sphere { radius: 1.0, placement: Trsf::translation(crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::Vec3::new(-1.0, 0.0, 0.0)) };
-            let b = Sdf::Sphere { radius: 1.0, placement: Trsf::translation(crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::Vec3::new(1.0, 0.0, 0.0)) };
+            let a = Sdf::Sphere { radius: 1.0, placement: Trsf::translation(crate::standards::v1::subsets::brep::schema::snapshot::vector::Vec3::new(-1.0, 0.0, 0.0)) };
+            let b = Sdf::Sphere { radius: 1.0, placement: Trsf::translation(crate::standards::v1::subsets::brep::schema::snapshot::vector::Vec3::new(1.0, 0.0, 0.0)) };
             let u = a.union(b);
             assert!(u.contains(Pnt3::new(-1.0, 0.0, 0.0), 1e-9));
             assert!(u.contains(Pnt3::new(1.0, 0.0, 0.0), 1e-9));
@@ -1867,7 +1867,7 @@ pub mod oracle {
 
         #[semio_framework_async_macros::async_test]
         async fn placed_box_sdf_respects_transform() {
-            let placement = Trsf::translation(crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::Vec3::new(10.0, 0.0, 0.0));
+            let placement = Trsf::translation(crate::standards::v1::subsets::brep::schema::snapshot::vector::Vec3::new(10.0, 0.0, 0.0));
             let b = Sdf::Box { half_extents: Pnt3::new(1.0, 1.0, 1.0), placement };
             assert!(b.eval(Pnt3::new(10.0, 0.0, 0.0)) < 0.0);
             assert!(b.eval(Pnt3::new(0.0, 0.0, 0.0)) > 0.0);
@@ -1897,8 +1897,8 @@ pub mod oracle {
     #[cfg(test)]
     #[test]
     fn watertightness_of_box_is_watertight() {
-        use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::primitives::make_box;
-        use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::history::OpRecorder;
+        use crate::standards::v1::subsets::brep::schema::diff::primitives::make_box;
+        use crate::standards::v1::subsets::brep::schema::snapshot::topology::history::OpRecorder;
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
         let solid = make_box(&mut body, 1.0, 1.0, 1.0, &mut rec).unwrap();

@@ -5,7 +5,7 @@
 //! `🪆️subsets/🖨️x/🧬️schema/` is present per `🔣️taxonomy.json`'s `subsetChildDirs`, without
 //! duplicating the schema definition. Ticket 26/08/11/ARTIFACT-STANDARD-SUBSETS-REAL-VOCABULARIES W3.
 
-pub use crate::artifacts::pdf::standards::v1_7::subsets::base::schema::*;
+pub use crate::standards::v1_7::subsets::base::schema::*;
 //#region 🧬️Mutations
 // 🧬️ This subset's OWN conformance-class vocabulary, mounted here rather than in the crate's shared
 // `🦀️.rs`: that file is one wiring file for every stdio artifact at once, and the rationale the
@@ -21,10 +21,10 @@ pub mod mutations;
 
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use crate::artifacts::pdf::standards::v1_7::subsets::base::schema::diff::PdfDiff;
-    use crate::artifacts::pdf::standards::v1_7::subsets::base::schema::mutations::{apply_pdf_mutation, InsertPage, PdfMutation, SetInfo};
-    use crate::artifacts::pdf::standards::v1_7::subsets::base::schema::snapshot::{ObjRef, PdfDictEntry, PdfIndirectObject, PdfInfo, PdfObject, PdfPage, PdfSnapshot};
-    use crate::artifacts::pdf::standards::v1_7::subsets::x::schema::check_x_conformance;
+    use crate::standards::v1_7::subsets::base::schema::diff::PdfDiff;
+    use crate::standards::v1_7::subsets::base::schema::mutations::{apply_pdf_mutation, InsertPage, PdfMutation, SetInfo};
+    use crate::standards::v1_7::subsets::base::schema::snapshot::{ObjRef, PdfDictEntry, PdfIndirectObject, PdfInfo, PdfObject, PdfPage, PdfSnapshot};
+    use crate::standards::v1_7::subsets::x::schema::check_x_conformance;
     use dsl::{Diagnostic, Severity};
     use semio_framework_plugin::ArtifactBuilder;
 
@@ -148,7 +148,7 @@ pub mod derived_construction {
             snapshot.objects.push(violating);
             let mutated = PdfXBuilderConstruction::from_snapshot(snapshot);
             let err = mutated.build().expect_err("an /Encrypt dict must fail build()");
-            assert!(err.iter().any(|d| d.code.0 == crate::artifacts::pdf::standards::v1_7::subsets::x::schema::CODE_ENCRYPT));
+            assert!(err.iter().any(|d| d.code.0 == crate::standards::v1_7::subsets::x::schema::CODE_ENCRYPT));
         }
     }
 }
@@ -157,9 +157,9 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use crate::artifacts::pdf::standards::v1_7::subsets::base::schema::snapshot::{ObjRef, PdfDictEntry, PdfIndirectObject, PdfObject, PdfSnapshot};
-    use crate::artifacts::pdf::standards::v1_7::subsets::base::schema::PdfAnalyzer as PdfAnyAnalyzer;
-    pub use crate::artifacts::pdf::standards::v1_7::subsets::base::schema::PdfParts;
+    use crate::standards::v1_7::subsets::base::schema::snapshot::{ObjRef, PdfDictEntry, PdfIndirectObject, PdfObject, PdfSnapshot};
+    use crate::standards::v1_7::subsets::base::schema::PdfAnalyzer as PdfAnyAnalyzer;
+    pub use crate::standards::v1_7::subsets::base::schema::PdfParts;
     use dsl::{Diagnostic, FaultCode, FaultScope, Severity, TextSpan};
     use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
@@ -363,7 +363,7 @@ pub mod derived_analysis {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use crate::artifacts::pdf::standards::v1_7::subsets::base::schema::snapshot::PdfDictEntry;
+        use crate::standards::v1_7::subsets::base::schema::snapshot::PdfDictEntry;
 
         // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         fn conforming_objects() -> Vec<PdfIndirectObject> {

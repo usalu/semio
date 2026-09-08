@@ -2,8 +2,8 @@
 //! 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §2.1). `BcfAnyEditor`
 //! implements `ArtifactEditor`, wiring the shared `TableWindowKit` to a single Main window.
 
-use crate::artifacts::bcf::standards::v2_1::subsets::any::schema::mutations::BcfMutation;
-use crate::artifacts::bcf::standards::v2_1::subsets::any::schema::snapshot::BcfSnapshot;
+use crate::standards::v2_1::subsets::any::schema::mutations::BcfMutation;
+use crate::standards::v2_1::subsets::any::schema::snapshot::BcfSnapshot;
 use crate::editor::bcf::modes::edit;
 use crate::editor::bcf::modes::edit::windows::main;
 use semio_framework_plugin::app::InteractionView;

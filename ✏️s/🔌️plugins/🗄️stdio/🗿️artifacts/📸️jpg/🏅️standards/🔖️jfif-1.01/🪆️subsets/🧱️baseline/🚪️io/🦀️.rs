@@ -5,9 +5,9 @@
 //! already established for this artifact.
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use crate::artifacts::jpg::standards::v_jfif_1_01::subsets::document::schema::JpgComposer as JpgAnyComposer;
-    use crate::artifacts::jpg::standards::v_jfif_1_01::subsets::baseline::schema::check_baseline_conformance;
-    use crate::artifacts::jpg::JpgSnapshot;
+    use crate::standards::v_jfif_1_01::subsets::document::schema::JpgComposer as JpgAnyComposer;
+    use crate::standards::v_jfif_1_01::subsets::baseline::schema::check_baseline_conformance;
+    use crate::JpgSnapshot;
     use dsl::{Diagnostic, FaultCode, Severity, TextSpan};
     use semio_framework_plugin::{register_subset_validator, subset_validator_entry_of, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, IoPayload, StandardId, SubsetId, SubsetValidator, SubsetValidatorEntry};
     use std::sync::OnceLock;
@@ -80,7 +80,7 @@ pub mod derived_composition {
     /// 📌️ Registers this subset's `SubsetValidator` with the generic io registry (D5's
     /// validate-on-build hook). Called from the jfif-1.01 standard's own `⚙️engine::register()`. The
     /// `ComposerEntry` itself is registered separately by the standard-level composer aggregator
-    /// (`crate::artifacts::jpg::standards::v_jfif_1_01::engine::io_registry::entries()`), matching how `🧾️document`'s
+    /// (`crate::standards::v_jfif_1_01::engine::io_registry::entries()`), matching how `🧾️document`'s
     /// own entry is registered.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn register() {
@@ -123,15 +123,15 @@ pub mod derived_composition {
             let composed = JpgBaselineComposerComposition::compose(&sources).expect("real baseline JPEG must compose and stamp baseline");
             assert!(composed.diagnostics.iter().all(|d| d.severity != Severity::Error), "no hard diagnostics expected: {:?}", composed.diagnostics);
             assert!(composed.snapshot.frame.is_some());
-            assert_eq!(composed.snapshot.sof_marker, crate::artifacts::jpg::standards::v_jfif_1_01::subsets::baseline::schema::SOF0);
+            assert_eq!(composed.snapshot.sof_marker, crate::standards::v_jfif_1_01::subsets::baseline::schema::SOF0);
         }
 
         #[semio_framework_async_macros::async_test]
         async fn subset_validator_recheck_flags_no_hard_diagnostics_for_a_real_encode() {
             let (w, h) = (16u32, 16u32);
             let snap = JpgSnapshot { width: w, height: h, pixels: gradient_image(w, h), ..JpgSnapshot::default() };
-            let bytes = crate::artifacts::jpg::standards::v_jfif_1_01::engine::encode_jpg(&snap).expect("encode");
-            let decoded = crate::artifacts::jpg::standards::v_jfif_1_01::engine::decode_jpg(&bytes).expect("decode");
+            let bytes = crate::standards::v_jfif_1_01::engine::encode_jpg(&snap).expect("encode");
+            let decoded = crate::standards::v_jfif_1_01::engine::decode_jpg(&bytes).expect("decode");
             let packed = <JpgSnapshot as store::ArtifactPack>::encode_pack(&decoded);
             let diagnostics = JpgBaselineValidator::validate(&IoPayload::Binary(packed)).await;
             assert!(diagnostics.iter().all(|d| d.severity != Severity::Error), "wire recheck must never report a hard violation for a real baseline encode: {diagnostics:?}");

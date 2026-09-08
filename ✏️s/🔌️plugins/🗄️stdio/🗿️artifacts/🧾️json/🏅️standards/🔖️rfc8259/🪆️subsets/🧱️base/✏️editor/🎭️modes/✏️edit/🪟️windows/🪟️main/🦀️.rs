@@ -4,8 +4,8 @@
 //! `set-node` can address ANY node, not just leaves — the editor's own `handle` always applies
 //! `JsonMutation::SetScalar` at that path, replacing whichever subtree previously lived there.
 
-use crate::artifacts::json::schema::snapshot::{JsonMember, JsonValue};
-use crate::artifacts::json::JsonSnapshot;
+use crate::schema::snapshot::{JsonMember, JsonValue};
+use crate::JsonSnapshot;
 use semio_framework_plugin::app::{TreeNodeView, TreeView, TreeWindowKit, WindowKit};
 use semio_framework_plugin::{BuiltNode, LocalizedLabel, WindowKindDefinition};
 

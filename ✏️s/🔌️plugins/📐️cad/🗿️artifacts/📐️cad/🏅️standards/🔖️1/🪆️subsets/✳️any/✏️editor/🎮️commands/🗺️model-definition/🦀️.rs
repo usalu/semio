@@ -40,7 +40,7 @@ pub mod set_active_example {
         let current = runtime_of(cfg);
         let preserved_shell = (current.active_utility_id, current.locale, current.terminology);
         let (scene, runtime) = if payload.example_id.is_empty() {
-            (default_document(), CadPlayRuntime { active_utility_id: preserved_shell.0.clone(), locale: preserved_shell.1.clone(), terminology: preserved_shell.2.clone(), ..CadPlayRuntime::default() })
+            (default_document(), CadPlayRuntime { active_utility_id: preserved_shell.0.clone(), locale: preserved_shell.1.clone(), terminology: preserved_shell.2, ..CadPlayRuntime::default() })
         } else if payload.example_id == CAD_EXAMPLE_FOREST_LEFT || payload.example_id == "forest-left" {
             let forest_camera = forest_play_camera();
             (

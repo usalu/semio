@@ -2,7 +2,7 @@
 //! framework `TextWindowKit` (contract §2.6). Independent render from the sibling mutation-capable
 //! surface — same `lines`/`line_ending` join, `read_only: true` stamps the host renderer.
 
-use crate::artifacts::txt::TxtSnapshot;
+use crate::TxtSnapshot;
 use semio_framework_plugin::app::{TextView, TextWindowKit, WindowKit};
 use semio_framework_plugin::{BuiltNode, LocalizedLabel, WindowKindDefinition};
 

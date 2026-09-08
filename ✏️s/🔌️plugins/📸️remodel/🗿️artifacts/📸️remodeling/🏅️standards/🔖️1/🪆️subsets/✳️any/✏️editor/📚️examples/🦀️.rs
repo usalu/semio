@@ -23,9 +23,9 @@ pub struct RemodelingExample {
 /// 📚️ Every committed example of this subset, in picker order. **Append-only** — see this module's doc.
 pub const REMODELING_EXAMPLES: &[RemodelingExample] = &[
     RemodelingExample {
-        id: crate::examples::art_remodeling_demo::ID,
-        text: crate::examples::art_remodeling_demo::PRIMARY_TEXT,
-        icon: crate::examples::art_remodeling_demo::ICON,
+        id: crate::artifacts::remodeling::examples::demo::ID,
+        text: crate::artifacts::remodeling::examples::demo::PRIMARY_TEXT,
+        icon: crate::artifacts::remodeling::examples::demo::ICON,
         label_en: "Demo",
         label_de: "Demo",
     },

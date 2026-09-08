@@ -1,23 +1,170 @@
 {
-  "$id": "https://semio.tech/schema/s.stdio.ply/mutation.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/ply/1.0/any/mutations.json",
   "title": "PlyMutation",
-  "type": "object",
-  "required": ["mutation"],
-  "properties": {
-    "mutation": {
-      "type": "string",
-      "enum": ["setSnapshot", "setFormat", "insertComment", "removeComment", "addElement", "removeElement", "insertRow", "removeRow", "setRowProperty"]
-    }
-  },
+  "description": "Discriminated union over this module's mutation leaves (internally tagged); every payload is the leaf's own schema, referenced, never restated.",
   "oneOf": [
-    { "properties": { "mutation": { "const": "setSnapshot" }, "snapshot": { "$ref": "snapshot.json" } }, "required": ["snapshot"] },
-    { "properties": { "mutation": { "const": "setFormat" }, "format": { "type": "string", "enum": ["ascii", "binaryLittleEndian", "binaryBigEndian"] } }, "required": ["format"] },
-    { "properties": { "mutation": { "const": "insertComment" }, "index": { "type": "integer" }, "comment": { "type": "string" } }, "required": ["index", "comment"] },
-    { "properties": { "mutation": { "const": "removeComment" }, "index": { "type": "integer" } }, "required": ["index"] },
-    { "properties": { "mutation": { "const": "addElement" }, "index": { "type": "integer" }, "element": {} }, "required": ["index", "element"] },
-    { "properties": { "mutation": { "const": "removeElement" }, "name": { "type": "string" } }, "required": ["name"] },
-    { "properties": { "mutation": { "const": "insertRow" }, "elementName": { "type": "string" }, "index": { "type": "integer" }, "row": {} }, "required": ["elementName", "index", "row"] },
-    { "properties": { "mutation": { "const": "removeRow" }, "elementName": { "type": "string" }, "index": { "type": "integer" } }, "required": ["elementName", "index"] },
-    { "properties": { "mutation": { "const": "setRowProperty" }, "elementName": { "type": "string" }, "rowIndex": { "type": "integer" }, "propertyName": { "type": "string" }, "value": {} }, "required": ["elementName", "rowIndex", "propertyName", "value"] }
+    {
+      "allOf": [
+        {
+          "$ref": "./🧱add-element/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "addElement"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "./💬insert-comment/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "insertComment"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "./📥insert-row/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "insertRow"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "./🗑️remove-comment/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "removeComment"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "./🚮remove-element/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "removeElement"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "./📤remove-row/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "removeRow"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "./🎚️set-format/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setFormat"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "./🏷️set-row-property/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setRowProperty"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "./📸️set-snapshot/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setSnapshot"
+            }
+          }
+        }
+      ]
+    }
   ]
 }

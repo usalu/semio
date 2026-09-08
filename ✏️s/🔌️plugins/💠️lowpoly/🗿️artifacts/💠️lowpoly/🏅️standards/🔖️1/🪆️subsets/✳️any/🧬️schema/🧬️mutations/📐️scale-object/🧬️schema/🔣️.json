@@ -1,0 +1,24 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/lowpoly/lowpoly/1/any/mutation/scale-object.json",
+  "title": "ScaleObject",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newScale"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "newScale": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      },
+      "minItems": 3,
+      "maxItems": 3
+    }
+  }
+}

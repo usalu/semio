@@ -15,13 +15,13 @@
 //! (already real, kernel-scope functions) are now reachable from here honestly, no
 //! straight-line-approximation shim.
 
-use crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioPoint3;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::engine::contract::MeshTransfer;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::inferences::mass_properties::solid_mass_properties;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::inferences::tessellation::tessellate_solid;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::Body;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
-use schema::ArtifactSchema;
+use crate::standards::v1::subsets::base::schema::geometry::SemioPoint3;
+use crate::standards::v1::subsets::brep::schema::engine::contract::MeshTransfer;
+use crate::standards::v1::subsets::brep::schema::inferences::mass_properties::solid_mass_properties;
+use crate::standards::v1::subsets::brep::schema::inferences::tessellation::tessellate_solid;
+use crate::standards::v1::subsets::brep::schema::snapshot::topology::Body;
+use crate::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
+use framework_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 
 use super::validation_report::{BrepValidationDiagnostic, BrepValidationReport};
@@ -35,7 +35,7 @@ pub const BREP_INFERENCE_DEFAULT_DEFLECTION: f64 = 0.1;
 
 /// 🧩️ Tessellates every solid in `body` and merges them into ONE [`MeshTransfer`] (index/vertex
 /// offsets adjusted per solid, `face_groups`/`edge_groups` keyed by each entity's own
-/// [`crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::history::PersistentLabel`]
+/// [`crate::standards::v1::subsets::brep::schema::snapshot::topology::history::PersistentLabel`]
 /// so a picked triangle/segment still resolves to the right face/edge regardless of which solid it
 /// came from) — the inference field is a single `MeshTransfer` (not one per solid), so a
 /// multi-solid document's whole tessellated scene is exactly one dependency-hash-chained value.
@@ -52,8 +52,8 @@ pub fn tessellate_document(body: &Body, deflection: f64) -> MeshTransfer {
         merged.index.extend(mesh.index.into_iter().map(|i| i + vertex_offset));
         merged.edges.extend(mesh.edges);
         merged.points.extend(mesh.points);
-        merged.face_groups.extend(mesh.face_groups.into_iter().map(|g| crate::artifacts::semio::standards::v1::subsets::brep::schema::engine::contract::FaceGroup { start: g.start + index_offset, count: g.count, entity_id: g.entity_id }));
-        merged.edge_groups.extend(mesh.edge_groups.into_iter().map(|g| crate::artifacts::semio::standards::v1::subsets::brep::schema::engine::contract::EdgeGroup { start: g.start + edge_segment_offset, count: g.count, entity_id: g.entity_id }));
+        merged.face_groups.extend(mesh.face_groups.into_iter().map(|g| crate::standards::v1::subsets::brep::schema::engine::contract::FaceGroup { start: g.start + index_offset, count: g.count, entity_id: g.entity_id }));
+        merged.edge_groups.extend(mesh.edge_groups.into_iter().map(|g| crate::standards::v1::subsets::brep::schema::engine::contract::EdgeGroup { start: g.start + edge_segment_offset, count: g.count, entity_id: g.entity_id }));
         merged.face_infos.extend(mesh.face_infos);
         merged.edge_infos.extend(mesh.edge_infos);
     }
@@ -141,7 +141,7 @@ impl protocol::InferenceSpec<SemioBrepSnapshot> for SemioBrepInference {
 //#endregion 🔖️Inference
 
 //#region 🔖️ArtifactInferrer
-impl ArtifactInferrer for crate::artifacts::semio::standards::v1::subsets::brep::schema::SemioBrepBuilder {
+impl ArtifactInferrer for crate::standards::v1::subsets::brep::schema::SemioBrepBuilder {
     type Snapshot = SemioBrepSnapshot;
     type Inference = SemioBrepInference;
 
@@ -167,10 +167,10 @@ impl ArtifactInferrer for crate::artifacts::semio::standards::v1::subsets::brep:
 /// `🧊️brep/🚪️io/🦀️.rs`'s own conformance-law doc comment already notes for the composer
 /// registration. Flagged under `## sharedFileRequests` in the wave report, not wired here.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn semio_brep_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
-    schema::ArtifactInferenceDescriptor {
+pub fn semio_brep_artifact_inference_descriptor() -> framework_schema::ArtifactInferenceDescriptor {
+    framework_schema::ArtifactInferenceDescriptor {
         id: "s.stdio.semio.brep.inference",
-        inference: schema::FacetLeaves {
+        inference: framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),

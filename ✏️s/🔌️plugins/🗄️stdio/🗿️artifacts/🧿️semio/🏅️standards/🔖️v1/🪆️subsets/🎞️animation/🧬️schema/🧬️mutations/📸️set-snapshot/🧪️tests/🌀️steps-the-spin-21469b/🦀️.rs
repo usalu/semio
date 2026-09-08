@@ -14,9 +14,9 @@
 //! is `Some(None)`, which serde writes as bare `null` and reads back as `None` (= unchanged), so no
 //! committed fixture may express it. Keeping the name stable here leaves the slot absent.
 
-use crate::artifacts::semio::standards::v1::subsets::animation::schema::diff::SemioAnimationDiff;
-use crate::artifacts::semio::standards::v1::subsets::animation::schema::mutations::{apply_semio_animation_mutation, SemioAnimationMutation};
-use crate::artifacts::semio::standards::v1::subsets::animation::schema::snapshot::{AnimInterpolation, AnimValue, SemioAnimationSnapshot};
+use crate::standards::v1::subsets::animation::schema::diff::SemioAnimationDiff;
+use crate::standards::v1::subsets::animation::schema::mutations::{apply_semio_animation_mutation, SemioAnimationMutation};
+use crate::standards::v1::subsets::animation::schema::snapshot::{AnimInterpolation, AnimValue, SemioAnimationSnapshot};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");

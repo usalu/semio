@@ -847,7 +847,7 @@ impl ArtifactApp for SpaceApp {
         let str_field = |key: &str| args.and_then(|value| value.get(key)).and_then(DslValue::as_str).map(str::to_string);
         let f64_field = |key: &str| args.and_then(|value| value.get(key)).and_then(DslValue::as_f64);
         let string_vec = |key: &str| args.and_then(|value| value.get(key)).and_then(DslValue::as_array).map(|items| items.iter().filter_map(DslValue::as_str).map(str::to_string).collect::<Vec<_>>()).unwrap_or_default();
-        let json_field = |key: &str| args.and_then(|value| value.get(key)).map(|raw| raw.as_str().map(str::to_string).unwrap_or_else(|| pack::json::to_string(&pack::json::from_dsl_value(raw))));
+        let json_field = |key: &str| args.and_then(|value| value.get(key)).map(|raw| raw.as_str().map_or_else(|| pack::json::to_string(&pack::json::from_dsl_value(raw)), str::to_string));
         let node_id = || str_field("nodeId").or_else(|| str_field("node_id")).or_else(|| str_field("instanceId")).or_else(|| str_field("instance_id"));
         match action {
             "patchParameter" => Ok(SpaceCommand::PatchParameter(patch_parameter::PatchParameter {
@@ -982,7 +982,7 @@ impl ArtifactApp for SpaceApp {
         let base_body_key = body_key.split_once(':').map_or(body_key, |(base, _)| base);
         match base_body_key {
             crate::engine::space::modes::main::windows::workflow::S_PLAY_BODY_WORKFLOW => {
-                crate::engine::space::modes::main::windows::workflow::render(&SpaceApp::default(), projection, config).await.map(semio_framework_plugin::built_to_component_tree)
+                crate::engine::space::modes::main::windows::workflow::render(&SpaceApp, projection, config).await.map(semio_framework_plugin::built_to_component_tree)
             }
             crate::engine::space::modes::main::windows::media_vfs::S_PLAY_BODY_MEDIA_VFS => crate::engine::space::modes::main::windows::media_vfs::render(projection, &config.locale).await.map(semio_framework_plugin::built_to_component_tree),
             crate::engine::space::modes::main::windows::compiled_dag::S_PLAY_BODY_COMPILED_DAG => crate::engine::space::modes::main::windows::compiled_dag::render(projection).await.map(semio_framework_plugin::built_to_component_tree),

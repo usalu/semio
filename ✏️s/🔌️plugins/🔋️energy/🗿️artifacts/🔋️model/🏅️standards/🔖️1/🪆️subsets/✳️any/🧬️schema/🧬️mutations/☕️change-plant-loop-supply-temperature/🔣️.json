@@ -5,7 +5,7 @@
   "displayName": "Change Plant Loop Supply Temperature",
   "emoji": "☕️",
   "aggregateVariant": "ChangePlantLoopSupplyTemperature",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-plant-loop-supply-temperature",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

@@ -6,8 +6,8 @@
 //! from `blocks` alone — the same shape stdio's own `md`/`docx`/`pptx` inference facets already
 //! establish for their own recursive block trees).
 
-use crate::artifacts::semio::standards::v1::subsets::document::schema::snapshot::SemioDocumentSnapshot;
-use schema::ArtifactSchema;
+use crate::standards::v1::subsets::document::schema::snapshot::SemioDocumentSnapshot;
+use framework_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 
 use super::outline::{compute_semio_document_outline, SemioDocumentOutline};
@@ -54,7 +54,7 @@ impl protocol::InferenceSpec<SemioDocumentSnapshot> for SemioDocumentInference {
 /// 💡️ No `InferredField`s here — `outline` is a single recursive walk over `blocks` (already
 /// O(n) in total block count, gathering headings + block/word counts in one pass), with no honest
 /// per-entity incremental decomposition — the default `infer_cached` passthrough is exact.
-impl ArtifactInferrer for crate::artifacts::semio::standards::v1::subsets::document::schema::SemioDocumentBuilder {
+impl ArtifactInferrer for crate::standards::v1::subsets::document::schema::SemioDocumentBuilder {
     type Snapshot = SemioDocumentSnapshot;
     type Inference = SemioDocumentInference;
 }
@@ -65,10 +65,10 @@ impl ArtifactInferrer for crate::artifacts::semio::standards::v1::subsets::docum
 /// catalog — call once at plugin init, alongside `semio_document_artifact_schema_descriptor`'s
 /// registration.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn semio_document_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
-    schema::ArtifactInferenceDescriptor {
+pub fn semio_document_artifact_inference_descriptor() -> framework_schema::ArtifactInferenceDescriptor {
+    framework_schema::ArtifactInferenceDescriptor {
         id: "s.stdio.semio.document.inference",
-        inference: schema::FacetLeaves {
+        inference: framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),

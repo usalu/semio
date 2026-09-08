@@ -5,7 +5,7 @@
   "displayName": "Replace Solid",
   "emoji": "🔄️",
   "aggregateVariant": "ReplaceSolid",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "replace-solid",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

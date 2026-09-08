@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/pdf/1.7/a/mutation/remove-embedded-file.json",
+  "title": "RemoveEmbeddedFile",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "fileName"
+  ],
+  "properties": {
+    "fileName": {
+      "type": "string"
+    },
+    "mutation": {
+      "const": "removeEmbeddedFile",
+      "description": "Aggregate discriminator spliced in by PdfAMutation; absent when the payload stands alone."
+    }
+  }
+}

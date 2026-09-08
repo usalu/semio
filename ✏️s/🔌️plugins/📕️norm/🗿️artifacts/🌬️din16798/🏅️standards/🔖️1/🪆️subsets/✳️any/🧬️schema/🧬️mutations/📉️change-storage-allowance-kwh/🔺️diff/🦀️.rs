@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeStorageAllowanceKwh, base: &Din16798Snapshot) -> pro
     if base.storage_allowance_kwh == payload.new_storage_allowance_kwh {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Storage loss allowance is already {}.", payload.new_storage_allowance_kwh));
     }
-    protocol::MutationOutcome::new(Din16798Diff { storage_allowance_kwh: Some(payload.new_storage_allowance_kwh.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(Din16798Diff { storage_allowance_kwh: Some(payload.new_storage_allowance_kwh), ..Default::default() })
 }
 //#endregion 🔖️Diff

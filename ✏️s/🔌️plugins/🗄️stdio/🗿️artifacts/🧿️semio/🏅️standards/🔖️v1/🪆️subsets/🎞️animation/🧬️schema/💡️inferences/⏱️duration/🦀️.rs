@@ -4,7 +4,7 @@
 //! player would compute clip length). A pure whole-snapshot scalar (one max-`t` fold) — no
 //! `InferredField` needed.
 
-use crate::artifacts::semio::standards::v1::subsets::animation::schema::snapshot::SemioAnimationSnapshot;
+use crate::standards::v1::subsets::animation::schema::snapshot::SemioAnimationSnapshot;
 
 //#region 🔖️Duration
 /// ⏱️ Semio animation's keyframe-derived playback duration.
@@ -44,7 +44,7 @@ pub fn compute_semio_animation_duration(snapshot: &SemioAnimationSnapshot) -> Se
 //#region 🧪️Tests
 mod tests {
     use super::*;
-    use crate::artifacts::semio::standards::v1::subsets::animation::schema::snapshot::{AnimChannel, AnimKeyframe, AnimTarget, AnimTimeline, STDIO_SEMIOANIMATION_DOCUMENT_SCHEMA};
+    use crate::standards::v1::subsets::animation::schema::snapshot::{AnimChannel, AnimKeyframe, AnimTarget, AnimTimeline, STDIO_SEMIOANIMATION_DOCUMENT_SCHEMA};
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn keyframe(t: f64) -> AnimKeyframe {

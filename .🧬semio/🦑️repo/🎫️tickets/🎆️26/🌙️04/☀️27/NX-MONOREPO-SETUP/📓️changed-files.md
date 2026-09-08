@@ -384,3 +384,49 @@ Print toolchain additions: `🔧️toolchain/🔣️.json`, `🧬️schema.json`
 - `🧰️framework/🛍️products/📓️print/🎮️commands/🧪️print-pipeline-verification/🟦️.ts`
 - `🧰️framework/🛍️products/📓️print/🎮️commands/🧪️print-pipeline-verification/🧪️tests/🧫️pdf-consumption.json`
 - `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/📜️script.ts` (daemon retention vectors)
+
+## Scoped Bun Dependency Inputs — 2026-09-08
+
+- `nx.json`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧫️fixtures/bun-dependencies/🔣️.json`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧫️fixtures/bun-dependencies/🧬️schema.json`
+
+Updated the existing native input/preparation probes for declared Bun identities, added external-dependency discovery/contracts/cache probes, and retained findings in `📓️external-dependencies.md`. Existing Print/Report metadata, command-boundary fixtures and quick tests now enforce the scoped production dependencies.
+
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts` (Nx execution root takes precedence)
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧫️fixtures/🗂️workspace-roots.json`
+
+## Runtime Closure and Demonstrator Configuration
+
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧩️runtime/🟨️.mjs` (created).
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs` (runtime preparation and helper revision loading).
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/📜️script.ts` and adjacent command-boundary/runtime-component fixtures.
+- `♻️mit-bestand/🧺️demonstrator/🔨️modules/🧩️runtime/{🟦️.ts,🔣️.json,🧬️schema.json,🧫️cases.json}` (created).
+- `♻️mit-bestand/🧺️demonstrator/{📜️script.ts,🪧️brand.ts,⚙️vite.config.ts}` (pure runtime description imports; awaited test completion).
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/{📜️script.ts,📋️project.json,📖️generated-projection.test.ts,🚀️launch.test.ts}` (shared closure, test-level parsing, generation prerequisite, preview expectation).
+- `.vscode/🧩️launch.seed.jsonc` and generated `.vscode/launch.json` (new Stdio contract build/check/test; Report preview order).
+- Ticket runtime-component/Demonstrator/Print collection probes (created); existing isolated Nx native/preparation/dependency/daemon/development probes updated to include the extracted helper.
+
+## Graph Coalescing and Concurrent Print Verification
+
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🩹️patches/nx@23.2.0.patch`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧫️fixtures/graph-coalescing/🔣️.json`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧫️fixtures/graph-coalescing/🧬️schema.json`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🕸️daemon/📜️script.ts`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/📜️script.ts`
+- `🧰️framework/🛍️products/📓️print/🎮️commands/🧪️print-pipeline-verification/🧪️tests/🟦️.ts`
+
+Retained probes: `🔬️graph-coalescing/📜️script.ts`, `🔬️graph-coalescing/🌐️native/📜️script.ts`, and the extended `🔬️daemon-patch/📜️script.ts`. Research and results are retained in `📓️graph-construction-waits.md` and `📓️print-compiler.md`.
+
+## Demonstrator Preparation Graph
+
+- `♻️mit-bestand/🧺️demonstrator/📋️project.json`
+- `♻️mit-bestand/🧺️demonstrator/🔨️modules/🧩️runtime/📜️script.ts`
+- `♻️mit-bestand/🧺️demonstrator/🔨️modules/🧩️runtime/🧫️pipeline.json`
+- `♻️mit-bestand/🧺️demonstrator/🔨️modules/🧩️runtime/🧫️invocations.json`
+- `📜️script.ts`
+- `.vscode/🧩️launch.seed.jsonc`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📜️script.ts`
+
+The existing `🔬️demonstrator-runtime/📜️script.ts` retained probe now checks profile invocation vectors as well.

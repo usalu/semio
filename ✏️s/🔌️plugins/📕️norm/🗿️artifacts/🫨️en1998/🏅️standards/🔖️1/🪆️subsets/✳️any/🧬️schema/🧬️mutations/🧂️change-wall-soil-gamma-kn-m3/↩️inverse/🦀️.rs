@@ -7,6 +7,6 @@ use crate::artifacts::en1998::En1998Snapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(_payload: &ChangeWallSoilGammaKnM3, base: &En1998Snapshot) -> Vec<En1998Mutation> {
-    vec![En1998Mutation::ChangeWallSoilGammaKnM3(ChangeWallSoilGammaKnM3 { new_wall_soil_gamma_kn_m3: base.wall_soil_gamma_kn_m3.clone() })]
+    vec![En1998Mutation::ChangeWallSoilGammaKnM3(ChangeWallSoilGammaKnM3 { new_wall_soil_gamma_kn_m3: base.wall_soil_gamma_kn_m3 })]
 }
 //#endregion 🔖️Inverse

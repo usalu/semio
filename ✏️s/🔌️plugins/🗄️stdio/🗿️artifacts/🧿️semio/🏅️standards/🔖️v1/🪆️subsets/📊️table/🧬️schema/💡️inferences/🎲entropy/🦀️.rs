@@ -15,10 +15,10 @@
 //! binary/text/json/proto/graphql codecs, same honest remainder as `📊moments`. This field is real
 //! and independently tested via `store::infer_field` directly.
 
-use crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::estimators::{entropy_discrete, DiscreteMethod};
-use crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::LogBase;
-use crate::artifacts::semio::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot;
-use crate::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValue;
+use crate::standards::v1::subsets::table::schema::entropy_internals::estimators::{entropy_discrete, DiscreteMethod};
+use crate::standards::v1::subsets::table::schema::entropy_internals::LogBase;
+use crate::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot;
+use crate::standards::v1::subsets::value::schema::snapshot::SemioValue;
 use std::collections::BTreeMap;
 
 //#region 🔖️Value
@@ -117,7 +117,7 @@ impl store::InferredField<SemioTableSnapshot> for ColumnEntropy {
 //#region 🧪️Tests
 mod tests {
     use super::*;
-    use crate::artifacts::semio::standards::v1::subsets::table::schema::snapshot::{SemioTableCellKind, SemioTableColumn, SemioTableRow, STDIO_SEMIOTABLE_DOCUMENT_SCHEMA};
+    use crate::standards::v1::subsets::table::schema::snapshot::{SemioTableCellKind, SemioTableColumn, SemioTableRow, STDIO_SEMIOTABLE_DOCUMENT_SCHEMA};
     use store::{InferenceCache, InferenceCacheConfig};
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9

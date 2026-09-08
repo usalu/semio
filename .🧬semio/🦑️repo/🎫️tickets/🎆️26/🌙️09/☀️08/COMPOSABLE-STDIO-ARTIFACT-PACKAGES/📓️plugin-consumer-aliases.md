@@ -1,0 +1,67 @@
+# Plugin Consumer Alias Inventory
+
+Nonstdio plugin dependencies, including local aliases that a fully-qualified Rust source replacement would miss. These are declaration facts, not proof that each dependency is an artifact consumer. Preserve plugin installation/catalog uses and migrate mounted artifact uses directly once package APIs are available.
+
+| Consumer | Section | Rust Alias | Plugin Package |
+| --- | --- | --- | --- |
+| semio-s-plugin-demonstrator | dependencies | procedural | semio-s-plugin-procedural |
+| semio-s-plugin-demonstrator | dependencies | cad | semio-s-plugin-cad |
+| semio-s-plugin-demonstrator | dependencies | puzzle | semio-s-plugin-puzzle |
+| semio-s-plugin-demonstrator | dependencies | sourcing | semio-s-plugin-sourcing |
+| semio-s-plugin-demonstrator | dependencies | process | semio-s-plugin-process |
+| semio-s-plugin-demonstrator | dependencies | gis | semio-s-plugin-gis |
+| semio-s-plugin-norm | dependencies | fem | semio-s-plugin-fem |
+| semio-s-plugin-cad-aec-building | dependencies | semio_s_plugin_cad | semio-s-plugin-cad |
+| semio-s-plugin-lowpoly | dependencies | cad_plugin | semio-s-plugin-cad |
+| semio-s-plugin-draw | dependencies | fsm | semio-s-plugin-draw-fsm |
+| semio-s-plugin-draw-fsm | dependencies | fsm_macros | semio-s-plugin-draw-fsm-macros |
+| semio-s-plugin-trinity-jack-shell | dependencies | trinity | semio-s-plugin-trinity |
+| semio-s-plugin-writer | dependencies | trinity | semio-s-plugin-trinity |
+| semio-s-plugin-sequence | dev-dependencies | semio_s_plugin_imperative_math | semio-s-plugin-imperative-math |
+| semio-s-plugin-sequence | dev-dependencies | semio_s_plugin_imperative_text | semio-s-plugin-imperative-text |
+| semio-s-plugin-sequence | dev-dependencies | semio_s_plugin_imperative_effect | semio-s-plugin-imperative-effect |
+| semio-s-plugin-sequence | dev-dependencies | semio_s_plugin_imperative_control | semio-s-plugin-imperative-control |
+| semio-framework-os-dsl-fixture-sweep | dependencies | block | semio-s-plugin-block |
+| semio-framework-os-dsl-fixture-sweep | dependencies | cad_document | semio-s-plugin-cad |
+| semio-framework-os-dsl-fixture-sweep | dependencies | dag_app | semio-s-plugin-dag |
+| semio-framework-os-dsl-fixture-sweep | dependencies | draw | semio-s-plugin-draw |
+| semio-framework-os-dsl-fixture-sweep | dependencies | fem | semio-s-plugin-fem |
+| semio-framework-os-dsl-fixture-sweep | dependencies | gis | semio-s-plugin-gis |
+| semio-framework-os-dsl-fixture-sweep | dependencies | home | semio-s-plugin-space |
+| semio-framework-os-dsl-fixture-sweep | dependencies | imperative | semio-s-plugin-imperative |
+| semio-framework-os-dsl-fixture-sweep | dependencies | layout | semio-s-plugin-layout |
+| semio-framework-os-dsl-fixture-sweep | dependencies | lowpoly | semio-s-plugin-lowpoly |
+| semio-framework-os-dsl-fixture-sweep | dependencies | mathematical | semio-s-plugin-mathematical |
+| semio-framework-os-dsl-fixture-sweep | dependencies | norm | semio-s-plugin-norm |
+| semio-framework-os-dsl-fixture-sweep | dependencies | note_app | semio-s-plugin-note |
+| semio-framework-os-dsl-fixture-sweep | dependencies | presentation | semio-s-plugin-animate |
+| semio-framework-os-dsl-fixture-sweep | dependencies | procedural | semio-s-plugin-procedural |
+| semio-framework-os-dsl-fixture-sweep | dependencies | process_3d | semio-s-plugin-process |
+| semio-framework-os-dsl-fixture-sweep | dependencies | puzzle | semio-s-plugin-puzzle |
+| semio-framework-os-dsl-fixture-sweep | dependencies | raster | semio-s-plugin-raster |
+| semio-framework-os-dsl-fixture-sweep | dependencies | reasoning_mindmap_plugin | semio-s-plugin-reasoning-mindmap |
+| semio-framework-os-dsl-fixture-sweep | dependencies | remodel | semio-s-plugin-remodel |
+| semio-framework-os-dsl-fixture-sweep | dependencies | sequence | semio-s-plugin-sequence |
+| semio-framework-os-dsl-fixture-sweep | dependencies | shooting | semio-s-plugin-shooting |
+| semio-framework-os-dsl-fixture-sweep | dependencies | sourcing | semio-s-plugin-sourcing |
+| semio-framework-os-dsl-fixture-sweep | dependencies | trinity | semio-s-plugin-trinity |
+| semio-framework-os-dsl-fixture-sweep | dependencies | vcs_app | semio-s-plugin-vcs |
+| semio-framework-os-dsl-fixture-sweep | dependencies | writer | semio-s-plugin-writer |
+| semio-framework-os-flow | dev-dependencies | semio_s_plugin_flow_extension_brep | semio-s-plugin-flow-extension-brep |
+| semio-framework-os-flow | dev-dependencies | semio_s_plugin_flow_extension_primitive | semio-s-plugin-flow-extension-primitive |
+| semio-framework-os-flow | dev-dependencies | semio_s_plugin_flow_extension_math | semio-s-plugin-flow-extension-math |
+| semio-framework-os-flow | dev-dependencies | semio_s_plugin_flow_extension_text | semio-s-plugin-flow-extension-text |
+| semio-framework-os-flow | dev-dependencies | semio_s_plugin_flow_extension_logic | semio-s-plugin-flow-extension-logic |
+| semio-framework-os-flow | dev-dependencies | semio_s_plugin_flow_extension_dictionary | semio-s-plugin-flow-extension-dictionary |
+| semio-framework-os-flow | dev-dependencies | semio_s_plugin_flow_extension_list | semio-s-plugin-flow-extension-list |
+| semio-framework-os-flow | dev-dependencies | semio_s_plugin_flow_extension_draw | semio-s-plugin-flow-extension-draw |
+| semio-framework-os-flow | dev-dependencies | semio_s_plugin_flow_extension_bim | semio-s-plugin-flow-extension-bim |
+| semio-s-plugin-process-concrete | dependencies | semio_s_plugin_process | semio-s-plugin-process |
+| semio-s-plugin-process-robotic | dependencies | semio_s_plugin_process | semio-s-plugin-process |
+| semio-s-plugin-process-wood | dependencies | semio_s_plugin_process | semio-s-plugin-process |
+| semio-s-plugin-process-metal | dependencies | semio_s_plugin_process | semio-s-plugin-process |
+| semio-s-plugin-sourcing-windows | dependencies | sourcing_curation | semio-s-plugin-sourcing |
+| semio-s-plugin-sourcing-slabs | dependencies | sourcing_curation | semio-s-plugin-sourcing |
+| semio-s-plugin-sourcing-beams | dependencies | sourcing_curation | semio-s-plugin-sourcing |
+| semio-hub | dependencies | semio_s_plugin_gis | semio-s-plugin-gis |
+| semio-hub | dependencies | semio_s_plugin_vcs | semio-s-plugin-vcs |

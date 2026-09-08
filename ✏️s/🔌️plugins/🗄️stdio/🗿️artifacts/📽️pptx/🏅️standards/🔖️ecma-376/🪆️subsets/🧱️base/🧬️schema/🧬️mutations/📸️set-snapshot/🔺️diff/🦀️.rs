@@ -1,7 +1,7 @@
 //! 🧩 set_snapshot diff leaf.
 
-use crate::artifacts::pptx::schema::diff::{diff_set_snapshot, PptxDiff};
-use crate::artifacts::pptx::PptxSnapshot;
+use crate::schema::diff::{diff_set_snapshot, PptxDiff};
+use crate::PptxSnapshot;
 
 /// 🔺️ Diff helper for set-snapshot -- sparse field-by-field `between(base, next)`, matching
 /// `PptxDiff::between`'s real shape (no `snapshot: Option<PptxSnapshot>` full-replace slot).

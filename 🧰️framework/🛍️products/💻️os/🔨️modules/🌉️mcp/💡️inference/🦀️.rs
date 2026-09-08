@@ -28,6 +28,10 @@ use crate::errors::{GatewayError, GatewayErrorCode};
 use crate::tool_from_capability;
 use crate::protocol::{CallToolResult, ContentBlock, GatewayBackend, InMemoryToolRegistry, Resource, ResourceContent};
 use crate::policy::{AgentPrincipal, PolicyEngine};
+use crate::schema::{
+    inference_approve_input_schema, inference_get_input_schema, inference_get_output_schema, inference_job_handle_input_schema, inference_job_output_schema, inference_list_input_schema, inference_list_output_schema,
+    inference_submit_input_schema,
+};
 use crate::workspace::remote::percent_encode;
 use crate::workspace::{HeadlessWorkspace, PROBE_SCHEMA};
 use semio_framework_async::OperationContext;
@@ -190,40 +194,6 @@ pub fn inference_job_payload(artifact_id: &str, item: &DeclaredInference, cancel
 //#endregion 🔖️JobSeam
 
 //#region 🔖️Capabilities
-fn inference_list_input_schema() -> serde_json::Value {
-    serde_json::json!({
-        "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "$id": "semio://capability/inference.list/input",
-        "type": "object",
-        "properties": { "artifactId": { "type": "string" } },
-        "additionalProperties": false,
-    })
-}
-
-fn inference_list_output_schema() -> serde_json::Value {
-    serde_json::json!({
-        "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "$id": "semio://capability/inference.list/output",
-        "type": "object",
-        "properties": { "artifactId": {}, "artifactKind": {}, "declared": { "type": "array" } },
-    })
-}
-
-fn inference_get_input_schema() -> serde_json::Value {
-    serde_json::json!({
-        "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "$id": "semio://capability/inference.get/input",
-        "type": "object",
-        "properties": { "artifactId": { "type": "string" }, "inferenceSchema": { "type": "string" } },
-        "required": ["artifactId", "inferenceSchema"],
-        "additionalProperties": false,
-    })
-}
-
-fn inference_get_output_schema() -> serde_json::Value {
-    serde_json::json!({ "$schema": "https://json-schema.org/draft/2020-12/schema", "$id": "semio://capability/inference.get/output", "type": "object" })
-}
-
 fn inference_capability(id: &str, tool_name: &str, title: &str, description: &str, input_schema: serde_json::Value, output_schema: serde_json::Value) -> CapabilityDefinition {
     CapabilityDefinition {
         id: CapabilityRef(id.to_string()),
@@ -1164,43 +1134,6 @@ fn inference_job_capability(id: &str, tool_name: &str, title: &str, description:
         examples: Vec::new(),
         source: CapabilitySource::Gateway,
     }
-}
-
-fn inference_submit_input_schema() -> serde_json::Value {
-    serde_json::json!({
-        "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "$id": "semio://capability/inference.submit/input",
-        "type": "object",
-        "properties": { "documentId": { "type": "string" }, "lifetimeMs": { "type": "integer", "minimum": 1, "maximum": INFERENCE_JOB_MAX_LIFETIME_MS }, "requestId": { "type": "string", "pattern": "^[0-9a-f]{32}$" } },
-        "required": ["documentId"],
-        "additionalProperties": false,
-    })
-}
-
-fn inference_job_handle_input_schema(id: &str) -> serde_json::Value {
-    serde_json::json!({
-        "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "$id": format!("semio://capability/{id}/input"),
-        "type": "object",
-        "properties": { "jobHandle": { "type": "string" }, "after": { "type": "integer", "minimum": 0, "maximum": INFERENCE_PROGRESS_MAX_CURSOR } },
-        "required": ["jobHandle"],
-        "additionalProperties": false,
-    })
-}
-
-fn inference_approve_input_schema() -> serde_json::Value {
-    serde_json::json!({
-        "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "$id": "semio://capability/inference.approve/input",
-        "type": "object",
-        "properties": { "jobHandle": { "type": "string" }, "proposalHash": { "type": "string", "pattern": "^[0-9a-f]{64}$" } },
-        "required": ["jobHandle", "proposalHash"],
-        "additionalProperties": false,
-    })
-}
-
-fn inference_job_output_schema(id: &str) -> serde_json::Value {
-    serde_json::json!({ "$schema": "https://json-schema.org/draft/2020-12/schema", "$id": format!("semio://capability/{id}/output"), "type": "object" })
 }
 
 pub fn inference_submit_capability() -> CapabilityDefinition {

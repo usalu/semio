@@ -59,7 +59,7 @@ pub(super) fn durable_fixture_record(fixture: &serde_json::Value) -> DurableFixt
         schema::{gis_map_descriptor_json, gis_map_document_from_descriptor_json, gis_map_snapshot_to_drawing},
         standards::v1::subsets::any::schema::inferences::GisMapInference,
     };
-    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::{drawing::schema::mutations::apply_semio_drawing_mutation, value::schema::mutations::apply_semio_value_mutation};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::{drawing::schema::mutations::apply_semio_drawing_mutation, value::schema::mutations::apply_semio_value_mutation};
 
     let base = gis_map_document_from_descriptor_json(r#"{"positions":[{"id":"point-a","lon":7,"lat":47}],"routes":[{"id":"route-a","points":[[8,46],[9,48]]}],"regions":[]}"#);
     let work = GisMapInference::infer(&base).create_region_group_work(&base, fixture["jobId"].as_str().unwrap()).expect("typed fixed-three inference work");

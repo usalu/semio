@@ -4,8 +4,8 @@
 //! 📤️export/🧵️serializers.
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use crate::artifacts::mp3::standards::mpeg1_layer3::subsets::any::schema::snapshot::Mp3Snapshot;
-    use crate::artifacts::mp3::standards::mpeg1_layer3::subsets::any::schema::Mp3Analyzer;
+    use crate::standards::mpeg1_layer3::subsets::any::schema::snapshot::Mp3Snapshot;
+    use crate::standards::mpeg1_layer3::subsets::any::schema::Mp3Analyzer;
     use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.mp3", standard: StandardId("mpeg1-layer3"), subset: SubsetId("*") };
@@ -45,9 +45,9 @@ pub mod derived_composition {
     /// this artifact's standard-level `engine::register()`.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn register() {
-        ::schema::register_artifact_schema_descriptor(crate::artifacts::mp3::standards::mpeg1_layer3::subsets::any::schema::mp3_artifact_schema_descriptor());
-        store::register_document_codec(store::ArtifactCodec::of::<Mp3Snapshot, crate::artifacts::mp3::standards::mpeg1_layer3::subsets::any::schema::mutations::Mp3Mutation>(
-            crate::artifacts::mp3::standards::mpeg1_layer3::subsets::any::schema::snapshot::STDIO_MP3_DOCUMENT_SCHEMA,
+        ::framework_schema::register_artifact_schema_descriptor(crate::standards::mpeg1_layer3::subsets::any::schema::mp3_artifact_schema_descriptor());
+        store::register_document_codec(store::ArtifactCodec::of::<Mp3Snapshot, crate::standards::mpeg1_layer3::subsets::any::schema::mutations::Mp3Mutation>(
+            crate::standards::mpeg1_layer3::subsets::any::schema::snapshot::STDIO_MP3_DOCUMENT_SCHEMA,
         )).expect("static Stdio registration must be available and conflict-free");
         register_artifact_inferences();
     }
@@ -57,7 +57,7 @@ pub mod derived_composition {
     /// ticket 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING P2/S3+S4).
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn register_artifact_inferences() {
-        ::schema::register_artifact_inference_descriptor(crate::artifacts::mp3::standards::mpeg1_layer3::subsets::any::schema::inferences::mp3_artifact_inference_descriptor());
+        ::framework_schema::register_artifact_inference_descriptor(crate::standards::mpeg1_layer3::subsets::any::schema::inferences::mp3_artifact_inference_descriptor());
     }
     //#endregion 🔖️Register
 }
@@ -65,7 +65,7 @@ pub use derived_composition::*;
 //#endregion 🎹️DerivedComposition
 
 //#region 🔖️Sniff
-use crate::artifacts::mp3::standards::mpeg1_layer3::subsets::any::schema::snapshot::{Id3Frame, Id3v1Tag, Id3v2Tag, Mp3Frame, Mp3FrameHeader, Mp3Snapshot, STDIO_MP3_DOCUMENT_SCHEMA};
+use crate::standards::mpeg1_layer3::subsets::any::schema::snapshot::{Id3Frame, Id3v1Tag, Id3v2Tag, Mp3Frame, Mp3FrameHeader, Mp3Snapshot, STDIO_MP3_DOCUMENT_SCHEMA};
 
 /// 🔍 Real magic sniff: an ID3v2 header at the front, OR a valid MPEG frame sync anywhere in the
 /// buffer.
@@ -244,7 +244,7 @@ fn parse_frame_header(bytes: &[u8], pos: usize) -> Option<(Mp3FrameHeader, usize
     let emphasis = b3 & 0x03;
 
     let bitrate_bps = bitrate_kbps(mpeg_version_id, layer, bitrate_index)? as u32 * 1000;
-    let sample_rate = crate::artifacts::mp3::standards::mpeg1_layer3::subsets::any::schema::sample_rate_hz(mpeg_version_id, sample_rate_index)?;
+    let sample_rate = crate::standards::mpeg1_layer3::subsets::any::schema::sample_rate_hz(mpeg_version_id, sample_rate_index)?;
     let pad = if padding { 1u32 } else { 0 };
     let frame_size = if layer == 3 {
         // Layer I: slots are 4 bytes.
@@ -448,7 +448,7 @@ mod codec_tests {
 
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
-    use crate::artifacts::mp3::standards::mpeg1_layer3::subsets::any::schema::Mp3Composer as Mp3RawAnyComposer;
+    use crate::standards::mpeg1_layer3::subsets::any::schema::Mp3Composer as Mp3RawAnyComposer;
     use semio_framework_plugin::{composer_entry_of, ComposerEntry};
     use std::sync::OnceLock;
 

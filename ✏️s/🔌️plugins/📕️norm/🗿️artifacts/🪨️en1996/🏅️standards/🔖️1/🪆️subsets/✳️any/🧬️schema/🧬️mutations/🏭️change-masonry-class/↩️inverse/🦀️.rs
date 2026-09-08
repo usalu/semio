@@ -7,6 +7,6 @@ use crate::artifacts::en1996::En1996Snapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(_payload: &ChangeMasonryClass, base: &En1996Snapshot) -> Vec<En1996Mutation> {
-    vec![En1996Mutation::ChangeMasonryClass(ChangeMasonryClass { new_masonry_class: base.masonry_class.clone() })]
+    vec![En1996Mutation::ChangeMasonryClass(ChangeMasonryClass { new_masonry_class: base.masonry_class })]
 }
 //#endregion 🔖️Inverse

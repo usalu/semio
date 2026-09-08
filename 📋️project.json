@@ -261,6 +261,68 @@
         "forwardAllArgs": true
       }
     },
+    "schema-generate": {
+      "executor": "nx:run-commands",
+      "inputs": [
+        "schemaSources"
+      ],
+      "outputs": [
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️schema-catalog.json"
+      ],
+      "options": {
+        "command": "bun ./📜️script.ts schema generate",
+        "forwardAllArgs": true
+      }
+    },
+    "schema-docs": {
+      "executor": "nx:run-commands",
+      "inputs": [
+        "schemaSources"
+      ],
+      "outputs": [
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📓️schema-catalog.md"
+      ],
+      "options": {
+        "command": "bun ./📜️script.ts schema docs"
+      }
+    },
+    "schema-check": {
+      "executor": "nx:run-commands",
+      "inputs": [
+        "schemaSources"
+      ],
+      "outputs": [],
+      "options": {
+        "command": "bun ./📜️script.ts schema check",
+        "forwardAllArgs": true
+      }
+    },
+    "schema-verify": {
+      "executor": "nx:run-commands",
+      "inputs": [
+        "schemaSources"
+      ],
+      "outputs": [],
+      "options": {
+        "command": "bun ./📜️script.ts schema verify"
+      }
+    },
+    "schema-audit": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts schema audit",
+        "forwardAllArgs": true
+      }
+    },
+    "schema-test": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts schema test",
+        "forwardAllArgs": true
+      }
+    },
     "lint": {
       "executor": "nx:run-commands",
       "dependsOn": [

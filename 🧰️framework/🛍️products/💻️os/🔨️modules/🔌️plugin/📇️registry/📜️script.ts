@@ -11,13 +11,14 @@
  *
  * @see .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️06/REGISTRY-SCRIPT-REFACTOR-TO-VOCABULARY-DISCOVERY-LIBRARY
  */
+import { runtimeComponentClosure } from "../../../../🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧩️runtime/🟨️.mjs";
 import { createHash } from "node:crypto";
 import { stageArtifacts } from "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️.ts";
 import { closeSync, existsSync, fstatSync, lstatSync, mkdirSync, mkdtempSync, openSync, readdirSync, readFileSync, readSync, realpathSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { isAbsolute, basename, dirname, join, relative, resolve } from "node:path";
 import { isDeepStrictEqual } from "node:util";
 import type { AreaState, ArtifactScaffoldLeaf, ArtifactScaffoldOptions, ArtifactScaffoldResult, DiscoveredPackage, PackageRole, RegistryCatalogInputView } from "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { authorArtifactScaffold, BundleScript, canonicalPrimaryFilenameForKind, discoverCatalogPackages, discoverPackageProblems, discoverPackages, getWorkspaceRoot, inspectRustModuleGraph, inspectRustModuleGraphFacts, loadCatalogTaxonomy, parseRegistryCatalogProjection, registryCatalogInputView, registryCatalogProjectedInputView, registryExampleCatalog, runBundleScriptMain, runVitest, ScriptRouter, validateGeneratorContractsAgainstWorkspace } from "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { authorArtifactScaffold, BundleScript, canonicalPrimaryFilenameForKind, discoverCatalogPackages, discoverPackageProblems, discoverPackages, getWorkspaceRoot, inspectRustModuleGraph, inspectRustModuleGraphFacts, loadCatalogTaxonomy, parseRegistryCatalogProjection, registryCatalogInputView, registryCatalogProjectedInputView, registryExampleCatalog, runBundleScriptMain, runVitest, resolveTestLevel, ScriptRouter, validateGeneratorContractsAgainstWorkspace } from "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { APP_CHANNEL_VERSION, clonePackValue, decodePackValue, encodePackValue, packValueToExactJson } from "../../../🟦️.ts";
 import type { PackValue } from "../../../🟦️.ts";
 import { generateLaunchJson, LAUNCH_OUTPUT_REL_PATH } from "./🖥️launch.ts";
@@ -617,44 +618,11 @@ export function isHostPluginFilter(pluginFilter?: string, repoRoot = getWorkspac
   return pluginEntryHasHost(resolveRegistryPluginIdForFilter(pluginFilter, repoRoot), repoRoot);
 }
 
-/**
- * 🎯️ Resolves a raw playground filter (a variant id like "puzzle5d", or an already-bare crate
- * pluginId like "note") to the set of crate pluginIds that must be built for one dev session: the
- * target crate itself, plus every crate whose declared `contributes` intersects the target crate
- * `consumes` (per `[package.metadata.semio]` in each crate Cargo.toml — no more registry-id
- * indirection through framework/core/js), plus the FULL TRANSITIVE `dependsOn` closure of everything
- * gathered so far (contract freeze §4/§5's dependency graph — a dev session for one plugin must also
- * build every plugin/extension whose ACTOR it needs beside it, however many hops deep). The two
- * membership rules are additive, not a replacement of one by the other: some topic-based consumption
- * (e.g. `demonstrator` consuming `forms.questionKind`) is not a declared runtime dependency at all,
- * so dropping the topic scan would silently shrink existing dev sessions. A crate this one merely
- * LINKS (its Cargo `[dependencies]`) is not in this closure and needs no session of its own — Cargo
- * compiles it into the dependent's own component.
- */
+/** 🎯️ Resolves variant aliases and closes every runtime dependency and consumed contribution. */
 export function resolveRegistryPluginIdsForFilter(filterPlaygroundPlugin: string, allEntries: readonly PluginRegistryEntry[] = generatePluginRegistry(getWorkspaceRoot()), playgrounds: readonly PlaygroundEntry[] = generatePlaygroundRegistry(getWorkspaceRoot())): readonly string[] {
   const variantRow = playgrounds.find((p) => p.variant === filterPlaygroundPlugin || p.aliases.includes(filterPlaygroundPlugin));
   const targetPluginId = variantRow?.pluginId ?? filterPlaygroundPlugin;
-  const byId = new Map(allEntries.map((entry) => [entry.pluginId, entry]));
-  const targetEntry = byId.get(targetPluginId);
-  const ids = new Set<string>([targetPluginId]);
-  if (targetEntry) {
-    for (const entry of allEntries) {
-      if (entry.pluginId === targetPluginId) continue;
-      if (entry.contributes.some((topic) => targetEntry.consumes.includes(topic))) ids.add(entry.pluginId);
-    }
-  }
-  // 🔗️ Transitive dependsOn closure over whatever the topic scan already gathered — a BFS/DFS-order-
-  // agnostic worklist since `ids` only ever grows and every id is pushed at most once.
-  const queue = [...ids];
-  while (queue.length > 0) {
-    const id = queue.pop()!;
-    for (const depId of byId.get(id)?.dependsOn ?? []) {
-      if (ids.has(depId)) continue;
-      ids.add(depId);
-      queue.push(depId);
-    }
-  }
-  return [...ids];
+  return allEntries.some(row => row.pluginId === targetPluginId) ? runtimeComponentClosure(allEntries, [targetPluginId]) : [];
 }
 
 function findPluginCargoPathsForIds(repoRoot: string, pluginIds: readonly string[]): string[] {
@@ -3265,7 +3233,8 @@ class CheckScript extends BundleScript {
 /** 🧪️ Runs the language-neutral generated-launch contract without catalog generation. */
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    await runVitest(this.root, segments, "🧪️tests/🟦️.ts");
+    const { rest } = resolveTestLevel(segments);
+    await runVitest(this.root, rest, "🧪️tests/🟦️.ts");
   }
 }
 

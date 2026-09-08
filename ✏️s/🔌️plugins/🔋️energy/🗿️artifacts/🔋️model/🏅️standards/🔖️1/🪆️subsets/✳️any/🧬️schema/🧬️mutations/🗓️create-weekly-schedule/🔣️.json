@@ -5,7 +5,7 @@
   "displayName": "Create Weekly Schedule",
   "emoji": "🗓️",
   "aggregateVariant": "CreateWeeklySchedule",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "create-weekly-schedule",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

@@ -1,6 +1,9 @@
 //! 📊️ Fem2d play app — the results window: static/modal/buckling analysis views, nodal-averaged
 //! von-Mises stress contours, reaction labels and moment diagrams.
 
+/// 🌈️ Triangle coordinates and scalar stress values at its vertices.
+type StressContourTriangle = ([(f64, f64); 3], [f64; 3]);
+
 use crate::app_surface::{hex_to_rgb01, normalize_mode_shape, DisplayMode, ResultDisplay, MODE_SHAPE_AMPLITUDE_RATIO, VON_MISES_BANDS};
 use crate::artifacts::fem2d::{element_id, Fem2dSnapshot, FemCamera};
 use crate::editor::fem2d::modes::edit::windows::model::{fem2d_deformed_shape_layers, fem2d_element_endpoints, fem2d_model_extent, fem2d_region_mesh_triangles, fem2d_structure_layers, find_node_2d, screen_2d, MOMENT_SCALE_2D};
@@ -194,7 +197,7 @@ fn render_static(doc: &Fem2dSnapshot, source_id: Option<&str>, camera: &FemCamer
     //#region 🔖️StressContour
     let nodal_von_mises = crate::fem2d_engine::mesh_preview::fem2d_nodal_von_mises(doc, &case_id).unwrap_or_default();
     let mesh_triangles = fem2d_region_mesh_triangles(doc);
-    let mut valued_triangles: Vec<([(f64, f64); 3], [f64; 3])> = Vec::new();
+    let mut valued_triangles: Vec<StressContourTriangle> = Vec::new();
     for (_, tri_points, node_ids) in &mesh_triangles {
         if let (Some(&v0), Some(&v1), Some(&v2)) = (nodal_von_mises.get(&node_ids[0]), nodal_von_mises.get(&node_ids[1]), nodal_von_mises.get(&node_ids[2])) {
             valued_triangles.push((*tri_points, [v0, v1, v2]));

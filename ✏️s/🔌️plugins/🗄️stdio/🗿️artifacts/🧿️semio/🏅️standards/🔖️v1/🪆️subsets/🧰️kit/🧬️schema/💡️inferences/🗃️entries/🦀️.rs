@@ -6,7 +6,7 @@
 //! what IS owned outright: `types`/`designs` (including every design's nested `pieces`/
 //! `connections`) plus a plain count/presence read of the four handle slots.
 
-use crate::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
+use crate::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
 
 //#region 🔖️Entries
 /// 🗃️ Semio kit catalog census.
@@ -48,8 +48,8 @@ pub fn compute_semio_kit_entries(snapshot: &SemioKitSnapshot) -> SemioKitEntries
 //#region 🧪️Tests
 mod tests {
     use super::*;
-    use crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioTransform;
-    use crate::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::{SemioKitConnection, SemioKitDesign, SemioKitPiece, SemioKitType, STDIO_SEMIOKIT_DOCUMENT_SCHEMA};
+    use crate::standards::v1::subsets::base::schema::geometry::SemioTransform;
+    use crate::standards::v1::subsets::kit::schema::snapshot::{SemioKitConnection, SemioKitDesign, SemioKitPiece, SemioKitType, STDIO_SEMIOKIT_DOCUMENT_SCHEMA};
 
     /// 🌱 A hand-built, non-empty catalog: 2 types, 2 designs (one with 2 pieces + 1 connection,
     /// one empty), no children/representations — exercises the real fold without depending on the

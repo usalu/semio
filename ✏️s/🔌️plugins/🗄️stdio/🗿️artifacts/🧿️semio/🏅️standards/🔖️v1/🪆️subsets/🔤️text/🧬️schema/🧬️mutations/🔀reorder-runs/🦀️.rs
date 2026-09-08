@@ -1,8 +1,8 @@
 //! 🔀️ `reorder-runs` — repositions one run within the sequence (never spatial — `SemioTextRun`
 //! carries no position of its own, only sequence order).
 
-use crate::artifacts::semio::standards::v1::subsets::text::schema::mutations::SemioTextMutation;
-use crate::artifacts::semio::standards::v1::subsets::text::schema::snapshot::SemioTextSnapshot;
+use crate::standards::v1::subsets::text::schema::mutations::SemioTextMutation;
+use crate::standards::v1::subsets::text::schema::snapshot::SemioTextSnapshot;
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]

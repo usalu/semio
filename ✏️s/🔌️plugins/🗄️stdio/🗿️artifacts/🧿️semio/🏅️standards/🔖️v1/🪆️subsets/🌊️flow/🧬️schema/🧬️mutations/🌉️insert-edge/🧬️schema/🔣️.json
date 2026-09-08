@@ -1,0 +1,61 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/flow/mutation/insert-edge.json",
+  "title": "InsertEdge",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "edge"
+  ],
+  "properties": {
+    "edge": {
+      "$ref": "#/$defs/FlowEdge"
+    },
+    "mutation": {
+      "const": "insertEdge",
+      "description": "Aggregate discriminator spliced in by SemioFlowMutation; absent when the payload stands alone."
+    }
+  },
+  "$defs": {
+    "FlowEdge": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to",
+        "kind"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "$ref": "#/$defs/PortRef"
+        },
+        "to": {
+          "$ref": "#/$defs/PortRef"
+        },
+        "kind": {
+          "type": "string"
+        }
+      }
+    },
+    "PortRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "node",
+        "port"
+      ],
+      "properties": {
+        "node": {
+          "type": "string"
+        },
+        "port": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

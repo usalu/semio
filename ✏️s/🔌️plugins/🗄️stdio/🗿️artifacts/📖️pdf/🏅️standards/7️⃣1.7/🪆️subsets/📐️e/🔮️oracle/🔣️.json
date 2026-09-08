@@ -147,7 +147,7 @@
         {
           "id": "embed-font-file",
           "capability": "pdf-1-7-e-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -167,7 +167,7 @@
         {
           "id": "insert-encryption-dictionary",
           "capability": "pdf-1-7-e-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -187,7 +187,7 @@
         {
           "id": "insert-javascript-action",
           "capability": "pdf-1-7-e-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -207,7 +207,7 @@
         {
           "id": "insert-launch-action",
           "capability": "pdf-1-7-e-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -227,7 +227,7 @@
         {
           "id": "insert-media-annotation",
           "capability": "pdf-1-7-e-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -247,7 +247,7 @@
         {
           "id": "remove-encryption-dictionary",
           "capability": "pdf-1-7-e-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -267,7 +267,7 @@
         {
           "id": "remove-font-file",
           "capability": "pdf-1-7-e-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -287,7 +287,7 @@
         {
           "id": "remove-javascript-action",
           "capability": "pdf-1-7-e-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -307,7 +307,7 @@
         {
           "id": "remove-launch-action",
           "capability": "pdf-1-7-e-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -327,7 +327,7 @@
         {
           "id": "remove-media-annotation",
           "capability": "pdf-1-7-e-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -347,7 +347,7 @@
         {
           "id": "remove-output-intent",
           "capability": "pdf-1-7-e-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -367,7 +367,7 @@
         {
           "id": "set-output-intent",
           "capability": "pdf-1-7-e-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],

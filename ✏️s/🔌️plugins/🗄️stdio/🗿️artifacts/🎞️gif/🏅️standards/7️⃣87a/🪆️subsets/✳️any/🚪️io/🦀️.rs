@@ -5,8 +5,8 @@ pub type QuantizedImage = (Vec<Rgb>, Vec<u8>, Option<u8>);
 
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use crate::artifacts::gif::standards::v87a::subsets::any::schema::snapshot::GifSnapshot;
-    use crate::artifacts::gif::standards::v87a::subsets::any::schema::GifAnalyzer;
+    use crate::standards::v87a::subsets::any::schema::snapshot::GifSnapshot;
+    use crate::standards::v87a::subsets::any::schema::GifAnalyzer;
     use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.gif", standard: StandardId("87a"), subset: SubsetId("*") };
@@ -57,13 +57,13 @@ pub use derived_composition::*;
 // `standards::v89a::subsets::any::io`. `GifEngine` (zero construction sites) deleted outright.
 // `register`/`register_artifact_inferences`/`register_pilot_languages`/`register_schema_specs`
 // kept together here (not dead: `register()` is reached by stdio's protected imperative
-// `crate::artifacts::gif::engine::register()` plugin-root call via this standard's own inline
+// `crate::engine::register()` plugin-root call via this standard's own inline
 // `engine` barrel). `empty_gif_snapshot`/`demo_gif_snapshot` moved to `../🧬️schema`.
-use crate::artifacts::gif::standards::v87a::subsets::any::schema::{
+use crate::standards::v87a::subsets::any::schema::{
     mutations::GifMutation,
     snapshot::{GifColorTable, GifImage, GifRgb, GifSnapshot},
 };
-use crate::artifacts::gif::STDIO_GIF_DOCUMENT_SCHEMA;
+use crate::STDIO_GIF_DOCUMENT_SCHEMA;
 use std::collections::HashMap;
 
 //#region BitIO
@@ -671,8 +671,8 @@ pub fn sniff_magic(source: &semio_framework_plugin::AnalyzeSource<'_>, magic: &[
 //#region 🔖️Register
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn register() {
-    crate::artifacts::gif::io_registry::register();
-    ::schema::register_artifact_schema_descriptor(crate::artifacts::gif::standards::v87a::subsets::any::schema::gif_artifact_schema_descriptor());
+    crate::io_registry::register();
+    ::framework_schema::register_artifact_schema_descriptor(crate::standards::v87a::subsets::any::schema::gif_artifact_schema_descriptor());
     register_artifact_inferences();
     register_pilot_languages();
     register_schema_specs();
@@ -684,7 +684,7 @@ pub fn register() {
 /// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn register_artifact_inferences() {
-    ::schema::register_artifact_inference_descriptor(crate::artifacts::gif::standards::v87a::subsets::any::schema::inferences::gif_artifact_inference_descriptor());
+    ::framework_schema::register_artifact_inference_descriptor(crate::standards::v87a::subsets::any::schema::inferences::gif_artifact_inference_descriptor());
 }
 
 /// 📌️ P2-FG2: 5-role `LanguageSpec` registration (Document/Ops/Diff/Pack/Spr), per the
@@ -700,28 +700,28 @@ pub fn register_pilot_languages() {
         id: "stdio.gif",
         extension: Some("gif"),
         role: dsl::LanguageRole::Document,
-        grammar: Some(crate::artifacts::gif::standards::v87a::subsets::any::schema::snapshot::text::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::gif::standards::v87a::subsets::any::schema::snapshot::text::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::artifacts::gif::standards::v87a::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::gif::standards::v87a::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
+        grammar: Some(crate::standards::v87a::subsets::any::schema::snapshot::text::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::standards::v87a::subsets::any::schema::snapshot::text::COMPONENT_GRAMMAR_PATH),
+        protocol: Some(crate::standards::v87a::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::standards::v87a::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("stdio.gif"),
     });
     dsl::register_language(dsl::LanguageSpec {
         id: "stdio.gif.op",
         extension: None,
         role: dsl::LanguageRole::Ops,
-        grammar: Some(crate::artifacts::gif::standards::v87a::subsets::any::schema::mutations::text::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::gif::standards::v87a::subsets::any::schema::mutations::text::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::artifacts::gif::standards::v87a::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::gif::standards::v87a::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
+        grammar: Some(crate::standards::v87a::subsets::any::schema::mutations::text::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::standards::v87a::subsets::any::schema::mutations::text::COMPONENT_GRAMMAR_PATH),
+        protocol: Some(crate::standards::v87a::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::standards::v87a::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("stdio.gif.op"),
     });
     dsl::register_language(dsl::LanguageSpec {
         id: "stdio.gif.diff",
         extension: None,
         role: dsl::LanguageRole::Diff,
-        grammar: Some(crate::artifacts::gif::standards::v87a::subsets::any::schema::diff::text::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::gif::standards::v87a::subsets::any::schema::diff::text::COMPONENT_GRAMMAR_PATH),
+        grammar: Some(crate::standards::v87a::subsets::any::schema::diff::text::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::standards::v87a::subsets::any::schema::diff::text::COMPONENT_GRAMMAR_PATH),
         protocol: None,
         protocol_path: None,
         hooks: dsl::passthrough_hooks("stdio.gif.diff"),
@@ -732,8 +732,8 @@ pub fn register_pilot_languages() {
         role: dsl::LanguageRole::Pack,
         grammar: None,
         grammar_path: None,
-        protocol: Some(crate::artifacts::gif::standards::v87a::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::gif::standards::v87a::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
+        protocol: Some(crate::standards::v87a::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::standards::v87a::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("stdio.gif.pack"),
     });
     dsl::register_language(dsl::LanguageSpec {
@@ -742,8 +742,8 @@ pub fn register_pilot_languages() {
         role: dsl::LanguageRole::Spr,
         grammar: None,
         grammar_path: None,
-        protocol: Some(crate::artifacts::gif::standards::v87a::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::gif::standards::v87a::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
+        protocol: Some(crate::standards::v87a::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::standards::v87a::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("stdio.gif.spr"),
     });
 }
@@ -773,7 +773,7 @@ pub fn register_schema_specs() {}
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::gif::standards::v87a::subsets::any::schema::demo_gif_snapshot;
+    use crate::standards::v87a::subsets::any::schema::demo_gif_snapshot;
 
     /// 🧪️ Builds a real, lossless `GifImage` (LCT + indices) from a checkerboard RGBA pattern via
     /// `quantize_rgba`/`indices_to_rgba` — those two byte-level helpers stay real and `pub` for
@@ -997,7 +997,7 @@ mod tests {
     /// framework file — mirrors png's own `conformance_laws` module shape verbatim.
     mod conformance_laws {
         use super::*;
-        use crate::artifacts::gif::standards::v87a::subsets::any::schema::{diff, mutations, snapshot};
+        use crate::standards::v87a::subsets::any::schema::{diff, mutations, snapshot};
         use protocol::{DiffCodec, OpBinary, OpText};
 
         /// ✅️ "committed files parse": all 6 handcrafted `.grammar.semio`/`.protocol.semio`
@@ -1101,7 +1101,7 @@ mod tests {
 
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
-    use crate::artifacts::gif::standards::v87a::subsets::any::schema::GifComposer as GifRawAnyComposer;
+    use crate::standards::v87a::subsets::any::schema::GifComposer as GifRawAnyComposer;
     use semio_framework_plugin::{composer_entry_of, ComposerEntry};
     use std::sync::OnceLock;
 

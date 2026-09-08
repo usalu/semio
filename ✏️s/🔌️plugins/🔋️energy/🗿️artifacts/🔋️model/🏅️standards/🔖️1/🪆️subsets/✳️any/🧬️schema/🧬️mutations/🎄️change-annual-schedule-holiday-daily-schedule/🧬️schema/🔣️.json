@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/energy/model/1/any/mutation/change-annual-schedule-holiday-daily-schedule.json",
+  "title": "ChangeAnnualScheduleHolidayDailySchedule",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newHolidayDailyScheduleId"
+  ],
+  "properties": {
+    "id": {
+      "type": "integer"
+    },
+    "newHolidayDailyScheduleId": {
+      "type": [
+        "integer",
+        "null"
+      ]
+    }
+  }
+}

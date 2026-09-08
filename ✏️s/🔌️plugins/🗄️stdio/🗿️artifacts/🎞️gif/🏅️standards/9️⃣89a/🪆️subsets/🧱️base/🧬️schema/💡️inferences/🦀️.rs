@@ -6,8 +6,8 @@
 //! SEPARATE inference schema id from) `7️⃣87a`'s own `GifInference` — same shape as those two
 //! standards' own `GifSnapshot`/`GifBuilder` reuse of the same Rust type name in different modules.
 
-use crate::artifacts::gif::standards::v89a::subsets::any::schema::snapshot::GifSnapshot;
-use schema::ArtifactSchema;
+use crate::standards::v89a::subsets::any::schema::snapshot::GifSnapshot;
+use framework_schema::ArtifactSchema;
 
 use super::dimensions::{compute_gif_dimensions, GifDimensions};
 
@@ -55,7 +55,7 @@ impl protocol::InferenceSpec<GifSnapshot> for GifInference {
 //#region 🔖️ArtifactInferrer
 /// 💡️ No `InferredField`s here (a screen-descriptor/GCT/GCE read is already O(frames)) — the
 /// default `infer_cached` passthrough (`ArtifactInferrer::infer_cached`) is exact.
-impl semio_framework_plugin::ArtifactInferrer for crate::artifacts::gif::standards::v89a::subsets::any::schema::GifBuilder {
+impl semio_framework_plugin::ArtifactInferrer for crate::standards::v89a::subsets::any::schema::GifBuilder {
     type Snapshot = GifSnapshot;
     type Inference = GifInference;
 }
@@ -65,10 +65,10 @@ impl semio_framework_plugin::ArtifactInferrer for crate::artifacts::gif::standar
 /// 💡️ Registers `s.stdio.gif.89a.inference`'s facet leaves into the OS-wide inference catalog —
 /// call once at plugin init, alongside 89a's own artifact schema descriptor registration.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn gif89a_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
-    schema::ArtifactInferenceDescriptor {
+pub fn gif89a_artifact_inference_descriptor() -> framework_schema::ArtifactInferenceDescriptor {
+    framework_schema::ArtifactInferenceDescriptor {
         id: "s.stdio.gif.89a.inference",
-        inference: schema::FacetLeaves {
+        inference: framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),

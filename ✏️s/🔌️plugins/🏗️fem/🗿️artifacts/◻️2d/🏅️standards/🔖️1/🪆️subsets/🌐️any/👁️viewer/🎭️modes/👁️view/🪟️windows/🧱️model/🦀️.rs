@@ -12,7 +12,6 @@ use semio_framework_plugin::{BuiltNode, Canvas2dScene};
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = "fem2d-view-model";
 pub const BODY_KEY: &str = "fem2d.view.model";
-/// 👁️ Read-only counterpart of the editor's `FEM2D_APP_ID` controller id — kept distinct so a viewer
 
 /// 📐️ Model-meters -> screen-pixels scale for the 2D canvas — duplicated from the sibling editor's
 /// model window (same literal value, not imported through it; see this file's own doc comment).

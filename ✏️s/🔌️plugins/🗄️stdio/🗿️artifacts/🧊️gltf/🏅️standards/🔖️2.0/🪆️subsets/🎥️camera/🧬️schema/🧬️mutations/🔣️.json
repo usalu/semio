@@ -1,7 +1,8 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/stdio/gltf/2.0/mutation/camera",
+  "$id": "https://semio.tech/schema/s/stdio/gltf/2.0/camera/mutations.json",
   "title": "glTF Camera Mutation",
+  "description": "View over the any subset's mutation leaves (adjacently tagged); every payload is the owning leaf's own schema, referenced, never restated.",
   "oneOf": [
     {
       "type": "object",
@@ -12,10 +13,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "create-camera"
+          "const": "createCamera"
         },
         "payload": {
-          "$ref": "🎥️camera/🌱️create/🧬️.schema.json"
+          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🎥️camera/🌱️create/🧬️schema/🔣️.json"
         }
       }
     },
@@ -28,10 +29,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "delete-camera"
+          "const": "deleteCamera"
         },
         "payload": {
-          "$ref": "🎥️camera/🗑️delete/🧬️.schema.json"
+          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🎥️camera/🗑️delete/🧬️schema/🔣️.json"
         }
       }
     },
@@ -44,10 +45,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "move-camera"
+          "const": "moveCamera"
         },
         "payload": {
-          "$ref": "🎥️camera/🚚️move/🧬️.schema.json"
+          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🎥️camera/🚚️move/🧬️schema/🔣️.json"
         }
       }
     },
@@ -60,10 +61,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "reorder-cameras"
+          "const": "reorderCameras"
         },
         "payload": {
-          "$ref": "🎥️camera/🔀️reorder/🧬️.schema.json"
+          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🎥️camera/🔀️reorder/🧬️schema/🔣️.json"
         }
       }
     }

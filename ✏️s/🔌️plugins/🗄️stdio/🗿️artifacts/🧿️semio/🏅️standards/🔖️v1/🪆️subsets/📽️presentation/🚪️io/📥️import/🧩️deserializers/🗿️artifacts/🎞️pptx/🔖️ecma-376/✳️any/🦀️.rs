@@ -21,11 +21,11 @@
 //!   block-content field to receive it (a real, spec-mandated shape limitation of this subset's
 //!   own type, not invented here).
 
-use crate::artifacts::pptx::schema::snapshot::{PptxParagraph, PptxRun, PptxShape, PptxTransform};
-use crate::artifacts::pptx::PptxSnapshot;
-use crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioPoint2;
-use crate::artifacts::semio::standards::v1::subsets::document::schema::snapshot::{DocBlock, DocRun, RunStyle};
-use crate::artifacts::semio::standards::v1::subsets::presentation::schema::snapshot::{PlaceholderKind, SemioPresentationSnapshot, Slide, SlideFrame, SlidePictureImage, SlideShape, STDIO_SEMIOPRESENTATION_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_pptx::schema::snapshot::{PptxParagraph, PptxRun, PptxShape, PptxTransform};
+use semio_s_artifact_stdio_pptx::PptxSnapshot;
+use crate::standards::v1::subsets::base::schema::geometry::SemioPoint2;
+use crate::standards::v1::subsets::document::schema::snapshot::{DocBlock, DocRun, RunStyle};
+use crate::standards::v1::subsets::presentation::schema::snapshot::{PlaceholderKind, SemioPresentationSnapshot, Slide, SlideFrame, SlidePictureImage, SlideShape, STDIO_SEMIOPRESENTATION_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId};
 
 //#region 🔖️FieldMapping
@@ -89,9 +89,9 @@ impl ArtifactDeserializer for SemioPresentationFromPptx {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::pptx::schema::snapshot::{PptxPresentation, PptxSlide};
-    use crate::artifacts::xml::schema::snapshot::XmlNode;
-    use crate::artifacts::zip::opc::OpcPackage;
+    use semio_s_artifact_stdio_pptx::schema::snapshot::{PptxPresentation, PptxSlide};
+    use semio_s_artifact_stdio_xml::schema::snapshot::XmlNode;
+    use semio_s_artifact_stdio_zip::opc::OpcPackage;
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(crate) fn sample_pptx() -> PptxSnapshot {

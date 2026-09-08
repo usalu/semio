@@ -10,9 +10,9 @@
 //! `blocks.modified[1] → runs.modified[0] → style.bold` and stopping there. In particular it must
 //! be a `DocBlockDiff::Paragraph` patch, never the `Replace` a block-KIND change would produce.
 
-use crate::artifacts::semio::standards::v1::subsets::document::schema::diff::{DocBlockDiff, SemioDocumentDiff};
-use crate::artifacts::semio::standards::v1::subsets::document::schema::mutations::{apply_semio_document_mutation, SemioDocumentMutation};
-use crate::artifacts::semio::standards::v1::subsets::document::schema::snapshot::SemioDocumentSnapshot;
+use crate::standards::v1::subsets::document::schema::diff::{DocBlockDiff, SemioDocumentDiff};
+use crate::standards::v1::subsets::document::schema::mutations::{apply_semio_document_mutation, SemioDocumentMutation};
+use crate::standards::v1::subsets::document::schema::snapshot::SemioDocumentSnapshot;
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");

@@ -15,7 +15,7 @@ pub fn diff(payload: &ChangeReferenceHidden, base: &CadSnapshot) -> protocol::Mu
     if existing.hidden == payload.new_hidden {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Reference \"{}\" already has hidden = {}.", payload.reference_id, payload.new_hidden));
     }
-    let patch = CadReferencePatch { hidden: Some(payload.new_hidden.clone()), ..Default::default() };
+    let patch = CadReferencePatch { hidden: Some(payload.new_hidden), ..Default::default() };
     let next = references
         .into_iter()
         .map(|mut reference| {

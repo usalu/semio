@@ -32,9 +32,9 @@ const INPUT: &str = "shared://🔣️.json";
 mod subject {
     use super::INPUT;
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_plugin_stdio::artifacts::json::standards::v_rfc8259::subsets::base::schema::mutations::{JsonPath, JsonPathSegment};
-    use semio_s_plugin_stdio::artifacts::json::standards::v_rfc8259::subsets::base::schema::snapshot::{parse_json_text, write_json_text, JsonMember, JsonSnapshot, JsonValue};
-    use semio_s_plugin_stdio::artifacts::json::standards::v_rfc8259::subsets::i_json::schema::mutations::{
+    use crate::standards::v_rfc8259::subsets::base::schema::mutations::{JsonPath, JsonPathSegment};
+    use crate::standards::v_rfc8259::subsets::base::schema::snapshot::{parse_json_text, write_json_text, JsonMember, JsonSnapshot, JsonValue};
+    use crate::standards::v_rfc8259::subsets::i_json::schema::mutations::{
         apply_json_i_json_mutation, insert_array_element, inverse_json_i_json_mutation, is_safe_number_lexeme, is_unicode_noncharacter, remove_array_element, remove_member, rename_member, set_safe_number, set_snapshot, set_string, set_top_level, upsert_member,
         JsonIJsonMutation, JsonIJsonRoot,
     };

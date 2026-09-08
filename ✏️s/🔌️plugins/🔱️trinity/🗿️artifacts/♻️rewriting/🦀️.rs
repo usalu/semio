@@ -211,7 +211,7 @@ pub fn pilot_languages() -> &'static [dsl::LanguageSpec] {
 pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
     use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
 
-    let rows: &[(&str, &str, &str, &[(&str, &str)], Option<(&str, &str)>)] = &[
+    let rows: &[semio_framework_plugin::ArtifactCapabilityRow<'_>] = &[
         ("s.trinity.rewriting.standard.v1", "standard", "1", &[], None),
         ("s.trinity.rewriting.standard.v1.profile.any", "profile", "any", &[], None),
         ("s.trinity.rewriting.schema.artifact", "schema", "s.trinity.rewriting", &[("schema", "s.trinity.rewriting")], None),

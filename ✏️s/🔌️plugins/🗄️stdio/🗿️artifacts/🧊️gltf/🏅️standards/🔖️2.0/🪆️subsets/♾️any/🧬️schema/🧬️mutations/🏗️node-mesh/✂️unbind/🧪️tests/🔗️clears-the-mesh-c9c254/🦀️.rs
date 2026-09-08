@@ -8,10 +8,10 @@
 //! leaf's own oracle. The derived `.op.semio`/`.spr.semio`/`.dsl.semio`/`.pack.semio`/
 //! `.patch.semio` encodings come from `fixtures generate`, not from here.
 
-use crate::artifacts::gltf::schema::mutations::unbind_node_mesh::diff::GltfUnbindNodeMeshDiff;
-use crate::artifacts::gltf::schema::mutations::unbind_node_mesh::GltfUnbindNodeMeshPayload;
-use crate::artifacts::gltf::schema::mutations::unbind_node_mesh::{diff, inverse, mutation};
-use crate::artifacts::gltf::GltfSnapshot;
+use crate::schema::mutations::unbind_node_mesh::diff::GltfUnbindNodeMeshDiff;
+use crate::schema::mutations::unbind_node_mesh::GltfUnbindNodeMeshPayload;
+use crate::schema::mutations::unbind_node_mesh::{diff, inverse, mutation};
+use crate::GltfSnapshot;
 
 const CASE: &str = "unbind-node-mesh/clears-the-mesh-binding-on-the-body-node";
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");

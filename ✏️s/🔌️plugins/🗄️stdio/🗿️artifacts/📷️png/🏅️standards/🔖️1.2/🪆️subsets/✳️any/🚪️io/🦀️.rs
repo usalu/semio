@@ -1,5 +1,5 @@
 //! 🚪️ IO stdio.png (1.2/✳️any) — registration now flows through 🎹️composer::register
-//! (called once from 🔌️plugin/🔧️setup via `crate::artifacts::png::register`), not per-leaf
+//! (called once from 🔌️plugin/🔧️setup via `crate::register`), not per-leaf
 //! register(). Relocated from `⚙️engine` verbatim (ticket
 //! 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES, rule 2: codecs live in `🚪️io/`).
 //!
@@ -14,15 +14,15 @@
 type PngChunkView<'a> = ([u8; 4], &'a [u8]);
 
 
-use crate::artifacts::png::{
+use crate::{
     schema::snapshot::{PngBackground, PngChromaticities, PngChunk, PngChunkMarker, PngColorType, PngPhysicalDims, PngRgb, PngSrgbIntent, PngTextChunk, PngTextKind, PngTimestamp, PngTransparency},
     PngSnapshot,
 };
 
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use crate::artifacts::png::standards::v1_2::subsets::any::schema::PngAnalyzer;
-    use crate::artifacts::png::PngSnapshot;
+    use crate::standards::v1_2::subsets::any::schema::PngAnalyzer;
+    use crate::PngSnapshot;
     use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.png", standard: StandardId("1.2"), subset: SubsetId("*") };
@@ -71,7 +71,7 @@ const PNG_SIGNATURE: [u8; 8] = [137, 80, 78, 71, 13, 10, 26, 10];
 //#region Crc
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn png_crc32(data: &[u8]) -> u32 {
-    crate::artifacts::zip::standards::v2_0::subsets::base::io::crc32(data)
+    semio_s_artifact_stdio_zip::standards::v2_0::subsets::base::io::crc32(data)
 }
 //#endregion Crc
 
@@ -418,7 +418,7 @@ fn write_text_chunk(out: &mut Vec<u8>, tc: &PngTextChunk) {
             data.extend_from_slice(tc.keyword.as_bytes());
             data.push(0);
             data.push(0); // compression method 0 = zlib/deflate
-            let compressed = crate::artifacts::deflate::standards::v_rfc1950::subsets::any::io::zlib_compress(tc.value.as_bytes()).unwrap_or_default();
+            let compressed = semio_s_artifact_stdio_deflate::standards::v_rfc1950::subsets::any::io::zlib_compress(tc.value.as_bytes()).unwrap_or_default();
             data.extend_from_slice(&compressed);
             write_chunk(out, b"zTXt", &data);
         }
@@ -433,7 +433,7 @@ fn write_text_chunk(out: &mut Vec<u8>, tc: &PngTextChunk) {
             data.extend_from_slice(tc.translated_keyword.as_bytes());
             data.push(0);
             if tc.compressed {
-                let compressed = crate::artifacts::deflate::standards::v_rfc1950::subsets::any::io::zlib_compress(tc.value.as_bytes()).unwrap_or_default();
+                let compressed = semio_s_artifact_stdio_deflate::standards::v_rfc1950::subsets::any::io::zlib_compress(tc.value.as_bytes()).unwrap_or_default();
                 data.extend_from_slice(&compressed);
             } else {
                 data.extend_from_slice(tc.value.as_bytes());
@@ -468,7 +468,7 @@ pub fn encode_png(snap: &PngSnapshot) -> Result<Vec<u8>, String> {
         idat.extend_from_slice(&filtered);
         prev = Some(row.to_vec());
     }
-    let compressed = crate::artifacts::deflate::standards::v_rfc1950::subsets::any::io::zlib_compress(&idat)?;
+    let compressed = semio_s_artifact_stdio_deflate::standards::v_rfc1950::subsets::any::io::zlib_compress(&idat)?;
 
     let mut out = Vec::new();
     out.extend_from_slice(&PNG_SIGNATURE);
@@ -707,7 +707,7 @@ pub fn decode_png(data: &[u8]) -> Result<PngSnapshot, String> {
             if chunk.len() < nul + 2 {
                 return Err("png zTXt: missing compression method".into());
             }
-            let value_bytes = crate::artifacts::deflate::standards::v_rfc1950::subsets::any::io::zlib_decompress(&chunk[nul + 2..])?;
+            let value_bytes = semio_s_artifact_stdio_deflate::standards::v_rfc1950::subsets::any::io::zlib_decompress(&chunk[nul + 2..])?;
             let value = String::from_utf8_lossy(&value_bytes).to_string();
             let index = text_chunks.len();
             text_chunks.push(PngTextChunk { keyword, value, compressed: true, kind: PngTextKind::ZText, language_tag: String::new(), translated_keyword: String::new() });
@@ -730,7 +730,7 @@ pub fn decode_png(data: &[u8]) -> Result<PngSnapshot, String> {
             pos += nul3 + 1;
             let rest = &chunk[pos..];
             let value = if compressed_flag {
-                let decompressed = crate::artifacts::deflate::standards::v_rfc1950::subsets::any::io::zlib_decompress(rest)?;
+                let decompressed = semio_s_artifact_stdio_deflate::standards::v_rfc1950::subsets::any::io::zlib_decompress(rest)?;
                 String::from_utf8_lossy(&decompressed).to_string()
             } else {
                 String::from_utf8_lossy(rest).to_string()
@@ -766,7 +766,7 @@ pub fn decode_png(data: &[u8]) -> Result<PngSnapshot, String> {
         return Err("png: color type 3 requires PLTE".into());
     }
 
-    let raw = crate::artifacts::deflate::standards::v_rfc1950::subsets::any::io::zlib_decompress(&idat)?;
+    let raw = semio_s_artifact_stdio_deflate::standards::v_rfc1950::subsets::any::io::zlib_decompress(&idat)?;
     let spp = samples_per_pixel(ihdr.color_type);
     let bpp = bpp_bytes(&ihdr);
     let mut rgba = vec![0u8; ihdr.width as usize * ihdr.height as usize * 4];
@@ -806,7 +806,7 @@ pub fn decode_png(data: &[u8]) -> Result<PngSnapshot, String> {
     }
 
     Ok(PngSnapshot {
-        schema: crate::artifacts::png::STDIO_PNG_DOCUMENT_SCHEMA.into(),
+        schema: crate::STDIO_PNG_DOCUMENT_SCHEMA.into(),
         width: ihdr.width,
         height: ihdr.height,
         bit_depth: ihdr.bit_depth,
@@ -831,7 +831,7 @@ pub fn decode_png(data: &[u8]) -> Result<PngSnapshot, String> {
 //#region 🚪️DerivedIoRegistry
 /// 🚪️ Relocated verbatim from `⚙️engine` (rule 3: `io_registry`/`ComposerEntry` live in `🚪️io/`).
 pub mod io_registry {
-    use crate::artifacts::png::standards::v1_2::subsets::any::schema::PngComposer as PngRawAnyComposer;
+    use crate::standards::v1_2::subsets::any::schema::PngComposer as PngRawAnyComposer;
     use semio_framework_plugin::{composer_entry_of, ComposerEntry};
     use std::sync::OnceLock;
 
@@ -863,7 +863,7 @@ mod codec_tests {
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn canonical_snapshot(w: u32, h: u32, rgba: Vec<u8>) -> PngSnapshot {
-        PngSnapshot { schema: crate::artifacts::png::STDIO_PNG_DOCUMENT_SCHEMA.into(), width: w, height: h, pixels: rgba, ..Default::default() }
+        PngSnapshot { schema: crate::STDIO_PNG_DOCUMENT_SCHEMA.into(), width: w, height: h, pixels: rgba, ..Default::default() }
     }
 
     /// 🔬 The load-bearing regression test: a non-solid image round-tripped through real
@@ -925,7 +925,7 @@ mod codec_tests {
             idat.extend_from_slice(&filtered);
             prev = Some(row.to_vec());
         }
-        let compressed = crate::artifacts::deflate::standards::v_rfc1950::subsets::any::io::zlib_compress(&idat).unwrap();
+        let compressed = semio_s_artifact_stdio_deflate::standards::v_rfc1950::subsets::any::io::zlib_compress(&idat).unwrap();
         let mut out = Vec::new();
         out.extend_from_slice(&PNG_SIGNATURE);
         let mut ihdr = Vec::with_capacity(13);
@@ -1058,7 +1058,7 @@ mod codec_tests {
         let (ft, filtered) = choose_filter(&raw, None, bpp);
         let mut idat_raw = vec![ft];
         idat_raw.extend_from_slice(&filtered);
-        let compressed = crate::artifacts::deflate::standards::v_rfc1950::subsets::any::io::zlib_compress(&idat_raw).unwrap();
+        let compressed = semio_s_artifact_stdio_deflate::standards::v_rfc1950::subsets::any::io::zlib_compress(&idat_raw).unwrap();
 
         let mut out = Vec::new();
         out.extend_from_slice(&PNG_SIGNATURE);
@@ -1140,7 +1140,7 @@ mod codec_tests {
     async fn ztxt_and_itxt_round_trip() {
         // zTXt: keyword\0 + compression-method(0).await + zlib(value)
         let mut ztxt = b"Comment\0\0".to_vec();
-        ztxt.extend_from_slice(&crate::artifacts::deflate::standards::v_rfc1950::subsets::any::io::zlib_compress(b"compressed value").unwrap());
+        ztxt.extend_from_slice(&semio_s_artifact_stdio_deflate::standards::v_rfc1950::subsets::any::io::zlib_compress(b"compressed value").unwrap());
         // iTXt (compressed): keyword\0 + flag(1) + method(0).await + lang\0 + translated\0 + zlib(value)
         let mut itxt = b"Title\0".to_vec();
         itxt.push(1);
@@ -1148,13 +1148,13 @@ mod codec_tests {
         itxt.extend_from_slice(b"en\0");
         itxt.extend_from_slice("Titre".as_bytes());
         itxt.push(0);
-        itxt.extend_from_slice(&crate::artifacts::deflate::standards::v_rfc1950::subsets::any::io::zlib_compress("valeur".as_bytes()).unwrap());
+        itxt.extend_from_slice(&semio_s_artifact_stdio_deflate::standards::v_rfc1950::subsets::any::io::zlib_compress("valeur".as_bytes()).unwrap());
 
         let raw = vec![0u8, 0, 0, 255];
         let (ft, filtered) = choose_filter(&raw, None, 4);
         let mut idat_raw = vec![ft];
         idat_raw.extend_from_slice(&filtered);
-        let compressed = crate::artifacts::deflate::standards::v_rfc1950::subsets::any::io::zlib_compress(&idat_raw).unwrap();
+        let compressed = semio_s_artifact_stdio_deflate::standards::v_rfc1950::subsets::any::io::zlib_compress(&idat_raw).unwrap();
 
         let mut out = Vec::new();
         out.extend_from_slice(&PNG_SIGNATURE);
@@ -1212,7 +1212,7 @@ mod codec_tests {
                 prev = Some(row);
             }
         }
-        let compressed = crate::artifacts::deflate::standards::v_rfc1950::subsets::any::io::zlib_compress(&idat).unwrap();
+        let compressed = semio_s_artifact_stdio_deflate::standards::v_rfc1950::subsets::any::io::zlib_compress(&idat).unwrap();
         let mut out = Vec::new();
         out.extend_from_slice(&PNG_SIGNATURE);
         let mut ihdr = Vec::with_capacity(13);

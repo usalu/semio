@@ -1,8 +1,8 @@
 //! 🧬️ Direct remove-line mutation owner.
 //#region 🔖️Payload
-use crate::artifacts::txt::TxtSnapshot;
-use crate::artifacts::txt::schema::diff::{TxtDiff, TxtLinesDiff};
-use crate::artifacts::txt::schema::mutation_support::{native_shape_error, native_snapshot_error, txt_u32_to_usize};
+use crate::TxtSnapshot;
+use crate::schema::diff::{TxtDiff, TxtLinesDiff};
+use crate::schema::mutation_support::{native_shape_error, native_snapshot_error, txt_u32_to_usize};
 
 #[path = "💾️binary/🦀️.rs"]
 pub mod binary;
@@ -19,8 +19,8 @@ pub struct RemoveLineMutation {
 pub type RemoveLinePayload = RemoveLineMutation;
 
 pub fn decode_remove_line_payload(value: &dsl::DslValue) -> Result<RemoveLinePayload, String> {
-    let fields = crate::artifacts::txt::schema::mutation_support::txt_required_object(value, &["index"])?;
-    Ok(RemoveLinePayload { index: crate::artifacts::txt::schema::mutation_support::txt_graphql_u32_variable(fields[0].1)? })
+    let fields = crate::schema::mutation_support::txt_required_object(value, &["index"])?;
+    Ok(RemoveLinePayload { index: crate::schema::mutation_support::txt_graphql_u32_variable(fields[0].1)? })
 }
 //#endregion 🔖️Payload
 
@@ -69,7 +69,7 @@ impl protocol::MutationKind<TxtSnapshot, super::TxtMutation> for RemoveLineMutat
 mod tests {
     use super::super::{InsertLineMutation, TxtMutation, apply_txt_mutation};
     use super::*;
-    use crate::artifacts::txt::schema::snapshot::LineEnding;
+    use crate::schema::snapshot::LineEnding;
     use protocol::{Mutation, MutationKind, MutationLeaf, OpBinary, OpText};
 
     fn snapshot(lines: &[&str], trailing_newline: bool, line_ending: LineEnding) -> TxtSnapshot {

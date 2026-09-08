@@ -10,8 +10,8 @@
 //! `object` has no LINK slots (`📦️object`'s own doc comment), so this is the FIRST facet in the
 //! ticket to exercise `bind`/`unbind`/`change-link-pin` for real.
 
-use crate::artifacts::semio::standards::v1::subsets::kit::schema::diff::SemioKitDiff;
-use crate::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
+use crate::standards::v1::subsets::kit::schema::diff::SemioKitDiff;
+use crate::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
 
 //#region 🔖️Leaves
 use super::add_design;
@@ -110,7 +110,7 @@ pub fn decode_kit_mutation_json(text: &str) -> Result<SemioKitMutation, String> 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::{demo_kit_snapshot, SemioKitDesign, SemioKitPiece};
+    use crate::standards::v1::subsets::kit::schema::snapshot::{demo_kit_snapshot, SemioKitDesign, SemioKitPiece};
     use protocol::{Mutation, MutationDiff, SemanticMutation};
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -256,7 +256,7 @@ mod tests {
         let after = round_trip(&base, &add);
         assert!(after.designs.iter().any(|d| d.id == "office"));
 
-        let new_pieces = vec![SemioKitPiece { id: "p9".into(), type_id: "chair".into(), transform: crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioTransform::identity() }];
+        let new_pieces = vec![SemioKitPiece { id: "p9".into(), type_id: "chair".into(), transform: crate::standards::v1::subsets::base::schema::geometry::SemioTransform::identity() }];
         let edit = SemioKitMutation::EditDesign(edit_design::EditDesign { id: "living-room".into(), pieces: new_pieces.clone(), connections: vec![] });
         let after = round_trip(&base, &edit);
         assert_eq!(after.designs.iter().find(|d| d.id == "living-room").unwrap().pieces, new_pieces);

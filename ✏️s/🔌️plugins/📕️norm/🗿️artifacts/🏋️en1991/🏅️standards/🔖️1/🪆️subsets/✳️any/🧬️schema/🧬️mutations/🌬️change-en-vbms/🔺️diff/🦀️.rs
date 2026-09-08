@@ -11,6 +11,6 @@ pub fn diff(payload: &ChangeEnVBMS, base: &En1991Snapshot) -> protocol::Mutation
     if base.en_v_b_m_s == payload.new_en_v_b_m_s {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "En vbms already has this value.");
     }
-    protocol::MutationOutcome::new(En1991Diff { en_v_b_m_s: Some(payload.new_en_v_b_m_s.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1991Diff { en_v_b_m_s: Some(payload.new_en_v_b_m_s), ..Default::default() })
 }
 //#endregion 🔖️Diff

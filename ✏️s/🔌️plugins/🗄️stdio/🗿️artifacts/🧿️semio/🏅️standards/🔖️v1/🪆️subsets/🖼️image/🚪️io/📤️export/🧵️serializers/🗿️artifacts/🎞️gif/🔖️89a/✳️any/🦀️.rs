@@ -19,8 +19,8 @@
 pub type QuantizedFrames = (GifColorTable, Vec<Vec<u8>>, Option<u8>);
 
 
-use crate::artifacts::gif::standards::v89a::subsets::any::schema::snapshot::{GifColorTable, GifFrame, GifRgb, GifSnapshot};
-use crate::artifacts::semio::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
+use semio_s_artifact_stdio_gif::standards::v89a::subsets::any::schema::snapshot::{GifColorTable, GifFrame, GifRgb, GifSnapshot};
+use crate::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
 use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
 
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("image") };
@@ -91,7 +91,7 @@ impl ArtifactSerializer for SemioImageToGif {
         let comments = from.metadata.iter().filter(|m| m.key == "comment").map(|m| m.value.clone()).collect();
         let loop_count = from.metadata.iter().find(|m| m.key == "loopCount").and_then(|m| m.value.parse::<u16>().ok());
         Ok(GifSnapshot {
-            schema: crate::artifacts::gif::standards::v89a::subsets::any::schema::snapshot::STDIO_GIF89A_DOCUMENT_SCHEMA.into(),
+            schema: semio_s_artifact_stdio_gif::standards::v89a::subsets::any::schema::snapshot::STDIO_GIF89A_DOCUMENT_SCHEMA.into(),
             width: from.width,
             height: from.height,
             gct: Some(gct),
@@ -108,7 +108,7 @@ impl ArtifactSerializer for SemioImageToGif {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::semio::standards::v1::subsets::image::schema::snapshot::{SemioColorspace, SemioImageFrame, SemioImageMetadataEntry};
+    use crate::standards::v1::subsets::image::schema::snapshot::{SemioColorspace, SemioImageFrame, SemioImageMetadataEntry};
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn sample_semio() -> SemioImageSnapshot {
@@ -133,8 +133,8 @@ mod tests {
         assert_eq!(gif.loop_count, Some(0));
         assert_eq!(gif.comments, vec!["semio fixture".to_string()]);
 
-        let bytes = crate::artifacts::gif::standards::v89a::engine::encode_gif(&gif).expect("encode real gif bytes");
-        let decoded = crate::artifacts::gif::standards::v89a::engine::decode_gif(&bytes).expect("decode real gif bytes");
+        let bytes = semio_s_artifact_stdio_gif::standards::v89a::engine::encode_gif(&gif).expect("encode real gif bytes");
+        let decoded = semio_s_artifact_stdio_gif::standards::v89a::engine::decode_gif(&bytes).expect("decode real gif bytes");
         assert_eq!(decoded.width, semio.width);
         assert_eq!(decoded.height, semio.height);
         assert_eq!(decoded.frames.len(), 1);

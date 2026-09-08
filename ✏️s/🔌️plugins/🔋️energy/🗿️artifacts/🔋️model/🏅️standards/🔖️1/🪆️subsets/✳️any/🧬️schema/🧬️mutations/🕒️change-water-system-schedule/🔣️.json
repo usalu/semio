@@ -5,7 +5,7 @@
   "displayName": "Change Water System Schedule",
   "emoji": "🕒️",
   "aggregateVariant": "ChangeWaterSystemSchedule",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-water-system-schedule",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

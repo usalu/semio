@@ -1,0 +1,39 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/energy/model/1/any/mutation/create-solar-thermal-system.json",
+  "title": "CreateSolarThermalSystem",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "index",
+    "id",
+    "collectorAreaM2",
+    "efficiency",
+    "storageVolumeM3",
+    "tiltDeg",
+    "azimuthDeg"
+  ],
+  "properties": {
+    "index": {
+      "type": "integer"
+    },
+    "id": {
+      "type": "integer"
+    },
+    "collectorAreaM2": {
+      "type": "number"
+    },
+    "efficiency": {
+      "type": "number"
+    },
+    "storageVolumeM3": {
+      "type": "number"
+    },
+    "tiltDeg": {
+      "type": "number"
+    },
+    "azimuthDeg": {
+      "type": "number"
+    }
+  }
+}

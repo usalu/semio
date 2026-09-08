@@ -20,6 +20,6 @@ pub fn handle(payload: &SetActiveUtility, doc: &ArtifactView<'_, DrawingSnapshot
     let mut config = cfg.snapshot.clone();
     let operation = doc.operation()?;
     session.cancel_trace_pointer(operation.app_instance_id, &operation.parent_document_id, config.trace_pointer_generation);
-    session.step_gesture(crate::editor::drawing::commands::canvas_pointer_down::drawing_gesture::Event::UtilityChanged, document, &mut config);
+    session.step_gesture(crate::editor::drawing::commands::canvas_pointer_down::drawing_gesture::Event::UtilityChanged, document, &config);
     Ok(Emit::config(vec![DrawingConfigMutation::SetActiveUtility { utility_id: payload.utility_id.clone() }]))
 }

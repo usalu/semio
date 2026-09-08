@@ -1,8 +1,8 @@
 //! 🧬️ Transparent JpgMutation aggregate.
-use crate::artifacts::jpg::schema::diff::JpgDiff;
-use crate::artifacts::jpg::JpgSnapshot;
+use crate::schema::diff::JpgDiff;
+use crate::JpgSnapshot;
 
-pub use crate::artifacts::jpg::schema::operations::{apply_jpg_mutation, inverse_jpg_mutation};
+pub use crate::schema::operations::{apply_jpg_mutation, inverse_jpg_mutation};
 
 //#region Owners
 pub use super::change_jfif_header::ChangeJfifHeaderMutation;
@@ -39,15 +39,15 @@ pub enum JpgMutation {
 #[cfg(test)]
 pub(crate) fn demo_mutation_cases() -> Vec<JpgMutation> {
     vec![
-        crate::artifacts::jpg::schema::mutations::change_jfif_header::test_case(),
-        crate::artifacts::jpg::schema::mutations::replace_quant_table::test_case(),
-        crate::artifacts::jpg::schema::mutations::remove_quant_table::test_case(),
-        crate::artifacts::jpg::schema::mutations::replace_huffman_table::test_case(),
-        crate::artifacts::jpg::schema::mutations::remove_huffman_table::test_case(),
-        crate::artifacts::jpg::schema::mutations::change_restart_interval::test_case(),
-        crate::artifacts::jpg::schema::mutations::insert_other_segment::test_case(),
-        crate::artifacts::jpg::schema::mutations::remove_other_segment::test_case(),
-        crate::artifacts::jpg::schema::mutations::replace_pixels::test_case(),
-        crate::artifacts::jpg::schema::mutations::change_re_encode_quality::test_case(),
+        crate::schema::mutations::change_jfif_header::test_case(),
+        crate::schema::mutations::replace_quant_table::test_case(),
+        crate::schema::mutations::remove_quant_table::test_case(),
+        crate::schema::mutations::replace_huffman_table::test_case(),
+        crate::schema::mutations::remove_huffman_table::test_case(),
+        crate::schema::mutations::change_restart_interval::test_case(),
+        crate::schema::mutations::insert_other_segment::test_case(),
+        crate::schema::mutations::remove_other_segment::test_case(),
+        crate::schema::mutations::replace_pixels::test_case(),
+        crate::schema::mutations::change_re_encode_quality::test_case(),
     ]
 }

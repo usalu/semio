@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeSiloQNominal, base: &En1998Snapshot) -> protocol::Mu
     if base.silo_q_nominal == payload.new_silo_q_nominal {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Silo nominal behaviour factor q is already {}.", payload.new_silo_q_nominal));
     }
-    protocol::MutationOutcome::new(En1998Diff { silo_q_nominal: Some(payload.new_silo_q_nominal.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1998Diff { silo_q_nominal: Some(payload.new_silo_q_nominal), ..Default::default() })
 }
 //#endregion 🔖️Diff

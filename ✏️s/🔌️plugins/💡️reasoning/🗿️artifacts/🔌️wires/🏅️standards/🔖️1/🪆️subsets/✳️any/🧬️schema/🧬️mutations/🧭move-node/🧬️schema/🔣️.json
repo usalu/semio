@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/reasoning/wires/1/any/mutation/move-node.json",
+  "title": "MoveNode",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newX",
+    "newY",
+    "nodeId"
+  ],
+  "properties": {
+    "nodeId": {
+      "type": "string"
+    },
+    "newX": {
+      "type": "number"
+    },
+    "newY": {
+      "type": "number"
+    }
+  }
+}

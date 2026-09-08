@@ -3,9 +3,9 @@
 //! Emits the frozen `set-pixel-region` action onto the artifact's own whole-raster replace mutation.
 //! MUST NOT be reached by the sibling `viewer` module (`policyViewerPurityBreaches`).
 
-use crate::artifacts::tiff::standards::v6_0::subsets::document::schema::mutations::TiffMutation;
-use crate::artifacts::tiff::standards::v6_0::subsets::document::schema::snapshot::TiffSnapshot;
-use crate::artifacts::tiff::{STDIO_TIFF_DOCUMENT_SCHEMA, TIFF_ANY_DIALECT};
+use crate::standards::v6_0::subsets::document::schema::mutations::TiffMutation;
+use crate::standards::v6_0::subsets::document::schema::snapshot::TiffSnapshot;
+use crate::{STDIO_TIFF_DOCUMENT_SCHEMA, TIFF_ANY_DIALECT};
 use crate::editor::tiff_any::modes::edit;
 use crate::editor::tiff_any::modes::edit::windows::main;
 use semio_framework_plugin::{ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation};
@@ -61,7 +61,7 @@ impl ArtifactEditor for TiffAnyEditor {
         _engines: &EngineHandles,
     ) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
         match command {
-            TiffAnyEditCommand::SetPixelRegion { pixels } => Ok(Emit::mutations(vec![TiffMutation::ReplacePixels(crate::artifacts::tiff::schema::mutations::ReplacePixelsMutation { pixels: pixels.clone() })])),
+            TiffAnyEditCommand::SetPixelRegion { pixels } => Ok(Emit::mutations(vec![TiffMutation::ReplacePixels(crate::schema::mutations::ReplacePixelsMutation { pixels: pixels.clone() })])),
         }
     }
 

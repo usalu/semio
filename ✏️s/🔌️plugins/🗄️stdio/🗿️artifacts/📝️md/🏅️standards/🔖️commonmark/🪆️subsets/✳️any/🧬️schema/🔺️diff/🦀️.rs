@@ -9,11 +9,11 @@
 //! 🎆️26/🌙️08/☀️10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION/🧬️schema-design.md`,
 //! xml's own diff module is the direct template this file follows arm-for-arm).
 
-use crate::artifacts::md::schema::snapshot::{MdBlock, MdInline};
-use crate::artifacts::md::MdSnapshot;
+use crate::schema::snapshot::{MdBlock, MdInline};
+use crate::MdSnapshot;
 use protocol::command::DiffAlgebra;
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
-use schema::ArtifactSchema;
+use framework_schema::ArtifactSchema;
 
 //#region 🔖️Diff
 /// 🔺️ Diff for `stdio.md`.
@@ -158,7 +158,7 @@ pub struct MdListItemAdded {
 /// 🧭️ One descent step from a `Vec<MdBlock>` container down into a nested one.
 /// `BlockQuote{index}` steps into the block-quote block at `index`'s own `blocks`;
 /// `ListItem{index,item}` steps into the list block at `index`'s `items[item]`. Re-exported from
-/// `crate::artifacts::md::schema::mutations` for ergonomic access -- kept here, not in the
+/// `crate::schema::mutations` for ergonomic access -- kept here, not in the
 /// mutations module, so this module never needs to depend on it (mutations already depends on
 /// diff).
 #[derive(Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
@@ -1694,7 +1694,7 @@ impl protocol::DiffCodec for MdDiff {
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn demo_snapshot(blocks: Vec<MdBlock>) -> MdSnapshot {
-    MdSnapshot { schema: crate::artifacts::md::STDIO_MD_DOCUMENT_SCHEMA.into(), blocks }
+    MdSnapshot { schema: crate::STDIO_MD_DOCUMENT_SCHEMA.into(), blocks }
 }
 
 /// 🌈 One instance of every `MdInline` variant (both `Option<title>` branches for

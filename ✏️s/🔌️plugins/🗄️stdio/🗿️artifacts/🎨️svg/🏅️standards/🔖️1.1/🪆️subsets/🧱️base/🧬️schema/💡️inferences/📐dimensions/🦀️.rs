@@ -5,9 +5,9 @@
 //! raster stdio formats this intentionally has no `bitDepth`/`hasAlpha`/`pixelCount` — those
 //! concepts don't apply here.
 
-use crate::artifacts::svg::schema::snapshot::{svg_element_from_xml_node, SvgElement};
-use crate::artifacts::svg::SvgSnapshot;
-use crate::artifacts::xml::schema::snapshot::XmlNode;
+use crate::schema::snapshot::{svg_element_from_xml_node, SvgElement};
+use crate::SvgSnapshot;
+use semio_s_artifact_stdio_xml::schema::snapshot::XmlNode;
 
 //#region 🔖️Dimensions
 /// 📐️ Root `<svg>` intrinsic size. `width`/`height` prefer the element's own `width`/`height`
@@ -53,11 +53,11 @@ pub fn compute_svg_dimensions(snapshot: &SvgSnapshot) -> SvgDimensions {
 //#region 🧪️Tests
 mod tests {
     use super::*;
-    use crate::artifacts::xml::schema::snapshot::{XmlAttr, XmlDocument};
+    use semio_s_artifact_stdio_xml::schema::snapshot::{XmlAttr, XmlDocument};
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn svg_snapshot(attrs: Vec<XmlAttr>) -> SvgSnapshot {
-        SvgSnapshot { schema: crate::artifacts::svg::STDIO_SVG_DOCUMENT_SCHEMA.into(), doc: XmlDocument { root: Some(XmlNode::Element { name: "svg".into(), attrs, children: Vec::new() }), doctype: None, declaration: None, prolog: Vec::new() } }
+        SvgSnapshot { schema: crate::STDIO_SVG_DOCUMENT_SCHEMA.into(), doc: XmlDocument { root: Some(XmlNode::Element { name: "svg".into(), attrs, children: Vec::new() }), doctype: None, declaration: None, prolog: Vec::new() } }
     }
 
     #[semio_framework_async_macros::async_test]
@@ -74,7 +74,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn empty_document_yields_zero_dimensions() {
-        assert_eq!(compute_svg_dimensions(&SvgSnapshot { schema: crate::artifacts::svg::STDIO_SVG_DOCUMENT_SCHEMA.into(), doc: XmlDocument { root: None, doctype: None, declaration: None, prolog: Vec::new() } }), SvgDimensions::default());
+        assert_eq!(compute_svg_dimensions(&SvgSnapshot { schema: crate::STDIO_SVG_DOCUMENT_SCHEMA.into(), doc: XmlDocument { root: None, doctype: None, declaration: None, prolog: Vec::new() } }), SvgDimensions::default());
     }
 }
 //#endregion 🧪️Tests

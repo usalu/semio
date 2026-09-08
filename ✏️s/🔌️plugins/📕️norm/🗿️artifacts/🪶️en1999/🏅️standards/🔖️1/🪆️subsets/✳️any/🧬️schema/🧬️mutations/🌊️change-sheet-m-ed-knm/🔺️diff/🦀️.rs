@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeSheetMEdKnm, base: &En1999Snapshot) -> protocol::Mut
     if base.sheet_m_ed_knm == payload.new_sheet_m_ed_knm {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Sheet design moment M_Ed [kNm] is already {}.", payload.new_sheet_m_ed_knm));
     }
-    protocol::MutationOutcome::new(En1999Diff { sheet_m_ed_knm: Some(payload.new_sheet_m_ed_knm.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1999Diff { sheet_m_ed_knm: Some(payload.new_sheet_m_ed_knm), ..Default::default() })
 }
 //#endregion 🔖️Diff

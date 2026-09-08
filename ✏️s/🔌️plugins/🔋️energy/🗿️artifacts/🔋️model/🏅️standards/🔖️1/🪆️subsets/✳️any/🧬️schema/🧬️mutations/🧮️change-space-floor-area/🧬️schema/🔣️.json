@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/energy/model/1/any/mutation/change-space-floor-area.json",
+  "title": "ChangeSpaceFloorArea",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newFloorAreaM2"
+  ],
+  "properties": {
+    "id": {
+      "type": "integer"
+    },
+    "newFloorAreaM2": {
+      "type": "number"
+    }
+  }
+}

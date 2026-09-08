@@ -1,8 +1,8 @@
 //! 🧬️ Direct insert-line mutation owner.
 //#region 🔖️Payload
-use crate::artifacts::txt::TxtSnapshot;
-use crate::artifacts::txt::schema::diff::{TxtDiff, TxtLineAdded, TxtLinesDiff};
-use crate::artifacts::txt::schema::mutation_support::{native_shape_error, native_snapshot_error, native_text_error, txt_u32_to_usize, txt_usize_to_u32};
+use crate::TxtSnapshot;
+use crate::schema::diff::{TxtDiff, TxtLineAdded, TxtLinesDiff};
+use crate::schema::mutation_support::{native_shape_error, native_snapshot_error, native_text_error, txt_u32_to_usize, txt_usize_to_u32};
 
 #[path = "💾️binary/🦀️.rs"]
 pub mod binary;
@@ -20,10 +20,10 @@ pub struct InsertLineMutation {
 pub type InsertLinePayload = InsertLineMutation;
 
 pub fn decode_insert_line_payload(value: &dsl::DslValue) -> Result<InsertLinePayload, String> {
-    let fields = crate::artifacts::txt::schema::mutation_support::txt_required_object(value, &["index", "text"])?;
+    let fields = crate::schema::mutation_support::txt_required_object(value, &["index", "text"])?;
     Ok(InsertLinePayload {
-        index: crate::artifacts::txt::schema::mutation_support::txt_graphql_u32_variable(fields[0].1)?,
-        text: crate::artifacts::txt::schema::mutation_support::txt_unicode_string(fields[1].1, "text")?,
+        index: crate::schema::mutation_support::txt_graphql_u32_variable(fields[0].1)?,
+        text: crate::schema::mutation_support::txt_unicode_string(fields[1].1, "text")?,
     })
 }
 //#endregion 🔖️Payload
@@ -76,7 +76,7 @@ impl protocol::MutationKind<TxtSnapshot, super::TxtMutation> for InsertLineMutat
 mod tests {
     use super::super::{RemoveLineMutation, TxtMutation, apply_txt_mutation};
     use super::*;
-    use crate::artifacts::txt::schema::snapshot::LineEnding;
+    use crate::schema::snapshot::LineEnding;
     use protocol::{Mutation, MutationKind, MutationLeaf, OpBinary, OpText};
 
     #[test]

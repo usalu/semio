@@ -5,7 +5,7 @@
   "displayName": "Create Building Storey",
   "emoji": "🏢️",
   "aggregateVariant": "CreateBuildingStorey",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "plan",

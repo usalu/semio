@@ -4,7 +4,7 @@
 //! honest-subset scope and the deviations it lists); `render_markdown_blocks` is the codec's
 //! write half, independently testable.
 
-use crate::artifacts::md::schema::snapshot::{MdBlock, MdInline};
+use crate::schema::snapshot::{MdBlock, MdInline};
 
 //#region 🔖️BlockRenderer
 /// 📤 Top-level entry: renders the complete block sequence back to CommonMark text. Documented

@@ -385,8 +385,8 @@ pub fn gis_map_parent_one_item_preparation_factory() -> std::sync::Arc<dyn store
 /// 🎨 Creates the exact drawing-child preparation port used by the retained fixed-three assembly.
 pub fn gis_map_drawing_one_item_preparation_factory() -> std::sync::Arc<
     dyn store::ArtifactStoreOneItemPreparationFactory<
-            semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot,
-            semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::drawing::schema::mutations::SemioDrawingMutation,
+            semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot,
+            semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::mutations::SemioDrawingMutation,
         >,
 > {
     std::sync::Arc::new(Gis2dOneItemPreparationFactory::default())
@@ -395,8 +395,8 @@ pub fn gis_map_drawing_one_item_preparation_factory() -> std::sync::Arc<
 /// 🔢 Creates the exact value-child preparation port used by the retained fixed-three assembly.
 pub fn gis_map_value_one_item_preparation_factory() -> std::sync::Arc<
     dyn store::ArtifactStoreOneItemPreparationFactory<
-            semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValueSnapshot,
-            semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::value::schema::mutations::SemioValueMutation,
+            semio_s_artifact_stdio_semio::standards::v1::subsets::value::schema::snapshot::SemioValueSnapshot,
+            semio_s_artifact_stdio_semio::standards::v1::subsets::value::schema::mutations::SemioValueMutation,
         >,
 > {
     std::sync::Arc::new(Gis2dOneItemPreparationFactory::default())
@@ -412,8 +412,8 @@ pub fn gis_map_drawing_stamped_one_item_preparation_factory(
     stamp: GisMapOneItemStampV1,
 ) -> std::sync::Arc<
     dyn store::ArtifactStoreOneItemPreparationFactory<
-            semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot,
-            semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::drawing::schema::mutations::SemioDrawingMutation,
+            semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot,
+            semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::mutations::SemioDrawingMutation,
         >,
 > {
     std::sync::Arc::new(Gis2dOneItemPreparationFactory { marker: std::marker::PhantomData, stamp: Some(stamp) })
@@ -424,8 +424,8 @@ pub fn gis_map_value_stamped_one_item_preparation_factory(
     stamp: GisMapOneItemStampV1,
 ) -> std::sync::Arc<
     dyn store::ArtifactStoreOneItemPreparationFactory<
-            semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValueSnapshot,
-            semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::value::schema::mutations::SemioValueMutation,
+            semio_s_artifact_stdio_semio::standards::v1::subsets::value::schema::snapshot::SemioValueSnapshot,
+            semio_s_artifact_stdio_semio::standards::v1::subsets::value::schema::mutations::SemioValueMutation,
         >,
 > {
     std::sync::Arc::new(Gis2dOneItemPreparationFactory { marker: std::marker::PhantomData, stamp: Some(stamp) })
@@ -453,7 +453,7 @@ fn gis2d_one_item_edit<M>(forward: M, inverse: Vec<M>, description: Option<Strin
         |stamp| (stamp.mutation_id.0.clone(), stamp.mutation_id, stamp.timestamp),
     );
     protocol::Edit {
-        id: id.clone(),
+        id: id,
         actor: Some(authority.actor().to_string()),
         forwards: vec![forward],
         inverse,
@@ -807,7 +807,7 @@ impl ArtifactEditor for Gis2dPlayApp {
     /// stringly `{action,args}` wire; this is the typed-command bridge until those call sites send
     /// `OpBinary` bytes directly.
     fn command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<Self::Command, Fault> {
-        let args = args.map(Value::from).unwrap_or(Value::Null);
+        let args = args.map_or(Value::Null, Value::from);
         let str_arg = |keys: &[&str]| -> Option<String> { keys.iter().find_map(|key| args.get(key).and_then(|value| value.as_str()).map(str::to_string)) };
         let string_list = |key: &str| -> Vec<String> { args.get(key).and_then(|value| value.as_array()).map(|rows| rows.iter().filter_map(|row| row.as_str().map(str::to_string)).collect()).unwrap_or_default() };
         let f64_arg = |keys: &[&str]| -> Option<f64> { keys.iter().find_map(|key| args.get(key).and_then(|value| value.as_f64())) };
@@ -1066,14 +1066,14 @@ mod tests {
         let parent: std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<GisMapSnapshot, GisMapMutation>> = gis_map_parent_one_item_preparation_factory();
         let drawing: std::sync::Arc<
             dyn store::ArtifactStoreOneItemPreparationFactory<
-                    semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot,
-                    semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::drawing::schema::mutations::SemioDrawingMutation,
+                    semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot,
+                    semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::mutations::SemioDrawingMutation,
                 >,
         > = gis_map_drawing_one_item_preparation_factory();
         let value: std::sync::Arc<
             dyn store::ArtifactStoreOneItemPreparationFactory<
-                    semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValueSnapshot,
-                    semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::value::schema::mutations::SemioValueMutation,
+                    semio_s_artifact_stdio_semio::standards::v1::subsets::value::schema::snapshot::SemioValueSnapshot,
+                    semio_s_artifact_stdio_semio::standards::v1::subsets::value::schema::mutations::SemioValueMutation,
                 >,
         > = gis_map_value_one_item_preparation_factory();
         assert_eq!([std::sync::Arc::strong_count(&parent), std::sync::Arc::strong_count(&drawing), std::sync::Arc::strong_count(&value)], [1, 1, 1]);

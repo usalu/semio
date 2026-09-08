@@ -486,7 +486,7 @@ pub const DRAWING_DIALECT: semio_framework::Dialect = semio_framework::Dialect {
 /// `localization: &[]` doc).
 pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
     use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
-    let rows: &[(&str, &str, &str, &[(&str, &str)], Option<(&str, &str)>)] = &[
+    let rows: &[semio_framework_plugin::ArtifactCapabilityRow<'_>] = &[
         ("s.draw.drawing.standard.v1", "standard", "1", &[], None),
         ("s.draw.drawing.standard.v1.profile.any", "profile", "any", &[], None),
         ("s.draw.drawing.schema.artifact", "schema", "s.draw.drawing", &[("schema", "s.draw.drawing")], None),

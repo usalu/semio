@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/energy/model/1/any/mutation/connect-surfaces.json",
+  "title": "ConnectSurfaces",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "surfaceAId",
+    "surfaceBId"
+  ],
+  "properties": {
+    "surfaceAId": {
+      "type": "integer"
+    },
+    "surfaceBId": {
+      "type": "integer"
+    }
+  }
+}

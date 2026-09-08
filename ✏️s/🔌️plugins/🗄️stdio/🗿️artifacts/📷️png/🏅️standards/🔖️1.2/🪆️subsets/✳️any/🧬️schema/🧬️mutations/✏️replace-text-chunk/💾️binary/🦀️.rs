@@ -1,6 +1,6 @@
 //! 💾️ Direct replace-text-chunk binary codec.
 use super::*;
-use crate::artifacts::png::schema::mutations::binary::Entry;
+use crate::schema::mutations::binary::Entry;
 pub const BINARY_TAG: u8 = 13;
 pub const CODEC: Entry = Entry { tag: BINARY_TAG, encode, decode };
 

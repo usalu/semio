@@ -1,0 +1,10 @@
+{
+  "valid": [
+    { "input": ["run", "@semio-tech/mit-bestand-demonstrator:prepare-dev"], "args": ["run", "@semio-tech/mit-bestand-demonstrator:prepare-dev"], "env": { "SEMIO_BUILD_MODE": "dev", "SEMIO_RENDERER": "react" } },
+    { "input": ["run", "@semio-tech/mit-bestand-demonstrator:prepare-release", "--graph=stdout"], "args": ["run", "@semio-tech/mit-bestand-demonstrator:prepare-release", "--graph=stdout"], "env": { "SEMIO_BUILD_MODE": "ship", "SEMIO_RENDERER": "react" } }
+  ],
+  "invalid": [
+    ["run", "@semio-tech/mit-bestand-demonstrator:prepare-dev", "--", "--release"],
+    ["run", "@semio-tech/mit-bestand-demonstrator:prepare-release", "--", "dev"]
+  ]
+}

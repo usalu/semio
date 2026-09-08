@@ -1,7 +1,8 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/stdio/gltf/2.0/mutation/material",
+  "$id": "https://semio.tech/schema/s/stdio/gltf/2.0/material/mutations.json",
   "title": "glTF Material Mutation",
+  "description": "View over the any subset's mutation leaves (adjacently tagged); every payload is the owning leaf's own schema, referenced, never restated.",
   "oneOf": [
     {
       "type": "object",
@@ -12,10 +13,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "change-material-alpha-mode"
+          "const": "changeMaterialAlphaMode"
         },
         "payload": {
-          "$ref": "💎️material/🌫️change-alpha/🧬️.schema.json"
+          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/💎️material/🌫️change-alpha/🧬️schema/🔣️.json"
         }
       }
     },
@@ -28,10 +29,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "change-material-double-sided"
+          "const": "changeMaterialDoubleSided"
         },
         "payload": {
-          "$ref": "💎️material/🪞️change-sides/🧬️.schema.json"
+          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/💎️material/🪞️change-sides/🧬️schema/🔣️.json"
         }
       }
     },
@@ -44,10 +45,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "create-image"
+          "const": "createImage"
         },
         "payload": {
-          "$ref": "🖼️image/🌱️create/🧬️.schema.json"
+          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🖼️image/🌱️create/🧬️schema/🔣️.json"
         }
       }
     },
@@ -60,10 +61,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "create-material"
+          "const": "createMaterial"
         },
         "payload": {
-          "$ref": "💎️material/🌱️create/🧬️.schema.json"
+          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/💎️material/🌱️create/🧬️schema/🔣️.json"
         }
       }
     },
@@ -76,10 +77,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "create-sampler"
+          "const": "createSampler"
         },
         "payload": {
-          "$ref": "🎛️sampler/🌱️create/🧬️.schema.json"
+          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🎛️sampler/🌱️create/🧬️schema/🔣️.json"
         }
       }
     },
@@ -92,10 +93,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "create-texture"
+          "const": "createTexture"
         },
         "payload": {
-          "$ref": "🎨️texture/🌱️create/🧬️.schema.json"
+          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🎨️texture/🌱️create/🧬️schema/🔣️.json"
         }
       }
     },
@@ -108,10 +109,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "delete-image"
+          "const": "deleteImage"
         },
         "payload": {
-          "$ref": "🖼️image/🗑️delete/🧬️.schema.json"
+          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🖼️image/🗑️delete/🧬️schema/🔣️.json"
         }
       }
     },
@@ -124,10 +125,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "delete-material"
+          "const": "deleteMaterial"
         },
         "payload": {
-          "$ref": "💎️material/🗑️delete/🧬️.schema.json"
+          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/💎️material/🗑️delete/🧬️schema/🔣️.json"
         }
       }
     },
@@ -140,10 +141,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "delete-sampler"
+          "const": "deleteSampler"
         },
         "payload": {
-          "$ref": "🎛️sampler/🗑️delete/🧬️.schema.json"
+          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🎛️sampler/🗑️delete/🧬️schema/🔣️.json"
         }
       }
     },
@@ -156,10 +157,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "delete-texture"
+          "const": "deleteTexture"
         },
         "payload": {
-          "$ref": "🎨️texture/🗑️delete/🧬️.schema.json"
+          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🎨️texture/🗑️delete/🧬️schema/🔣️.json"
         }
       }
     },
@@ -172,10 +173,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "move-image"
+          "const": "moveImage"
         },
         "payload": {
-          "$ref": "🖼️image/🚚️move/🧬️.schema.json"
+          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🖼️image/🚚️move/🧬️schema/🔣️.json"
         }
       }
     },
@@ -188,10 +189,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "move-material"
+          "const": "moveMaterial"
         },
         "payload": {
-          "$ref": "💎️material/🚚️move/🧬️.schema.json"
+          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/💎️material/🚚️move/🧬️schema/🔣️.json"
         }
       }
     },
@@ -204,10 +205,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "move-sampler"
+          "const": "moveSampler"
         },
         "payload": {
-          "$ref": "🎛️sampler/🚚️move/🧬️.schema.json"
+          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🎛️sampler/🚚️move/🧬️schema/🔣️.json"
         }
       }
     },
@@ -220,10 +221,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "move-texture"
+          "const": "moveTexture"
         },
         "payload": {
-          "$ref": "🎨️texture/🚚️move/🧬️.schema.json"
+          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🎨️texture/🚚️move/🧬️schema/🔣️.json"
         }
       }
     },
@@ -236,10 +237,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "reorder-images"
+          "const": "reorderImages"
         },
         "payload": {
-          "$ref": "🖼️image/🔀️reorder/🧬️.schema.json"
+          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🖼️image/🔀️reorder/🧬️schema/🔣️.json"
         }
       }
     },
@@ -252,10 +253,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "reorder-materials"
+          "const": "reorderMaterials"
         },
         "payload": {
-          "$ref": "💎️material/🔀️reorder/🧬️.schema.json"
+          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/💎️material/🔀️reorder/🧬️schema/🔣️.json"
         }
       }
     },
@@ -268,10 +269,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "reorder-samplers"
+          "const": "reorderSamplers"
         },
         "payload": {
-          "$ref": "🎛️sampler/🔀️reorder/🧬️.schema.json"
+          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🎛️sampler/🔀️reorder/🧬️schema/🔣️.json"
         }
       }
     },
@@ -284,10 +285,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "reorder-textures"
+          "const": "reorderTextures"
         },
         "payload": {
-          "$ref": "🎨️texture/🔀️reorder/🧬️.schema.json"
+          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🎨️texture/🔀️reorder/🧬️schema/🔣️.json"
         }
       }
     }

@@ -13,8 +13,8 @@
 //! (`step_text` ↔ `SemioBrepSnapshot`, in `🚪️io/🦀️.rs`) already uses for STEP.
 
 use semio_framework_plugin::{ArtifactSerializer, MeshData};
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::mesh_data_from_mesh_transfer;
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::{Brep, BrepKernel, GeometryHandle, Vec3};
+use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::engine::mesh_data_from_mesh_transfer;
+use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::engine::{Brep, BrepKernel, GeometryHandle, Vec3};
 use protocol::DslValue;
 use std::collections::HashMap;
 // 🌉️ Ticket 26/08/11/SEMIO-ARTIFACT-UNIFIED-IMPORT-EXPORT-AND-MEDIA-FORMAT-RETIREMENT W5a: the
@@ -22,11 +22,11 @@ use std::collections::HashMap;
 // is now stdio's real `semio/mesh` → `obj` codec (`SemioMeshToObj` + `obj::engine::encode_obj`) —
 // same real mesh→OBJ encoder `⚙️engine/🦀️.rs`'s `export_solids_as` now uses, no
 // reimplementation.
-use semio_s_plugin_stdio::artifacts::obj::standards::v3_0::engine::encode_obj;
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::base::schema::geometry::{SemioPoint3, SemioQuaternion, SemioTransform};
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::mesh::io::export::serializers::artifacts::obj::v3_0::any::SemioMeshToObj;
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::{SemioMesh, SemioMeshSnapshot, SemioPrimitive, SemioTopology, STDIO_SEMIOMESH_DOCUMENT_SCHEMA};
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::model::schema::snapshot::{ElementClass, GeometryRef, SemioModelElement, SemioModelSnapshot, STDIO_SEMIOMODEL_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_obj::standards::v3_0::engine::encode_obj;
+use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::{SemioPoint3, SemioQuaternion, SemioTransform};
+use semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::io::export::serializers::artifacts::obj::v3_0::any::SemioMeshToObj;
+use semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::schema::snapshot::{SemioMesh, SemioMeshSnapshot, SemioPrimitive, SemioTopology, STDIO_SEMIOMESH_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_semio::standards::v1::subsets::model::schema::snapshot::{ElementClass, GeometryRef, SemioModelElement, SemioModelSnapshot, STDIO_SEMIOMODEL_DOCUMENT_SCHEMA};
 
 //#region 🔖️EphemeralImportTypes
 /// 🧱️ EPHEMERAL — never persisted, never part of `ArtifactSchema`. See module doc comment.
@@ -472,10 +472,10 @@ fn curve_mesh_from_wire(kernel: &mut Brep, wire: &GeometryHandle) -> Option<Mesh
 /// flat position pool rather than glTF-style parallel per-vertex arrays — `None` for degenerate
 /// input (not a multiple of 3 indices), never a fabricated triangle).
 fn semio_mesh_snapshot_from_mesh_data(mesh: &MeshData) -> Option<SemioMeshSnapshot> {
-    if mesh.indices.is_empty() || mesh.indices.len() % 3 != 0 || mesh.positions.is_empty() {
+    if mesh.indices.is_empty() || !mesh.indices.len().is_multiple_of(3) || mesh.positions.is_empty() {
         return None;
     }
-    let positions: Vec<SemioPoint3> = mesh.positions.chunks_exact(3).map(|c| SemioPoint3 { x: c[0] as f64, y: c[1] as f64, z: c[2] as f64 }).collect();
+    let positions: Vec<SemioPoint3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| SemioPoint3 { x: c[0] as f64, y: c[1] as f64, z: c[2] as f64 }).collect();
     Some(SemioMeshSnapshot {
         schema: STDIO_SEMIOMESH_DOCUMENT_SCHEMA.into(),
         meshes: vec![SemioMesh {
@@ -659,7 +659,7 @@ pub(crate) fn objects_from_model_snapshot(model: &SemioModelSnapshot) -> Vec<Cad
 #[cfg(test)]
 mod tests {
     use super::*;
-    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::Brep;
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::engine::Brep;
 
     fn mesh_triangle_area(mesh: &MeshData, triangle_index: usize) -> f32 {
         let i0 = mesh.indices[triangle_index * 3] as usize;

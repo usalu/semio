@@ -1,6 +1,6 @@
 //! 🧾️ Deserialize layout from the first-party JSON artifact codec.
 use crate::artifacts::layout::LayoutSnapshot;
-use semio_s_plugin_stdio::artifacts::json::schema::snapshot::{write_json_text, JsonSnapshot};
+use semio_s_artifact_stdio_json::schema::snapshot::{write_json_text, JsonSnapshot};
 
 pub fn register() {}
 

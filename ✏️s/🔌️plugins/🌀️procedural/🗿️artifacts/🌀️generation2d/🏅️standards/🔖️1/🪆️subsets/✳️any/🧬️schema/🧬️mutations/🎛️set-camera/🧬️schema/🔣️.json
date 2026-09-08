@@ -1,0 +1,33 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/procedural/generation2d/1/any/mutation/update-camera.json",
+  "title": "UpdateCamera",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "camera"
+  ],
+  "properties": {
+    "camera": {
+      "title": "CameraJson",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y",
+        "zoom"
+      ],
+      "properties": {
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "zoom": {
+          "type": "number"
+        }
+      }
+    }
+  }
+}

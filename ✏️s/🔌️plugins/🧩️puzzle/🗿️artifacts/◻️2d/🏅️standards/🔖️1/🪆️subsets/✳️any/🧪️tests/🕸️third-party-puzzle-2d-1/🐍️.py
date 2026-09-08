@@ -23,7 +23,7 @@ library state the answer:
   algebra and its own ``area`` / ``bounds`` / ``centroid`` / ``equals_exact``, on numbers this
   repository never handed it in that form.
 * ``jsonschema`` — every committed ``🦠️mutation`` payload is validated against its own leaf
-  ``🧬️.schema.json`` by an independent draft-07 validator, and every leaf schema is additionally
+  ``🧬️schema/🔣️.json`` by an independent draft-07 validator, and every leaf schema is additionally
   probed with a member it does not declare, so an accepted payload proves the validator ran rather
   than that the schema was permissive.
 * ``jsonpatch``, corroborated by ``deepdiff`` — the committed ``🔺️diff`` is a TYPED ``Puzzle2dDiff``
@@ -76,7 +76,7 @@ MUTATION_LEAF = ("🦠️mutation", "🔣️.json")
 DIFF_LEAF = ("🔺️diff", "🔣️.json")
 OUTCOME_LEAF = ("🎯️outcome", "🔣️.json")
 SCENARIOS_DIR = "🧪️tests"
-LEAF_SCHEMA = "🧬️.schema.json"
+LEAF_SCHEMA = "🧬️schema/🔣️.json"
 
 GRAPH_KINDS = ("create-node", "delete-node", "add-node-handle", "remove-node-handle", "replace-node-handle", "connect-handles", "disconnect-handles")
 """🕸️ The seven kinds whose correctness is topological — the only ones a graph library can speak to."""

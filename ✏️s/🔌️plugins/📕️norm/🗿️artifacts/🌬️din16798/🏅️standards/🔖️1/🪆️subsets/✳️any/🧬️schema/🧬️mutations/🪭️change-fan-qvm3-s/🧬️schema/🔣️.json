@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/norm/din16798/1/any/mutation/change-fan-qvm3-s.json",
+  "title": "ChangeFanQVM3S",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newFanQVM3S"
+  ],
+  "properties": {
+    "newFanQVM3S": {
+      "type": "number"
+    }
+  }
+}

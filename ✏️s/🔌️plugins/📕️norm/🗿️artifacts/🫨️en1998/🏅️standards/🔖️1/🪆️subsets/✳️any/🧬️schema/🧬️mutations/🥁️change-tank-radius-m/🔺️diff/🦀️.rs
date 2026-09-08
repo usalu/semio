@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeTankRadiusM, base: &En1998Snapshot) -> protocol::Mut
     if base.tank_radius_m == payload.new_tank_radius_m {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Tank radius [m] is already {}.", payload.new_tank_radius_m));
     }
-    protocol::MutationOutcome::new(En1998Diff { tank_radius_m: Some(payload.new_tank_radius_m.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1998Diff { tank_radius_m: Some(payload.new_tank_radius_m), ..Default::default() })
 }
 //#endregion 🔖️Diff

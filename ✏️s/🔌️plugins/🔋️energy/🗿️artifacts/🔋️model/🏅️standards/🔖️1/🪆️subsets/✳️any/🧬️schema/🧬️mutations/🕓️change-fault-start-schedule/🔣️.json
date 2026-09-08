@@ -5,7 +5,7 @@
   "displayName": "Change Fault Start Schedule",
   "emoji": "🕓️",
   "aggregateVariant": "ChangeFaultStartSchedule",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-fault-start-schedule",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

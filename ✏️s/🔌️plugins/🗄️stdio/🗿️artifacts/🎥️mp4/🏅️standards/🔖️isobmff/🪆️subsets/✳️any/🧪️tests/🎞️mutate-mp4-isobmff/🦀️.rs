@@ -82,10 +82,10 @@ fn round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::mutable_input;
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_plugin_stdio::artifacts::mp4::standards::isobmff::subsets::any::io::{decode_mp4, encode_mp4};
-    use semio_s_plugin_stdio::artifacts::mp4::standards::isobmff::subsets::any::schema::mutations;
-    use semio_s_plugin_stdio::artifacts::mp4::standards::isobmff::subsets::any::schema::mutations::{apply_mp4_mutation, Mp4Mutation};
-    use semio_s_plugin_stdio::artifacts::mp4::standards::isobmff::subsets::any::schema::snapshot::{Mp4Codec, Mp4Ftyp, Mp4Sample, Mp4Snapshot, Mp4Track};
+    use crate::standards::isobmff::subsets::any::io::{decode_mp4, encode_mp4};
+    use crate::standards::isobmff::subsets::any::schema::mutations;
+    use crate::standards::isobmff::subsets::any::schema::mutations::{apply_mp4_mutation, Mp4Mutation};
+    use crate::standards::isobmff::subsets::any::schema::snapshot::{Mp4Codec, Mp4Ftyp, Mp4Sample, Mp4Snapshot, Mp4Track};
     use semio_s_plugin_stdio_test_oracle::artifacts::mp4::standards::v_isobmff::subsets::any::project_mp4_mutation;
     use semio_s_plugin_stdio_test_oracle::law;
 

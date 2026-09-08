@@ -5,7 +5,7 @@
   "displayName": "Change Battery Round Trip Efficiency",
   "emoji": "🥉️",
   "aggregateVariant": "ChangeBatteryRoundTripEfficiency",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-battery-round-trip-efficiency",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

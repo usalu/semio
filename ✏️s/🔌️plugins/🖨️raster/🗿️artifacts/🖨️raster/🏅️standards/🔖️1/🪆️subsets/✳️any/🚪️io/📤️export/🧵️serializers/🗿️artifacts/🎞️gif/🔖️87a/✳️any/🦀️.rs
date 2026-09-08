@@ -10,10 +10,10 @@
 //! is normalized to opaque black by the 89a quantizer's own documented rule.
 use crate::artifacts::raster::io::{gif87a, raster_composite_image, semio_image_to_format, GIF89A_DIALECT};
 use crate::artifacts::raster::RasterSnapshot;
-use semio_s_plugin_stdio::artifacts::gif::standards::v89a::subsets::any::schema::snapshot::GifSnapshot as Gif89aSnapshot;
+use semio_s_artifact_stdio_gif::standards::v89a::subsets::any::schema::snapshot::GifSnapshot as Gif89aSnapshot;
 pub fn register() {}
 pub fn serialize_bytes(snapshot: &RasterSnapshot) -> Result<Vec<u8>, String> {
     let image = raster_composite_image(snapshot).map_err(|reason| format!("gif export not available for this raster document: {reason}"))?;
     let gif89a: Gif89aSnapshot = semio_image_to_format(&image, GIF89A_DIALECT)?;
-    semio_s_plugin_stdio::artifacts::gif::standards::v87a::subsets::any::io::encode_gif(&gif87a::from_89a(&gif89a))
+    semio_s_artifact_stdio_gif::standards::v87a::subsets::any::io::encode_gif(&gif87a::from_89a(&gif89a))
 }

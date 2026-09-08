@@ -1,0 +1,37 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/scene-root/move.json",
+  "title": "GltfMoveSceneRootNodeMutation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "scene",
+    "node",
+    "position"
+  ],
+  "properties": {
+    "scene": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "node": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "position": {
+      "type": "integer",
+      "minimum": 0
+    }
+  },
+  "x-semio": {
+    "id": "s.stdio.gltf.mutation.move-scene-root-node.v1",
+    "version": 1,
+    "phase": "mutation",
+    "kind": "move",
+    "touchedPaths": [
+      "document/scenes/*/nodes"
+    ],
+    "referencePolicy": "reorders one identified scene root without retargeting any node reference"
+  },
+  "x-semio-mutation": "move-scene-root-node"
+}

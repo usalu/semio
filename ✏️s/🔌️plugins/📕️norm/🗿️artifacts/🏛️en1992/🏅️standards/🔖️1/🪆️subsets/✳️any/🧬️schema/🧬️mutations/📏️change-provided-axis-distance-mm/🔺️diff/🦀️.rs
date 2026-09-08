@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeProvidedAxisDistanceMm, base: &En1992Snapshot) -> pr
     if base.provided_axis_distance_mm == payload.new_provided_axis_distance_mm {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "Provided axis distance mm already has this value.");
     }
-    protocol::MutationOutcome::new(En1992Diff { provided_axis_distance_mm: Some(payload.new_provided_axis_distance_mm.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1992Diff { provided_axis_distance_mm: Some(payload.new_provided_axis_distance_mm), ..Default::default() })
 }
 //#endregion 🔖️Diff

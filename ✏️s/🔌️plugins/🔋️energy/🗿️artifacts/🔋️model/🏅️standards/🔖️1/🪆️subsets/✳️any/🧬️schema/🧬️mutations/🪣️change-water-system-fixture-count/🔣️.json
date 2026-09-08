@@ -5,7 +5,7 @@
   "displayName": "Change Water System Fixture Count",
   "emoji": "🪣️",
   "aggregateVariant": "ChangeWaterSystemFixtureCount",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-water-system-fixture-count",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

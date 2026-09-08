@@ -1,5 +1,5 @@
 //! 🚪️ IO stdio.dwg (ac1018/✳️any) — registration now flows through the `s.stdio.dwg`
-//! `ArtifactDeclaration` (`crate::artifacts::dwg::declaration`, combined-composers per its own doc
+//! `ArtifactDeclaration` (`crate::declaration`, combined-composers per its own doc
 //! comment), not per-leaf register(). ac1018's OWN `register()`/schema/inference/language
 //! registration is confirmed dead repo-wide (superseded by real R2004+/ac1024 decode per
 //! Decision #5) and was deleted outright with the rest of `⚙️engine` — only its composer entries
@@ -7,8 +7,8 @@
 //! unions both standards' `io_registry::entries()`.
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use crate::artifacts::dwg::standards::v_ac1018::subsets::any::schema::DwgAnalyzer;
-    use crate::artifacts::dwg::DwgSnapshot;
+    use crate::standards::v_ac1018::subsets::any::schema::DwgAnalyzer;
+    use crate::DwgSnapshot;
     use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.dwg", standard: StandardId("ac1018"), subset: SubsetId("*") };
@@ -51,10 +51,10 @@ pub use derived_composition::*;
 
 //#region 🚪️DerivedIoRegistry
 /// 🚪️ Dissolved out of `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) —
-/// unioned with ac1024's own `io_registry::entries()` by the root `crate::artifacts::dwg::
+/// unioned with ac1024's own `io_registry::entries()` by the root `crate::
 /// declaration()`'s `dwg_combined_composer_entries()`.
 pub mod io_registry {
-    use crate::artifacts::dwg::standards::v_ac1018::subsets::any::schema::DwgComposer as DwgRawAnyComposer;
+    use crate::standards::v_ac1018::subsets::any::schema::DwgComposer as DwgRawAnyComposer;
     use semio_framework_plugin::{composer_entry_of, ComposerEntry};
     use std::sync::OnceLock;
 

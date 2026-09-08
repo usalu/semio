@@ -1348,9 +1348,7 @@ impl Puzzle3dCollision {
                         let _ = outcome.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
                         if outcome.terminal_is_empty() {
                             self.fill_worker_outcome.take();
-                            if self.fill_worker_terminal {
-                                self.fill_steps_remaining = 0;
-                            } else if self.fill_worker.as_mut().is_none_or(|worker| worker.resume().is_err()) {
+                            if self.fill_worker_terminal || self.fill_worker.as_mut().is_none_or(|worker| worker.resume().is_err()) {
                                 self.fill_steps_remaining = 0;
                             }
                         }
@@ -1602,11 +1600,10 @@ impl Puzzle3dPrecomputeSession {
 
     pub fn fill_progress(&self) -> FillBuildProgress {
         self.read_fill(FillBuilder::progress)
-            .map(|mut progress| {
+            .map_or(FillBuildProgress { count: 0, applied_count: 0, max_count: FILL_COUNT_MAX, done: true, appended_objects: vec![], appended_attractions: vec![], sequence: vec![], preview: None }, |mut progress| {
                 progress.applied_count = (self.fill_applied_count as usize).min(progress.count);
                 progress
             })
-            .unwrap_or(FillBuildProgress { count: 0, applied_count: 0, max_count: FILL_COUNT_MAX, done: true, appended_objects: vec![], appended_attractions: vec![], sequence: vec![], preview: None })
     }
 
     pub fn fill_progress_summary(&self) -> FillProgressSummary {

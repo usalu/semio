@@ -1,13 +1,13 @@
 //! 🧪️ Preserved raster sparse-diff and codec regression laws.
-use crate::artifacts::tiff::schema::diff::TiffDiff;
+use crate::schema::diff::TiffDiff;
 #[cfg(test)]
-use crate::artifacts::tiff::schema::snapshot::TiffTag;
-use crate::artifacts::tiff::schema::snapshot::{TiffByteOrder, TiffFieldType, TiffIfd, TiffValues};
-use crate::artifacts::tiff::TiffSnapshot;
+use crate::schema::snapshot::TiffTag;
+use crate::schema::snapshot::{TiffByteOrder, TiffFieldType, TiffIfd, TiffValues};
+use crate::TiffSnapshot;
 use protocol::OpBinary;
 use protocol::{Mutation, MutationDiff, OpText};
 
-use crate::artifacts::tiff::schema::mutations::*;
+use crate::schema::mutations::*;
 
 //#region Tests
 #[cfg(test)]
@@ -241,10 +241,10 @@ mod tests {
     //#region 🔖️codec_retention_law
     #[semio_framework_async_macros::async_test]
     async fn codec_retention_law() {
-        let bytes = crate::artifacts::tiff::engine::encode_tiff(&base_snapshot()).expect("encode synthetic fixture");
-        let decoded = crate::artifacts::tiff::engine::decode_tiff(&bytes).expect("decode fixture");
-        let reencoded = crate::artifacts::tiff::engine::encode_tiff(&decoded).expect("re-encode fixture");
-        let redecoded = crate::artifacts::tiff::engine::decode_tiff(&reencoded).expect("re-decode fixture");
+        let bytes = crate::engine::encode_tiff(&base_snapshot()).expect("encode synthetic fixture");
+        let decoded = crate::engine::decode_tiff(&bytes).expect("decode fixture");
+        let reencoded = crate::engine::encode_tiff(&decoded).expect("re-encode fixture");
+        let redecoded = crate::engine::decode_tiff(&reencoded).expect("re-decode fixture");
         // `base_snapshot()` is single-IFD, so this only exercises IFD 0's own canonicalization
         // invariant (see `../../🚪️io/🦀️.rs`'s `MultiIfdEncodeScopeNote`: IFD 0's
         // strip/geometry tags are always recomputed fresh from `pixels`) — pixel CONTENT + carried

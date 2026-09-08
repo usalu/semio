@@ -5,7 +5,7 @@
   "displayName": "Create Solar Thermal System",
   "emoji": "🌄️",
   "aggregateVariant": "CreateSolarThermalSystem",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "create-solar-thermal-system",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

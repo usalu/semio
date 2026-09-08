@@ -1,0 +1,24 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/lowpoly/lowpoly/1/any/mutation/change-paint-layer-visible.json",
+  "title": "ChangePaintLayerVisible",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "index",
+    "newVisible",
+    "objectId"
+  ],
+  "properties": {
+    "objectId": {
+      "type": "string"
+    },
+    "index": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "newVisible": {
+      "type": "boolean"
+    }
+  }
+}

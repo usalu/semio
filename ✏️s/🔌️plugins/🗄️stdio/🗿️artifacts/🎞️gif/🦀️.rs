@@ -1,17 +1,54 @@
 //! 🎪 `stdio.gif` artifact — stdio reference format.
 
+#![allow(async_fn_in_trait)]
+#![allow(long_running_const_eval)]
+
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_schema as framework_schema;
+extern crate semio_framework_value_derive as value_derive;
+
+pub(crate) use semio_s_artifact_stdio_contract::{base64_standard};
+
 use semio_framework_plugin::{ArtifactKindSpec, Dialect, MediaClass, MediaForm, MediaType, OsMediaCapability, StandardId, SubsetId};
 
-pub use crate::artifacts::gif::schema::diff::GifDiff;
-pub use crate::artifacts::gif::schema::mutations::GifMutation;
-pub use crate::artifacts::gif::schema::snapshot::GifSnapshot;
-pub use crate::artifacts::gif::schema::GifArtifact;
+pub use schema::diff::GifDiff;
+pub use schema::mutations::GifMutation;
+pub use schema::snapshot::GifSnapshot;
+pub use schema::GifArtifact;
 
 /// 🏷️ Document schema / DSL envelope id.
 pub const STDIO_GIF_DOCUMENT_SCHEMA: &str = "stdio.gif";
 
 /// 🧬️ Artifact schema descriptor id.
 pub const GIF_ARTIFACT_SCHEMA_ID: &str = "s.stdio.gif";
+
+/// 📜 Schema-owned package definition.
+pub const ARTIFACT_DEFINITION_SCHEMA: &str = include_str!("🧬️schema/📜️artifact-definition.json");
+
+pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::PluginAssemblyError> {
+    semio_s_artifact_stdio_contract::definition_from_schema(ARTIFACT_DEFINITION_SCHEMA)
+}
+
+pub fn formats() -> Result<Vec<semio_framework_plugin::io::FormatDescriptor>, semio_framework_plugin::ArtifactDefinitionError> {
+    semio_s_artifact_stdio_contract::format_descriptors(ARTIFACT_DEFINITION_SCHEMA)
+}
+
+pub fn native_codecs() -> Vec<semio_s_artifact_stdio_contract::NativeCodecFactory> {
+    Vec::new()
+}
+
+pub fn contribution() -> semio_s_artifact_stdio_contract::ArtifactContribution {
+    semio_s_artifact_stdio_contract::ArtifactContribution {
+        identity: "gif",
+        schema: ARTIFACT_DEFINITION_SCHEMA,
+        definition,
+        assembly,
+        formats,
+        native_codecs,
+    }
+}
 
 //#region 🔖️Dialect
 /// 🪪️ Surface coordinate(s) for this artifact — `artifact_kind` matches the schema descriptor
@@ -26,8 +63,8 @@ pub const GIF_89A_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.gif", sta
 //#region 🔖️ArtifactKind
 /// 🗂️ This artifact's `ArtifactKindSpec`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn assembly(definition: semio_framework_plugin::ArtifactDefinition) -> Result<crate::registry::ArtifactAssembly, semio_framework_plugin::PluginAssemblyError> {
-    crate::registry::definition_only_assembly("gif", definition)
+pub fn assembly() -> Result<semio_s_artifact_stdio_contract::ArtifactAssembly, semio_framework_plugin::PluginAssemblyError> {
+    semio_s_artifact_stdio_contract::definition_only_assembly("gif", definition()?)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -50,8 +87,8 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 //#endregion 🔖️ArtifactKind
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
-    use crate::artifacts::gif::standards::v87a::engine::io_registry as v87a;
-    use crate::artifacts::gif::standards::v89a::engine::io_registry as v89a;
+    use crate::standards::v87a::engine::io_registry as v87a;
+    use crate::standards::v89a::engine::io_registry as v89a;
     use semio_framework_plugin::{register_composer_entries, ComposeError, ComposedArtifact, ComposerEntry, Dialect, ErasedComposeSource};
     use std::sync::OnceLock;
 
@@ -80,3 +117,395 @@ pub mod io_registry {
     }
 }
 //#endregion 🚪️DerivedIoRegistry
+
+#[path = "."]
+pub mod standards {
+    #[path = "."]
+    pub mod v87a {
+        // 🐜️ `⚙️engine/` dissolved (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES):
+        // real code now lives in `subsets::any::io` (codec/register/io_registry — `register`
+        // stays reachable since gif is one of stdio's 10 deliberate imperative
+        // `engine::register()` plugin-root calls) and `subsets::any::schema` (document
+        // helpers); this stays an inline barrel so every existing
+        // `standards::v87a::engine::*`/`gif::engine::*` path still resolves — including
+        // 89a's own `standards::v87a::engine as codec` cross-standard reuse import.
+        pub mod engine {
+            pub use super::subsets::any::io::*;
+        }
+        #[path = "."]
+        pub mod subsets {
+            #[path = "."]
+            pub mod any {
+                #[path = "."]
+                pub mod schema {
+                    #[path = "🏅️standards/7️⃣87a/🪆️subsets/✳️any/🧬️schema/🦀️.rs"]
+                    mod component;
+                    pub use component::*;
+                    #[path = "."]
+                    pub mod snapshot {
+                        #[path = "🏅️standards/7️⃣87a/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                        #[path = "🏅️standards/7️⃣87a/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/🦀️.rs"]
+                        pub mod binary;
+                        #[path = "🏅️standards/7️⃣87a/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🦀️.rs"]
+                        pub mod text;
+                    }
+                    #[path = "."]
+                    pub mod inferences {
+                        #[path = "🏅️standards/7️⃣87a/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                        #[path = "🏅️standards/7️⃣87a/🪆️subsets/✳️any/🧬️schema/💡️inferences/💾️binary/🦀️.rs"]
+                        pub mod binary;
+                        #[path = "🏅️standards/7️⃣87a/🪆️subsets/✳️any/🧬️schema/💡️inferences/📝️text/🦀️.rs"]
+                        pub mod text;
+                        #[path = "."]
+                        pub mod dimensions {
+                            #[path = "🏅️standards/7️⃣87a/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐dimensions/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                    }
+                    #[path = "."]
+                    pub mod diff {
+                        #[path = "🏅️standards/7️⃣87a/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                        #[path = "🏅️standards/7️⃣87a/🪆️subsets/✳️any/🧬️schema/🔺️diff/💾️binary/🦀️.rs"]
+                        pub mod binary;
+                        #[path = "🏅️standards/7️⃣87a/🪆️subsets/✳️any/🧬️schema/🔺️diff/📝️text/🦀️.rs"]
+                        pub mod text;
+                    }
+                    #[path = "."]
+                    pub mod mutations {
+                        #[path = "🏅️standards/7️⃣87a/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                        #[path = "🏅️standards/7️⃣87a/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️.rs"]
+                        pub mod binary;
+                        #[path = "🏅️standards/7️⃣87a/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️.rs"]
+                        pub mod text;
+                    }
+                }
+                #[path = "."]
+                pub mod io {
+                    #[path = "🏅️standards/7️⃣87a/🪆️subsets/✳️any/🚪️io/🦀️.rs"]
+                    mod component;
+                    pub use component::*;
+                    #[path = "."]
+                    pub mod import {
+                        #[path = "."]
+                        pub mod deserializers {
+                            #[path = "."]
+                            pub mod artifacts {
+                                #[path = "."]
+                                pub mod binary {
+                                    #[path = "."]
+                                    pub mod v_raw {
+                                        #[path = "."]
+                                        pub mod any {
+                                            #[path = "🏅️standards/7️⃣87a/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/💾️binary/🔖️raw/✳️any/🦀️.rs"]
+                                            mod component;
+                                            pub use component::*;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    #[path = "."]
+                    pub mod export {
+                        #[path = "."]
+                        pub mod serializers {
+                            #[path = "."]
+                            pub mod artifacts {
+                                #[path = "."]
+                                pub mod binary {
+                                    #[path = "."]
+                                    pub mod v_raw {
+                                        #[path = "."]
+                                        pub mod any {
+                                            #[path = "🏅️standards/7️⃣87a/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/💾️binary/🔖️raw/✳️any/🦀️.rs"]
+                                            mod component;
+                                            pub use component::*;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    #[path = "."]
+    pub mod v89a {
+        // 🐜️ `⚙️engine/` dissolved (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES):
+        // real code now lives in `subsets::any::io` (codec/register/io_registry — `register`
+        // stays reachable since gif is one of stdio's 10 deliberate imperative
+        // `engine::register()` plugin-root calls) and `subsets::any::schema` (document
+        // helpers); this stays an inline barrel so every existing
+        // `standards::v89a::engine::*`/`gif::engine::*` path still resolves — including
+        // `📚️examples/💃️dancing`'s own `standards::v89a::engine::decode_gif` call.
+        pub mod engine {
+            pub use super::subsets::any::io::*;
+        }
+        #[path = "🏅️standards/9️⃣89a/🧬️migrations/🦀️.rs"]
+        pub mod migrations;
+        #[path = "."]
+        pub mod subsets {
+            #[path = "."]
+            pub mod any {
+                #[path = "."]
+                pub mod schema {
+                    #[path = "🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🧬️schema/🦀️.rs"]
+                    mod component;
+                    pub use component::*;
+                    #[path = "."]
+                    pub mod snapshot {
+                        #[path = "🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                        #[path = "🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/💾️binary/🦀️.rs"]
+                        pub mod binary;
+                        #[path = "🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/📝️text/🦀️.rs"]
+                        pub mod text;
+                    }
+                    #[path = "."]
+                    pub mod inferences {
+                        #[path = "🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🧬️schema/💡️inferences/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                        #[path = "🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🧬️schema/💡️inferences/💾️binary/🦀️.rs"]
+                        pub mod binary;
+                        #[path = "🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🧬️schema/💡️inferences/📝️text/🦀️.rs"]
+                        pub mod text;
+                        #[path = "."]
+                        pub mod dimensions {
+                            #[path = "🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🧬️schema/💡️inferences/📐dimensions/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                    }
+                    #[path = "."]
+                    pub mod diff {
+                        #[path = "🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🧬️schema/🔺️diff/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                        #[path = "🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🧬️schema/🔺️diff/💾️binary/🦀️.rs"]
+                        pub mod binary;
+                        #[path = "🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🧬️schema/🔺️diff/📝️text/🦀️.rs"]
+                        pub mod text;
+                    }
+                    #[path = "."]
+                    pub mod mutations {
+                        #[path = "🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                        #[path = "🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/💾️binary/🦀️.rs"]
+                        pub mod binary;
+                        #[path = "🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/📝️text/🦀️.rs"]
+                        pub mod text;
+                    }
+                }
+                #[path = "."]
+                pub mod io {
+                    #[path = "🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🚪️io/🦀️.rs"]
+                    mod component;
+                    pub use component::*;
+                    #[path = "."]
+                    pub mod import {
+                        #[path = "."]
+                        pub mod deserializers {
+                            #[path = "."]
+                            pub mod artifacts {
+                                #[path = "."]
+                                pub mod binary {
+                                    #[path = "."]
+                                    pub mod v_raw {
+                                        #[path = "."]
+                                        pub mod any {
+                                            #[path = "🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/💾️binary/🔖️raw/✳️any/🦀️.rs"]
+                                            mod component;
+                                            pub use component::*;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    #[path = "."]
+                    pub mod export {
+                        #[path = "."]
+                        pub mod serializers {
+                            #[path = "."]
+                            pub mod artifacts {
+                                #[path = "."]
+                                pub mod binary {
+                                    #[path = "."]
+                                    pub mod v_raw {
+                                        #[path = "."]
+                                        pub mod any {
+                                            #[path = "🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🚪️io/📤️export/🧵️serializers/🗿️artifacts/💾️binary/🔖️raw/✳️any/🦀️.rs"]
+                                            mod component;
+                                            pub use component::*;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+// ---- Shims: keep pre-migration module paths resolving for external callers ----
+// 🔀️ S-6 (`.claude/plans/the-current-schemas-are-scalable-journal.md`): 89a is the richer
+// standard (frames/GCE/loop vs. 87a's single-image model) and is now canonical here; 87a
+// stays reachable under its own explicit `standards::v87a::` path for callers that need it.
+pub mod schema {
+    pub use super::standards::v89a::subsets::any::schema::*;
+}
+pub mod engine {
+    pub use super::standards::v89a::engine::*;
+    /// 📎 Registers BOTH standards' engines (89a canonical + 87a legacy) — a flat glob
+    /// re-export can't do this (two `register` fns of the same name would collide), so this
+    /// local definition shadows the glob-imported 89a one and calls both explicitly.
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn register() {
+        super::standards::v87a::engine::register();
+        super::standards::v89a::engine::register();
+    }
+}
+pub mod io {
+    pub use super::standards::v89a::subsets::any::io::*;
+}
+
+#[path = "."]
+pub mod examples {
+    #[path = "."]
+    pub mod demo {
+        #[path = "🏅️standards/7️⃣87a/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️.rs"]
+        mod component;
+        pub use component::*;
+    }
+    #[path = "."]
+    pub mod dancing {
+        #[path = "🏅️standards/7️⃣87a/🪆️subsets/✳️any/📚️examples/💃️dancing/🦀️.rs"]
+        mod component;
+        pub use component::*;
+        #[cfg(test)]
+        #[path = "🏅️standards/7️⃣87a/🪆️subsets/✳️any/📚️examples/💃️dancing/🧪️tests/🦀️.rs"]
+        mod dancing_tests;
+    }
+}
+
+#[cfg(feature = "component-app-assembly")]
+#[path = "."]
+pub mod editor {
+    #[path = "."]
+    pub mod gif_87a {
+        #[path = "🏅️standards/7️⃣87a/🪆️subsets/✳️any/✏️editor/🦀️.rs"]
+        mod component;
+        pub use component::*;
+        #[path = "."]
+        pub mod modes {
+            #[path = "."]
+            pub mod edit {
+                #[path = "🏅️standards/7️⃣87a/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🦀️.rs"]
+                mod component;
+                pub use component::*;
+                #[path = "."]
+                pub mod windows {
+                    #[path = "."]
+                    pub mod main {
+                        #[path = "🏅️standards/7️⃣87a/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+        }
+    }
+    #[path = "."]
+    pub mod gif_89a {
+        #[path = "🏅️standards/9️⃣89a/🪆️subsets/🧱️base/✏️editor/🦀️.rs"]
+        mod component;
+        pub use component::*;
+        #[path = "."]
+        pub mod modes {
+            #[path = "."]
+            pub mod edit {
+                #[path = "🏅️standards/9️⃣89a/🪆️subsets/🧱️base/✏️editor/🎭️modes/✏️edit/🦀️.rs"]
+                mod component;
+                pub use component::*;
+                #[path = "."]
+                pub mod windows {
+                    #[path = "."]
+                    pub mod main {
+                        #[path = "🏅️standards/9️⃣89a/🪆️subsets/🧱️base/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+        }
+    }
+}
+
+#[cfg(feature = "component-app-assembly")]
+#[path = "."]
+pub mod viewer {
+    #[path = "."]
+    pub mod gif_87a {
+        #[path = "🏅️standards/7️⃣87a/🪆️subsets/✳️any/👁️viewer/🦀️.rs"]
+        mod component;
+        pub use component::*;
+        #[path = "."]
+        pub mod modes {
+            #[path = "."]
+            pub mod view {
+                #[path = "🏅️standards/7️⃣87a/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🦀️.rs"]
+                mod component;
+                pub use component::*;
+                #[path = "."]
+                pub mod windows {
+                    #[path = "."]
+                    pub mod main {
+                        #[path = "🏅️standards/7️⃣87a/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+        }
+    }
+    #[path = "."]
+    pub mod gif_89a {
+        #[path = "🏅️standards/9️⃣89a/🪆️subsets/🧱️base/👁️viewer/🦀️.rs"]
+        mod component;
+        pub use component::*;
+        #[path = "."]
+        pub mod modes {
+            #[path = "."]
+            pub mod view {
+                #[path = "🏅️standards/9️⃣89a/🪆️subsets/🧱️base/👁️viewer/🎭️modes/👁️view/🦀️.rs"]
+                mod component;
+                pub use component::*;
+                #[path = "."]
+                pub mod windows {
+                    #[path = "."]
+                    pub mod main {
+                        #[path = "🏅️standards/9️⃣89a/🪆️subsets/🧱️base/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+        }
+    }
+}

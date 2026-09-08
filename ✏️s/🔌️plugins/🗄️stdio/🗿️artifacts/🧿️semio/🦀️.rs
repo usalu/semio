@@ -2,12 +2,22 @@
 //! schema-owning domain subsets + the `✉️base` envelope union). See the master plan's
 //! "Architecture > The semio artifact" section.
 
+#![allow(async_fn_in_trait)]
+#![allow(long_running_const_eval)]
+
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_schema as framework_schema;
+extern crate semio_framework_value_derive as value_derive;
+extern crate semio_framework_graph as graph_core;
+
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 
-pub use crate::artifacts::semio::standards::v1::subsets::base::schema::SemioArtifact;
-pub use crate::artifacts::semio::standards::v1::subsets::base::schema::diff::SemioDiff;
-pub use crate::artifacts::semio::standards::v1::subsets::base::schema::mutations::SemioMutation;
-pub use crate::artifacts::semio::standards::v1::subsets::base::schema::snapshot::SemioSnapshot;
+pub use standards::v1::subsets::base::schema::SemioArtifact;
+pub use standards::v1::subsets::base::schema::diff::SemioDiff;
+pub use standards::v1::subsets::base::schema::mutations::SemioMutation;
+pub use standards::v1::subsets::base::schema::snapshot::SemioSnapshot;
 
 /// 🏷️ Document schema / DSL envelope id.
 pub const STDIO_SEMIO_DOCUMENT_SCHEMA: &str = "stdio.semio";
@@ -15,11 +25,37 @@ pub const STDIO_SEMIO_DOCUMENT_SCHEMA: &str = "stdio.semio";
 /// 🧬️ Artifact schema descriptor id.
 pub const SEMIO_ARTIFACT_SCHEMA_ID: &str = "s.stdio.semio";
 
+/// 📜 Schema-owned package definition.
+pub const ARTIFACT_DEFINITION_SCHEMA: &str = include_str!("🧬️schema/📜️artifact-definition.json");
+
+pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::PluginAssemblyError> {
+    semio_s_artifact_stdio_contract::definition_from_schema(ARTIFACT_DEFINITION_SCHEMA)
+}
+
+pub fn formats() -> Result<Vec<semio_framework_plugin::io::FormatDescriptor>, semio_framework_plugin::ArtifactDefinitionError> {
+    semio_s_artifact_stdio_contract::format_descriptors(ARTIFACT_DEFINITION_SCHEMA)
+}
+
+pub fn native_codecs() -> Vec<semio_s_artifact_stdio_contract::NativeCodecFactory> {
+    Vec::new()
+}
+
+pub fn contribution() -> semio_s_artifact_stdio_contract::ArtifactContribution {
+    semio_s_artifact_stdio_contract::ArtifactContribution {
+        identity: "semio",
+        schema: ARTIFACT_DEFINITION_SCHEMA,
+        definition,
+        assembly,
+        formats,
+        native_codecs,
+    }
+}
+
 //#region 🔖️ArtifactKind
 /// 🗂️ This artifact's `ArtifactKindSpec`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn assembly(definition: semio_framework_plugin::ArtifactDefinition) -> Result<crate::registry::ArtifactAssembly, semio_framework_plugin::PluginAssemblyError> {
-    crate::registry::definition_only_assembly("semio", definition)
+pub fn assembly() -> Result<semio_s_artifact_stdio_contract::ArtifactAssembly, semio_framework_plugin::PluginAssemblyError> {
+    semio_s_artifact_stdio_contract::definition_only_assembly("semio", definition()?)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -109,7 +145,7 @@ pub fn composable_subsets() -> Vec<&'static str> {
     semio_subset_table!(subset_names)
 }
 
-use crate::artifacts::semio::standards::v1::subsets;
+use crate::standards::v1::subsets;
 
 //#region 🧹️SnapshotRetirement
 use std::{marker::PhantomData, sync::Arc};
@@ -1165,7 +1201,7 @@ pub async fn open_semio_member(expected: &dsl::os_io::ArtifactRef, owner: Option
 
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
-    use crate::artifacts::semio::standards::v1::subsets::base::io::io_registry as v1;
+    use crate::standards::v1::subsets::base::io::io_registry as v1;
     use semio_framework_plugin::{ComposeError, ComposedArtifact, ComposerEntry, Dialect, ErasedComposeSource, register_composer_entries};
     use std::sync::OnceLock;
 
@@ -1193,7 +1229,7 @@ pub mod io_registry {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
+    use crate::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
     use crate::dsl::{ArtifactPack, SpaceMember, os_io::ArtifactDialect};
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -1289,3 +1325,4075 @@ mod tests {
     }
 }
 //#endregion 🧪️Tests
+
+#[path = "."]
+pub mod standards {
+    #[path = "."]
+    pub mod v1 {
+        #[path = "."]
+        pub mod subsets {
+            #[path = "."]
+            pub mod animation {
+                #[path = "🏅️standards/🔖️v1/🪆️subsets/🎞️animation/🚪️io/🦀️.rs"]
+                pub mod io;
+                #[path = "."]
+                pub mod schema {
+                    #[path = "🏅️standards/🔖️v1/🪆️subsets/🎞️animation/🧬️schema/🦀️.rs"]
+                    mod component;
+                    pub use component::*;
+                    #[path = "."]
+                    pub mod snapshot {
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🎞️animation/🧬️schema/📸️snapshot/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🎞️animation/🧬️schema/📸️snapshot/💾️binary/🦀️.rs"]
+                        pub mod binary;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🎞️animation/🧬️schema/📸️snapshot/📝️text/🦀️.rs"]
+                        pub mod text;
+                    }
+                    #[path = "."]
+                    pub mod diff {
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🎞️animation/🧬️schema/🔺️diff/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🎞️animation/🧬️schema/🔺️diff/💾️binary/🦀️.rs"]
+                        pub mod binary;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🎞️animation/🧬️schema/🔺️diff/📝️text/🦀️.rs"]
+                        pub mod text;
+                    }
+                    #[path = "."]
+                    pub mod inferences {
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🎞️animation/🧬️schema/💡️inferences/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🎞️animation/🧬️schema/💡️inferences/💾️binary/🦀️.rs"]
+                        pub mod binary;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🎞️animation/🧬️schema/💡️inferences/📝️text/🦀️.rs"]
+                        pub mod text;
+                        #[path = "."]
+                        pub mod duration {
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🎞️animation/🧬️schema/💡️inferences/⏱️duration/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                    }
+                    #[path = "."]
+                    pub mod mutations {
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🎞️animation/🧬️schema/🧬️mutations/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🎞️animation/🧬️schema/🧬️mutations/💾️binary/🦀️.rs"]
+                        pub mod binary;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🎞️animation/🧬️schema/🧬️mutations/📝️text/🦀️.rs"]
+                        pub mod text;
+                    }
+                }
+            }
+            #[path = "."]
+            pub mod base {
+                #[path = "🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🦀️.rs"]
+                pub mod io;
+                #[path = "."]
+                pub mod schema {
+                    #[path = "🏅️standards/🔖️v1/🪆️subsets/✉️base/🧬️schema/🦀️.rs"]
+                    mod component;
+                    pub use component::*;
+                    #[path = "."]
+                    pub mod snapshot {
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/✉️base/🧬️schema/📸️snapshot/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/✉️base/🧬️schema/📸️snapshot/💾️binary/🦀️.rs"]
+                        pub mod binary;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/✉️base/🧬️schema/📸️snapshot/📝️text/🦀️.rs"]
+                        pub mod text;
+                    }
+                    #[path = "."]
+                    pub mod diff {
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/✉️base/🧬️schema/🔺️diff/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/✉️base/🧬️schema/🔺️diff/💾️binary/🦀️.rs"]
+                        pub mod binary;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/✉️base/🧬️schema/🔺️diff/📝️text/🦀️.rs"]
+                        pub mod text;
+                    }
+                    #[path = "."]
+                    pub mod inferences {
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/✉️base/🧬️schema/💡️inferences/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/✉️base/🧬️schema/💡️inferences/💾️binary/🦀️.rs"]
+                        pub mod binary;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/✉️base/🧬️schema/💡️inferences/📝️text/🦀️.rs"]
+                        pub mod text;
+                        #[path = "."]
+                        pub mod kind {
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/✉️base/🧬️schema/💡️inferences/🏷️kind/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                    }
+                    #[path = "."]
+                    pub mod mutations {
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/✉️base/🧬️schema/🧬️mutations/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/✉️base/🧬️schema/🧬️mutations/💾️binary/🦀️.rs"]
+                        pub mod binary;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/✉️base/🧬️schema/🧬️mutations/📝️text/🦀️.rs"]
+                        pub mod text;
+                    }
+                    #[path = "🏅️standards/🔖️v1/🪆️subsets/✉️base/🧬️schema/🧮️geometry/🦀️.rs"]
+                    pub mod geometry;
+                    #[path = "🏅️standards/🔖️v1/🪆️subsets/✉️base/🧬️schema/🧰️triples/🦀️.rs"]
+                    pub mod triples;
+                }
+            }
+            #[path = "."]
+            pub mod audio {
+                #[path = "🏅️standards/🔖️v1/🪆️subsets/🔊️audio/🚪️io/🦀️.rs"]
+                pub mod io;
+                #[path = "."]
+                pub mod schema {
+                    #[path = "🏅️standards/🔖️v1/🪆️subsets/🔊️audio/🧬️schema/🦀️.rs"]
+                    mod component;
+                    pub use component::*;
+                    #[path = "."]
+                    pub mod snapshot {
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🔊️audio/🧬️schema/📸️snapshot/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🔊️audio/🧬️schema/📸️snapshot/💾️binary/🦀️.rs"]
+                        pub mod binary;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🔊️audio/🧬️schema/📸️snapshot/📝️text/🦀️.rs"]
+                        pub mod text;
+                    }
+                    #[path = "."]
+                    pub mod diff {
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🔊️audio/🧬️schema/🔺️diff/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🔊️audio/🧬️schema/🔺️diff/💾️binary/🦀️.rs"]
+                        pub mod binary;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🔊️audio/🧬️schema/🔺️diff/📝️text/🦀️.rs"]
+                        pub mod text;
+                    }
+                    #[path = "."]
+                    pub mod inferences {
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🔊️audio/🧬️schema/💡️inferences/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🔊️audio/🧬️schema/💡️inferences/💾️binary/🦀️.rs"]
+                        pub mod binary;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🔊️audio/🧬️schema/💡️inferences/📝️text/🦀️.rs"]
+                        pub mod text;
+                        #[path = "."]
+                        pub mod duration {
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🔊️audio/🧬️schema/💡️inferences/⏱️duration/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                    }
+                    #[path = "."]
+                    pub mod mutations {
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🔊️audio/🧬️schema/🧬️mutations/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🔊️audio/🧬️schema/🧬️mutations/💾️binary/🦀️.rs"]
+                        pub mod binary;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🔊️audio/🧬️schema/🧬️mutations/📝️text/🦀️.rs"]
+                        pub mod text;
+                    }
+                }
+            }
+            #[path = "."]
+            pub mod brep {
+                #[path = "."]
+                pub mod io {
+                    #[path = "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🚪️io/🦀️.rs"]
+                    mod component;
+                    pub use component::*;
+                    #[path = "."]
+                    pub mod import {
+                        #[path = "."]
+                        pub mod deserializers {
+                            #[path = "."]
+                            pub mod artifacts {
+                                #[path = "."]
+                                pub mod step {
+                                    #[path = "."]
+                                    pub mod v_ap214 {
+                                        #[path = "."]
+                                        pub mod any {
+                                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📐️step/🔖️ap214/✳️any/🦀️.rs"]
+                                            mod component;
+                                            pub use component::*;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    #[path = "."]
+                    pub mod export {
+                        #[path = "."]
+                        pub mod serializers {
+                            #[path = "."]
+                            pub mod artifacts {
+                                #[path = "."]
+                                pub mod step {
+                                    #[path = "."]
+                                    pub mod v_ap214 {
+                                        #[path = "."]
+                                        pub mod any {
+                                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📐️step/🔖️ap214/✳️any/🦀️.rs"]
+                                            mod component;
+                                            pub use component::*;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                #[path = "."]
+                pub mod schema {
+                    #[path = "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/🦀️.rs"]
+                    mod component;
+                    pub use component::*;
+                    #[path = "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/⚙️engine/🦀️.rs"]
+                    pub mod engine;
+                    #[path = "."]
+                    pub mod snapshot {
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🏟️arena/🦀️.rs"]
+                        pub mod arena;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/💾️binary/🦀️.rs"]
+                        pub mod binary;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/➰️curve/🦀️.rs"]
+                        pub mod curve;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🚨️error/🦀️.rs"]
+                        pub mod error;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/〰️polynomial/🦀️.rs"]
+                        pub mod polynomial;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🏄️surface/🦀️.rs"]
+                        pub mod surface;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/📝️text/🦀️.rs"]
+                        pub mod text;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/📏️tolerance/🦀️.rs"]
+                        pub mod tolerance;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🕸️topology/🦀️.rs"]
+                        pub mod topology;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/➡️vector/🦀️.rs"]
+                        pub mod vector;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🔁️body/🦀️.rs"]
+                        pub mod body;
+                    }
+                    #[path = "."]
+                    pub mod diff {
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/🔺️diff/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/🔺️diff/💾️binary/🦀️.rs"]
+                        pub mod binary;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/🔺️diff/🎨️blend/🦀️.rs"]
+                        pub mod blend;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/🔺️diff/🔀️boolean/🦀️.rs"]
+                        pub mod boolean;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/🔺️diff/🔺️euler/🦀️.rs"]
+                        pub mod euler;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/🔺️diff/✂️intersect/🦀️.rs"]
+                        pub mod intersect;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/🔺️diff/↔️offset/🦀️.rs"]
+                        pub mod offset;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/🔺️diff/🧱️primitives/🦀️.rs"]
+                        pub mod primitives;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/🔺️diff/🧵️sew/🦀️.rs"]
+                        pub mod sew;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/🔺️diff/➡️sweep/🦀️.rs"]
+                        pub mod sweep;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/🔺️diff/📝️text/🦀️.rs"]
+                        pub mod text;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/🔺️diff/🔁️transform/🦀️.rs"]
+                        pub mod transform;
+                    }
+                    #[path = "."]
+                    pub mod inferences {
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/💡️inferences/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                        #[path = "."]
+                        pub mod validation_report {
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/💡️inferences/✅validation-report/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/💡️inferences/🌳bounding-volume/🦀️.rs"]
+                        pub mod bounding_volume;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/💡️inferences/🏷️classification/🦀️.rs"]
+                        pub mod classification;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/💡️inferences/📏mass-properties/🦀️.rs"]
+                        pub mod mass_properties;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/💡️inferences/🧩tessellation/🦀️.rs"]
+                        pub mod tessellation;
+                    }
+                    #[path = "."]
+                    pub mod mutations {
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/🧬️mutations/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/🧬️mutations/💾️binary/🦀️.rs"]
+                        pub mod binary;
+                        #[path = "."]
+                        pub mod delete_edge {
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/🧬️mutations/✂️delete-edge/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/🧬️mutations/✂️delete-edge/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/🧬️mutations/✂️delete-edge/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod replace_curve {
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/🧬️mutations/➰replace-curve/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/🧬️mutations/➰replace-curve/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/🧬️mutations/➰replace-curve/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod create_vertex {
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/🧬️mutations/🏗️create-vertex/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/🧬️mutations/🏗️create-vertex/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/🧬️mutations/🏗️create-vertex/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod create_shell {
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/🧬️mutations/🐚create-shell/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/🧬️mutations/🐚create-shell/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/🧬️mutations/🐚create-shell/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod delete_shell {
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/🧬️mutations/💥delete-shell/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/🧬️mutations/💥delete-shell/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/🧬️mutations/💥delete-shell/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod move_vertex {
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/🧬️mutations/📍move-vertex/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/🧬️mutations/📍move-vertex/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/🧬️mutations/📍move-vertex/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod create_edge {
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/🧬️mutations/🖇️create-edge/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/🧬️mutations/🖇️create-edge/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/🧬️mutations/🖇️create-edge/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod create_face {
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/🧬️mutations/🔷create-face/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/🧬️mutations/🔷create-face/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/🧬️mutations/🔷create-face/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod delete_solid {
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/🧬️mutations/🕳️delete-solid/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/🧬️mutations/🕳️delete-solid/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/🧬️mutations/🕳️delete-solid/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod delete_vertex {
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/🧬️mutations/🗑️delete-vertex/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/🧬️mutations/🗑️delete-vertex/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/🧬️mutations/🗑️delete-vertex/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod replace_surface {
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/🧬️mutations/🗺️replace-surface/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/🧬️mutations/🗺️replace-surface/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/🧬️mutations/🗺️replace-surface/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod delete_face {
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/🧬️mutations/🚮delete-face/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/🧬️mutations/🚮delete-face/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/🧬️mutations/🚮delete-face/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod create_solid {
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/🧬️mutations/🧊create-solid/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/🧬️mutations/🧊create-solid/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/🧬️mutations/🧊create-solid/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/🧬️mutations/📝️text/🦀️.rs"]
+                        pub mod text;
+                    }
+                }
+            }
+            #[path = "."]
+            pub mod cad {
+                #[path = "."]
+                pub mod io {
+                    #[path = "🏅️standards/🔖️v1/🪆️subsets/📐️cad/🚪️io/🦀️.rs"]
+                    mod component;
+                    pub use component::*;
+                    #[path = "."]
+                    pub mod import {
+                        #[path = "."]
+                        pub mod deserializers {
+                            #[path = "."]
+                            pub mod artifacts {
+                                #[path = "."]
+                                pub mod dxf {
+                                    #[path = "."]
+                                    pub mod v_r12 {
+                                        #[path = "."]
+                                        pub mod any {
+                                            #[path = "🏅️standards/🔖️v1/🪆️subsets/📐️cad/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🔄️dxf/🔖️r12/✳️any/🦀️.rs"]
+                                            mod component;
+                                            pub use component::*;
+                                        }
+                                    }
+                                }
+                                #[path = "."]
+                                pub mod dwg {
+                                    #[path = "."]
+                                    pub mod v_ac1024 {
+                                        #[path = "."]
+                                        pub mod any {
+                                            #[path = "🏅️standards/🔖️v1/🪆️subsets/📐️cad/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🖊️dwg/🔖️ac1024/✳️any/🦀️.rs"]
+                                            mod component;
+                                            pub use component::*;
+                                        }
+                                    }
+                                }
+                                #[path = "."]
+                                pub mod step {
+                                    #[path = "."]
+                                    pub mod v_ap214 {
+                                        #[path = "."]
+                                        pub mod any {
+                                            #[path = "🏅️standards/🔖️v1/🪆️subsets/📐️cad/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📐️step/🔖️ap214/✳️any/🦀️.rs"]
+                                            mod component;
+                                            pub use component::*;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    #[path = "."]
+                    pub mod export {
+                        #[path = "."]
+                        pub mod serializers {
+                            #[path = "."]
+                            pub mod artifacts {
+                                #[path = "."]
+                                pub mod dxf {
+                                    #[path = "."]
+                                    pub mod v_r12 {
+                                        #[path = "."]
+                                        pub mod any {
+                                            #[path = "🏅️standards/🔖️v1/🪆️subsets/📐️cad/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🔄️dxf/🔖️r12/✳️any/🦀️.rs"]
+                                            mod component;
+                                            pub use component::*;
+                                        }
+                                    }
+                                }
+                                #[path = "."]
+                                pub mod dwg {
+                                    #[path = "."]
+                                    pub mod v_ac1024 {
+                                        #[path = "."]
+                                        pub mod any {
+                                            #[path = "🏅️standards/🔖️v1/🪆️subsets/📐️cad/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🖊️dwg/🔖️ac1024/✳️any/🦀️.rs"]
+                                            mod component;
+                                            pub use component::*;
+                                        }
+                                    }
+                                }
+                                #[path = "."]
+                                pub mod step {
+                                    #[path = "."]
+                                    pub mod v_ap214 {
+                                        #[path = "."]
+                                        pub mod any {
+                                            #[path = "🏅️standards/🔖️v1/🪆️subsets/📐️cad/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📐️step/🔖️ap214/✳️any/🦀️.rs"]
+                                            mod component;
+                                            pub use component::*;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                #[path = "."]
+                pub mod schema {
+                    #[path = "🏅️standards/🔖️v1/🪆️subsets/📐️cad/🧬️schema/🦀️.rs"]
+                    mod component;
+                    pub use component::*;
+                    #[path = "."]
+                    pub mod snapshot {
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/📐️cad/🧬️schema/📸️snapshot/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/📐️cad/🧬️schema/📸️snapshot/💾️binary/🦀️.rs"]
+                        pub mod binary;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/📐️cad/🧬️schema/📸️snapshot/📝️text/🦀️.rs"]
+                        pub mod text;
+                    }
+                    #[path = "."]
+                    pub mod diff {
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/📐️cad/🧬️schema/🔺️diff/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/📐️cad/🧬️schema/🔺️diff/💾️binary/🦀️.rs"]
+                        pub mod binary;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/📐️cad/🧬️schema/🔺️diff/📝️text/🦀️.rs"]
+                        pub mod text;
+                    }
+                    #[path = "."]
+                    pub mod inferences {
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/📐️cad/🧬️schema/💡️inferences/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/📐️cad/🧬️schema/💡️inferences/💾️binary/🦀️.rs"]
+                        pub mod binary;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/📐️cad/🧬️schema/💡️inferences/📝️text/🦀️.rs"]
+                        pub mod text;
+                        #[path = "."]
+                        pub mod bounds {
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/📐️cad/🧬️schema/💡️inferences/📦bounds/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                    }
+                    #[path = "."]
+                    pub mod mutations {
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/📐️cad/🧬️schema/🧬️mutations/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/📐️cad/🧬️schema/🧬️mutations/💾️binary/🦀️.rs"]
+                        pub mod binary;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/📐️cad/🧬️schema/🧬️mutations/📝️text/🦀️.rs"]
+                        pub mod text;
+                    }
+                }
+            }
+            #[path = "."]
+            pub mod document {
+                #[path = "."]
+                pub mod io {
+                    #[path = "🏅️standards/🔖️v1/🪆️subsets/📑️document/🚪️io/🦀️.rs"]
+                    mod component;
+                    pub use component::*;
+                    #[path = "."]
+                    pub mod import {
+                        #[path = "."]
+                        pub mod deserializers {
+                            #[path = "."]
+                            pub mod artifacts {
+                                #[path = "."]
+                                pub mod docx {
+                                    #[path = "."]
+                                    pub mod v_ecma_376 {
+                                        #[path = "."]
+                                        pub mod any {
+                                            #[path = "🏅️standards/🔖️v1/🪆️subsets/📑️document/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📜️docx/🔖️ecma-376/✳️any/🦀️.rs"]
+                                            mod component;
+                                            pub use component::*;
+                                        }
+                                    }
+                                }
+                                #[path = "."]
+                                pub mod md {
+                                    #[path = "."]
+                                    pub mod v_commonmark {
+                                        #[path = "."]
+                                        pub mod any {
+                                            #[path = "🏅️standards/🔖️v1/🪆️subsets/📑️document/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📝️md/🔖️commonmark/✳️any/🦀️.rs"]
+                                            mod component;
+                                            pub use component::*;
+                                        }
+                                    }
+                                }
+                                #[path = "."]
+                                pub mod txt {
+                                    #[path = "."]
+                                    pub mod v_utf_8 {
+                                        #[path = "."]
+                                        pub mod any {
+                                            #[path = "🏅️standards/🔖️v1/🪆️subsets/📑️document/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🔤️txt/🔖️utf-8/✳️any/🦀️.rs"]
+                                            mod component;
+                                            pub use component::*;
+                                        }
+                                    }
+                                }
+                                #[path = "."]
+                                pub mod pdf {
+                                    #[path = "."]
+                                    pub mod v1_7 {
+                                        #[path = "."]
+                                        pub mod any {
+                                            #[path = "🏅️standards/🔖️v1/🪆️subsets/📑️document/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📖️pdf/🔖️1.7/✳️any/🦀️.rs"]
+                                            mod component;
+                                            pub use component::*;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    #[path = "."]
+                    pub mod export {
+                        #[path = "."]
+                        pub mod serializers {
+                            #[path = "."]
+                            pub mod artifacts {
+                                #[path = "."]
+                                pub mod docx {
+                                    #[path = "."]
+                                    pub mod v_ecma_376 {
+                                        #[path = "."]
+                                        pub mod any {
+                                            #[path = "🏅️standards/🔖️v1/🪆️subsets/📑️document/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📜️docx/🔖️ecma-376/✳️any/🦀️.rs"]
+                                            mod component;
+                                            pub use component::*;
+                                        }
+                                    }
+                                }
+                                #[path = "."]
+                                pub mod md {
+                                    #[path = "."]
+                                    pub mod v_commonmark {
+                                        #[path = "."]
+                                        pub mod any {
+                                            #[path = "🏅️standards/🔖️v1/🪆️subsets/📑️document/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📝️md/🔖️commonmark/✳️any/🦀️.rs"]
+                                            mod component;
+                                            pub use component::*;
+                                        }
+                                    }
+                                }
+                                #[path = "."]
+                                pub mod txt {
+                                    #[path = "."]
+                                    pub mod v_utf_8 {
+                                        #[path = "."]
+                                        pub mod any {
+                                            #[path = "🏅️standards/🔖️v1/🪆️subsets/📑️document/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🔤️txt/🔖️utf-8/✳️any/🦀️.rs"]
+                                            mod component;
+                                            pub use component::*;
+                                        }
+                                    }
+                                }
+                                #[path = "."]
+                                pub mod pdf {
+                                    #[path = "."]
+                                    pub mod v1_7 {
+                                        #[path = "."]
+                                        pub mod any {
+                                            #[path = "🏅️standards/🔖️v1/🪆️subsets/📑️document/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📖️pdf/🔖️1.7/✳️any/🦀️.rs"]
+                                            mod component;
+                                            pub use component::*;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                #[path = "."]
+                pub mod schema {
+                    #[path = "🏅️standards/🔖️v1/🪆️subsets/📑️document/🧬️schema/🦀️.rs"]
+                    mod component;
+                    pub use component::*;
+                    #[path = "."]
+                    pub mod snapshot {
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/📑️document/🧬️schema/📸️snapshot/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/📑️document/🧬️schema/📸️snapshot/💾️binary/🦀️.rs"]
+                        pub mod binary;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/📑️document/🧬️schema/📸️snapshot/📝️text/🦀️.rs"]
+                        pub mod text;
+                    }
+                    #[path = "."]
+                    pub mod diff {
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/📑️document/🧬️schema/🔺️diff/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/📑️document/🧬️schema/🔺️diff/💾️binary/🦀️.rs"]
+                        pub mod binary;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/📑️document/🧬️schema/🔺️diff/📝️text/🦀️.rs"]
+                        pub mod text;
+                    }
+                    #[path = "."]
+                    pub mod inferences {
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/📑️document/🧬️schema/💡️inferences/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/📑️document/🧬️schema/💡️inferences/💾️binary/🦀️.rs"]
+                        pub mod binary;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/📑️document/🧬️schema/💡️inferences/📝️text/🦀️.rs"]
+                        pub mod text;
+                        #[path = "."]
+                        pub mod outline {
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/📑️document/🧬️schema/💡️inferences/🧾outline/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                    }
+                    #[path = "."]
+                    pub mod mutations {
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/📑️document/🧬️schema/🧬️mutations/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/📑️document/🧬️schema/🧬️mutations/💾️binary/🦀️.rs"]
+                        pub mod binary;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/📑️document/🧬️schema/🧬️mutations/📝️text/🦀️.rs"]
+                        pub mod text;
+                    }
+                }
+            }
+            #[path = "."]
+            pub mod drawing {
+                #[path = "."]
+                pub mod io {
+                    #[path = "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🚪️io/🦀️.rs"]
+                    mod component;
+                    pub use component::*;
+                    #[path = "."]
+                    pub mod import {
+                        #[path = "."]
+                        pub mod deserializers {
+                            #[path = "."]
+                            pub mod artifacts {
+                                #[path = "."]
+                                pub mod svg {
+                                    #[path = "."]
+                                    pub mod v1_1 {
+                                        #[path = "."]
+                                        pub mod any {
+                                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/🦀️.rs"]
+                                            mod component;
+                                            pub use component::*;
+                                        }
+                                    }
+                                }
+                                #[path = "."]
+                                pub mod dxf {
+                                    #[path = "."]
+                                    pub mod v_r12 {
+                                        #[path = "."]
+                                        pub mod any {
+                                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🔄️dxf/🔖️r12/✳️any/🦀️.rs"]
+                                            mod component;
+                                            pub use component::*;
+                                        }
+                                    }
+                                }
+                                #[path = "."]
+                                pub mod pdf {
+                                    #[path = "."]
+                                    pub mod v1_7 {
+                                        #[path = "."]
+                                        pub mod any {
+                                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📖️pdf/🔖️1.7/✳️any/🦀️.rs"]
+                                            mod component;
+                                            pub use component::*;
+                                        }
+                                    }
+                                }
+                                #[path = "."]
+                                pub mod dwg {
+                                    #[path = "."]
+                                    pub mod v_ac1024 {
+                                        #[path = "."]
+                                        pub mod any {
+                                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🖊️dwg/🔖️ac1024/✳️any/🦀️.rs"]
+                                            mod component;
+                                            pub use component::*;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    #[path = "."]
+                    pub mod export {
+                        #[path = "."]
+                        pub mod serializers {
+                            #[path = "."]
+                            pub mod artifacts {
+                                #[path = "."]
+                                pub mod svg {
+                                    #[path = "."]
+                                    pub mod v1_1 {
+                                        #[path = "."]
+                                        pub mod any {
+                                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/🦀️.rs"]
+                                            mod component;
+                                            pub use component::*;
+                                        }
+                                    }
+                                }
+                                #[path = "."]
+                                pub mod dxf {
+                                    #[path = "."]
+                                    pub mod v_r12 {
+                                        #[path = "."]
+                                        pub mod any {
+                                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🔄️dxf/🔖️r12/✳️any/🦀️.rs"]
+                                            mod component;
+                                            pub use component::*;
+                                        }
+                                    }
+                                }
+                                #[path = "."]
+                                pub mod pdf {
+                                    #[path = "."]
+                                    pub mod v1_7 {
+                                        #[path = "."]
+                                        pub mod any {
+                                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📖️pdf/🔖️1.7/✳️any/🦀️.rs"]
+                                            mod component;
+                                            pub use component::*;
+                                        }
+                                    }
+                                }
+                                #[path = "."]
+                                pub mod dwg {
+                                    #[path = "."]
+                                    pub mod v_ac1024 {
+                                        #[path = "."]
+                                        pub mod any {
+                                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🖊️dwg/🔖️ac1024/✳️any/🦀️.rs"]
+                                            mod component;
+                                            pub use component::*;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                #[path = "."]
+                pub mod schema {
+                    #[path = "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/🦀️.rs"]
+                    mod component;
+                    pub use component::*;
+                    #[path = "."]
+                    pub mod snapshot {
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/📸️snapshot/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/📸️snapshot/💾️binary/🦀️.rs"]
+                        pub mod binary;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/📸️snapshot/📝️text/🦀️.rs"]
+                        pub mod text;
+                    }
+                    #[path = "."]
+                    pub mod diff {
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/🔺️diff/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/🔺️diff/💾️binary/🦀️.rs"]
+                        pub mod binary;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/🔺️diff/📝️text/🦀️.rs"]
+                        pub mod text;
+                    }
+                    #[path = "."]
+                    pub mod inferences {
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/💡️inferences/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/💡️inferences/💾️binary/🦀️.rs"]
+                        pub mod binary;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/💡️inferences/📝️text/🦀️.rs"]
+                        pub mod text;
+                        #[path = "."]
+                        pub mod flattened_scene {
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/💡️inferences/🎛️flattened-scene/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                    }
+                    #[path = "."]
+                    pub mod mutations {
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/🧬️mutations/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/🧬️mutations/💾️binary/🦀️.rs"]
+                        pub mod binary;
+                        #[path = "."]
+                        pub mod create_node {
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/🧬️mutations/➕create-node/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/🧬️mutations/➕create-node/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/🧬️mutations/➕create-node/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod delete_node {
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/🧬️mutations/➖delete-node/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/🧬️mutations/➖delete-node/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/🧬️mutations/➖delete-node/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod create_layer {
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/🧬️mutations/🌱create-layer/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/🧬️mutations/🌱create-layer/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/🧬️mutations/🌱create-layer/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod unflatten_node {
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/🧬️mutations/🎈unflatten-node/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/🧬️mutations/🎈unflatten-node/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/🧬️mutations/🎈unflatten-node/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod ungroup_node {
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/🧬️mutations/💫ungroup-node/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/🧬️mutations/💫ungroup-node/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/🧬️mutations/💫ungroup-node/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod move_node {
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/🧬️mutations/📍move-node/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/🧬️mutations/📍move-node/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/🧬️mutations/📍move-node/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod scale_node {
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/🧬️mutations/📏scale-node/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/🧬️mutations/📏scale-node/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/🧬️mutations/📏scale-node/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod change_stroke_width {
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/🧬️mutations/📐change-stroke-width/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/🧬️mutations/📐change-stroke-width/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/🧬️mutations/📐change-stroke-width/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod reorder_nodes {
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/🧬️mutations/🔀reorder-nodes/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/🧬️mutations/🔀reorder-nodes/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/🧬️mutations/🔀reorder-nodes/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod rotate_node {
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/🧬️mutations/🔄rotate-node/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/🧬️mutations/🔄rotate-node/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/🧬️mutations/🔄rotate-node/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod change_stroke_color {
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/🧬️mutations/🖌️change-stroke-color/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/🧬️mutations/🖌️change-stroke-color/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/🧬️mutations/🖌️change-stroke-color/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod drag_nodes {
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/🧬️mutations/🖐️drag-nodes/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/🧬️mutations/🖐️drag-nodes/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/🧬️mutations/🖐️drag-nodes/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod delete_layer {
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/🧬️mutations/🗑️delete-layer/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/🧬️mutations/🗑️delete-layer/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/🧬️mutations/🗑️delete-layer/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod replace_path {
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/🧬️mutations/🛤️replace-path/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/🧬️mutations/🛤️replace-path/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/🧬️mutations/🛤️replace-path/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod group_nodes {
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/🧬️mutations/🧷group-nodes/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/🧬️mutations/🧷group-nodes/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/🧬️mutations/🧷group-nodes/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod replace_fill {
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/🧬️mutations/🪣replace-fill/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/🧬️mutations/🪣replace-fill/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/🧬️mutations/🪣replace-fill/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod flatten_node {
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/🧬️mutations/🫓flatten-node/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/🧬️mutations/🫓flatten-node/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/🧬️mutations/🫓flatten-node/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/🧬️mutations/📝️text/🦀️.rs"]
+                        pub mod text;
+                    }
+                }
+            }
+            #[path = "."]
+            pub mod image {
+                #[path = "."]
+                pub mod io {
+                    #[path = "🏅️standards/🔖️v1/🪆️subsets/🖼️image/🚪️io/🦀️.rs"]
+                    mod component;
+                    pub use component::*;
+                    #[path = "."]
+                    pub mod import {
+                        #[path = "."]
+                        pub mod deserializers {
+                            #[path = "."]
+                            pub mod artifacts {
+                                #[path = "."]
+                                pub mod png {
+                                    #[path = "."]
+                                    pub mod v1_2 {
+                                        #[path = "."]
+                                        pub mod any {
+                                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🖼️image/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📷️png/🔖️1.2/✳️any/🦀️.rs"]
+                                            mod component;
+                                            pub use component::*;
+                                        }
+                                    }
+                                }
+                                #[path = "."]
+                                pub mod jpg {
+                                    #[path = "."]
+                                    pub mod v_jfif_1_01 {
+                                        #[path = "."]
+                                        pub mod any {
+                                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🖼️image/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📸️jpg/🔖️jfif-1.01/♾️any/🦀️.rs"]
+                                            mod component;
+                                            pub use component::*;
+                                        }
+                                    }
+                                }
+                                #[path = "."]
+                                pub mod gif {
+                                    #[path = "."]
+                                    pub mod v89a {
+                                        #[path = "."]
+                                        pub mod any {
+                                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🖼️image/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🎞️gif/🔖️89a/✳️any/🦀️.rs"]
+                                            mod component;
+                                            pub use component::*;
+                                        }
+                                    }
+                                }
+                                #[path = "."]
+                                pub mod bmp {
+                                    #[path = "."]
+                                    pub mod v_v3 {
+                                        #[path = "."]
+                                        pub mod any {
+                                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🖼️image/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🪟️bmp/🔖️v3/✳️any/🦀️.rs"]
+                                            mod component;
+                                            pub use component::*;
+                                        }
+                                    }
+                                }
+                                #[path = "."]
+                                pub mod tiff {
+                                    #[path = "."]
+                                    pub mod v6_0 {
+                                        #[path = "."]
+                                        pub mod any {
+                                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🖼️image/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🖼️tiff/🔖️6.0/✳️any/🦀️.rs"]
+                                            mod component;
+                                            pub use component::*;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    #[path = "."]
+                    pub mod export {
+                        #[path = "."]
+                        pub mod serializers {
+                            #[path = "."]
+                            pub mod artifacts {
+                                #[path = "."]
+                                pub mod png {
+                                    #[path = "."]
+                                    pub mod v1_2 {
+                                        #[path = "."]
+                                        pub mod any {
+                                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🖼️image/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📷️png/🔖️1.2/✳️any/🦀️.rs"]
+                                            mod component;
+                                            pub use component::*;
+                                        }
+                                    }
+                                }
+                                #[path = "."]
+                                pub mod jpg {
+                                    #[path = "."]
+                                    pub mod v_jfif_1_01 {
+                                        #[path = "."]
+                                        pub mod any {
+                                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🖼️image/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📸️jpg/🔖️jfif-1.01/♾️any/🦀️.rs"]
+                                            mod component;
+                                            pub use component::*;
+                                        }
+                                    }
+                                }
+                                #[path = "."]
+                                pub mod gif {
+                                    #[path = "."]
+                                    pub mod v89a {
+                                        #[path = "."]
+                                        pub mod any {
+                                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🖼️image/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🎞️gif/🔖️89a/✳️any/🦀️.rs"]
+                                            mod component;
+                                            pub use component::*;
+                                        }
+                                    }
+                                }
+                                #[path = "."]
+                                pub mod bmp {
+                                    #[path = "."]
+                                    pub mod v_v3 {
+                                        #[path = "."]
+                                        pub mod any {
+                                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🖼️image/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🪟️bmp/🔖️v3/✳️any/🦀️.rs"]
+                                            mod component;
+                                            pub use component::*;
+                                        }
+                                    }
+                                }
+                                #[path = "."]
+                                pub mod tiff {
+                                    #[path = "."]
+                                    pub mod v6_0 {
+                                        #[path = "."]
+                                        pub mod any {
+                                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🖼️image/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🖼️tiff/🔖️6.0/✳️any/🦀️.rs"]
+                                            mod component;
+                                            pub use component::*;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                #[path = "."]
+                pub mod schema {
+                    #[path = "🏅️standards/🔖️v1/🪆️subsets/🖼️image/🧬️schema/🦀️.rs"]
+                    mod component;
+                    pub use component::*;
+                    #[path = "."]
+                    pub mod snapshot {
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🖼️image/🧬️schema/📸️snapshot/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🖼️image/🧬️schema/📸️snapshot/💾️binary/🦀️.rs"]
+                        pub mod binary;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🖼️image/🧬️schema/📸️snapshot/📝️text/🦀️.rs"]
+                        pub mod text;
+                    }
+                    #[path = "."]
+                    pub mod diff {
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🖼️image/🧬️schema/🔺️diff/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🖼️image/🧬️schema/🔺️diff/💾️binary/🦀️.rs"]
+                        pub mod binary;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🖼️image/🧬️schema/🔺️diff/📝️text/🦀️.rs"]
+                        pub mod text;
+                    }
+                    #[path = "."]
+                    pub mod inferences {
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🖼️image/🧬️schema/💡️inferences/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🖼️image/🧬️schema/💡️inferences/💾️binary/🦀️.rs"]
+                        pub mod binary;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🖼️image/🧬️schema/💡️inferences/📝️text/🦀️.rs"]
+                        pub mod text;
+                        #[path = "."]
+                        pub mod dimensions {
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🖼️image/🧬️schema/💡️inferences/📐dimensions/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                    }
+                    #[path = "."]
+                    pub mod mutations {
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🖼️image/🧬️schema/🧬️mutations/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🖼️image/🧬️schema/🧬️mutations/💾️binary/🦀️.rs"]
+                        pub mod binary;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🖼️image/🧬️schema/🧬️mutations/📝️text/🦀️.rs"]
+                        pub mod text;
+                    }
+                }
+            }
+            #[path = "."]
+            pub mod mesh {
+                #[path = "."]
+                pub mod io {
+                    #[path = "🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🚪️io/🦀️.rs"]
+                    mod component;
+                    pub use component::*;
+                    #[path = "."]
+                    pub mod import {
+                        #[path = "."]
+                        pub mod deserializers {
+                            #[path = "."]
+                            pub mod artifacts {
+                                #[path = "."]
+                                pub mod gltf {
+                                    #[path = "."]
+                                    pub mod v2_0 {
+                                        #[path = "."]
+                                        pub mod any {
+                                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🎬️gltf/🔖️2.0/✳️any/🦀️.rs"]
+                                            mod component;
+                                            pub use component::*;
+                                        }
+                                    }
+                                }
+                                #[path = "."]
+                                pub mod stl {
+                                    #[path = "."]
+                                    pub mod v_ascii {
+                                        #[path = "."]
+                                        pub mod any {
+                                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🔺️stl/🔖️ascii/✳️any/🦀️.rs"]
+                                            mod component;
+                                            pub use component::*;
+                                        }
+                                    }
+                                }
+                                #[path = "."]
+                                pub mod obj {
+                                    #[path = "."]
+                                    pub mod v3_0 {
+                                        #[path = "."]
+                                        pub mod any {
+                                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🧊️obj/🔖️3.0/✳️any/🦀️.rs"]
+                                            mod component;
+                                            pub use component::*;
+                                        }
+                                    }
+                                }
+                                #[path = "."]
+                                pub mod ply {
+                                    #[path = "."]
+                                    pub mod v1_0 {
+                                        #[path = "."]
+                                        pub mod any {
+                                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🧱️ply/🔖️1.0/✳️any/🦀️.rs"]
+                                            mod component;
+                                            pub use component::*;
+                                        }
+                                    }
+                                }
+                                #[path = "."]
+                                pub mod las {
+                                    #[path = "."]
+                                    pub mod v1_0 {
+                                        #[path = "."]
+                                        pub mod any {
+                                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/☁️las/🔖️1.0/✳️any/🦀️.rs"]
+                                            mod component;
+                                            pub use component::*;
+                                        }
+                                    }
+                                }
+                                #[path = "."]
+                                pub mod dwg {
+                                    #[path = "."]
+                                    pub mod v_ac1024 {
+                                        #[path = "."]
+                                        pub mod any {
+                                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🖊️dwg/🔖️ac1024/✳️any/🦀️.rs"]
+                                            mod component;
+                                            pub use component::*;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    #[path = "."]
+                    pub mod export {
+                        #[path = "."]
+                        pub mod serializers {
+                            #[path = "."]
+                            pub mod artifacts {
+                                #[path = "."]
+                                pub mod gltf {
+                                    #[path = "."]
+                                    pub mod v2_0 {
+                                        #[path = "."]
+                                        pub mod any {
+                                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🎬️gltf/🔖️2.0/✳️any/🦀️.rs"]
+                                            mod component;
+                                            pub use component::*;
+                                        }
+                                    }
+                                }
+                                #[path = "."]
+                                pub mod stl {
+                                    #[path = "."]
+                                    pub mod v_ascii {
+                                        #[path = "."]
+                                        pub mod any {
+                                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🔺️stl/🔖️ascii/✳️any/🦀️.rs"]
+                                            mod component;
+                                            pub use component::*;
+                                        }
+                                    }
+                                }
+                                #[path = "."]
+                                pub mod obj {
+                                    #[path = "."]
+                                    pub mod v3_0 {
+                                        #[path = "."]
+                                        pub mod any {
+                                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🧊️obj/🔖️3.0/✳️any/🦀️.rs"]
+                                            mod component;
+                                            pub use component::*;
+                                        }
+                                    }
+                                }
+                                #[path = "."]
+                                pub mod ply {
+                                    #[path = "."]
+                                    pub mod v1_0 {
+                                        #[path = "."]
+                                        pub mod any {
+                                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🧱️ply/🔖️1.0/✳️any/🦀️.rs"]
+                                            mod component;
+                                            pub use component::*;
+                                        }
+                                    }
+                                }
+                                #[path = "."]
+                                pub mod las {
+                                    #[path = "."]
+                                    pub mod v1_0 {
+                                        #[path = "."]
+                                        pub mod any {
+                                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🚪️io/📤️export/🧵️serializers/🗿️artifacts/☁️las/🔖️1.0/✳️any/🦀️.rs"]
+                                            mod component;
+                                            pub use component::*;
+                                        }
+                                    }
+                                }
+                                #[path = "."]
+                                pub mod dwg {
+                                    #[path = "."]
+                                    pub mod v_ac1024 {
+                                        #[path = "."]
+                                        pub mod any {
+                                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🖊️dwg/🔖️ac1024/✳️any/🦀️.rs"]
+                                            mod component;
+                                            pub use component::*;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                #[path = "."]
+                pub mod schema {
+                    #[path = "🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🧬️schema/🦀️.rs"]
+                    mod component;
+                    pub use component::*;
+                    #[path = "."]
+                    pub mod snapshot {
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🧬️schema/📸️snapshot/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🧬️schema/📸️snapshot/💾️binary/🦀️.rs"]
+                        pub mod binary;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🧬️schema/📸️snapshot/📝️text/🦀️.rs"]
+                        pub mod text;
+                    }
+                    #[path = "."]
+                    pub mod diff {
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🧬️schema/🔺️diff/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🧬️schema/🔺️diff/💾️binary/🦀️.rs"]
+                        pub mod binary;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🧬️schema/🔺️diff/📝️text/🦀️.rs"]
+                        pub mod text;
+                    }
+                    #[path = "."]
+                    pub mod inferences {
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🧬️schema/💡️inferences/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                        #[path = "."]
+                        pub mod aabb {
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🧬️schema/💡️inferences/📦aabb/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                    }
+                    #[path = "."]
+                    pub mod mutations {
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🧬️schema/🧬️mutations/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🧬️schema/🧬️mutations/💾️binary/🦀️.rs"]
+                        pub mod binary;
+                        #[path = "."]
+                        pub mod create_mesh {
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🧬️schema/🧬️mutations/🕸️create-mesh/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🧬️schema/🧬️mutations/🕸️create-mesh/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🧬️schema/🧬️mutations/🕸️create-mesh/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod delete_mesh {
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🧬️schema/🧬️mutations/🗑️delete-mesh/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🧬️schema/🧬️mutations/🗑️delete-mesh/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🧬️schema/🧬️mutations/🗑️delete-mesh/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod create_primitive {
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🧬️schema/🧬️mutations/🔺create-primitive/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🧬️schema/🧬️mutations/🔺create-primitive/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🧬️schema/🧬️mutations/🔺create-primitive/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod delete_primitive {
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🧬️schema/🧬️mutations/✂️delete-primitive/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🧬️schema/🧬️mutations/✂️delete-primitive/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🧬️schema/🧬️mutations/✂️delete-primitive/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod set_primitive_topology {
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🧬️schema/🧬️mutations/🔀set-primitive-topology/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🧬️schema/🧬️mutations/🔀set-primitive-topology/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🧬️schema/🧬️mutations/🔀set-primitive-topology/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod replace_primitive_geometry {
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🧬️schema/🧬️mutations/📐replace-primitive-geometry/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🧬️schema/🧬️mutations/📐replace-primitive-geometry/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🧬️schema/🧬️mutations/📐replace-primitive-geometry/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod set_primitive_material {
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🧬️schema/🧬️mutations/🧲️set-primitive-material/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🧬️schema/🧬️mutations/🧲️set-primitive-material/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🧬️schema/🧬️mutations/🧲️set-primitive-material/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod create_material {
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🧬️schema/🧬️mutations/🎨create-material/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🧬️schema/🧬️mutations/🎨create-material/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🧬️schema/🧬️mutations/🎨create-material/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod delete_material {
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🧬️schema/🧬️mutations/🚮delete-material/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🧬️schema/🧬️mutations/🚮delete-material/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🧬️schema/🧬️mutations/🚮delete-material/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod change_material_base_color {
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🧬️schema/🧬️mutations/🌈change-material-base-color/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🧬️schema/🧬️mutations/🌈change-material-base-color/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🧬️schema/🧬️mutations/🌈change-material-base-color/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod change_material_metallic {
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🧬️schema/🧬️mutations/⚙️change-material-metallic/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🧬️schema/🧬️mutations/⚙️change-material-metallic/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🧬️schema/🧬️mutations/⚙️change-material-metallic/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod change_material_roughness {
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🧬️schema/🧬️mutations/🧱change-material-roughness/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🧬️schema/🧬️mutations/🧱change-material-roughness/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🧬️schema/🧬️mutations/🧱change-material-roughness/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod create_texture {
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🧬️schema/🧬️mutations/🖼️create-texture/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🧬️schema/🧬️mutations/🖼️create-texture/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🧬️schema/🧬️mutations/🖼️create-texture/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod delete_texture {
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🧬️schema/🧬️mutations/🕳️delete-texture/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🧬️schema/🧬️mutations/🕳️delete-texture/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🧬️schema/🧬️mutations/🕳️delete-texture/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod change_texture_mime {
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🧬️schema/🧬️mutations/🏷️change-texture-mime/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🧬️schema/🧬️mutations/🏷️change-texture-mime/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🧬️schema/🧬️mutations/🏷️change-texture-mime/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod replace_texture_bytes {
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🧬️schema/🧬️mutations/📀replace-texture-bytes/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🧬️schema/🧬️mutations/📀replace-texture-bytes/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🧬️schema/🧬️mutations/📀replace-texture-bytes/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod move_vertex {
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🧬️schema/🧬️mutations/📍move-vertex/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🧬️schema/🧬️mutations/📍move-vertex/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🧬️schema/🧬️mutations/📍move-vertex/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🧬️schema/🧬️mutations/📝️text/🦀️.rs"]
+                        pub mod text;
+                    }
+                }
+                #[path = "."]
+                pub mod examples {
+                    #[path = "."]
+                    pub mod cube {
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/📚️examples/🧊️cube/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+            #[path = "."]
+            pub mod model {
+                #[path = "."]
+                pub mod io {
+                    #[path = "🏅️standards/🔖️v1/🪆️subsets/🏛️model/🚪️io/🦀️.rs"]
+                    mod component;
+                    pub use component::*;
+                    #[path = "."]
+                    pub mod import {
+                        #[path = "."]
+                        pub mod deserializers {
+                            #[path = "."]
+                            pub mod artifacts {
+                                #[path = "."]
+                                pub mod ifc {
+                                    #[path = "."]
+                                    pub mod v4 {
+                                        #[path = "."]
+                                        pub mod any {
+                                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🏛️model/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🏗️ifc/🔖️4/✳️any/🦀️.rs"]
+                                            mod component;
+                                            pub use component::*;
+                                        }
+                                    }
+                                }
+                                #[path = "."]
+                                pub mod bcf {
+                                    #[path = "."]
+                                    pub mod v2_1 {
+                                        #[path = "."]
+                                        pub mod any {
+                                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🏛️model/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/💬️bcf/🔖️2.1/✳️any/🦀️.rs"]
+                                            mod component;
+                                            pub use component::*;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    #[path = "."]
+                    pub mod export {
+                        #[path = "."]
+                        pub mod serializers {
+                            #[path = "."]
+                            pub mod artifacts {
+                                #[path = "."]
+                                pub mod ifc {
+                                    #[path = "."]
+                                    pub mod v4 {
+                                        #[path = "."]
+                                        pub mod any {
+                                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🏛️model/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🏗️ifc/🔖️4/✳️any/🦀️.rs"]
+                                            mod component;
+                                            pub use component::*;
+                                        }
+                                    }
+                                }
+                                #[path = "."]
+                                pub mod bcf {
+                                    #[path = "."]
+                                    pub mod v2_1 {
+                                        #[path = "."]
+                                        pub mod any {
+                                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🏛️model/🚪️io/📤️export/🧵️serializers/🗿️artifacts/💬️bcf/🔖️2.1/✳️any/🦀️.rs"]
+                                            mod component;
+                                            pub use component::*;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                #[path = "."]
+                pub mod schema {
+                    #[path = "🏅️standards/🔖️v1/🪆️subsets/🏛️model/🧬️schema/🦀️.rs"]
+                    mod component;
+                    pub use component::*;
+                    #[path = "."]
+                    pub mod snapshot {
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🏛️model/🧬️schema/📸️snapshot/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🏛️model/🧬️schema/📸️snapshot/💾️binary/🦀️.rs"]
+                        pub mod binary;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🏛️model/🧬️schema/📸️snapshot/📝️text/🦀️.rs"]
+                        pub mod text;
+                    }
+                    #[path = "."]
+                    pub mod diff {
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🏛️model/🧬️schema/🔺️diff/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🏛️model/🧬️schema/🔺️diff/💾️binary/🦀️.rs"]
+                        pub mod binary;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🏛️model/🧬️schema/🔺️diff/📝️text/🦀️.rs"]
+                        pub mod text;
+                    }
+                    #[path = "."]
+                    pub mod inferences {
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🏛️model/🧬️schema/💡️inferences/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🏛️model/🧬️schema/💡️inferences/💾️binary/🦀️.rs"]
+                        pub mod binary;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🏛️model/🧬️schema/💡️inferences/📝️text/🦀️.rs"]
+                        pub mod text;
+                        #[path = "."]
+                        pub mod bounds {
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🏛️model/🧬️schema/💡️inferences/📦bounds/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                    }
+                    #[path = "."]
+                    pub mod mutations {
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🏛️model/🧬️schema/🧬️mutations/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🏛️model/🧬️schema/🧬️mutations/💾️binary/🦀️.rs"]
+                        pub mod binary;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🏛️model/🧬️schema/🧬️mutations/📝️text/🦀️.rs"]
+                        pub mod text;
+                    }
+                }
+            }
+            #[path = "."]
+            pub mod value {
+                #[path = "."]
+                pub mod io {
+                    #[path = "🏅️standards/🔖️v1/🪆️subsets/🔢️value/🚪️io/🦀️.rs"]
+                    mod component;
+                    pub use component::*;
+                    #[path = "."]
+                    pub mod import {
+                        #[path = "."]
+                        pub mod deserializers {
+                            #[path = "."]
+                            pub mod artifacts {
+                                #[path = "."]
+                                pub mod json {
+                                    #[path = "."]
+                                    pub mod v_rfc8259 {
+                                        #[path = "."]
+                                        pub mod any {
+                                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🔢️value/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🔣️json/🔖️rfc8259/✳️any/🦀️.rs"]
+                                            mod component;
+                                            pub use component::*;
+                                        }
+                                    }
+                                }
+                                #[path = "."]
+                                pub mod xml {
+                                    #[path = "."]
+                                    pub mod v1_0 {
+                                        #[path = "."]
+                                        pub mod any {
+                                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🔢️value/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📰️xml/🔖️1.0/✳️any/🦀️.rs"]
+                                            mod component;
+                                            pub use component::*;
+                                        }
+                                    }
+                                }
+                                #[path = "."]
+                                pub mod csv {
+                                    #[path = "."]
+                                    pub mod v_rfc4180 {
+                                        #[path = "."]
+                                        pub mod any {
+                                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🔢️value/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📊️csv/🔖️rfc4180/✳️any/🦀️.rs"]
+                                            mod component;
+                                            pub use component::*;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    #[path = "."]
+                    pub mod export {
+                        #[path = "."]
+                        pub mod serializers {
+                            #[path = "."]
+                            pub mod artifacts {
+                                #[path = "."]
+                                pub mod json {
+                                    #[path = "."]
+                                    pub mod v_rfc8259 {
+                                        #[path = "."]
+                                        pub mod any {
+                                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🔢️value/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🔣️json/🔖️rfc8259/✳️any/🦀️.rs"]
+                                            mod component;
+                                            pub use component::*;
+                                        }
+                                    }
+                                }
+                                #[path = "."]
+                                pub mod xml {
+                                    #[path = "."]
+                                    pub mod v1_0 {
+                                        #[path = "."]
+                                        pub mod any {
+                                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🔢️value/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📰️xml/🔖️1.0/✳️any/🦀️.rs"]
+                                            mod component;
+                                            pub use component::*;
+                                        }
+                                    }
+                                }
+                                #[path = "."]
+                                pub mod csv {
+                                    #[path = "."]
+                                    pub mod v_rfc4180 {
+                                        #[path = "."]
+                                        pub mod any {
+                                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🔢️value/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📊️csv/🔖️rfc4180/✳️any/🦀️.rs"]
+                                            mod component;
+                                            pub use component::*;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                #[path = "."]
+                pub mod schema {
+                    #[path = "🏅️standards/🔖️v1/🪆️subsets/🔢️value/🧬️schema/🦀️.rs"]
+                    mod component;
+                    pub use component::*;
+                    #[path = "🏅️standards/🔖️v1/🪆️subsets/🔢️value/🧬️schema/➕️algebra-internals/🦀️.rs"]
+                    pub mod algebra_internals;
+                    #[path = "🏅️standards/🔖️v1/🪆️subsets/🔢️value/🧬️schema/🌫️fuzzy-internals/🦀️.rs"]
+                    pub mod fuzzy_internals;
+                    #[path = "."]
+                    pub mod snapshot {
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🔢️value/🧬️schema/📸️snapshot/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🔢️value/🧬️schema/📸️snapshot/💾️binary/🦀️.rs"]
+                        pub mod binary;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🔢️value/🧬️schema/📸️snapshot/📝️text/🦀️.rs"]
+                        pub mod text;
+                    }
+                    #[path = "."]
+                    pub mod diff {
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🔢️value/🧬️schema/🔺️diff/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🔢️value/🧬️schema/🔺️diff/💾️binary/🦀️.rs"]
+                        pub mod binary;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🔢️value/🧬️schema/🔺️diff/📝️text/🦀️.rs"]
+                        pub mod text;
+                    }
+                    #[path = "."]
+                    pub mod inferences {
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🔢️value/🧬️schema/💡️inferences/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🔢️value/🧬️schema/💡️inferences/💾️binary/🦀️.rs"]
+                        pub mod binary;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🔢️value/🧬️schema/💡️inferences/📝️text/🦀️.rs"]
+                        pub mod text;
+                        #[path = "."]
+                        pub mod census {
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🔢️value/🧬️schema/💡️inferences/🌳census/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                    }
+                    #[path = "."]
+                    pub mod mutations {
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🔢️value/🧬️schema/🧬️mutations/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🔢️value/🧬️schema/🧬️mutations/💾️binary/🦀️.rs"]
+                        pub mod binary;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🔢️value/🧬️schema/🧬️mutations/📝️text/🦀️.rs"]
+                        pub mod text;
+                    }
+                }
+            }
+            #[path = "."]
+            pub mod presentation {
+                #[path = "."]
+                pub mod io {
+                    #[path = "🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🚪️io/🦀️.rs"]
+                    mod component;
+                    pub use component::*;
+                    #[path = "."]
+                    pub mod import {
+                        #[path = "."]
+                        pub mod deserializers {
+                            #[path = "."]
+                            pub mod artifacts {
+                                #[path = "."]
+                                pub mod pptx {
+                                    #[path = "."]
+                                    pub mod v_ecma_376 {
+                                        #[path = "."]
+                                        pub mod any {
+                                            #[path = "🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🎞️pptx/🔖️ecma-376/✳️any/🦀️.rs"]
+                                            mod component;
+                                            pub use component::*;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    #[path = "."]
+                    pub mod export {
+                        #[path = "."]
+                        pub mod serializers {
+                            #[path = "."]
+                            pub mod artifacts {
+                                #[path = "."]
+                                pub mod pptx {
+                                    #[path = "."]
+                                    pub mod v_ecma_376 {
+                                        #[path = "."]
+                                        pub mod any {
+                                            #[path = "🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🎞️pptx/🔖️ecma-376/✳️any/🦀️.rs"]
+                                            mod component;
+                                            pub use component::*;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                #[path = "."]
+                pub mod schema {
+                    #[path = "🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🧬️schema/🦀️.rs"]
+                    mod component;
+                    pub use component::*;
+                    #[path = "."]
+                    pub mod snapshot {
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🧬️schema/📸️snapshot/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🧬️schema/📸️snapshot/💾️binary/🦀️.rs"]
+                        pub mod binary;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🧬️schema/📸️snapshot/📝️text/🦀️.rs"]
+                        pub mod text;
+                    }
+                    #[path = "."]
+                    pub mod diff {
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🧬️schema/🔺️diff/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🧬️schema/🔺️diff/💾️binary/🦀️.rs"]
+                        pub mod binary;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🧬️schema/🔺️diff/📝️text/🦀️.rs"]
+                        pub mod text;
+                    }
+                    #[path = "."]
+                    pub mod inferences {
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🧬️schema/💡️inferences/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🧬️schema/💡️inferences/💾️binary/🦀️.rs"]
+                        pub mod binary;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🧬️schema/💡️inferences/📝️text/🦀️.rs"]
+                        pub mod text;
+                        #[path = "."]
+                        pub mod outline {
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🧬️schema/💡️inferences/🧾outline/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                    }
+                    #[path = "."]
+                    pub mod mutations {
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🧬️schema/🧬️mutations/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🧬️schema/🧬️mutations/💾️binary/🦀️.rs"]
+                        pub mod binary;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🧬️schema/🧬️mutations/📝️text/🦀️.rs"]
+                        pub mod text;
+                    }
+                }
+            }
+            #[path = "."]
+            pub mod video {
+                #[path = "🏅️standards/🔖️v1/🪆️subsets/🎬️video/🚪️io/🦀️.rs"]
+                pub mod io;
+                #[path = "."]
+                pub mod schema {
+                    #[path = "🏅️standards/🔖️v1/🪆️subsets/🎬️video/🧬️schema/🦀️.rs"]
+                    mod component;
+                    pub use component::*;
+                    #[path = "."]
+                    pub mod snapshot {
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🎬️video/🧬️schema/📸️snapshot/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🎬️video/🧬️schema/📸️snapshot/💾️binary/🦀️.rs"]
+                        pub mod binary;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🎬️video/🧬️schema/📸️snapshot/📝️text/🦀️.rs"]
+                        pub mod text;
+                    }
+                    #[path = "."]
+                    pub mod diff {
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🎬️video/🧬️schema/🔺️diff/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🎬️video/🧬️schema/🔺️diff/💾️binary/🦀️.rs"]
+                        pub mod binary;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🎬️video/🧬️schema/🔺️diff/📝️text/🦀️.rs"]
+                        pub mod text;
+                    }
+                    #[path = "."]
+                    pub mod inferences {
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🎬️video/🧬️schema/💡️inferences/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🎬️video/🧬️schema/💡️inferences/💾️binary/🦀️.rs"]
+                        pub mod binary;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🎬️video/🧬️schema/💡️inferences/📝️text/🦀️.rs"]
+                        pub mod text;
+                        #[path = "."]
+                        pub mod duration {
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🎬️video/🧬️schema/💡️inferences/⏱️duration/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                    }
+                    #[path = "."]
+                    pub mod mutations {
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🎬️video/🧬️schema/🧬️mutations/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🎬️video/🧬️schema/🧬️mutations/💾️binary/🦀️.rs"]
+                        pub mod binary;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🎬️video/🧬️schema/🧬️mutations/📝️text/🦀️.rs"]
+                        pub mod text;
+                    }
+                }
+            }
+            #[path = "."]
+            pub mod flow {
+                #[path = "."]
+                pub mod io {
+                    #[path = "🏅️standards/🔖️v1/🪆️subsets/🌊️flow/🚪️io/🦀️.rs"]
+                    mod component;
+                    pub use component::*;
+                    #[path = "."]
+                    pub mod import {
+                        #[path = "."]
+                        pub mod deserializers {
+                            #[path = "."]
+                            pub mod artifacts {
+                                #[path = "."]
+                                pub mod json {
+                                    #[path = "."]
+                                    pub mod v_rfc8259 {
+                                        #[path = "."]
+                                        pub mod any {
+                                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🌊️flow/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🔣️json/🔖️rfc8259/✳️any/🦀️.rs"]
+                                            mod component;
+                                            pub use component::*;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    #[path = "."]
+                    pub mod export {
+                        #[path = "."]
+                        pub mod serializers {
+                            #[path = "."]
+                            pub mod artifacts {
+                                #[path = "."]
+                                pub mod json {
+                                    #[path = "."]
+                                    pub mod v_rfc8259 {
+                                        #[path = "."]
+                                        pub mod any {
+                                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🌊️flow/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🔣️json/🔖️rfc8259/✳️any/🦀️.rs"]
+                                            mod component;
+                                            pub use component::*;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                #[path = "."]
+                pub mod schema {
+                    #[path = "🏅️standards/🔖️v1/🪆️subsets/🌊️flow/🧬️schema/🦀️.rs"]
+                    mod component;
+                    pub use component::*;
+                    #[path = "."]
+                    pub mod snapshot {
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🌊️flow/🧬️schema/📸️snapshot/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🌊️flow/🧬️schema/📸️snapshot/💾️binary/🦀️.rs"]
+                        pub mod binary;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🌊️flow/🧬️schema/📸️snapshot/📝️text/🦀️.rs"]
+                        pub mod text;
+                    }
+                    #[path = "."]
+                    pub mod diff {
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🌊️flow/🧬️schema/🔺️diff/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🌊️flow/🧬️schema/🔺️diff/💾️binary/🦀️.rs"]
+                        pub mod binary;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🌊️flow/🧬️schema/🔺️diff/📝️text/🦀️.rs"]
+                        pub mod text;
+                    }
+                    #[path = "."]
+                    pub mod inferences {
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🌊️flow/🧬️schema/💡️inferences/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🌊️flow/🧬️schema/💡️inferences/💾️binary/🦀️.rs"]
+                        pub mod binary;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🌊️flow/🧬️schema/💡️inferences/📝️text/🦀️.rs"]
+                        pub mod text;
+                        #[path = "."]
+                        pub mod topology {
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🌊️flow/🧬️schema/💡️inferences/🧭topology/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                    }
+                    #[path = "."]
+                    pub mod mutations {
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🌊️flow/🧬️schema/🧬️mutations/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🌊️flow/🧬️schema/🧬️mutations/💾️binary/🦀️.rs"]
+                        pub mod binary;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🌊️flow/🧬️schema/🧬️mutations/📝️text/🦀️.rs"]
+                        pub mod text;
+                    }
+                }
+            }
+            #[path = "."]
+            pub mod text {
+                #[path = "🏅️standards/🔖️v1/🪆️subsets/🔤️text/🚪️io/🦀️.rs"]
+                pub mod io;
+                #[path = "."]
+                pub mod schema {
+                    #[path = "🏅️standards/🔖️v1/🪆️subsets/🔤️text/🧬️schema/🦀️.rs"]
+                    mod component;
+                    pub use component::*;
+                    #[path = "."]
+                    pub mod snapshot {
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🔤️text/🧬️schema/📸️snapshot/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🔤️text/🧬️schema/📸️snapshot/💾️binary/🦀️.rs"]
+                        pub mod binary;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🔤️text/🧬️schema/📸️snapshot/📝️text/🦀️.rs"]
+                        pub mod text;
+                    }
+                    #[path = "."]
+                    pub mod diff {
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🔤️text/🧬️schema/🔺️diff/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🔤️text/🧬️schema/🔺️diff/💾️binary/🦀️.rs"]
+                        pub mod binary;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🔤️text/🧬️schema/🔺️diff/📝️text/🦀️.rs"]
+                        pub mod text;
+                    }
+                    #[path = "."]
+                    pub mod inferences {
+                        #[path = "."]
+                        pub mod profile {
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🔤️text/🧬️schema/💡️inferences/📊profile/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🔤️text/🧬️schema/💡️inferences/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🔤️text/🧬️schema/💡️inferences/💾️binary/🦀️.rs"]
+                        pub mod binary;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🔤️text/🧬️schema/💡️inferences/📝️text/🦀️.rs"]
+                        pub mod text;
+                    }
+                    #[path = "."]
+                    pub mod mutations {
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🔤️text/🧬️schema/🧬️mutations/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🔤️text/🧬️schema/🧬️mutations/💾️binary/🦀️.rs"]
+                        pub mod binary;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🔤️text/🧬️schema/🧬️mutations/📝️text/🦀️.rs"]
+                        pub mod text;
+                        #[path = "."]
+                        pub mod insert_run {
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🔤️text/🧬️schema/🧬️mutations/📥insert-run/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🔤️text/🧬️schema/🧬️mutations/📥insert-run/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🔤️text/🧬️schema/🧬️mutations/📥insert-run/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod remove_run {
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🔤️text/🧬️schema/🧬️mutations/🗑️remove-run/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🔤️text/🧬️schema/🧬️mutations/🗑️remove-run/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🔤️text/🧬️schema/🧬️mutations/🗑️remove-run/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod edit_run {
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🔤️text/🧬️schema/🧬️mutations/✏️edit-run/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🔤️text/🧬️schema/🧬️mutations/✏️edit-run/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🔤️text/🧬️schema/🧬️mutations/✏️edit-run/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod change_run_language {
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🔤️text/🧬️schema/🧬️mutations/🌐change-run-language/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🔤️text/🧬️schema/🧬️mutations/🌐change-run-language/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🔤️text/🧬️schema/🧬️mutations/🌐change-run-language/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod reorder_runs {
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🔤️text/🧬️schema/🧬️mutations/🔀reorder-runs/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🔤️text/🧬️schema/🧬️mutations/🔀reorder-runs/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🔤️text/🧬️schema/🧬️mutations/🔀reorder-runs/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod add_mark {
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🔤️text/🧬️schema/🧬️mutations/➕add-mark/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🔤️text/🧬️schema/🧬️mutations/➕add-mark/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🔤️text/🧬️schema/🧬️mutations/➕add-mark/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod remove_mark {
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🔤️text/🧬️schema/🧬️mutations/➖remove-mark/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🔤️text/🧬️schema/🧬️mutations/➖remove-mark/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🔤️text/🧬️schema/🧬️mutations/➖remove-mark/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                    }
+                }
+            }
+            #[path = "."]
+            pub mod table {
+                #[path = "🏅️standards/🔖️v1/🪆️subsets/📊️table/🚪️io/🦀️.rs"]
+                pub mod io;
+                #[path = "."]
+                pub mod schema {
+                    #[path = "🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/🦀️.rs"]
+                    mod component;
+                    pub use component::*;
+                    #[path = "🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/🧭️causal-internals/🦀️.rs"]
+                    pub mod causal_internals;
+                    #[path = "🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/🌀️entropy-internals/🦀️.rs"]
+                    pub mod entropy_internals;
+                    #[path = "🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/🎲️probability-internals/🦀️.rs"]
+                    pub mod probability_internals;
+                    #[path = "🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/📊️statistics-internals/🦀️.rs"]
+                    pub mod statistics_internals;
+                    #[path = "🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/📋️tabular-internals/🦀️.rs"]
+                    pub mod tabular_internals;
+                    #[path = "."]
+                    pub mod snapshot {
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/📸️snapshot/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/📸️snapshot/💾️binary/🦀️.rs"]
+                        pub mod binary;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/📸️snapshot/📝️text/🦀️.rs"]
+                        pub mod text;
+                    }
+                    #[path = "."]
+                    pub mod diff {
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/🔺️diff/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/🔺️diff/💾️binary/🦀️.rs"]
+                        pub mod binary;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/🔺️diff/📝️text/🦀️.rs"]
+                        pub mod text;
+                    }
+                    #[path = "."]
+                    pub mod inferences {
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/💡️inferences/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/💡️inferences/💾️binary/🦀️.rs"]
+                        pub mod binary;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/💡️inferences/📝️text/🦀️.rs"]
+                        pub mod text;
+                        #[path = "."]
+                        pub mod shape {
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/💡️inferences/📐shape/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod moments {
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/💡️inferences/📊moments/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod entropy {
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/💡️inferences/🎲entropy/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                    }
+                    #[path = "."]
+                    pub mod mutations {
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/🧬️mutations/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/🧬️mutations/💾️binary/🦀️.rs"]
+                        pub mod binary;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/🧬️mutations/📝️text/🦀️.rs"]
+                        pub mod text;
+                        #[path = "."]
+                        pub mod create_column {
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/🧬️mutations/🏗️create-column/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/🧬️mutations/🏗️create-column/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/🧬️mutations/🏗️create-column/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod delete_column {
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/🧬️mutations/🗑️delete-column/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/🧬️mutations/🗑️delete-column/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/🧬️mutations/🗑️delete-column/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod rename_column {
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/🧬️mutations/🏷️rename-column/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/🧬️mutations/🏷️rename-column/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/🧬️mutations/🏷️rename-column/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod reorder_columns {
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/🧬️mutations/🔀reorder-columns/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/🧬️mutations/🔀reorder-columns/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/🧬️mutations/🔀reorder-columns/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod insert_row {
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/🧬️mutations/📥insert-row/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/🧬️mutations/📥insert-row/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/🧬️mutations/📥insert-row/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod remove_row {
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/🧬️mutations/➖remove-row/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/🧬️mutations/➖remove-row/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/🧬️mutations/➖remove-row/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod reorder_rows {
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/🧬️mutations/🔃reorder-rows/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/🧬️mutations/🔃reorder-rows/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/🧬️mutations/🔃reorder-rows/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod edit_cell {
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/🧬️mutations/✏️edit-cell/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/🧬️mutations/✏️edit-cell/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/🧬️mutations/✏️edit-cell/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                    }
+                }
+                #[path = "."]
+                pub mod examples {
+                    #[path = "."]
+                    pub mod sheet {
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/📊️table/📚️examples/📃️sheet/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+            #[path = "."]
+            pub mod graph {
+                #[path = "🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🚪️io/🦀️.rs"]
+                pub mod io;
+                #[path = "."]
+                pub mod schema {
+                    #[path = "🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/🦀️.rs"]
+                    mod component;
+                    pub use component::*;
+                    #[path = "🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/🔧️operators-internals/🦀️.rs"]
+                    pub mod operators_internals;
+                    #[path = "🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/🚶️traversal-internals/🦀️.rs"]
+                    pub mod traversal_internals;
+                    #[path = "."]
+                    pub mod normal_internals {
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/➕️normal-internals/➡️directed/🦀️.rs"]
+                        pub mod directed;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/➕️normal-internals/↔️undirected/🦀️.rs"]
+                        pub mod undirected;
+                    }
+                    #[path = "."]
+                    pub mod ports_internals {
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/🔌️ports-internals/↔️undirected/🦀️.rs"]
+                        pub mod undirected;
+                        #[path = "."]
+                        pub mod directed {
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/🔌️ports-internals/➡️directed/➕️normal/🦀️.rs"]
+                            pub mod normal;
+                        }
+                    }
+                    #[path = "."]
+                    pub mod snapshot {
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/📸️snapshot/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/📸️snapshot/💾️binary/🦀️.rs"]
+                        pub mod binary;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/📸️snapshot/📝️text/🦀️.rs"]
+                        pub mod text;
+                    }
+                    #[path = "."]
+                    pub mod diff {
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/🔺️diff/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/🔺️diff/💾️binary/🦀️.rs"]
+                        pub mod binary;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/🔺️diff/📝️text/🦀️.rs"]
+                        pub mod text;
+                    }
+                    #[path = "."]
+                    pub mod inferences {
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/💡️inferences/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/💡️inferences/💾️binary/🦀️.rs"]
+                        pub mod binary;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/💡️inferences/📝️text/🦀️.rs"]
+                        pub mod text;
+                        #[path = "."]
+                        pub mod topology {
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/💡️inferences/🧭topology/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod connectivity {
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/💡️inferences/🕸️connectivity/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                    }
+                    #[path = "."]
+                    pub mod mutations {
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/💾️binary/🦀️.rs"]
+                        pub mod binary;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/📝️text/🦀️.rs"]
+                        pub mod text;
+                        #[path = "."]
+                        pub mod create_node {
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/🏗️create-node/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/🏗️create-node/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/🏗️create-node/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod delete_node {
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/🗑️delete-node/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/🗑️delete-node/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/🗑️delete-node/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod change_node_kind {
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/🔧change-node-kind/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/🔧change-node-kind/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/🔧change-node-kind/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod change_node_label {
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/🖍️change-node-label/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/🖍️change-node-label/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/🖍️change-node-label/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod move_node {
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/📍move-node/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/📍move-node/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/📍move-node/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod add_node_port {
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/🔌add-node-port/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/🔌add-node-port/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/🔌add-node-port/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod remove_node_port {
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/🔚remove-node-port/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/🔚remove-node-port/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/🔚remove-node-port/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod add_node_property {
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/➕add-node-property/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/➕add-node-property/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/➕add-node-property/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod remove_node_property {
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/➖remove-node-property/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/➖remove-node-property/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/➖remove-node-property/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod create_edge {
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/🌉️create-edge/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/🌉️create-edge/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/🌉️create-edge/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod delete_edge {
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/✂️delete-edge/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/✂️delete-edge/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/✂️delete-edge/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                    }
+                }
+                #[path = "."]
+                pub mod examples {
+                    #[path = "."]
+                    pub mod wires {
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🕸️graph/📚️examples/🕸️wires/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+            #[path = "."]
+            pub mod object {
+                #[path = "🏅️standards/🔖️v1/🪆️subsets/📦️object/🚪️io/🦀️.rs"]
+                pub mod io;
+                #[path = "."]
+                pub mod schema {
+                    #[path = "🏅️standards/🔖️v1/🪆️subsets/📦️object/🧬️schema/🦀️.rs"]
+                    mod component;
+                    pub use component::*;
+                    #[path = "."]
+                    pub mod snapshot {
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/📦️object/🧬️schema/📸️snapshot/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/📦️object/🧬️schema/📸️snapshot/💾️binary/🦀️.rs"]
+                        pub mod binary;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/📦️object/🧬️schema/📸️snapshot/📝️text/🦀️.rs"]
+                        pub mod text;
+                    }
+                    #[path = "."]
+                    pub mod diff {
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/📦️object/🧬️schema/🔺️diff/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/📦️object/🧬️schema/🔺️diff/💾️binary/🦀️.rs"]
+                        pub mod binary;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/📦️object/🧬️schema/🔺️diff/📝️text/🦀️.rs"]
+                        pub mod text;
+                    }
+                    #[path = "."]
+                    pub mod inferences {
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/📦️object/🧬️schema/💡️inferences/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/📦️object/🧬️schema/💡️inferences/💾️binary/🦀️.rs"]
+                        pub mod binary;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/📦️object/🧬️schema/💡️inferences/📝️text/🦀️.rs"]
+                        pub mod text;
+                        #[path = "."]
+                        pub mod composition {
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/📦️object/🧬️schema/💡️inferences/🧩composition/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                    }
+                    #[path = "."]
+                    pub mod mutations {
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/📦️object/🧬️schema/🧬️mutations/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/📦️object/🧬️schema/🧬️mutations/💾️binary/🦀️.rs"]
+                        pub mod binary;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/📦️object/🧬️schema/🧬️mutations/📝️text/🦀️.rs"]
+                        pub mod text;
+                        #[path = "."]
+                        pub mod move_object {
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/📦️object/🧬️schema/🧬️mutations/🚚move-object/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/📦️object/🧬️schema/🧬️mutations/🚚move-object/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/📦️object/🧬️schema/🧬️mutations/🚚move-object/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod rotate_object {
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/📦️object/🧬️schema/🧬️mutations/🔄rotate-object/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/📦️object/🧬️schema/🧬️mutations/🔄rotate-object/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/📦️object/🧬️schema/🧬️mutations/🔄rotate-object/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod scale_object {
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/📦️object/🧬️schema/🧬️mutations/📏scale-object/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/📦️object/🧬️schema/🧬️mutations/📏scale-object/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/📦️object/🧬️schema/🧬️mutations/📏scale-object/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod create_brep {
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/📦️object/🧬️schema/🧬️mutations/🧱create-brep/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/📦️object/🧬️schema/🧬️mutations/🧱create-brep/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/📦️object/🧬️schema/🧬️mutations/🧱create-brep/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod delete_brep {
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/📦️object/🧬️schema/🧬️mutations/💥delete-brep/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/📦️object/🧬️schema/🧬️mutations/💥delete-brep/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/📦️object/🧬️schema/🧬️mutations/💥delete-brep/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod create_mesh {
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/📦️object/🧬️schema/🧬️mutations/🕸️create-mesh/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/📦️object/🧬️schema/🧬️mutations/🕸️create-mesh/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/📦️object/🧬️schema/🧬️mutations/🕸️create-mesh/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod delete_mesh {
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/📦️object/🧬️schema/🧬️mutations/🧨delete-mesh/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/📦️object/🧬️schema/🧬️mutations/🧨delete-mesh/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/📦️object/🧬️schema/🧬️mutations/🧨delete-mesh/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod create_properties {
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/📦️object/🧬️schema/🧬️mutations/🏷️create-properties/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/📦️object/🧬️schema/🧬️mutations/🏷️create-properties/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/📦️object/🧬️schema/🧬️mutations/🏷️create-properties/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod delete_properties {
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/📦️object/🧬️schema/🧬️mutations/🚫delete-properties/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/📦️object/🧬️schema/🧬️mutations/🚫delete-properties/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/📦️object/🧬️schema/🧬️mutations/🚫delete-properties/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                    }
+                }
+                #[path = "."]
+                pub mod examples {
+                    #[path = "."]
+                    pub mod crate_ {
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/📦️object/📚️examples/📦️crate/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+            #[path = "."]
+            pub mod kit {
+                #[path = "🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🚪️io/🦀️.rs"]
+                pub mod io;
+                #[path = "."]
+                pub mod schema {
+                    #[path = "🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/🦀️.rs"]
+                    mod component;
+                    pub use component::*;
+                    #[path = "."]
+                    pub mod snapshot {
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/📸️snapshot/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/📸️snapshot/💾️binary/🦀️.rs"]
+                        pub mod binary;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/📸️snapshot/📝️text/🦀️.rs"]
+                        pub mod text;
+                    }
+                    #[path = "."]
+                    pub mod diff {
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/🔺️diff/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/🔺️diff/💾️binary/🦀️.rs"]
+                        pub mod binary;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/🔺️diff/📝️text/🦀️.rs"]
+                        pub mod text;
+                    }
+                    #[path = "."]
+                    pub mod inferences {
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/💡️inferences/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/💡️inferences/💾️binary/🦀️.rs"]
+                        pub mod binary;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/💡️inferences/📝️text/🦀️.rs"]
+                        pub mod text;
+                        #[path = "."]
+                        pub mod entries {
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/💡️inferences/🗃️entries/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                    }
+                    #[path = "."]
+                    pub mod mutations {
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/🧬️mutations/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/🧬️mutations/💾️binary/🦀️.rs"]
+                        pub mod binary;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/🧬️mutations/📝️text/🦀️.rs"]
+                        pub mod text;
+                        #[path = "."]
+                        pub mod create_object {
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/🧬️mutations/🏗️create-object/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/🧬️mutations/🏗️create-object/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/🧬️mutations/🏗️create-object/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod delete_object {
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/🧬️mutations/🪓delete-object/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/🧬️mutations/🪓delete-object/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/🧬️mutations/🪓delete-object/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod create_model {
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/🧬️mutations/🏛️create-model/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/🧬️mutations/🏛️create-model/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/🧬️mutations/🏛️create-model/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod delete_model {
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/🧬️mutations/💣delete-model/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/🧬️mutations/💣delete-model/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/🧬️mutations/💣delete-model/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod create_properties {
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/🧬️mutations/🏷️create-properties/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/🧬️mutations/🏷️create-properties/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/🧬️mutations/🏷️create-properties/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod delete_properties {
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/🧬️mutations/🚫delete-properties/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/🧬️mutations/🚫delete-properties/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/🧬️mutations/🚫delete-properties/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod bind_representation {
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/🧬️mutations/🪢️bind-representation/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/🧬️mutations/🪢️bind-representation/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/🧬️mutations/🪢️bind-representation/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod unbind_representation {
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/🧬️mutations/✂️unbind-representation/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/🧬️mutations/✂️unbind-representation/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/🧬️mutations/✂️unbind-representation/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod change_representation_pin {
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/🧬️mutations/📌change-representation-pin/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/🧬️mutations/📌change-representation-pin/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/🧬️mutations/📌change-representation-pin/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod add_type {
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/🧬️mutations/➕add-type/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/🧬️mutations/➕add-type/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/🧬️mutations/➕add-type/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod remove_type {
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/🧬️mutations/➖remove-type/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/🧬️mutations/➖remove-type/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/🧬️mutations/➖remove-type/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod rename_type {
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/🧬️mutations/✏️rename-type/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/🧬️mutations/✏️rename-type/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/🧬️mutations/✏️rename-type/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod add_design {
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/🧬️mutations/🆕add-design/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/🧬️mutations/🆕add-design/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/🧬️mutations/🆕add-design/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod remove_design {
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/🧬️mutations/🗑️remove-design/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/🧬️mutations/🗑️remove-design/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/🧬️mutations/🗑️remove-design/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod edit_design {
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/🧬️mutations/🖊️edit-design/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/🧬️mutations/🖊️edit-design/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/🧬️mutations/🖊️edit-design/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                    }
+                }
+                #[path = "."]
+                pub mod examples {
+                    #[path = "."]
+                    pub mod furniture {
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🧰️kit/📚️examples/🪑️furniture/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+        }
+    }
+}
+#[path = "."]
+pub mod examples {
+    #[path = "🏅️standards/🔖️v1/🪆️subsets/✉️base/📚️examples/🎬️demo/🦀️.rs"]
+    pub mod demo;
+    #[path = "🏅️standards/🔖️v1/🪆️subsets/✉️base/📚️examples/📃️note/🦀️.rs"]
+    pub mod note;
+}
+
+#[cfg(feature = "component-app-assembly")]
+#[path = "."]
+pub mod editor {
+    #[path = "."]
+    pub mod semio_animation {
+        #[path = "🏅️standards/🔖️v1/🪆️subsets/🎞️animation/✏️editor/🦀️.rs"]
+        mod component;
+        pub use component::*;
+        #[path = "."]
+        pub mod modes {
+            #[path = "."]
+            pub mod edit {
+                #[path = "🏅️standards/🔖️v1/🪆️subsets/🎞️animation/✏️editor/🎭️modes/✏️edit/🦀️.rs"]
+                mod component;
+                pub use component::*;
+                #[path = "."]
+                pub mod windows {
+                    #[path = "."]
+                    pub mod main {
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🎞️animation/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+        }
+    }
+    #[path = "."]
+    pub mod semio_base {
+        #[path = "🏅️standards/🔖️v1/🪆️subsets/✉️base/✏️editor/🦀️.rs"]
+        mod component;
+        pub use component::*;
+        #[path = "."]
+        pub mod modes {
+            #[path = "."]
+            pub mod edit {
+                #[path = "🏅️standards/🔖️v1/🪆️subsets/✉️base/✏️editor/🎭️modes/✏️edit/🦀️.rs"]
+                mod component;
+                pub use component::*;
+                #[path = "."]
+                pub mod windows {
+                    #[path = "."]
+                    pub mod main {
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/✉️base/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+        }
+    }
+    #[path = "."]
+    pub mod semio_audio {
+        #[path = "🏅️standards/🔖️v1/🪆️subsets/🔊️audio/✏️editor/🦀️.rs"]
+        mod component;
+        pub use component::*;
+        #[path = "."]
+        pub mod modes {
+            #[path = "."]
+            pub mod edit {
+                #[path = "🏅️standards/🔖️v1/🪆️subsets/🔊️audio/✏️editor/🎭️modes/✏️edit/🦀️.rs"]
+                mod component;
+                pub use component::*;
+                #[path = "."]
+                pub mod windows {
+                    #[path = "."]
+                    pub mod main {
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🔊️audio/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+        }
+    }
+    #[path = "."]
+    pub mod semio_brep {
+        #[path = "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/✏️editor/🦀️.rs"]
+        mod component;
+        pub use component::*;
+        #[path = "."]
+        pub mod modes {
+            #[path = "."]
+            pub mod edit {
+                #[path = "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/✏️editor/🎭️modes/✏️edit/🦀️.rs"]
+                mod component;
+                pub use component::*;
+                #[path = "."]
+                pub mod windows {
+                    #[path = "."]
+                    pub mod main {
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+        }
+    }
+    #[path = "."]
+    pub mod semio_cad {
+        #[path = "🏅️standards/🔖️v1/🪆️subsets/📐️cad/✏️editor/🦀️.rs"]
+        mod component;
+        pub use component::*;
+        #[path = "."]
+        pub mod modes {
+            #[path = "."]
+            pub mod edit {
+                #[path = "🏅️standards/🔖️v1/🪆️subsets/📐️cad/✏️editor/🎭️modes/✏️edit/🦀️.rs"]
+                mod component;
+                pub use component::*;
+                #[path = "."]
+                pub mod windows {
+                    #[path = "."]
+                    pub mod main {
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/📐️cad/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+        }
+    }
+    #[path = "."]
+    pub mod semio_document {
+        #[path = "🏅️standards/🔖️v1/🪆️subsets/📑️document/✏️editor/🦀️.rs"]
+        mod component;
+        pub use component::*;
+        #[path = "."]
+        pub mod modes {
+            #[path = "."]
+            pub mod edit {
+                #[path = "🏅️standards/🔖️v1/🪆️subsets/📑️document/✏️editor/🎭️modes/✏️edit/🦀️.rs"]
+                mod component;
+                pub use component::*;
+                #[path = "."]
+                pub mod windows {
+                    #[path = "."]
+                    pub mod main {
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/📑️document/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+        }
+    }
+    #[path = "."]
+    pub mod semio_drawing {
+        #[path = "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/✏️editor/🦀️.rs"]
+        mod component;
+        pub use component::*;
+        #[path = "."]
+        pub mod modes {
+            #[path = "."]
+            pub mod edit {
+                #[path = "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/✏️editor/🎭️modes/✏️edit/🦀️.rs"]
+                mod component;
+                pub use component::*;
+                #[path = "."]
+                pub mod windows {
+                    #[path = "."]
+                    pub mod main {
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+        }
+    }
+    #[path = "."]
+    pub mod semio_flow {
+        #[path = "🏅️standards/🔖️v1/🪆️subsets/🌊️flow/✏️editor/🦀️.rs"]
+        mod component;
+        pub use component::*;
+        #[path = "."]
+        pub mod modes {
+            #[path = "."]
+            pub mod edit {
+                #[path = "🏅️standards/🔖️v1/🪆️subsets/🌊️flow/✏️editor/🎭️modes/✏️edit/🦀️.rs"]
+                mod component;
+                pub use component::*;
+                #[path = "."]
+                pub mod windows {
+                    #[path = "."]
+                    pub mod main {
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🌊️flow/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+        }
+    }
+    #[path = "."]
+    pub mod semio_graph {
+        #[path = "🏅️standards/🔖️v1/🪆️subsets/🕸️graph/✏️editor/🦀️.rs"]
+        mod component;
+        pub use component::*;
+        #[path = "."]
+        pub mod modes {
+            #[path = "."]
+            pub mod edit {
+                #[path = "🏅️standards/🔖️v1/🪆️subsets/🕸️graph/✏️editor/🎭️modes/✏️edit/🦀️.rs"]
+                mod component;
+                pub use component::*;
+                #[path = "."]
+                pub mod windows {
+                    #[path = "."]
+                    pub mod main {
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🕸️graph/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+        }
+    }
+    #[path = "."]
+    pub mod semio_image {
+        #[path = "🏅️standards/🔖️v1/🪆️subsets/🖼️image/✏️editor/🦀️.rs"]
+        mod component;
+        pub use component::*;
+        #[path = "."]
+        pub mod modes {
+            #[path = "."]
+            pub mod edit {
+                #[path = "🏅️standards/🔖️v1/🪆️subsets/🖼️image/✏️editor/🎭️modes/✏️edit/🦀️.rs"]
+                mod component;
+                pub use component::*;
+                #[path = "."]
+                pub mod windows {
+                    #[path = "."]
+                    pub mod main {
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🖼️image/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+        }
+    }
+    #[path = "."]
+    pub mod semio_kit {
+        #[path = "🏅️standards/🔖️v1/🪆️subsets/🧰️kit/✏️editor/🦀️.rs"]
+        mod component;
+        pub use component::*;
+        #[path = "."]
+        pub mod modes {
+            #[path = "."]
+            pub mod edit {
+                #[path = "🏅️standards/🔖️v1/🪆️subsets/🧰️kit/✏️editor/🎭️modes/✏️edit/🦀️.rs"]
+                mod component;
+                pub use component::*;
+                #[path = "."]
+                pub mod windows {
+                    #[path = "."]
+                    pub mod main {
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🧰️kit/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+        }
+    }
+    #[path = "."]
+    pub mod semio_mesh {
+        #[path = "🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/✏️editor/🦀️.rs"]
+        mod component;
+        pub use component::*;
+        #[path = "."]
+        pub mod modes {
+            #[path = "."]
+            pub mod edit {
+                #[path = "🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/✏️editor/🎭️modes/✏️edit/🦀️.rs"]
+                mod component;
+                pub use component::*;
+                #[path = "."]
+                pub mod windows {
+                    #[path = "."]
+                    pub mod main {
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+        }
+    }
+    #[path = "."]
+    pub mod semio_model {
+        #[path = "🏅️standards/🔖️v1/🪆️subsets/🏛️model/✏️editor/🦀️.rs"]
+        mod component;
+        pub use component::*;
+        #[path = "."]
+        pub mod modes {
+            #[path = "."]
+            pub mod edit {
+                #[path = "🏅️standards/🔖️v1/🪆️subsets/🏛️model/✏️editor/🎭️modes/✏️edit/🦀️.rs"]
+                mod component;
+                pub use component::*;
+                #[path = "."]
+                pub mod windows {
+                    #[path = "."]
+                    pub mod main {
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🏛️model/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+        }
+    }
+    #[path = "."]
+    pub mod semio_object {
+        #[path = "🏅️standards/🔖️v1/🪆️subsets/📦️object/✏️editor/🦀️.rs"]
+        mod component;
+        pub use component::*;
+        #[path = "."]
+        pub mod modes {
+            #[path = "."]
+            pub mod edit {
+                #[path = "🏅️standards/🔖️v1/🪆️subsets/📦️object/✏️editor/🎭️modes/✏️edit/🦀️.rs"]
+                mod component;
+                pub use component::*;
+                #[path = "."]
+                pub mod windows {
+                    #[path = "."]
+                    pub mod main {
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/📦️object/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+        }
+    }
+    #[path = "."]
+    pub mod semio_presentation {
+        #[path = "🏅️standards/🔖️v1/🪆️subsets/📽️presentation/✏️editor/🦀️.rs"]
+        mod component;
+        pub use component::*;
+        #[path = "."]
+        pub mod modes {
+            #[path = "."]
+            pub mod edit {
+                #[path = "🏅️standards/🔖️v1/🪆️subsets/📽️presentation/✏️editor/🎭️modes/✏️edit/🦀️.rs"]
+                mod component;
+                pub use component::*;
+                #[path = "."]
+                pub mod windows {
+                    #[path = "."]
+                    pub mod main {
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/📽️presentation/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+        }
+    }
+    #[path = "."]
+    pub mod semio_table {
+        #[path = "🏅️standards/🔖️v1/🪆️subsets/📊️table/✏️editor/🦀️.rs"]
+        mod component;
+        pub use component::*;
+        #[path = "."]
+        pub mod modes {
+            #[path = "."]
+            pub mod edit {
+                #[path = "🏅️standards/🔖️v1/🪆️subsets/📊️table/✏️editor/🎭️modes/✏️edit/🦀️.rs"]
+                mod component;
+                pub use component::*;
+                #[path = "."]
+                pub mod windows {
+                    #[path = "."]
+                    pub mod main {
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/📊️table/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+        }
+    }
+    #[path = "."]
+    pub mod semio_text {
+        #[path = "🏅️standards/🔖️v1/🪆️subsets/🔤️text/✏️editor/🦀️.rs"]
+        mod component;
+        pub use component::*;
+        #[path = "."]
+        pub mod modes {
+            #[path = "."]
+            pub mod edit {
+                #[path = "🏅️standards/🔖️v1/🪆️subsets/🔤️text/✏️editor/🎭️modes/✏️edit/🦀️.rs"]
+                mod component;
+                pub use component::*;
+                #[path = "."]
+                pub mod windows {
+                    #[path = "."]
+                    pub mod main {
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🔤️text/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+        }
+    }
+    #[path = "."]
+    pub mod semio_value {
+        #[path = "🏅️standards/🔖️v1/🪆️subsets/🔢️value/✏️editor/🦀️.rs"]
+        mod component;
+        pub use component::*;
+        #[path = "."]
+        pub mod modes {
+            #[path = "."]
+            pub mod edit {
+                #[path = "🏅️standards/🔖️v1/🪆️subsets/🔢️value/✏️editor/🎭️modes/✏️edit/🦀️.rs"]
+                mod component;
+                pub use component::*;
+                #[path = "."]
+                pub mod windows {
+                    #[path = "."]
+                    pub mod main {
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🔢️value/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+        }
+    }
+    #[path = "."]
+    pub mod semio_video {
+        #[path = "🏅️standards/🔖️v1/🪆️subsets/🎬️video/✏️editor/🦀️.rs"]
+        mod component;
+        pub use component::*;
+        #[path = "."]
+        pub mod modes {
+            #[path = "."]
+            pub mod edit {
+                #[path = "🏅️standards/🔖️v1/🪆️subsets/🎬️video/✏️editor/🎭️modes/✏️edit/🦀️.rs"]
+                mod component;
+                pub use component::*;
+                #[path = "."]
+                pub mod windows {
+                    #[path = "."]
+                    pub mod main {
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🎬️video/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+        }
+    }
+}
+
+#[cfg(feature = "component-app-assembly")]
+#[path = "."]
+pub mod viewer {
+    #[path = "."]
+    pub mod semio_animation {
+        #[path = "🏅️standards/🔖️v1/🪆️subsets/🎞️animation/👁️viewer/🦀️.rs"]
+        mod component;
+        pub use component::*;
+        #[path = "."]
+        pub mod modes {
+            #[path = "."]
+            pub mod view {
+                #[path = "🏅️standards/🔖️v1/🪆️subsets/🎞️animation/👁️viewer/🎭️modes/👁️view/🦀️.rs"]
+                mod component;
+                pub use component::*;
+                #[path = "."]
+                pub mod windows {
+                    #[path = "."]
+                    pub mod main {
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🎞️animation/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+        }
+    }
+    #[path = "."]
+    pub mod semio_base {
+        #[path = "🏅️standards/🔖️v1/🪆️subsets/✉️base/👁️viewer/🦀️.rs"]
+        mod component;
+        pub use component::*;
+        #[path = "."]
+        pub mod modes {
+            #[path = "."]
+            pub mod view {
+                #[path = "🏅️standards/🔖️v1/🪆️subsets/✉️base/👁️viewer/🎭️modes/👁️view/🦀️.rs"]
+                mod component;
+                pub use component::*;
+                #[path = "."]
+                pub mod windows {
+                    #[path = "."]
+                    pub mod main {
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/✉️base/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+        }
+    }
+    #[path = "."]
+    pub mod semio_audio {
+        #[path = "🏅️standards/🔖️v1/🪆️subsets/🔊️audio/👁️viewer/🦀️.rs"]
+        mod component;
+        pub use component::*;
+        #[path = "."]
+        pub mod modes {
+            #[path = "."]
+            pub mod view {
+                #[path = "🏅️standards/🔖️v1/🪆️subsets/🔊️audio/👁️viewer/🎭️modes/👁️view/🦀️.rs"]
+                mod component;
+                pub use component::*;
+                #[path = "."]
+                pub mod windows {
+                    #[path = "."]
+                    pub mod main {
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🔊️audio/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+        }
+    }
+    #[path = "."]
+    pub mod semio_brep {
+        #[path = "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/👁️viewer/🦀️.rs"]
+        mod component;
+        pub use component::*;
+        #[path = "."]
+        pub mod modes {
+            #[path = "."]
+            pub mod view {
+                #[path = "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/👁️viewer/🎭️modes/👁️view/🦀️.rs"]
+                mod component;
+                pub use component::*;
+                #[path = "."]
+                pub mod windows {
+                    #[path = "."]
+                    pub mod main {
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+        }
+    }
+    #[path = "."]
+    pub mod semio_cad {
+        #[path = "🏅️standards/🔖️v1/🪆️subsets/📐️cad/👁️viewer/🦀️.rs"]
+        mod component;
+        pub use component::*;
+        #[path = "."]
+        pub mod modes {
+            #[path = "."]
+            pub mod view {
+                #[path = "🏅️standards/🔖️v1/🪆️subsets/📐️cad/👁️viewer/🎭️modes/👁️view/🦀️.rs"]
+                mod component;
+                pub use component::*;
+                #[path = "."]
+                pub mod windows {
+                    #[path = "."]
+                    pub mod main {
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/📐️cad/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+        }
+    }
+    #[path = "."]
+    pub mod semio_document {
+        #[path = "🏅️standards/🔖️v1/🪆️subsets/📑️document/👁️viewer/🦀️.rs"]
+        mod component;
+        pub use component::*;
+        #[path = "."]
+        pub mod modes {
+            #[path = "."]
+            pub mod view {
+                #[path = "🏅️standards/🔖️v1/🪆️subsets/📑️document/👁️viewer/🎭️modes/👁️view/🦀️.rs"]
+                mod component;
+                pub use component::*;
+                #[path = "."]
+                pub mod windows {
+                    #[path = "."]
+                    pub mod main {
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/📑️document/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+        }
+    }
+    #[path = "."]
+    pub mod semio_drawing {
+        #[path = "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/👁️viewer/🦀️.rs"]
+        mod component;
+        pub use component::*;
+        #[path = "."]
+        pub mod modes {
+            #[path = "."]
+            pub mod view {
+                #[path = "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/👁️viewer/🎭️modes/👁️view/🦀️.rs"]
+                mod component;
+                pub use component::*;
+                #[path = "."]
+                pub mod windows {
+                    #[path = "."]
+                    pub mod main {
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+        }
+    }
+    #[path = "."]
+    pub mod semio_flow {
+        #[path = "🏅️standards/🔖️v1/🪆️subsets/🌊️flow/👁️viewer/🦀️.rs"]
+        mod component;
+        pub use component::*;
+        #[path = "."]
+        pub mod modes {
+            #[path = "."]
+            pub mod view {
+                #[path = "🏅️standards/🔖️v1/🪆️subsets/🌊️flow/👁️viewer/🎭️modes/👁️view/🦀️.rs"]
+                mod component;
+                pub use component::*;
+                #[path = "."]
+                pub mod windows {
+                    #[path = "."]
+                    pub mod main {
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🌊️flow/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+        }
+    }
+    #[path = "."]
+    pub mod semio_graph {
+        #[path = "🏅️standards/🔖️v1/🪆️subsets/🕸️graph/👁️viewer/🦀️.rs"]
+        mod component;
+        pub use component::*;
+        #[path = "."]
+        pub mod modes {
+            #[path = "."]
+            pub mod view {
+                #[path = "🏅️standards/🔖️v1/🪆️subsets/🕸️graph/👁️viewer/🎭️modes/👁️view/🦀️.rs"]
+                mod component;
+                pub use component::*;
+                #[path = "."]
+                pub mod windows {
+                    #[path = "."]
+                    pub mod main {
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🕸️graph/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+        }
+    }
+    #[path = "."]
+    pub mod semio_image {
+        #[path = "🏅️standards/🔖️v1/🪆️subsets/🖼️image/👁️viewer/🦀️.rs"]
+        mod component;
+        pub use component::*;
+        #[path = "."]
+        pub mod modes {
+            #[path = "."]
+            pub mod view {
+                #[path = "🏅️standards/🔖️v1/🪆️subsets/🖼️image/👁️viewer/🎭️modes/👁️view/🦀️.rs"]
+                mod component;
+                pub use component::*;
+                #[path = "."]
+                pub mod windows {
+                    #[path = "."]
+                    pub mod main {
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🖼️image/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+        }
+    }
+    #[path = "."]
+    pub mod semio_kit {
+        #[path = "🏅️standards/🔖️v1/🪆️subsets/🧰️kit/👁️viewer/🦀️.rs"]
+        mod component;
+        pub use component::*;
+        #[path = "."]
+        pub mod modes {
+            #[path = "."]
+            pub mod view {
+                #[path = "🏅️standards/🔖️v1/🪆️subsets/🧰️kit/👁️viewer/🎭️modes/👁️view/🦀️.rs"]
+                mod component;
+                pub use component::*;
+                #[path = "."]
+                pub mod windows {
+                    #[path = "."]
+                    pub mod main {
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🧰️kit/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+        }
+    }
+    #[path = "."]
+    pub mod semio_mesh {
+        #[path = "🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/👁️viewer/🦀️.rs"]
+        mod component;
+        pub use component::*;
+        #[path = "."]
+        pub mod modes {
+            #[path = "."]
+            pub mod view {
+                #[path = "🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/👁️viewer/🎭️modes/👁️view/🦀️.rs"]
+                mod component;
+                pub use component::*;
+                #[path = "."]
+                pub mod windows {
+                    #[path = "."]
+                    pub mod main {
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+        }
+    }
+    #[path = "."]
+    pub mod semio_model {
+        #[path = "🏅️standards/🔖️v1/🪆️subsets/🏛️model/👁️viewer/🦀️.rs"]
+        mod component;
+        pub use component::*;
+        #[path = "."]
+        pub mod modes {
+            #[path = "."]
+            pub mod view {
+                #[path = "🏅️standards/🔖️v1/🪆️subsets/🏛️model/👁️viewer/🎭️modes/👁️view/🦀️.rs"]
+                mod component;
+                pub use component::*;
+                #[path = "."]
+                pub mod windows {
+                    #[path = "."]
+                    pub mod main {
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🏛️model/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+        }
+    }
+    #[path = "."]
+    pub mod semio_object {
+        #[path = "🏅️standards/🔖️v1/🪆️subsets/📦️object/👁️viewer/🦀️.rs"]
+        mod component;
+        pub use component::*;
+        #[path = "."]
+        pub mod modes {
+            #[path = "."]
+            pub mod view {
+                #[path = "🏅️standards/🔖️v1/🪆️subsets/📦️object/👁️viewer/🎭️modes/👁️view/🦀️.rs"]
+                mod component;
+                pub use component::*;
+                #[path = "."]
+                pub mod windows {
+                    #[path = "."]
+                    pub mod main {
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/📦️object/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+        }
+    }
+    #[path = "."]
+    pub mod semio_presentation {
+        #[path = "🏅️standards/🔖️v1/🪆️subsets/📽️presentation/👁️viewer/🦀️.rs"]
+        mod component;
+        pub use component::*;
+        #[path = "."]
+        pub mod modes {
+            #[path = "."]
+            pub mod view {
+                #[path = "🏅️standards/🔖️v1/🪆️subsets/📽️presentation/👁️viewer/🎭️modes/👁️view/🦀️.rs"]
+                mod component;
+                pub use component::*;
+                #[path = "."]
+                pub mod windows {
+                    #[path = "."]
+                    pub mod main {
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/📽️presentation/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+        }
+    }
+    #[path = "."]
+    pub mod semio_table {
+        #[path = "🏅️standards/🔖️v1/🪆️subsets/📊️table/👁️viewer/🦀️.rs"]
+        mod component;
+        pub use component::*;
+        #[path = "."]
+        pub mod modes {
+            #[path = "."]
+            pub mod view {
+                #[path = "🏅️standards/🔖️v1/🪆️subsets/📊️table/👁️viewer/🎭️modes/👁️view/🦀️.rs"]
+                mod component;
+                pub use component::*;
+                #[path = "."]
+                pub mod windows {
+                    #[path = "."]
+                    pub mod main {
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/📊️table/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+        }
+    }
+    #[path = "."]
+    pub mod semio_text {
+        #[path = "🏅️standards/🔖️v1/🪆️subsets/🔤️text/👁️viewer/🦀️.rs"]
+        mod component;
+        pub use component::*;
+        #[path = "."]
+        pub mod modes {
+            #[path = "."]
+            pub mod view {
+                #[path = "🏅️standards/🔖️v1/🪆️subsets/🔤️text/👁️viewer/🎭️modes/👁️view/🦀️.rs"]
+                mod component;
+                pub use component::*;
+                #[path = "."]
+                pub mod windows {
+                    #[path = "."]
+                    pub mod main {
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🔤️text/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+        }
+    }
+    #[path = "."]
+    pub mod semio_value {
+        #[path = "🏅️standards/🔖️v1/🪆️subsets/🔢️value/👁️viewer/🦀️.rs"]
+        mod component;
+        pub use component::*;
+        #[path = "."]
+        pub mod modes {
+            #[path = "."]
+            pub mod view {
+                #[path = "🏅️standards/🔖️v1/🪆️subsets/🔢️value/👁️viewer/🎭️modes/👁️view/🦀️.rs"]
+                mod component;
+                pub use component::*;
+                #[path = "."]
+                pub mod windows {
+                    #[path = "."]
+                    pub mod main {
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🔢️value/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+        }
+    }
+    #[path = "."]
+    pub mod semio_video {
+        #[path = "🏅️standards/🔖️v1/🪆️subsets/🎬️video/👁️viewer/🦀️.rs"]
+        mod component;
+        pub use component::*;
+        #[path = "."]
+        pub mod modes {
+            #[path = "."]
+            pub mod view {
+                #[path = "🏅️standards/🔖️v1/🪆️subsets/🎬️video/👁️viewer/🎭️modes/👁️view/🦀️.rs"]
+                mod component;
+                pub use component::*;
+                #[path = "."]
+                pub mod windows {
+                    #[path = "."]
+                    pub mod main {
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🎬️video/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+        }
+    }
+}

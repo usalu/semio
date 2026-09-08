@@ -5,7 +5,7 @@
   "displayName": "Insert Object",
   "emoji": "📦️",
   "aggregateVariant": "InsertObject",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "insert-object",
   "binaryTag": 6,
   "invertibility": "explicit-mutation",

@@ -2,11 +2,11 @@
 //! The class-neutral edit is performed by the shared ladder module; this file names the axis and
 //! routes to it, so each rule has ONE implementation and every class calls it.
 
-use crate::artifacts::step::StepSnapshot;
-use crate::artifacts::step::standards::v_ap214::engine::ladder::ShapeRepresentationRow;
-use crate::artifacts::step::standards::v_ap214::engine::ladder::ClassEdit;
-use crate::artifacts::step::standards::v_ap214::subsets::cc4::schema::mutations::{class_diff, class_inverse};
-use crate::artifacts::step::standards::v_ap214::subsets::cc4::schema::mutations::{StepCc4Mutation};
+use crate::StepSnapshot;
+use crate::standards::v_ap214::engine::ladder::ShapeRepresentationRow;
+use crate::standards::v_ap214::engine::ladder::ClassEdit;
+use crate::standards::v_ap214::subsets::cc4::schema::mutations::{class_diff, class_inverse};
+use crate::standards::v_ap214::subsets::cc4::schema::mutations::{StepCc4Mutation};
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]

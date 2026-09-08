@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeN50HInv, base: &Din16798Snapshot) -> protocol::Mutat
     if base.n50_h_inv == payload.new_n50_h_inv {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("N50 air change rate is already {}.", payload.new_n50_h_inv));
     }
-    protocol::MutationOutcome::new(Din16798Diff { n50_h_inv: Some(payload.new_n50_h_inv.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(Din16798Diff { n50_h_inv: Some(payload.new_n50_h_inv), ..Default::default() })
 }
 //#endregion 🔖️Diff

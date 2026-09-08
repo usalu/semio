@@ -12,9 +12,9 @@
 //! `SemioValueTreeDiff`, and this fixture is what proves a set-snapshot fills exactly the ones
 //! that moved.
 
-use crate::artifacts::semio::standards::v1::subsets::value::schema::diff::{SemioValueDiff, SemioValueTreeDiff};
-use crate::artifacts::semio::standards::v1::subsets::value::schema::mutations::{apply_semio_value_mutation, SemioValueMutation};
-use crate::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValueSnapshot;
+use crate::standards::v1::subsets::value::schema::diff::{SemioValueDiff, SemioValueTreeDiff};
+use crate::standards::v1::subsets::value::schema::mutations::{apply_semio_value_mutation, SemioValueMutation};
+use crate::standards::v1::subsets::value::schema::snapshot::SemioValueSnapshot;
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");

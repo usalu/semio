@@ -23,7 +23,7 @@ to and left the other eight untouched.
   a density, an area, a second moment, a thickness, a mesh size and the deformation scale; the open
   Poisson interval; `minItems: 3` on a region outline; `minimum: 1` on each mode count). Every bound
   this file enforces is read from there.
-* ``…/🧬️schema/🧬️mutations/<kind>/🧬️.schema.json`` — the per-kind wire payloads, internally tagged
+* ``…/🧬️schema/🧬️mutations/<kind>/🧬️schema/🔣️.json`` — the per-kind wire payloads, internally tagged
   with `mutation`.
 * the committed `(before, mutation, after, outcome)` specification vectors — where the referential
   rules are written down: which `delete-` refuses while referrers exist and which is deliberately

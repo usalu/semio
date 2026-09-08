@@ -5,7 +5,7 @@
   "displayName": "Change Fenestration Fin Depth",
   "emoji": "🐬️",
   "aggregateVariant": "ChangeFenestrationFinDepth",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-fenestration-fin-depth",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

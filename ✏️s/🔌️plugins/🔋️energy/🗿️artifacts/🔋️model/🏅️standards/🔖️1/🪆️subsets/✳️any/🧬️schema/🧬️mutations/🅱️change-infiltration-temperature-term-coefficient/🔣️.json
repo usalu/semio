@@ -5,7 +5,7 @@
   "displayName": "Change Infiltration Temperature Term Coefficient",
   "emoji": "🅱️",
   "aggregateVariant": "ChangeInfiltrationTemperatureTermCoefficient",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-infiltration-temperature-term-coefficient",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

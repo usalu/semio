@@ -115,7 +115,7 @@ fn hex_encode(bytes: &[u8]) -> String {
     bytes.iter().map(|b| format!("{b:02x}")).collect()
 }
 fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
-    if s.len() % 2 != 0 {
+    if !s.len().is_multiple_of(2) {
         return Err(format!("odd hex length: {s:?}"));
     }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
@@ -134,7 +134,7 @@ fn dec_child(s: &str) -> Result<ShootingEmblemChild, String> {
     let parts: Vec<&str> = inner.splitn(2, ',').collect();
     let [child_id, target] = parts.as_slice() else { return Err(format!("child handle: expected 2 fields, got {}", parts.len())) };
     let target_uri = dec_hex_str(target)?;
-    let target = store::os_io::ArtifactRef::parse_uri(&target_uri).map_err(|e| e.to_string())?;
+    let target = store::os_io::ArtifactRef::parse_uri(&target_uri).map_err(|e| e)?;
     Ok(store::ArtifactChild::new(dec_hex_str(child_id)?, target))
 }
 //#endregion 🔖️ChildCodecPrimitives

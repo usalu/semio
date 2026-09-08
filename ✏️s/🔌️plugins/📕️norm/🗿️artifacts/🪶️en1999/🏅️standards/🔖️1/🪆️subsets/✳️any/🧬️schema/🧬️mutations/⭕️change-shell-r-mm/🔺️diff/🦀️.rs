@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeShellRMm, base: &En1999Snapshot) -> protocol::Mutati
     if base.shell_r_mm == payload.new_shell_r_mm {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Shell radius r [mm] is already {}.", payload.new_shell_r_mm));
     }
-    protocol::MutationOutcome::new(En1999Diff { shell_r_mm: Some(payload.new_shell_r_mm.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1999Diff { shell_r_mm: Some(payload.new_shell_r_mm), ..Default::default() })
 }
 //#endregion 🔖️Diff

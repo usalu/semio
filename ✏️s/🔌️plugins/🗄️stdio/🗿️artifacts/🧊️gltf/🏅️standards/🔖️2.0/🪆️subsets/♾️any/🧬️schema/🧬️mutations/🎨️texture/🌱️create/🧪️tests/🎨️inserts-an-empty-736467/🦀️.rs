@@ -10,10 +10,10 @@
 //! leaf's own oracle. The derived `.op.semio`/`.spr.semio`/`.dsl.semio`/`.pack.semio`/
 //! `.patch.semio` encodings come from `fixtures generate`, not from here.
 
-use crate::artifacts::gltf::schema::mutations::create_texture::diff::GltfCreateTextureDiff;
-use crate::artifacts::gltf::schema::mutations::create_texture::GltfCreateTexturePayload;
-use crate::artifacts::gltf::schema::mutations::create_texture::{diff, inverse, mutation};
-use crate::artifacts::gltf::GltfSnapshot;
+use crate::schema::mutations::create_texture::diff::GltfCreateTextureDiff;
+use crate::schema::mutations::create_texture::GltfCreateTexturePayload;
+use crate::schema::mutations::create_texture::{diff, inverse, mutation};
+use crate::GltfSnapshot;
 
 const CASE: &str = "create-texture/inserts-an-empty-texture-ahead-of-the-albedo-texture";
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");

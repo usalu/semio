@@ -1,7 +1,7 @@
 //! 🧬️ Direct remove-element mutation owner.
-use crate::artifacts::svg::schema::diff::{diff_at_path, SvgChildrenDiff, SvgDiff, SvgElementDiff, SvgNodeDiff};
-use crate::artifacts::svg::schema::snapshot::NodePath;
-use crate::artifacts::svg::SvgSnapshot;
+use crate::schema::diff::{diff_at_path, SvgChildrenDiff, SvgDiff, SvgElementDiff, SvgNodeDiff};
+use crate::schema::snapshot::NodePath;
+use crate::SvgSnapshot;
 
 #[path = "📝️text/🦀️.rs"]
 pub mod text;

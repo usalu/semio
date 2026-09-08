@@ -7,7 +7,7 @@ use crate::artifacts::writer::{writer_snapshot_with_text, WriterSnapshot, WRITER
 use semio_framework::io::io_mechanism::Deserializer;
 use semio_framework::io_schema::{IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{Dialect, StandardId, SubsetId};
-use semio_s_plugin_stdio::artifacts::md::MdSnapshot;
+use semio_s_artifact_stdio_md::MdSnapshot;
 
 pub const MD_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.md", standard: StandardId("commonmark"), subset: SubsetId("*") };
 

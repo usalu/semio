@@ -206,12 +206,12 @@ fn round_trip_oracle_once(input: &[u8], what: &str) -> Result<(Vec<u8>, Json), S
 mod subject {
     use super::{mutable_input, KINDS};
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_plugin_stdio::artifacts::xml::schema::mutations::{
+    use crate::schema::mutations::{
         apply_xml_mutation, InsertElementMutation, InsertElementPayload, RemoveElementMutation, RemoveElementPayload, SetAttributeMutation, SetAttributePayload, SetDeclarationMutation,
         SetDeclarationPayload, SetDoctypeMutation, SetDoctypePayload, SetTextMutation, SetTextPayload, XmlMutation, XmlNodePath,
     };
-    use semio_s_plugin_stdio::artifacts::xml::schema::snapshot::{XmlAttr, XmlDeclaration, XmlDoctype, XmlDtdDeclaration, XmlExternalId, XmlNode};
-    use semio_s_plugin_stdio::artifacts::xml::XmlSnapshot;
+    use crate::schema::snapshot::{XmlAttr, XmlDeclaration, XmlDoctype, XmlDtdDeclaration, XmlExternalId, XmlNode};
+    use crate::XmlSnapshot;
     use semio_s_plugin_stdio_test_oracle::artifacts::xml::standards::v1_0::subsets::base::project_xml_1_0;
 
     //#region 🔖️SpecCodec

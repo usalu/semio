@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeFoundationPRdKpa, base: &En1998Snapshot) -> protocol
     if base.foundation_p_rd_kpa == payload.new_foundation_p_rd_kpa {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Foundation bearing resistance p_Rd [kPa] is already {}.", payload.new_foundation_p_rd_kpa));
     }
-    protocol::MutationOutcome::new(En1998Diff { foundation_p_rd_kpa: Some(payload.new_foundation_p_rd_kpa.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1998Diff { foundation_p_rd_kpa: Some(payload.new_foundation_p_rd_kpa), ..Default::default() })
 }
 //#endregion 🔖️Diff

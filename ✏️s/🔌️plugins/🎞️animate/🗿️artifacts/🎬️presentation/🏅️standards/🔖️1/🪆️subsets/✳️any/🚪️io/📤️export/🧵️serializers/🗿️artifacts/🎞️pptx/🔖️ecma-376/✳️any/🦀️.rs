@@ -7,7 +7,7 @@ use crate::artifacts::presentation::PresentationSnapshot;
 use semio_framework::io::io_mechanism::Serializer;
 use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};
-use semio_s_plugin_stdio::artifacts::pptx::PptxSnapshot;
+use semio_s_artifact_stdio_pptx::PptxSnapshot;
 
 pub const PPTX_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.pptx", standard: StandardId("ecma-376"), subset: SubsetId::ANY };
 

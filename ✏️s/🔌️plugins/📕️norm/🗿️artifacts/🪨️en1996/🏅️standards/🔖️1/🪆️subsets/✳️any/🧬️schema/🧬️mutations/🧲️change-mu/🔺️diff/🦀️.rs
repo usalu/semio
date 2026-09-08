@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeMu, base: &En1996Snapshot) -> protocol::MutationOutc
     if base.mu == payload.new_mu {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "Mu already has this value.");
     }
-    protocol::MutationOutcome::new(En1996Diff { mu: Some(payload.new_mu.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1996Diff { mu: Some(payload.new_mu), ..Default::default() })
 }
 //#endregion 🔖️Diff

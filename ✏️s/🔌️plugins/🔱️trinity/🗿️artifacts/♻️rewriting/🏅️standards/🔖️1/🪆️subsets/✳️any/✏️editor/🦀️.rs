@@ -334,12 +334,12 @@ pub(crate) fn rewriting_io() -> semio_framework_plugin::AppIo {
 //#endregion 🔖️Io
 
 //#region 🔖️Render
-fn rewriting_lod_json_for_window(cfg: &RewritingConfig, window_id: &str) -> Option<String> {
+fn rewriting_lod_json_for_window(cfg: &RewritingConfig, window_id: &str) -> String {
     let mode = cfg.lod_mode_by_window.get(window_id).map_or(TRINITY_LOD_MODE_AUTOMATIC, String::as_str);
     if mode == TRINITY_LOD_MODE_AUTOMATIC {
-        Some(pack::json!({ "automatic": true }).to_string())
+        pack::json!({ "automatic": true }).to_string()
     } else {
-        Some(pack::json!({ "automatic": false, "forcedLabel": mode }).to_string())
+        pack::json!({ "automatic": false, "forcedLabel": mode }).to_string()
     }
 }
 
@@ -367,7 +367,7 @@ pub(crate) fn render_fixture_graph(surface_id: &str, window_id: &str, fixture_js
     semio_framework_plugin::scene_surface(
         surface_id,
         SemanticSurfaceKind::NodeGraph,
-        &semio_framework_plugin::NodeGraphScene { lod_json: rewriting_lod_json_for_window(cfg, window_id), editable: editable.then_some(true), ..semio_framework_plugin::NodeGraphScene::base(nodes, edges, viewport) },
+        &semio_framework_plugin::NodeGraphScene { lod_json: Some(rewriting_lod_json_for_window(cfg, window_id)), editable: editable.then_some(true), ..semio_framework_plugin::NodeGraphScene::base(nodes, edges, viewport) },
     )
 }
 //#endregion 🔖️Render
@@ -576,7 +576,7 @@ impl ArtifactEditor for TrinityRewritingPlayApp {
     ) -> Result<Emit<RewriteRuleMutation, RewritingConfigMutation, Self::DraftMutation>, Fault> {
         let state = doc.snapshot;
         let config = cfg.snapshot;
-        match command {
+        Ok(match command {
             TrinityRewritingCommand::NodeGraphEdit { surface_id, operations_json } => crate::editor::rewriting::commands::node_graph_edit(state, &interaction.selection("graph").ids, surface_id, operations_json),
             TrinityRewritingCommand::SetLhsJson { value } => crate::editor::rewriting::commands::set_lhs_json(state, value),
             TrinityRewritingCommand::SetRhsJson { value } => crate::editor::rewriting::commands::set_rhs_json(state, value),
@@ -588,7 +588,7 @@ impl ArtifactEditor for TrinityRewritingPlayApp {
             TrinityRewritingCommand::Reorganize => crate::editor::rewriting::commands::reorganize(config.reorganize_epoch),
             TrinityRewritingCommand::SetLodMode { window_id, value } => crate::editor::rewriting::commands::set_lod_mode(window_id, value),
             TrinityRewritingCommand::SetLocale { value } => crate::editor::rewriting::commands::set_locale(value),
-        }
+        })
     }
 
     fn render(body_key: &str, doc: &ArtifactView<'_, RewritingSnapshot>, cfg: &ConfigView<'_, RewritingConfig>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {

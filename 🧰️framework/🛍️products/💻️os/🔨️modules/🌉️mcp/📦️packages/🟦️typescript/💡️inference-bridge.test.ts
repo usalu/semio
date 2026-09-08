@@ -14,8 +14,10 @@
  * involved anywhere; no WGPU or browser rendering is implicated; no two-user process journey is run
  * here; and nothing here asserts that a live hub inference job ran — with no trusted GIS Map
  * binding a hub answers `503 inference.unavailable`, and that is the honest end of the chain. */
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
-import { INFERENCE_JOB_TOOLS, proveMcpInferenceBridgeFixture } from "./💡️inference-bridge.ts";
+import { INFERENCE_JOB_TOOLS, approvalRequestSchema, proveMcpInferenceBridgeFixture, proveOsMirrorsHubApprovalAuthority } from "./💡️inference-bridge.ts";
 import { isValidJsonSchema2020_12 } from "./🧬️schema-validation.ts";
 import { requireMcpBinary, spawnRawMcp, type RawMcpProcess } from "../../🟦️.ts";
 import { getWorkspaceRoot } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
@@ -41,6 +43,16 @@ describe("gis map inference bridge — neutral fixture and closed wire shapes", 
     expect(report.routes).toBe(4);
     expect(report.limits).toBe(4);
     expect(report.hostile).toBeGreaterThanOrEqual(26);
+  });
+
+  it("the os.mcp approval mirror is structurally identical to hub's own authority", () => {
+    const { authority, compared } = proveOsMirrorsHubApprovalAuthority(repoRoot);
+    expect(compared).toBe(4);
+    expect(authority).toBe("🌎️hub/🧪️fixtures/✅️inference-approval-v1/🧬️.schema.json");
+    const hubAuthority = (JSON.parse(readFileSync(resolve(repoRoot, authority), "utf8")) as { $defs: { request: Record<string, unknown> } }).$defs.request;
+    const { $schema, ...mirror } = approvalRequestSchema as Record<string, unknown>;
+    expect($schema).toBe("http://json-schema.org/draft-07/schema#");
+    expect(mirror).toEqual(hubAuthority);
   });
 });
 

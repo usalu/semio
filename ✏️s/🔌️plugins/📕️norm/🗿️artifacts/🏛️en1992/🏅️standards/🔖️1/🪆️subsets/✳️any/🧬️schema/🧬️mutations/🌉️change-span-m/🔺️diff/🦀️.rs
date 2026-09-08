@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeSpanM, base: &En1992Snapshot) -> protocol::MutationO
     if base.span_m == payload.new_span_m {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "Span m already has this value.");
     }
-    protocol::MutationOutcome::new(En1992Diff { span_m: Some(payload.new_span_m.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1992Diff { span_m: Some(payload.new_span_m), ..Default::default() })
 }
 //#endregion 🔖️Diff

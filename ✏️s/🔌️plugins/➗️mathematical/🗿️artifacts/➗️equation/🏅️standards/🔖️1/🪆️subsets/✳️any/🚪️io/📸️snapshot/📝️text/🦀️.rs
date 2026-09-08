@@ -128,24 +128,9 @@ impl FromValue for EquationGraphDsl {
     }
 }
 
-/// 📌️ `EquationGraphDsl`/`EquationEdgeDsl` above are the DSL-only shape the `SetArtifact`
-/// app command's own payload uses (`🎮️commands/🗿️set-artifact/🦀️.rs`) — that command still
-/// carries a WHOLE graph as one gesture (routed onto the granular `ReplaceGraph`/`ReplacePoints`
-/// mutations, never a banned whole-snapshot replace), so it kept its own `#[derive(dsl::DslRecord)]`
-/// wire shape. The former `EquationSnapshotDsl` mirror — the snapshot's OWN codec — is gone:
-/// `EquationSnapshot` no longer derives (indirectly or otherwise) `dsl::DslRecord` now that
-/// `notation`/`results`/`computed` are composed `ArtifactChild<S>` slots (no `DslField` impl for
-/// those reachable from this crate); its `ArtifactDsl` is hand-rolled directly below
-/// (`🔖️HandcraftedArtifactDsl` region, this file) — same upgrade `📐️cad`/`✒️writer` made.
 //#endregion 🔖️Dsl
 
 //#region 🔖️HandcraftedArtifactDsl
-/// ✉️ P6 handcrafted `ArtifactDsl`, real hex/bracket text primitives — moved here verbatim from
-/// `🧬️schema/📸️snapshot/🦀️.rs` (design.md §1 CORRECTION: the native codec is one
-/// bidirectional thing per representation, unsplit, and sits directly under `🚪️io/<facet>/
-/// <representation>/`). Same upgrade `📐️cad`/`✒️writer` made once their snapshot gained a real
-/// `ArtifactChild<S>` slot (the old `dsl::DslRecord`-derive-driven path cannot express a
-/// composed child slot, which has no `dsl::DslField` impl reachable from this crate).
 //#region 🔖️ChildCodecPrimitives
 /// 🧪️ Real hex/bracket child-handle codec (mirrors `📐️cad`'s/`✒️writer`'s own `enc_child`/
 /// `dec_child`) — a handle is exactly two strings (`child_id`, the target's `ArtifactRef` flattened
@@ -154,7 +139,7 @@ fn hex_encode(bytes: &[u8]) -> String {
     bytes.iter().map(|b| format!("{b:02x}")).collect()
 }
 fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
-    if s.len() % 2 != 0 {
+    if !s.len().is_multiple_of(2) {
         return Err(format!("odd hex length: {s:?}"));
     }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()

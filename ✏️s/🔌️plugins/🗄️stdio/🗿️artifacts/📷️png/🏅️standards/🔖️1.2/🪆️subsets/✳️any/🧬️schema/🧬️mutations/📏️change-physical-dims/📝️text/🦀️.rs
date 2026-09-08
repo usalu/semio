@@ -1,6 +1,6 @@
 //! 📝️ Direct change-physical-dims text codec.
 use super::*;
-use crate::artifacts::png::schema::mutations::text::Entry;
+use crate::schema::mutations::text::Entry;
 pub const TEXT_OPCODE: &str = "change-physical-dims";
 pub const CODEC: Entry = Entry { opcode: TEXT_OPCODE, print, parse };
 

@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeFoundationHEdKn, base: &En1998Snapshot) -> protocol:
     if base.foundation_h_ed_kn == payload.new_foundation_h_ed_kn {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Foundation design horizontal force H_Ed [kN] is already {}.", payload.new_foundation_h_ed_kn));
     }
-    protocol::MutationOutcome::new(En1998Diff { foundation_h_ed_kn: Some(payload.new_foundation_h_ed_kn.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1998Diff { foundation_h_ed_kn: Some(payload.new_foundation_h_ed_kn), ..Default::default() })
 }
 //#endregion 🔖️Diff

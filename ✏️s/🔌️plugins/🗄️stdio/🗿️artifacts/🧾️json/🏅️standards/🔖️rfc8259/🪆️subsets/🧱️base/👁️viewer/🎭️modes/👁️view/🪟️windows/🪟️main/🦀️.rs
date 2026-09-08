@@ -3,8 +3,8 @@
 //! mutation-capable window (documentation only, not a compile dependency — this file never
 //! imports the editor module).
 
-use crate::artifacts::json::schema::snapshot::{JsonMember, JsonValue};
-use crate::artifacts::json::JsonSnapshot;
+use crate::schema::snapshot::{JsonMember, JsonValue};
+use crate::JsonSnapshot;
 use semio_framework_plugin::app::{TreeNodeView, TreeView, TreeWindowKit, WindowKit};
 use semio_framework_plugin::{BuiltNode, LocalizedLabel, WindowKindDefinition};
 

@@ -6,7 +6,7 @@
 //! established for gltf-style multi-channel timing). A pure whole-snapshot fold — no
 //! `InferredField` needed.
 
-use crate::artifacts::mp4::standards::isobmff::subsets::any::schema::snapshot::Mp4Snapshot;
+use crate::standards::isobmff::subsets::any::schema::snapshot::Mp4Snapshot;
 
 //#region 🔖️Duration
 /// ⏱️ mp4's per-track `stts`-derived container duration.
@@ -45,7 +45,7 @@ pub fn compute_mp4_duration(snapshot: &Mp4Snapshot) -> Mp4Duration {
 //#region 🧪️Tests
 mod tests {
     use super::*;
-    use crate::artifacts::mp4::standards::isobmff::subsets::any::schema::snapshot::{Mp4Sample, Mp4Track};
+    use crate::standards::isobmff::subsets::any::schema::snapshot::{Mp4Sample, Mp4Track};
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn track(timescale: u32, sample_durations: &[u32]) -> Mp4Track {

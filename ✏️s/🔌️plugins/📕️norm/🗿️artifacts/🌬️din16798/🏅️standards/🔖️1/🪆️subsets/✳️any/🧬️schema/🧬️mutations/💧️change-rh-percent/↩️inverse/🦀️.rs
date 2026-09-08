@@ -7,6 +7,6 @@ use crate::artifacts::din16798::Din16798Snapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(_payload: &ChangeRhPercent, base: &Din16798Snapshot) -> Vec<Din16798Mutation> {
-    vec![Din16798Mutation::ChangeRhPercent(ChangeRhPercent { new_rh_percent: base.rh_percent.clone() })]
+    vec![Din16798Mutation::ChangeRhPercent(ChangeRhPercent { new_rh_percent: base.rh_percent })]
 }
 //#endregion 🔖️Inverse

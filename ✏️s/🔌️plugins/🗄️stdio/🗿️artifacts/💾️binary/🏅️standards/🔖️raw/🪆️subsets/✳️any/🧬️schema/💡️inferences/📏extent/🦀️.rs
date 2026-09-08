@@ -4,7 +4,7 @@
 //! single-field shape); it has no header, no chunk table, no entry list, so this facet does NOT
 //! fabricate one — it reports exactly what the bytes themselves honestly are.
 
-use crate::artifacts::binary::standards::v_raw::subsets::any::schema::snapshot::BinarySnapshot;
+use crate::standards::v_raw::subsets::any::schema::snapshot::BinarySnapshot;
 use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
 

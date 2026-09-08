@@ -35,6 +35,7 @@ use crate::catalog::{CapabilityDefinition, CapabilityKind, CapabilityOwner, Capa
 use crate::errors::{GatewayError, GatewayErrorCode};
 use crate::handles::{mint_id, HandleKind};
 use crate::protocol::{CallToolResult, ContentBlock, InMemoryToolRegistry, Resource, ResourceContent, ResourceTemplate, Tool};
+use crate::schema::{job_cancel_input_schema, job_get_input_schema, job_snapshot_output_schema, ui_focus_input_schema, ui_focus_output_schema, ui_reveal_input_schema, ui_reveal_output_schema};
 use crate::workspace::HeadlessWorkspace;
 use semio_framework_os_kernel::{FromValue, ToValue};
 use serde::Serialize;
@@ -311,84 +312,8 @@ pub fn job_registry() -> &'static JobRegistry {
 //#endregion 🔖️JobRegistry
 
 //#region 🔖️Schemas
-fn ui_focus_input_schema() -> serde_json::Value {
-    serde_json::json!({
-        "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "$id": "semio://capability/ui.focus/input",
-        "type": "object",
-        "properties": { "windowId": { "type": "string" } },
-        "additionalProperties": false,
-    })
-}
-
-fn ui_focus_output_schema() -> serde_json::Value {
-    serde_json::json!({
-        "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "$id": "semio://capability/ui.focus/output",
-        "type": "object",
-        "properties": { "ok": { "type": "boolean" }, "windowId": {} },
-    })
-}
-
-fn ui_reveal_input_schema() -> serde_json::Value {
-    serde_json::json!({
-        "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "$id": "semio://capability/ui.reveal/input",
-        "type": "object",
-        "properties": { "anchor": { "type": "string", "enum": ["left", "right", "top", "bottom"] }, "path": { "type": "array", "items": { "type": "string" } } },
-        "required": ["anchor", "path"],
-        "additionalProperties": false,
-    })
-}
-
-fn ui_reveal_output_schema() -> serde_json::Value {
-    serde_json::json!({
-        "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "$id": "semio://capability/ui.reveal/output",
-        "type": "object",
-        "properties": { "ok": { "type": "boolean" }, "anchor": { "type": "string" }, "path": { "type": "array", "items": { "type": "string" } } },
-    })
-}
-
-fn job_get_input_schema() -> serde_json::Value {
-    serde_json::json!({
-        "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "$id": "semio://capability/job.get/input",
-        "type": "object",
-        "properties": { "jobId": { "type": "string" } },
-        "required": ["jobId"],
-        "additionalProperties": false,
-    })
-}
-
-fn job_snapshot_output_schema(id: &str) -> serde_json::Value {
-    serde_json::json!({
-        "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "$id": format!("semio://capability/{id}/output"),
-        "type": "object",
-        "properties": {
-            "jobId": { "type": "string" },
-            "kind": { "type": "string" },
-            "status": { "type": "string" },
-            "progress": {},
-            "message": {},
-            "result": {},
-            "error": {},
-            "cancelRequested": { "type": "boolean" },
-        },
-    })
-}
-
-fn job_cancel_input_schema() -> serde_json::Value {
-    serde_json::json!({
-        "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "$id": "semio://capability/job.cancel/input",
-        "type": "object",
-        "properties": { "jobId": { "type": "string" } },
-        "required": ["jobId"],
-        "additionalProperties": false,
-    })
-}
+// 📐️ Every `ui_*`/`job_*` tool schema is a named export of `🧬️schema/🦀️.rs` (scope `os.mcp`),
+// imported above — this facet stamps none of its own.
 //#endregion 🔖️Schemas
 
 //#region 🔖️Capabilities

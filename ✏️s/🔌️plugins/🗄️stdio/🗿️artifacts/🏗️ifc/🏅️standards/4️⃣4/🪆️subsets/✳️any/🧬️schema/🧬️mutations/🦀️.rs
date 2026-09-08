@@ -6,12 +6,12 @@
 //! `diff()` is handcrafted (constructs `IfcDiff` directly via the `schema::diff` builders) —
 //! apply-and-capture is never used.
 
-use crate::artifacts::ifc::schema::diff::{
+use crate::schema::diff::{
     self, dec_entity, dec_entity_bin, dec_entity_list_bin, dec_ifc_value, dec_ifc_value_bin, dec_ifc_value_list, dec_ifc_value_list_bin, dec_str, enc_entity, enc_entity_bin, enc_entity_list_bin, enc_ifc_value, enc_ifc_value_bin, enc_ifc_value_list,
     enc_ifc_value_list_bin, enc_str, read_str_bin, split_top_level, strip_brackets, write_str_bin, IfcDiff,
 };
-use crate::artifacts::ifc::schema::snapshot::{IfcEntity, IfcHeader, IfcValue};
-use crate::artifacts::ifc::IfcSnapshot;
+use crate::schema::snapshot::{IfcEntity, IfcHeader, IfcValue};
+use crate::IfcSnapshot;
 use protocol::OpBinary;
 use protocol::{Mutation, OpText};
 
@@ -343,7 +343,7 @@ impl OpBinary for IfcMutation {
 pub(crate) fn demo_mutation_cases() -> Vec<IfcMutation> {
     let demo_entity = |id: u64, name: &str, args: Vec<IfcValue>| IfcEntity { id, name: name.into(), args, complex: Vec::new() };
     vec![
-        IfcMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: crate::artifacts::ifc::engine::demo_ifc_snapshot() }),
+        IfcMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: crate::engine::demo_ifc_snapshot() }),
         IfcMutation::SetFileDescription(set_file_description::SetFileDescription { values: vec![IfcValue::String("demo".into())] }),
         IfcMutation::SetFileName(set_file_name::SetFileName { values: vec![IfcValue::String("demo.ifc".into())] }),
         IfcMutation::SetFileSchema(set_file_schema::SetFileSchema { values: vec![IfcValue::Aggregate(vec![IfcValue::String("IFC4".into())])] }),
@@ -430,8 +430,8 @@ pub(crate) fn agg_inverse(this: &IfcMutation, base: &IfcSnapshot) -> Vec<IfcMuta
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::ifc::schema::diff::IfcEntitiesDiff;
-    use crate::artifacts::ifc::schema::snapshot::{IfcComplexType, IfcHeader};
+    use crate::schema::diff::IfcEntitiesDiff;
+    use crate::schema::snapshot::{IfcComplexType, IfcHeader};
     use protocol::command::DiffAlgebra;
     use protocol::MutationDiff;
 

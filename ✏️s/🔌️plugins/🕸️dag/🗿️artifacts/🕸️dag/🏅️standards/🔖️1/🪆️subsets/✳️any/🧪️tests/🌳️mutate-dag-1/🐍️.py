@@ -3,7 +3,7 @@
 `dag.dag` is a semio-NATIVE port-directed computation graph. Nothing third-party reads
 `.dag.dsl.semio`, and no graph format holds an opinion about an edge whose endpoints are named PORTS
 owned by two nodes. The reference is therefore a second IMPLEMENTATION, written from this subset's
-own committed `../../🧬️schema/📸️snapshot/🔣️.json` and each mutation's `🧬️.schema.json`, and from
+own committed `../../🧬️schema/📸️snapshot/🔣️.json` and each mutation's `🧬️schema/🔣️.json`, and from
 `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-DIRECT-LEAF-OVERHAUL/📓️taxonomy.md`'s
 `create` (`Missing target ⇒ inverse returns Vec::new()`, and its own invariant: an EXISTING id is
 `mutation.duplicate-id`) and `delete`/`rename`/`change`/`move`/`resize`/`replace`/`connect`/

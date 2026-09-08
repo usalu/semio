@@ -9,11 +9,11 @@
 //! See ticket `26/07/26/NATIVE-BREP-KERNEL-AND-VCS-BREP-DOCUMENT`, upgraded in
 //! `26/09/03/BREP-KERNEL-DEPENDENCY-FREE-RUNTIME` wave 2 (W2-A).
 
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::bezier::RationalBezier3;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::{Curve3, NurbsCurve3};
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::error::IntersectError;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Frame3;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::{Pnt3, Vec3};
+use crate::standards::v1::subsets::brep::schema::snapshot::curve::bezier::RationalBezier3;
+use crate::standards::v1::subsets::brep::schema::snapshot::curve::{Curve3, NurbsCurve3};
+use crate::standards::v1::subsets::brep::schema::snapshot::error::IntersectError;
+use crate::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Frame3;
+use crate::standards::v1::subsets::brep::schema::snapshot::vector::{Pnt3, Vec3};
 
 // #region 🔖️Api
 
@@ -298,10 +298,10 @@ fn nurbs_to_bezier_segments(nurbs: &NurbsCurve3) -> Result<Vec<(RationalBezier3,
     }
     for u in unique {
         while knots.multiplicity(u) < p {
-            let (nk, nx) = crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::bspline::insert_knot(&knots, &hx, u);
-            let (_, ny) = crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::bspline::insert_knot(&knots, &hy, u);
-            let (_, nz) = crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::bspline::insert_knot(&knots, &hz, u);
-            let (_, nw) = crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::bspline::insert_knot(&knots, &hw, u);
+            let (nk, nx) = crate::standards::v1::subsets::brep::schema::snapshot::curve::bspline::insert_knot(&knots, &hx, u);
+            let (_, ny) = crate::standards::v1::subsets::brep::schema::snapshot::curve::bspline::insert_knot(&knots, &hy, u);
+            let (_, nz) = crate::standards::v1::subsets::brep::schema::snapshot::curve::bspline::insert_knot(&knots, &hz, u);
+            let (_, nw) = crate::standards::v1::subsets::brep::schema::snapshot::curve::bspline::insert_knot(&knots, &hw, u);
             knots = nk;
             hx = nx;
             hy = ny;

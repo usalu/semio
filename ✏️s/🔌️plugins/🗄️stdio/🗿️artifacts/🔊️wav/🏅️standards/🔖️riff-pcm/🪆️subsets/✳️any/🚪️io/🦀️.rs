@@ -4,8 +4,8 @@
 //! 📤️export/🧵️serializers.
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use crate::artifacts::wav::standards::riff_pcm::subsets::any::schema::snapshot::WavSnapshot;
-    use crate::artifacts::wav::standards::riff_pcm::subsets::any::schema::WavAnalyzer;
+    use crate::standards::riff_pcm::subsets::any::schema::snapshot::WavSnapshot;
+    use crate::standards::riff_pcm::subsets::any::schema::WavAnalyzer;
     use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.wav", standard: StandardId("riff-pcm"), subset: SubsetId("*") };
@@ -45,10 +45,10 @@ pub mod derived_composition {
     /// this artifact's standard-level `engine::register()`.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn register() {
-        ::schema::register_artifact_schema_descriptor(crate::artifacts::wav::standards::riff_pcm::subsets::any::schema::wav_artifact_schema_descriptor());
+        ::framework_schema::register_artifact_schema_descriptor(crate::standards::riff_pcm::subsets::any::schema::wav_artifact_schema_descriptor());
         register_artifact_inferences();
-        store::register_document_codec(store::ArtifactCodec::of::<WavSnapshot, crate::artifacts::wav::standards::riff_pcm::subsets::any::schema::mutations::WavMutation>(
-            crate::artifacts::wav::standards::riff_pcm::subsets::any::schema::snapshot::STDIO_WAV_DOCUMENT_SCHEMA,
+        store::register_document_codec(store::ArtifactCodec::of::<WavSnapshot, crate::standards::riff_pcm::subsets::any::schema::mutations::WavMutation>(
+            crate::standards::riff_pcm::subsets::any::schema::snapshot::STDIO_WAV_DOCUMENT_SCHEMA,
         )).expect("static Stdio registration must be available and conflict-free");
     }
 
@@ -57,7 +57,7 @@ pub mod derived_composition {
     /// ticket 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING P2/S3+S4).
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn register_artifact_inferences() {
-        ::schema::register_artifact_inference_descriptor(crate::artifacts::wav::standards::riff_pcm::subsets::any::schema::inferences::wav_artifact_inference_descriptor());
+        ::framework_schema::register_artifact_inference_descriptor(crate::standards::riff_pcm::subsets::any::schema::inferences::wav_artifact_inference_descriptor());
     }
     //#endregion 🔖️Register
 }
@@ -72,7 +72,7 @@ pub use derived_composition::*;
 // `fmt `+`data` roles) is small enough that duplicating the ~15-line walk loop keeps each
 // artifact's engine self-contained without a cross-artifact dependency).
 
-use crate::artifacts::wav::standards::riff_pcm::subsets::any::schema::snapshot::{RiffChunk, WavData, WavFmt, WavSnapshot, STDIO_WAV_DOCUMENT_SCHEMA};
+use crate::standards::riff_pcm::subsets::any::schema::snapshot::{RiffChunk, WavData, WavFmt, WavSnapshot, STDIO_WAV_DOCUMENT_SCHEMA};
 
 //#region 🔖️Sniff
 /// 🔍 Real magic sniff: `RIFF` fourcc at byte 0 + `WAVE` fourcc at byte 8 (RIFF's own type tag).
@@ -362,7 +362,7 @@ mod codec_tests {
 }
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
-    use crate::artifacts::wav::standards::riff_pcm::subsets::any::schema::WavComposer as WavRawAnyComposer;
+    use crate::standards::riff_pcm::subsets::any::schema::WavComposer as WavRawAnyComposer;
     use semio_framework_plugin::{composer_entry_of, ComposerEntry};
     use std::sync::OnceLock;
 

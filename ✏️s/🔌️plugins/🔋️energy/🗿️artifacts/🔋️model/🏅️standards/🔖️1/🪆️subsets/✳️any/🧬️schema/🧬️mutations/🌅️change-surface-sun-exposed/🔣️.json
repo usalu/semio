@@ -5,7 +5,7 @@
   "displayName": "Change Surface Sun Exposed",
   "emoji": "🌅️",
   "aggregateVariant": "ChangeSurfaceSunExposed",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-surface-sun-exposed",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

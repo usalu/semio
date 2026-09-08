@@ -1,26 +1,152 @@
 {
-  "$id": "https://semio.tech/schema/s.stdio.semio.video/mutations.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/video/mutations.json",
   "title": "SemioVideoMutation",
-  "description": "Named-variant enum discriminated on the mutation tag.",
+  "description": "Discriminated union over this module's mutation leaves (internally tagged); every payload is the leaf's own schema, referenced, never restated.",
   "oneOf": [
-    { "type": "object", "properties": { "mutation": { "const": "setSnapshot" }, "snapshot": { "$ref": "../📸️snapshot/🔣️.json" } } },
-    { "type": "object", "properties": { "mutation": { "const": "insertStream" }, "index": { "type": "integer" }, "stream": { "type": "object" } } },
-    { "type": "object", "properties": { "mutation": { "const": "removeStream" }, "index": { "type": "integer" } } },
     {
-      "type": "object",
-      "properties": {
-        "mutation": { "const": "setStreamMeta" },
-        "index": { "type": "integer" },
-        "kind": { "enum": ["video", "audio", "subtitle"] },
-        "codec": { "type": "string" },
-        "width": { "type": "integer" },
-        "height": { "type": "integer" },
-        "rate": { "type": "object", "properties": { "num": { "type": "integer" }, "den": { "type": "integer" } } }
-      }
+      "allOf": [
+        {
+          "$ref": "./➕️insert-sample/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "insertSample"
+            }
+          }
+        }
+      ]
     },
-    { "type": "object", "properties": { "mutation": { "const": "insertSample" }, "streamIndex": { "type": "integer" }, "index": { "type": "integer" }, "sample": { "type": "object" } } },
-    { "type": "object", "properties": { "mutation": { "const": "removeSample" }, "streamIndex": { "type": "integer" }, "index": { "type": "integer" } } },
-    { "type": "object", "properties": { "mutation": { "const": "setSampleData" }, "streamIndex": { "type": "integer" }, "index": { "type": "integer" }, "data": { "type": "string", "contentEncoding": "hex" } } },
-    { "type": "object", "properties": { "mutation": { "const": "setSampleFlags" }, "streamIndex": { "type": "integer" }, "index": { "type": "integer" }, "pts": { "type": "integer" }, "key": { "type": "boolean" } } }
+    {
+      "allOf": [
+        {
+          "$ref": "./🎥insert-stream/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "insertStream"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "./🚮remove-sample/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "removeSample"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "./🗑️remove-stream/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "removeStream"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "./📀set-sample-data/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setSampleData"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "./🚩set-sample-flags/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setSampleFlags"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "./📸️set-snapshot/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setSnapshot"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "./📋set-stream-meta/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setStreamMeta"
+            }
+          }
+        }
+      ]
+    }
   ]
 }

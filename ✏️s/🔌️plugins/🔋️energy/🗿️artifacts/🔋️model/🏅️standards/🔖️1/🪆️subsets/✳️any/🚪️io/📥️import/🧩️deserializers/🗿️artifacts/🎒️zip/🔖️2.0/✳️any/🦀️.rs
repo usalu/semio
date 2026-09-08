@@ -1,6 +1,6 @@
 //! model <- zip
 use crate::artifacts::model::EnergyModelSnapshot;
-use semio_s_plugin_stdio::artifacts::zip::{ZipSnapshot, STDIO_ZIP_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_zip::{ZipSnapshot, STDIO_ZIP_DOCUMENT_SCHEMA};
 
 pub async fn register() {}
 

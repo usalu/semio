@@ -5,7 +5,7 @@
   "displayName": "Replace Config",
   "emoji": "🔄️",
   "aggregateVariant": "ReplaceConfig",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "replace-config",
   "binaryTag": 0,
   "invertibility": "explicit-mutation",

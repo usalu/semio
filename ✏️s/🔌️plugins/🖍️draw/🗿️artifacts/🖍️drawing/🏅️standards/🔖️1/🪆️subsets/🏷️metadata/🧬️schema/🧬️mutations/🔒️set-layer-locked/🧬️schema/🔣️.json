@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/draw/drawing/1/metadata/mutation/set-layer-locked.json",
+  "title": "SetLayerLocked",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "layerId",
+    "locked"
+  ],
+  "properties": {
+    "layerId": {
+      "type": "string"
+    },
+    "locked": {
+      "type": "boolean"
+    }
+  }
+}

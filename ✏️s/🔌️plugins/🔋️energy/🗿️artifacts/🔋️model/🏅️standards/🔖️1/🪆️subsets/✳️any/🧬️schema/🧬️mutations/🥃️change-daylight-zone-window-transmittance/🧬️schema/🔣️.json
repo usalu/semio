@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/energy/model/1/any/mutation/change-daylight-zone-window-transmittance.json",
+  "title": "ChangeDaylightZoneWindowTransmittance",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newWindowTransmittance"
+  ],
+  "properties": {
+    "id": {
+      "type": "integer"
+    },
+    "newWindowTransmittance": {
+      "type": "number"
+    }
+  }
+}

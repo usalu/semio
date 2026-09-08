@@ -5,7 +5,7 @@
   "displayName": "Change Humidistat Dehumidifying Throttle Range",
   "emoji": "🧻️",
   "aggregateVariant": "ChangeHumidistatDehumidifyingThrottleRange",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-humidistat-dehumidifying-throttle-range",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

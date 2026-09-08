@@ -3,7 +3,7 @@
 //! `charCount` is the total character count of every line's content (line-ending bytes not
 //! included — those live in `line_ending`/`trailing_newline`, not the content itself).
 
-use crate::artifacts::txt::TxtSnapshot;
+use crate::TxtSnapshot;
 
 //#region 🔖️Outline
 /// 🧾️ `Txt` document outline.

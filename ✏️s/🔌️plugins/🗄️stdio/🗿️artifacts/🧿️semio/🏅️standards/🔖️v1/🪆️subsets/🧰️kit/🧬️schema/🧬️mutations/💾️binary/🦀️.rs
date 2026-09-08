@@ -3,7 +3,7 @@
 //! opaque trailing `bytes` chain — reuses the already-real `../📝️text/🦀️.rs` text codec's
 //! argument tail, same convention every sibling subset uses.
 
-use crate::artifacts::semio::standards::v1::subsets::kit::schema::mutations::SemioKitMutation;
+use crate::standards::v1::subsets::kit::schema::mutations::SemioKitMutation;
 
 //#region 📡️SemioProtocol
 pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio");
@@ -88,7 +88,7 @@ impl protocol::OpBinary for SemioKitMutation {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::semio::standards::v1::subsets::kit::schema::mutations::text::demo_mutation_cases;
+    use crate::standards::v1::subsets::kit::schema::mutations::text::demo_mutation_cases;
     use protocol::OpBinary;
 
     #[semio_framework_async_macros::async_test]

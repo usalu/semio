@@ -1,5 +1,5 @@
 //! 🚪️ IO stdio.step (ap214/🧱️base) — registration now flows through the `s.stdio.step`
-//! `ArtifactDeclaration` (`crate::artifacts::step::declaration`), not per-leaf register().
+//! `ArtifactDeclaration` (`crate::declaration`), not per-leaf register().
 //#region 🔖️Submodules
 /// 🧱 BrepMesh analyzer view, derived from the generic graph — never persisted itself.
 #[path = "🧱️brep/🦀️.rs"]
@@ -17,8 +17,8 @@ pub mod part21;
 
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use crate::artifacts::step::standards::v_ap214::subsets::base::schema::StepAnalyzer;
-    use crate::artifacts::step::StepSnapshot;
+    use crate::standards::v_ap214::subsets::base::schema::StepAnalyzer;
+    use crate::StepSnapshot;
     use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.step", standard: StandardId("ap214"), subset: SubsetId("*") };
@@ -65,13 +65,13 @@ pub use derived_composition::*;
 /// through the `engine` barrel shim (`🦀️.rs`'s `pub mod engine { pub use super::subsets::
 /// any::io::*; pub use super::subsets::any::schema::*; }`).
 pub mod io_registry {
-    use crate::artifacts::step::standards::v_ap214::subsets::base::schema::StepComposer as StepRawAnyComposer;
-    use crate::artifacts::step::standards::v_ap214::subsets::cc1::schema::StepCc1Composer;
-    use crate::artifacts::step::standards::v_ap214::subsets::cc2::schema::StepCc2Composer;
-    use crate::artifacts::step::standards::v_ap214::subsets::cc3::schema::StepCc3Composer;
-    use crate::artifacts::step::standards::v_ap214::subsets::cc4::schema::StepCc4Composer;
-    use crate::artifacts::step::standards::v_ap214::subsets::cc5::schema::StepCc5Composer;
-    use crate::artifacts::step::standards::v_ap214::subsets::cc6::schema::StepCc6Composer;
+    use crate::standards::v_ap214::subsets::base::schema::StepComposer as StepRawAnyComposer;
+    use crate::standards::v_ap214::subsets::cc1::schema::StepCc1Composer;
+    use crate::standards::v_ap214::subsets::cc2::schema::StepCc2Composer;
+    use crate::standards::v_ap214::subsets::cc3::schema::StepCc3Composer;
+    use crate::standards::v_ap214::subsets::cc4::schema::StepCc4Composer;
+    use crate::standards::v_ap214::subsets::cc5::schema::StepCc5Composer;
+    use crate::standards::v_ap214::subsets::cc6::schema::StepCc6Composer;
     use semio_framework_plugin::{composer_entry_of, ComposerEntry};
     use std::sync::OnceLock;
 

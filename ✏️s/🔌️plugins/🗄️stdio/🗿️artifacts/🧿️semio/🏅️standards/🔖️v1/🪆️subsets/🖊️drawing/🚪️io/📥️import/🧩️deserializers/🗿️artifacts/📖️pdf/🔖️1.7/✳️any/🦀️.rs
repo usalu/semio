@@ -10,9 +10,9 @@
 //! containing exactly one `DrawNode::Text` holding that page's whole extracted text — never
 //! fabricating vector paths PDF's own typed snapshot doesn't expose.
 
-use crate::artifacts::pdf::PdfSnapshot;
-use crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioTransform};
-use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{DrawCanvas, DrawLayer, DrawNode, SemioDrawingSnapshot, STDIO_SEMIODRAWING_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_pdf::PdfSnapshot;
+use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioTransform};
+use crate::standards::v1::subsets::drawing::schema::snapshot::{DrawCanvas, DrawLayer, DrawNode, SemioDrawingSnapshot, STDIO_SEMIODRAWING_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId};
 
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.pdf", standard: StandardId("1.7"), subset: SubsetId::ANY };
@@ -56,7 +56,7 @@ impl ArtifactDeserializer for SemioDrawingFromPdf {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::pdf::schema::snapshot::PdfPage;
+    use semio_s_artifact_stdio_pdf::schema::snapshot::PdfPage;
 
     #[semio_framework_async_macros::async_test]
     async fn maps_page_text_and_media_box() {

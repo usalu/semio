@@ -8,6 +8,6 @@ pub fn diff(payload: &ChangeBridgeLane, base: &En1991Snapshot) -> protocol::Muta
     if base.bridge_lane == payload.new_bridge_lane {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "Bridge lane already has this value.");
     }
-    protocol::MutationOutcome::new(En1991Diff { bridge_lane: Some(payload.new_bridge_lane.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1991Diff { bridge_lane: Some(payload.new_bridge_lane), ..Default::default() })
 }
 //#endregion 🔖️Diff

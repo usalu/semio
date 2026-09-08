@@ -11,9 +11,9 @@
 //!   are left empty/`None`, mirroring the sibling export leaf's own drop list.
 //! - Malformed logical geometry is a hard `Err`, not a fabricated empty mesh.
 
-use crate::artifacts::dwg::{DwgDrawing, DwgGeometry, DwgSnapshot};
-use crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioPoint3;
-use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::{SemioMesh, SemioMeshSnapshot, SemioPrimitive, SemioTopology, STDIO_SEMIOMESH_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_dwg::{DwgDrawing, DwgGeometry, DwgSnapshot};
+use crate::standards::v1::subsets::base::schema::geometry::SemioPoint3;
+use crate::standards::v1::subsets::mesh::schema::snapshot::{SemioMesh, SemioMeshSnapshot, SemioPrimitive, SemioTopology, STDIO_SEMIOMESH_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId};
 
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.dwg", standard: StandardId("ac1024"), subset: SubsetId::ANY };
@@ -90,8 +90,8 @@ impl ArtifactDeserializer for SemioMeshFromDwg {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::dwg::schema::snapshot::DwgLogicalDrawing;
-    use crate::artifacts::dwg::{DwgColor, DwgEntity};
+    use semio_s_artifact_stdio_dwg::schema::snapshot::DwgLogicalDrawing;
+    use semio_s_artifact_stdio_dwg::{DwgColor, DwgEntity};
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn sample_dwg() -> DwgSnapshot {

@@ -8,7 +8,6 @@
 
 extern crate infinite_canvas as infinite_board_port_directed;
 extern crate infinite_canvas as infinite_board_port_directed_normal;
-#[allow(clippy::result_large_err)]
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
@@ -1477,13 +1476,9 @@ pub mod examples {
     pub mod app_jack_demo_session;
     #[path = "../../🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🦀️.rs"]
     pub mod app_rewriting_demo_session;
-    #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️.rs"]
-    pub mod art_jack_demo;
     #[cfg(test)]
     #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🦀️.rs"]
     mod art_jack_demo_tests;
-    #[path = "../../🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️.rs"]
-    pub mod art_rewriting_demo;
     #[cfg(test)]
     #[path = "../../🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🦀️.rs"]
     mod art_rewriting_demo_tests;

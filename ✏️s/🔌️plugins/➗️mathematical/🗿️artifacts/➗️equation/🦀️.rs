@@ -5,9 +5,9 @@
 use semio_framework_os_kernel::{FromValue, ToValue};
 use semio_framework_plugin::{ArtifactKindSpec, Dialect, MediaClass, MediaForm, MediaType, OsMediaCapability, StandardId, SubsetId};
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::table::schema::snapshot::{SemioTableCellKind, SemioTableColumn, SemioTableRow, SemioTableSnapshot, STDIO_SEMIOTABLE_DOCUMENT_SCHEMA};
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::text::schema::snapshot::{SemioTextRun, SemioTextSnapshot, STDIO_SEMIOTEXT_DOCUMENT_SCHEMA};
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::value::schema::snapshot::{SemioValue, SemioValueEntry, SemioValueSnapshot, STDIO_SEMIOVALUE_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_semio::standards::v1::subsets::table::schema::snapshot::{SemioTableCellKind, SemioTableColumn, SemioTableRow, SemioTableSnapshot, STDIO_SEMIOTABLE_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_semio::standards::v1::subsets::text::schema::snapshot::{SemioTextRun, SemioTextSnapshot, STDIO_SEMIOTEXT_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_semio::standards::v1::subsets::value::schema::snapshot::{SemioValue, SemioValueEntry, SemioValueSnapshot, STDIO_SEMIOVALUE_DOCUMENT_SCHEMA};
 use std::sync::Arc;
 
 //#region 🔖️Constants
@@ -141,7 +141,6 @@ pub use crate::artifacts::equation::snapshot::schema::{EquationExprSnapshot, Equ
 /// zips them back losslessly; `equation_computed_from_state` is a genuinely derived/computed
 /// structure (never independently authored), documented honestly rather than pretending it is
 /// user-editable prose.
-
 //#region 🔖️ChildTypes
 pub type EquationNotationChild = store::ArtifactChild<SemioTextSnapshot>;
 pub type EquationResultsChild = store::ArtifactChild<SemioTableSnapshot>;
@@ -330,9 +329,7 @@ pub fn equation_children_from_state(graph: &EquationGraph, geometry: &EquationGe
 
 /// 🔎 Reads the exact artifact-instance scene behind a snapshot's composed children.
 pub fn equation_scene(snapshot: &EquationSnapshot) -> EquationWorkingScene {
-    equation_scene_owner(snapshot)
-        .map(|scene| (*scene).clone())
-        .unwrap_or_else(|| EquationWorkingScene { graph: EquationGraph { directed: true, nodes: Vec::new(), edges: Vec::new(), algorithm: String::new(), algorithm_seed: None }, geometry: EquationGeometry { points: Vec::new() } })
+    equation_scene_owner(snapshot).map_or_else(|| EquationWorkingScene { graph: EquationGraph { directed: true, nodes: Vec::new(), edges: Vec::new(), algorithm: String::new(), algorithm_seed: None }, geometry: EquationGeometry { points: Vec::new() } }, |scene| (*scene).clone())
 }
 
 /// 🧵 Retains the exact immutable scene owner for a resumable app operation.
@@ -480,7 +477,7 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
 /// `register_app_schema_descriptor` is not in the §6 artifact-scoped set.
 pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
     use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
-    let rows: &[(&str, &str, &str, &[(&str, &str)], Option<(&str, &str)>)] = &[
+    let rows: &[semio_framework_plugin::ArtifactCapabilityRow<'_>] = &[
         ("s.mathematical.equation.standard.v1", "standard", "1", &[], None),
         ("s.mathematical.equation.standard.v1.profile.any", "profile", "any", &[], None),
         ("s.mathematical.equation.schema.artifact", "schema", "s.mathematical.equation", &[("schema", "s.mathematical.equation")], None),

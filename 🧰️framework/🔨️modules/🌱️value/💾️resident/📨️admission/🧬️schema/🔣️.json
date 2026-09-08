@@ -1,0 +1,414 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/framework/value/resident/admission/schema.json",
+  "title": "Value Resident Admission Schema Module",
+  "$defs": {
+    "AdmissionFixture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "bootstrap",
+        "resourceKinds",
+        "faultKinds",
+        "quarantine",
+        "ownership",
+        "grants",
+        "unrelatedByte",
+        "nativeOwnership"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "bootstrap": {
+          "type": "array",
+          "minItems": 7,
+          "maxItems": 7,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "resourceKinds": {
+          "type": "array",
+          "minItems": 5,
+          "maxItems": 5,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "owner",
+              "record",
+              "page",
+              "reader",
+              "external"
+            ]
+          }
+        },
+        "faultKinds": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 4,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "object",
+              "null",
+              "undefined",
+              "proxy"
+            ]
+          }
+        },
+        "quarantine": {
+          "type": "array",
+          "minItems": 11,
+          "maxItems": 11,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "page-allocate",
+              "page-write",
+              "page-seal",
+              "reader-admission",
+              "reader-byte",
+              "reader-length",
+              "external-fence",
+              "external-late-retirement",
+              "external-byte",
+              "external-length",
+              "external-current-custody"
+            ]
+          }
+        },
+        "ownership": {
+          "type": "array",
+          "minItems": 8,
+          "maxItems": 8,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "grants": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "maxItems",
+              "maxBytes"
+            ],
+            "properties": {
+              "maxItems": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 1
+              },
+              "maxBytes": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 4096
+              }
+            }
+          }
+        },
+        "unrelatedByte": {
+          "const": 73
+        },
+        "nativeOwnership": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "firstAccessAllocations",
+            "foreignRepopulation",
+            "phaseAccess",
+            "exactAllocation",
+            "grantCases",
+            "preparationGrantFrontiers",
+            "preparationGrantCases",
+            "releaseTrace",
+            "refusals",
+            "layout",
+            "unknownFaultFinalDisposal"
+          ],
+          "properties": {
+            "firstAccessAllocations": {
+              "const": [
+                0,
+                0,
+                0
+              ]
+            },
+            "foreignRepopulation": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "afterEmptyObservation",
+                "accepted",
+                "consumerDropsDuringRelease"
+              ],
+              "properties": {
+                "afterEmptyObservation": {
+                  "const": true
+                },
+                "accepted": {
+                  "const": false
+                },
+                "consumerDropsDuringRelease": {
+                  "const": 0
+                }
+              }
+            },
+            "phaseAccess": {
+              "const": [
+                {
+                  "phase": "open",
+                  "forward": true,
+                  "recovery": false
+                },
+                {
+                  "phase": "consumer-closing",
+                  "forward": false,
+                  "recovery": true
+                },
+                {
+                  "phase": "root-closing",
+                  "forward": false,
+                  "recovery": true
+                }
+              ]
+            },
+            "exactAllocation": {
+              "const": {
+                "alignment": 64,
+                "failure": "injected-null",
+                "consumerFailure": "retain-reservation",
+                "admissionFailure": "retain-reservation",
+                "recordFailure": "release-uninstalled-reservation",
+                "cancelFrontiers": [
+                  "reserved",
+                  "allocated",
+                  "initialized",
+                  "published"
+                ],
+                "cancelAllocations": [
+                  0,
+                  1,
+                  1,
+                  1
+                ],
+                "cancelDeallocations": [
+                  0,
+                  1,
+                  1,
+                  1
+                ],
+                "deallocation": "same-requested-layout-once"
+              }
+            },
+            "grantCases": {
+              "const": [
+                "zero-items",
+                "required-minus-one",
+                "required"
+              ]
+            },
+            "preparationGrantFrontiers": {
+              "const": [
+                {
+                  "phase": "reserve",
+                  "required": "Option<ConsumerPage>+u64+ResidentResources+Option<NonNull<ConsumerHeader>>",
+                  "before": {
+                    "reserved": false,
+                    "allocations": 0
+                  },
+                  "afterRefusal": {
+                    "reserved": false,
+                    "allocations": 0
+                  },
+                  "afterExact": {
+                    "reserved": true,
+                    "allocations": 0
+                  }
+                },
+                {
+                  "phase": "allocate",
+                  "required": "ConsumerNode<C>.layout+Option<NonNull<ConsumerHeader>>+u64",
+                  "before": {
+                    "reserved": true,
+                    "allocations": 0
+                  },
+                  "afterRefusal": {
+                    "reserved": true,
+                    "allocations": 0
+                  },
+                  "afterExact": {
+                    "reserved": true,
+                    "allocations": 1
+                  }
+                }
+              ]
+            },
+            "preparationGrantCases": {
+              "const": [
+                "zero-items",
+                "zero-bytes",
+                "required-minus-one",
+                "required"
+              ]
+            },
+            "releaseTrace": {
+              "type": "array",
+              "minItems": 7,
+              "maxItems": 7,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "phase",
+                  "consumerDrops",
+                  "shellDrops",
+                  "terminal"
+                ],
+                "properties": {
+                  "phase": {
+                    "enum": [
+                      "prepared",
+                      "caller-lost",
+                      "record-empty-consumer-live",
+                      "shell-handed-to-parent",
+                      "consumer-handed-to-parent",
+                      "parent-typed-retirement",
+                      "aliases-pages-root-released"
+                    ]
+                  },
+                  "consumerDrops": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 1
+                  },
+                  "shellDrops": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 1
+                  },
+                  "terminal": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            },
+            "refusals": {
+              "const": [
+                "foreign-consumer",
+                "foreign-equal-capacity-ledger",
+                "occupied-parent-target",
+                "live-consumer-at-erased-release"
+              ]
+            },
+            "layout": {
+              "const": [
+                "fixed-root",
+                "admission-page",
+                "consumer-page",
+                "record-page",
+                "consumer-move",
+                "shell-move",
+                "descriptor-move",
+                "final-root-release"
+              ]
+            },
+            "unknownFaultFinalDisposal": {
+              "const": false
+            }
+          }
+        }
+      }
+    },
+    "Admission": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "charge",
+        "bootstrap",
+        "resourceKinds",
+        "faultPolicy",
+        "closePolicy",
+        "dispatch",
+        "nativeOwnership"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "charge": {
+          "$ref": "https://semio.tech/schema/framework/value/resident/schema.json#/definitions/resources"
+        },
+        "bootstrap": {
+          "const": "exact-consumer-prepare-read-claim"
+        },
+        "resourceKinds": {
+          "type": "array",
+          "minItems": 5,
+          "maxItems": 5,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "owner",
+              "record",
+              "page",
+              "reader",
+              "external"
+            ]
+          }
+        },
+        "faultPolicy": {
+          "const": "first-exact-root-retained-no-refund"
+        },
+        "closePolicy": {
+          "const": "intrinsic-descendants-before-fault-held-cell"
+        },
+        "dispatch": {
+          "const": "exact-private-state-not-public-facade-methods"
+        },
+        "nativeOwnership": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "root",
+            "consumer",
+            "pages",
+            "pricing",
+            "release",
+            "unknownFault"
+          ],
+          "properties": {
+            "root": {
+              "const": "borrowed-facades-original-bootstrap-root-outside-callback"
+            },
+            "consumer": {
+              "const": "private-typed-slot-forward-revocation-explicit-close-recovery-before-erased-release"
+            },
+            "pages": {
+              "const": "exact-requested-layout-preadmitted-before-allocation-original-descriptor-until-deallocation"
+            },
+            "pricing": {
+              "const": "native-layout-and-actual-allocation-not-typescript-logical-charge"
+            },
+            "release": {
+              "const": "typed-shell-consumer-result-alias-page-root-separate-grants"
+            },
+            "unknownFault": {
+              "const": "observe-retained-original-no-generic-terminal-disposal"
+            }
+          }
+        }
+      }
+    }
+  }
+}

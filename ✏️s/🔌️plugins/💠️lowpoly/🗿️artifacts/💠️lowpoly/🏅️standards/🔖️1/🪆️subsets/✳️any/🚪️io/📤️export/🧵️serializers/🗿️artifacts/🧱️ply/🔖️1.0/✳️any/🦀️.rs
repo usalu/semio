@@ -11,8 +11,8 @@
 //! lowpoly document losslessly.
 use crate::artifacts::lowpoly::schema::snapshot::text::print_dsl;
 use crate::artifacts::lowpoly::schema::snapshot::{enc_str, LowpolySnapshot};
-use semio_s_plugin_stdio::artifacts::ply::engine::encode_ply;
-use semio_s_plugin_stdio::artifacts::ply::PlySnapshot;
+use semio_s_artifact_stdio_ply::engine::encode_ply;
+use semio_s_artifact_stdio_ply::PlySnapshot;
 
 pub(crate) const LOWPOLY_DSL_COMMENT_PREFIX: &str = "semio-lowpoly-dsl ";
 

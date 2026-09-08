@@ -1,8 +1,8 @@
 //! 🧬️ MdArtifact schema — full artifact state.
 
-use crate::artifacts::md::schema::snapshot::MdBlock;
-use crate::artifacts::md::MdSnapshot;
-use schema::ArtifactSchema;
+use crate::schema::snapshot::MdBlock;
+use crate::MdSnapshot;
+use framework_schema::ArtifactSchema;
 
 //#region 🔖️Artifact
 /// 🧬️ Full `stdio.md` artifact state.
@@ -50,31 +50,31 @@ impl MdArtifact {
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.stdio.md`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn md_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
-    schema::ArtifactSchemaDescriptor {
+pub fn md_artifact_schema_descriptor() -> framework_schema::ArtifactSchemaDescriptor {
+    framework_schema::ArtifactSchemaDescriptor {
         id: "s.stdio.md",
-        artifact: schema::FacetLeaves {
+        artifact: framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),
             json_schema: include_str!("🔣️.json"),
             proto: include_str!("🛰️.proto"),
         },
-        snapshot: schema::FacetLeaves {
+        snapshot: framework_schema::FacetLeaves {
             rust: include_str!("📸️snapshot/🦀️.rs"),
             typescript: include_str!("📸️snapshot/🟦️.ts"),
             graphql: include_str!("📸️snapshot/🔗️.graphql"),
             json_schema: include_str!("📸️snapshot/🔣️.json"),
             proto: include_str!("📸️snapshot/🛰️.proto"),
         },
-        diff: schema::FacetLeaves {
+        diff: framework_schema::FacetLeaves {
             rust: include_str!("🔺️diff/🦀️.rs"),
             typescript: include_str!("🔺️diff/🟦️.ts"),
             graphql: include_str!("🔺️diff/🔗️.graphql"),
             json_schema: include_str!("🔺️diff/🔣️.json"),
             proto: include_str!("🔺️diff/🛰️.proto"),
         },
-        mutations: schema::FacetLeaves {
+        mutations: framework_schema::FacetLeaves {
             rust: include_str!("🧬️mutations/🦀️.rs"),
             typescript: include_str!("🧬️mutations/🟦️.ts"),
             graphql: include_str!("🧬️mutations/🔗️.graphql"),
@@ -86,7 +86,7 @@ pub fn md_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
 //#endregion 🔖️Descriptor
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use crate::artifacts::md::{MdDiff, MdMutation, MdSnapshot};
+    use crate::{MdDiff, MdMutation, MdSnapshot};
     use semio_framework_plugin::ArtifactBuilder;
 
     //#region 🔖️Builder
@@ -114,7 +114,7 @@ pub mod derived_construction {
             Ok(Self::from_snapshot(<MdSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
         fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
-            let diff = crate::artifacts::md::schema::mutations::apply_md_mutation(&mut self.snapshot, &mutation);
+            let diff = crate::schema::mutations::apply_md_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
         fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
@@ -136,7 +136,7 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use crate::artifacts::md::MdSnapshot;
+    use crate::MdSnapshot;
     use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     //#region 🔖️Parts
@@ -158,15 +158,15 @@ pub mod derived_analysis {
         if text.trim().is_empty() {
             return IoConfidence::Low;
         }
-        let blocks = crate::artifacts::md::standards::v_commonmark::subsets::any::io::import::deserializers::parse_markdown_blocks(text);
+        let blocks = crate::standards::v_commonmark::subsets::any::io::import::deserializers::parse_markdown_blocks(text);
         if blocks.is_empty() {
             return IoConfidence::Low;
         }
         let has_structure = blocks.iter().any(|b| {
             !matches!(
                 b,
-                crate::artifacts::md::schema::snapshot::MdBlock::Paragraph { inlines }
-                    if inlines.iter().all(|n| matches!(n, crate::artifacts::md::schema::snapshot::MdInline::Text { .. }))
+                crate::schema::snapshot::MdBlock::Paragraph { inlines }
+                    if inlines.iter().all(|n| matches!(n, crate::schema::snapshot::MdInline::Text { .. }))
             )
         });
         if has_structure {
@@ -291,7 +291,7 @@ pub fn empty_md_snapshot() -> MdSnapshot {
 /// (out of this wave's ownership boundary).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn demo_md_snapshot() -> MdSnapshot {
-    use crate::artifacts::md::schema::snapshot::{MdBlock, MdInline};
+    use crate::schema::snapshot::{MdBlock, MdInline};
     let blocks = vec![
         MdBlock::Heading { level: 1, inlines: vec![MdInline::Text { text: "Title".into() }] },
         MdBlock::BlockQuote { blocks: vec![MdBlock::BlockQuote { blocks: vec![MdBlock::Paragraph { inlines: vec![MdInline::Text { text: "Deeply quoted.".into() }] }] }] },
@@ -309,7 +309,7 @@ pub fn demo_md_snapshot() -> MdSnapshot {
         MdBlock::CodeBlock { info: Some("rust".into()), literal: "fn demo() -> i32 {\n    42\n}".into() },
         MdBlock::ThematicBreak,
     ];
-    MdSnapshot { schema: crate::artifacts::md::STDIO_MD_DOCUMENT_SCHEMA.into(), blocks }
+    MdSnapshot { schema: crate::STDIO_MD_DOCUMENT_SCHEMA.into(), blocks }
 }
 //#endregion 🔖️DocumentHelpers
 
@@ -330,13 +330,13 @@ semio_framework_plugin::derive_artifact_facets!(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::md::schema::diff::{diff_at_path, MdBlockAdded, MdBlockDiff, MdBlockModified, MdBlocksDiff, MdListItemAdded, MdListItemModified, MdListItemsDiff};
-    use crate::artifacts::md::schema::mutations::{insert_block::InsertBlock, remove_block::RemoveBlock, replace_block::ReplaceBlock, set_inlines::SetInlines, set_snapshot::SetSnapshot};
-    use crate::artifacts::md::schema::mutations::MdPathStep;
-    use crate::artifacts::md::schema::snapshot::{MdBlock, MdInline};
-    use crate::artifacts::md::standards::v_commonmark::subsets::any::io::export::serializers::render_markdown_blocks;
-    use crate::artifacts::md::standards::v_commonmark::subsets::any::io::import::deserializers::{parse_inline, parse_markdown_blocks};
-    use crate::artifacts::md::{MdDiff, MdMutation, STDIO_MD_DOCUMENT_SCHEMA};
+    use crate::schema::diff::{diff_at_path, MdBlockAdded, MdBlockDiff, MdBlockModified, MdBlocksDiff, MdListItemAdded, MdListItemModified, MdListItemsDiff};
+    use crate::schema::mutations::{insert_block::InsertBlock, remove_block::RemoveBlock, replace_block::ReplaceBlock, set_inlines::SetInlines, set_snapshot::SetSnapshot};
+    use crate::schema::mutations::MdPathStep;
+    use crate::schema::snapshot::{MdBlock, MdInline};
+    use crate::standards::v_commonmark::subsets::any::io::export::serializers::render_markdown_blocks;
+    use crate::standards::v_commonmark::subsets::any::io::import::deserializers::{parse_inline, parse_markdown_blocks};
+    use crate::{MdDiff, MdMutation, STDIO_MD_DOCUMENT_SCHEMA};
     use protocol::command::DiffAlgebra;
     use protocol::{Mutation, MutationDiff};
 
@@ -378,7 +378,7 @@ mod tests {
     /// facets that harness does not auto-discover at all.
     mod conformance_laws {
         use super::*;
-        use crate::artifacts::md::schema::{diff, mutations, snapshot};
+        use crate::schema::{diff, mutations, snapshot};
         use protocol::{DiffCodec, OpBinary, OpText};
 
         /// ✅️ "committed files parse": all 6 handcrafted `.grammar.semio`/`.protocol.semio` files
@@ -719,7 +719,7 @@ mod tests {
             let applied_via_diff = MutationDiff::apply(diff_direct.diff(), &base).unwrap();
 
             let mut via_apply = base.clone();
-            let diff_from_apply = crate::artifacts::md::schema::mutations::apply_md_mutation(&mut via_apply, &mutation);
+            let diff_from_apply = crate::schema::mutations::apply_md_mutation(&mut via_apply, &mutation);
 
             assert_eq!(applied_via_diff, via_apply, "mutation_diff_law: apply mismatch for {mutation:?}");
             assert_eq!(diff_direct, diff_from_apply, "mutation_diff_law: diff mismatch for {mutation:?}");
@@ -734,9 +734,9 @@ mod tests {
             let base = sample_snapshot();
 
             let mut round_tripped = base.clone();
-            crate::artifacts::md::schema::mutations::apply_md_mutation(&mut round_tripped, &mutation);
+            crate::schema::mutations::apply_md_mutation(&mut round_tripped, &mutation);
             for inverse_mutation in <MdMutation as Mutation<MdSnapshot>>::inverse(&mutation, &base) {
-                crate::artifacts::md::schema::mutations::apply_md_mutation(&mut round_tripped, &inverse_mutation);
+                crate::schema::mutations::apply_md_mutation(&mut round_tripped, &inverse_mutation);
             }
             assert_eq!(round_tripped, base, "inverse_law (mutation-level).await failed for {mutation:?}");
 
@@ -883,7 +883,7 @@ mod tests {
         let fixture_blocks = parse_markdown_blocks(fixture_text);
         let fixture = MdSnapshot { schema: STDIO_MD_DOCUMENT_SCHEMA.into(), blocks: fixture_blocks };
         let mut mutated = fixture.clone();
-        crate::artifacts::md::schema::mutations::apply_md_mutation(&mut mutated, &MdMutation::InsertBlock(InsertBlock { path: vec![], index: 0, block: MdBlock::ThematicBreak }));
+        crate::schema::mutations::apply_md_mutation(&mut mutated, &MdMutation::InsertBlock(InsertBlock { path: vec![], index: 0, block: MdBlock::ThematicBreak }));
         assert_ne!(fixture, mutated);
         assert_eq!(MutationDiff::apply(&<MdDiff as DiffAlgebra<MdSnapshot>>::between(&fixture, &mutated), &fixture).unwrap(), mutated);
         assert_eq!(MutationDiff::apply(&<MdDiff as DiffAlgebra<MdSnapshot>>::between(&mutated, &fixture), &mutated).unwrap(), fixture);
@@ -951,7 +951,7 @@ mod tests {
         // Sanity: nested list-item content diff and top-level block-kind Replace both exist as
         // reachable shapes (exercised directly, not just via sweep, since the naive between()
         // can't surface every shape from one pair -- same rationale as xml's F1 precedent).
-        let leaf = diff_at_path(&[], 0, crate::artifacts::md::schema::diff::MdBlocksLeafDiff::Modified(MdBlockDiff::Replace { block: MdBlock::ThematicBreak }));
+        let leaf = diff_at_path(&[], 0, crate::schema::diff::MdBlocksLeafDiff::Modified(MdBlockDiff::Replace { block: MdBlock::ThematicBreak }));
         assert!(leaf.blocks.is_some());
         let nested = MdListItemsDiff {
             removed: vec![0],

@@ -94,7 +94,7 @@
         {
           "id": "insert-element",
           "capability": "semio-v1-model-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -113,7 +113,7 @@
         {
           "id": "insert-relation",
           "capability": "semio-v1-model-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -132,7 +132,7 @@
         {
           "id": "insert-spatial-node",
           "capability": "semio-v1-model-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -151,7 +151,7 @@
         {
           "id": "remove-element",
           "capability": "semio-v1-model-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -170,7 +170,7 @@
         {
           "id": "remove-relation",
           "capability": "semio-v1-model-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -189,7 +189,7 @@
         {
           "id": "remove-spatial-node",
           "capability": "semio-v1-model-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -208,7 +208,7 @@
         {
           "id": "set-element",
           "capability": "semio-v1-model-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -227,7 +227,7 @@
         {
           "id": "set-relation",
           "capability": "semio-v1-model-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -246,7 +246,7 @@
         {
           "id": "set-snapshot",
           "capability": "semio-v1-model-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -265,7 +265,7 @@
         {
           "id": "set-spatial-node",
           "capability": "semio-v1-model-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -303,14 +303,14 @@
       "files": [
         {
           "role": "expected-before-json",
-              "path": "../🧫️fixtures/🧱insert-element-applied/⬅️before.json",
+          "path": "../🧫️fixtures/🧱insert-element-applied/⬅️before.json",
           "mediaType": "application/json",
           "sha256": "sha256:c622a394ba853e316f8bef49d27b4e3fda2c5dcb76fbb1d4bed6f6ab98a55ccd",
           "bytes": 267407
         },
         {
           "role": "expected-after-json",
-              "path": "../🧫️fixtures/🧱insert-element-applied/➡️after.json",
+          "path": "../🧫️fixtures/🧱insert-element-applied/➡️after.json",
           "mediaType": "application/json",
           "sha256": "sha256:31f9d7b75b2aed5e59b9f6af7805ca970cb6da2d0fd1e16f659f4db1242bbf08",
           "bytes": 267983
@@ -354,14 +354,14 @@
       "files": [
         {
           "role": "expected-before-json",
-              "path": "../🧫️fixtures/🪢insert-relation-applied/⬅️before.json",
+          "path": "../🧫️fixtures/🪢insert-relation-applied/⬅️before.json",
           "mediaType": "application/json",
           "sha256": "sha256:c622a394ba853e316f8bef49d27b4e3fda2c5dcb76fbb1d4bed6f6ab98a55ccd",
           "bytes": 267407
         },
         {
           "role": "expected-after-json",
-              "path": "../🧫️fixtures/🪢insert-relation-applied/➡️after.json",
+          "path": "../🧫️fixtures/🪢insert-relation-applied/➡️after.json",
           "mediaType": "application/json",
           "sha256": "sha256:a768cb332b9a466883beab8c834543174473e5a1f8dd526038a7f0fc99baadd3",
           "bytes": 267587
@@ -405,14 +405,14 @@
       "files": [
         {
           "role": "expected-before-json",
-              "path": "../🧫️fixtures/🏗️insert-spatial-node-applied/⬅️before.json",
+          "path": "../🧫️fixtures/🏗️insert-spatial-node-applied/⬅️before.json",
           "mediaType": "application/json",
           "sha256": "sha256:c622a394ba853e316f8bef49d27b4e3fda2c5dcb76fbb1d4bed6f6ab98a55ccd",
           "bytes": 267407
         },
         {
           "role": "expected-after-json",
-              "path": "../🧫️fixtures/🏗️insert-spatial-node-applied/➡️after.json",
+          "path": "../🧫️fixtures/🏗️insert-spatial-node-applied/➡️after.json",
           "mediaType": "application/json",
           "sha256": "sha256:0f1787f5261d538612955262a83732b85dcb418646b3bf8d064dfaaef271b19f",
           "bytes": 267847
@@ -456,14 +456,14 @@
       "files": [
         {
           "role": "expected-before-json",
-              "path": "../🧫️fixtures/🔨remove-element-applied/⬅️before.json",
+          "path": "../🧫️fixtures/🔨remove-element-applied/⬅️before.json",
           "mediaType": "application/json",
           "sha256": "sha256:c622a394ba853e316f8bef49d27b4e3fda2c5dcb76fbb1d4bed6f6ab98a55ccd",
           "bytes": 267407
         },
         {
           "role": "expected-after-json",
-              "path": "../🧫️fixtures/🔨remove-element-applied/➡️after.json",
+          "path": "../🧫️fixtures/🔨remove-element-applied/➡️after.json",
           "mediaType": "application/json",
           "sha256": "sha256:65aed25fb9c6adaa5d993cd43b64eb53ae3c968ddf0e583e68906176413b1d32",
           "bytes": 266313
@@ -507,14 +507,14 @@
       "files": [
         {
           "role": "expected-before-json",
-              "path": "../🧫️fixtures/✂️remove-relation-applied/⬅️before.json",
+          "path": "../🧫️fixtures/✂️remove-relation-applied/⬅️before.json",
           "mediaType": "application/json",
           "sha256": "sha256:c622a394ba853e316f8bef49d27b4e3fda2c5dcb76fbb1d4bed6f6ab98a55ccd",
           "bytes": 267407
         },
         {
           "role": "expected-after-json",
-              "path": "../🧫️fixtures/✂️remove-relation-applied/➡️after.json",
+          "path": "../🧫️fixtures/✂️remove-relation-applied/➡️after.json",
           "mediaType": "application/json",
           "sha256": "sha256:e38302c4b425e145dea4044d1bf00406ab8b968ebbdf4172007dd1472f773135",
           "bytes": 267225
@@ -558,14 +558,14 @@
       "files": [
         {
           "role": "expected-before-json",
-              "path": "../🧫️fixtures/🕳️remove-spatial-node-applied/⬅️before.json",
+          "path": "../🧫️fixtures/🕳️remove-spatial-node-applied/⬅️before.json",
           "mediaType": "application/json",
           "sha256": "sha256:c622a394ba853e316f8bef49d27b4e3fda2c5dcb76fbb1d4bed6f6ab98a55ccd",
           "bytes": 267407
         },
         {
           "role": "expected-after-json",
-              "path": "../🧫️fixtures/🕳️remove-spatial-node-applied/➡️after.json",
+          "path": "../🧫️fixtures/🕳️remove-spatial-node-applied/➡️after.json",
           "mediaType": "application/json",
           "sha256": "sha256:a1ceec82fa6724274132adfe20447577ac7d9263810824af364702761c648164",
           "bytes": 266940
@@ -609,14 +609,14 @@
       "files": [
         {
           "role": "expected-before-json",
-              "path": "../🧫️fixtures/🎛️set-element-applied/⬅️before.json",
+          "path": "../🧫️fixtures/🎛️set-element-applied/⬅️before.json",
           "mediaType": "application/json",
           "sha256": "sha256:c622a394ba853e316f8bef49d27b4e3fda2c5dcb76fbb1d4bed6f6ab98a55ccd",
           "bytes": 267407
         },
         {
           "role": "expected-after-json",
-              "path": "../🧫️fixtures/🎛️set-element-applied/➡️after.json",
+          "path": "../🧫️fixtures/🎛️set-element-applied/➡️after.json",
           "mediaType": "application/json",
           "sha256": "sha256:2dd6ce87ddc6413a9d4df90751421895bf180ad1fdb635fdb4ad69955d87a74d",
           "bytes": 267412
@@ -660,14 +660,14 @@
       "files": [
         {
           "role": "expected-before-json",
-              "path": "../🧫️fixtures/🔧️set-relation-applied/⬅️before.json",
+          "path": "../🧫️fixtures/🔧️set-relation-applied/⬅️before.json",
           "mediaType": "application/json",
           "sha256": "sha256:c622a394ba853e316f8bef49d27b4e3fda2c5dcb76fbb1d4bed6f6ab98a55ccd",
           "bytes": 267407
         },
         {
           "role": "expected-after-json",
-              "path": "../🧫️fixtures/🔧️set-relation-applied/➡️after.json",
+          "path": "../🧫️fixtures/🔧️set-relation-applied/➡️after.json",
           "mediaType": "application/json",
           "sha256": "sha256:7aaabda58fd296c600432f982ecd80d3df34d37abce386d663002a215bd451a5",
           "bytes": 267408
@@ -711,14 +711,14 @@
       "files": [
         {
           "role": "expected-before-json",
-              "path": "../🧫️fixtures/🧭set-spatial-node-applied/⬅️before.json",
+          "path": "../🧫️fixtures/🧭set-spatial-node-applied/⬅️before.json",
           "mediaType": "application/json",
           "sha256": "sha256:c622a394ba853e316f8bef49d27b4e3fda2c5dcb76fbb1d4bed6f6ab98a55ccd",
           "bytes": 267407
         },
         {
           "role": "expected-after-json",
-              "path": "../🧫️fixtures/🧭set-spatial-node-applied/➡️after.json",
+          "path": "../🧫️fixtures/🧭set-spatial-node-applied/➡️after.json",
           "mediaType": "application/json",
           "sha256": "sha256:ac4f907ec7340df704c933334d3b67a69f2adb224c3075795b94f0a5f6bb146e",
           "bytes": 267411

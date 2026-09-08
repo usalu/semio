@@ -9,6 +9,6 @@ pub fn diff(payload: &ChangeStoreys, base: &En1996Snapshot) -> protocol::Mutatio
     if base.storeys == payload.new_storeys {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "Storeys already has this value.");
     }
-    protocol::MutationOutcome::new(En1996Diff { storeys: Some(payload.new_storeys.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1996Diff { storeys: Some(payload.new_storeys), ..Default::default() })
 }
 //#endregion 🔖️Diff

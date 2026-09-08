@@ -30,7 +30,7 @@ Feature: Answer every committed puzzle2d vector with four third-party Python lib
   Every other kind is required to leave every footprint on the board exactly where it was.
 
   **`jsonschema` (MIT) speaks the PAYLOAD SHAPE.** Every committed `🦠️mutation`, with its
-  discriminator removed, is validated against its own leaf `🧬️.schema.json`, and every leaf schema
+  discriminator removed, is validated against its own leaf `🧬️schema/🔣️.json`, and every leaf schema
   is additionally handed a member it does not declare — so an accepted payload proves the validator
   ran rather than that the schema was permissive.
 
@@ -99,7 +99,7 @@ Feature: Answer every committed puzzle2d vector with four third-party Python lib
   @mode-conformance
   Scenario: jsonschema accepts every committed payload against its own leaf schema and rejects an undeclared member
     Given every committed vector under asset://🧬️schema/🧬️mutations/🔣️.json
-    When each payload is validated against its leaf 🧬️.schema.json by the draft the schema itself names
+    When each payload is validated against its leaf 🧬️schema/🔣️.json by the draft the schema itself names
     Then the committed payload carries its kind's own internally tagged discriminator
     And the validator accepts the committed payload with no error
     And the validator rejects the same payload once a member the schema does not declare is added

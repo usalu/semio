@@ -1,8 +1,8 @@
 //! 🧱 Analytic solid primitives: box/sphere/cylinder/cone/torus + wires/planar faces/convex hull.
 //!
-//! Builds closed [`Body`](crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::Body) solids exclusively through
-//! [`crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::euler`] editors, attaching shared [`Curve3`](crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::Curve3) /
-//! [`Surface`](crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::surface::Surface) geometry from the body's pools, with a stored [`Curve2`] p-curve on
+//! Builds closed [`Body`](crate::standards::v1::subsets::brep::schema::snapshot::topology::Body) solids exclusively through
+//! [`crate::standards::v1::subsets::brep::schema::diff::euler`] editors, attaching shared [`Curve3`](crate::standards::v1::subsets::brep::schema::snapshot::curve::Curve3) /
+//! [`Surface`](crate::standards::v1::subsets::brep::schema::snapshot::surface::Surface) geometry from the body's pools, with a stored [`Curve2`] p-curve on
 //! every coedge. Topology: box (V=8 E=12 F=6), sphere/cylinder/cone/torus as exact analytic
 //! surfaces with seam/degenerate edges (no faceting, no `segments`), convex hull as
 //! coplanar-merged polygon faces (Quickhull + boundary-walk merge).
@@ -16,18 +16,18 @@
 use std::collections::HashMap;
 use std::f64::consts::{FRAC_PI_2, TAU};
 
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::euler::{add_face, add_shell, add_solid, make_edge, make_loop, make_vertex};
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::{ArenaId, Curve2Id, EdgeId, FaceId, SolidId, VertexId};
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::{Curve2, Curve3};
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::error::KernelError;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::surface::Surface;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::tolerance::Tol;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::history::OpRecorder;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::Body;
+use crate::standards::v1::subsets::brep::schema::diff::euler::{add_face, add_shell, add_solid, make_edge, make_loop, make_vertex};
+use crate::standards::v1::subsets::brep::schema::snapshot::arena::{ArenaId, Curve2Id, EdgeId, FaceId, SolidId, VertexId};
+use crate::standards::v1::subsets::brep::schema::snapshot::curve::{Curve2, Curve3};
+use crate::standards::v1::subsets::brep::schema::snapshot::error::KernelError;
+use crate::standards::v1::subsets::brep::schema::snapshot::surface::Surface;
+use crate::standards::v1::subsets::brep::schema::snapshot::tolerance::Tol;
+use crate::standards::v1::subsets::brep::schema::snapshot::topology::history::OpRecorder;
+use crate::standards::v1::subsets::brep::schema::snapshot::topology::Body;
 #[cfg(test)]
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::Edge;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Frame3;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::{Pnt2, Pnt3, Vec2, Vec3};
+use crate::standards::v1::subsets::brep::schema::snapshot::topology::Edge;
+use crate::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Frame3;
+use crate::standards::v1::subsets::brep::schema::snapshot::vector::{Pnt2, Pnt3, Vec2, Vec3};
 
 /// 🔺 Coplanar triangles grouped by quantized plane coordinates.
 pub type PlaneClusters = HashMap<(i64, i64, i64, i64), (Vec3, Vec<[usize; 3]>)>;
@@ -61,7 +61,7 @@ fn require_positive(name: &str, value: f64) -> Result<(), KernelError> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn attach_face(body: &mut Body, surface_id: crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::SurfaceId, members: &[(EdgeId, bool)], flipped: bool, tol: Tol, rec: &mut OpRecorder) -> FaceId {
+pub(crate) fn attach_face(body: &mut Body, surface_id: crate::standards::v1::subsets::brep::schema::snapshot::arena::SurfaceId, members: &[(EdgeId, bool)], flipped: bool, tol: Tol, rec: &mut OpRecorder) -> FaceId {
     let outer = make_loop(body, placeholder_face(), members);
     let face = add_face(body, surface_id, Some(outer), vec![], flipped, tol, rec);
     body.loops.get_mut(outer).unwrap().face = face;
@@ -144,7 +144,7 @@ fn attach_planar_face_pcurves(body: &mut Body, face: FaceId, frame: Frame3, memb
 /// 🧱 Stamps `pcurves` (one `(curve2, prange)` pair per coedge, in `attach_face`'s own `members`
 /// order) onto `face`'s outer loop. `prange` always shares its interpolating parameter `s` with
 /// the coedge's underlying [`Edge::range`] — i.e. it is *never* reversed to account for
-/// `Coedge::forward` (see [`crate::artifacts::semio::standards::v1::subsets::brep::schema::inferences::validation_report::check_same_parameter`], which samples both ranges with
+/// `Coedge::forward` (see [`crate::standards::v1::subsets::brep::schema::inferences::validation_report::check_same_parameter`], which samples both ranges with
 /// the same `s`) — only reparametrized (phase/sign/offset) when the p-curve targets a different
 /// surface frame than the edge's own curve.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -175,7 +175,7 @@ pub(crate) fn is_degenerate_edge(edge: &Edge, curve: &Curve3) -> bool {
 // #region 🔖️Solids
 
 /// 🧱 Axis-aligned box from the origin to `(w, d, h)` with six planar faces (V=8, E=12, F=6).
-/// Threads the caller-owned `rec` through every euler call so the whole box's [`crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::history::OpDelta`]
+/// Threads the caller-owned `rec` through every euler call so the whole box's [`crate::standards::v1::subsets::brep::schema::snapshot::topology::history::OpDelta`]
 /// is observable after this call returns, instead of being discarded at the function boundary.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn make_box(body: &mut Body, w: f64, d: f64, h: f64, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
@@ -805,7 +805,7 @@ fn merge_coplanar_triangles(hull: &ConvexHull) -> Vec<FaceGroup> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::semio::standards::v1::subsets::brep::schema::inferences::validation_report::validate_body;
+    use crate::standards::v1::subsets::brep::schema::inferences::validation_report::validate_body;
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn solid_counts(body: &Body, solid: SolidId) -> (usize, usize, usize) {
@@ -1035,7 +1035,7 @@ mod tests {
     /// quadrature — see `w1e-primitives.md` for the honest pass/fail report on each shape.
     #[semio_framework_async_macros::async_test]
     async fn closed_form_volumes_via_mass_properties() {
-        use crate::artifacts::semio::standards::v1::subsets::brep::schema::inferences::mass_properties::solid_volume;
+        use crate::standards::v1::subsets::brep::schema::inferences::mass_properties::solid_volume;
         let tol = 1e-3;
 
         let mut body = Body::new();

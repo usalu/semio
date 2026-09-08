@@ -115,7 +115,7 @@
         {
           "id": "insert-shared-string",
           "capability": "xlsx-ecma-376-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -135,7 +135,7 @@
         {
           "id": "insert-sheet",
           "capability": "xlsx-ecma-376-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -155,7 +155,7 @@
         {
           "id": "remove-cell",
           "capability": "xlsx-ecma-376-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -175,7 +175,7 @@
         {
           "id": "remove-shared-string",
           "capability": "xlsx-ecma-376-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -195,7 +195,7 @@
         {
           "id": "remove-sheet",
           "capability": "xlsx-ecma-376-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -215,7 +215,7 @@
         {
           "id": "rename-sheet",
           "capability": "xlsx-ecma-376-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -235,7 +235,7 @@
         {
           "id": "set-cell",
           "capability": "xlsx-ecma-376-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -255,7 +255,7 @@
         {
           "id": "set-shared-string",
           "capability": "xlsx-ecma-376-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -275,7 +275,7 @@
         {
           "id": "set-snapshot",
           "capability": "xlsx-ecma-376-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],

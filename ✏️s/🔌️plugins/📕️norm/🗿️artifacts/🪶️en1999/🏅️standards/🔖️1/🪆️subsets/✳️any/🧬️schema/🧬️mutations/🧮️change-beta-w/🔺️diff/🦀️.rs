@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeBetaW, base: &En1999Snapshot) -> protocol::MutationO
     if base.beta_w == payload.new_beta_w {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Correlation factor beta_w is already {}.", payload.new_beta_w));
     }
-    protocol::MutationOutcome::new(En1999Diff { beta_w: Some(payload.new_beta_w.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1999Diff { beta_w: Some(payload.new_beta_w), ..Default::default() })
 }
 //#endregion 🔖️Diff

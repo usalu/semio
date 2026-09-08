@@ -9,7 +9,7 @@
 //! fixture's own verification method (`verify_tsv.py`) exactly. Own types — deliberately NOT
 //! merged into csv's (different standard, different grammar, no shared quoting semantics).
 
-use schema::ArtifactSchema;
+use framework_schema::ArtifactSchema;
 
 //#region 🔖️Ids
 pub const STDIO_TSV_DOCUMENT_SCHEMA: &str = "stdio.tsv";

@@ -28,6 +28,13 @@ class TestScript extends BundleScript {
   }
 }
 
+/** 🔽️ Runs the shared neutral closed-choice fixture through the native implementation. */
+class ActionChoicesTestScript extends BundleScript {
+  async run(): Promise<void> {
+    await runCargoTestBudgeted(["semio-framework"], this.repoRoot, ["--lib", "unresolved_action_choices_follow_neutral_catalog_contract", "--", "--nocapture"]);
+  }
+}
+
 class CoreModulesTestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
@@ -110,6 +117,6 @@ class CheckScript extends BundleScript {
 }
 //#endregion 🔖️Typegen
 
-const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("test-core-modules", CoreModulesTestScript).register("test-package-descriptor-value-codec", PackageDescriptorValueCodecTestScript).register("test-wire-retirement-source", WireRetirementSourceScript).register("test-wire-retirement-native", WireRetirementNativeScript).register("generate", GenerateScript).register("preview-generated", PreviewGeneratedScript).register("check", CheckScript).register("lint", LintScript);
+const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("test-action-choices", ActionChoicesTestScript).register("test-core-modules", CoreModulesTestScript).register("test-package-descriptor-value-codec", PackageDescriptorValueCodecTestScript).register("test-wire-retirement-source", WireRetirementSourceScript).register("test-wire-retirement-native", WireRetirementNativeScript).register("generate", GenerateScript).register("preview-generated", PreviewGeneratedScript).register("check", CheckScript).register("lint", LintScript);
 
 await runBundleScriptMain(router, import.meta.url, { defaultCommand: "test" });

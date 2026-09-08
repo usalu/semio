@@ -356,7 +356,7 @@ pub fn puzzle3d_operations_from_fixture_change(before: &Value, after_fixture: &P
 /// dropping the `meshUrl` key means copying every other key across instead.
 fn puzzle3d_normalize_object_kind_row(row: Value) -> Value {
     let mesh_url = row.get("meshUrl").and_then(Value::as_str).filter(|url| !url.is_empty()).map(str::to_string);
-    let has_rep = row.get("representations").and_then(Value::as_array).map(|rows| rows.iter().any(|rep| rep.get("url").and_then(Value::as_str).filter(|url| !url.is_empty()).is_some())).unwrap_or(false);
+    let has_rep = row.get("representations").and_then(Value::as_array).is_some_and(|rows| rows.iter().any(|rep| rep.get("url").and_then(Value::as_str).filter(|url| !url.is_empty()).is_some()));
     let id = row.get("id").and_then(Value::as_str).unwrap_or("kind").to_string();
     let Some(url) = mesh_url else {
         return row;
@@ -2136,7 +2136,7 @@ fn puzzle3d_context_menu_items(envelope: &Puzzle3dScene, selection: &Puzzle3dCon
                 
         };
     }
-    if selection.reference_ids.first().is_some() {
+    if !selection.reference_ids.is_empty() {
         return {
             Menu::of(registry)
                 
@@ -2260,9 +2260,9 @@ impl Puzzle3dPlayApp {
         let mut scratch = self.transform_scratch.borrow().clone().or_else(|| self.transform_base.borrow().clone()).unwrap_or_else(empty_fixture);
         let axis = |key: &str, fallback: f64| args.and_then(|value| value.get(key)).and_then(|value| value.as_f64()).unwrap_or(fallback);
         match action {
-            "translateSelection" => puzzle3d_apply_translate(&mut scratch, &object_ids, &volume_ids, axis("dx", 0.0), axis("dy", 0.0), axis("dz", 0.0)),
-            "rotateSelection" => puzzle3d_apply_rotate(&mut scratch, &object_ids, &volume_ids, axis("ax", 0.0), axis("ay", 0.0), axis("az", 0.0), axis("angle", 0.0)),
-            "scaleSelection" => puzzle3d_apply_scale(&mut scratch, &object_ids, &volume_ids, axis("sx", 1.0), axis("sy", 1.0), axis("sz", 1.0)),
+            "translateSelection" => puzzle3d_apply_translate(&mut scratch, &object_ids, volume_ids, axis("dx", 0.0), axis("dy", 0.0), axis("dz", 0.0)),
+            "rotateSelection" => puzzle3d_apply_rotate(&mut scratch, &object_ids, volume_ids, axis("ax", 0.0), axis("ay", 0.0), axis("az", 0.0), axis("angle", 0.0)),
+            "scaleSelection" => puzzle3d_apply_scale(&mut scratch, &object_ids, volume_ids, axis("sx", 1.0), axis("sy", 1.0), axis("sz", 1.0)),
             _ => {}
         }
         *self.transform_scratch.borrow_mut() = Some(scratch);
@@ -2373,7 +2373,7 @@ impl Puzzle3dPlayApp {
         // the scene runtime before handling, and snapshot them back out (via `save_window`) so a
         // grid/LOD/selection/vortex/sun mutation never leaks into another window's options. Fill count
         // / distribution / overlap stay on the flat runtime and are shared.
-        let wid = window_id.map(str::to_string).unwrap_or_else(|| main::WINDOW_KIND_ID.into());
+        let wid = window_id.map_or_else(|| main::WINDOW_KIND_ID.into(), str::to_string);
         let mut runtime_for_window = config.clone();
         // 🪟️ B1: self-maintaining window registry — was host-pushed `view_state.window_instances`; now
         // the app itself remembers every window instance id it has ever been dispatched an action for,
@@ -2615,7 +2615,7 @@ impl Puzzle3dScalarConfigWork {
         Self { tool_id, stage: Puzzle3dScalarConfigStage::Prepare, mutation: None }
     }
 
-    fn window<'a>(command: &'a Puzzle3dCommand) -> &'a str {
+    fn window(command: &Puzzle3dCommand) -> &str {
         command.window_id().unwrap_or(main::WINDOW_KIND_ID)
     }
 
@@ -5775,7 +5775,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
                 self.vortex_cursor += 1;
                 if puzzle3d_vortex_full_id(&object.id, &vortex.id) == requested {
                     let rotated = quat_rotate_vector(object.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]), vortex.position);
-                    self.target_id = Some(requested.clone());
+                    self.target_id = Some(requested);
                     self.target_position = Some([object.origin[0] + rotated[0], object.origin[1] + rotated[1], object.origin[2] + rotated[2]]);
                     self.stage = Puzzle3dAcceptSuggestionStage::Candidate;
                 }
@@ -6874,24 +6874,24 @@ impl ArtifactEditor for Puzzle3dPlayApp {
         _engines: &EngineHandles,
     ) -> Result<Emit<Puzzle3dMutation, Puzzle3dConfigMutation, Self::DraftMutation>, Fault> {
         let selection = interaction.selection(PUZZLE3D_INTERACTION_DOMAIN);
-        Ok(with_puzzle3d_app_for(&cfg.snapshot, |app| {
+        Ok(with_puzzle3d_app_for(cfg.snapshot, |app| {
             if command.action_id() == "fillBuildTick" {
-                if let Some(emit) = fill_build_tick::fill_build_tick_cached(app, &cfg.snapshot) {
+                if let Some(emit) = fill_build_tick::fill_build_tick_cached(app, cfg.snapshot) {
                     return emit;
                 }
             }
             if matches!(command.action_id(), "setFillCount" | set_fill_count::STEP_ACTION_ID) {
                 let mut precompute = app.precompute.borrow_mut();
                 if !cfg.snapshot.fill_checkpoint.is_empty() && !precompute.restore_persisted_fill(&cfg.snapshot.fill_checkpoint) {
-                    let active_utility = puzzle3d_scene_active_utility(&cfg.snapshot, command.window_id());
+                    let active_utility = puzzle3d_scene_active_utility(cfg.snapshot, command.window_id());
                     let scene = scene_from_projection(&puzzle3d_projection_value(doc.snapshot.value()), cfg.snapshot.clone(), &active_utility);
                     sync_precompute_session(&mut precompute, &scene);
                     precompute.restore_persisted_fill(&cfg.snapshot.fill_checkpoint);
                 }
                 precompute.set_fill_applied_count(cfg.snapshot.fill_applied_count);
-                return if command.action_id() == "setFillCount" { set_fill_count::begin(&mut precompute, &cfg.snapshot, command.args()) } else { set_fill_count::step(&mut precompute, &cfg.snapshot, command.args()) };
+                return if command.action_id() == "setFillCount" { set_fill_count::begin(&mut precompute, cfg.snapshot, command.args()) } else { set_fill_count::step(&mut precompute, cfg.snapshot, command.args()) };
             }
-            app.handle_action_impl(command.action_id(), command.args(), command.window_id(), doc.snapshot, &cfg.snapshot, selection)
+            app.handle_action_impl(command.action_id(), command.args(), command.window_id(), doc.snapshot, cfg.snapshot, selection)
         }))
     }
 
@@ -6984,8 +6984,8 @@ impl ArtifactEditor for Puzzle3dPlayApp {
     }
 
     fn render(body_key: &str, doc: &ArtifactView<'_, Puzzle3dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle3dConfig>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
-        let node = with_puzzle3d_app_for(&cfg.snapshot, |app| -> semio_framework_plugin::UiAssemblyResult<_> {
-            let (base_body_key, window_id_from_key) = body_key.split_once(':').map(|(b, w)| (b, Some(w))).unwrap_or((body_key, None));
+        let node = with_puzzle3d_app_for(cfg.snapshot, |app| -> semio_framework_plugin::UiAssemblyResult<_> {
+            let (base_body_key, window_id_from_key) = body_key.split_once(':').map_or((body_key, None), |(b, w)| (b, Some(w)));
             let config = cfg.snapshot;
             let wid = window_id_from_key.or_else(|| config.window_ids.first().map(String::as_str)).unwrap_or(main::WINDOW_KIND_ID);
             let active_utility = puzzle3d_scene_active_utility(config, Some(wid));
@@ -7025,7 +7025,7 @@ impl ArtifactEditor for Puzzle3dPlayApp {
     }
 
     fn window_engagements(doc: &ArtifactView<'_, Puzzle3dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle3dConfig>) -> HashMap<String, WindowEngagement> {
-        with_puzzle3d_app_for(&cfg.snapshot, |app| {
+        with_puzzle3d_app_for(cfg.snapshot, |app| {
             let config = cfg.snapshot;
             let Some(labels) = puzzle3d_labels(config) else {
                 return HashMap::new();
@@ -7043,7 +7043,7 @@ impl ArtifactEditor for Puzzle3dPlayApp {
     }
 
     fn window_measures(doc: &ArtifactView<'_, Puzzle3dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle3dConfig>) -> HashMap<String, Vec<WindowMeasure>> {
-        with_puzzle3d_app_for(&cfg.snapshot, |app| {
+        with_puzzle3d_app_for(cfg.snapshot, |app| {
             let config = cfg.snapshot;
             let Some(labels) = puzzle3d_labels(config) else {
                 return HashMap::new();
@@ -7060,9 +7060,9 @@ impl ArtifactEditor for Puzzle3dPlayApp {
     }
 
     fn tool_measures(doc: &ArtifactView<'_, Puzzle3dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle3dConfig>) -> HashMap<String, Vec<WindowMeasure>> {
-        with_puzzle3d_app_for(&cfg.snapshot, |app| {
+        with_puzzle3d_app_for(cfg.snapshot, |app| {
             let config = cfg.snapshot;
-            let wid = config.window_ids.first().map(String::as_str).unwrap_or(main::WINDOW_KIND_ID);
+            let wid = config.window_ids.first().map_or(main::WINDOW_KIND_ID, String::as_str);
             let Some(labels) = puzzle3d_labels(config) else {
                 return HashMap::new();
             };
@@ -7082,7 +7082,7 @@ impl ArtifactEditor for Puzzle3dPlayApp {
         let Some(labels) = puzzle3d_labels(config) else {
             return Vec::new();
         };
-        let wid = config.window_ids.first().map(String::as_str).unwrap_or(main::WINDOW_KIND_ID);
+        let wid = config.window_ids.first().map_or(main::WINDOW_KIND_ID, String::as_str);
         let active_utility = puzzle3d_scene_active_utility(config, Some(wid));
         let envelope = scene_from_projection(&puzzle3d_projection_value(doc.snapshot.value()), config.clone(), &active_utility);
         let selection = Puzzle3dContextSelection::from_surface(request.surface.as_ref());

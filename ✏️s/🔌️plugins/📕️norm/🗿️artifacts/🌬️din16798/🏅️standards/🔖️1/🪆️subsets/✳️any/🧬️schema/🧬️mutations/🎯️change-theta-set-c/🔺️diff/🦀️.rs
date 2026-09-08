@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeThetaSetC, base: &Din16798Snapshot) -> protocol::Mut
     if base.theta_set_c == payload.new_theta_set_c {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Cooling set-point temperature is already {}.", payload.new_theta_set_c));
     }
-    protocol::MutationOutcome::new(Din16798Diff { theta_set_c: Some(payload.new_theta_set_c.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(Din16798Diff { theta_set_c: Some(payload.new_theta_set_c), ..Default::default() })
 }
 //#endregion 🔖️Diff

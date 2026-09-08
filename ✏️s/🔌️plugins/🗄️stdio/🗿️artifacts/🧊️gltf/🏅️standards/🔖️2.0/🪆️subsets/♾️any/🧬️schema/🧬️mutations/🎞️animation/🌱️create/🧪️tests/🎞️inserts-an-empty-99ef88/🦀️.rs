@@ -10,10 +10,10 @@
 //! leaf's own oracle. The derived `.op.semio`/`.spr.semio`/`.dsl.semio`/`.pack.semio`/
 //! `.patch.semio` encodings come from `fixtures generate`, not from here.
 
-use crate::artifacts::gltf::schema::mutations::create_animation::diff::GltfCreateAnimationDiff;
-use crate::artifacts::gltf::schema::mutations::create_animation::GltfCreateAnimationPayload;
-use crate::artifacts::gltf::schema::mutations::create_animation::{diff, inverse, mutation};
-use crate::artifacts::gltf::GltfSnapshot;
+use crate::schema::mutations::create_animation::diff::GltfCreateAnimationDiff;
+use crate::schema::mutations::create_animation::GltfCreateAnimationPayload;
+use crate::schema::mutations::create_animation::{diff, inverse, mutation};
+use crate::GltfSnapshot;
 
 const CASE: &str = "create-animation/inserts-an-empty-clip-ahead-of-the-spin-clip";
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
@@ -105,7 +105,7 @@ async fn committed_diff_is_canonical() {
     let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "{CASE}: committed diff JSON is not canonical");
-    assert!(matches!(decoded.operation, crate::artifacts::gltf::schema::mutations::create_animation::diff::GltfCreateAnimationOperation::Insert { position: 0, .. }), "{CASE}: the committed operation must be an insert at position 0");
+    assert!(matches!(decoded.operation, crate::schema::mutations::create_animation::diff::GltfCreateAnimationOperation::Insert { position: 0, .. }), "{CASE}: the committed operation must be an insert at position 0");
 }
 
 /// 🩹 Applying the committed diff directly to `before` yields the committed `after` — the diff is

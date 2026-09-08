@@ -12,6 +12,7 @@ use store::ArtifactPack;
 #[value(rename_all = "camelCase", default)]
 #[dsl(extension = "trinity.jack.presence")]
 #[dsl(layout = "lines")]
+#[derive(Default)]
 pub struct JackPresence {
     pub active_fixture_id: String,
     pub jack_query: String,
@@ -20,11 +21,6 @@ pub struct JackPresence {
     pub lod_mode_by_window: BTreeMap<String, String>,
 }
 
-impl Default for JackPresence {
-    fn default() -> Self {
-        Self { active_fixture_id: String::new(), jack_query: String::new(), camera: Camera::default(), lod_mode_by_window: BTreeMap::new() }
-    }
-}
 
 impl protocol::MutationDiff<JackPresence> for JackPresence {
     fn apply(&self, _base: &JackPresence) -> protocol::MutationApplyResult<JackPresence> {

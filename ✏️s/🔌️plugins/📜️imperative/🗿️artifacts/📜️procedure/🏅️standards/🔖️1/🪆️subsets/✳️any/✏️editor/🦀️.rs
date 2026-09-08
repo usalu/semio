@@ -520,7 +520,7 @@ pub fn create_imperative_app() -> semio_framework_plugin::AppDefinition {
             // has no `.example_source(...)`/`.workflow(...)` — `PluginBuilder::editor::<E>` only takes
             // the bare `AppDefinition`, so the demo-session example source and the `"imperative"`
             // workflow registration this app used to chain here are dropped, not ported. The
-            // artifact-level `📚️examples/🎬️demo` facet (`crate::examples::art_procedure_demo`,
+            // artifact-level `📚️examples/🎬️demo` facet (`crate::artifacts::procedure::examples::demo`,
             // still mounted in `🦀️.rs`) is the surviving example registration path.
             .build_definition()
 }

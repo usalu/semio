@@ -5,7 +5,7 @@
   "displayName": "Set Trailer Entry",
   "emoji": "🧳️",
   "aggregateVariant": "SetTrailerEntry",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "set-trailer-entry",
   "binaryTag": 11,
   "invertibility": "explicit-mutation",

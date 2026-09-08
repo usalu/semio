@@ -2,9 +2,9 @@
 
 #[cfg(test)]
 mod tests {
-    use crate::artifacts::gltf::schema::mutations::create_scene::{diff, inverse, mutation, DESCRIPTOR};
-    use crate::artifacts::gltf::schema::snapshot::GltfScene;
-    use crate::artifacts::gltf::GltfSnapshot;
+    use crate::schema::mutations::create_scene::{diff, inverse, mutation, DESCRIPTOR};
+    use crate::schema::snapshot::GltfScene;
+    use crate::GltfSnapshot;
 
     #[derive(value_derive::FromValue)]
     #[value(rename_all = "camelCase")]

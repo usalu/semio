@@ -2,8 +2,8 @@
 //! 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §2.1). `SemioAudioEditor`
 //! implements `ArtifactEditor`, wiring the shared `MeshWindowKit` to a single Main window.
 
-use crate::artifacts::semio::standards::v1::subsets::audio::schema::mutations::SemioAudioMutation;
-use crate::artifacts::semio::standards::v1::subsets::audio::schema::snapshot::SemioAudioSnapshot;
+use crate::standards::v1::subsets::audio::schema::mutations::SemioAudioMutation;
+use crate::standards::v1::subsets::audio::schema::snapshot::SemioAudioSnapshot;
 use crate::editor::semio_audio::modes::edit;
 use crate::editor::semio_audio::modes::edit::windows::main;
 use semio_framework_plugin::app::InteractionView;

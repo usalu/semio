@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeFYk, base: &En1992Snapshot) -> protocol::MutationOut
     if base.f_yk == payload.new_f_yk {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "F yk already has this value.");
     }
-    protocol::MutationOutcome::new(En1992Diff { f_yk: Some(payload.new_f_yk.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1992Diff { f_yk: Some(payload.new_f_yk), ..Default::default() })
 }
 //#endregion 🔖️Diff

@@ -96,15 +96,15 @@ fn identity_round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::{mutable_input, KINDS};
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_plugin_stdio::artifacts::docx::standards::v_ecma_376::subsets::any::io::export::serializers::encode_docx;
-    use semio_s_plugin_stdio::artifacts::docx::standards::v_ecma_376::subsets::any::io::import::deserializers::decode_docx;
-    use semio_s_plugin_stdio::artifacts::docx::standards::v_ecma_376::subsets::any::schema::diff::{resolve_blocks, DocxBlockPath, DocxPathSegment};
-    use semio_s_plugin_stdio::artifacts::docx::standards::v_ecma_376::subsets::any::schema::mutations::apply_docx_mutation;
-    use semio_s_plugin_stdio::artifacts::docx::standards::v_ecma_376::subsets::any::schema::mutations::{
+    use crate::standards::v_ecma_376::subsets::any::io::export::serializers::encode_docx;
+    use crate::standards::v_ecma_376::subsets::any::io::import::deserializers::decode_docx;
+    use crate::standards::v_ecma_376::subsets::any::schema::diff::{resolve_blocks, DocxBlockPath, DocxPathSegment};
+    use crate::standards::v_ecma_376::subsets::any::schema::mutations::apply_docx_mutation;
+    use crate::standards::v_ecma_376::subsets::any::schema::mutations::{
         insert_block, insert_style, remove_block, remove_part, remove_style, set_block_content, set_part, set_run_formatting, set_run_text, set_snapshot, set_style_based_on, set_style_name,
     };
-    use semio_s_plugin_stdio::artifacts::docx::standards::v_ecma_376::subsets::any::schema::snapshot::{DocxBlock, DocxParagraph, DocxRun, DocxStyle, DocxTable, DocxTableCell, DocxTableRow};
-    use semio_s_plugin_stdio::artifacts::docx::{DocxMutation, DocxSnapshot};
+    use crate::standards::v_ecma_376::subsets::any::schema::snapshot::{DocxBlock, DocxParagraph, DocxRun, DocxStyle, DocxTable, DocxTableCell, DocxTableRow};
+    use crate::{DocxMutation, DocxSnapshot};
     use semio_s_plugin_stdio_test_oracle::artifacts::docx::standards::v_ecma_376::subsets::any::project_docx_ecma_376;
 
     //#region 🔖️SpecCodec

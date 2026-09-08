@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeReferenceQPKwh, base: &Din18599Snapshot) -> protocol
     if base.reference_q_p_kwh == payload.new_reference_q_p_kwh {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "Reference qp kwh already has this value.");
     }
-    protocol::MutationOutcome::new(Din18599Diff { reference_q_p_kwh: Some(payload.new_reference_q_p_kwh.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(Din18599Diff { reference_q_p_kwh: Some(payload.new_reference_q_p_kwh), ..Default::default() })
 }
 //#endregion 🔖️Diff

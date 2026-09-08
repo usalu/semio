@@ -1,8 +1,8 @@
-use crate::artifacts::semio::standards::v1::subsets::image::schema::diff::SemioImageDiff;
-use crate::artifacts::semio::standards::v1::subsets::image::schema::mutations::SemioImageMutation;
-use crate::artifacts::semio::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
+use crate::standards::v1::subsets::image::schema::diff::SemioImageDiff;
+use crate::standards::v1::subsets::image::schema::mutations::SemioImageMutation;
+use crate::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
 use protocol::Mutation;
-use crate::artifacts::semio::standards::v1::subsets::image::schema::mutations::move_frame;
+use crate::standards::v1::subsets::image::schema::mutations::move_frame;
 
 /// 🔺️ Diff helper for move-frame — index-based reordering of one existing frame; an out-of-range
 /// `from` (source) or `to` (destination) is `mutation.target-missing` (Error, empty diff, checked

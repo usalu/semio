@@ -11,6 +11,6 @@ pub fn diff(payload: &ChangeCD, base: &En1991Snapshot) -> protocol::MutationOutc
     if base.c_d == payload.new_c_d {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "Cd already has this value.");
     }
-    protocol::MutationOutcome::new(En1991Diff { c_d: Some(payload.new_c_d.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1991Diff { c_d: Some(payload.new_c_d), ..Default::default() })
 }
 //#endregion 🔖️Diff

@@ -1,5 +1,5 @@
 {
-  "schema": "semio.value.ordered-set.v1",
+  "schema": "https://semio.tech/schema/framework/value/ordered/set/schema.json#/$defs/OrderedSet",
   "values": [
     "z",
     "α",

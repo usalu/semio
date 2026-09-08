@@ -2,7 +2,7 @@
 
 use super::set_output_intent::SetOutputIntent;
 use super::PdfAMutation;
-use crate::artifacts::pdf::standards::v1_7::subsets::base::schema::{conformance_support as support, diff::PdfDiff, snapshot::PdfSnapshot};
+use crate::standards::v1_7::subsets::base::schema::{conformance_support as support, diff::PdfDiff, snapshot::PdfSnapshot};
 use protocol::command::DiffAlgebra;
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
 
@@ -42,7 +42,7 @@ impl MutationKind<PdfSnapshot, PdfAMutation> for RemoveOutputIntent {
 mod tests {
     use super::super::set_output_intent::{OUTPUT_INTENT_DEST_PROFILE, OUTPUT_INTENT_SUBTYPE};
     use super::*;
-    use crate::artifacts::pdf::standards::v1_7::subsets::base::schema::snapshot::PdfObject;
+    use crate::standards::v1_7::subsets::base::schema::snapshot::PdfObject;
     use protocol::MutationDiff;
 
     #[test]

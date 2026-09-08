@@ -5,7 +5,7 @@
   "displayName": "Change Lighting Gain Schedule",
   "emoji": "⏱️",
   "aggregateVariant": "ChangeLightingGainSchedule",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-lighting-gain-schedule",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

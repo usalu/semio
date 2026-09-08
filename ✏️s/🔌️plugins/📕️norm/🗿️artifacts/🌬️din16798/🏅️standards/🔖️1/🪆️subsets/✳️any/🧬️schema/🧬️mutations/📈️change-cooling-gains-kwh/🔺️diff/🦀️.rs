@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeCoolingGainsKwh, base: &Din16798Snapshot) -> protoco
     if base.cooling_gains_kwh == payload.new_cooling_gains_kwh {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Cooling internal gains is already {}.", payload.new_cooling_gains_kwh));
     }
-    protocol::MutationOutcome::new(Din16798Diff { cooling_gains_kwh: Some(payload.new_cooling_gains_kwh.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(Din16798Diff { cooling_gains_kwh: Some(payload.new_cooling_gains_kwh), ..Default::default() })
 }
 //#endregion 🔖️Diff

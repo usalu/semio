@@ -1,0 +1,48 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/remodel/remodeling/1/any/mutation/update-motion-params.json",
+  "title": "UpdateMotionParams",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "params"
+  ],
+  "properties": {
+    "params": {
+      "type": "object",
+      "title": "MotionParams",
+      "additionalProperties": false,
+      "required": [
+        "enabled",
+        "maxTracks",
+        "trackWindowPx",
+        "minTrackQuality",
+        "minTrackLengthFrames"
+      ],
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "maxTracks": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "trackWindowPx": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "minTrackQuality": {
+          "type": "number",
+          "format": "float"
+        },
+        "minTrackLengthFrames": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        }
+      }
+    }
+  }
+}

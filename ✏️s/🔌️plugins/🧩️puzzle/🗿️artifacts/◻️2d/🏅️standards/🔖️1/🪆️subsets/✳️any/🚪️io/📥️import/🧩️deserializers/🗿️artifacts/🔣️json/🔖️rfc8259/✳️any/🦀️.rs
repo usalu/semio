@@ -14,8 +14,8 @@
 //! its own `From` bridge, then `dsl::FromValue::from_value` (first-party) hydrates the typed
 //! snapshot — same shape the sibling `block2d` leaf already uses.
 use crate::artifacts::puzzle2d::Puzzle2dSnapshot;
-use semio_s_plugin_stdio::artifacts::json::schema::snapshot::parse_json_text;
-use semio_s_plugin_stdio::artifacts::json::{JsonSnapshot, STDIO_JSON_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_json::schema::snapshot::parse_json_text;
+use semio_s_artifact_stdio_json::{JsonSnapshot, STDIO_JSON_DOCUMENT_SCHEMA};
 
 pub fn register() {}
 

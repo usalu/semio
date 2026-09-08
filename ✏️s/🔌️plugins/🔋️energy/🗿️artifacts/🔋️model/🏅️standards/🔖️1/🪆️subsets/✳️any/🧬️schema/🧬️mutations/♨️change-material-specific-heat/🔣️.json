@@ -5,7 +5,7 @@
   "displayName": "Change Material Specific Heat",
   "emoji": "♨️",
   "aggregateVariant": "ChangeMaterialSpecificHeat",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-material-specific-heat",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

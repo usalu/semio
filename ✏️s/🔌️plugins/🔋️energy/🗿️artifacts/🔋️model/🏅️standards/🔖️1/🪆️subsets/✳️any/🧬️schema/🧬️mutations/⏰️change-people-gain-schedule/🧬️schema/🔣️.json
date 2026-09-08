@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/energy/model/1/any/mutation/change-people-gain-schedule.json",
+  "title": "ChangePeopleGainSchedule",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newScheduleId"
+  ],
+  "properties": {
+    "id": {
+      "type": "integer"
+    },
+    "newScheduleId": {
+      "type": "integer"
+    }
+  }
+}

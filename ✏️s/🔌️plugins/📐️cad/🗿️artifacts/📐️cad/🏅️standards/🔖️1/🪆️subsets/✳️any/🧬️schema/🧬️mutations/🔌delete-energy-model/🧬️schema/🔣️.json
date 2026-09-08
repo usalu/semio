@@ -1,0 +1,8 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/cad/cad/1/any/mutation/delete-energy-model.json",
+  "title": "DeleteEnergyModel",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {}
+}

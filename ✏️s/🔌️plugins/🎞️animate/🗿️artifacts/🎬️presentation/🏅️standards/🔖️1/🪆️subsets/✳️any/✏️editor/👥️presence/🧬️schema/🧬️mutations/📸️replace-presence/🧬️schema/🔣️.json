@@ -1,0 +1,18 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/animate/presentation/1/any/editor/presence/mutation/replace-presence.json",
+  "title": "ReplacePresence",
+  "type": "object",
+  "properties": {
+    "presence": {
+      "type": "object",
+      "properties": {},
+      "required": [],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "presence"
+  ],
+  "additionalProperties": false
+}

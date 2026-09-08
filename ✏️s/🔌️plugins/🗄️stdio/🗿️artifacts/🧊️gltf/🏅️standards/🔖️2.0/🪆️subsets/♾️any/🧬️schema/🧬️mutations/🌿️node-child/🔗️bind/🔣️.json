@@ -5,7 +5,7 @@
   "displayName": "Bind Node Child",
   "emoji": "🔗️",
   "aggregateVariant": "BindNodeChild",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

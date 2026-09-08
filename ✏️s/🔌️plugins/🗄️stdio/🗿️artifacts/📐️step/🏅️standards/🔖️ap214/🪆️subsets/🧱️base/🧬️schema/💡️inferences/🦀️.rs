@@ -8,8 +8,8 @@
 //! ISO 10303 snake_case with no `IFC`-style prefix, unlike `🏗️ifc`'s `IFCCARTESIANPOINT` even
 //! though both ride the identical Part-21 syntax).
 
-use crate::artifacts::step::StepSnapshot;
-use schema::ArtifactSchema;
+use crate::StepSnapshot;
+use framework_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 
 use super::bounds::{compute_step_bounds, StepBounds};
@@ -57,7 +57,7 @@ impl protocol::InferenceSpec<StepSnapshot> for StepInference {
 /// entity in `entities`, already O(n) in total entity count with no honest per-entity incremental
 /// decomposition (a merkle dep-chain over this flat entity list costs more than the fold it would
 /// cache) — the default `infer_cached` passthrough is exact.
-impl ArtifactInferrer for crate::artifacts::step::standards::v_ap214::subsets::base::schema::StepBuilder {
+impl ArtifactInferrer for crate::standards::v_ap214::subsets::base::schema::StepBuilder {
     type Snapshot = StepSnapshot;
     type Inference = StepInference;
 }
@@ -67,10 +67,10 @@ impl ArtifactInferrer for crate::artifacts::step::standards::v_ap214::subsets::b
 /// 💡️ Registers `s.stdio.step.inference`'s facet leaves into the OS-wide inference catalog —
 /// call once at plugin init, alongside `step_artifact_schema_descriptor`'s registration.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn step_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
-    schema::ArtifactInferenceDescriptor {
+pub fn step_artifact_inference_descriptor() -> framework_schema::ArtifactInferenceDescriptor {
+    framework_schema::ArtifactInferenceDescriptor {
         id: "s.stdio.step.inference",
-        inference: schema::FacetLeaves {
+        inference: framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),

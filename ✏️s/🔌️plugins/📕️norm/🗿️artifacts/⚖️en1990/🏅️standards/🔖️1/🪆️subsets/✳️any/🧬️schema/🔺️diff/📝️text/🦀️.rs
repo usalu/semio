@@ -17,22 +17,22 @@ impl En1990Diff {
         Ok({
             let mut next = artifact.clone();
             if let Some(value) = &self.g_k {
-                next.g_k = value.clone();
+                next.g_k = *value;
             }
             if let Some(child) = &self.q_k {
                 next.q_k = child.clone();
             }
             if let Some(value) = &self.resistance_kn {
-                next.resistance_kn = value.clone();
+                next.resistance_kn = *value;
             }
             if let Some(value) = &self.consequence_class {
-                next.consequence_class = value.clone();
+                next.consequence_class = *value;
             }
             if let Some(value) = &self.annex {
-                next.annex = value.clone();
+                next.annex = *value;
             }
             if let Some(value) = &self.seismic_a_ed_kn {
-                next.seismic_a_ed_kn = value.clone();
+                next.seismic_a_ed_kn = *value;
             }
             if let Some(value) = &self.selected_check_index {
                 next.selected_check_index = *value;
@@ -47,22 +47,22 @@ impl MutationDiff<En1990Snapshot> for En1990Diff {
         Ok({
             let mut next = snapshot.clone();
             if let Some(value) = &self.g_k {
-                next.g_k = value.clone();
+                next.g_k = *value;
             }
             if let Some(child) = &self.q_k {
                 next.q_k = child.clone();
             }
             if let Some(value) = &self.resistance_kn {
-                next.resistance_kn = value.clone();
+                next.resistance_kn = *value;
             }
             if let Some(value) = &self.consequence_class {
-                next.consequence_class = value.clone();
+                next.consequence_class = *value;
             }
             if let Some(value) = &self.annex {
-                next.annex = value.clone();
+                next.annex = *value;
             }
             if let Some(value) = &self.seismic_a_ed_kn {
-                next.seismic_a_ed_kn = value.clone();
+                next.seismic_a_ed_kn = *value;
             }
             next
         })

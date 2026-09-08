@@ -7,6 +7,6 @@ use crate::artifacts::en1998::En1998Snapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(_payload: &ChangeSeismicZone, base: &En1998Snapshot) -> Vec<En1998Mutation> {
-    vec![En1998Mutation::ChangeSeismicZone(ChangeSeismicZone { new_seismic_zone: base.seismic_zone.clone() })]
+    vec![En1998Mutation::ChangeSeismicZone(ChangeSeismicZone { new_seismic_zone: base.seismic_zone })]
 }
 //#endregion 🔖️Inverse

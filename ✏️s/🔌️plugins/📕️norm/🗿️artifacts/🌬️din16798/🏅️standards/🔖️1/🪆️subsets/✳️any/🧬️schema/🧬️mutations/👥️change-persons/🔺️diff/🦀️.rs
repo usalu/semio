@@ -9,6 +9,6 @@ pub fn diff(payload: &ChangePersons, base: &Din16798Snapshot) -> protocol::Mutat
     if base.persons == payload.new_persons {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Number of persons is already {}.", payload.new_persons));
     }
-    protocol::MutationOutcome::new(Din16798Diff { persons: Some(payload.new_persons.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(Din16798Diff { persons: Some(payload.new_persons), ..Default::default() })
 }
 //#endregion 🔖️Diff

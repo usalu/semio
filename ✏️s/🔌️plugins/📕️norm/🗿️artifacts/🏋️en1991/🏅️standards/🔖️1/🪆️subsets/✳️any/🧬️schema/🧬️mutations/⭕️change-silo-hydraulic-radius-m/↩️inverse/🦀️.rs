@@ -5,6 +5,6 @@ use crate::artifacts::en1991::{En1991Mutation, En1991Snapshot};
 
 //#region 🔖️Inverse
 pub fn inverse(_payload: &ChangeSiloHydraulicRadiusM, base: &En1991Snapshot) -> Vec<En1991Mutation> {
-    vec![En1991Mutation::ChangeSiloHydraulicRadiusM(ChangeSiloHydraulicRadiusM { new_silo_hydraulic_radius_m: base.silo_hydraulic_radius_m.clone() })]
+    vec![En1991Mutation::ChangeSiloHydraulicRadiusM(ChangeSiloHydraulicRadiusM { new_silo_hydraulic_radius_m: base.silo_hydraulic_radius_m })]
 }
 //#endregion 🔖️Inverse

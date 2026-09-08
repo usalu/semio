@@ -1,11 +1,20 @@
 //! 🎪 `stdio.ply` artifact — stdio reference format.
 
+#![allow(async_fn_in_trait)]
+#![allow(long_running_const_eval)]
+
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_schema as framework_schema;
+extern crate semio_framework_value_derive as value_derive;
+
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 
-pub use crate::artifacts::ply::schema::diff::PlyDiff;
-pub use crate::artifacts::ply::schema::mutations::PlyMutation;
-pub use crate::artifacts::ply::schema::snapshot::PlySnapshot;
-pub use crate::artifacts::ply::schema::PlyArtifact;
+pub use schema::diff::PlyDiff;
+pub use schema::mutations::PlyMutation;
+pub use schema::snapshot::PlySnapshot;
+pub use schema::PlyArtifact;
 
 /// 🏷️ Document schema / DSL envelope id.
 pub const STDIO_PLY_DOCUMENT_SCHEMA: &str = "stdio.ply";
@@ -13,9 +22,44 @@ pub const STDIO_PLY_DOCUMENT_SCHEMA: &str = "stdio.ply";
 /// 🧬️ Artifact schema descriptor id.
 pub const PLY_ARTIFACT_SCHEMA_ID: &str = "s.stdio.ply";
 
+/// 📜 Schema-owned package definition.
+pub const ARTIFACT_DEFINITION_SCHEMA: &str = include_str!("🧬️schema/📜️artifact-definition.json");
+
+pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::PluginAssemblyError> {
+    let factories = native_codecs();
+    let executables = semio_s_artifact_stdio_contract::native_codec_executables(ARTIFACT_DEFINITION_SCHEMA, &factories)?;
+    semio_s_artifact_stdio_contract::definition_from_schema_with_executables(ARTIFACT_DEFINITION_SCHEMA, executables)
+}
+
+pub fn formats() -> Result<Vec<semio_framework_plugin::io::FormatDescriptor>, semio_framework_plugin::ArtifactDefinitionError> {
+    semio_s_artifact_stdio_contract::format_descriptors(ARTIFACT_DEFINITION_SCHEMA)
+}
+
+fn native_codec() -> store::ArtifactCodec {
+    let mut codec = store::ArtifactCodec::of::<PlySnapshot, PlyMutation>(STDIO_PLY_DOCUMENT_SCHEMA);
+    codec.extension = "ply";
+    codec.pack_schema_hash = semio_framework_hash::Sha256::digest(include_bytes!("🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio"));
+    codec
+}
+
+pub fn native_codecs() -> Vec<semio_s_artifact_stdio_contract::NativeCodecFactory> {
+    vec![semio_s_artifact_stdio_contract::NativeCodecFactory { id: "stdio.native.ply.v1", artifact: "ply", kind: artifact_kind, codec: native_codec }]
+}
+
+pub fn contribution() -> semio_s_artifact_stdio_contract::ArtifactContribution {
+    semio_s_artifact_stdio_contract::ArtifactContribution {
+        identity: "ply",
+        schema: ARTIFACT_DEFINITION_SCHEMA,
+        definition,
+        assembly,
+        formats,
+        native_codecs,
+    }
+}
+
 //#region 🔖️Declaration
 /// 🔖️ This artifact's declaration (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE W6, g4) —
-/// replaces the old side-effecting `crate::artifacts::ply::engine::register()`, which the plugin
+/// replaces the old side-effecting `crate::engine::register()`, which the plugin
 /// root used to call unconditionally before `Plugin::builder(...)` was even constructed. Mirrors
 /// `🗜️deflate`'s own `s.stdio.deflate` exemplar exactly: a headless library artifact with zero
 /// `ArtifactApp`s, so `.document_codec_bare::<Snapshot, Mutation>(schema)` stands in for
@@ -29,18 +73,18 @@ pub const PLY_ARTIFACT_SCHEMA_ID: &str = "s.stdio.ply";
 /// performed is covered by a declaration field — no `.setup()` survivor needed.
 /// 🧩️ Binds this executable root to its sole schema-owned definition.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn assembly(definition: semio_framework_plugin::ArtifactDefinition) -> Result<crate::registry::ArtifactAssembly, semio_framework_plugin::PluginAssemblyError> {
-    crate::registry::runtime_assembly("ply", definition, declaration)
+pub fn assembly() -> Result<semio_s_artifact_stdio_contract::ArtifactAssembly, semio_framework_plugin::PluginAssemblyError> {
+    semio_s_artifact_stdio_contract::runtime_assembly("ply", definition()?, declaration)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
-    let formats = crate::registry::format_descriptors_for("ply")?;
+    let formats = formats()?;
     semio_framework_plugin::ArtifactDeclaration::builder(definition)
-        .schema(crate::artifacts::ply::schema::ply_artifact_schema_descriptor())
+        .schema(crate::schema::ply_artifact_schema_descriptor())
         .formats(formats)
-        .inferences([crate::artifacts::ply::schema::inferences::ply_artifact_inference_descriptor()])
-        .composers(crate::artifacts::ply::engine::io_registry::entries())
+        .inferences([crate::schema::inferences::ply_artifact_inference_descriptor()])
+        .composers(crate::engine::io_registry::entries())
         .languages(pilot_languages())
         .document_codec_bare::<PlySnapshot, PlyMutation>(STDIO_PLY_DOCUMENT_SCHEMA)
         .try_build()
@@ -48,7 +92,7 @@ pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Re
 
 /// 📌️ Handcrafted facet grammars (text) and protocols (binary) for in-process execution — built
 /// once and leaked to a `&'static` slice since `dsl::passthrough_hooks` isn't `const fn`, copied
-/// verbatim (five `LanguageSpec` rows, one per role) from `crate::artifacts::ply::standards::v1_0::
+/// verbatim (five `LanguageSpec` rows, one per role) from `crate::standards::v1_0::
 /// engine::register_pilot_languages`'s own `dsl::register_language(...)` call bodies.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn pilot_languages() -> &'static [dsl::LanguageSpec] {
@@ -60,28 +104,28 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                     id: "stdio.ply",
                     extension: Some("ply"),
                     role: dsl::LanguageRole::Document,
-                    grammar: Some(crate::artifacts::ply::schema::snapshot::text::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::artifacts::ply::schema::snapshot::text::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(crate::artifacts::ply::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::artifacts::ply::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(crate::schema::snapshot::text::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::schema::snapshot::text::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(crate::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("stdio.ply"),
                 },
                 dsl::LanguageSpec {
                     id: "stdio.ply.op",
                     extension: None,
                     role: dsl::LanguageRole::Ops,
-                    grammar: Some(crate::artifacts::ply::schema::mutations::text::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::artifacts::ply::schema::mutations::text::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(crate::artifacts::ply::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::artifacts::ply::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(crate::schema::mutations::text::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::schema::mutations::text::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(crate::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("stdio.ply.op"),
                 },
                 dsl::LanguageSpec {
                     id: "stdio.ply.diff",
                     extension: None,
                     role: dsl::LanguageRole::Diff,
-                    grammar: Some(crate::artifacts::ply::schema::diff::text::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::artifacts::ply::schema::diff::text::COMPONENT_GRAMMAR_PATH),
+                    grammar: Some(crate::schema::diff::text::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::schema::diff::text::COMPONENT_GRAMMAR_PATH),
                     protocol: None,
                     protocol_path: None,
                     hooks: dsl::passthrough_hooks("stdio.ply.diff"),
@@ -92,8 +136,8 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                     role: dsl::LanguageRole::Pack,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(crate::artifacts::ply::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::artifacts::ply::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(crate::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("stdio.ply.pack"),
                 },
                 dsl::LanguageSpec {
@@ -102,8 +146,8 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                     role: dsl::LanguageRole::Spr,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(crate::artifacts::ply::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::artifacts::ply::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(crate::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("stdio.ply.spr"),
                 },
             ]
@@ -134,7 +178,7 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 //#endregion 🔖️ArtifactKind
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
-    use crate::artifacts::ply::standards::v1_0::engine::io_registry as v1_0;
+    use crate::standards::v1_0::engine::io_registry as v1_0;
     use semio_framework_plugin::{register_composer_entries, ComposeError, ComposedArtifact, ComposerEntry, Dialect, ErasedComposeSource};
     use std::sync::OnceLock;
 
@@ -157,3 +201,200 @@ pub mod io_registry {
     }
 }
 //#endregion 🚪️DerivedIoRegistry
+
+#[path = "."]
+pub mod standards {
+    #[path = "."]
+    pub mod v1_0 {
+        // ⚙️→🚪️/🧬️ dissolved (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES):
+        // real code now lives in `subsets::any::{io,schema}`; this stays an inline barrel
+        // so every existing `standards::v1_0::engine::*`/root `engine::*` path still resolves.
+        pub mod engine {
+            pub use super::subsets::any::io::*;
+            pub use super::subsets::any::schema::*;
+        }
+        #[path = "."]
+        pub mod subsets {
+            #[path = "."]
+            pub mod any {
+                #[path = "."]
+                pub mod schema {
+                    #[path = "🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🦀️.rs"]
+                    mod component;
+                    pub use component::*;
+                    #[path = "."]
+                    pub mod snapshot {
+                        #[path = "🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                        #[path = "🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/🦀️.rs"]
+                        pub mod binary;
+                        #[path = "🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🦀️.rs"]
+                        pub mod text;
+                    }
+                    #[path = "."]
+                    pub mod diff {
+                        #[path = "🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                        #[path = "🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/💾️binary/🦀️.rs"]
+                        pub mod binary;
+                        #[path = "🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/📝️text/🦀️.rs"]
+                        pub mod text;
+                    }
+                    #[path = "."]
+                    pub mod inferences {
+                        #[path = "."]
+                        pub mod bounds {
+                            #[path = "🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦bounds/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                        #[path = "🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/📝️text/🦀️.rs"]
+                        pub mod text;
+                    }
+                    #[path = "."]
+                    pub mod mutations {
+                        #[path = "🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                        #[path = "🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️.rs"]
+                        pub mod binary;
+                        #[path = "🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️.rs"]
+                        pub mod text;
+                    }
+                }
+                #[path = "."]
+                pub mod io {
+                    #[path = "🏅️standards/🔖️1.0/🪆️subsets/✳️any/🚪️io/🦀️.rs"]
+                    mod component;
+                    pub use component::*;
+                    #[path = "."]
+                    pub mod import {
+                        #[path = "."]
+                        pub mod deserializers {
+                            #[path = "."]
+                            pub mod artifacts {
+                                #[path = "."]
+                                pub mod txt {
+                                    #[path = "."]
+                                    pub mod v_utf_8 {
+                                        #[path = "."]
+                                        pub mod any {
+                                            #[path = "🏅️standards/🔖️1.0/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🔤️txt/🔖️utf-8/✳️any/🦀️.rs"]
+                                            mod component;
+                                            pub use component::*;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    #[path = "."]
+                    pub mod export {
+                        #[path = "."]
+                        pub mod serializers {
+                            #[path = "."]
+                            pub mod artifacts {
+                                #[path = "."]
+                                pub mod txt {
+                                    #[path = "."]
+                                    pub mod v_utf_8 {
+                                        #[path = "."]
+                                        pub mod any {
+                                            #[path = "🏅️standards/🔖️1.0/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🔤️txt/🔖️utf-8/✳️any/🦀️.rs"]
+                                            mod component;
+                                            pub use component::*;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+// ---- Shims: keep pre-migration module paths resolving for external callers ----
+pub mod schema {
+    pub use super::standards::v1_0::subsets::any::schema::*;
+}
+pub mod engine {
+    pub use super::standards::v1_0::engine::*;
+}
+pub mod io {
+    pub use super::standards::v1_0::subsets::any::io::*;
+}
+
+#[path = "."]
+pub mod examples {
+    #[path = "."]
+    pub mod demo {
+        #[path = "🏅️standards/🔖️1.0/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️.rs"]
+        mod component;
+        pub use component::*;
+    }
+}
+
+#[cfg(feature = "component-app-assembly")]
+#[path = "."]
+pub mod editor {
+    #[path = "."]
+    pub mod ply {
+        #[path = "🏅️standards/🔖️1.0/🪆️subsets/✳️any/✏️editor/🦀️.rs"]
+        mod component;
+        pub use component::*;
+        #[path = "."]
+        pub mod modes {
+            #[path = "."]
+            pub mod edit {
+                #[path = "🏅️standards/🔖️1.0/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🦀️.rs"]
+                mod component;
+                pub use component::*;
+                #[path = "."]
+                pub mod windows {
+                    #[path = "."]
+                    pub mod main {
+                        #[path = "🏅️standards/🔖️1.0/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+        }
+    }
+}
+
+#[cfg(feature = "component-app-assembly")]
+#[path = "."]
+pub mod viewer {
+    #[path = "."]
+    pub mod ply {
+        #[path = "🏅️standards/🔖️1.0/🪆️subsets/✳️any/👁️viewer/🦀️.rs"]
+        mod component;
+        pub use component::*;
+        #[path = "."]
+        pub mod modes {
+            #[path = "."]
+            pub mod view {
+                #[path = "🏅️standards/🔖️1.0/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🦀️.rs"]
+                mod component;
+                pub use component::*;
+                #[path = "."]
+                pub mod windows {
+                    #[path = "."]
+                    pub mod main {
+                        #[path = "🏅️standards/🔖️1.0/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+        }
+    }
+}

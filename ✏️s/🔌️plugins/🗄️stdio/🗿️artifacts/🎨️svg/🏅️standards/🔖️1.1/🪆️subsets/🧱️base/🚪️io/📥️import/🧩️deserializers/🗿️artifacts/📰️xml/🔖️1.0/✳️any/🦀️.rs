@@ -1,8 +1,8 @@
 //! 📥️ Deserialize `stdio.svg` from stdio.xml.
 
-use crate::artifacts::svg::{SvgSnapshot, STDIO_SVG_DOCUMENT_SCHEMA};
-use crate::artifacts::xml::schema::snapshot::XmlNode;
-use crate::artifacts::xml::XmlSnapshot;
+use crate::{SvgSnapshot, STDIO_SVG_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_xml::schema::snapshot::XmlNode;
+use semio_s_artifact_stdio_xml::XmlSnapshot;
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn register() {}

@@ -4,8 +4,8 @@
 //! slug dirs directly — `🦀️.rs` is the sole mounting mechanism, same as mutations); each named
 //! inference gets its own `<emoji><slug>/` child (currently: `🧾outline/`).
 
-use crate::artifacts::docx::DocxSnapshot;
-use schema::ArtifactSchema;
+use crate::DocxSnapshot;
+use framework_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 
 use super::outline::DocxOutline;
@@ -41,7 +41,7 @@ impl protocol::InferenceSpec<DocxSnapshot> for DocxInference {
 //#endregion 🔖️Inference
 
 //#region 🔖️ArtifactInferrer
-impl ArtifactInferrer for crate::artifacts::docx::standards::v_ecma_376::subsets::base::schema::DocxBuilder {
+impl ArtifactInferrer for crate::standards::v_ecma_376::subsets::base::schema::DocxBuilder {
     type Snapshot = DocxSnapshot;
     type Inference = DocxInference;
 }
@@ -51,10 +51,10 @@ impl ArtifactInferrer for crate::artifacts::docx::standards::v_ecma_376::subsets
 /// 💡️ Registers `s.stdio.docx.inference`'s facet leaves into the OS-wide inference catalog —
 /// call once at plugin init, alongside `docx_artifact_schema_descriptor`'s registration.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn docx_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
-    schema::ArtifactInferenceDescriptor {
+pub fn docx_artifact_inference_descriptor() -> framework_schema::ArtifactInferenceDescriptor {
+    framework_schema::ArtifactInferenceDescriptor {
         id: "s.stdio.docx.inference",
-        inference: schema::FacetLeaves {
+        inference: framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),

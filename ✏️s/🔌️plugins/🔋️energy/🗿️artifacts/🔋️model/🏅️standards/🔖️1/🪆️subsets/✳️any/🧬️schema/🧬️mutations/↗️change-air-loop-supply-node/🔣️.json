@@ -5,7 +5,7 @@
   "displayName": "Change Air Loop Supply Node",
   "emoji": "↗️",
   "aggregateVariant": "ChangeAirLoopSupplyNode",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-air-loop-supply-node",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

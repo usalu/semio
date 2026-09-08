@@ -11,10 +11,10 @@
 //! leaf's own oracle. The derived `.op.semio`/`.spr.semio`/`.dsl.semio`/`.pack.semio`/
 //! `.patch.semio` encodings come from `fixtures generate`, not from here.
 
-use crate::artifacts::gltf::schema::mutations::bind_node_child::diff::GltfBindNodeChildDiff;
-use crate::artifacts::gltf::schema::mutations::bind_node_child::GltfBindNodeChildPayload;
-use crate::artifacts::gltf::schema::mutations::bind_node_child::{diff, inverse, mutation};
-use crate::artifacts::gltf::GltfSnapshot;
+use crate::schema::mutations::bind_node_child::diff::GltfBindNodeChildDiff;
+use crate::schema::mutations::bind_node_child::GltfBindNodeChildPayload;
+use crate::schema::mutations::bind_node_child::{diff, inverse, mutation};
+use crate::GltfSnapshot;
 
 const CASE: &str = "bind-node-child/adopts-the-child-node-under-the-parent-node";
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");

@@ -93,7 +93,7 @@
         {
           "id": "insert-channel",
           "capability": "semio-v1-audio-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -112,7 +112,7 @@
         {
           "id": "insert-tag",
           "capability": "semio-v1-audio-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -131,7 +131,7 @@
         {
           "id": "remove-channel",
           "capability": "semio-v1-audio-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -150,7 +150,7 @@
         {
           "id": "remove-tag",
           "capability": "semio-v1-audio-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -169,7 +169,7 @@
         {
           "id": "set-channel-samples",
           "capability": "semio-v1-audio-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -188,7 +188,7 @@
         {
           "id": "set-format",
           "capability": "semio-v1-audio-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -207,7 +207,7 @@
         {
           "id": "set-sample-rate",
           "capability": "semio-v1-audio-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -226,7 +226,7 @@
         {
           "id": "set-snapshot",
           "capability": "semio-v1-audio-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -245,7 +245,7 @@
         {
           "id": "set-tag-value",
           "capability": "semio-v1-audio-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],

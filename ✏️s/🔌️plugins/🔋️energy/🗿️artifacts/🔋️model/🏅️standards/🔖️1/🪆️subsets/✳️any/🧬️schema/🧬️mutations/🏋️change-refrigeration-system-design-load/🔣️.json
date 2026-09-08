@@ -5,7 +5,7 @@
   "displayName": "Change Refrigeration System Design Load",
   "emoji": "🏋️",
   "aggregateVariant": "ChangeRefrigerationSystemDesignLoad",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-refrigeration-system-design-load",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

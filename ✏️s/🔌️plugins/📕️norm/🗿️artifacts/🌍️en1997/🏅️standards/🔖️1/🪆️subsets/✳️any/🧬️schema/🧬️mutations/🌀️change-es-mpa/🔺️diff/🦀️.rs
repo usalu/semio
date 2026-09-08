@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeESMpa, base: &En1997Snapshot) -> protocol::MutationO
     if base.e_s_mpa == payload.new_e_s_mpa {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Soil modulus E_s [MPa] is already {}.", payload.new_e_s_mpa));
     }
-    protocol::MutationOutcome::new(En1997Diff { e_s_mpa: Some(payload.new_e_s_mpa.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1997Diff { e_s_mpa: Some(payload.new_e_s_mpa), ..Default::default() })
 }
 //#endregion 🔖️Diff

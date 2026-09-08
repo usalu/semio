@@ -1,8 +1,8 @@
-use crate::artifacts::semio::standards::v1::subsets::image::schema::diff::SemioImageDiff;
-use crate::artifacts::semio::standards::v1::subsets::image::schema::mutations::SemioImageMutation;
-use crate::artifacts::semio::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
+use crate::standards::v1::subsets::image::schema::diff::SemioImageDiff;
+use crate::standards::v1::subsets::image::schema::mutations::SemioImageMutation;
+use crate::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
 use protocol::Mutation;
-use crate::artifacts::semio::standards::v1::subsets::image::schema::mutations::remove_frame;
+use crate::standards::v1::subsets::image::schema::mutations::remove_frame;
 
 /// 🔺️ Diff helper for remove-frame — an absent BASE frame `index` is `mutation.target-missing`
 /// (Error, empty diff).

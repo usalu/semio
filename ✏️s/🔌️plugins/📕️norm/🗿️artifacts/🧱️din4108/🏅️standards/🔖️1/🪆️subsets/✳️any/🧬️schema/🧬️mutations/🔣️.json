@@ -1,123 +1,97 @@
 {
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://semio.tech/schema/s/norm/din4108/mutation.json",
   "title": "Din4108Mutation",
-  "type": "object",
-  "additionalProperties": false,
-  "required": [
-    "category",
-    "layers",
-    "climate",
-    "airtightnessN50",
-    "psiTimesLSum",
-    "rhInt",
-    "catalogId",
-    "materialId",
-    "airtightnessClass",
-    "tIntC",
-    "solarAbsorptance",
-    "irradianceWM2",
-    "moistureMuExterior",
-    "moistureMuInterior",
-    "envelopeAreaM2",
-    "bb2DetailsConform",
-    "applicationType",
-    "declaredApplicationClass"
+  "oneOf": [
+    {
+      "$ref": "./🔒️change-airtightness-class/🧬️schema/🔣️.json"
+    },
+    {
+      "$ref": "./💨️change-airtightness-n50/🧬️schema/🔣️.json"
+    },
+    {
+      "$ref": "./🧩️change-application-type/🧬️schema/🔣️.json"
+    },
+    {
+      "$ref": "./✅️change-bb2-details-conform/🧬️schema/🔣️.json"
+    },
+    {
+      "$ref": "./📇️change-catalog-id/🧬️schema/🔣️.json"
+    },
+    {
+      "$ref": "./🗂️change-category/🧬️schema/🔣️.json"
+    },
+    {
+      "$ref": "./🌦️change-climate/🧬️schema/🔣️.json"
+    },
+    {
+      "$ref": "./🏷️change-declared-application-class/🧬️schema/🔣️.json"
+    },
+    {
+      "$ref": "./📐️change-envelope-area-m2/🧬️schema/🔣️.json"
+    },
+    {
+      "$ref": "./🔆️change-irradiance-wm2/🧬️schema/🔣️.json"
+    },
+    {
+      "$ref": "./🧊️change-layer-lambda/🧬️schema/🔣️.json"
+    },
+    {
+      "$ref": "./📏️change-layer-thickness/🧬️schema/🔣️.json"
+    },
+    {
+      "$ref": "./🧽️change-material-id/🧬️schema/🔣️.json"
+    },
+    {
+      "$ref": "./🌧️change-moisture-mu-exterior/🧬️schema/🔣️.json"
+    },
+    {
+      "$ref": "./💦️change-moisture-mu-interior/🧬️schema/🔣️.json"
+    },
+    {
+      "$ref": "./🌉️change-psi-times-l-sum/🧬️schema/🔣️.json"
+    },
+    {
+      "$ref": "./💧️change-rh-int/🧬️schema/🔣️.json"
+    },
+    {
+      "$ref": "./☀️change-solar-absorptance/🧬️schema/🔣️.json"
+    },
+    {
+      "$ref": "./🌡️change-t-int-c/🧬️schema/🔣️.json"
+    },
+    {
+      "$ref": "./➕️insert-layer/🧬️schema/🔣️.json"
+    },
+    {
+      "$ref": "./➖️remove-layer/🧬️schema/🔣️.json"
+    },
+    {
+      "$ref": "./🔀️reorder-layers/🧬️schema/🔣️.json"
+    }
   ],
-  "properties": {
-    "category": {
-      "type": "string",
-      "x-semio-state": "artifact"
-    },
-    "layers": {
-      "type": "array",
-      "items": {
-        "$ref": "#/$defs/Din4108LayerDocument"
-      },
-      "x-semio-state": "artifact"
-    },
-    "climate": {
-      "type": "string",
-      "x-semio-state": "artifact"
-    },
-    "airtightnessN50": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "psiTimesLSum": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "rhInt": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "catalogId": {
-      "type": "string",
-      "x-semio-state": "artifact"
-    },
-    "materialId": {
-      "type": "string",
-      "x-semio-state": "artifact"
-    },
-    "airtightnessClass": {
-      "type": "string",
-      "x-semio-state": "artifact"
-    },
-    "tIntC": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "solarAbsorptance": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "irradianceWM2": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "moistureMuExterior": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "moistureMuInterior": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "envelopeAreaM2": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "bb2DetailsConform": {
-      "type": "boolean",
-      "x-semio-state": "artifact"
-    },
-    "applicationType": {
-      "type": "string",
-      "x-semio-state": "artifact"
-    },
-    "declaredApplicationClass": {
-      "type": "string",
-      "x-semio-state": "artifact"
-    }
-  },
-  "$defs": {
-    "Din4108LayerDocument": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["thicknessM", "lambdaWMk"],
-      "properties": {
-        "thicknessM": { "type": "number", "format": "double" },
-        "lambdaWMk": { "type": "number", "format": "double" }
-      }
-    }
-  }
+  "x-semio-mutationKinds": [
+    "change-airtightness-class",
+    "change-airtightness-n50",
+    "change-application-type",
+    "change-bb2-details-conform",
+    "change-catalog-id",
+    "change-category",
+    "change-climate",
+    "change-declared-application-class",
+    "change-envelope-area-m2",
+    "change-irradiance-wm2",
+    "change-layer-lambda",
+    "change-layer-thickness",
+    "change-material-id",
+    "change-moisture-mu-exterior",
+    "change-moisture-mu-interior",
+    "change-psi-times-l-sum",
+    "change-rh-int",
+    "change-solar-absorptance",
+    "change-t-int-c",
+    "insert-layer",
+    "remove-layer",
+    "reorder-layers"
+  ]
 }

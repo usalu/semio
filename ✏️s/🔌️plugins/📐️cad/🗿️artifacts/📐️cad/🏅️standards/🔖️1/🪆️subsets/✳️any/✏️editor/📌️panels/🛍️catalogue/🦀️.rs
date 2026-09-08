@@ -29,7 +29,7 @@ pub fn build_catalogue_tree(labels: &CadLabels) -> semio_framework_plugin::UiAss
         ])?;
         cad_tree_item(
                 format!("cad-play-catalogue.{}", entry.typology),
-                typology_label(entry.typology, labels).to_string(),
+                typology_label(entry.typology, labels),
                 Some(entry.icon),
                 cad_action("addObject", Some(args))?,
             )

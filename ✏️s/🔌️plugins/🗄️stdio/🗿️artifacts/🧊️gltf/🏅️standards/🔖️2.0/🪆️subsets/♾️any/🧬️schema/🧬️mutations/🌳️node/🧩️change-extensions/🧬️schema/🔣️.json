@@ -1,0 +1,58 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/node/change-extensions.json",
+  "title": "GltfChangeNodeExtensionDataMutation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "node",
+    "data"
+  ],
+  "properties": {
+    "node": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "data": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "state": {
+              "const": "absent"
+            }
+          },
+          "required": [
+            "state"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "state": {
+              "const": "present"
+            },
+            "value": {}
+          },
+          "required": [
+            "state",
+            "value"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    }
+  },
+  "x-semio": {
+    "id": "s.stdio.gltf.mutation.change-node-extension-data.v1",
+    "version": 1,
+    "phase": "mutation",
+    "kind": "change",
+    "touchedPaths": [
+      "document/nodes/*/extensions"
+    ],
+    "referencePolicy": "none"
+  },
+  "x-semio-mutation": "change-node-extension-data"
+}

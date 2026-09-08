@@ -4,9 +4,9 @@
 //! slug dirs directly — `🦀️.rs` is the sole mounting mechanism, same as mutations); each named
 //! inference gets its own `<emoji><slug>/` child (currently: `🧾outline/`).
 
-use crate::artifacts::json::JsonSnapshot;
+use crate::JsonSnapshot;
 use protocol::Inference;
-use schema::ArtifactSchema;
+use framework_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 
 use super::outline::JsonOutline;
@@ -52,7 +52,7 @@ impl protocol::InferenceSpec<JsonSnapshot> for JsonInference {
 //#endregion 🔖️Inference
 
 //#region 🔖️ArtifactInferrer
-impl ArtifactInferrer for crate::artifacts::json::standards::v_rfc8259::subsets::base::schema::JsonBuilder {
+impl ArtifactInferrer for crate::standards::v_rfc8259::subsets::base::schema::JsonBuilder {
     type Snapshot = JsonSnapshot;
     type Inference = JsonInference;
 }
@@ -62,10 +62,10 @@ impl ArtifactInferrer for crate::artifacts::json::standards::v_rfc8259::subsets:
 /// 💡️ Registers `s.stdio.json.inference`'s facet leaves into the OS-wide inference catalog —
 /// call once at plugin init, alongside `json_artifact_schema_descriptor`'s registration.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn json_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
-    schema::ArtifactInferenceDescriptor {
+pub fn json_artifact_inference_descriptor() -> framework_schema::ArtifactInferenceDescriptor {
+    framework_schema::ArtifactInferenceDescriptor {
         id: "s.stdio.json.inference",
-        inference: schema::FacetLeaves {
+        inference: framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),
@@ -105,7 +105,7 @@ mod tests {
     /// auto-discover at all.
     mod conformance_laws {
         use super::*;
-        use crate::artifacts::json::schema::{diff, mutations, snapshot};
+        use crate::schema::{diff, mutations, snapshot};
         use protocol::{DiffCodec, OpBinary, OpText};
 
         /// ✅️ "committed files parse": all 6 handcrafted `.grammar.semio`/`.protocol.semio` files

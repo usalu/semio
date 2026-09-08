@@ -518,7 +518,7 @@
         {
           "id": "change-header-fields",
           "capability": "bmp-3-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -538,7 +538,7 @@
         {
           "id": "insert-palette-entry",
           "capability": "bmp-3-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -558,7 +558,7 @@
         {
           "id": "remove-palette-entry",
           "capability": "bmp-3-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -578,7 +578,7 @@
         {
           "id": "replace-palette-entry",
           "capability": "bmp-3-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -598,7 +598,7 @@
         {
           "id": "replace-pixel-data",
           "capability": "bmp-3-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],

@@ -217,7 +217,7 @@
         {
           "id": "insert-frame",
           "capability": "semio-v1-image-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -236,7 +236,7 @@
         {
           "id": "move-frame",
           "capability": "semio-v1-image-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -255,7 +255,7 @@
         {
           "id": "remove-frame",
           "capability": "semio-v1-image-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -274,7 +274,7 @@
         {
           "id": "remove-metadata-entry",
           "capability": "semio-v1-image-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -293,7 +293,7 @@
         {
           "id": "set-bit-depth",
           "capability": "semio-v1-image-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -312,7 +312,7 @@
         {
           "id": "set-colorspace",
           "capability": "semio-v1-image-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -331,7 +331,7 @@
         {
           "id": "set-dimensions",
           "capability": "semio-v1-image-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -350,7 +350,7 @@
         {
           "id": "set-frame-delay",
           "capability": "semio-v1-image-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -369,7 +369,7 @@
         {
           "id": "set-frame-pixels",
           "capability": "semio-v1-image-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -388,7 +388,7 @@
         {
           "id": "set-icc",
           "capability": "semio-v1-image-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -407,7 +407,7 @@
         {
           "id": "set-metadata-entry",
           "capability": "semio-v1-image-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -426,7 +426,7 @@
         {
           "id": "set-snapshot",
           "capability": "semio-v1-image-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],

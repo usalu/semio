@@ -31,7 +31,7 @@ mod subject {
     use super::spec;
     use semio_s_plugin_stdio_test_oracle::raster::{oracle_create_gif, project_gif};
     use semio_repo_test_host::{Context, Outcome};
-    use semio_s_plugin_stdio::artifacts::gif::standards::v89a::subsets::any::io::{decode_gif, encode_gif};
+    use crate::standards::v89a::subsets::any::io::{decode_gif, encode_gif};
 
     pub fn run(ctx: &Context) -> Result<Outcome, String> {
         let reference = oracle_create_gif(&spec(ctx)?)?;

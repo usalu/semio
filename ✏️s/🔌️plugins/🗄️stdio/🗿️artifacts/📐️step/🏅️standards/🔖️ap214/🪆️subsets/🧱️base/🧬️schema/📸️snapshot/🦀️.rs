@@ -5,14 +5,14 @@
 //! raw `Part21Document` (that was the copy-paste-type defect flagged against ifc in
 //! `w0-recon-report.md` §7 — step does not repeat it for itself).
 
-use crate::artifacts::step::engine::part21::{parse_part21, write_part21, Part21Document, Part21Header, Part21Instance, Part21Value};
-use crate::artifacts::step::STDIO_STEP_DOCUMENT_SCHEMA;
-use schema::ArtifactSchema;
+use crate::engine::part21::{parse_part21, write_part21, Part21Document, Part21Header, Part21Instance, Part21Value};
+use crate::STDIO_STEP_DOCUMENT_SCHEMA;
+use framework_schema::ArtifactSchema;
 
 //#region 🔖️BrepModelReexport
 /// 🧱 The BrepMesh analyzer types live with the derived view in `engine::brep`, not here — the
 /// snapshot only stores the generic graph. Re-exported for pre-existing call sites' convenience.
-pub use crate::artifacts::step::engine::brep::{BrepFace, BrepMesh, BrepVertex};
+pub use crate::engine::brep::{BrepFace, BrepMesh, BrepVertex};
 //#endregion 🔖️BrepModelReexport
 
 //#region 🔖️Value
@@ -173,7 +173,7 @@ pub struct StepEntity {
 /// FORMAT SPEC: nothing about a real AP214 exchange file is silently dropped (undecoded header
 /// positions default gracefully; complex instances retain every constituent type via
 /// `StepEntity::complex`). BrepMesh is a derived analyzer view
-/// (`crate::artifacts::step::engine::brep::analyze_brep_mesh`), not stored here.
+/// (`crate::engine::brep::analyze_brep_mesh`), not stored here.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.step")]

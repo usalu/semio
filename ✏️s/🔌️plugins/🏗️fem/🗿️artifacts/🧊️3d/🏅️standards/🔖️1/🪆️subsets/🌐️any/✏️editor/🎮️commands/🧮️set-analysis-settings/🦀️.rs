@@ -21,8 +21,8 @@ pub struct SetAnalysisSettings {
 pub fn handle(payload: &SetAnalysisSettings, doc: &ArtifactView<'_, Fem3dSnapshot>, _cfg: &ConfigView<'_, Fem3dConfig>) -> Result<Emit<Fem3dMutation, Fem3dConfigMutation>, Fault> {
     let current = &doc.snapshot.analysis;
     let settings = crate::artifacts::fem3d::FemAnalysisSettings {
-        modal_count: payload.modal_count.map(|value| value as usize).unwrap_or(current.modal_count),
-        buckling_count: payload.buckling_count.map(|value| value as usize).unwrap_or(current.buckling_count),
+        modal_count: payload.modal_count.map_or(current.modal_count, |value| value as usize),
+        buckling_count: payload.buckling_count.map_or(current.buckling_count, |value| value as usize),
         deformation_scale: payload.deformation_scale.unwrap_or(current.deformation_scale),
     };
     Ok(Emit::mutations(vec![Fem3dMutation::UpdateAnalysisSettings(update_analysis_settings::UpdateAnalysisSettings { settings })]))

@@ -1,7 +1,7 @@
 //! 🧬️ Authoritative change-restart-interval mutation.
-use crate::artifacts::jpg::schema::diff::*;
-use crate::artifacts::jpg::schema::mutations::JpgMutation;
-use crate::artifacts::jpg::schema::snapshot::*;
+use crate::schema::diff::*;
+use crate::schema::mutations::JpgMutation;
+use crate::schema::snapshot::*;
 
 //#region Payload
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]

@@ -26,9 +26,9 @@ pub const SPR_BYTES: &[u8] = include_bytes!("🖼️assets/📡️example.spr.se
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::csv::schema::snapshot::{CsvField, CsvRecord};
-    use crate::artifacts::csv::standards::v_rfc4180::subsets::any::schema::inferences::CsvInference;
-    use crate::artifacts::csv::{CsvMutation, CsvSnapshot};
+    use crate::schema::snapshot::{CsvField, CsvRecord};
+    use crate::standards::v_rfc4180::subsets::any::schema::inferences::CsvInference;
+    use crate::{CsvMutation, CsvSnapshot};
     use protocol::Inference;
 
     use store::os_store::test_support::{self, ExampleAsset, IoFidelityClass, SubsetRoundtripSpec};
@@ -60,16 +60,16 @@ mod tests {
 
         async fn parse_native(asset: &ExampleAsset<'_>) -> Result<Self::Snapshot, String> {
             let text = std::str::from_utf8(asset.bytes).map_err(|e| e.to_string())?;
-            Ok(crate::artifacts::csv::schema::snapshot::decode_csv_with(text, true))
+            Ok(crate::schema::snapshot::decode_csv_with(text, true))
         }
 
         async fn export_native(snapshot: &Self::Snapshot) -> Result<Vec<u8>, String> {
-            Ok(crate::artifacts::csv::schema::snapshot::encode_csv(snapshot).into_bytes())
+            Ok(crate::schema::snapshot::encode_csv(snapshot).into_bytes())
         }
 
         async fn reimport_native(bytes: &[u8]) -> Result<Self::Snapshot, String> {
             let text = std::str::from_utf8(bytes).map_err(|e| e.to_string())?;
-            Ok(crate::artifacts::csv::schema::snapshot::decode_csv_with(text, true))
+            Ok(crate::schema::snapshot::decode_csv_with(text, true))
         }
 
         async fn infer(snapshot: &Self::Snapshot) -> Self::Inference {
@@ -77,11 +77,11 @@ mod tests {
         }
 
         async fn sample_mutations(snapshot: &Self::Snapshot) -> Vec<Self::Mutation> {
-            vec![CsvMutation::InsertRecord(crate::artifacts::csv::schema::mutations::insert_record::InsertRecord { index: snapshot.records.len(), record: CsvRecord { fields: vec![CsvField { value: "roundtrip".into(), quoted: false }] } })]
+            vec![CsvMutation::InsertRecord(crate::schema::mutations::insert_record::InsertRecord { index: snapshot.records.len(), record: CsvRecord { fields: vec![CsvField { value: "roundtrip".into(), quoted: false }] } })]
         }
 
         async fn validate_payload(bytes: &[u8]) -> Result<(), Vec<String>> {
-            std::str::from_utf8(bytes).map_err(|e| vec![e.to_string()]).and_then(|text| crate::artifacts::csv::schema::snapshot::decode_csv(text).map_err(|e| vec![e])).map(|_| ())
+            std::str::from_utf8(bytes).map_err(|e| vec![e.to_string()]).and_then(|text| crate::schema::snapshot::decode_csv(text).map_err(|e| vec![e])).map(|_| ())
         }
 
         async fn validate_negative(_bytes: &[u8]) -> Result<Vec<String>, String> {

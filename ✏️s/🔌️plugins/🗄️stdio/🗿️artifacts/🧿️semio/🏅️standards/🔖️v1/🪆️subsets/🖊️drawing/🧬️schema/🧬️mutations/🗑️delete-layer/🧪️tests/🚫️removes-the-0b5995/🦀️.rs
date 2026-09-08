@@ -5,9 +5,9 @@
 //! index-keyed diff, which is exactly the asymmetry this case pins. An unknown id is Error
 //! `mutation.target-missing`.
 
-use crate::artifacts::semio::standards::v1::subsets::drawing::schema::diff::SemioDrawingDiff;
-use crate::artifacts::semio::standards::v1::subsets::drawing::schema::mutations::SemioDrawingMutation;
-use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot;
+use crate::standards::v1::subsets::drawing::schema::diff::SemioDrawingDiff;
+use crate::standards::v1::subsets::drawing::schema::mutations::SemioDrawingMutation;
+use crate::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot;
 use protocol::{Mutation, MutationDiff};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");

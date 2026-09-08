@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeHeatRecoveryEta, base: &Din16798Snapshot) -> protoco
     if base.heat_recovery_eta == payload.new_heat_recovery_eta {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Heat recovery efficiency is already {}.", payload.new_heat_recovery_eta));
     }
-    protocol::MutationOutcome::new(Din16798Diff { heat_recovery_eta: Some(payload.new_heat_recovery_eta.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(Din16798Diff { heat_recovery_eta: Some(payload.new_heat_recovery_eta), ..Default::default() })
 }
 //#endregion 🔖️Diff

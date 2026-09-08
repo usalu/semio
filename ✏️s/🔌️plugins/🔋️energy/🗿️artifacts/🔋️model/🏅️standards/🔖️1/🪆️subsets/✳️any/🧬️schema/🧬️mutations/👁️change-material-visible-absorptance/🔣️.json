@@ -5,7 +5,7 @@
   "displayName": "Change Material Visible Absorptance",
   "emoji": "👁️",
   "aggregateVariant": "ChangeMaterialVisibleAbsorptance",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-material-visible-absorptance",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

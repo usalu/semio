@@ -1,6 +1,6 @@
 //! 🎚️ The kernel's tolerance model: a fixed global [`Resolution`], per-entity [`Tol`] values with
 //! a containment ordering (vertex ≥ its edges ≥ their faces), and a certified interval type [`Iv`]
-//! used by [`crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::predicates`] to decide when a fast `f64` computation is trustworthy versus
+//! used by [`crate::standards::v1::subsets::brep::schema::snapshot::vector::predicates`] to decide when a fast `f64` computation is trustworthy versus
 //! when it must escalate to exact arithmetic. Geometric decision code should never compare raw
 //! `f64`s with `==`/`<` — it should go through a `Tol` or an `Iv`.
 //!

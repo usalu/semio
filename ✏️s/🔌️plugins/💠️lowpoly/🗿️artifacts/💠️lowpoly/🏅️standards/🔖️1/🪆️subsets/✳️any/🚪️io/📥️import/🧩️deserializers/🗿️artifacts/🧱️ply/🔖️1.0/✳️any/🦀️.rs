@@ -5,8 +5,8 @@
 //! grammar) and handed to lowpoly's own `parse_dsl`.
 use crate::artifacts::lowpoly::schema::snapshot::text::parse_dsl;
 use crate::artifacts::lowpoly::schema::snapshot::{dec_str, LowpolySnapshot};
-use semio_s_plugin_stdio::artifacts::ply::engine::decode_ply;
-use semio_s_plugin_stdio::artifacts::ply::PlySnapshot;
+use semio_s_artifact_stdio_ply::engine::decode_ply;
+use semio_s_artifact_stdio_ply::PlySnapshot;
 
 pub fn register() {}
 

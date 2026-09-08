@@ -39733,26 +39733,31 @@ func syncTicketToServer(ticket *Ticket, action string) {
 		return
 	}
 	ticketID := FormatTicketRelPath(ticket.Year, ticket.Month, ticket.Day, ticket.Slug)
-	payload := map[string]interface{}{
-		"action":    action,
-		"ticket_id": ticketID,
-		"title":     ticket.Title,
-		"prompt":    ticket.Description,
-		"summary":   ticket.Summary,
-		"goal":      ticket.Goal,
-		"parent":    ticket.Parent,
-		"author":    GetGitAuthorAlias(),
-	}
-	if ticket.Management != nil && ticket.Management.Issue != "" {
-		payload["github_issue"] = ticket.Management.Issue
-	}
-	for _, s := range ticket.Sessions {
-		if s != "" {
-			payload["session_id"] = s
-			break
+	var payload map[string]interface{}
+	switch action {
+	case "close":
+		payload = map[string]interface{}{"action": action, "ticket_id": ticketID, "summary": ticket.Summary}
+	case "reopen":
+		payload = map[string]interface{}{"action": action, "ticket_id": ticketID, "prompt": ticket.Description, "title": ticket.Title}
+	default:
+		var parent *string
+		if ticket.Parent != "" {
+			parent = &ticket.Parent
+		}
+		payload = map[string]interface{}{
+			"action":    action,
+			"ticket_id": ticketID,
+			"title":     ticket.Title,
+			"prompt":    ticket.Description,
+			"goal":      ticket.Goal,
+			"parent":    parent,
+			"author":    GetGitAuthorAlias(),
+		}
+		if ticket.Management != nil && ticket.Management.Issue != "" {
+			payload["github_issue"] = ticket.Management.Issue
 		}
 	}
-	resp, err := serverRequest("POST", "/api/v1/tickets", payload)
+	resp, err := serverRequest("POST", "/api/v1/ticket", payload)
 	if err != nil {
 		return
 	}

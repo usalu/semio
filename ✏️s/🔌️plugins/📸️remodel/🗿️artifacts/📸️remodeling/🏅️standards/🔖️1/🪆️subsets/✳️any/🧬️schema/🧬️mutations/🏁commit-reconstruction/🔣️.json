@@ -5,7 +5,7 @@
   "displayName": "Commit Reconstruction",
   "emoji": "🏁",
   "aggregateVariant": "CommitReconstruction",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "commit-reconstruction",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

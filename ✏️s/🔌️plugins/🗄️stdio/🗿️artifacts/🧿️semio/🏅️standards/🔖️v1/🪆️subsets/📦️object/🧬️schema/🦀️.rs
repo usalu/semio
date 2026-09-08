@@ -1,12 +1,12 @@
 //! 🧬️ SemioObjectArtifact schema — full artifact state, mirrors `SemioObjectSnapshot` field for
 //! field (see `🔤️text`'s `SemioTextArtifact` for the precedent this follows).
 
-use crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioTransform;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
-use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
-use crate::artifacts::semio::standards::v1::subsets::object::schema::snapshot::SemioObjectSnapshot;
-use crate::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValueSnapshot;
-use schema::ArtifactSchema;
+use crate::standards::v1::subsets::base::schema::geometry::SemioTransform;
+use crate::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
+use crate::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
+use crate::standards::v1::subsets::object::schema::snapshot::SemioObjectSnapshot;
+use crate::standards::v1::subsets::value::schema::snapshot::SemioValueSnapshot;
+use framework_schema::ArtifactSchema;
 
 #[derive(Clone, Debug, PartialEq, ArtifactSchema)]
 #[artifact_schema(id = "s.stdio.semio.object")]
@@ -81,31 +81,31 @@ impl SemioObjectArtifact {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn semio_object_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
-    schema::ArtifactSchemaDescriptor {
+pub fn semio_object_artifact_schema_descriptor() -> framework_schema::ArtifactSchemaDescriptor {
+    framework_schema::ArtifactSchemaDescriptor {
         id: "s.stdio.semio.object",
-        artifact: schema::FacetLeaves {
+        artifact: framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),
             json_schema: include_str!("🔣️.json"),
             proto: include_str!("🛰️.proto"),
         },
-        snapshot: schema::FacetLeaves {
+        snapshot: framework_schema::FacetLeaves {
             rust: include_str!("📸️snapshot/🦀️.rs"),
             typescript: include_str!("📸️snapshot/🟦️.ts"),
             graphql: include_str!("📸️snapshot/🔗️.graphql"),
             json_schema: include_str!("📸️snapshot/🔣️.json"),
             proto: include_str!("📸️snapshot/🛰️.proto"),
         },
-        diff: schema::FacetLeaves {
+        diff: framework_schema::FacetLeaves {
             rust: include_str!("🔺️diff/🦀️.rs"),
             typescript: include_str!("🔺️diff/🟦️.ts"),
             graphql: include_str!("🔺️diff/🔗️.graphql"),
             json_schema: include_str!("🔺️diff/🔣️.json"),
             proto: include_str!("🔺️diff/🛰️.proto"),
         },
-        mutations: schema::FacetLeaves {
+        mutations: framework_schema::FacetLeaves {
             rust: include_str!("🧬️mutations/🦀️.rs"),
             typescript: include_str!("🧬️mutations/🟦️.ts"),
             graphql: include_str!("🧬️mutations/🔗️.graphql"),
@@ -117,10 +117,10 @@ pub fn semio_object_artifact_schema_descriptor() -> schema::ArtifactSchemaDescri
 
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioTransform;
-    use crate::artifacts::semio::standards::v1::subsets::object::schema::diff::SemioObjectDiff;
-    use crate::artifacts::semio::standards::v1::subsets::object::schema::mutations::{apply_semio_object_mutation, SemioObjectMutation};
-    use crate::artifacts::semio::standards::v1::subsets::object::schema::snapshot::SemioObjectSnapshot;
+    use crate::standards::v1::subsets::base::schema::geometry::SemioTransform;
+    use crate::standards::v1::subsets::object::schema::diff::SemioObjectDiff;
+    use crate::standards::v1::subsets::object::schema::mutations::{apply_semio_object_mutation, SemioObjectMutation};
+    use crate::standards::v1::subsets::object::schema::snapshot::SemioObjectSnapshot;
     use semio_framework_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
@@ -187,7 +187,7 @@ pub mod derived_construction {
         #[semio_framework_async_macros::async_test]
         async fn typed_constructors_build_a_populated_snapshot() {
             let snapshot = SemioObjectBuilderConstruction::new()
-                .with_transform(SemioTransform { translation: crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioPoint3 { x: 1.0, y: 0.0, z: 0.0 }, ..SemioTransform::identity() })
+                .with_transform(SemioTransform { translation: crate::standards::v1::subsets::base::schema::geometry::SemioPoint3 { x: 1.0, y: 0.0, z: 0.0 }, ..SemioTransform::identity() })
                 .with_brep("b1", store::os_io::ArtifactRef { artifact_id: "brep-a".into(), dialect: store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "brep".into() } })
                 .build()
                 .expect("build");
@@ -202,7 +202,7 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use crate::artifacts::semio::standards::v1::subsets::object::schema::snapshot::{SemioObjectSnapshot, STDIO_SEMIOOBJECT_DOCUMENT_SCHEMA};
+    use crate::standards::v1::subsets::object::schema::snapshot::{SemioObjectSnapshot, STDIO_SEMIOOBJECT_DOCUMENT_SCHEMA};
     use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     #[derive(Clone, Debug, Default)]

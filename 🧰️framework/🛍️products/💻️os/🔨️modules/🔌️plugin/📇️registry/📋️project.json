@@ -61,7 +61,11 @@
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry",
         "command": "bun ./📜️script.ts test",
         "forwardAllArgs": true
-      }
+      },
+      "dependsOn": [
+        "generate"
+      ],
+      "cache": false
     },
     "new": {
       "executor": "nx:run-commands",

@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/norm/en1993/1/any/mutation/update-tower-inputs.json",
+  "title": "UpdateTowerInputs",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newTowerNEdKn",
+    "newTowerWindFactor"
+  ],
+  "properties": {
+    "newTowerWindFactor": {
+      "type": "number"
+    },
+    "newTowerNEdKn": {
+      "type": "number"
+    }
+  }
+}

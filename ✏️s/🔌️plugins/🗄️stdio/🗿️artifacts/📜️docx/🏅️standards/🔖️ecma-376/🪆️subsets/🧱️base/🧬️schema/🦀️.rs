@@ -1,9 +1,9 @@
 //! 🧬️ DocxArtifact schema — full artifact state.
 
-use crate::artifacts::docx::schema::snapshot::DocxDocument;
-use crate::artifacts::docx::DocxSnapshot;
-use crate::artifacts::zip::opc::OpcPackage;
-use schema::ArtifactSchema;
+use crate::schema::snapshot::DocxDocument;
+use crate::DocxSnapshot;
+use semio_s_artifact_stdio_zip::opc::OpcPackage;
+use framework_schema::ArtifactSchema;
 
 //#region Artifact
 /// 🧬️ Full `stdio.docx` artifact state.
@@ -51,31 +51,31 @@ impl DocxArtifact {
 
 //#region Descriptor
 /// 🧬️ Descriptor for `s.stdio.docx`.
-pub fn docx_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
-    schema::ArtifactSchemaDescriptor {
+pub fn docx_artifact_schema_descriptor() -> framework_schema::ArtifactSchemaDescriptor {
+    framework_schema::ArtifactSchemaDescriptor {
         id: "s.stdio.docx",
-        artifact: schema::FacetLeaves {
+        artifact: framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),
             json_schema: include_str!("🔣️.json"),
             proto: include_str!("🛰️.proto"),
         },
-        snapshot: schema::FacetLeaves {
+        snapshot: framework_schema::FacetLeaves {
             rust: include_str!("📸️snapshot/🦀️.rs"),
             typescript: include_str!("📸️snapshot/🟦️.ts"),
             graphql: include_str!("📸️snapshot/🔗️.graphql"),
             json_schema: include_str!("📸️snapshot/🔣️.json"),
             proto: include_str!("📸️snapshot/🛰️.proto"),
         },
-        diff: schema::FacetLeaves {
+        diff: framework_schema::FacetLeaves {
             rust: include_str!("🔺️diff/🦀️.rs"),
             typescript: include_str!("🔺️diff/🟦️.ts"),
             graphql: include_str!("🔺️diff/🔗️.graphql"),
             json_schema: include_str!("🔺️diff/🔣️.json"),
             proto: include_str!("🔺️diff/🛰️.proto"),
         },
-        mutations: schema::FacetLeaves {
+        mutations: framework_schema::FacetLeaves {
             rust: include_str!("🧬️mutations/🦀️.rs"),
             typescript: include_str!("🧬️mutations/🟦️.ts"),
             graphql: include_str!("🧬️mutations/🔗️.graphql"),
@@ -87,8 +87,8 @@ pub fn docx_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
 //#endregion Descriptor
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use crate::artifacts::docx::schema::snapshot::{DocxBlock, DocxParagraph, DocxRun, DocxStyle, DocxTable};
-    use crate::artifacts::docx::{DocxDiff, DocxMutation, DocxSnapshot};
+    use crate::schema::snapshot::{DocxBlock, DocxParagraph, DocxRun, DocxStyle, DocxTable};
+    use crate::{DocxDiff, DocxMutation, DocxSnapshot};
     use semio_framework_plugin::ArtifactBuilder;
 
     //#region 🔖️Builder
@@ -116,7 +116,7 @@ pub mod derived_construction {
             Ok(Self::from_snapshot(<DocxSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
         fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
-            let diff = crate::artifacts::docx::schema::mutations::apply_docx_mutation(&mut self.snapshot, &mutation);
+            let diff = crate::schema::mutations::apply_docx_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
         fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
@@ -143,7 +143,7 @@ pub mod derived_construction {
         /// ➕️ Appends a paragraph.
         pub fn add_paragraph(mut self, paragraph: DocxParagraph) -> Self {
             self.snapshot.document.body.push(DocxBlock::Paragraph(paragraph));
-            self.snapshot = crate::artifacts::docx::standards::v_ecma_376::subsets::base::io::export::serializers::build_minimal_docx(self.snapshot.document);
+            self.snapshot = crate::standards::v_ecma_376::subsets::base::io::export::serializers::build_minimal_docx(self.snapshot.document);
             self
         }
 
@@ -160,7 +160,7 @@ pub mod derived_construction {
         /// ➕️ Appends a table.
         pub fn add_table(mut self, table: DocxTable) -> Self {
             self.snapshot.document.body.push(DocxBlock::Table(table));
-            self.snapshot = crate::artifacts::docx::standards::v_ecma_376::subsets::base::io::export::serializers::build_minimal_docx(self.snapshot.document);
+            self.snapshot = crate::standards::v_ecma_376::subsets::base::io::export::serializers::build_minimal_docx(self.snapshot.document);
             self
         }
 
@@ -171,7 +171,7 @@ pub mod derived_construction {
             } else {
                 self.snapshot.document.styles.push(style);
             }
-            self.snapshot = crate::artifacts::docx::standards::v_ecma_376::subsets::base::io::export::serializers::build_minimal_docx(self.snapshot.document);
+            self.snapshot = crate::standards::v_ecma_376::subsets::base::io::export::serializers::build_minimal_docx(self.snapshot.document);
             self
         }
     }
@@ -182,7 +182,7 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use crate::artifacts::docx::DocxSnapshot;
+    use crate::DocxSnapshot;
     use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     //#region 🔖️Parts
@@ -206,7 +206,7 @@ pub mod derived_analysis {
             // relationship resolves under `word/` — disambiguates from xlsx/pptx, which share the
             // same zip magic and OPC shape but resolve under `xl/`/`ppt/` instead.
             match source {
-                AnalyzeSource::Binary(bytes) if crate::artifacts::docx::standards::v_ecma_376::subsets::base::io::import::deserializers::sniff_docx_bytes(bytes) => IoConfidence::High,
+                AnalyzeSource::Binary(bytes) if crate::standards::v_ecma_376::subsets::base::io::import::deserializers::sniff_docx_bytes(bytes) => IoConfidence::High,
                 AnalyzeSource::Binary(_) | AnalyzeSource::Text(_) => IoConfidence::Low,
             }
         }
@@ -255,7 +255,7 @@ pub async fn empty_docx_snapshot() -> DocxSnapshot {
 /// `fixture_honesty_law` below) — same shape `📷️png/…/⚙️engine/🦀️.rs`'s own
 /// `demo_png_snapshot()` establishes.
 pub async fn demo_docx_snapshot() -> DocxSnapshot {
-    use crate::artifacts::docx::schema::snapshot::{DocxBlock, DocxParagraph, DocxRun, DocxStyle, DocxTable, DocxTableCell, DocxTableRow};
+    use crate::schema::snapshot::{DocxBlock, DocxParagraph, DocxRun, DocxStyle, DocxTable, DocxTableCell, DocxTableRow};
     let document = DocxDocument {
         body: vec![
             DocxBlock::Paragraph(DocxParagraph { style: Some("Heading1".into()), ..DocxParagraph::text("Semio Demo") }),
@@ -274,7 +274,7 @@ pub async fn demo_docx_snapshot() -> DocxSnapshot {
         ],
         styles: vec![DocxStyle { id: "Normal".into(), name: "Normal".into(), based_on: None }, DocxStyle { id: "Heading1".into(), name: "heading 1".into(), based_on: Some("Normal".into()) }],
     };
-    let mut snap = crate::artifacts::docx::standards::v_ecma_376::subsets::base::io::export::serializers::build_minimal_docx(document);
+    let mut snap = crate::standards::v_ecma_376::subsets::base::io::export::serializers::build_minimal_docx(document);
     snap.opc.set_part("word/numbering.xml", "application/vnd.openxmlformats-officedocument.wordprocessingml.numbering+xml", b"<w:numbering/>".to_vec());
     snap
 }
@@ -297,12 +297,12 @@ semio_framework_plugin::derive_artifact_facets!(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::docx::schema::snapshot::{DocxBlock, DocxParagraph, DocxRun, DocxStyle, DocxTable, DocxTableCell, DocxTableRow};
-    use crate::artifacts::docx::standards::v_ecma_376::subsets::base::io::export::serializers::{build_minimal_docx, document_to_xml, encode_docx};
-    use crate::artifacts::docx::standards::v_ecma_376::subsets::base::io::import::deserializers::{decode_docx, sniff_docx_bytes};
-    use crate::artifacts::docx::standards::v_ecma_376::subsets::base::io::DocxError;
-    use crate::artifacts::xml::schema::snapshot::{xml_document_to_text, XmlAttr, XmlNode};
-    use crate::artifacts::zip::opc::{OpcPackage, RELS_CONTENT_TYPE};
+    use crate::schema::snapshot::{DocxBlock, DocxParagraph, DocxRun, DocxStyle, DocxTable, DocxTableCell, DocxTableRow};
+    use crate::standards::v_ecma_376::subsets::base::io::export::serializers::{build_minimal_docx, document_to_xml, encode_docx};
+    use crate::standards::v_ecma_376::subsets::base::io::import::deserializers::{decode_docx, sniff_docx_bytes};
+    use crate::standards::v_ecma_376::subsets::base::io::DocxError;
+    use semio_s_artifact_stdio_xml::schema::snapshot::{xml_document_to_text, XmlAttr, XmlNode};
+    use semio_s_artifact_stdio_zip::opc::{OpcPackage, RELS_CONTENT_TYPE};
 
     async fn sample_document() -> DocxDocument {
         DocxDocument {
@@ -338,7 +338,7 @@ mod tests {
     async fn builder_produces_minimal_valid_package_that_decodes_back() {
         let snap = build_minimal_docx(sample_document().await);
         let bytes = encode_docx(&snap).expect("encode minimal package");
-        assert!(crate::artifacts::zip::opc::sniff_opc_bytes(&bytes));
+        assert!(semio_s_artifact_stdio_zip::opc::sniff_opc_bytes(&bytes));
         assert!(sniff_docx_bytes(&bytes));
         let decoded = decode_docx(&bytes).expect("decode minimal package");
         assert_eq!(decoded.document, sample_document().await);
@@ -374,7 +374,7 @@ mod tests {
         const REL_TYPE_OFFICE_DOCUMENT: &str = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument";
         opc.set_part(MAIN_DOCUMENT_PART, MAIN_DOCUMENT_CONTENT_TYPE, xml.as_bytes().to_vec());
         opc.add_relationship("", "rId1", REL_TYPE_OFFICE_DOCUMENT, MAIN_DOCUMENT_PART);
-        let bytes = crate::artifacts::zip::opc::encode_opc(&opc).expect("encode opc");
+        let bytes = semio_s_artifact_stdio_zip::opc::encode_opc(&opc).expect("encode opc");
 
         let decoded = decode_docx(&bytes).expect("decode hand-built docx");
         assert_eq!(decoded.document.body.len(), 3);
@@ -397,7 +397,7 @@ mod tests {
         opc.set_part(MAIN_DOCUMENT_PART, MAIN_DOCUMENT_CONTENT_TYPE, xml_document_to_text(&document_to_xml(&sample_document().await)).into_bytes());
         opc.set_part("word/numbering.xml", "application/vnd.openxmlformats-officedocument.wordprocessingml.numbering+xml", b"<w:numbering/>".to_vec());
         opc.add_relationship("", "rId1", REL_TYPE_OFFICE_DOCUMENT, MAIN_DOCUMENT_PART);
-        let bytes = crate::artifacts::zip::opc::encode_opc(&opc).expect("encode");
+        let bytes = semio_s_artifact_stdio_zip::opc::encode_opc(&opc).expect("encode");
 
         let decoded = decode_docx(&bytes).expect("decode");
         assert_eq!(decoded.opc.part_bytes("word/numbering.xml"), Some(b"<w:numbering/>".as_slice()));
@@ -422,7 +422,7 @@ mod tests {
     async fn decode_rejects_missing_main_document_relationship() {
         let mut opc = OpcPackage::empty();
         opc.content_types.set_default("rels", RELS_CONTENT_TYPE);
-        let bytes = crate::artifacts::zip::opc::encode_opc(&opc).expect("encode");
+        let bytes = semio_s_artifact_stdio_zip::opc::encode_opc(&opc).expect("encode");
         let err = decode_docx(&bytes).expect_err("must reject a package with no officeDocument relationship");
         assert_eq!(err, DocxError::MissingMainDocumentRelationship);
     }
@@ -450,7 +450,7 @@ mod tests {
     /// framework's `m5` auto-discovery does not reach at all.
     mod conformance_laws {
         use super::*;
-        use crate::artifacts::docx::schema::{diff, mutations, snapshot};
+        use crate::schema::{diff, mutations, snapshot};
         use protocol::{DiffCodec, OpBinary, OpText};
 
         /// ✅️ "committed files parse": all 6 handcrafted `.grammar.semio`/`.protocol.semio` files
@@ -487,7 +487,7 @@ mod tests {
 
             let demo = demo_docx_snapshot().await;
             let bytes = encode_docx(&demo).expect("encode demo docx");
-            let zip = crate::artifacts::zip::standards::v2_0::subsets::base::io::decode_zip(&bytes).expect("decode zip");
+            let zip = semio_s_artifact_stdio_zip::standards::v2_0::subsets::base::io::decode_zip(&bytes).expect("decode zip");
 
             let modeled_parts = ["[Content_Types].xml", "_rels/.rels", "word/document.xml", "word/styles.xml"];
             let mut checked = 0;

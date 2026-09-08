@@ -8,6 +8,6 @@ pub fn diff(payload: &ChangeCategory, base: &En1991Snapshot) -> protocol::Mutati
     if base.category == payload.new_category {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "Category already has this value.");
     }
-    protocol::MutationOutcome::new(En1991Diff { category: Some(payload.new_category.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1991Diff { category: Some(payload.new_category), ..Default::default() })
 }
 //#endregion 🔖️Diff

@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeSolarGainsKwh, base: &Din18599Snapshot) -> protocol:
     if base.solar_gains_kwh == payload.new_solar_gains_kwh {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "Solar gains kwh already has this value.");
     }
-    protocol::MutationOutcome::new(Din18599Diff { solar_gains_kwh: Some(payload.new_solar_gains_kwh.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(Din18599Diff { solar_gains_kwh: Some(payload.new_solar_gains_kwh), ..Default::default() })
 }
 //#endregion 🔖️Diff

@@ -80,7 +80,7 @@
         {
           "id": "insert-row",
           "capability": "tsv-iana-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -99,7 +99,7 @@
         {
           "id": "remove-row",
           "capability": "tsv-iana-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -118,7 +118,7 @@
         {
           "id": "set-cell",
           "capability": "tsv-iana-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -137,7 +137,7 @@
         {
           "id": "set-line-ending",
           "capability": "tsv-iana-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -156,7 +156,7 @@
         {
           "id": "set-snapshot",
           "capability": "tsv-iana-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -175,7 +175,7 @@
         {
           "id": "set-trailing-newline",
           "capability": "tsv-iana-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],

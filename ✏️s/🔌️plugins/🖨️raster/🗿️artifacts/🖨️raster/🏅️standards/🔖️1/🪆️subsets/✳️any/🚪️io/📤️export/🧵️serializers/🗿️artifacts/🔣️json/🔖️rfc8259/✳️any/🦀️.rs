@@ -5,8 +5,8 @@
 //! no hand-rolled bridge needed here.
 use crate::artifacts::raster::RasterSnapshot;
 use dsl::ToValue;
-use semio_s_plugin_stdio::artifacts::json::schema::snapshot::{write_json_pretty, JsonSnapshot};
-use semio_s_plugin_stdio::artifacts::json::STDIO_JSON_DOCUMENT_SCHEMA;
+use semio_s_artifact_stdio_json::schema::snapshot::{write_json_pretty, JsonSnapshot};
+use semio_s_artifact_stdio_json::STDIO_JSON_DOCUMENT_SCHEMA;
 pub fn register() {}
 
 pub fn serialize(snapshot: &RasterSnapshot) -> Result<JsonSnapshot, String> {

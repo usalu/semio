@@ -4,9 +4,9 @@
 //! D1-D2 wave); this module owns the typed persisted model and glues `decode_dwg`/`encode_dwg`
 //! to it.
 
-use crate::artifacts::dwg::standards::v_ac1024::engine as dwg_engine;
-use crate::artifacts::dwg::STDIO_DWG_DOCUMENT_SCHEMA;
-use schema::ArtifactSchema;
+use crate::standards::v_ac1024::engine as dwg_engine;
+use crate::STDIO_DWG_DOCUMENT_SCHEMA;
+use framework_schema::ArtifactSchema;
 use std::fmt;
 
 //#region 🔖️DrawingModel

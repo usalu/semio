@@ -1,195 +1,137 @@
 {
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://semio.tech/schema/s/norm/en1991/mutation.json",
   "title": "En1991Mutation",
-  "type": "object",
-  "additionalProperties": false,
-  "required": [
-    "areaM2",
-    "category",
-    "annex",
-    "selfWeightMaterial",
-    "selfWeightThicknessM",
-    "assumedGKKnM2",
-    "fireCurve",
-    "fireResistanceMin",
-    "fireMemberCapacityC",
-    "snowZone",
-    "snowAltitudeM",
-    "enSKKnM2",
-    "windZone",
-    "enVBMS",
-    "deltaTK",
-    "constructionActivity",
-    "accidentalMassT",
-    "accidentalSpeedKmH",
-    "bridgeLane",
-    "bridgeSpanM",
-    "bridgeLaneWidthM",
-    "bridgeMomentResistanceKnm",
-    "craneClass",
-    "hoistClass",
-    "hoistingSpeedMS",
-    "siloBulkDensityKnM3",
-    "siloHeightM",
-    "siloHydraulicRadiusM",
-    "siloMu",
-    "siloK",
-    "cS",
-    "cD"
-  ],
-  "properties": {
-    "areaM2": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+  "oneOf": [
+    {
+      "$ref": "./🚚️change-accidental-mass-t/🧬️schema/🔣️.json"
     },
-    "category": {
-      "type": "string",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🚗️change-accidental-speed-km-h/🧬️schema/🔣️.json"
     },
-    "annex": {
-      "type": "string",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🌍️change-annex/🧬️schema/🔣️.json"
     },
-    "selfWeightMaterial": {
-      "type": "string",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./📐️change-area-m2/🧬️schema/🔣️.json"
     },
-    "selfWeightThicknessM": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./⚖️change-assumed-gk-kn-m2/🧬️schema/🔣️.json"
     },
-    "assumedGKKnM2": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🛣️change-bridge-lane/🧬️schema/🔣️.json"
     },
-    "fireCurve": {
-      "type": "string",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./↔️change-bridge-lane-width-m/🧬️schema/🔣️.json"
     },
-    "fireResistanceMin": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./💪️change-bridge-moment-resistance-knm/🧬️schema/🔣️.json"
     },
-    "fireMemberCapacityC": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🌉️change-bridge-span-m/🧬️schema/🔣️.json"
     },
-    "snowZone": {
-      "type": "integer",
-      "format": "uint32",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🗂️change-category/🧬️schema/🔣️.json"
     },
-    "snowAltitudeM": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🌀️change-cd/🧬️schema/🔣️.json"
     },
-    "enSKKnM2": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🚧️change-construction-activity/🧬️schema/🔣️.json"
     },
-    "windZone": {
-      "type": "integer",
-      "format": "uint32",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🏗️change-crane-class/🧬️schema/🔣️.json"
     },
-    "enVBMS": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🔎️change-cs/🧬️schema/🔣️.json"
     },
-    "deltaTK": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🌡️change-delta-tk/🧬️schema/🔣️.json"
     },
-    "constructionActivity": {
-      "type": "string",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./❄️change-en-sk-kn-m2/🧬️schema/🔣️.json"
     },
-    "accidentalMassT": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🌬️change-en-vbms/🧬️schema/🔣️.json"
     },
-    "accidentalSpeedKmH": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🔥️change-fire-curve/🧬️schema/🔣️.json"
     },
-    "bridgeLane": {
-      "type": "integer",
-      "format": "uint32",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🛡️change-fire-member-capacity-c/🧬️schema/🔣️.json"
     },
-    "bridgeSpanM": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./⏱️change-fire-resistance-min/🧬️schema/🔣️.json"
     },
-    "bridgeLaneWidthM": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🏷️change-hoist-class/🧬️schema/🔣️.json"
     },
-    "bridgeMomentResistanceKnm": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🪝️change-hoisting-speed-ms/🧬️schema/🔣️.json"
     },
-    "craneClass": {
-      "type": "string",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🧱️change-self-weight-material/🧬️schema/🔣️.json"
     },
-    "hoistClass": {
-      "type": "string",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./📏️change-self-weight-thickness-m/🧬️schema/🔣️.json"
     },
-    "hoistingSpeedMS": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🌾️change-silo-bulk-density-kn-m3/🧬️schema/🔣️.json"
     },
-    "siloBulkDensityKnM3": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🗼️change-silo-height-m/🧬️schema/🔣️.json"
     },
-    "siloHeightM": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./⭕️change-silo-hydraulic-radius-m/🧬️schema/🔣️.json"
     },
-    "siloHydraulicRadiusM": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./⚙️change-silo-k/🧬️schema/🔣️.json"
     },
-    "siloMu": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🧲️change-silo-mu/🧬️schema/🔣️.json"
     },
-    "siloK": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🏔️change-snow-altitude-m/🧬️schema/🔣️.json"
     },
-    "cS": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🗺️change-snow-zone/🧬️schema/🔣️.json"
     },
-    "cD": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🪁️change-wind-zone/🧬️schema/🔣️.json"
     }
-  }
+  ],
+  "x-semio-mutationKinds": [
+    "change-accidental-mass-t",
+    "change-accidental-speed-km-h",
+    "change-annex",
+    "change-area-m2",
+    "change-assumed-gk-kn-m2",
+    "change-bridge-lane",
+    "change-bridge-lane-width-m",
+    "change-bridge-moment-resistance-knm",
+    "change-bridge-span-m",
+    "change-category",
+    "change-cd",
+    "change-construction-activity",
+    "change-crane-class",
+    "change-cs",
+    "change-delta-tk",
+    "change-en-sk-kn-m2",
+    "change-en-vbms",
+    "change-fire-curve",
+    "change-fire-member-capacity-c",
+    "change-fire-resistance-min",
+    "change-hoist-class",
+    "change-hoisting-speed-ms",
+    "change-self-weight-material",
+    "change-self-weight-thickness-m",
+    "change-silo-bulk-density-kn-m3",
+    "change-silo-height-m",
+    "change-silo-hydraulic-radius-m",
+    "change-silo-k",
+    "change-silo-mu",
+    "change-snow-altitude-m",
+    "change-snow-zone",
+    "change-wind-zone"
+  ]
 }

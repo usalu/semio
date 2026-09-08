@@ -7,6 +7,6 @@ use crate::artifacts::en1998::En1998Snapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(_payload: &ChangePeriodRatio, base: &En1998Snapshot) -> Vec<En1998Mutation> {
-    vec![En1998Mutation::ChangePeriodRatio(ChangePeriodRatio { new_period_ratio: base.period_ratio.clone() })]
+    vec![En1998Mutation::ChangePeriodRatio(ChangePeriodRatio { new_period_ratio: base.period_ratio })]
 }
 //#endregion 🔖️Inverse

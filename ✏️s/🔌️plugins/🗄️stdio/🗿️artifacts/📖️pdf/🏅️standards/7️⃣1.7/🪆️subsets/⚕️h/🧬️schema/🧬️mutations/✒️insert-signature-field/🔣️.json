@@ -5,7 +5,7 @@
   "displayName": "Insert Signature Field",
   "emoji": "✒️",
   "aggregateVariant": "InsertSignatureField",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "insert-signature-field",
   "binaryTag": 6,
   "invertibility": "explicit-mutation",

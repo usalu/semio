@@ -5,7 +5,7 @@
   "displayName": "Replace Daily Schedule Hourly Values",
   "emoji": "🕔️",
   "aggregateVariant": "ReplaceDailyScheduleHourlyValues",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "replace-daily-schedule-hourly-values",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

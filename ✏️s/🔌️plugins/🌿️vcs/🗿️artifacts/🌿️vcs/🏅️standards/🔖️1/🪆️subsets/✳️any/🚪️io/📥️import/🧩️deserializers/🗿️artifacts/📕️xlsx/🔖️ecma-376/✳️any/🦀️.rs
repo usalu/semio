@@ -9,7 +9,7 @@ use dsl::{FromValue, ToValue};
 use semio_framework::io::io_mechanism::Deserializer;
 use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};
-use semio_s_plugin_stdio::artifacts::xlsx::XlsxSnapshot;
+use semio_s_artifact_stdio_xlsx::XlsxSnapshot;
 
 pub const XLSX_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.xlsx", standard: StandardId("ecma-376"), subset: SubsetId::ANY };
 

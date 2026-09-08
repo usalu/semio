@@ -5,7 +5,7 @@
   "displayName": "Delete Infiltration",
   "emoji": "🧽️",
   "aggregateVariant": "DeleteInfiltration",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "delete-infiltration",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

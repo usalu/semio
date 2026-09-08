@@ -6,9 +6,9 @@
 //! `marks` is index-addressed one level deeper than `runs`, so this case pins insertion POSITION
 //! inside the run, not mere membership.
 
-use crate::artifacts::semio::standards::v1::subsets::text::schema::diff::SemioTextDiff;
-use crate::artifacts::semio::standards::v1::subsets::text::schema::mutations::SemioTextMutation;
-use crate::artifacts::semio::standards::v1::subsets::text::schema::snapshot::{SemioTextMarkKind, SemioTextSnapshot};
+use crate::standards::v1::subsets::text::schema::diff::SemioTextDiff;
+use crate::standards::v1::subsets::text::schema::mutations::SemioTextMutation;
+use crate::standards::v1::subsets::text::schema::snapshot::{SemioTextMarkKind, SemioTextSnapshot};
 use protocol::{Mutation, MutationDiff};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
@@ -49,7 +49,7 @@ async fn the_undo_remove_mark_detaches_the_link_again() {
     let undo = mutation.inverse(&base);
     assert_eq!(
         undo,
-        vec![SemioTextMutation::RemoveMark(crate::artifacts::semio::standards::v1::subsets::text::schema::mutations::remove_mark::RemoveMark { run_index: 0, index: 0 })],
+        vec![SemioTextMutation::RemoveMark(crate::standards::v1::subsets::text::schema::mutations::remove_mark::RemoveMark { run_index: 0, index: 0 })],
         "add-mark at run #0/#0 must undo as remove-mark at run #0/#0"
     );
     let mut current = mutation.diff(&base).diff().apply(&base).expect("forward add-mark applies");

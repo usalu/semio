@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeEnAGr, base: &En1998Snapshot) -> protocol::MutationO
     if base.en_a_gr == payload.new_en_a_gr {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Reference ground acceleration a_gr is already {}.", payload.new_en_a_gr));
     }
-    protocol::MutationOutcome::new(En1998Diff { en_a_gr: Some(payload.new_en_a_gr.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1998Diff { en_a_gr: Some(payload.new_en_a_gr), ..Default::default() })
 }
 //#endregion 🔖️Diff

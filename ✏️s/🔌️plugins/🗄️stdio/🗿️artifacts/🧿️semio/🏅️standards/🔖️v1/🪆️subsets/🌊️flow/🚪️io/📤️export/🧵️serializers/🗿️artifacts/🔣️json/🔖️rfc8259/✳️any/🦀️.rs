@@ -2,10 +2,10 @@
 //! mirror of this pair's deserializer. Lossless: every `FlowNode`/`FlowEdge` field has a
 //! direct JSON member, so `serialize`+`deserialize` round-trips exactly.
 
-use crate::artifacts::json::schema::snapshot::{JsonMember, JsonValue};
-use crate::artifacts::json::JsonSnapshot;
-use crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioPoint2;
-use crate::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::{FlowEdge, FlowNode, FlowParam, PortRef, SemioFlowSnapshot};
+use semio_s_artifact_stdio_json::schema::snapshot::{JsonMember, JsonValue};
+use semio_s_artifact_stdio_json::JsonSnapshot;
+use crate::standards::v1::subsets::base::schema::geometry::SemioPoint2;
+use crate::standards::v1::subsets::flow::schema::snapshot::{FlowEdge, FlowNode, FlowParam, PortRef, SemioFlowSnapshot};
 use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
 
 //#region 🔖️FieldMapping
@@ -69,7 +69,7 @@ impl ArtifactSerializer for SemioFlowToJson {
 
     async fn serialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
         let value = obj(vec![member("nodes", JsonValue::Array { items: from.nodes.iter().map(node_to_json).collect() }), member("edges", JsonValue::Array { items: from.edges.iter().map(edge_to_json).collect() })]);
-        Ok(JsonSnapshot { schema: crate::artifacts::json::STDIO_JSON_DOCUMENT_SCHEMA.into(), value })
+        Ok(JsonSnapshot { schema: semio_s_artifact_stdio_json::STDIO_JSON_DOCUMENT_SCHEMA.into(), value })
     }
 }
 //#endregion 🔖️Serializer
@@ -78,7 +78,7 @@ impl ArtifactSerializer for SemioFlowToJson {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::STDIO_SEMIOFLOW_DOCUMENT_SCHEMA;
+    use crate::standards::v1::subsets::flow::schema::snapshot::STDIO_SEMIOFLOW_DOCUMENT_SCHEMA;
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn sample_semio() -> SemioFlowSnapshot {
@@ -112,8 +112,8 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn serialized_json_round_trips_through_the_real_json_text_codec() {
         let json1 = semio_framework_plugin::resolve_ready(SemioFlowToJson::serialize(&sample_semio())).expect("serialize");
-        let text = crate::artifacts::json::schema::snapshot::write_json_text(&json1.value);
-        let reparsed = crate::artifacts::json::schema::snapshot::parse_json_text(&text).expect("re-parse emitted json text");
+        let text = semio_s_artifact_stdio_json::schema::snapshot::write_json_text(&json1.value);
+        let reparsed = semio_s_artifact_stdio_json::schema::snapshot::parse_json_text(&text).expect("re-parse emitted json text");
         assert_eq!(reparsed, json1.value);
     }
 }

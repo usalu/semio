@@ -1,7 +1,7 @@
 //! 📤️ Serialize `stdio.stl` to stdio.txt.
 
-use crate::artifacts::stl::StlSnapshot;
-use crate::artifacts::txt::TxtSnapshot;
+use crate::StlSnapshot;
+use semio_s_artifact_stdio_txt::TxtSnapshot;
 
 //#region 🔖️Codec
 /// 🗂️ Register serializer hooks.
@@ -11,7 +11,7 @@ pub fn register() {}
 /// 📤️ Encode stl into a TxtSnapshot.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn serialize(from: &StlSnapshot) -> Result<TxtSnapshot, store::PackError> {
-    let text = crate::artifacts::stl::engine::encode_stl_ascii(from);
+    let text = crate::engine::encode_stl_ascii(from);
     Ok(TxtSnapshot::from_body(&text))
 }
 

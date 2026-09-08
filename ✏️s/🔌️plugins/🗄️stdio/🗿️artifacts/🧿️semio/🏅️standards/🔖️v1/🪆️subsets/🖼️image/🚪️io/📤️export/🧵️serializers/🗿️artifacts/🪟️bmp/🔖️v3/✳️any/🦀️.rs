@@ -9,8 +9,8 @@
 //!   matching header fields); any other key is dropped (no other textual field exists on
 //!   `BmpSnapshot`).
 
-use crate::artifacts::bmp::{schema::snapshot::BmpRowOrder, BmpSnapshot};
-use crate::artifacts::semio::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
+use semio_s_artifact_stdio_bmp::{schema::snapshot::BmpRowOrder, BmpSnapshot};
+use crate::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
 use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
 
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("image") };
@@ -33,7 +33,7 @@ impl ArtifactSerializer for SemioImageToBmp {
         let x_pixels_per_meter = from.metadata.iter().find(|m| m.key == "xPixelsPerMeter").and_then(|m| m.value.parse::<i32>().ok()).unwrap_or(0);
         let y_pixels_per_meter = from.metadata.iter().find(|m| m.key == "yPixelsPerMeter").and_then(|m| m.value.parse::<i32>().ok()).unwrap_or(0);
         Ok(BmpSnapshot {
-            schema: crate::artifacts::bmp::STDIO_BMP_DOCUMENT_SCHEMA.into(),
+            schema: semio_s_artifact_stdio_bmp::STDIO_BMP_DOCUMENT_SCHEMA.into(),
             width: from.width,
             height: from.height,
             row_order: BmpRowOrder::BottomUp,
@@ -53,7 +53,7 @@ impl ArtifactSerializer for SemioImageToBmp {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::semio::standards::v1::subsets::image::schema::snapshot::{SemioColorspace, SemioImageFrame, SemioImageMetadataEntry};
+    use crate::standards::v1::subsets::image::schema::snapshot::{SemioColorspace, SemioImageFrame, SemioImageMetadataEntry};
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn sample_semio() -> SemioImageSnapshot {
@@ -76,8 +76,8 @@ mod tests {
         let semio = sample_semio();
         let bmp = semio_framework_plugin::resolve_ready(SemioImageToBmp::serialize(&semio)).expect("serialize");
         assert_eq!(bmp.x_pixels_per_meter, 2835);
-        let bytes = crate::artifacts::bmp::engine::encode_bmp(&bmp).expect("encode real bmp bytes");
-        let decoded = crate::artifacts::bmp::engine::decode_bmp(&bytes).expect("decode real bmp bytes");
+        let bytes = semio_s_artifact_stdio_bmp::engine::encode_bmp(&bmp).expect("encode real bmp bytes");
+        let decoded = semio_s_artifact_stdio_bmp::engine::decode_bmp(&bytes).expect("decode real bmp bytes");
         assert_eq!(decoded.width, semio.width);
         assert_eq!(decoded.height, semio.height);
         for (a, b) in decoded.pixels.chunks_exact(4).zip(semio.frames[0].rgba8.chunks_exact(4)) {

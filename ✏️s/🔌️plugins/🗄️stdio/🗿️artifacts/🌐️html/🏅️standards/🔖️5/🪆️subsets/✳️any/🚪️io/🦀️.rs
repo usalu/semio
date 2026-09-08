@@ -4,8 +4,8 @@
 //! 📤️export/🧵️serializers.
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use crate::artifacts::html::standards::v5::subsets::any::schema::snapshot::HtmlSnapshot;
-    use crate::artifacts::html::standards::v5::subsets::any::schema::HtmlAnalyzer;
+    use crate::standards::v5::subsets::any::schema::snapshot::HtmlSnapshot;
+    use crate::standards::v5::subsets::any::schema::HtmlAnalyzer;
     use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.html", standard: StandardId("5"), subset: SubsetId("*") };
@@ -45,10 +45,10 @@ pub mod derived_composition {
     /// this artifact's standard-level `engine::register()`.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn register() {
-        ::schema::register_artifact_schema_descriptor(crate::artifacts::html::standards::v5::subsets::any::schema::html_artifact_schema_descriptor());
+        ::framework_schema::register_artifact_schema_descriptor(crate::standards::v5::subsets::any::schema::html_artifact_schema_descriptor());
         register_artifact_inferences();
-        store::register_document_codec(store::ArtifactCodec::of::<HtmlSnapshot, crate::artifacts::html::standards::v5::subsets::any::schema::mutations::HtmlMutation>(
-            crate::artifacts::html::standards::v5::subsets::any::schema::snapshot::STDIO_HTML_DOCUMENT_SCHEMA,
+        store::register_document_codec(store::ArtifactCodec::of::<HtmlSnapshot, crate::standards::v5::subsets::any::schema::mutations::HtmlMutation>(
+            crate::standards::v5::subsets::any::schema::snapshot::STDIO_HTML_DOCUMENT_SCHEMA,
         )).expect("static Stdio registration must be available and conflict-free");
     }
 
@@ -57,7 +57,7 @@ pub mod derived_composition {
     /// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn register_artifact_inferences() {
-        ::schema::register_artifact_inference_descriptor(crate::artifacts::html::standards::v5::subsets::any::schema::inferences::html_artifact_inference_descriptor());
+        ::framework_schema::register_artifact_inference_descriptor(crate::standards::v5::subsets::any::schema::inferences::html_artifact_inference_descriptor());
     }
     //#endregion 🔖️Register
 }
@@ -98,7 +98,7 @@ pub mod import {
 
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
-    use crate::artifacts::html::standards::v5::subsets::any::schema::HtmlComposer as HtmlRawAnyComposer;
+    use crate::standards::v5::subsets::any::schema::HtmlComposer as HtmlRawAnyComposer;
     use semio_framework_plugin::{composer_entry_of, ComposerEntry};
     use std::sync::OnceLock;
 

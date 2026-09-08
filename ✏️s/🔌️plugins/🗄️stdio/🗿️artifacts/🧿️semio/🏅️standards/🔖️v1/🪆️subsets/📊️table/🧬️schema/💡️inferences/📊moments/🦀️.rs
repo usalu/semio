@@ -17,9 +17,9 @@
 //! real and independently tested (see below) via `store::infer_field` directly; wiring it into the
 //! aggregate is an honest, flagged remainder, not a silently dropped step.
 
-use crate::artifacts::semio::standards::v1::subsets::table::schema::snapshot::{SemioTableCellKind, SemioTableSnapshot};
-use crate::artifacts::semio::standards::v1::subsets::table::schema::statistics_internals;
-use crate::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValue;
+use crate::standards::v1::subsets::table::schema::snapshot::{SemioTableCellKind, SemioTableSnapshot};
+use crate::standards::v1::subsets::table::schema::statistics_internals;
+use crate::standards::v1::subsets::value::schema::snapshot::SemioValue;
 
 //#region 🔖️Value
 /// 📊️ One numeric column's descriptive moments. `SemioColumnMoments::default()` (all-zero) is the
@@ -102,7 +102,7 @@ impl store::InferredField<SemioTableSnapshot> for ColumnMoments {
 //#region 🧪️Tests
 mod tests {
     use super::*;
-    use crate::artifacts::semio::standards::v1::subsets::table::schema::snapshot::{SemioTableColumn, SemioTableRow, STDIO_SEMIOTABLE_DOCUMENT_SCHEMA};
+    use crate::standards::v1::subsets::table::schema::snapshot::{SemioTableColumn, SemioTableRow, STDIO_SEMIOTABLE_DOCUMENT_SCHEMA};
     use store::{InferenceCache, InferenceCacheConfig};
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9

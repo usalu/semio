@@ -6,23 +6,23 @@
 //!
 //! ## Identity convention
 //! Every entity id `to_snapshot` emits is literally `label.0.to_string()` (a bare decimal `u64`)
-//! — the entity's own [`crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::history::PersistentLabel`]. `from_snapshot` exploits this:
+//! — the entity's own [`crate::standards::v1::subsets::brep::schema::snapshot::topology::history::PersistentLabel`]. `from_snapshot` exploits this:
 //! an id that parses as `u64` is trusted as literally that label (so a document that has been
 //! through `to_snapshot` round-trips its exact labels — required so two independent mutation
 //! constructions against the same document never mint colliding labels, `SemioBrepSnapshot::next_label`'s own doc comment); a
 //! non-numeric id (STEP import's `"v12"`/`"e7"`, hand-authored fixtures' `"🐼️v1"`) mints a fresh
 //! label instead, since such a document has no persistent-label history to preserve. Loops and
-//! coedges carry no `PersistentLabel` in the native model (see [`crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::BrepArenaSeed`]'s own doc
+//! coedges carry no `PersistentLabel` in the native model (see [`crate::standards::v1::subsets::brep::schema::snapshot::topology::BrepArenaSeed`]'s own doc
 //! comment) — `to_snapshot` mints ordinal ids (`"lp0"`, `"co0"`, …) for them, stable only within
 //! one `to_snapshot` call, never round-tripped as identity (matching `BrepArenaSeed.loops`' own
 //! index-addressed convention, generalized to also carry p-curve + ring position).
 //!
 //! ## Known, deliberate lossy corners (documented, not silently dropped)
 //! - **In-plane rotation of analytic curves/surfaces.** Native `Circle`/`Ellipse`/`Cylinder`/
-//!   `Cone`/`Sphere`/`Torus` carry a full [`crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Frame3`] (origin + orthonormal x/y/z);
-//!   [`crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::BrepCurve`]/[`crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::BrepSurface`] only carry origin + the z-axis (matching STEP AP214's own
+//!   `Cone`/`Sphere`/`Torus` carry a full [`crate::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Frame3`] (origin + orthonormal x/y/z);
+//!   [`crate::standards::v1::subsets::brep::schema::snapshot::BrepCurve`]/[`crate::standards::v1::subsets::brep::schema::snapshot::BrepSurface`] only carry origin + the z-axis (matching STEP AP214's own
 //!   `ref_direction`-unset gap, audit §10.2/§10.4). `from_snapshot` reconstructs the missing x/y
-//!   via [`crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Frame3::from_normal`]'s deterministic canonical choice — round-trips EXACTLY for
+//!   via [`crate::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Frame3::from_normal`]'s deterministic canonical choice — round-trips EXACTLY for
 //!   any body built through the ordinary primitive constructors (`🔺️diff/🧱️primitives`, which
 //!   themselves call `from_normal`/use world axes), lossy only for a hand-crafted body with a
 //!   deliberately non-canonical in-plane rotation. Fixing this needs widening `BrepCurve`/
@@ -43,18 +43,18 @@
 
 use std::collections::HashMap;
 
-use crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioPoint3};
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::{FaceId, LoopId};
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::bspline::KnotVector;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::{curve_ops, Curve2, Curve3};
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::error::KernelError;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::surface::Surface;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::tolerance::Tol;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::history::PersistentLabel;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::{Body, BrepArenaSeed, SeedEdge, SeedFace, SeedShell, SeedSolid, SeedVertex};
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Frame3;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::{Pnt2, Pnt3, Vec2, Vec3};
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::{BrepCoedge, BrepCurve, BrepCurve2, BrepEdge, BrepFace, BrepLoop, BrepLoopEdge, BrepShell, BrepShellFace, BrepSolid, BrepSolidShell, BrepSurface, BrepVertex, SemioBrepSnapshot};
+use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioPoint3};
+use crate::standards::v1::subsets::brep::schema::snapshot::arena::{FaceId, LoopId};
+use crate::standards::v1::subsets::brep::schema::snapshot::curve::bspline::KnotVector;
+use crate::standards::v1::subsets::brep::schema::snapshot::curve::{curve_ops, Curve2, Curve3};
+use crate::standards::v1::subsets::brep::schema::snapshot::error::KernelError;
+use crate::standards::v1::subsets::brep::schema::snapshot::surface::Surface;
+use crate::standards::v1::subsets::brep::schema::snapshot::tolerance::Tol;
+use crate::standards::v1::subsets::brep::schema::snapshot::topology::history::PersistentLabel;
+use crate::standards::v1::subsets::brep::schema::snapshot::topology::{Body, BrepArenaSeed, SeedEdge, SeedFace, SeedShell, SeedSolid, SeedVertex};
+use crate::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Frame3;
+use crate::standards::v1::subsets::brep::schema::snapshot::vector::{Pnt2, Pnt3, Vec2, Vec3};
+use crate::standards::v1::subsets::brep::schema::snapshot::{BrepCoedge, BrepCurve, BrepCurve2, BrepEdge, BrepFace, BrepLoop, BrepLoopEdge, BrepShell, BrepShellFace, BrepSolid, BrepSolidShell, BrepSurface, BrepVertex, SemioBrepSnapshot};
 
 //#region 🔖️PointVectorBridge
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -486,9 +486,9 @@ impl Body {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::primitives::{make_box, make_cylinder, make_sphere, make_torus};
-    use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::history::OpRecorder;
-    use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::EntityCounts;
+    use crate::standards::v1::subsets::brep::schema::diff::primitives::{make_box, make_cylinder, make_sphere, make_torus};
+    use crate::standards::v1::subsets::brep::schema::snapshot::topology::history::OpRecorder;
+    use crate::standards::v1::subsets::brep::schema::snapshot::topology::EntityCounts;
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn counts(body: &Body) -> EntityCounts {
@@ -517,7 +517,7 @@ mod tests {
         let snap2 = rebuilt.to_snapshot();
         assert_eq!(snap1, snap2, "snapshot -> body -> snapshot must be identical");
         assert_eq!(counts(&body), counts(&rebuilt), "entity counts must match after round trip");
-        let issues = crate::artifacts::semio::standards::v1::subsets::brep::schema::inferences::validation_report::validate_body(&rebuilt);
+        let issues = crate::standards::v1::subsets::brep::schema::inferences::validation_report::validate_body(&rebuilt);
         assert!(issues.is_empty(), "rebuilt body must validate cleanly: {issues:?}");
     }
 
@@ -592,7 +592,7 @@ mod tests {
         let body = Body::from_snapshot(&snap).expect("from_snapshot on foreign ids");
         assert_eq!(body.vertices.len(), 3);
         assert_eq!(body.faces.len(), 1);
-        let issues = crate::artifacts::semio::standards::v1::subsets::brep::schema::inferences::validation_report::validate_body(&body);
+        let issues = crate::standards::v1::subsets::brep::schema::inferences::validation_report::validate_body(&body);
         assert!(issues.is_empty(), "{issues:?}");
     }
 

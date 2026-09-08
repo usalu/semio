@@ -5,7 +5,7 @@
   "displayName": "Delete Surface",
   "emoji": "🪚️",
   "aggregateVariant": "DeleteSurface",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "delete-surface",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

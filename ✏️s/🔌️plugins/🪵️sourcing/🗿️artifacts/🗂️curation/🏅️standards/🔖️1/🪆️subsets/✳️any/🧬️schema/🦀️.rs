@@ -4,7 +4,7 @@ use crate::artifacts::curation::{CurationSnapshot, CuratedItem, Filters, Geometr
 use schema::ArtifactSchema;
 use semio_framework::parse_contributions;
 use semio_framework_dispatch_macros::{dyn_enum, dyn_enum_close};
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
+use semio_s_artifact_stdio_semio::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
 
 //#region 🔖️Artifact
 /// 🧬️ Full curation artifact state across the artifact, presence and config lanes. `catalog`/

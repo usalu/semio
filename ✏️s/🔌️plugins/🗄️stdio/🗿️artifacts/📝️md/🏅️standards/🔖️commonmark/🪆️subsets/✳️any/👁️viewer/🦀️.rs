@@ -4,9 +4,9 @@
 //! the sole runtime adapter, so this file can never structurally emit an artifact or draft mutation.
 //! MUST NOT import anything from the sibling `editor` module (`policyViewerPurityBreaches`).
 
-use crate::artifacts::md::standards::v_commonmark::subsets::any::schema::mutations::MdMutation;
-use crate::artifacts::md::standards::v_commonmark::subsets::any::schema::snapshot::MdSnapshot;
-use crate::artifacts::md::{MD_DIALECT, STDIO_MD_DOCUMENT_SCHEMA};
+use crate::standards::v_commonmark::subsets::any::schema::mutations::MdMutation;
+use crate::standards::v_commonmark::subsets::any::schema::snapshot::MdSnapshot;
+use crate::{MD_DIALECT, STDIO_MD_DOCUMENT_SCHEMA};
 use crate::viewer::md::modes::view;
 use crate::viewer::md::modes::view::windows::main;
 use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, ViewEmit, Viewer};

@@ -10,8 +10,8 @@
 //! mutation vocabulary is a plain re-export of AC1024's, so the fixture also exercises that the
 //! re-export really resolves from the AC1018 module path.
 
-use crate::artifacts::dwg::standards::v_ac1018::subsets::any::schema::mutations::{apply_dwg_mutation, DwgMutation};
-use crate::artifacts::dwg::{DwgDiff, DwgSnapshot};
+use crate::standards::v_ac1018::subsets::any::schema::mutations::{apply_dwg_mutation, DwgMutation};
+use crate::{DwgDiff, DwgSnapshot};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");

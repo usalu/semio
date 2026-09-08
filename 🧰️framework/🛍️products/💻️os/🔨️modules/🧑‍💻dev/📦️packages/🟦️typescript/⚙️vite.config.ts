@@ -13,6 +13,7 @@ import { resolveShellBrandById } from "../../🏷️brand/🟦️.ts";
 import { semioBackboneVitePlugin, semioBlobVitePlugin, semioDescriptorRouteGuardVitePlugin, semioActivationVitePlugin, semioProductionTestBoundaryVitePlugin } from "./🔌️vite-plugins.ts";
 import { semioExtensionStoreVitePlugin } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏪️store/📥️store.ts";
 import { developmentRuntimeRoot, readActivationReceipt } from "../../♻️activation/🟦️.ts";
+import { resolveTestBrowserHostRootsV1 } from "../../♻️activation/🌐️browser-host/🟦️.ts";
 import { DISTRIBUTION_LAYOUT, distributionChunkName, distributionAssetName } from "../../🚚️distribution/🟦️.ts";
 
 const configDir = path.dirname(fileURLToPath(import.meta.url));
@@ -22,10 +23,12 @@ const rendererModulesDir = path.join(repoRoot, ".🧬semio/🦑️repo/⚡️cac
 const renderer = process.env.SEMIO_RENDERER ?? "react";
 const plugin = process.env.SEMIO_PLUGIN ?? process.env.PLAYGROUND_APP_KIND ?? DEFAULT_HOST_VARIANT;
 const profile = process.env.SEMIO_BUILD_MODE === "ship" ? "release" : "dev";
-const runtimeRoot = developmentRuntimeRoot(configDir, plugin, profile), receiptDirectory = path.join(runtimeRoot, "activation");
+const runtimeRoot = developmentRuntimeRoot(configDir, plugin, profile);
+const testBrowserHost = resolveTestBrowserHostRootsV1(process.env);
+const receiptDirectory = testBrowserHost?.activationRoot ?? path.join(runtimeRoot, "activation");
 const activated = readActivationReceipt(receiptDirectory);
-const pluginModulesDir = path.resolve(configDir, "../../../🔌️plugin/📦️packages/🟦️typescript/dist", profile, "🔌️plugin-modules");
-const installedExtensionsDir = path.join(runtimeRoot, "extensions");
+const pluginModulesDir = testBrowserHost?.moduleRoot ?? path.resolve(configDir, "../../../🔌️plugin/📦️packages/🟦️typescript/dist", profile, "🔌️plugin-modules");
+const installedExtensionsDir = testBrowserHost ? path.join(testBrowserHost.browserHostRoot, "extensions") : path.join(runtimeRoot, "extensions");
 const fontsDir = path.resolve(configDir, "../../../♾️infinite/📦️packages/🦀️rust/dist/fonts");
 const sessionPath = path.resolve(configDir, "../../../🔌️plugin/📇️registry/dist/sessions", plugin, "🟦️session.ts");
 const brandId = process.env.SEMIO_BRAND ?? PLAYGROUND_BUILD_TARGETS.find((target) => target.variant === plugin || target.aliases.includes(plugin))?.brand;

@@ -13,8 +13,8 @@ pub type ConvexHullMetrics = (f64, f64, Vec<(V3, f64)>);
 // with zero suspension points; consumed by ~79 sibling inference files across the gltf tree, so
 // R9 propagates outward from here rather than the other way around. Reverted 2026-08-20.
 
-use crate::artifacts::gltf::engine::{GltfAccessorType, GltfComponentType};
-use crate::artifacts::gltf::schema::snapshot::GltfSnapshot;
+use crate::engine::{GltfAccessorType, GltfComponentType};
+use crate::schema::snapshot::GltfSnapshot;
 use std::collections::{BTreeMap, BTreeSet};
 
 use super::super::modules::{measurement_contracts::*, mesh_topology::Topology};
@@ -104,7 +104,7 @@ fn mat_mul(a: M4, b: M4) -> M4 {
 fn transform(m: M4, p: V3) -> V3 {
     [m[0] * p[0] + m[4] * p[1] + m[8] * p[2] + m[12], m[1] * p[0] + m[5] * p[1] + m[9] * p[2] + m[13], m[2] * p[0] + m[6] * p[1] + m[10] * p[2] + m[14]]
 }
-fn node_matrix(node: &crate::artifacts::gltf::schema::snapshot::GltfNode) -> M4 {
+fn node_matrix(node: &crate::schema::snapshot::GltfNode) -> M4 {
     if let Some(m) = node.matrix {
         return m;
     }
@@ -214,7 +214,7 @@ fn decode_part(snapshot: &GltfSnapshot, (mesh_index, primitive_index): (usize, u
         diagnostics.push(GltfDiagnostic { id, severity: GltfSeverity::Error, code: "invalid-position-accessor-type".into(), message: "POSITION must use FLOAT VEC3".into(), paths: vec![format!("accessors/{position_accessor}")] });
         return None;
     }
-    let decoded = match crate::artifacts::gltf::engine::decode_accessor(&snapshot.document, &snapshot.buffers, position_accessor) {
+    let decoded = match crate::engine::decode_accessor(&snapshot.document, &snapshot.buffers, position_accessor) {
         Ok(x) if x.components.len() % 3 == 0 => x,
         Ok(_) => return None,
         Err(message) => {
@@ -241,7 +241,7 @@ fn decode_part(snapshot: &GltfSnapshot, (mesh_index, primitive_index): (usize, u
             });
             continue;
         }
-        match crate::artifacts::gltf::engine::decode_accessor(&snapshot.document, &snapshot.buffers, accessor) {
+        match crate::engine::decode_accessor(&snapshot.document, &snapshot.buffers, accessor) {
             Ok(delta) if delta.components.len() == local.len() * 3 => {
                 for (p, d) in local.iter_mut().zip(delta.components.as_chunks::<3>().0) {
                     *p = add(*p, mul([d[0], d[1], d[2]], weight));
@@ -272,7 +272,7 @@ fn decode_part(snapshot: &GltfSnapshot, (mesh_index, primitive_index): (usize, u
             diagnostics.push(GltfDiagnostic { id, severity: GltfSeverity::Error, code: "invalid-index-accessor-type".into(), message: "indices must use unsigned SCALAR components".into(), paths: vec![format!("accessors/{accessor}")] });
             return None;
         }
-        match crate::artifacts::gltf::engine::decode_accessor(&snapshot.document, &snapshot.buffers, accessor) {
+        match crate::engine::decode_accessor(&snapshot.document, &snapshot.buffers, accessor) {
             Ok(v) => v.components.iter().filter_map(|x| if x.is_finite() && *x >= 0.0 && x.fract() == 0.0 { Some(*x as usize) } else { None }).collect(),
             Err(message) => {
                 let id = format!("gltf-geometry-{}", diagnostics.len());

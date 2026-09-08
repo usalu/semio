@@ -3,7 +3,7 @@
 //! real TSV file is often ragged on the wire — IANA TSV draws no header/data structural
 //! distinction, so this never assumes rectangularity or a header row).
 
-use crate::artifacts::tsv::TsvSnapshot;
+use crate::TsvSnapshot;
 
 //#region 🔖️Outline
 /// 🧾️ `Tsv` document outline.

@@ -1,0 +1,21 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/image/mutation/set-bit-depth.json",
+  "title": "SetBitDepth",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "bit_depth"
+  ],
+  "properties": {
+    "bit_depth": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 255
+    },
+    "mutation": {
+      "const": "setBitDepth",
+      "description": "Aggregate discriminator spliced in by SemioImageMutation; absent when the payload stands alone."
+    }
+  }
+}

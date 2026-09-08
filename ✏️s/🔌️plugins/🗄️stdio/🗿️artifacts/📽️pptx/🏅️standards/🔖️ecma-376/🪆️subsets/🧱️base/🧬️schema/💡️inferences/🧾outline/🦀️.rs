@@ -4,8 +4,8 @@
 //! `wordCount` is a whitespace-split word count over every `TextBox`/`Placeholder` run's `text`
 //! (`Picture`/`Other` shapes carry no modeled text).
 
-use crate::artifacts::pptx::schema::snapshot::PptxShape;
-use crate::artifacts::pptx::PptxSnapshot;
+use crate::schema::snapshot::PptxShape;
+use crate::PptxSnapshot;
 
 //#region 🔖️Outline
 /// 🧾️ `Pptx` document outline.
@@ -45,14 +45,14 @@ impl PptxOutline {
 //#region 🧪️Tests
 mod tests {
     use super::*;
-    use crate::artifacts::pptx::schema::snapshot::{PptxParagraph, PptxSlide};
+    use crate::schema::snapshot::{PptxParagraph, PptxSlide};
 
     #[semio_framework_async_macros::async_test]
     async fn counts_slides_shapes_and_words() {
         let snapshot = PptxSnapshot {
             schema: "stdio.pptx".into(),
             opc: Default::default(),
-            presentation: crate::artifacts::pptx::schema::snapshot::PptxPresentation {
+            presentation: crate::schema::snapshot::PptxPresentation {
                 slides: vec![PptxSlide { shapes: vec![PptxShape::TextBox { text_frame: vec![PptxParagraph::text("hello world")], position: Default::default() }, PptxShape::Picture { blip_rel_id: "rId1".into(), position: Default::default() }] }],
             },
             xml_parts: Vec::new(),

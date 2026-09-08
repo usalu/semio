@@ -1,9 +1,9 @@
 //! 🧪️ Rust consumer for the shared alpha-mode canonical vector.
 #[cfg(test)]
 mod tests {
-    use crate::artifacts::gltf::schema::mutations::change_material_alpha_mode::{diff, inverse, mutation};
-    use crate::artifacts::gltf::schema::snapshot::GltfAlphaMode;
-    use crate::artifacts::gltf::GltfSnapshot;
+    use crate::schema::mutations::change_material_alpha_mode::{diff, inverse, mutation};
+    use crate::schema::snapshot::GltfAlphaMode;
+    use crate::GltfSnapshot;
     use std::collections::BTreeMap;
 
     #[derive(value_derive::FromValue)]

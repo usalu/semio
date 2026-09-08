@@ -2,8 +2,8 @@
 //! (called once from 🔌️plugin/🔧️setup via ⚙️engine::register), not per-leaf register().
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use crate::artifacts::csv::standards::v_rfc4180::subsets::any::schema::CsvAnalyzer;
-    use crate::artifacts::csv::CsvSnapshot;
+    use crate::standards::v_rfc4180::subsets::any::schema::CsvAnalyzer;
+    use crate::CsvSnapshot;
     use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.csv", standard: StandardId("rfc4180"), subset: SubsetId("*") };
@@ -53,7 +53,7 @@ pub use derived_composition::*;
 /// type (`&'static [&'static ComposerEntry]` vs this module's `&'static [ComposerEntry]`); a bare
 /// `io_registry::entries()` silently rebinds to the wrong one.
 pub mod io_registry {
-    use crate::artifacts::csv::standards::v_rfc4180::subsets::any::schema::CsvComposer as CsvRawAnyComposer;
+    use crate::standards::v_rfc4180::subsets::any::schema::CsvComposer as CsvRawAnyComposer;
     use semio_framework_plugin::{composer_entry_of, ComposerEntry};
     use std::sync::OnceLock;
 

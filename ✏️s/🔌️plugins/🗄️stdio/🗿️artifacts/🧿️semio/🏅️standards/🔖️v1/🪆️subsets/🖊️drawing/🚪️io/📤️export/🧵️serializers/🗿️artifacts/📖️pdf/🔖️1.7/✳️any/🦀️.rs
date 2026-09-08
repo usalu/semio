@@ -6,8 +6,8 @@
 //! own module doc — it has no path-painting operator emission at all) and are dropped, documented,
 //! not fabricated.
 
-use crate::artifacts::pdf::{schema::snapshot::PdfPage, PdfSnapshot};
-use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{DrawNode, SemioDrawingSnapshot};
+use semio_s_artifact_stdio_pdf::{schema::snapshot::PdfPage, PdfSnapshot};
+use crate::standards::v1::subsets::drawing::schema::snapshot::{DrawNode, SemioDrawingSnapshot};
 use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
 
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("drawing") };
@@ -53,7 +53,7 @@ impl ArtifactSerializer for SemioDrawingToPdf {
                 PdfPage { text, ..PdfPage::new(from.canvas.width.max(1.0), from.canvas.height.max(1.0)) }
             })
             .collect();
-        Ok(PdfSnapshot { schema: crate::artifacts::pdf::schema::snapshot::STDIO_PDF17_DOCUMENT_SCHEMA.into(), declared_version: "1.7".into(), pages, ..PdfSnapshot::default() })
+        Ok(PdfSnapshot { schema: semio_s_artifact_stdio_pdf::schema::snapshot::STDIO_PDF17_DOCUMENT_SCHEMA.into(), declared_version: "1.7".into(), pages, ..PdfSnapshot::default() })
     }
 }
 //#endregion 🔖️Serializer
@@ -62,8 +62,8 @@ impl ArtifactSerializer for SemioDrawingToPdf {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioTransform};
-    use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{DrawCanvas, DrawLayer, PathSegment};
+    use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioTransform};
+    use crate::standards::v1::subsets::drawing::schema::snapshot::{DrawCanvas, DrawLayer, PathSegment};
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn sample_drawing() -> SemioDrawingSnapshot {
@@ -96,8 +96,8 @@ mod tests {
         assert_eq!(pdf.pages.len(), 1);
         assert_eq!(pdf.pages[0].text, "hello\nsemio");
 
-        let bytes = crate::artifacts::pdf::standards::v1_7::subsets::base::io::encode_pdf(&pdf).expect("encode real pdf bytes");
-        let decoded = crate::artifacts::pdf::standards::v1_7::subsets::base::io::decode_pdf(&bytes).expect("decode real pdf bytes");
+        let bytes = semio_s_artifact_stdio_pdf::standards::v1_7::subsets::base::io::encode_pdf(&pdf).expect("encode real pdf bytes");
+        let decoded = semio_s_artifact_stdio_pdf::standards::v1_7::subsets::base::io::decode_pdf(&bytes).expect("decode real pdf bytes");
         assert_eq!(decoded.pages.len(), 1);
         assert_eq!(decoded.pages[0].text, "hello\nsemio");
     }

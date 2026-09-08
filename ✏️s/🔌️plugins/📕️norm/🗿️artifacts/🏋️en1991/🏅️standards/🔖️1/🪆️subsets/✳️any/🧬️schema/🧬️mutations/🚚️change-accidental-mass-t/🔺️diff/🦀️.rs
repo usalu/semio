@@ -11,6 +11,6 @@ pub fn diff(payload: &ChangeAccidentalMassT, base: &En1991Snapshot) -> protocol:
     if base.accidental_mass_t == payload.new_accidental_mass_t {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "Accidental mass t already has this value.");
     }
-    protocol::MutationOutcome::new(En1991Diff { accidental_mass_t: Some(payload.new_accidental_mass_t.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1991Diff { accidental_mass_t: Some(payload.new_accidental_mass_t), ..Default::default() })
 }
 //#endregion 🔖️Diff

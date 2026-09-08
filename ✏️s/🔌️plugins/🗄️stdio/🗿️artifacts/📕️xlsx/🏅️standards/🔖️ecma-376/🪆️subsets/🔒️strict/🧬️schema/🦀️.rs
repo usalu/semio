@@ -5,7 +5,7 @@
 //! This leaf exists so `🪆️subsets/🔒️strict/🧬️schema/` is present per `🔣️taxonomy.json`'s
 //! `subsetChildDirs`, without duplicating the schema definition.
 
-pub use crate::artifacts::xlsx::standards::v_ecma_376::subsets::base::schema::*;
+pub use crate::standards::v_ecma_376::subsets::base::schema::*;
 //#region 🧬️Mutations
 // 🧬️ This subset's OWN conformance-class vocabulary, mounted here rather than in the crate's shared
 // `🦀️.rs`: that file is one wiring file for every stdio artifact at once, and the rationale the
@@ -22,11 +22,11 @@ pub mod mutations;
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
     #[cfg(test)]
-    use crate::artifacts::xlsx::standards::v_ecma_376::subsets::base::schema::mutations::set_snapshot;
-    use crate::artifacts::xlsx::standards::v_ecma_376::subsets::base::schema::snapshot::{XlsxSnapshot, XlsxWorkbook};
-    use crate::artifacts::xlsx::standards::v_ecma_376::subsets::strict::schema::{check_strict_conformance, STRICT_R_NS, STRICT_SML_NS};
-    use crate::artifacts::xlsx::{XlsxDiff, XlsxMutation};
-    use crate::artifacts::xml::schema::snapshot::{xml_document_from_text, xml_document_to_text, XmlAttr, XmlNode};
+    use crate::standards::v_ecma_376::subsets::base::schema::mutations::set_snapshot;
+    use crate::standards::v_ecma_376::subsets::base::schema::snapshot::{XlsxSnapshot, XlsxWorkbook};
+    use crate::standards::v_ecma_376::subsets::strict::schema::{check_strict_conformance, STRICT_R_NS, STRICT_SML_NS};
+    use crate::{XlsxDiff, XlsxMutation};
+    use semio_s_artifact_stdio_xml::schema::snapshot::{xml_document_from_text, xml_document_to_text, XmlAttr, XmlNode};
     use dsl::{Diagnostic, Severity};
     use semio_framework_plugin::ArtifactBuilder;
 
@@ -76,7 +76,7 @@ pub mod derived_construction {
         /// ecma-376 engine, then stamps it Strict.
         // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn new(workbook: XlsxWorkbook) -> Self {
-            Self { snapshot: stamp_strict_namespace(crate::artifacts::xlsx::standards::v_ecma_376::subsets::base::io::export::serializers::build_minimal_xlsx(workbook)) }
+            Self { snapshot: stamp_strict_namespace(crate::standards::v_ecma_376::subsets::base::io::export::serializers::build_minimal_xlsx(workbook)) }
         }
     }
 
@@ -106,7 +106,7 @@ pub mod derived_construction {
         }
 
         fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
-            let diff = crate::artifacts::xlsx::standards::v_ecma_376::subsets::base::schema::mutations::apply_xlsx_mutation(&mut self.snapshot, &mutation);
+            let diff = crate::standards::v_ecma_376::subsets::base::schema::mutations::apply_xlsx_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
 
@@ -148,7 +148,7 @@ pub mod derived_construction {
             snapshot.opc.set_part(WORKBOOK_PART, WORKBOOK_CONTENT_TYPE, b"<workbook xmlns=\"transitional\"/>".to_vec());
             let (mutated, _diff) = XlsxStrictBuilderConstruction::from_snapshot(XlsxSnapshot::default()).mutate(XlsxMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }));
             let err = mutated.build().expect_err("a non-Strict workbook.xml must fail build()");
-            assert!(err.iter().any(|d| d.code.0 == crate::artifacts::xlsx::standards::v_ecma_376::subsets::strict::schema::CODE_NAMESPACE_MISMATCH), "got {err:?}");
+            assert!(err.iter().any(|d| d.code.0 == crate::standards::v_ecma_376::subsets::strict::schema::CODE_NAMESPACE_MISMATCH), "got {err:?}");
         }
     }
 }
@@ -157,10 +157,10 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use crate::artifacts::xlsx::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxSnapshot;
-    use crate::artifacts::xlsx::standards::v_ecma_376::subsets::base::schema::XlsxAnalyzer as XlsxAnyAnalyzer;
-    pub use crate::artifacts::xlsx::standards::v_ecma_376::subsets::base::schema::XlsxParts;
-    use crate::artifacts::xml::schema::snapshot::{xml_document_from_text, XmlNode};
+    use crate::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxSnapshot;
+    use crate::standards::v_ecma_376::subsets::base::schema::XlsxAnalyzer as XlsxAnyAnalyzer;
+    pub use crate::standards::v_ecma_376::subsets::base::schema::XlsxParts;
+    use semio_s_artifact_stdio_xml::schema::snapshot::{xml_document_from_text, XmlNode};
     use dsl::{Diagnostic, FaultCode, FaultScope, Severity, TextSpan};
     use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
@@ -290,8 +290,8 @@ pub mod derived_analysis {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use crate::artifacts::xml::schema::snapshot::{xml_document_to_text, XmlAttr, XmlDocument};
-        use crate::artifacts::zip::opc::OpcPackage;
+        use semio_s_artifact_stdio_xml::schema::snapshot::{xml_document_to_text, XmlAttr, XmlDocument};
+        use semio_s_artifact_stdio_zip::opc::OpcPackage;
 
         // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         fn attr(name: &str, value: &str) -> XmlAttr {

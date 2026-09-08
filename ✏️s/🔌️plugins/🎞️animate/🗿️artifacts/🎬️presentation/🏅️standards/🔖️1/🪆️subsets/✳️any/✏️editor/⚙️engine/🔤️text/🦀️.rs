@@ -411,11 +411,11 @@ pub mod text {
     // 🔀️ R11 "exactly one impl" case: `MarkupTypesetter` has a single implementor (`TypstTypesetter`),
     // so the trait-object parameter is dropped for the concrete type instead of routed through
     // `dyn_enum_close!` (an enum of one variant is worse than none — see 📓️terra-dedyn-fleet-animate-report.md).
-    fn render_markup_to_svg_snapshot(renderer: &semio_framework_typeset::TypstTypesetter, markup: &str) -> Option<semio_s_plugin_stdio::artifacts::svg::SvgSnapshot> {
-        use semio_s_plugin_stdio::artifacts::svg::schema::snapshot::parse_svg_xml;
+    fn render_markup_to_svg_snapshot(renderer: &semio_framework_typeset::TypstTypesetter, markup: &str) -> Option<semio_s_artifact_stdio_svg::SvgSnapshot> {
+        use semio_s_artifact_stdio_svg::schema::snapshot::parse_svg_xml;
         let svg_text = renderer.render_svg(markup)?;
         let doc = parse_svg_xml(&svg_text).ok()?;
-        Some(semio_s_plugin_stdio::artifacts::svg::SvgSnapshot { schema: semio_s_plugin_stdio::artifacts::svg::STDIO_SVG_DOCUMENT_SCHEMA.into(), doc })
+        Some(semio_s_artifact_stdio_svg::SvgSnapshot { schema: semio_s_artifact_stdio_svg::STDIO_SVG_DOCUMENT_SCHEMA.into(), doc })
     }
 
     /// 🖨️ Renders `markup` and returns the SVG text stdio's own real codec re-serialized from the
@@ -425,7 +425,7 @@ pub mod text {
     /// svg codec deliberately does not attempt — a rendering concern, not a duplicated codec), but
     /// that string is now stdio-validated first instead of Typst's raw, unchecked output.
     fn typst_markup_to_validated_svg(renderer: &semio_framework_typeset::TypstTypesetter, markup: &str) -> String {
-        use semio_s_plugin_stdio::artifacts::svg::schema::snapshot::write_svg_xml;
+        use semio_s_artifact_stdio_svg::schema::snapshot::write_svg_xml;
         match render_markup_to_svg_snapshot(renderer, markup) {
             Some(snapshot) => write_svg_xml(&snapshot.doc),
             None => String::new(),

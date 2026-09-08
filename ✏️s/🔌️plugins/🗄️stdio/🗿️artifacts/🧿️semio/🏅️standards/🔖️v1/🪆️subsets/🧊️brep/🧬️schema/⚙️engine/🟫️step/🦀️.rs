@@ -17,17 +17,17 @@ pub type BsplineCurveAttributes = (usize, Vec<u64>, Vec<u32>, Vec<f64>);
 use std::collections::HashMap;
 use std::fmt::Write as _;
 
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::euler::{add_face, add_shell, add_solid, make_edge, make_loop, make_vertex};
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::{ArenaId, Curve3Id, EdgeId, FaceId, SolidId, SurfaceId, VertexId};
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::bspline::KnotVector;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::Curve3;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::error::StepError;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::surface::Surface;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::tolerance::Tol;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::history::OpRecorder;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::Body;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Frame3;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::{Pnt3, Vec3};
+use crate::standards::v1::subsets::brep::schema::diff::euler::{add_face, add_shell, add_solid, make_edge, make_loop, make_vertex};
+use crate::standards::v1::subsets::brep::schema::snapshot::arena::{ArenaId, Curve3Id, EdgeId, FaceId, SolidId, SurfaceId, VertexId};
+use crate::standards::v1::subsets::brep::schema::snapshot::curve::bspline::KnotVector;
+use crate::standards::v1::subsets::brep::schema::snapshot::curve::Curve3;
+use crate::standards::v1::subsets::brep::schema::snapshot::error::StepError;
+use crate::standards::v1::subsets::brep::schema::snapshot::surface::Surface;
+use crate::standards::v1::subsets::brep::schema::snapshot::tolerance::Tol;
+use crate::standards::v1::subsets::brep::schema::snapshot::topology::history::OpRecorder;
+use crate::standards::v1::subsets::brep::schema::snapshot::topology::Body;
+use crate::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Frame3;
+use crate::standards::v1::subsets::brep::schema::snapshot::vector::{Pnt3, Vec3};
 
 // #region 🔖️Api
 
@@ -242,7 +242,7 @@ impl StepWriteContext {
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn write_edge_loop(&mut self, body: &Body, loop_id: crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::LoopId) -> Result<u64, StepError> {
+    fn write_edge_loop(&mut self, body: &Body, loop_id: crate::standards::v1::subsets::brep::schema::snapshot::arena::LoopId) -> Result<u64, StepError> {
         let mut oriented_edge_ids = Vec::new();
         for coedge_id in body.loop_coedges(loop_id) {
             let coedge = body.coedges.get(coedge_id).ok_or(StepError::Syntax("missing coedge".to_string()))?;
@@ -360,7 +360,7 @@ impl StepWriteContext {
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn write_shell(&mut self, body: &Body, shell_id: crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::ShellId) -> Result<u64, StepError> {
+    fn write_shell(&mut self, body: &Body, shell_id: crate::standards::v1::subsets::brep::schema::snapshot::arena::ShellId) -> Result<u64, StepError> {
         let shell = body.shells.get(shell_id).ok_or(StepError::Syntax("missing shell".to_string()))?;
         let mut face_step_ids = Vec::new();
         for &face_id in &shell.faces {
@@ -767,7 +767,7 @@ impl<'a> StepBuilder<'a> {
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn build_shell(&mut self, shell_ref: u64) -> Result<crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::ShellId, StepError> {
+    fn build_shell(&mut self, shell_ref: u64) -> Result<crate::standards::v1::subsets::brep::schema::snapshot::arena::ShellId, StepError> {
         let attrs = self.get_entity(shell_ref)?.attrs.clone();
         let face_refs = parse_list_refs(&attrs);
         let mut face_ids = Vec::new();
@@ -1029,7 +1029,7 @@ impl<'a> StepBuilder<'a> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::primitives::make_box;
+    use crate::standards::v1::subsets::brep::schema::diff::primitives::make_box;
 
     #[semio_framework_async_macros::async_test]
     async fn box_round_trip_topology_counts() {

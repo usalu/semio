@@ -35,8 +35,8 @@ pub mod derived_composition {
             for source in sources {
                 if source.dialect == DIALECT {
                     let native = match &source.payload {
-                        AnalyzeSource::Text(t) => AnalyzeSource::Text(*t),
-                        AnalyzeSource::Binary(b) => AnalyzeSource::Binary(*b),
+                        AnalyzeSource::Text(t) => AnalyzeSource::Text(t),
+                        AnalyzeSource::Binary(b) => AnalyzeSource::Binary(b),
                     };
                     let analysis = GisMapAnalyzer::analyze(&[native]);
                     if let Some(snapshot) = analysis.parts.snapshot {
@@ -237,9 +237,9 @@ pub mod dwg_projection {
     use crate::artifacts::gismap::standards::v1::subsets::any::schema::{default_document, dsl_to_value, value_to_dsl};
     use crate::artifacts::gismap::{gis_map_snapshot_with_derived_children, GisMapSnapshot, MapFeature};
     use dsl::ToValue;
-    use semio_s_plugin_stdio::artifacts::dwg::{DwgDrawing, DwgGeometry};
-    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioTransform};
-    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{DrawLayer, DrawNode, PathSegment, SemioDrawingSnapshot};
+    use semio_s_artifact_stdio_dwg::{DwgDrawing, DwgGeometry};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioTransform};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::{DrawLayer, DrawNode, PathSegment, SemioDrawingSnapshot};
     use serde_json::{json, Value};
 //#region 🔖️MediaImport
 /// ✏️ Projects supported DWG geometry into drawing path segments.
@@ -325,7 +325,7 @@ pub fn gis2d_document_json_from_dwg(drawing: &DwgDrawing) -> Result<Value, Strin
 #[cfg(test)]
 mod tests {
     use super::*;
-    use semio_s_plugin_stdio::artifacts::dwg::{DwgColor, DwgEntity};
+    use semio_s_artifact_stdio_dwg::{DwgColor, DwgEntity};
     #[semio_framework_async_macros::async_test]
     async fn dwg_import_collects_point_and_line_vertices() {
         let mut drawing = DwgDrawing::default();

@@ -7,6 +7,6 @@ use crate::artifacts::en1997::En1997Snapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(_payload: &ChangePhiDeg, base: &En1997Snapshot) -> Vec<En1997Mutation> {
-    vec![En1997Mutation::ChangePhiDeg(ChangePhiDeg { new_phi_deg: base.phi_deg.clone() })]
+    vec![En1997Mutation::ChangePhiDeg(ChangePhiDeg { new_phi_deg: base.phi_deg })]
 }
 //#endregion 🔖️Inverse

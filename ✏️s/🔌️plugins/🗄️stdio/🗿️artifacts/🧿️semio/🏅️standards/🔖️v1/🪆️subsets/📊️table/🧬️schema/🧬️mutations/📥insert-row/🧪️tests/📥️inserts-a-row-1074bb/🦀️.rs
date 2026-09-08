@@ -5,9 +5,9 @@
 //! never redeclares the schema — so the committed diff must carry `rows` and nothing else. The
 //! inserted row's `cells` are authored pre-aligned with the existing two columns.
 
-use crate::artifacts::semio::standards::v1::subsets::table::schema::diff::SemioTableDiff;
-use crate::artifacts::semio::standards::v1::subsets::table::schema::mutations::SemioTableMutation;
-use crate::artifacts::semio::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot;
+use crate::standards::v1::subsets::table::schema::diff::SemioTableDiff;
+use crate::standards::v1::subsets::table::schema::mutations::SemioTableMutation;
+use crate::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot;
 use protocol::{Mutation, MutationDiff};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
@@ -44,7 +44,7 @@ async fn the_undo_remove_row_takes_the_hamburg_row_back_out() {
     let base = before();
     let mutation = insert_row();
     let undo = mutation.inverse(&base);
-    assert_eq!(undo, vec![SemioTableMutation::RemoveRow(crate::artifacts::semio::standards::v1::subsets::table::schema::mutations::remove_row::RemoveRow { index: 1 })], "insert-row at #1 must undo as remove-row at #1");
+    assert_eq!(undo, vec![SemioTableMutation::RemoveRow(crate::standards::v1::subsets::table::schema::mutations::remove_row::RemoveRow { index: 1 })], "insert-row at #1 must undo as remove-row at #1");
     let mut current = mutation.diff(&base).diff().apply(&base).expect("forward insert-row applies");
     for step in &undo {
         current = step.diff(&current).diff().apply(&current).expect("the undo remove-row applies to the lengthened table");

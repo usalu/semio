@@ -12,7 +12,7 @@
 //! single point at `pose.position` — honest given what the brep content alone can tell us.
 
 use crate::artifacts::process3d::Pose;
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
+use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️BoundingBox

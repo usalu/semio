@@ -11,6 +11,6 @@ pub fn diff(payload: &ChangeHoistingSpeedMS, base: &En1991Snapshot) -> protocol:
     if base.hoisting_speed_m_s == payload.new_hoisting_speed_m_s {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "Hoisting speed ms already has this value.");
     }
-    protocol::MutationOutcome::new(En1991Diff { hoisting_speed_m_s: Some(payload.new_hoisting_speed_m_s.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1991Diff { hoisting_speed_m_s: Some(payload.new_hoisting_speed_m_s), ..Default::default() })
 }
 //#endregion 🔖️Diff

@@ -7,6 +7,6 @@ use crate::artifacts::en1992::En1992Snapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(_payload: &ChangeLiquidSRMaxMm, base: &En1992Snapshot) -> Vec<En1992Mutation> {
-    vec![En1992Mutation::ChangeLiquidSRMaxMm(ChangeLiquidSRMaxMm { new_liquid_s_r_max_mm: base.liquid_s_r_max_mm.clone() })]
+    vec![En1992Mutation::ChangeLiquidSRMaxMm(ChangeLiquidSRMaxMm { new_liquid_s_r_max_mm: base.liquid_s_r_max_mm })]
 }
 //#endregion 🔖️Inverse

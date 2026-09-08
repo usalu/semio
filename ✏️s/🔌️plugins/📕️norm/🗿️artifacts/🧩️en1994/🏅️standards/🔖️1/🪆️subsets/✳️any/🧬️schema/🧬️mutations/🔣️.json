@@ -1,138 +1,97 @@
 {
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://semio.tech/schema/s/norm/en1994/mutation.json",
   "title": "En1994Mutation",
-  "type": "object",
-  "additionalProperties": false,
-  "required": [
-    "annex",
-    "mEdKnm",
-    "vEdKn",
-    "mPla",
-    "mPlRd",
-    "eta",
-    "vLRd",
-    "insulationThicknessMm",
-    "fireRating",
-    "deckType",
-    "deltaSigmaMpa",
-    "fatigueDetail",
-    "dMm",
-    "hScMm",
-    "fCkMpa",
-    "fUMpa",
-    "eCmMpa",
-    "vEdPerStudKn",
-    "spanM",
-    "fYMpa",
-    "nCyclesStud",
-    "deltaTauStudMpa"
-  ],
-  "properties": {
-    "annex": {
-      "type": "string",
-      "x-semio-state": "artifact"
+  "oneOf": [
+    {
+      "$ref": "./🌍️change-annex/🧬️schema/🔣️.json"
     },
-    "mEdKnm": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./⭕️change-d-mm/🧬️schema/🔣️.json"
     },
-    "vEdKn": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🪜️change-deck-type/🧬️schema/🔣️.json"
     },
-    "mPla": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./📊️change-delta-sigma-mpa/🧬️schema/🔣️.json"
     },
-    "mPlRd": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🔩️change-delta-tau-stud-mpa/🧬️schema/🔣️.json"
     },
-    "eta": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🪨️change-e-cm-mpa/🧬️schema/🔣️.json"
     },
-    "vLRd": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🤝️change-eta/🧬️schema/🔣️.json"
     },
-    "insulationThicknessMm": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🧱️change-f-ck-mpa/🧬️schema/🔣️.json"
     },
-    "fireRating": {
-      "type": "string",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🔁️change-fatigue-detail/🧬️schema/🔣️.json"
     },
-    "deckType": {
-      "type": "string",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🔥️change-fire-rating/🧬️schema/🔣️.json"
     },
-    "deltaSigmaMpa": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./💪️change-fu-mpa/🧬️schema/🔣️.json"
     },
-    "fatigueDetail": {
-      "type": "string",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🏋️change-fy-mpa/🧬️schema/🔣️.json"
     },
-    "dMm": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./↕️change-h-sc-mm/🧬️schema/🔣️.json"
     },
-    "hScMm": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🧯️change-insulation-thickness-mm/🧬️schema/🔣️.json"
     },
-    "fCkMpa": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🌀️change-m-ed-knm/🧬️schema/🔣️.json"
     },
-    "fUMpa": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🛡️change-m-pl-rd/🧬️schema/🔣️.json"
     },
-    "eCmMpa": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🦾️change-m-pla/🧬️schema/🔣️.json"
     },
-    "vEdPerStudKn": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./🔄️change-n-cycles-stud/🧬️schema/🔣️.json"
     },
-    "spanM": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./📏️change-span-m/🧬️schema/🔣️.json"
     },
-    "fYMpa": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./✂️change-v-ed-kn/🧬️schema/🔣️.json"
     },
-    "nCyclesStud": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./📌️change-v-ed-per-stud-kn/🧬️schema/🔣️.json"
     },
-    "deltaTauStudMpa": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./↔️change-vl-rd/🧬️schema/🔣️.json"
     }
-  }
+  ],
+  "x-semio-mutationKinds": [
+    "change-annex",
+    "change-d-mm",
+    "change-deck-type",
+    "change-delta-sigma-mpa",
+    "change-delta-tau-stud-mpa",
+    "change-e-cm-mpa",
+    "change-eta",
+    "change-f-ck-mpa",
+    "change-fatigue-detail",
+    "change-fire-rating",
+    "change-fu-mpa",
+    "change-fy-mpa",
+    "change-h-sc-mm",
+    "change-insulation-thickness-mm",
+    "change-m-ed-knm",
+    "change-m-pl-rd",
+    "change-m-pla",
+    "change-n-cycles-stud",
+    "change-span-m",
+    "change-v-ed-kn",
+    "change-v-ed-per-stud-kn",
+    "change-vl-rd"
+  ]
 }

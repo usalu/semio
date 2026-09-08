@@ -1,8 +1,8 @@
 //! 👁️ `png` view (any) — Main window: real `ImageWindowKit`
 //! render of the current document (read-only).
 
-use crate::artifacts::png::standards::v1_2::subsets::any::io::encode_png;
-use crate::artifacts::png::standards::v1_2::subsets::any::schema::snapshot::PngSnapshot;
+use crate::standards::v1_2::subsets::any::io::encode_png;
+use crate::standards::v1_2::subsets::any::schema::snapshot::PngSnapshot;
 use semio_framework_plugin::app::{ImageView, ImageWindowKit};
 use semio_framework_plugin::{BuiltNode, WindowKindDefinition, WindowKit};
 

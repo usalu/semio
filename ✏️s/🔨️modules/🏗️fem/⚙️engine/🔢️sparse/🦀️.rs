@@ -435,6 +435,13 @@ const LDLT_MAXIMUM_ORDER: usize = 40;
 const NUMERICAL_OWNER_PAGE_BYTES: usize = 16 * 1024;
 pub const MOUNTED_SCALAR_SLOTS: usize = 768;
 
+/// 📊️ A mounted scalar admission or update exceeds its available slots.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum MountedScalarFault {
+    Capacity { requested: usize, maximum: usize },
+    Index { index: usize, len: usize },
+}
+
 /// 🧮 Fixed mounted scalar owner with one admission, write, update, or close action per turn.
 pub struct MountedScalarSlots {
     values: [f64; MOUNTED_SCALAR_SLOTS],
@@ -447,9 +454,9 @@ impl MountedScalarSlots {
         Self { values: [0.0; MOUNTED_SCALAR_SLOTS], admitted: 0, len: 0 }
     }
 
-    pub fn admit_one(&mut self, target: usize) -> Result<bool, ()> {
+    pub fn admit_one(&mut self, target: usize) -> Result<bool, MountedScalarFault> {
         if target > MOUNTED_SCALAR_SLOTS {
-            return Err(());
+            return Err(MountedScalarFault::Capacity { requested: target, maximum: MOUNTED_SCALAR_SLOTS });
         }
         if self.admitted < target {
             self.admitted += 1;
@@ -467,9 +474,9 @@ impl MountedScalarSlots {
         Ok(())
     }
 
-    pub fn add_at(&mut self, index: usize, value: f64) -> Result<(), ()> {
+    pub fn add_at(&mut self, index: usize, value: f64) -> Result<(), MountedScalarFault> {
         if index >= self.len {
-            return Err(());
+            return Err(MountedScalarFault::Index { index, len: self.len });
         }
         self.values[index] += value;
         Ok(())
@@ -481,6 +488,10 @@ impl MountedScalarSlots {
 
     pub fn len(&self) -> usize {
         self.len
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.len == 0
     }
 
     pub fn close_step(&mut self) -> bool {

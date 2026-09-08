@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangePeriodRatio, base: &En1998Snapshot) -> protocol::Mut
     if base.period_ratio == payload.new_period_ratio {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Period ratio is already {}.", payload.new_period_ratio));
     }
-    protocol::MutationOutcome::new(En1998Diff { period_ratio: Some(payload.new_period_ratio.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1998Diff { period_ratio: Some(payload.new_period_ratio), ..Default::default() })
 }
 //#endregion 🔖️Diff

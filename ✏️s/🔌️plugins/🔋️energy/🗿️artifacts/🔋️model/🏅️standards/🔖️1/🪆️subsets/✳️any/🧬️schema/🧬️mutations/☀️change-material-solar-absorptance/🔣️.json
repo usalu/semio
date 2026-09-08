@@ -5,7 +5,7 @@
   "displayName": "Change Material Solar Absorptance",
   "emoji": "☀️",
   "aggregateVariant": "ChangeMaterialSolarAbsorptance",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-material-solar-absorptance",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

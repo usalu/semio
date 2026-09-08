@@ -1,0 +1,63 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/docx/ecma-376/base/mutation/remove-block.json",
+  "title": "RemoveBlock",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "path"
+  ],
+  "properties": {
+    "path": {
+      "$ref": "#/$defs/DocxBlockPath"
+    },
+    "mutation": {
+      "const": "removeBlock",
+      "description": "Aggregate discriminator spliced in by DocxMutation; absent when the payload stands alone."
+    }
+  },
+  "$defs": {
+    "DocxBlockPath": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index"
+      ],
+      "properties": {
+        "segments": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/DocxPathSegment"
+          }
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "DocxPathSegment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "blockIndex",
+        "row",
+        "cell"
+      ],
+      "properties": {
+        "blockIndex": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "row": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "cell": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    }
+  }
+}

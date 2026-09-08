@@ -7,6 +7,6 @@ use crate::artifacts::din18599::Din18599Snapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(_payload: &ChangeUseClass, base: &Din18599Snapshot) -> Vec<Din18599Mutation> {
-    vec![Din18599Mutation::ChangeUseClass(ChangeUseClass { new_use_class: base.use_class.clone() })]
+    vec![Din18599Mutation::ChangeUseClass(ChangeUseClass { new_use_class: base.use_class })]
 }
 //#endregion 🔖️Inverse

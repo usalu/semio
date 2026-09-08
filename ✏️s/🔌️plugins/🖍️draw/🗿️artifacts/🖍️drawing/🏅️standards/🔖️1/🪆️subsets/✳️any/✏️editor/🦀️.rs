@@ -1406,7 +1406,7 @@ impl DrawingBoundedProofs {
 
 //#region 🔖️DrawingPlayApp
 pub(crate) fn drawing_document_revision(doc: &ArtifactView<'_, DrawingSnapshot>, _config: &DrawingConfig) -> String {
-    doc.operation_optional().map(|operation| operation.canonical_base_revision_hex()).unwrap_or_else(|| "0".repeat(64))
+    doc.operation_optional().map_or_else(|| "0".repeat(64), |operation| operation.canonical_base_revision_hex())
 }
 
 /// 🧪️ Unit struct apart from `session`: every former `DrawingInteractionState`/`ViewModel`-derived field

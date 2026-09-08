@@ -1,7 +1,7 @@
 //! 🧬️ Authoritative insert-unknown-chunk mutation.
-use crate::artifacts::png::schema::diff::*;
-use crate::artifacts::png::schema::mutations::PngMutation;
-use crate::artifacts::png::schema::snapshot::*;
+use crate::schema::diff::*;
+use crate::schema::mutations::PngMutation;
+use crate::schema::snapshot::*;
 
 //#region Payload
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
@@ -34,7 +34,7 @@ impl protocol::MutationKind<PngSnapshot, PngMutation> for InsertUnknownChunkMuta
             return Vec::new();
         }
         {
-            vec![PngMutation::RemoveUnknownChunk(crate::artifacts::png::schema::mutations::RemoveUnknownChunkMutation { index: (*index).min(base.unknown_chunks.len()) })]
+            vec![PngMutation::RemoveUnknownChunk(crate::schema::mutations::RemoveUnknownChunkMutation { index: (*index).min(base.unknown_chunks.len()) })]
         }
     }
     fn label(&self) -> String {

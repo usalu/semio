@@ -1,5 +1,5 @@
 {
-  "capacitySchema": "semio.value.resident.capacity.v1",
+  "capacitySchema": "https://semio.tech/schema/framework/value/resident/schema.json#/$defs/Resident",
   "pageBytes": 256,
   "allocation": {
     "requiresExactReservation": true,

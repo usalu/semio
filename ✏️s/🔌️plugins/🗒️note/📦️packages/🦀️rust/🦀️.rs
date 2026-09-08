@@ -1053,8 +1053,6 @@ semio_framework_plugin::plugin_exports!(plugin::plugin, NoteApps);
 pub mod examples {
     #[path = "../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🦀️.rs"]
     pub mod app_note_demo_session;
-    #[path = "../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️.rs"]
-    pub mod art_note_demo;
 }
 //#endregion 📚️Examples
 

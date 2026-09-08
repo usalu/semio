@@ -7,6 +7,7 @@
 //! (`📓️terra-P1a-report.md` §5, D8) so the peer ticket's mid-flight plugin-host rewrite can never
 //! break this crate's own build.
 
+use crate::schema::{artifact_create_template_input_schema, capability_action_input_schema, capability_generic_input_schema, capability_generic_output_schema, ui_dialog_open_input_schema};
 use semio_framework::manifest;
 use semio_framework::manifest::kernel;
 use semio_framework::{Locale, Terminology};
@@ -305,42 +306,19 @@ pub struct CapabilityDefinition {
 //#endregion 🔖️CapabilityDefinition
 
 //#region 🔖️SchemaBuilders
-/// 📐️ JSON Schema 2020-12 envelope wrapping one action/command's declared args as `properties` —
-/// `📋️master.md` §3.2 step 1: `{type:"object", properties, required, additionalProperties:false,
-/// $schema, $id: semio://capability/<id>/input}`. Leaf schemas come from `ActionArgDef::json_schema()`
-/// (landed by P3, `🛂️manifest/🦀️.rs` `🔖️ActionArgs`).
+/// 📐️ `📋️master.md` §3.2 step 1's input envelope, folding one action/command's declared args in as
+/// `properties`. Leaf schemas come from `ActionArgDef::json_schema()` (P3, `🛂️manifest/🦀️.rs`
+/// `🔖️ActionArgs`); the envelope itself is `crate::schema`'s `CapabilityActionInput` export.
 fn action_input_schema(capability_id: &str, args: &[manifest::ActionArgDef]) -> serde_json::Value {
     let mut properties = serde_json::Map::new();
     let mut required = Vec::new();
     for arg in args {
         properties.insert(arg.id.clone(), dsl_to_json_value(arg.json_schema()).expect("DslValue to JSON schema conversion is infallible"));
         if arg.required {
-            required.push(serde_json::Value::String(arg.id.clone()));
+            required.push(arg.id.clone());
         }
     }
-    let mut schema = serde_json::json!({
-        "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "$id": format!("semio://capability/{capability_id}/input"),
-        "type": "object",
-        "properties": properties,
-        "additionalProperties": false,
-    });
-    if !required.is_empty() {
-        schema.as_object_mut().expect("object schema").insert("required".into(), serde_json::Value::Array(required));
-    }
-    schema
-}
-
-/// 📐️ A permissive JSON Schema 2020-12 output envelope — no `manifest::ActionDefinition` carries a
-/// typed output shape yet (the bridge's `AppFrame::Emit`/`DispatchReport` payload is dynamic), so
-/// every capability's `output_schema` is `{type:"object"}` tagged with its own `$id` until a later
-/// packet (P6+) types individual results.
-fn generic_output_schema(capability_id: &str) -> serde_json::Value {
-    serde_json::json!({
-        "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "$id": format!("semio://capability/{capability_id}/output"),
-        "type": "object",
-    })
+    capability_action_input_schema(capability_id, properties, required)
 }
 //#endregion 🔖️SchemaBuilders
 
@@ -416,7 +394,7 @@ fn capability_from_action(id: &str, owner: CapabilityOwner, artifact_kind: Optio
         artifact_kind,
         use_when: action.semantics.use_when.clone(),
         input_schema: action_input_schema(id, &action.args),
-        output_schema: generic_output_schema(id),
+        output_schema: capability_generic_output_schema(id),
         effects: action.semantics.effects.clone(),
         policy: action.semantics.policy.clone(),
         execution: action.semantics.execution.clone(),
@@ -449,7 +427,7 @@ fn capability_from_command(id: &str, owner: CapabilityOwner, artifact_kind: Opti
         artifact_kind,
         use_when: command.semantics.use_when.clone(),
         input_schema: action_input_schema(id, &command.args),
-        output_schema: generic_output_schema(id),
+        output_schema: capability_generic_output_schema(id),
         effects: command.semantics.effects.clone(),
         policy: command.semantics.policy.clone(),
         execution: command.semantics.execution.clone(),
@@ -586,8 +564,8 @@ fn capability_from_contribution<Row: ContributionRow>(plugin_id: &str, category:
         description: entry.row_description(),
         artifact_kind: entry.row_artifact_kind(),
         use_when: Vec::new(),
-        input_schema: serde_json::json!({ "$schema": "https://json-schema.org/draft/2020-12/schema", "$id": format!("semio://capability/{id}/input"), "type": "object" }),
-        output_schema: generic_output_schema(&id),
+        input_schema: capability_generic_input_schema(&id),
+        output_schema: capability_generic_output_schema(&id),
         effects: manifest::CapabilityEffects::default(),
         policy: manifest::CapabilityPolicy::default(),
         execution: manifest::CapabilityExecution { class: manifest::ExecutionClass::Job, interactive_job: manifest::InteractiveJobClassification::Migrated, ..Default::default() },
@@ -629,15 +607,7 @@ fn humanize(id: &str) -> String {
 /// fold into ONE gateway-owned `ui.dialog.open` capability (never one capability per dialog), whose
 /// `dialogId` argument enumerates every dialog id collected across every walked app.
 fn ui_dialog_open_capability(dialog_ids: &[String]) -> CapabilityDefinition {
-    let options: Vec<serde_json::Value> = dialog_ids.iter().map(|id| serde_json::Value::String(id.clone())).collect();
-    let input_schema = serde_json::json!({
-        "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "$id": "semio://capability/ui.dialog.open/input",
-        "type": "object",
-        "properties": { "dialogId": { "type": "string", "enum": options }, "args": { "type": "object" } },
-        "required": ["dialogId"],
-        "additionalProperties": false,
-    });
+    let input_schema = ui_dialog_open_input_schema(dialog_ids);
     CapabilityDefinition {
         id: CapabilityRef("ui.dialog.open".to_string()),
         version: 1,
@@ -648,7 +618,7 @@ fn ui_dialog_open_capability(dialog_ids: &[String]) -> CapabilityDefinition {
         artifact_kind: None,
         use_when: vec!["open a dialog".to_string(), "show a form".to_string()],
         input_schema,
-        output_schema: generic_output_schema("ui.dialog.open"),
+        output_schema: capability_generic_output_schema("ui.dialog.open"),
         effects: manifest::CapabilityEffects { reads: vec![manifest::ResourceSelector::new("ui:window")], ..Default::default() },
         policy: manifest::CapabilityPolicy { scopes: vec![kernel::CapabilityId("ui.dialog".into())], ..Default::default() },
         execution: manifest::CapabilityExecution::default(),
@@ -663,15 +633,7 @@ fn ui_dialog_open_capability(dialog_ids: &[String]) -> CapabilityDefinition {
 /// declared `ExampleDefinition`s fold into ONE gateway-owned `artifact.create` capability, whose
 /// `template` argument enumerates every `<plugin_id>:<example_id>` collected across every descriptor.
 fn artifact_create_capability(template_ids: &[String]) -> CapabilityDefinition {
-    let options: Vec<serde_json::Value> = template_ids.iter().map(|id| serde_json::Value::String(id.clone())).collect();
-    let input_schema = serde_json::json!({
-        "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "$id": "semio://capability/artifact.create/input",
-        "type": "object",
-        "properties": { "kind": { "type": "string" }, "template": { "type": "string", "enum": options } },
-        "required": ["kind"],
-        "additionalProperties": false,
-    });
+    let input_schema = artifact_create_template_input_schema(template_ids);
     CapabilityDefinition {
         id: CapabilityRef("artifact.create".to_string()),
         version: 1,
@@ -682,7 +644,7 @@ fn artifact_create_capability(template_ids: &[String]) -> CapabilityDefinition {
         artifact_kind: None,
         use_when: vec!["create a new artifact".to_string(), "start a new document".to_string()],
         input_schema,
-        output_schema: generic_output_schema("artifact.create"),
+        output_schema: capability_generic_output_schema("artifact.create"),
         effects: manifest::CapabilityEffects { writes: vec![manifest::ResourceSelector::new("artifact:{self}")], reversible: false, ..Default::default() },
         policy: manifest::CapabilityPolicy { scopes: vec![kernel::CapabilityId("documents.write".into())], ..Default::default() },
         execution: manifest::CapabilityExecution { class: manifest::ExecutionClass::Job, interactive_job: manifest::InteractiveJobClassification::Migrated, ..Default::default() },

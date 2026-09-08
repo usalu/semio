@@ -2,7 +2,7 @@
 //! from the framework `TextWindowKit` (contract §2.6). `TxtSnapshot.lines` is joined with the
 //! document's own `line_ending` on render, and re-split the same way on `replace-text`.
 
-use crate::artifacts::txt::TxtSnapshot;
+use crate::TxtSnapshot;
 use semio_framework_plugin::app::{TextView, TextWindowKit, WindowKit};
 use semio_framework_plugin::{BuiltNode, LocalizedLabel, WindowKindDefinition};
 

@@ -1,0 +1,31 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/energy/model/1/any/mutation/update-site.json",
+  "title": "UpdateSite",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "latitudeDeg",
+    "longitudeDeg",
+    "elevationM",
+    "timeZoneHours",
+    "northAxisDeg"
+  ],
+  "properties": {
+    "latitudeDeg": {
+      "type": "number"
+    },
+    "longitudeDeg": {
+      "type": "number"
+    },
+    "elevationM": {
+      "type": "number"
+    },
+    "timeZoneHours": {
+      "type": "number"
+    },
+    "northAxisDeg": {
+      "type": "number"
+    }
+  }
+}

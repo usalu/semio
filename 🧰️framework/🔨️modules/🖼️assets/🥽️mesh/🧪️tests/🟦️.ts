@@ -9,8 +9,8 @@ describe("explicit mesh delivery authority", () => {
   it("agrees with independent JSON Schema admission and the neutral source/output map", async () => {
     const { default: Ajv } = await import("ajv");
     const ajv = new Ajv({ strict: true });
-    const deliverySchema = JSON.parse(readFileSync(resolve(import.meta.dir, "../🧬️catalog.schema.json"), "utf8"));
-    const sourceSchema = JSON.parse(readFileSync(resolve(import.meta.dir, "../../🌱️metabolism/🎨️representation/🧬️catalog.schema.json"), "utf8"));
+    const deliverySchema = JSON.parse(readFileSync(resolve(import.meta.dir, "../🧬️schema/🔣️.json"), "utf8"));
+    const sourceSchema = JSON.parse(readFileSync(resolve(import.meta.dir, "../../🌱️metabolism/🎨️representation/🧬️schema/🔣️.json"), "utf8"));
     expect(ajv.compile(deliverySchema)(fixture.delivery)).toBe(true);
     const validateSource = ajv.compile(sourceSchema);
     for (const value of Object.values(fixture.catalogs)) expect(validateSource(value)).toBe(true);

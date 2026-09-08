@@ -2,8 +2,8 @@
 //! (called once from 🔌️plugin/🔧️setup via ⚙️engine::register), not per-leaf register().
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use crate::artifacts::bmp::standards::v_v3::subsets::any::schema::BmpAnalyzer;
-    use crate::artifacts::bmp::BmpSnapshot;
+    use crate::standards::v_v3::subsets::any::schema::BmpAnalyzer;
+    use crate::BmpSnapshot;
     use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.bmp", standard: StandardId("v3"), subset: SubsetId("*") };
@@ -61,11 +61,11 @@ pub use derived_composition::*;
 // snapshot) — see 🚫️EncodeScopeNote below. `BmpEngine` (zero construction sites) deleted
 // outright. `register`/`register_artifact_schema`/`register_artifact_inferences`/
 // `register_pilot_languages`/`register_schema_specs` kept together here (not dead: `register()`
-// is reached by stdio's protected imperative `crate::artifacts::bmp::engine::register()`
+// is reached by stdio's protected imperative `crate::engine::register()`
 // plugin-root call via this standard's own inline `engine` barrel). `empty_bmp_snapshot`/
 // `demo_bmp_snapshot` moved to `../🧬️schema`.
-use crate::artifacts::bmp::schema::snapshot::{BmpPaletteEntry, BmpRowOrder};
-use crate::artifacts::bmp::{BmpMutation, BmpSnapshot, STDIO_BMP_DOCUMENT_SCHEMA};
+use crate::schema::snapshot::{BmpPaletteEntry, BmpRowOrder};
+use crate::{BmpMutation, BmpSnapshot, STDIO_BMP_DOCUMENT_SCHEMA};
 use std::collections::HashMap;
 
 //#region ByteIo
@@ -526,7 +526,7 @@ fn encode_bmp_direct(snap: &BmpSnapshot, w: u32, h: u32) -> Vec<u8> {
 /// 🗂️ Registers codecs and the artifact schema descriptor.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn register() {
-    crate::artifacts::bmp::io_registry::register();
+    crate::io_registry::register();
     register_artifact_schema();
     register_artifact_inferences();
     register_pilot_languages();
@@ -549,7 +549,7 @@ pub fn register() {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn register_schema_specs() {
     semio_framework_plugin::resolve_ready(dsl::registry::register_schema_spec("stdio.bmp", BmpSnapshot::__dsl_spec));
-    semio_framework_plugin::resolve_ready(dsl::registry::register_schema_spec("stdio.bmp#diff", crate::artifacts::bmp::schema::diff::BmpDiff::__dsl_diff_spec));
+    semio_framework_plugin::resolve_ready(dsl::registry::register_schema_spec("stdio.bmp#diff", crate::schema::diff::BmpDiff::__dsl_diff_spec));
 }
 
 #[cfg(target_arch = "wasm32")]
@@ -565,28 +565,28 @@ pub fn register_pilot_languages() {
         id: "stdio.bmp",
         extension: Some("bmp"),
         role: dsl::LanguageRole::Document,
-        grammar: Some(crate::artifacts::bmp::schema::snapshot::text::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::bmp::schema::snapshot::text::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::artifacts::bmp::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::bmp::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
+        grammar: Some(crate::schema::snapshot::text::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::schema::snapshot::text::COMPONENT_GRAMMAR_PATH),
+        protocol: Some(crate::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("stdio.bmp"),
     });
     dsl::register_language(dsl::LanguageSpec {
         id: "stdio.bmp.op",
         extension: None,
         role: dsl::LanguageRole::Ops,
-        grammar: Some(crate::artifacts::bmp::schema::mutations::text::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::bmp::schema::mutations::text::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::artifacts::bmp::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::bmp::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
+        grammar: Some(crate::schema::mutations::text::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::schema::mutations::text::COMPONENT_GRAMMAR_PATH),
+        protocol: Some(crate::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("stdio.bmp.op"),
     });
     dsl::register_language(dsl::LanguageSpec {
         id: "stdio.bmp.diff",
         extension: None,
         role: dsl::LanguageRole::Diff,
-        grammar: Some(crate::artifacts::bmp::schema::diff::text::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::bmp::schema::diff::text::COMPONENT_GRAMMAR_PATH),
+        grammar: Some(crate::schema::diff::text::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::schema::diff::text::COMPONENT_GRAMMAR_PATH),
         // 🎫️ The 5-role scheme has no dedicated "diff binary" role even when a real diff
         // protocol file exists (this ticket's own recipe §4 checklist item) — `BmpDiff`'s own
         // `.spk`-container protocol IS real (see ../🪆️subsets/✳️any/🧬️schema/🔺️diff/💾️binary/
@@ -601,8 +601,8 @@ pub fn register_pilot_languages() {
         role: dsl::LanguageRole::Pack,
         grammar: None,
         grammar_path: None,
-        protocol: Some(crate::artifacts::bmp::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::bmp::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
+        protocol: Some(crate::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("stdio.bmp.pack"),
     });
     dsl::register_language(dsl::LanguageSpec {
@@ -611,8 +611,8 @@ pub fn register_pilot_languages() {
         role: dsl::LanguageRole::Spr,
         grammar: None,
         grammar_path: None,
-        protocol: Some(crate::artifacts::bmp::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::bmp::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
+        protocol: Some(crate::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("stdio.bmp.spr"),
     });
 }
@@ -620,7 +620,7 @@ pub fn register_pilot_languages() {
 /// 📌️ Registers schema leaves for `s.stdio.bmp`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn register_artifact_schema() {
-    ::schema::register_artifact_schema_descriptor(crate::artifacts::bmp::schema::bmp_artifact_schema_descriptor());
+    ::framework_schema::register_artifact_schema_descriptor(crate::schema::bmp_artifact_schema_descriptor());
 }
 
 /// 💡️ Registers `s.stdio.bmp.inference`'s facet leaves into the OS-wide inference catalog —
@@ -628,7 +628,7 @@ pub fn register_artifact_schema() {
 /// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn register_artifact_inferences() {
-    ::schema::register_artifact_inference_descriptor(crate::artifacts::bmp::standards::v_v3::subsets::any::schema::inferences::bmp_artifact_inference_descriptor());
+    ::framework_schema::register_artifact_inference_descriptor(crate::standards::v_v3::subsets::any::schema::inferences::bmp_artifact_inference_descriptor());
 }
 //#endregion 🔖️Register
 
@@ -636,7 +636,7 @@ pub fn register_artifact_inferences() {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::bmp::schema::{demo_bmp_snapshot, empty_bmp_snapshot};
+    use crate::schema::{demo_bmp_snapshot, empty_bmp_snapshot};
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn gradient_checkerboard_rgba(w: u32, h: u32) -> Vec<u8> {
@@ -1043,7 +1043,7 @@ mod tests {
     /// module verbatim in shape.
     mod conformance_laws {
         use super::*;
-        use crate::artifacts::bmp::schema::{diff, mutations, snapshot};
+        use crate::schema::{diff, mutations, snapshot};
         use protocol::{DiffCodec, OpBinary, OpText};
 
         /// ✅️ "committed files parse": all 6 handcrafted `.grammar.semio`/`.protocol.semio`
@@ -1171,7 +1171,7 @@ mod tests {
 
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
-    use crate::artifacts::bmp::standards::v_v3::subsets::any::schema::BmpComposer as BmpRawAnyComposer;
+    use crate::standards::v_v3::subsets::any::schema::BmpComposer as BmpRawAnyComposer;
     use semio_framework_plugin::{composer_entry_of, ComposerEntry};
     use std::sync::OnceLock;
 

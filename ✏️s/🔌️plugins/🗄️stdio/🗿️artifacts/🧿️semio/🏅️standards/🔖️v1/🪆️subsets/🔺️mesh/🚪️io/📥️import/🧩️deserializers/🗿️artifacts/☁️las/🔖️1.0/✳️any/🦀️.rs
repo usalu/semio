@@ -21,9 +21,9 @@
 //!   fabricated values.
 //! - No normals/uvs/materials/textures — LAS has none of these concepts.
 
-use crate::artifacts::las::LasSnapshot;
-use crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::{SemioPoint3, SemioRgba};
-use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::{SemioMesh, SemioMeshSnapshot, SemioPrimitive, SemioTopology, STDIO_SEMIOMESH_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_las::LasSnapshot;
+use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint3, SemioRgba};
+use crate::standards::v1::subsets::mesh::schema::snapshot::{SemioMesh, SemioMeshSnapshot, SemioPrimitive, SemioTopology, STDIO_SEMIOMESH_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId};
 
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.las", standard: StandardId("1.0"), subset: SubsetId::ANY };
@@ -61,7 +61,7 @@ impl ArtifactDeserializer for SemioMeshFromLas {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::las::schema::snapshot::{LasHeader, LasPoint};
+    use semio_s_artifact_stdio_las::schema::snapshot::{LasHeader, LasPoint};
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn sample_las() -> LasSnapshot {

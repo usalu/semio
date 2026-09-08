@@ -1,7 +1,7 @@
 //! 🧬️ Transparent PDF 1.7/E conformance mutation dispatch. Every concrete payload, graph
 //! transform, inverse, codec, schema, and test is owned by its direct semantic leaf.
 
-use crate::artifacts::pdf::standards::v1_7::subsets::base::schema::{diff::PdfDiff, snapshot::PdfSnapshot};
+use crate::standards::v1_7::subsets::base::schema::{diff::PdfDiff, snapshot::PdfSnapshot};
 
 //#region 🔖️Leaves
 #[path = "🔒️insert-encryption-dictionary/🦀️.rs"]

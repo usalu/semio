@@ -2,8 +2,8 @@
 //! (called once from 🔌️plugin/🔧️setup via ⚙️engine::register), not per-leaf register().
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use crate::artifacts::txt::standards::v_utf_8::subsets::any::schema::TxtAnalyzer;
-    use crate::artifacts::txt::TxtSnapshot;
+    use crate::standards::v_utf_8::subsets::any::schema::TxtAnalyzer;
+    use crate::TxtSnapshot;
     use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.txt", standard: StandardId("utf-8"), subset: SubsetId("*") };
@@ -45,17 +45,17 @@ pub use derived_composition::*;
 //#endregion 🎹️DerivedComposition
 
 //#region 🔖️Register
-use crate::artifacts::txt::{TxtMutation, TxtSnapshot, STDIO_TXT_DOCUMENT_SCHEMA};
+use crate::{TxtMutation, TxtSnapshot, STDIO_TXT_DOCUMENT_SCHEMA};
 #[cfg(not(target_arch = "wasm32"))]
-use crate::artifacts::txt::TxtDiff;
+use crate::TxtDiff;
 
 /// 🗂️ Registers codecs and the artifact schema descriptor. One of stdio's 10 protected
-/// imperative plugin-root calls (`crate::artifacts::txt::engine::register()` in
+/// imperative plugin-root calls (`crate::engine::register()` in
 /// `🗄️stdio/🦀️.rs`) — left callable at that exact path via a pure re-export
 /// (`standards::v_utf_8::engine::register`), body unchanged.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn register() {
-    crate::artifacts::txt::io_registry::register();
+    crate::io_registry::register();
     register_artifact_schema();
     register_artifact_inferences();
     register_pilot_languages();
@@ -92,30 +92,30 @@ pub fn register_pilot_languages() {
         id: "stdio.txt",
         extension: Some("txt"),
         role: dsl::LanguageRole::Document,
-        grammar: Some(crate::artifacts::txt::schema::snapshot::text::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::txt::schema::snapshot::text::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::artifacts::txt::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::txt::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
+        grammar: Some(crate::schema::snapshot::text::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::schema::snapshot::text::COMPONENT_GRAMMAR_PATH),
+        protocol: Some(crate::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("stdio.txt"),
     });
     dsl::register_language(dsl::LanguageSpec {
         id: "stdio.txt.op",
         extension: None,
         role: dsl::LanguageRole::Ops,
-        grammar: Some(crate::artifacts::txt::schema::mutations::text::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::txt::schema::mutations::text::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::artifacts::txt::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::txt::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
+        grammar: Some(crate::schema::mutations::text::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::schema::mutations::text::COMPONENT_GRAMMAR_PATH),
+        protocol: Some(crate::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("stdio.txt.op"),
     });
     dsl::register_language(dsl::LanguageSpec {
         id: "stdio.txt.diff",
         extension: None,
         role: dsl::LanguageRole::Diff,
-        grammar: Some(crate::artifacts::txt::schema::diff::text::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::txt::schema::diff::text::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::artifacts::txt::schema::diff::binary::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::txt::schema::diff::binary::COMPONENT_PROTOCOL_PATH),
+        grammar: Some(crate::schema::diff::text::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::schema::diff::text::COMPONENT_GRAMMAR_PATH),
+        protocol: Some(crate::schema::diff::binary::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::schema::diff::binary::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("stdio.txt.diff"),
     });
     dsl::register_language(dsl::LanguageSpec {
@@ -124,8 +124,8 @@ pub fn register_pilot_languages() {
         role: dsl::LanguageRole::Pack,
         grammar: None,
         grammar_path: None,
-        protocol: Some(crate::artifacts::txt::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::txt::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
+        protocol: Some(crate::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("stdio.txt.pack"),
     });
     dsl::register_language(dsl::LanguageSpec {
@@ -134,8 +134,8 @@ pub fn register_pilot_languages() {
         role: dsl::LanguageRole::Spr,
         grammar: None,
         grammar_path: None,
-        protocol: Some(crate::artifacts::txt::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::txt::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
+        protocol: Some(crate::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("stdio.txt.spr"),
     });
 }
@@ -143,7 +143,7 @@ pub fn register_pilot_languages() {
 /// 📌️ Registers schema leaves for `s.stdio.txt`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn register_artifact_schema() {
-    ::schema::register_artifact_schema_descriptor(crate::artifacts::txt::schema::txt_artifact_schema_descriptor());
+    ::framework_schema::register_artifact_schema_descriptor(crate::schema::txt_artifact_schema_descriptor());
 }
 
 /// 💡️ Registers `s.stdio.txt.inference`'s facet leaves into the OS-wide inference catalog —
@@ -151,13 +151,13 @@ pub fn register_artifact_schema() {
 /// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn register_artifact_inferences() {
-    ::schema::register_artifact_inference_descriptor(crate::artifacts::txt::standards::v_utf_8::subsets::any::schema::inferences::txt_artifact_inference_descriptor());
+    ::framework_schema::register_artifact_inference_descriptor(crate::standards::v_utf_8::subsets::any::schema::inferences::txt_artifact_inference_descriptor());
 }
 //#endregion 🔖️Register
 
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
-    use crate::artifacts::txt::standards::v_utf_8::subsets::any::schema::TxtComposer as TxtRawAnyComposer;
+    use crate::standards::v_utf_8::subsets::any::schema::TxtComposer as TxtRawAnyComposer;
     use semio_framework_plugin::{composer_entry_of, ComposerEntry};
     use std::sync::OnceLock;
 
@@ -202,7 +202,7 @@ mod carrier_law {
     //! — decode→encode must reproduce arbitrary text exactly, and the encoded payload must NOT
     //! carry the old `semio stdio.txt.dsl v1` preamble line (`ArtifactDsl::print_dsl` emitted
     //! before this fix — see `📸️snapshot/🦀️.rs`).
-    use crate::artifacts::txt::TxtSnapshot;
+    use crate::TxtSnapshot;
     use store::ArtifactDsl;
 
     #[semio_framework_async_macros::async_test]

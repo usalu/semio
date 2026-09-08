@@ -1,16 +1,188 @@
 {
-  "$id": "https://semio.tech/schema/s.stdio.semio.kit/mutations.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/kit/mutations.json",
   "title": "SemioKitMutation",
-  "description": "Fifteen-variant mutation dispatch across two owned-child collections, one optional owned-child slot, one link collection, and two id-keyed value collections.",
-  "type": "object",
-  "properties": {
-    "mutation": {
-      "enum": [
-        "createObject", "deleteObject", "createModel", "deleteModel", "createProperties", "deleteProperties",
-        "bindRepresentation", "unbindRepresentation", "changeRepresentationPin",
-        "addType", "removeType", "renameType", "addDesign", "removeDesign", "editDesign"
-      ]
+  "description": "Discriminated union over this module's mutation leaves (externally tagged); every payload is the leaf's own schema, referenced, never restated.",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "AddDesign"
+      ],
+      "properties": {
+        "AddDesign": {
+          "$ref": "./🆕add-design/🧬️schema/🔣️.json"
+        }
+      }
     },
-    "payload": { "type": "object" }
-  }
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "AddType"
+      ],
+      "properties": {
+        "AddType": {
+          "$ref": "./➕add-type/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "BindRepresentation"
+      ],
+      "properties": {
+        "BindRepresentation": {
+          "$ref": "./🪢️bind-representation/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeRepresentationPin"
+      ],
+      "properties": {
+        "ChangeRepresentationPin": {
+          "$ref": "./📌change-representation-pin/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "CreateModel"
+      ],
+      "properties": {
+        "CreateModel": {
+          "$ref": "./🏛️create-model/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "CreateObject"
+      ],
+      "properties": {
+        "CreateObject": {
+          "$ref": "./🏗️create-object/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "CreateProperties"
+      ],
+      "properties": {
+        "CreateProperties": {
+          "$ref": "./🏷️create-properties/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "DeleteModel"
+      ],
+      "properties": {
+        "DeleteModel": {
+          "$ref": "./💣delete-model/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "DeleteObject"
+      ],
+      "properties": {
+        "DeleteObject": {
+          "$ref": "./🪓delete-object/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "DeleteProperties"
+      ],
+      "properties": {
+        "DeleteProperties": {
+          "$ref": "./🚫delete-properties/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "EditDesign"
+      ],
+      "properties": {
+        "EditDesign": {
+          "$ref": "./🖊️edit-design/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "RemoveDesign"
+      ],
+      "properties": {
+        "RemoveDesign": {
+          "$ref": "./🗑️remove-design/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "RemoveType"
+      ],
+      "properties": {
+        "RemoveType": {
+          "$ref": "./➖remove-type/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "RenameType"
+      ],
+      "properties": {
+        "RenameType": {
+          "$ref": "./✏️rename-type/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "UnbindRepresentation"
+      ],
+      "properties": {
+        "UnbindRepresentation": {
+          "$ref": "./✂️unbind-representation/🧬️schema/🔣️.json"
+        }
+      }
+    }
+  ]
 }

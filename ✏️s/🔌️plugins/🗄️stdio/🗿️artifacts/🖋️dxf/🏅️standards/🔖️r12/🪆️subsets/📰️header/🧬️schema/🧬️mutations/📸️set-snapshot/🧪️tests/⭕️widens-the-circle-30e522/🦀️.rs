@@ -10,9 +10,9 @@
 //! carrying a `DxfEntityDiff::Circle` with `radius` as its ONLY set field, never the `Replace`
 //! fallback that a kind change would produce.
 
-use crate::artifacts::dxf::schema::diff::{DxfDiff, DxfEntityDiff};
-use crate::artifacts::dxf::schema::mutations::{apply_dxf_mutation, DxfMutation};
-use crate::artifacts::dxf::schema::snapshot::{DxfEntity, DxfSnapshot};
+use crate::schema::diff::{DxfDiff, DxfEntityDiff};
+use crate::schema::mutations::{apply_dxf_mutation, DxfMutation};
+use crate::schema::snapshot::{DxfEntity, DxfSnapshot};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");

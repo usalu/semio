@@ -8,6 +8,7 @@
       "catalog": {
         "loading": "Loading the available artifact kinds…",
         "ready": "The available artifact kinds are current.",
+        "empty": "No artifact kinds are available for this space.",
         "unavailable": "Artifact kinds are unavailable. Reopen the space before creating an artifact."
       },
       "phases": {
@@ -26,6 +27,7 @@
       "catalog": {
         "loading": "Verfügbare Artefaktarten werden geladen…",
         "ready": "Die verfügbaren Artefaktarten sind aktuell.",
+        "empty": "Für diesen Space sind keine Artefaktarten verfügbar.",
         "unavailable": "Artefaktarten sind nicht verfügbar. Öffne den Space erneut, bevor du ein Artefakt erstellst."
       },
       "phases": {
@@ -48,9 +50,11 @@
     { "id": "cancelled-en", "locale": "en", "phase": "cancelled", "cancelRequested": true, "role": "alert", "live": "assertive", "cancellable": false, "opens": false }
   ],
   "catalogCases": [
-    { "id": "catalog-loading-en", "locale": "en", "phase": "loading", "role": "status", "live": "polite" },
-    { "id": "catalog-ready-de", "locale": "de", "phase": "ready", "role": "status", "live": "polite" },
-    { "id": "catalog-unavailable-en", "locale": "en", "phase": "unavailable", "role": "alert", "live": "assertive" }
+    { "id": "catalog-loading-en", "locale": "en", "phase": "loading", "role": "status", "live": "polite", "hasChoices": false },
+    { "id": "catalog-ready-de", "locale": "de", "phase": "ready", "role": "status", "live": "polite", "hasChoices": true },
+    { "id": "catalog-unavailable-en", "locale": "en", "phase": "unavailable", "role": "alert", "live": "assertive", "hasChoices": false },
+    { "id": "catalog-empty-en", "locale": "en", "phase": "ready", "role": "status", "live": "polite", "hasChoices": false },
+    { "id": "catalog-empty-de", "locale": "de", "phase": "ready", "role": "status", "live": "polite", "hasChoices": false }
   ],
   "unsupportedLocales": ["fr", "it-IT", "und"]
 }

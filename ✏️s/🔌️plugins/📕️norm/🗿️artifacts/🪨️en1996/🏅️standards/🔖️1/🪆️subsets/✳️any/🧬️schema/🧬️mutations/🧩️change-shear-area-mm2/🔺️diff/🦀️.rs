@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeShearAreaMm2, base: &En1996Snapshot) -> protocol::Mu
     if base.shear_area_mm2 == payload.new_shear_area_mm2 {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "Shear area mm2 already has this value.");
     }
-    protocol::MutationOutcome::new(En1996Diff { shear_area_mm2: Some(payload.new_shear_area_mm2.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1996Diff { shear_area_mm2: Some(payload.new_shear_area_mm2), ..Default::default() })
 }
 //#endregion 🔖️Diff

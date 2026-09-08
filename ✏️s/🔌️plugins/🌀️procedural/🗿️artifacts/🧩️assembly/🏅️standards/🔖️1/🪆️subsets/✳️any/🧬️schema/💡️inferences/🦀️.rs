@@ -801,8 +801,8 @@ mod tests {
     use semio_framework_job::{allocate_operation_id, root_cancel_token, CommitValidation, Generation, InteractiveJob, Operation, RevisionId, StepBudget, StepContext, StepOutcome};
     use semio_framework_plugin::app::{WireArtifactInferenceBudget, WireArtifactInferenceCacheMode, WireArtifactInferenceRequest, WireArtifactInferenceResult, ARTIFACT_INFERENCE_WIRE_VERSION};
     use semio_framework_plugin::reactor::jobs::{cancel_job, checkpoint_jobs, restore_job, start_job, step_job as step_reactor_job, JobBudget, JobStep, JOB_KIND_INFER};
-    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
-    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValue;
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::value::schema::snapshot::SemioValue;
     
 
     fn kit_child(id: &str) -> store::ArtifactChild<SemioKitSnapshot> {

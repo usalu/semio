@@ -14,9 +14,9 @@
 //!   is reused verbatim as the emitted URL (round-trips through THIS pair's own deserializer,
 //!   which reads `MdInline::Image::url` back into `image_id`) so no data is silently invented.
 
-use crate::artifacts::md::schema::snapshot::{MdBlock, MdInline};
-use crate::artifacts::md::MdSnapshot;
-use crate::artifacts::semio::standards::v1::subsets::document::schema::snapshot::{DocBlock, DocRun, SemioDocumentSnapshot};
+use semio_s_artifact_stdio_md::schema::snapshot::{MdBlock, MdInline};
+use semio_s_artifact_stdio_md::MdSnapshot;
+use crate::standards::v1::subsets::document::schema::snapshot::{DocBlock, DocRun, SemioDocumentSnapshot};
 use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
 
 //#region 🔖️FieldMapping
@@ -71,7 +71,7 @@ impl ArtifactSerializer for SemioDocumentToMd {
     const INTO: Dialect = Dialect { artifact_kind: "s.stdio.md", standard: StandardId("commonmark"), subset: SubsetId::ANY };
 
     async fn serialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
-        Ok(MdSnapshot { schema: crate::artifacts::md::STDIO_MD_DOCUMENT_SCHEMA.into(), blocks: from.blocks.iter().flat_map(map_semio_block).collect() })
+        Ok(MdSnapshot { schema: semio_s_artifact_stdio_md::STDIO_MD_DOCUMENT_SCHEMA.into(), blocks: from.blocks.iter().flat_map(map_semio_block).collect() })
     }
 }
 //#endregion 🔖️Serializer
@@ -80,7 +80,7 @@ impl ArtifactSerializer for SemioDocumentToMd {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::semio::standards::v1::subsets::document::schema::snapshot::{DocListItem, DocTableCell, DocTableRow, RunStyle, STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA};
+    use crate::standards::v1::subsets::document::schema::snapshot::{DocListItem, DocTableCell, DocTableRow, RunStyle, STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA};
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn sample_semio() -> SemioDocumentSnapshot {

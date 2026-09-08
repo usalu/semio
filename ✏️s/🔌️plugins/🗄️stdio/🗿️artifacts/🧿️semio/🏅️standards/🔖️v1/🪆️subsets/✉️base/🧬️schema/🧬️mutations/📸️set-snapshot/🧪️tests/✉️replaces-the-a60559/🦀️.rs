@@ -11,9 +11,9 @@
 //! "this artifact used to be a value, now it is a flow" exists. This fixture pins exactly that —
 //! the committed diff is a whole `replace`, and asserting a per-field delta here would be wrong.
 
-use crate::artifacts::semio::standards::v1::subsets::base::schema::diff::SemioDiff;
-use crate::artifacts::semio::standards::v1::subsets::base::schema::mutations::{apply_semio_mutation, SemioMutation};
-use crate::artifacts::semio::standards::v1::subsets::base::schema::snapshot::{SemioSnapshot, SemioSubsetSnapshot};
+use crate::standards::v1::subsets::base::schema::diff::SemioDiff;
+use crate::standards::v1::subsets::base::schema::mutations::{apply_semio_mutation, SemioMutation};
+use crate::standards::v1::subsets::base::schema::snapshot::{SemioSnapshot, SemioSubsetSnapshot};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");

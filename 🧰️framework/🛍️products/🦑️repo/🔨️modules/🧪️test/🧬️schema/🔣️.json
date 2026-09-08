@@ -1,5 +1,5 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://semio-tech.com/schema/repo/test/v2",
   "title": "Semio Repository Test Protocol v2",
   "description": "🧬️ Schema-first contract shared by the test coordinator, every native host and every external probe. v2 makes the unit of coverage `artifact × standard × smallest owning subset × runtime mutation × expected outcome class × fixture × subject implementation × platform`, replaces the single-projection result with a multi-artifact bundle, and requires a QUALIFYING third-party oracle for every mutation. Ticket 26/08/27/SUBSET-SCOPED-EXTERNAL-ORACLE-MUTATION-TESTING, baseline a8d1caf41f68204e73ff5e47ce40c5f543ed442d.",
@@ -22,16 +22,36 @@
       "pattern": "^sha256:[0-9a-f]{64}$"
     },
     "TestLevel": {
-      "enum": ["fundamental", "quick", "long", "exhaustive"]
+      "enum": [
+        "fundamental",
+        "quick",
+        "long",
+        "exhaustive"
+      ]
     },
     "TestMode": {
-      "enum": ["differential", "conformance", "round-trip", "property", "error"]
+      "enum": [
+        "differential",
+        "conformance",
+        "round-trip",
+        "property",
+        "error"
+      ]
     },
     "TestRole": {
-      "enum": ["oracle", "subject"]
+      "enum": [
+        "oracle",
+        "subject"
+      ]
     },
     "Implementation": {
-      "enum": ["rust", "typescript", "go", "python", "dotnet"]
+      "enum": [
+        "rust",
+        "typescript",
+        "go",
+        "python",
+        "dotnet"
+      ]
     },
     "Platform": {
       "type": "string",
@@ -47,13 +67,23 @@
     },
     "MutationOutcomeClass": {
       "description": "🎯️ The semantic class a fixture DECLARES for its mutation. A fixture that accepts any non-crash result measures nothing, so every fixture names exactly one of these.",
-      "enum": ["applied", "no-op", "empty", "disjoint", "rejected"]
+      "enum": [
+        "applied",
+        "no-op",
+        "empty",
+        "disjoint",
+        "rejected"
+      ]
     },
     "EngineFamily": {
       "type": "object",
       "additionalProperties": false,
       "description": "⚙️ The exact-geometry or format kernel a reference actually sits on. Independence is accounted at the FAMILY level: two wrappers around one kernel are one oracle, not two.",
-      "required": ["family", "implementation", "version"],
+      "required": [
+        "family",
+        "implementation",
+        "version"
+      ],
       "properties": {
         "family": {
           "$ref": "#/$defs/Slug",
@@ -71,116 +101,301 @@
     },
     "QualifyingOracleKind": {
       "description": "✅️ The only kinds that can DISCHARGE a mutation's external-oracle requirement. `verified-native-second-implementation` is the one exception to \"a second implementation never discharges\", it exists ONLY for a format no third party can even in principle implement, and `nativeSecondImplementationBreaches` makes the claim EARNED rather than asserted — evidence object, native format, full capability coverage, a recorded no-third-party survey, a different implementation language, a specification source and at least one fixture vector.",
-      "enum": ["third-party-library", "third-party-cli", "standards-reference-tool", "verified-native-second-implementation"]
+      "enum": [
+        "third-party-library",
+        "third-party-cli",
+        "standards-reference-tool",
+        "verified-native-second-implementation"
+      ]
     },
     "SupplementalOracleKind": {
       "description": "➕️ Required supplements that can never substitute for a qualifying oracle. `cross-semio-implementation` names a second implementation written inside this repository — useful, and explicitly NOT independent evidence.",
-      "enum": ["metamorphic", "inverse", "round-trip", "property", "cross-semio-implementation"]
+      "enum": [
+        "metamorphic",
+        "inverse",
+        "round-trip",
+        "property",
+        "cross-semio-implementation"
+      ]
     },
     "OracleKind": {
       "anyOf": [
-        { "$ref": "#/$defs/QualifyingOracleKind" },
-        { "$ref": "#/$defs/SupplementalOracleKind" }
+        {
+          "$ref": "#/$defs/QualifyingOracleKind"
+        },
+        {
+          "$ref": "#/$defs/SupplementalOracleKind"
+        }
       ]
     },
     "OracleLinkedPackage": {
       "type": "object",
       "additionalProperties": false,
       "description": "🧩️ One FURTHER third-party package a composed reference links beyond its primary one, pinned and licensed in its own right.",
-      "required": ["package", "version", "license", "role"],
+      "required": [
+        "package",
+        "version",
+        "license",
+        "role"
+      ],
       "properties": {
-        "package": { "type": "string", "minLength": 1 },
-        "version": { "type": "string", "minLength": 1 },
-        "license": { "type": "string", "minLength": 1 },
-        "lockDigest": { "$ref": "#/$defs/Sha256" },
-        "homepage": { "type": "string" },
-        "role": { "type": "string", "minLength": 1 }
+        "package": {
+          "type": "string",
+          "minLength": 1
+        },
+        "version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "license": {
+          "type": "string",
+          "minLength": 1
+        },
+        "lockDigest": {
+          "$ref": "#/$defs/Sha256"
+        },
+        "homepage": {
+          "type": "string"
+        },
+        "role": {
+          "type": "string",
+          "minLength": 1
+        }
       }
     },
     "ProductionDebt": {
       "type": "object",
       "additionalProperties": false,
       "description": "🔒️ Pre-existing production reachability of a test-only package, recorded rather than hidden. Shrink-only: a path may leave this list, never join it.",
-      "required": ["reachableFrom", "owner", "plan"],
+      "required": [
+        "reachableFrom",
+        "owner",
+        "plan"
+      ],
       "properties": {
-        "reachableFrom": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
-        "owner": { "type": "string" },
-        "plan": { "type": "string" }
+        "reachableFrom": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1
+        },
+        "owner": {
+          "type": "string"
+        },
+        "plan": {
+          "type": "string"
+        }
       }
     },
     "OracleRegistryEntry": {
       "type": "object",
       "additionalProperties": false,
       "description": "📇️ One registered reference. `kind` decides whether it can discharge an external-oracle requirement at all; `engine` decides whether it is INDEPENDENT of the subject and of other oracles.",
-      "required": ["id", "kind", "ecosystem", "package", "capabilities", "comparisonProfiles", "license", "testOnly", "engine", "productionReachable", "networkDuringExecution"],
+      "required": [
+        "id",
+        "kind",
+        "ecosystem",
+        "package",
+        "capabilities",
+        "comparisonProfiles",
+        "license",
+        "testOnly",
+        "engine",
+        "productionReachable",
+        "networkDuringExecution"
+      ],
       "properties": {
-        "id": { "$ref": "#/$defs/Slug" },
-        "kind": { "$ref": "#/$defs/OracleKind" },
-        "ecosystem": { "enum": ["rust", "javascript", "go", "python", "dotnet", "native"] },
-        "package": { "type": "string" },
-        "packages": { "type": "array", "items": { "$ref": "#/$defs/OracleLinkedPackage" } },
-        "version": { "type": "string" },
-        "lockDigest": { "$ref": "#/$defs/Sha256" },
+        "id": {
+          "$ref": "#/$defs/Slug"
+        },
+        "kind": {
+          "$ref": "#/$defs/OracleKind"
+        },
+        "ecosystem": {
+          "enum": [
+            "rust",
+            "javascript",
+            "go",
+            "python",
+            "dotnet",
+            "native"
+          ]
+        },
+        "package": {
+          "type": "string"
+        },
+        "packages": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/OracleLinkedPackage"
+          }
+        },
+        "version": {
+          "type": "string"
+        },
+        "lockDigest": {
+          "$ref": "#/$defs/Sha256"
+        },
         "source": {
           "type": "object",
           "additionalProperties": false,
           "properties": {
-            "repository": { "type": "string" },
-            "commit": { "type": "string" },
-            "license": { "type": "string" }
+            "repository": {
+              "type": "string"
+            },
+            "commit": {
+              "type": "string"
+            },
+            "license": {
+              "type": "string"
+            }
           }
         },
-        "engine": { "$ref": "#/$defs/EngineFamily" },
-        "capabilities": { "type": "array", "items": { "$ref": "#/$defs/DottedId" }, "minItems": 1 },
-        "comparisonProfiles": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
-        "license": { "type": "string", "minLength": 1 },
-        "testOnly": { "const": true },
-        "productionReachable": { "type": "boolean" },
-        "networkDuringExecution": { "type": "boolean" },
-        "platforms": { "type": "array", "items": { "$ref": "#/$defs/Platform" } },
-        "homepage": { "type": "string" },
-        "rationale": { "type": "string" },
-        "hostPath": { "type": "string" },
-        "productionDebt": { "$ref": "#/$defs/ProductionDebt" },
-        "nativeSecondImplementation": { "$ref": "#/$defs/NativeSecondImplementationEvidence" }
+        "engine": {
+          "$ref": "#/$defs/EngineFamily"
+        },
+        "capabilities": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/DottedId"
+          },
+          "minItems": 1
+        },
+        "comparisonProfiles": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1
+        },
+        "license": {
+          "type": "string",
+          "minLength": 1
+        },
+        "testOnly": {
+          "const": true
+        },
+        "productionReachable": {
+          "type": "boolean"
+        },
+        "networkDuringExecution": {
+          "type": "boolean"
+        },
+        "platforms": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Platform"
+          }
+        },
+        "homepage": {
+          "type": "string"
+        },
+        "rationale": {
+          "type": "string"
+        },
+        "hostPath": {
+          "type": "string"
+        },
+        "productionDebt": {
+          "$ref": "#/$defs/ProductionDebt"
+        },
+        "nativeSecondImplementation": {
+          "$ref": "#/$defs/NativeSecondImplementationEvidence"
+        }
       }
     },
     "NativeSecondImplementationEvidence": {
       "type": "object",
       "additionalProperties": false,
       "description": "🌱️ What makes a `verified-native-second-implementation` claim EARNED rather than asserted. Required by `nativeSecondImplementationBreaches` whenever an entry carries that kind, and forbidden otherwise.",
-      "required": ["format", "noThirdPartySurvey", "subjectImplementationLanguage", "secondImplementationLanguage", "specificationSource", "fixtureCoverage"],
+      "required": [
+        "format",
+        "noThirdPartySurvey",
+        "subjectImplementationLanguage",
+        "secondImplementationLanguage",
+        "specificationSource",
+        "fixtureCoverage"
+      ],
       "properties": {
-        "format": { "type": "string", "minLength": 1, "description": "🎯️ The `mutationManifests[].artifact` id this claims native status for — cross-checked against a real manifest this same contribution owns." },
+        "format": {
+          "type": "string",
+          "minLength": 1,
+          "description": "🎯️ The `mutationManifests[].artifact` id this claims native status for — cross-checked against a real manifest this same contribution owns."
+        },
         "noThirdPartySurvey": {
           "type": "object",
           "additionalProperties": false,
           "description": "🔍️ The recorded negative search: what was checked, and why each candidate considered was declined.",
-          "required": ["ecosystemsSearched", "candidatesConsidered"],
+          "required": [
+            "ecosystemsSearched",
+            "candidatesConsidered"
+          ],
           "properties": {
-            "ecosystemsSearched": { "type": "array", "items": { "type": "string", "minLength": 1 }, "minItems": 1 },
+            "ecosystemsSearched": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "minItems": 1
+            },
             "candidatesConsidered": {
               "type": "array",
               "minItems": 1,
               "items": {
                 "type": "object",
                 "additionalProperties": false,
-                "required": ["package", "reason"],
-                "properties": { "package": { "type": "string", "minLength": 1 }, "reason": { "type": "string", "minLength": 10 } }
+                "required": [
+                  "package",
+                  "reason"
+                ],
+                "properties": {
+                  "package": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "reason": {
+                    "type": "string",
+                    "minLength": 10
+                  }
+                }
               }
             }
           }
         },
-        "subjectImplementationLanguage": { "type": "string", "minLength": 1 },
-        "secondImplementationLanguage": { "type": "string", "minLength": 1 },
-        "specificationSource": { "type": "string", "minLength": 1, "description": "📖️ The written specification this was authored FROM — never the subject's own source." },
+        "subjectImplementationLanguage": {
+          "type": "string",
+          "minLength": 1
+        },
+        "secondImplementationLanguage": {
+          "type": "string",
+          "minLength": 1
+        },
+        "specificationSource": {
+          "type": "string",
+          "minLength": 1,
+          "description": "📖️ The written specification this was authored FROM — never the subject's own source."
+        },
         "fixtureCoverage": {
           "type": "object",
           "additionalProperties": false,
-          "required": ["vectors", "capabilitiesCovered"],
+          "required": [
+            "vectors",
+            "capabilitiesCovered"
+          ],
           "properties": {
-            "vectors": { "type": "integer", "minimum": 1 },
-            "capabilitiesCovered": { "type": "array", "items": { "$ref": "#/$defs/DottedId" }, "minItems": 1 }
+            "vectors": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "capabilitiesCovered": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/DottedId"
+              },
+              "minItems": 1
+            }
           }
         }
       }
@@ -189,48 +404,144 @@
       "type": "object",
       "additionalProperties": false,
       "description": "🔬️ One EXTERNAL measurement tool the comparison pipeline invokes. A probe computes; the framework only evaluates the typed JSON it emits. No geometry, no format parsing and no metric arithmetic may live in the orchestrator.",
-      "required": ["id", "kind", "ecosystem", "package", "capabilities", "outputSchema", "deterministic", "license", "testOnly", "engine", "productionReachable"],
+      "required": [
+        "id",
+        "kind",
+        "ecosystem",
+        "package",
+        "capabilities",
+        "outputSchema",
+        "deterministic",
+        "license",
+        "testOnly",
+        "engine",
+        "productionReachable"
+      ],
       "properties": {
-        "id": { "$ref": "#/$defs/Slug" },
-        "kind": { "enum": ["external-process", "external-library"] },
-        "ecosystem": { "enum": ["rust", "javascript", "go", "python", "dotnet", "native"] },
-        "package": { "type": "string", "minLength": 1 },
-        "version": { "type": "string" },
-        "lockDigest": { "$ref": "#/$defs/Sha256" },
-        "engine": { "$ref": "#/$defs/EngineFamily" },
-        "capabilities": { "type": "array", "items": { "$ref": "#/$defs/DottedId" }, "minItems": 1 },
-        "outputSchema": { "type": "string", "minLength": 1 },
-        "deterministic": { "type": "boolean" },
-        "seedRequired": { "type": "boolean" },
-        "platforms": { "type": "array", "items": { "$ref": "#/$defs/Platform" } },
-        "license": { "type": "string", "minLength": 1 },
-        "testOnly": { "const": true },
-        "productionReachable": { "type": "boolean" },
-        "networkDuringExecution": { "type": "boolean" },
-        "command": { "type": "array", "items": { "type": "string" } },
-        "rationale": { "type": "string" },
-        "qualification": { "$ref": "#/$defs/ProbeQualification" }
+        "id": {
+          "$ref": "#/$defs/Slug"
+        },
+        "kind": {
+          "enum": [
+            "external-process",
+            "external-library"
+          ]
+        },
+        "ecosystem": {
+          "enum": [
+            "rust",
+            "javascript",
+            "go",
+            "python",
+            "dotnet",
+            "native"
+          ]
+        },
+        "package": {
+          "type": "string",
+          "minLength": 1
+        },
+        "version": {
+          "type": "string"
+        },
+        "lockDigest": {
+          "$ref": "#/$defs/Sha256"
+        },
+        "engine": {
+          "$ref": "#/$defs/EngineFamily"
+        },
+        "capabilities": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/DottedId"
+          },
+          "minItems": 1
+        },
+        "outputSchema": {
+          "type": "string",
+          "minLength": 1
+        },
+        "deterministic": {
+          "type": "boolean"
+        },
+        "seedRequired": {
+          "type": "boolean"
+        },
+        "platforms": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Platform"
+          }
+        },
+        "license": {
+          "type": "string",
+          "minLength": 1
+        },
+        "testOnly": {
+          "const": true
+        },
+        "productionReachable": {
+          "type": "boolean"
+        },
+        "networkDuringExecution": {
+          "type": "boolean"
+        },
+        "command": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "rationale": {
+          "type": "string"
+        },
+        "qualification": {
+          "$ref": "#/$defs/ProbeQualification"
+        }
       }
     },
     "ProbeQualification": {
       "type": "object",
       "additionalProperties": false,
       "description": "🎓️ The recorded outcome of a qualification spike. A probe whose `status` is not `qualified` may be RUN, but no gate may claim its strongest guarantee — the canonical-STEP gate is the motivating case.",
-      "required": ["status", "evidence"],
+      "required": [
+        "status",
+        "evidence"
+      ],
       "properties": {
-        "status": { "enum": ["qualified", "provisional", "rejected"] },
-        "evidence": { "type": "string", "minLength": 1 },
-        "checkedAt": { "type": "string" },
+        "status": {
+          "enum": [
+            "qualified",
+            "provisional",
+            "rejected"
+          ]
+        },
+        "evidence": {
+          "type": "string",
+          "minLength": 1
+        },
+        "checkedAt": {
+          "type": "string"
+        },
         "criteria": {
           "type": "array",
           "items": {
             "type": "object",
             "additionalProperties": false,
-            "required": ["id", "met"],
+            "required": [
+              "id",
+              "met"
+            ],
             "properties": {
-              "id": { "$ref": "#/$defs/Slug" },
-              "met": { "type": "boolean" },
-              "detail": { "type": "string" }
+              "id": {
+                "$ref": "#/$defs/Slug"
+              },
+              "met": {
+                "type": "boolean"
+              },
+              "detail": {
+                "type": "string"
+              }
             }
           }
         }
@@ -240,24 +551,55 @@
       "type": "object",
       "additionalProperties": false,
       "description": "🪆️ The SMALLEST semantic subset a mutation owns, plus the selector addressing the entity inside it. Wildcard and artifact-wide targets are unrepresentable here on purpose.",
-      "required": ["artifact", "standard", "subset"],
+      "required": [
+        "artifact",
+        "standard",
+        "subset"
+      ],
       "properties": {
-        "artifact": { "$ref": "#/$defs/DottedId" },
-        "standard": { "type": "string", "minLength": 1 },
-        "subset": { "$ref": "#/$defs/Slug" },
+        "artifact": {
+          "$ref": "#/$defs/DottedId"
+        },
+        "standard": {
+          "type": "string",
+          "minLength": 1
+        },
+        "subset": {
+          "$ref": "#/$defs/Slug"
+        },
         "compound": {
           "type": "array",
-          "items": { "$ref": "#/$defs/Slug" },
+          "items": {
+            "$ref": "#/$defs/Slug"
+          },
           "minItems": 2,
           "description": "🧩️ For a cross-subset operation: the explicit typed compound. Declaring the compound is the ONLY way to span subsets — falling back to the whole artifact is a contract failure."
         },
         "selector": {
           "type": "object",
           "additionalProperties": false,
-          "required": ["type", "value"],
+          "required": [
+            "type",
+            "value"
+          ],
           "properties": {
-            "type": { "enum": ["entity-id", "entity-path", "entity-set", "whole-subset"] },
-            "value": { "type": ["string", "array"], "items": { "type": "string" } }
+            "type": {
+              "enum": [
+                "entity-id",
+                "entity-path",
+                "entity-set",
+                "whole-subset"
+              ]
+            },
+            "value": {
+              "type": [
+                "string",
+                "array"
+              ],
+              "items": {
+                "type": "string"
+              }
+            }
           }
         }
       }
@@ -266,10 +608,17 @@
       "type": "object",
       "additionalProperties": false,
       "description": "🎯️ What a mutation needs from an external reference before it may be registered or released.",
-      "required": ["capability", "qualifyingKind"],
+      "required": [
+        "capability",
+        "qualifyingKind"
+      ],
       "properties": {
-        "capability": { "$ref": "#/$defs/DottedId" },
-        "qualifyingKind": { "$ref": "#/$defs/QualifyingOracleKind" },
+        "capability": {
+          "$ref": "#/$defs/DottedId"
+        },
+        "qualifyingKind": {
+          "$ref": "#/$defs/QualifyingOracleKind"
+        },
         "distinctEngineFamilies": {
           "type": "integer",
           "minimum": 1,
@@ -281,36 +630,93 @@
       "type": "object",
       "additionalProperties": false,
       "description": "🦠️ One mutation as the DOMAIN owner declares it. This record is the single source that feeds both production registration metadata and the repository test catalog; there must never be two handwritten lists to reconcile.",
-      "required": ["id", "capability", "outcomes", "productionDispatch", "oracleRequirements"],
+      "required": [
+        "id",
+        "capability",
+        "outcomes",
+        "productionDispatch",
+        "oracleRequirements"
+      ],
       "properties": {
-        "id": { "$ref": "#/$defs/Slug" },
-        "capability": { "$ref": "#/$defs/DottedId" },
+        "id": {
+          "$ref": "#/$defs/Slug"
+        },
+        "capability": {
+          "$ref": "#/$defs/DottedId"
+        },
         "subset": {
           "$ref": "#/$defs/Slug",
           "description": "🪆️ Overrides the manifest's own subset when this mutation is owned by a NARROWER one. Absent means the manifest subset owns it."
         },
-        "compound": { "type": "array", "items": { "$ref": "#/$defs/Slug" }, "minItems": 2 },
-        "selectorSchema": { "type": "string" },
-        "payloadSchema": { "type": "string" },
-        "resultSchema": { "type": "string" },
-        "outcomes": { "type": "array", "items": { "$ref": "#/$defs/MutationOutcomeClass" }, "minItems": 1, "uniqueItems": true },
+        "compound": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Slug"
+          },
+          "minItems": 2
+        },
+        "selectorSchema": {
+          "type": "string"
+        },
+        "payloadSchema": {
+          "type": "string"
+        },
+        "resultSchema": {
+          "type": "string"
+        },
+        "outcomes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/MutationOutcomeClass"
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
         "productionDispatch": {
           "type": "object",
           "additionalProperties": false,
-          "required": ["operation", "bridgeVersion"],
+          "required": [
+            "operation",
+            "bridgeVersion"
+          ],
           "properties": {
-            "operation": { "type": "string", "minLength": 1 },
-            "bridgeVersion": { "type": "integer", "minimum": 1 },
-            "variant": { "type": "string", "description": "🦀️ The dispatch enum variant this row corresponds to, so runtime↔manifest equality is name-checked rather than order-checked." }
+            "operation": {
+              "type": "string",
+              "minLength": 1
+            },
+            "bridgeVersion": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "variant": {
+              "type": "string",
+              "description": "🦀️ The dispatch enum variant this row corresponds to, so runtime↔manifest equality is name-checked rather than order-checked."
+            }
           }
         },
-        "oracleRequirements": { "type": "array", "items": { "$ref": "#/$defs/OracleRequirement" }, "minItems": 1 },
+        "oracleRequirements": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/OracleRequirement"
+          },
+          "minItems": 1
+        },
         "invariants": {
           "type": "object",
           "additionalProperties": false,
           "properties": {
-            "local": { "type": "array", "items": { "$ref": "#/$defs/Slug" } },
-            "enclosing": { "type": "array", "items": { "$ref": "#/$defs/Slug" } }
+            "local": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Slug"
+              }
+            },
+            "enclosing": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Slug"
+              }
+            }
           }
         },
         "normativeTopologyCounts": {
@@ -323,162 +729,434 @@
       "type": "object",
       "additionalProperties": false,
       "description": "🧬️ One owner's authoritative mutation inventory for one artifact/standard/subset. The contract phase requires `runtime inventory = manifest inventory = claimed test inventory`, exactly.",
-      "required": ["schema", "artifact", "standard", "subset", "mutations"],
+      "required": [
+        "schema",
+        "artifact",
+        "standard",
+        "subset",
+        "mutations"
+      ],
       "properties": {
-        "schema": { "const": "semio.repository-test.mutation-manifest/v2" },
-        "artifact": { "$ref": "#/$defs/DottedId" },
-        "standard": { "type": "string", "minLength": 1 },
-        "subset": { "$ref": "#/$defs/Slug" },
-        "standardDirectoryName": { "type": "string", "pattern": "^🔖️.+$" },
-        "subsetDirectoryName": { "type": "string", "pattern": "^✳️.+$" },
-        "mutations": { "type": "array", "items": { "$ref": "#/$defs/ManifestMutation" }, "minItems": 1 }
+        "schema": {
+          "const": "semio.repository-test.mutation-manifest/v2"
+        },
+        "artifact": {
+          "$ref": "#/$defs/DottedId"
+        },
+        "standard": {
+          "type": "string",
+          "minLength": 1
+        },
+        "subset": {
+          "$ref": "#/$defs/Slug"
+        },
+        "standardDirectoryName": {
+          "type": "string",
+          "pattern": "^🔖️.+$"
+        },
+        "subsetDirectoryName": {
+          "type": "string",
+          "pattern": "^✳️.+$"
+        },
+        "mutations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ManifestMutation"
+          },
+          "minItems": 1
+        }
       }
     },
     "RuntimeMutationInventory": {
       "type": "object",
       "additionalProperties": false,
       "description": "🏭️ What PRODUCTION dispatch actually offers, emitted by the language-neutral bridge `listMutations(artifact, standard, subset)`. This file is generated by running production code, never by parsing source.",
-      "required": ["schema", "artifact", "standard", "subset", "bridgeVersion", "mutations"],
+      "required": [
+        "schema",
+        "artifact",
+        "standard",
+        "subset",
+        "bridgeVersion",
+        "mutations"
+      ],
       "properties": {
-        "schema": { "const": "semio.repository-test.runtime-inventory/v2" },
-        "artifact": { "$ref": "#/$defs/DottedId" },
-        "standard": { "type": "string" },
-        "subset": { "$ref": "#/$defs/Slug" },
-        "bridgeVersion": { "type": "integer", "minimum": 1 },
-        "producedBy": { "type": "string" },
+        "schema": {
+          "const": "semio.repository-test.runtime-inventory/v2"
+        },
+        "artifact": {
+          "$ref": "#/$defs/DottedId"
+        },
+        "standard": {
+          "type": "string"
+        },
+        "subset": {
+          "$ref": "#/$defs/Slug"
+        },
+        "bridgeVersion": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "producedBy": {
+          "type": "string"
+        },
         "mutations": {
           "type": "array",
           "items": {
             "type": "object",
             "additionalProperties": false,
-            "required": ["id", "variant", "outcomes"],
+            "required": [
+              "id",
+              "variant",
+              "outcomes"
+            ],
             "properties": {
-              "id": { "$ref": "#/$defs/Slug" },
-              "variant": { "type": "string" },
-              "verb": { "type": "string" },
-              "entity": { "type": "string" },
-              "record": { "type": "string" },
-              "outcomes": { "type": "array", "items": { "$ref": "#/$defs/MutationOutcomeClass" }, "minItems": 1 }
+              "id": {
+                "$ref": "#/$defs/Slug"
+              },
+              "variant": {
+                "type": "string"
+              },
+              "verb": {
+                "type": "string"
+              },
+              "entity": {
+                "type": "string"
+              },
+              "record": {
+                "type": "string"
+              },
+              "outcomes": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/$defs/MutationOutcomeClass"
+                },
+                "minItems": 1
+              }
             }
           }
         }
       }
     },
     "FixtureClass": {
-      "enum": ["real-world", "handcrafted", "third-party-generated"]
+      "enum": [
+        "real-world",
+        "handcrafted",
+        "third-party-generated"
+      ]
     },
     "FixtureFile": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["role", "path", "mediaType", "sha256"],
+      "required": [
+        "role",
+        "path",
+        "mediaType",
+        "sha256"
+      ],
       "properties": {
-        "role": { "$ref": "#/$defs/ArtifactRole" },
-        "path": { "type": "string", "minLength": 1 },
-        "mediaType": { "$ref": "#/$defs/MediaType" },
-        "sha256": { "$ref": "#/$defs/Sha256" },
-        "bytes": { "type": "integer", "minimum": 0 }
+        "role": {
+          "$ref": "#/$defs/ArtifactRole"
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "mediaType": {
+          "$ref": "#/$defs/MediaType"
+        },
+        "sha256": {
+          "$ref": "#/$defs/Sha256"
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 0
+        }
       }
     },
     "FixtureGenerator": {
       "type": "object",
       "additionalProperties": false,
       "description": "🏭️ Exactly how a third-party-generated fixture was produced, in enough detail to re-run it. A generated fixture with no reproducible generator record is a fixture nobody can audit.",
-      "required": ["oracle", "packageVersion", "engineFamily", "engineVersion", "command", "platform"],
+      "required": [
+        "oracle",
+        "packageVersion",
+        "engineFamily",
+        "engineVersion",
+        "command",
+        "platform"
+      ],
       "properties": {
-        "oracle": { "$ref": "#/$defs/Slug" },
-        "packageVersion": { "type": "string", "minLength": 1 },
-        "engineFamily": { "$ref": "#/$defs/Slug" },
-        "engineVersion": { "type": "string", "minLength": 1 },
-        "command": { "type": "string", "minLength": 1 },
-        "seed": { "type": ["string", "integer"] },
-        "platform": { "$ref": "#/$defs/Platform" },
-        "sourceDigest": { "$ref": "#/$defs/Sha256" }
+        "oracle": {
+          "$ref": "#/$defs/Slug"
+        },
+        "packageVersion": {
+          "type": "string",
+          "minLength": 1
+        },
+        "engineFamily": {
+          "$ref": "#/$defs/Slug"
+        },
+        "engineVersion": {
+          "type": "string",
+          "minLength": 1
+        },
+        "command": {
+          "type": "string",
+          "minLength": 1
+        },
+        "seed": {
+          "type": [
+            "string",
+            "integer"
+          ]
+        },
+        "platform": {
+          "$ref": "#/$defs/Platform"
+        },
+        "sourceDigest": {
+          "$ref": "#/$defs/Sha256"
+        }
       }
     },
     "FixtureProvenance": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["source", "license"],
+      "required": [
+        "source",
+        "license"
+      ],
       "properties": {
-        "source": { "enum": ["generated", "authored", "downloaded", "vendored"] },
-        "license": { "type": "string", "minLength": 1 },
-        "acquiredAt": { "type": "string" },
-        "attribution": { "type": "string" },
-        "url": { "type": "string" },
-        "security": { "enum": ["scanned-clean", "unscanned", "quarantined"] },
-        "privacy": { "enum": ["no-personal-data", "reviewed", "unreviewed"] }
+        "source": {
+          "enum": [
+            "generated",
+            "authored",
+            "downloaded",
+            "vendored"
+          ]
+        },
+        "license": {
+          "type": "string",
+          "minLength": 1
+        },
+        "acquiredAt": {
+          "type": "string"
+        },
+        "attribution": {
+          "type": "string"
+        },
+        "url": {
+          "type": "string"
+        },
+        "security": {
+          "enum": [
+            "scanned-clean",
+            "unscanned",
+            "quarantined"
+          ]
+        },
+        "privacy": {
+          "enum": [
+            "no-personal-data",
+            "reviewed",
+            "unreviewed"
+          ]
+        }
       }
     },
     "FixtureUnits": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["length", "angle"],
+      "required": [
+        "length",
+        "angle"
+      ],
       "properties": {
-        "length": { "enum": ["metre", "millimetre", "centimetre", "inch", "foot", "unitless"] },
-        "angle": { "enum": ["radian", "degree"] },
-        "handedness": { "enum": ["right", "left"] },
-        "up": { "enum": ["y", "z"] }
+        "length": {
+          "enum": [
+            "metre",
+            "millimetre",
+            "centimetre",
+            "inch",
+            "foot",
+            "unitless"
+          ]
+        },
+        "angle": {
+          "enum": [
+            "radian",
+            "degree"
+          ]
+        },
+        "handedness": {
+          "enum": [
+            "right",
+            "left"
+          ]
+        },
+        "up": {
+          "enum": [
+            "y",
+            "z"
+          ]
+        }
       }
     },
     "FixtureManifest": {
       "type": "object",
       "additionalProperties": false,
       "description": "🧫️ One immutable fixture bundle. Updating a fixture creates a NEW identity and digest; the manifest is never edited in place.",
-      "required": ["schema", "id", "class", "target", "units", "files", "provenance", "comparisonProfile", "reproducible"],
+      "required": [
+        "schema",
+        "id",
+        "class",
+        "target",
+        "units",
+        "files",
+        "provenance",
+        "comparisonProfile",
+        "reproducible"
+      ],
       "properties": {
-        "schema": { "const": "semio.repository-test.fixture/v2" },
-        "id": { "$ref": "#/$defs/Slug" },
-        "class": { "$ref": "#/$defs/FixtureClass" },
+        "schema": {
+          "const": "semio.repository-test.fixture/v2"
+        },
+        "id": {
+          "$ref": "#/$defs/Slug"
+        },
+        "class": {
+          "$ref": "#/$defs/FixtureClass"
+        },
         "target": {
-          "allOf": [{ "$ref": "#/$defs/SubsetTarget" }],
+          "allOf": [
+            {
+              "$ref": "#/$defs/SubsetTarget"
+            }
+          ],
           "description": "🎯️ The subset-scoped coordinates plus the mutation and the DECLARED outcome class."
         },
-        "mutation": { "$ref": "#/$defs/Slug" },
-        "outcome": { "$ref": "#/$defs/MutationOutcomeClass" },
-        "units": { "$ref": "#/$defs/FixtureUnits" },
-        "files": { "type": "array", "items": { "$ref": "#/$defs/FixtureFile" }, "minItems": 1 },
-        "generator": { "$ref": "#/$defs/FixtureGenerator" },
-        "provenance": { "$ref": "#/$defs/FixtureProvenance" },
-        "comparisonProfile": { "type": "string", "minLength": 1 },
-        "toleranceProfile": { "$ref": "#/$defs/Slug" },
-        "toleranceOverride": { "$ref": "#/$defs/ToleranceOverride" },
-        "reproducible": { "type": "boolean" },
+        "mutation": {
+          "$ref": "#/$defs/Slug"
+        },
+        "outcome": {
+          "$ref": "#/$defs/MutationOutcomeClass"
+        },
+        "units": {
+          "$ref": "#/$defs/FixtureUnits"
+        },
+        "files": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/FixtureFile"
+          },
+          "minItems": 1
+        },
+        "generator": {
+          "$ref": "#/$defs/FixtureGenerator"
+        },
+        "provenance": {
+          "$ref": "#/$defs/FixtureProvenance"
+        },
+        "comparisonProfile": {
+          "type": "string",
+          "minLength": 1
+        },
+        "toleranceProfile": {
+          "$ref": "#/$defs/Slug"
+        },
+        "toleranceOverride": {
+          "$ref": "#/$defs/ToleranceOverride"
+        },
+        "reproducible": {
+          "type": "boolean"
+        },
         "family": {
           "$ref": "#/$defs/Slug",
           "description": "👪️ The fixture family this case belongs to (`spatial-relationship`, `shape-complexity`, `robustness`, `mechanical`, `failure`) — the sharding and reporting key that keeps a matrix from collapsing to artifact level."
         },
-        "notes": { "type": "string" }
+        "notes": {
+          "type": "string"
+        }
       }
     },
     "ToleranceProfile": {
       "type": "object",
       "additionalProperties": false,
       "description": "📏️ Scale-relative tolerance policy. Effective tolerance is `max(absolute, relative × reference)`, so one profile serves micro-scale and large-coordinate fixtures without a per-fixture override.",
-      "required": ["id"],
+      "required": [
+        "id"
+      ],
       "properties": {
-        "id": { "$ref": "#/$defs/Slug" },
-        "description": { "type": "string" },
-        "absoluteLength": { "type": "number", "minimum": 0 },
-        "relativeLength": { "type": "number", "minimum": 0 },
-        "absoluteArea": { "type": "number", "minimum": 0 },
-        "relativeArea": { "type": "number", "minimum": 0 },
-        "absoluteVolume": { "type": "number", "minimum": 0 },
-        "relativeVolume": { "type": "number", "minimum": 0 },
-        "normalizedHausdorffMax": { "type": "number", "minimum": 0 },
-        "normalizedCentroidDistanceMax": { "type": "number", "minimum": 0 },
-        "maxOverrideFactor": { "type": "number", "minimum": 1 }
+        "id": {
+          "$ref": "#/$defs/Slug"
+        },
+        "description": {
+          "type": "string"
+        },
+        "absoluteLength": {
+          "type": "number",
+          "minimum": 0
+        },
+        "relativeLength": {
+          "type": "number",
+          "minimum": 0
+        },
+        "absoluteArea": {
+          "type": "number",
+          "minimum": 0
+        },
+        "relativeArea": {
+          "type": "number",
+          "minimum": 0
+        },
+        "absoluteVolume": {
+          "type": "number",
+          "minimum": 0
+        },
+        "relativeVolume": {
+          "type": "number",
+          "minimum": 0
+        },
+        "normalizedHausdorffMax": {
+          "type": "number",
+          "minimum": 0
+        },
+        "normalizedCentroidDistanceMax": {
+          "type": "number",
+          "minimum": 0
+        },
+        "maxOverrideFactor": {
+          "type": "number",
+          "minimum": 1
+        }
       }
     },
     "ToleranceOverride": {
       "type": "object",
       "additionalProperties": false,
       "description": "⚠️ A fixture-level loosening of its profile. Every field is mandatory because an unexplained override turns a failure into a pass and nothing in the report would say so.",
-      "required": ["reason", "measuredBaseline", "factor", "approvedBy"],
+      "required": [
+        "reason",
+        "measuredBaseline",
+        "factor",
+        "approvedBy"
+      ],
       "properties": {
-        "reason": { "type": "string", "minLength": 20 },
-        "measuredBaseline": { "type": "number", "minimum": 0 },
-        "factor": { "type": "number", "minimum": 1 },
-        "approvedBy": { "type": "string", "minLength": 1 }
+        "reason": {
+          "type": "string",
+          "minLength": 20
+        },
+        "measuredBaseline": {
+          "type": "number",
+          "minimum": 0
+        },
+        "factor": {
+          "type": "number",
+          "minimum": 1
+        },
+        "approvedBy": {
+          "type": "string",
+          "minLength": 1
+        }
       }
     },
     "ComparisonAssertion": {
@@ -489,252 +1167,725 @@
     "ComparisonStage": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["probe", "inputs"],
+      "required": [
+        "probe",
+        "inputs"
+      ],
       "properties": {
-        "probe": { "$ref": "#/$defs/Slug" },
-        "description": { "type": "string" },
-        "inputs": { "type": "array", "items": { "$ref": "#/$defs/ArtifactRole" }, "minItems": 1 },
-        "outputs": { "type": "array", "items": { "$ref": "#/$defs/ArtifactRole" } },
-        "args": { "type": "array", "items": { "type": "string" } },
-        "seed": { "type": ["string", "integer"] },
+        "probe": {
+          "$ref": "#/$defs/Slug"
+        },
+        "description": {
+          "type": "string"
+        },
+        "inputs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ArtifactRole"
+          },
+          "minItems": 1
+        },
+        "outputs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ArtifactRole"
+          }
+        },
+        "args": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "seed": {
+          "type": [
+            "string",
+            "integer"
+          ]
+        },
         "optional": {
           "type": "boolean",
           "description": "🚧️ A stage whose probe is not yet qualified. An optional stage RUNS and REPORTS, and its guarantee may not be claimed by any release gate."
         },
-        "assertions": { "$ref": "#/$defs/ComparisonAssertion" }
+        "assertions": {
+          "$ref": "#/$defs/ComparisonAssertion"
+        }
       }
     },
     "ComparisonPipeline": {
       "type": "object",
       "additionalProperties": false,
       "description": "⚖️ An ordered, multi-artifact, externally-probed comparison. Replaces v1's single-projection profile for every case that produces more than one file or needs a measured metric.",
-      "required": ["id", "stages"],
+      "required": [
+        "id",
+        "stages"
+      ],
       "properties": {
-        "id": { "type": "string", "minLength": 1 },
-        "description": { "type": "string" },
-        "toleranceProfile": { "$ref": "#/$defs/Slug" },
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "description": {
+          "type": "string"
+        },
+        "toleranceProfile": {
+          "$ref": "#/$defs/Slug"
+        },
         "referenceScale": {
-          "enum": ["bounding-box-diagonal", "unit", "declared"],
+          "enum": [
+            "bounding-box-diagonal",
+            "unit",
+            "declared"
+          ],
           "description": "📐️ What `D` is when normalizing a length. `bounding-box-diagonal` is measured by a probe, never by the orchestrator."
         },
-        "stages": { "type": "array", "items": { "$ref": "#/$defs/ComparisonStage" }, "minItems": 1 }
+        "stages": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ComparisonStage"
+          },
+          "minItems": 1
+        }
       }
     },
     "ComparisonProfileSpec": {
       "type": "object",
       "additionalProperties": false,
       "description": "⚖️ The declarative structural profile a projection is compared under. Still the right tool for a single JSON/text/byte projection; a bundle uses a ComparisonPipeline instead.",
-      "required": ["id"],
+      "required": [
+        "id"
+      ],
       "properties": {
-        "id": { "type": "string", "minLength": 1 },
-        "description": { "type": "string" },
-        "arrays": { "enum": ["ordered", "set"] },
-        "ignoreKeys": { "type": "array", "items": { "type": "string" } },
-        "tolerance": { "type": "number" },
-        "text": { "enum": ["none", "utf8"] },
-        "bytes": { "type": "boolean" },
-        "pipeline": { "$ref": "#/$defs/Slug" }
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "description": {
+          "type": "string"
+        },
+        "arrays": {
+          "enum": [
+            "ordered",
+            "set"
+          ]
+        },
+        "ignoreKeys": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "tolerance": {
+          "type": "number"
+        },
+        "text": {
+          "enum": [
+            "none",
+            "utf8"
+          ]
+        },
+        "bytes": {
+          "type": "boolean"
+        },
+        "pipeline": {
+          "$ref": "#/$defs/Slug"
+        }
       }
     },
     "FixtureRef": {
       "type": "object",
       "additionalProperties": false,
       "description": "🧫️ How a scenario ADDRESSES a fixture. v2 requires the manifest id alongside the digest so a run is keyed by reviewed provenance and not merely by bytes.",
-      "required": ["uri", "scope", "name", "path", "digest"],
+      "required": [
+        "uri",
+        "scope",
+        "name",
+        "path",
+        "digest"
+      ],
       "properties": {
-        "uri": { "type": "string", "pattern": "^(shared|local|asset|cas)://.+$" },
-        "scope": { "enum": ["shared", "local", "asset", "cas"] },
-        "name": { "type": "string", "minLength": 1 },
-        "path": { "type": "string", "minLength": 1 },
-        "digest": { "type": "string", "minLength": 1 },
-        "manifestId": { "$ref": "#/$defs/Slug" },
-        "role": { "$ref": "#/$defs/ArtifactRole" },
-        "mediaType": { "$ref": "#/$defs/MediaType" }
+        "uri": {
+          "type": "string",
+          "pattern": "^(shared|local|asset|cas|schema)://.+$"
+        },
+        "scope": {
+          "enum": [
+            "shared",
+            "local",
+            "asset",
+            "cas",
+            "schema"
+          ]
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "digest": {
+          "type": "string",
+          "minLength": 1
+        },
+        "manifestId": {
+          "$ref": "#/$defs/Slug"
+        },
+        "role": {
+          "$ref": "#/$defs/ArtifactRole"
+        },
+        "mediaType": {
+          "$ref": "#/$defs/MediaType"
+        }
       }
     },
     "Step": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["keyword", "text"],
+      "required": [
+        "keyword",
+        "text"
+      ],
       "properties": {
-        "keyword": { "enum": ["Given", "When", "Then"] },
-        "rawKeyword": { "type": "string" },
-        "text": { "type": "string" },
-        "docString": { "type": "string" },
-        "dataTable": { "type": "array", "items": { "type": "array", "items": { "type": "string" } } }
+        "keyword": {
+          "enum": [
+            "Given",
+            "When",
+            "Then"
+          ]
+        },
+        "rawKeyword": {
+          "type": "string"
+        },
+        "text": {
+          "type": "string"
+        },
+        "docString": {
+          "type": "string"
+        },
+        "dataTable": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
       }
     },
     "Scenario": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["id", "name", "level", "mode", "steps", "tags"],
+      "required": [
+        "id",
+        "name",
+        "level",
+        "mode",
+        "steps",
+        "tags"
+      ],
       "properties": {
-        "id": { "$ref": "#/$defs/Slug" },
-        "name": { "type": "string" },
-        "level": { "$ref": "#/$defs/TestLevel" },
-        "mode": { "$ref": "#/$defs/TestMode" },
-        "tags": { "type": "array", "items": { "type": "string" } },
-        "steps": { "type": "array", "items": { "$ref": "#/$defs/Step" } },
-        "seed": { "type": "string" },
-        "platforms": { "type": "array", "items": { "type": "string" } },
-        "requires": { "type": "array", "items": { "type": "string" } },
-        "implementations": { "type": "array", "items": { "$ref": "#/$defs/Implementation" } },
-        "examples": { "type": "array", "items": { "type": "object", "additionalProperties": { "type": "string" } } },
-        "outlineOf": { "type": "string" },
-        "line": { "type": "integer" },
-        "mutation": { "$ref": "#/$defs/Slug" },
-        "outcome": { "$ref": "#/$defs/MutationOutcomeClass" },
-        "fixtureFamily": { "$ref": "#/$defs/Slug" }
+        "id": {
+          "$ref": "#/$defs/Slug"
+        },
+        "name": {
+          "type": "string"
+        },
+        "level": {
+          "$ref": "#/$defs/TestLevel"
+        },
+        "mode": {
+          "$ref": "#/$defs/TestMode"
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "steps": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Step"
+          }
+        },
+        "seed": {
+          "type": "string"
+        },
+        "platforms": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "requires": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "implementations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Implementation"
+          }
+        },
+        "examples": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        },
+        "outlineOf": {
+          "type": "string"
+        },
+        "line": {
+          "type": "integer"
+        },
+        "mutation": {
+          "$ref": "#/$defs/Slug"
+        },
+        "outcome": {
+          "$ref": "#/$defs/MutationOutcomeClass"
+        },
+        "fixtureFamily": {
+          "$ref": "#/$defs/Slug"
+        }
       }
     },
     "TestCasePlan": {
       "type": "object",
       "additionalProperties": false,
       "description": "📋️ The complete, serializable instruction one host receives. v2 adds the subset target, the mutation manifest digest and the comparison pipeline so a host can never widen its own scope.",
-      "required": ["schemaVersion", "owner", "case", "featurePath", "featureHash", "capability", "comparison", "scenarios", "adapters", "fixtures"],
+      "required": [
+        "schemaVersion",
+        "owner",
+        "case",
+        "featurePath",
+        "featureHash",
+        "capability",
+        "comparison",
+        "scenarios",
+        "adapters",
+        "fixtures"
+      ],
       "properties": {
-        "schemaVersion": { "const": 2 },
-        "baselineSha": { "type": "string" },
-        "owner": { "type": "string" },
-        "case": { "$ref": "#/$defs/Slug" },
-        "featurePath": { "type": "string" },
-        "featureHash": { "type": "string" },
-        "featureName": { "type": "string" },
-        "description": { "type": "string" },
-        "capability": { "type": "string" },
-        "target": { "$ref": "#/$defs/SubsetTarget" },
-        "mutationManifestDigest": { "type": "string" },
-        "oracle": { "type": ["string", "null"] },
-        "noOracleDecision": { "type": ["string", "null"] },
-        "comparison": { "type": "string" },
-        "comparisonPipeline": { "type": ["string", "null"] },
-        "toleranceProfile": { "type": ["string", "null"] },
-        "background": { "type": "array", "items": { "$ref": "#/$defs/Step" } },
-        "scenarios": { "type": "array", "items": { "$ref": "#/$defs/Scenario" } },
+        "schemaVersion": {
+          "const": 2
+        },
+        "baselineSha": {
+          "type": "string"
+        },
+        "owner": {
+          "type": "string"
+        },
+        "case": {
+          "$ref": "#/$defs/Slug"
+        },
+        "featurePath": {
+          "type": "string"
+        },
+        "featureHash": {
+          "type": "string"
+        },
+        "featureName": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "capability": {
+          "type": "string"
+        },
+        "target": {
+          "$ref": "#/$defs/SubsetTarget"
+        },
+        "mutationManifestDigest": {
+          "type": "string"
+        },
+        "oracle": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "noOracleDecision": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "comparison": {
+          "type": "string"
+        },
+        "comparisonPipeline": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "toleranceProfile": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "background": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Step"
+          }
+        },
+        "scenarios": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Scenario"
+          }
+        },
         "adapters": {
           "type": "object",
           "additionalProperties": false,
-          "propertyNames": { "$ref": "#/$defs/Implementation" },
-          "patternProperties": { "^(rust|typescript|go|python|dotnet)$": { "type": "string" } }
+          "propertyNames": {
+            "$ref": "#/$defs/Implementation"
+          },
+          "patternProperties": {
+            "^(rust|typescript|go|python|dotnet)$": {
+              "type": "string"
+            }
+          }
         },
-        "fixtures": { "type": "array", "items": { "$ref": "#/$defs/FixtureRef" } },
-        "fixtureManifests": { "type": "array", "items": { "$ref": "#/$defs/FixtureManifest" } },
-        "workDir": { "type": "string" },
-        "resultsPath": { "type": "string" },
-        "outputDir": { "type": "string" },
-        "artifactDir": { "type": "string" },
-        "level": { "$ref": "#/$defs/TestLevel" },
-        "role": { "$ref": "#/$defs/TestRole" },
-        "implementation": { "$ref": "#/$defs/Implementation" },
-        "platform": { "$ref": "#/$defs/Platform" }
+        "fixtures": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/FixtureRef"
+          }
+        },
+        "fixtureManifests": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/FixtureManifest"
+          }
+        },
+        "workDir": {
+          "type": "string"
+        },
+        "resultsPath": {
+          "type": "string"
+        },
+        "outputDir": {
+          "type": "string"
+        },
+        "artifactDir": {
+          "type": "string"
+        },
+        "level": {
+          "$ref": "#/$defs/TestLevel"
+        },
+        "role": {
+          "$ref": "#/$defs/TestRole"
+        },
+        "implementation": {
+          "$ref": "#/$defs/Implementation"
+        },
+        "platform": {
+          "$ref": "#/$defs/Platform"
+        }
       }
     },
     "Diagnostic": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["severity", "message"],
+      "required": [
+        "severity",
+        "message"
+      ],
       "properties": {
-        "severity": { "enum": ["info", "warning", "error"] },
-        "message": { "type": "string" },
-        "detail": { "type": "string" }
+        "severity": {
+          "enum": [
+            "info",
+            "warning",
+            "error"
+          ]
+        },
+        "message": {
+          "type": "string"
+        },
+        "detail": {
+          "type": "string"
+        }
       }
     },
     "ResultArtifact": {
       "type": "object",
       "additionalProperties": false,
       "description": "📦️ One file a host produced. `role` joins it to the fixture bundle and to every comparison stage.",
-      "required": ["role", "path", "mediaType", "sha256"],
+      "required": [
+        "role",
+        "path",
+        "mediaType",
+        "sha256"
+      ],
       "properties": {
-        "role": { "$ref": "#/$defs/ArtifactRole" },
-        "path": { "type": "string", "minLength": 1 },
-        "mediaType": { "$ref": "#/$defs/MediaType" },
-        "sha256": { "$ref": "#/$defs/Sha256" },
-        "bytes": { "type": "integer", "minimum": 0 }
+        "role": {
+          "$ref": "#/$defs/ArtifactRole"
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "mediaType": {
+          "$ref": "#/$defs/MediaType"
+        },
+        "sha256": {
+          "$ref": "#/$defs/Sha256"
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 0
+        }
       }
     },
     "TestResult": {
       "type": "object",
       "additionalProperties": false,
       "description": "📤️ One scenario × implementation × role execution. v2 returns an ARTIFACT BUNDLE plus a projection, so a BRep case can hand back STEP and a mesh without inventing a second protocol.",
-      "required": ["schemaVersion", "testId", "owner", "case", "scenario", "implementation", "role", "level", "status", "durationMs", "output", "diagnostics", "artifacts"],
+      "required": [
+        "schemaVersion",
+        "testId",
+        "owner",
+        "case",
+        "scenario",
+        "implementation",
+        "role",
+        "level",
+        "status",
+        "durationMs",
+        "output",
+        "diagnostics",
+        "artifacts"
+      ],
       "properties": {
-        "schemaVersion": { "const": 2 },
-        "testId": { "type": "string" },
-        "baselineSha": { "type": "string" },
-        "owner": { "type": "string" },
-        "case": { "type": "string" },
-        "scenario": { "type": "string" },
-        "implementation": { "$ref": "#/$defs/Implementation" },
-        "role": { "$ref": "#/$defs/TestRole" },
-        "level": { "$ref": "#/$defs/TestLevel" },
-        "platform": { "$ref": "#/$defs/Platform" },
-        "status": { "enum": ["passed", "failed", "errored"] },
-        "durationMs": { "type": "number", "minimum": 0 },
-        "seed": { "type": "string" },
-        "featureHash": { "type": "string" },
-        "fixtureHash": { "type": "string" },
-        "sourceHash": { "type": "string" },
-        "dependencyFingerprint": { "type": "string" },
-        "runKey": { "type": "string" },
-        "mutation": { "$ref": "#/$defs/Slug" },
-        "outcome": { "$ref": "#/$defs/MutationOutcomeClass" },
+        "schemaVersion": {
+          "const": 2
+        },
+        "testId": {
+          "type": "string"
+        },
+        "baselineSha": {
+          "type": "string"
+        },
+        "owner": {
+          "type": "string"
+        },
+        "case": {
+          "type": "string"
+        },
+        "scenario": {
+          "type": "string"
+        },
+        "implementation": {
+          "$ref": "#/$defs/Implementation"
+        },
+        "role": {
+          "$ref": "#/$defs/TestRole"
+        },
+        "level": {
+          "$ref": "#/$defs/TestLevel"
+        },
+        "platform": {
+          "$ref": "#/$defs/Platform"
+        },
+        "status": {
+          "enum": [
+            "passed",
+            "failed",
+            "errored"
+          ]
+        },
+        "durationMs": {
+          "type": "number",
+          "minimum": 0
+        },
+        "seed": {
+          "type": "string"
+        },
+        "featureHash": {
+          "type": "string"
+        },
+        "fixtureHash": {
+          "type": "string"
+        },
+        "sourceHash": {
+          "type": "string"
+        },
+        "dependencyFingerprint": {
+          "type": "string"
+        },
+        "runKey": {
+          "type": "string"
+        },
+        "mutation": {
+          "$ref": "#/$defs/Slug"
+        },
+        "outcome": {
+          "$ref": "#/$defs/MutationOutcomeClass"
+        },
         "productionDispatch": {
           "type": "object",
           "additionalProperties": false,
           "description": "🏭️ Proof the subject reached PRODUCTION dispatch rather than replaying a committed vector. A subject result without it cannot count toward production-bridge coverage.",
-          "required": ["invoked", "operation", "bridgeVersion"],
+          "required": [
+            "invoked",
+            "operation",
+            "bridgeVersion"
+          ],
           "properties": {
-            "invoked": { "const": true },
-            "operation": { "type": "string" },
-            "bridgeVersion": { "type": "integer", "minimum": 1 }
+            "invoked": {
+              "const": true
+            },
+            "operation": {
+              "type": "string"
+            },
+            "bridgeVersion": {
+              "type": "integer",
+              "minimum": 1
+            }
           }
         },
-        "artifacts": { "type": "array", "items": { "$ref": "#/$defs/ResultArtifact" } },
+        "artifacts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ResultArtifact"
+          }
+        },
         "output": {
           "type": "object",
           "additionalProperties": false,
-          "required": ["rawHash", "projectionHash"],
+          "required": [
+            "rawHash",
+            "projectionHash"
+          ],
           "properties": {
-            "rawHash": { "type": "string" },
-            "projectionHash": { "type": "string" },
-            "rawPath": { "type": "string" },
-            "projectionPath": { "type": "string" },
+            "rawHash": {
+              "type": "string"
+            },
+            "projectionHash": {
+              "type": "string"
+            },
+            "rawPath": {
+              "type": "string"
+            },
+            "projectionPath": {
+              "type": "string"
+            },
             "projection": {}
           }
         },
-        "diagnostics": { "type": "array", "items": { "$ref": "#/$defs/Diagnostic" } }
+        "diagnostics": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Diagnostic"
+          }
+        }
       }
     },
     "ProbeReport": {
       "type": "object",
       "additionalProperties": false,
       "description": "🔬️ The typed JSON one probe emits for one stage. `measurements` is probe-defined; the orchestrator evaluates the stage's assertions against it and computes nothing itself.",
-      "required": ["schema", "probe", "status", "measurements"],
+      "required": [
+        "schema",
+        "probe",
+        "status",
+        "measurements"
+      ],
       "properties": {
-        "schema": { "const": "semio.repository-test.probe-report/v2" },
-        "probe": { "$ref": "#/$defs/Slug" },
-        "probeVersion": { "type": "string" },
-        "engine": { "$ref": "#/$defs/EngineFamily" },
-        "status": { "enum": ["ok", "failed", "unsupported"] },
-        "seed": { "type": ["string", "integer"] },
-        "durationMs": { "type": "number", "minimum": 0 },
-        "measurements": { "type": "object" },
-        "outputs": { "type": "array", "items": { "$ref": "#/$defs/ResultArtifact" } },
-        "diagnostics": { "type": "array", "items": { "$ref": "#/$defs/Diagnostic" } }
+        "schema": {
+          "const": "semio.repository-test.probe-report/v2"
+        },
+        "probe": {
+          "$ref": "#/$defs/Slug"
+        },
+        "probeVersion": {
+          "type": "string"
+        },
+        "engine": {
+          "$ref": "#/$defs/EngineFamily"
+        },
+        "status": {
+          "enum": [
+            "ok",
+            "failed",
+            "unsupported"
+          ]
+        },
+        "seed": {
+          "type": [
+            "string",
+            "integer"
+          ]
+        },
+        "durationMs": {
+          "type": "number",
+          "minimum": 0
+        },
+        "measurements": {
+          "type": "object"
+        },
+        "outputs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ResultArtifact"
+          }
+        },
+        "diagnostics": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Diagnostic"
+          }
+        }
       }
     },
     "NoOracleDecision": {
       "type": "object",
       "additionalProperties": false,
       "description": "📇️ A recorded decision that a capability has no credible reference. v2 keeps it for NON-mutation capabilities only: a runtime mutation can never be discharged this way.",
-      "required": ["id", "capabilities", "rationale", "substitutes"],
+      "required": [
+        "id",
+        "capabilities",
+        "rationale",
+        "substitutes"
+      ],
       "properties": {
-        "id": { "$ref": "#/$defs/Slug" },
-        "capabilities": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
-        "rationale": { "type": "string", "minLength": 20 },
+        "id": {
+          "$ref": "#/$defs/Slug"
+        },
+        "capabilities": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1
+        },
+        "rationale": {
+          "type": "string",
+          "minLength": 20
+        },
         "substitutes": {
           "type": "array",
-          "items": { "enum": ["specification-vectors", "metamorphic-laws", "independent-implementations", "second-parser"] },
+          "items": {
+            "enum": [
+              "specification-vectors",
+              "metamorphic-laws",
+              "independent-implementations",
+              "second-parser"
+            ]
+          },
           "minItems": 1
         },
         "coversMutations": {
@@ -746,125 +1897,376 @@
     "OracleHostPackage": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["implementation", "package"],
+      "required": [
+        "implementation",
+        "package"
+      ],
       "properties": {
-        "implementation": { "$ref": "#/$defs/Implementation" },
-        "package": { "type": "string", "minLength": 1 },
-        "path": { "type": "string", "minLength": 1 },
-        "version": { "type": "string" },
-        "module": { "type": "string" },
-        "features": { "type": "array", "items": { "type": "string" } }
+        "implementation": {
+          "$ref": "#/$defs/Implementation"
+        },
+        "package": {
+          "type": "string",
+          "minLength": 1
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "version": {
+          "type": "string"
+        },
+        "module": {
+          "type": "string"
+        },
+        "features": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
       }
     },
     "OracleRegistry": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["schemaVersion", "oracles", "noOracleDecisions"],
+      "required": [
+        "schemaVersion",
+        "oracles",
+        "noOracleDecisions"
+      ],
       "properties": {
-        "schemaVersion": { "const": 2 },
-        "$schema": { "type": "string" },
-        "_comment": { "type": "string" },
-        "oracles": { "type": "array", "items": { "$ref": "#/$defs/OracleRegistryEntry" } },
-        "probes": { "type": "array", "items": { "$ref": "#/$defs/ProbeRegistryEntry" } },
-        "noOracleDecisions": { "type": "array", "items": { "$ref": "#/$defs/NoOracleDecision" } },
-        "mutationManifests": { "type": "array", "items": { "$ref": "#/$defs/MutationManifest" } },
-        "fixtureManifests": { "type": "array", "items": { "$ref": "#/$defs/FixtureManifest" } },
-        "comparisonProfiles": { "type": "array", "items": { "$ref": "#/$defs/ComparisonProfileSpec" } },
-        "comparisonPipelines": { "type": "array", "items": { "$ref": "#/$defs/ComparisonPipeline" } },
-        "toleranceProfiles": { "type": "array", "items": { "$ref": "#/$defs/ToleranceProfile" } },
-        "oracleHostPackages": { "type": "array", "items": { "$ref": "#/$defs/OracleHostPackage" } },
-        "migrationStatus": { "type": "object", "additionalProperties": { "type": "string" } }
+        "schemaVersion": {
+          "const": 2
+        },
+        "$schema": {
+          "type": "string"
+        },
+        "_comment": {
+          "type": "string"
+        },
+        "oracles": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/OracleRegistryEntry"
+          }
+        },
+        "probes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProbeRegistryEntry"
+          }
+        },
+        "noOracleDecisions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/NoOracleDecision"
+          }
+        },
+        "mutationManifests": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/MutationManifest"
+          }
+        },
+        "fixtureManifests": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/FixtureManifest"
+          }
+        },
+        "comparisonProfiles": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ComparisonProfileSpec"
+          }
+        },
+        "comparisonPipelines": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ComparisonPipeline"
+          }
+        },
+        "toleranceProfiles": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ToleranceProfile"
+          }
+        },
+        "oracleHostPackages": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/OracleHostPackage"
+          }
+        },
+        "migrationStatus": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
       }
     },
     "RetentionClass": {
       "description": "🗄️ What a cached path IS, which decides when it may be removed. Failure evidence and pinned proof are never removed by routine stale cleanup.",
-      "enum": ["ephemeral-success", "last-success-proof", "failure-evidence", "fixture-generation", "toolchain", "downloaded-source", "pinned"]
+      "enum": [
+        "ephemeral-success",
+        "last-success-proof",
+        "failure-evidence",
+        "fixture-generation",
+        "toolchain",
+        "downloaded-source",
+        "pinned"
+      ]
     },
     "LeaseState": {
-      "enum": ["creating", "active", "complete", "failed", "abandoned"]
+      "enum": [
+        "creating",
+        "active",
+        "complete",
+        "failed",
+        "abandoned"
+      ]
     },
     "RunLease": {
       "type": "object",
       "additionalProperties": false,
       "description": "🔐️ One agent's claim on one run directory. Clean and GC read this; an `active` lease is never reclaimed, and a stale one only after a documented timeout AND a process check.",
-      "required": ["schema", "runId", "agentId", "state", "createdAt", "heartbeatAt", "retention"],
+      "required": [
+        "schema",
+        "runId",
+        "agentId",
+        "state",
+        "createdAt",
+        "heartbeatAt",
+        "retention"
+      ],
       "properties": {
-        "schema": { "const": "semio.repository-test.lease/v2" },
-        "runId": { "type": "string", "minLength": 1 },
-        "agentId": { "type": "string", "minLength": 1 },
-        "pid": { "type": "integer" },
-        "state": { "$ref": "#/$defs/LeaseState" },
-        "createdAt": { "type": "string" },
-        "heartbeatAt": { "type": "string" },
-        "retention": { "$ref": "#/$defs/RetentionClass" },
-        "runKey": { "type": "string" },
-        "testId": { "type": "string" }
+        "schema": {
+          "const": "semio.repository-test.lease/v2"
+        },
+        "runId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "agentId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "pid": {
+          "type": "integer"
+        },
+        "state": {
+          "$ref": "#/$defs/LeaseState"
+        },
+        "createdAt": {
+          "type": "string"
+        },
+        "heartbeatAt": {
+          "type": "string"
+        },
+        "retention": {
+          "$ref": "#/$defs/RetentionClass"
+        },
+        "runKey": {
+          "type": "string"
+        },
+        "testId": {
+          "type": "string"
+        }
       }
     },
     "RunManifest": {
       "type": "object",
       "additionalProperties": false,
       "description": "🗝️ Everything a reusable run result is keyed by. A changed tolerance profile must not reuse an earlier parity result, so the profile digest is part of the key rather than metadata beside it.",
-      "required": ["schema", "runId", "runKey", "baselineSha", "components"],
+      "required": [
+        "schema",
+        "runId",
+        "runKey",
+        "baselineSha",
+        "components"
+      ],
       "properties": {
-        "schema": { "const": "semio.repository-test.run-manifest/v2" },
-        "runId": { "type": "string" },
-        "runKey": { "type": "string" },
-        "baselineSha": { "type": "string" },
-        "startedAt": { "type": "string" },
-        "finishedAt": { "type": "string" },
-        "retention": { "$ref": "#/$defs/RetentionClass" },
+        "schema": {
+          "const": "semio.repository-test.run-manifest/v2"
+        },
+        "runId": {
+          "type": "string"
+        },
+        "runKey": {
+          "type": "string"
+        },
+        "baselineSha": {
+          "type": "string"
+        },
+        "startedAt": {
+          "type": "string"
+        },
+        "finishedAt": {
+          "type": "string"
+        },
+        "retention": {
+          "$ref": "#/$defs/RetentionClass"
+        },
         "components": {
           "type": "object",
           "additionalProperties": false,
-          "required": ["mutationManifestDigest", "fixtureManifestDigest", "fixtureFileDigests", "oracleLockDigest", "oracleEngineDigest", "probeDigest", "comparisonProfileDigest", "subjectDigest", "platform", "level"],
+          "required": [
+            "mutationManifestDigest",
+            "fixtureManifestDigest",
+            "fixtureFileDigests",
+            "oracleLockDigest",
+            "oracleEngineDigest",
+            "probeDigest",
+            "comparisonProfileDigest",
+            "subjectDigest",
+            "platform",
+            "level"
+          ],
           "properties": {
-            "mutationManifestDigest": { "type": "string" },
-            "fixtureManifestDigest": { "type": "string" },
-            "fixtureFileDigests": { "type": "string" },
-            "oracleLockDigest": { "type": "string" },
-            "oracleEngineDigest": { "type": "string" },
-            "probeDigest": { "type": "string" },
-            "comparisonProfileDigest": { "type": "string" },
-            "subjectDigest": { "type": "string" },
-            "platform": { "$ref": "#/$defs/Platform" },
-            "seed": { "type": ["string", "integer"] },
-            "level": { "$ref": "#/$defs/TestLevel" }
+            "mutationManifestDigest": {
+              "type": "string"
+            },
+            "fixtureManifestDigest": {
+              "type": "string"
+            },
+            "fixtureFileDigests": {
+              "type": "string"
+            },
+            "oracleLockDigest": {
+              "type": "string"
+            },
+            "oracleEngineDigest": {
+              "type": "string"
+            },
+            "probeDigest": {
+              "type": "string"
+            },
+            "comparisonProfileDigest": {
+              "type": "string"
+            },
+            "subjectDigest": {
+              "type": "string"
+            },
+            "platform": {
+              "$ref": "#/$defs/Platform"
+            },
+            "seed": {
+              "type": [
+                "string",
+                "integer"
+              ]
+            },
+            "level": {
+              "$ref": "#/$defs/TestLevel"
+            }
           }
         },
-        "artifacts": { "type": "array", "items": { "$ref": "#/$defs/ResultArtifact" } }
+        "artifacts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ResultArtifact"
+          }
+        }
       }
     },
     "OutputMarker": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["kind", "testId", "cacheKey"],
+      "required": [
+        "kind",
+        "testId",
+        "cacheKey"
+      ],
       "properties": {
-        "kind": { "const": "semio-test-output" },
-        "testId": { "type": "string" },
-        "cacheKey": { "type": "string" },
-        "runId": { "type": "string" },
-        "agentId": { "type": "string" },
-        "retention": { "$ref": "#/$defs/RetentionClass" }
+        "kind": {
+          "const": "semio-test-output"
+        },
+        "testId": {
+          "type": "string"
+        },
+        "cacheKey": {
+          "type": "string"
+        },
+        "runId": {
+          "type": "string"
+        },
+        "agentId": {
+          "type": "string"
+        },
+        "retention": {
+          "$ref": "#/$defs/RetentionClass"
+        }
       }
     },
     "DependencyBaselineEntry": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["ecosystem", "name", "version", "kinds", "users"],
+      "required": [
+        "ecosystem",
+        "name",
+        "version",
+        "kinds",
+        "users"
+      ],
       "properties": {
-        "ecosystem": { "enum": ["rust", "js", "go", "python", "dotnet", "native"] },
-        "name": { "type": "string" },
-        "version": { "type": "string" },
+        "ecosystem": {
+          "enum": [
+            "rust",
+            "js",
+            "go",
+            "python",
+            "dotnet",
+            "native"
+          ]
+        },
+        "name": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        },
         "kinds": {
           "type": "array",
-          "items": { "enum": ["production-runtime", "production-build", "repository-tooling", "test-runner", "test-oracle", "test-probe"] }
+          "items": {
+            "enum": [
+              "production-runtime",
+              "production-build",
+              "repository-tooling",
+              "test-runner",
+              "test-oracle",
+              "test-probe"
+            ]
+          }
         },
-        "users": { "type": "array", "items": { "type": "string" } },
-        "productionReachable": { "type": "boolean" },
-        "oracleIds": { "type": "array", "items": { "type": "string" } },
-        "probeIds": { "type": "array", "items": { "type": "string" } },
-        "capabilities": { "type": "array", "items": { "type": "string" } }
+        "users": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "productionReachable": {
+          "type": "boolean"
+        },
+        "oracleIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "probeIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "capabilities": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
       }
     },
     "CoverageDimension": {
@@ -892,39 +2294,836 @@
       "type": "object",
       "additionalProperties": false,
       "description": "📊️ One report row. The key is the FULL coordinate; sharding or reporting at artifact level is what this shape exists to prevent.",
-      "required": ["baselineSha", "artifact", "standard", "subset", "mutation", "outcome", "fixture", "oracle", "probes", "implementation", "platform", "comparisonProfile", "status"],
+      "required": [
+        "baselineSha",
+        "artifact",
+        "standard",
+        "subset",
+        "mutation",
+        "outcome",
+        "fixture",
+        "oracle",
+        "probes",
+        "implementation",
+        "platform",
+        "comparisonProfile",
+        "status"
+      ],
       "properties": {
-        "baselineSha": { "type": "string" },
-        "artifact": { "type": "string" },
-        "standard": { "type": "string" },
-        "subset": { "type": "string" },
-        "mutation": { "type": "string" },
-        "outcome": { "$ref": "#/$defs/MutationOutcomeClass" },
-        "fixture": { "type": "string" },
-        "fixtureClass": { "$ref": "#/$defs/FixtureClass" },
-        "oracle": { "type": "string" },
-        "oracleKind": { "$ref": "#/$defs/OracleKind" },
-        "oracleEngineFamily": { "type": "string" },
-        "subjectEngineFamily": { "type": "string" },
-        "probes": { "type": "array", "items": { "type": "string" } },
-        "implementation": { "$ref": "#/$defs/Implementation" },
-        "platform": { "$ref": "#/$defs/Platform" },
-        "comparisonProfile": { "type": "string" },
-        "toleranceOverridden": { "type": "boolean" },
-        "status": { "enum": ["passed", "failed", "errored", "missing"] },
-        "notes": { "type": "string" }
+        "baselineSha": {
+          "type": "string"
+        },
+        "artifact": {
+          "type": "string"
+        },
+        "standard": {
+          "type": "string"
+        },
+        "subset": {
+          "type": "string"
+        },
+        "mutation": {
+          "type": "string"
+        },
+        "outcome": {
+          "$ref": "#/$defs/MutationOutcomeClass"
+        },
+        "fixture": {
+          "type": "string"
+        },
+        "fixtureClass": {
+          "$ref": "#/$defs/FixtureClass"
+        },
+        "oracle": {
+          "type": "string"
+        },
+        "oracleKind": {
+          "$ref": "#/$defs/OracleKind"
+        },
+        "oracleEngineFamily": {
+          "type": "string"
+        },
+        "subjectEngineFamily": {
+          "type": "string"
+        },
+        "probes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "implementation": {
+          "$ref": "#/$defs/Implementation"
+        },
+        "platform": {
+          "$ref": "#/$defs/Platform"
+        },
+        "comparisonProfile": {
+          "type": "string"
+        },
+        "toleranceOverridden": {
+          "type": "boolean"
+        },
+        "status": {
+          "enum": [
+            "passed",
+            "failed",
+            "errored",
+            "missing"
+          ]
+        },
+        "notes": {
+          "type": "string"
+        }
+      }
+    },
+    "SchemaScopeId": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(?:[.-][a-z0-9]+)*$",
+      "description": "🏛️ The dotted id of an eligible scope owner, derived from its module `$id` path after `https://semio.tech/schema/`. Never derived by stripping emoji from a directory path."
+    },
+    "SchemaExportId": {
+      "type": "string",
+      "pattern": "^[A-Z][A-Za-z0-9]*$",
+      "description": "🎯️ A PascalCase key of the owning module's `$defs`, and the same-named entity in every format the module implements."
+    },
+    "SchemaFormatId": {
+      "enum": [
+        "🔣️jsonschema",
+        "🦀️rust",
+        "🟦️typescript",
+        "🔗️graphql",
+        "🛰️protobuf",
+        "📜️wit"
+      ],
+      "description": "🔠️ A taxonomy `schemaFormats` key. The normative format of a `🧬️data` facet is `🔣️jsonschema`."
+    },
+    "SchemaExportUri": {
+      "type": "string",
+      "pattern": "^schema://[a-z0-9]+(?:[.-][a-z0-9]+)*/[A-Z][A-Za-z0-9]*$",
+      "description": "🔗️ `schema://<scope id>/<ExportId>` — the only way a fixture names the contract it is an example of. It resolves through the derived catalog; there is no nearest-parent search, no glob and no fixture-local fallback."
+    },
+    "SchemaFixtureStage": {
+      "enum": [
+        "metadata",
+        "contract-resolution",
+        "parse",
+        "structural-validation",
+        "domain",
+        "assertions"
+      ],
+      "description": "🪜️ The six stages every schema-bound fixture runs through, in order. A negative fixture names the stage it is supposed to fail at, so a case that starts failing EARLIER stops counting as the proof it was written to be."
+    },
+    "SchemaDiagnosticCode": {
+      "enum": [
+        "schema-export-resolution-undeclared",
+        "schema-catalog-missing",
+        "schema-catalog-malformed",
+        "schema-uri-malformed",
+        "schema-scope-unknown",
+        "schema-scope-ambiguous",
+        "schema-export-unknown",
+        "schema-format-unavailable",
+        "schema-file-missing",
+        "schema-ref-unresolved",
+        "schema-cross-scope-dependency-forbidden",
+        "schema-placement-forbidden-filename",
+        "schema-placement-outside-module",
+        "schema-contracts-directory-forbidden",
+        "schema-owner-ineligible",
+        "schema-export-incomplete",
+        "schema-dialect-not-draft-07",
+        "schema-module-id-missing",
+        "schema-fixture-defines-schema",
+        "schema-fixture-local-schema-fallback",
+        "schema-fixture-metadata-invalid",
+        "schema-fixture-parse-failed",
+        "schema-instance-invalid"
+      ],
+      "description": "🩺️ One code per distinguishable failure. \"It did not resolve\" is not actionable; \"the catalog declares no scope s.writer.absent\" is."
+    },
+    "SchemaDiagnostic": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "code",
+        "detail"
+      ],
+      "description": "🩺️ One schema-contract finding, carrying everything needed to act on it and nothing inferred.",
+      "properties": {
+        "code": {
+          "$ref": "#/$defs/SchemaDiagnosticCode"
+        },
+        "detail": {
+          "type": "string",
+          "minLength": 1
+        },
+        "scope": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "export": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "format": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "path": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "SchemaCatalogScope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "formats",
+        "exports",
+        "dependsOn"
+      ],
+      "description": "📚️ One scope's row in the derived catalog. `path` is the eligible owner directory; every `formats` value is a repository-relative file UNDER that directory.",
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "formats": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "exports": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SchemaExportId"
+          },
+          "uniqueItems": true
+        },
+        "dependsOn": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SchemaScopeId"
+          },
+          "uniqueItems": true
+        },
+        "hashes": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "SchemaCatalog": {
+      "type": "object",
+      "required": [
+        "scopes"
+      ],
+      "description": "📚️ The derived catalog: the single place `(scope id, export id, format id)` is answered from. Generated, never hand-edited.",
+      "properties": {
+        "scopes": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/SchemaCatalogScope"
+          }
+        }
+      }
+    },
+    "SchemaFixtureTarget": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "scope",
+        "export",
+        "format"
+      ],
+      "description": "🎯️ What a fixture BINDS to: a named export of a scope, in one format. Never a file path.",
+      "properties": {
+        "scope": {
+          "$ref": "#/$defs/SchemaScopeId"
+        },
+        "export": {
+          "$ref": "#/$defs/SchemaExportId"
+        },
+        "format": {
+          "$ref": "#/$defs/SchemaFormatId"
+        }
+      }
+    },
+    "SchemaStageExpectation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "stage",
+        "result"
+      ],
+      "description": "🎯️ The stage, verdict and code a fixture asserts. A negative fixture that merely 'fails' measures nothing.",
+      "properties": {
+        "stage": {
+          "$ref": "#/$defs/SchemaFixtureStage"
+        },
+        "result": {
+          "enum": [
+            "passed",
+            "failed"
+          ]
+        },
+        "code": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "SchemaBoundFixture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "uri",
+        "target",
+        "expect"
+      ],
+      "description": "🧫️ One example that binds to a declared export. Exactly one of `data` (a case-relative file) and `inline` carries the subject.",
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/Slug"
+        },
+        "uri": {
+          "$ref": "#/$defs/SchemaExportUri"
+        },
+        "target": {
+          "$ref": "#/$defs/SchemaFixtureTarget"
+        },
+        "data": {
+          "type": "string",
+          "minLength": 1
+        },
+        "inline": {},
+        "expect": {
+          "$ref": "#/$defs/SchemaStageExpectation"
+        }
+      }
+    },
+    "SchemaStageOutcome": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "stage",
+        "result",
+        "code",
+        "detail"
+      ],
+      "description": "🪜️ What one stage did. Every stage is reported — the ones after a failure as `skipped`, never omitted.",
+      "properties": {
+        "stage": {
+          "$ref": "#/$defs/SchemaFixtureStage"
+        },
+        "result": {
+          "enum": [
+            "passed",
+            "failed",
+            "skipped"
+          ]
+        },
+        "code": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "detail": {
+          "type": "string"
+        }
+      }
+    },
+    "SchemaFixtureReport": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "fixture",
+        "uri",
+        "target",
+        "stages",
+        "outcome",
+        "expected",
+        "detail"
+      ],
+      "description": "📤️ One schema-bound fixture's staged report — what `test schema` prints and a gate reads.",
+      "properties": {
+        "fixture": {
+          "type": "string",
+          "minLength": 1
+        },
+        "uri": {
+          "$ref": "#/$defs/SchemaExportUri"
+        },
+        "target": {
+          "$ref": "#/$defs/SchemaFixtureTarget"
+        },
+        "stages": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SchemaStageOutcome"
+          },
+          "minItems": 6,
+          "maxItems": 6
+        },
+        "outcome": {
+          "enum": [
+            "passed",
+            "failed"
+          ]
+        },
+        "expected": {
+          "$ref": "#/$defs/SchemaStageExpectation"
+        },
+        "detail": {
+          "type": "string"
+        }
+      }
+    },
+    "ContributionDirectoryOwnershipCases": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "defaultDirectory",
+        "overrides",
+        "cases"
+      ],
+      "description": "🧭️ The neutral owner-override vector every contribution-directory implementation is measured against. It lives here, in the owning module, because a case directory holds examples and never the contract they are examples of.",
+      "properties": {
+        "$schema": {
+          "type": "string"
+        },
+        "defaultDirectory": {
+          "type": "string",
+          "minLength": 1
+        },
+        "overrides": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "owner",
+              "directory",
+              "path",
+              "owned"
+            ],
+            "properties": {
+              "owner": {
+                "type": "string",
+                "minLength": 1
+              },
+              "directory": {
+                "type": "string",
+                "minLength": 1
+              },
+              "path": {
+                "type": "string",
+                "minLength": 1
+              },
+              "owned": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      }
+    },
+    "SchemaInvariantCases": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "eligibilityCases",
+        "treeCases",
+        "resolutionCases",
+        "catalogCases",
+        "validationCases",
+        "pipelineCases"
+      ],
+      "description": "🧬️ The language-agnostic vector every implementation of the scope-owned schema contract is measured against: who may own a contract, where a definition may live, how `schema://` resolves, what a draft-07 validator must decide, and which stage a bound fixture fails at.",
+      "properties": {
+        "$schema": {
+          "type": "string"
+        },
+        "schema": {
+          "const": "semio.repository-test.schema-invariant-cases/v2"
+        },
+        "eligibilityCases": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "path",
+              "eligible",
+              "level"
+            ],
+            "properties": {
+              "id": {
+                "$ref": "#/$defs/Slug"
+              },
+              "path": {
+                "type": "string",
+                "minLength": 1
+              },
+              "eligible": {
+                "type": "boolean"
+              },
+              "level": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            }
+          }
+        },
+        "treeCases": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "title",
+              "invariant",
+              "files",
+              "expect"
+            ],
+            "properties": {
+              "id": {
+                "$ref": "#/$defs/Slug"
+              },
+              "title": {
+                "type": "string",
+                "minLength": 1
+              },
+              "invariant": {
+                "enum": [
+                  "placement",
+                  "owner-eligibility",
+                  "completeness",
+                  "export-resolution",
+                  "fixture-isolation"
+                ]
+              },
+              "files": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "path",
+                    "json"
+                  ],
+                  "properties": {
+                    "path": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "json": {}
+                  }
+                }
+              },
+              "expect": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "code",
+                    "path"
+                  ],
+                  "properties": {
+                    "code": {
+                      "$ref": "#/$defs/SchemaDiagnosticCode"
+                    },
+                    "path": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "resolutionCases": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "uri",
+              "expect"
+            ],
+            "properties": {
+              "id": {
+                "$ref": "#/$defs/Slug"
+              },
+              "declareResolution": {
+                "type": "boolean"
+              },
+              "omitCatalog": {
+                "type": "boolean"
+              },
+              "duplicateScopeId": {
+                "$ref": "#/$defs/SchemaScopeId"
+              },
+              "aliasScopeId": {
+                "$ref": "#/$defs/SchemaScopeId"
+              },
+              "fixtureOwnedScope": {
+                "type": "boolean"
+              },
+              "uri": {
+                "type": "string",
+                "minLength": 1
+              },
+              "format": {
+                "$ref": "#/$defs/SchemaFormatId"
+              },
+              "expect": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "resolved",
+                  "codes"
+                ],
+                "properties": {
+                  "resolved": {
+                    "type": "boolean"
+                  },
+                  "path": {
+                    "type": "string"
+                  },
+                  "codes": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/$defs/SchemaDiagnosticCode"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "catalogCases": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "expect"
+            ],
+            "properties": {
+              "id": {
+                "$ref": "#/$defs/Slug"
+              },
+              "recursiveRef": {
+                "type": "boolean"
+              },
+              "unresolvedLocalRef": {
+                "type": "boolean"
+              },
+              "crossScopeRef": {
+                "type": "boolean"
+              },
+              "declareDependency": {
+                "type": "boolean"
+              },
+              "filePathRef": {
+                "type": "boolean"
+              },
+              "dropRustExport": {
+                "type": "boolean"
+              },
+              "dropTypescriptExport": {
+                "type": "boolean"
+              },
+              "dropProtoExport": {
+                "type": "boolean"
+              },
+              "dropGraphqlExport": {
+                "type": "boolean"
+              },
+              "expect": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "code"
+                  ],
+                  "properties": {
+                    "code": {
+                      "$ref": "#/$defs/SchemaDiagnosticCode"
+                    },
+                    "format": {
+                      "$ref": "#/$defs/SchemaFormatId"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "validationCases": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "schema",
+              "instance",
+              "valid"
+            ],
+            "properties": {
+              "id": {
+                "$ref": "#/$defs/Slug"
+              },
+              "schema": {
+                "type": "object"
+              },
+              "instance": {},
+              "valid": {
+                "type": "boolean"
+              }
+            }
+          }
+        },
+        "pipelineCases": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "fixture",
+              "expect"
+            ],
+            "properties": {
+              "id": {
+                "$ref": "#/$defs/Slug"
+              },
+              "dropRustExport": {
+                "type": "boolean"
+              },
+              "fixture": {
+                "$ref": "#/$defs/SchemaBoundFixture"
+              },
+              "expect": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "outcome",
+                  "failedStage",
+                  "code"
+                ],
+                "properties": {
+                  "outcome": {
+                    "enum": [
+                      "passed",
+                      "failed"
+                    ]
+                  },
+                  "failedStage": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "code": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
       }
     }
   },
   "oneOf": [
-    { "$ref": "#/$defs/TestCasePlan" },
-    { "$ref": "#/$defs/TestResult" },
-    { "$ref": "#/$defs/OracleRegistry" },
-    { "$ref": "#/$defs/MutationManifest" },
-    { "$ref": "#/$defs/RuntimeMutationInventory" },
-    { "$ref": "#/$defs/FixtureManifest" },
-    { "$ref": "#/$defs/ProbeReport" },
-    { "$ref": "#/$defs/RunManifest" },
-    { "$ref": "#/$defs/RunLease" }
+    {
+      "$ref": "#/$defs/TestCasePlan"
+    },
+    {
+      "$ref": "#/$defs/TestResult"
+    },
+    {
+      "$ref": "#/$defs/OracleRegistry"
+    },
+    {
+      "$ref": "#/$defs/MutationManifest"
+    },
+    {
+      "$ref": "#/$defs/RuntimeMutationInventory"
+    },
+    {
+      "$ref": "#/$defs/FixtureManifest"
+    },
+    {
+      "$ref": "#/$defs/ProbeReport"
+    },
+    {
+      "$ref": "#/$defs/RunManifest"
+    },
+    {
+      "$ref": "#/$defs/RunLease"
+    },
+    {
+      "$ref": "#/$defs/SchemaCatalog"
+    },
+    {
+      "$ref": "#/$defs/SchemaFixtureReport"
+    },
+    {
+      "$ref": "#/$defs/SchemaInvariantCases"
+    },
+    {
+      "$ref": "#/$defs/ContributionDirectoryOwnershipCases"
+    }
   ]
 }

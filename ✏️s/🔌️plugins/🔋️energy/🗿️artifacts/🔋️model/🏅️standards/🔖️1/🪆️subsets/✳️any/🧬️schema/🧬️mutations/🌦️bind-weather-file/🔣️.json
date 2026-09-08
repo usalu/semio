@@ -5,7 +5,7 @@
   "displayName": "Bind Weather File",
   "emoji": "🌦️",
   "aggregateVariant": "BindWeatherFile",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "bind-weather-file",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

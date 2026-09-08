@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/flow/mutation/remove-node-param.json",
+  "title": "RemoveNodeParam",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "key"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "key": {
+      "type": "string"
+    },
+    "mutation": {
+      "const": "removeNodeParam",
+      "description": "Aggregate discriminator spliced in by SemioFlowMutation; absent when the payload stands alone."
+    }
+  }
+}

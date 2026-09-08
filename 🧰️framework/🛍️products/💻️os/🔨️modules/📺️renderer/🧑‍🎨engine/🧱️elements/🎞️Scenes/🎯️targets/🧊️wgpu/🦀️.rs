@@ -380,6 +380,7 @@ impl Viewport {
         ((sx - cx) / self.zoom + self.x, (sy - cy) / self.zoom + self.y)
     }
 
+    #[cfg(test)]
     fn world_to_screen(&self, wx: f32, wy: f32, origin: Rect) -> (f32, f32) {
         let cx = origin.x + origin.w * 0.5;
         let cy = origin.y + origin.h * 0.5;
@@ -411,12 +412,13 @@ struct SceneSurfaceState {
     viewport: Viewport,
     drag: Option<SceneDrag>,
     pointer_was_down: bool,
+    #[cfg(test)]
     last_click_ms: f64,
+    #[cfg(test)]
     last_click_target: Option<String>,
+    #[cfg(test)]
     node_positions: HashMap<String, (f32, f32)>,
     selected_ids: HashSet<String>,
-    canvas_image_digests: HashMap<String, u64>,
-    canvas_image_src_digests: HashMap<String, u64>,
     paint_stroke_active: bool,
     vfs_expanded_ids: HashSet<String>,
     vfs_selection_anchor: Option<String>,
@@ -1043,6 +1045,7 @@ pub(crate) fn set_scene_last_pointer_pos(surface_id: &str, x: f32, y: f32) {
     });
 }
 
+#[cfg(test)]
 fn scene_action(scene: &UiComponentSceneNode, action: &str, args: Value) -> ActionDescriptor {
     ActionDescriptor { controller_id: scene.controller_id.clone(), action: action.into(), args: semio_framework::optional_json_to_dsl(Some(args)) }
 }
@@ -1171,13 +1174,8 @@ fn ink_block_cursor_visits_nested_groups_in_stable_depth_first_order() {
         id: header.id,
         camera: header.camera,
         active_utility: header.active_utility,
-        grid_visible: header.grid_visible,
-        grid_spacing: header.grid_spacing,
-        grid_subdivisions: header.grid_subdivisions,
-        grid_opacity: header.grid_opacity,
         snap_enabled: header.snap_enabled,
         snap_grid_spacing: header.snap_grid_spacing,
-        pencil_width: header.pencil_width,
         eraser_radius: header.eraser_radius,
     };
     let mut cursor = InkBlockCursor::default();
@@ -1220,11 +1218,13 @@ fn set_scroll_offset(surface_id: &str, suffix: &str, value: f32) {
 }
 
 #[cfg(target_arch = "wasm32")]
+#[cfg(test)]
 fn now_ms() -> f64 {
     web_sys::window().and_then(|window| window.performance()).map(|perf| perf.now()).unwrap_or(0.0)
 }
 
 #[cfg(not(target_arch = "wasm32"))]
+#[cfg(test)]
 fn now_ms() -> f64 {
     0.0
 }
@@ -1910,66 +1910,8 @@ impl Default for Paint2dCameraFields {
     }
 }
 
-#[derive(Deserialize, Clone, Copy)]
-#[serde(rename_all = "camelCase")]
-struct Paint2dTransformFields {
-    #[serde(default)]
-    x: f64,
-    #[serde(default)]
-    y: f64,
-    #[serde(default = "paint2d_default_one")]
-    scale_x: f64,
-    #[serde(default = "paint2d_default_one")]
-    scale_y: f64,
-}
-
-impl Default for Paint2dTransformFields {
-    fn default() -> Self {
-        Self { x: 0.0, y: 0.0, scale_x: 1.0, scale_y: 1.0 }
-    }
-}
-
 fn paint2d_default_one() -> f64 {
     1.0
-}
-
-fn paint2d_default_true() -> bool {
-    true
-}
-
-fn paint2d_default_opacity() -> f32 {
-    1.0
-}
-
-#[derive(Deserialize, Clone)]
-#[serde(tag = "kind", rename_all = "camelCase")]
-enum Paint2dLayerJson {
-    #[serde(rename = "pixel", rename_all = "camelCase")]
-    Pixel {
-        id: String,
-        #[serde(default = "paint2d_default_true")]
-        visible: bool,
-        #[serde(default = "paint2d_default_opacity")]
-        opacity: f32,
-        #[serde(default)]
-        transform: Paint2dTransformFields,
-        width: Option<u32>,
-        height: Option<u32>,
-        image_key: Option<String>,
-    },
-    #[serde(rename = "group", rename_all = "camelCase")]
-    Group {
-        #[serde(default = "paint2d_default_true")]
-        visible: bool,
-        #[serde(default = "paint2d_default_opacity")]
-        opacity: f32,
-        #[serde(default)]
-        transform: Paint2dTransformFields,
-        #[serde(default)]
-        children: Vec<Paint2dLayerJson>,
-    },
-    #[serde(rename = "adjustment", rename_all = "camelCase")]
-    Adjustment {},
 }
 
 #[derive(Deserialize, Default)]
@@ -1977,23 +1919,17 @@ enum Paint2dLayerJson {
 struct Paint2dDocSyncJson {
     #[serde(default)]
     camera: Paint2dCameraFields,
-    #[serde(default)]
-    layers: Vec<Paint2dLayerJson>,
 }
 
 #[cfg(test)]
 struct Paint2dFlatLayer {
-    id: String,
-    image_key: Option<String>,
     x: f64,
     y: f64,
     scale_x: f64,
     scale_y: f64,
-    opacity: f32,
     width: u32,
     height: u32,
 }
-
 
 //#region Paint2dNavigator
 #[cfg(test)]
@@ -2105,6 +2041,7 @@ struct TableCellButtonPayload {
 }
 
 /// 🔗️ Merges `patch` into `base`'s existing args (rather than replacing them), so a stepper/button cell keeps its row-identifying args (e.g. `objectId`) alongside the delta/click patch.
+#[cfg(test)]
 fn merge_action_args(base: &ActionDescriptor, patch: Value) -> ActionDescriptor {
     let mut args = match &base.args {
         Some(dsl) => match Value::from(dsl) {
@@ -4744,13 +4681,8 @@ struct InkDocumentJson {
     camera: InkCameraJson,
     blocks: Vec<Value>,
     active_utility: Option<String>,
-    grid_visible: Option<bool>,
-    grid_spacing: Option<f64>,
-    grid_subdivisions: Option<f64>,
-    grid_opacity: Option<f64>,
     snap_enabled: Option<bool>,
     snap_grid_spacing: Option<f64>,
-    pencil_width: Option<f64>,
     eraser_radius: Option<f64>,
     assets: HashMap<String, Value>,
 }
@@ -4763,13 +4695,8 @@ impl Default for InkDocumentJson {
             camera: InkCameraJson::default(),
             blocks: Vec::new(),
             active_utility: Some("selectDirect".into()),
-            grid_visible: None,
-            grid_spacing: None,
-            grid_subdivisions: None,
-            grid_opacity: None,
             snap_enabled: None,
             snap_grid_spacing: None,
-            pencil_width: None,
             eraser_radius: None,
             assets: HashMap::new(),
         }
@@ -5186,13 +5113,8 @@ struct InkInteractionDocument {
     id: String,
     camera: InkCameraJson,
     active_utility: Option<String>,
-    grid_visible: Option<bool>,
-    grid_spacing: Option<f64>,
-    grid_subdivisions: Option<f64>,
-    grid_opacity: Option<f64>,
     snap_enabled: Option<bool>,
     snap_grid_spacing: Option<f64>,
-    pencil_width: Option<f64>,
     eraser_radius: Option<f64>,
 }
 
@@ -5649,13 +5571,8 @@ fn checked_ink_document(scene: &UiComponentSceneNode) -> Result<Option<InkIntera
         id: document.id,
         camera: document.camera,
         active_utility: document.active_utility,
-        grid_visible: document.grid_visible,
-        grid_spacing: document.grid_spacing,
-        grid_subdivisions: document.grid_subdivisions,
-        grid_opacity: document.grid_opacity,
         snap_enabled: document.snap_enabled,
         snap_grid_spacing: document.snap_grid_spacing,
-        pencil_width: document.pencil_width,
         eraser_radius: document.eraser_radius,
     }))
 }
@@ -7095,7 +7012,7 @@ mod raster_frame_cost_tests {
     //#region Paint2dNavigatorTests
     #[test]
     fn paint2d_navigator_fit_viewport_centers_and_scales_to_content_bounds() {
-        let flat = vec![Paint2dFlatLayer { id: "a".into(), image_key: Some("k".into()), x: 100.0, y: 50.0, scale_x: 1.0, scale_y: 1.0, opacity: 1.0, width: 200, height: 100 }];
+        let flat = vec![Paint2dFlatLayer { x: 100.0, y: 50.0, scale_x: 1.0, scale_y: 1.0, width: 200, height: 100 }];
         let inner = Rect::new(0.0, 0.0, 100.0, 100.0);
         let viewport = paint2d_navigator_fit_viewport(&flat, inner);
         assert!((viewport.x - 100.0).abs() < 0.01, "camera should center on content x, got {}", viewport.x);
@@ -7694,81 +7611,10 @@ pub fn tiled_map_drag_active(surface_id: &str) -> bool {
 //#region IconRender
 #[cfg(test)]
 #[derive(Deserialize)]
-#[serde(rename_all = "camelCase")]
-struct IconRenderCameraFields {
-    position: [f64; 3],
-    target: [f64; 3],
-    #[serde(default = "icon_render_default_zoom")]
-    zoom: f64,
-    #[serde(default)]
-    fov: Option<f64>,
-    #[serde(default)]
-    up: Option<[f64; 3]>,
-}
-
-
-#[cfg(test)]
-fn icon_render_default_zoom() -> f64 {
-    1.0
-}
-
-#[cfg(test)]
-#[derive(Deserialize, Clone, Default)]
-#[serde(rename_all = "camelCase")]
-struct IconRenderLightsFields {
-    #[serde(default)]
-    ambient_intensity: f64,
-    #[serde(default)]
-    ambient_color: Option<String>,
-    #[serde(default)]
-    sun_azimuth: f64,
-    #[serde(default)]
-    sun_elevation: f64,
-    #[serde(default)]
-    sun_intensity: f64,
-    #[serde(default)]
-    sun_color: Option<String>,
-}
-
-#[cfg(test)]
-#[derive(Deserialize)]
-#[serde(rename_all = "camelCase")]
-struct IconRenderMaterialFields {
-    #[serde(default)]
-    color: Option<String>,
-    #[serde(default)]
-    metalness: Option<f64>,
-    #[serde(default)]
-    roughness: Option<f64>,
-    #[serde(default)]
-    emissive: Option<String>,
-    #[serde(default)]
-    emissive_intensity: Option<f64>,
-}
-
-#[cfg(test)]
-#[derive(Deserialize)]
-#[serde(rename_all = "camelCase")]
 struct IconRenderRequestFields {
-    asset_url: String,
-    camera: IconRenderCameraFields,
-    #[serde(default)]
-    lights: Option<IconRenderLightsFields>,
     width: f64,
     height: f64,
-    #[serde(default)]
-    shape: Option<String>,
-    #[serde(default)]
-    background: Option<String>,
-    #[serde(default)]
-    shadow_enabled: Option<bool>,
-    #[serde(default)]
-    material: Option<IconRenderMaterialFields>,
 }
-
-
-
-
 
 /// 🖼️ The aspect-fit frame border, size/shape badge, and optional footer caption painted on top of
 /// the delegated `render_world_3d` GLB draw — split out from `render_icon_render` (which needs a

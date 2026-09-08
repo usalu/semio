@@ -74,7 +74,7 @@ Feature: Answer the same puzzle2d vectors a second time, in a second ecosystem, 
   @mode-conformance
   Scenario: the npm jsonschema accepts every committed payload against its own leaf schema and rejects an undeclared member
     Given every committed vector under asset://🧬️schema/🧬️mutations/🔣️.json
-    When each payload is validated against its leaf 🧬️.schema.json
+    When each payload is validated against its leaf 🧬️schema/🔣️.json
     Then the committed payload carries its kind's own internally tagged discriminator
     And the validator accepts the committed payload with no error
     And the validator rejects the same payload once a member the schema does not declare is added

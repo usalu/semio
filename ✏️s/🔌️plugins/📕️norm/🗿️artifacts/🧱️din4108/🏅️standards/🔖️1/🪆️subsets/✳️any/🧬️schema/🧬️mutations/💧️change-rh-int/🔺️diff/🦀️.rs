@@ -11,6 +11,6 @@ pub fn diff(payload: &ChangeRhInt, base: &Din4108Snapshot) -> protocol::Mutation
     if base.rh_int == payload.new_rh_int {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "Rh int already has this value.");
     }
-    protocol::MutationOutcome::new(Din4108Diff { rh_int: Some(payload.new_rh_int.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(Din4108Diff { rh_int: Some(payload.new_rh_int), ..Default::default() })
 }
 //#endregion 🔖️Diff

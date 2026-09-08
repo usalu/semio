@@ -154,9 +154,9 @@ fn round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::{inverse_spec, mutable_input};
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_plugin_stdio::artifacts::ply::standards::v1_0::subsets::any::io::{decode_ply, encode_ply_with_format};
-    use semio_s_plugin_stdio::artifacts::ply::standards::v1_0::subsets::any::schema::mutations::{add_element, apply_ply_mutation, insert_comment, insert_row, remove_comment, remove_element, remove_row, set_format, set_row_property, set_snapshot, PlyMutation};
-    use semio_s_plugin_stdio::artifacts::ply::standards::v1_0::subsets::any::schema::snapshot::{PlyElement, PlyFormat, PlyProperty, PlyRow, PlyScalarType, PlySnapshot, PlyValue};
+    use crate::standards::v1_0::subsets::any::io::{decode_ply, encode_ply_with_format};
+    use crate::standards::v1_0::subsets::any::schema::mutations::{add_element, apply_ply_mutation, insert_comment, insert_row, remove_comment, remove_element, remove_row, set_format, set_row_property, set_snapshot, PlyMutation};
+    use crate::standards::v1_0::subsets::any::schema::snapshot::{PlyElement, PlyFormat, PlyProperty, PlyRow, PlyScalarType, PlySnapshot, PlyValue};
     use semio_s_plugin_stdio_test_oracle::artifacts::ply::standards::v1_0::subsets::any::project_ply;
 
     //#region 🔖️SpecReading
@@ -283,7 +283,7 @@ mod subject {
                     Some(Json::Array(items)) => items.iter().map(element_from_json).collect::<Result<Vec<_>, String>>()?,
                     _ => Vec::new(),
                 };
-                let mut next = semio_s_plugin_stdio::artifacts::ply::standards::v1_0::subsets::any::schema::snapshot::PlySnapshot::default();
+                let mut next = crate::standards::v1_0::subsets::any::schema::snapshot::PlySnapshot::default();
                 next.format = format_from_json(&json_str(snapshot_json, "format").unwrap_or_else(|| "ascii".to_string()))?;
                 next.comments = string_array(snapshot_json, "comments");
                 next.elements = elements;

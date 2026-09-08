@@ -5,7 +5,7 @@
   "displayName": "Remove Plant Loop Equipment",
   "emoji": "⚙️",
   "aggregateVariant": "RemovePlantLoopEquipment",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "remove-plant-loop-equipment",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

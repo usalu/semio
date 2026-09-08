@@ -10,7 +10,7 @@ use crate::artifacts::fem2d::Fem2dSnapshot;
 use semio_framework::io::io_mechanism::Deserializer;
 use semio_framework::io_schema::{Confidence, Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};
-use semio_s_plugin_stdio::artifacts::csv::schema::snapshot::decode_csv_with;
+use semio_s_artifact_stdio_csv::schema::snapshot::decode_csv_with;
 
 /// 🎯️ The foreign dialect this leaf reads.
 pub const CSV_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.csv", standard: StandardId("rfc4180"), subset: SubsetId::ANY };

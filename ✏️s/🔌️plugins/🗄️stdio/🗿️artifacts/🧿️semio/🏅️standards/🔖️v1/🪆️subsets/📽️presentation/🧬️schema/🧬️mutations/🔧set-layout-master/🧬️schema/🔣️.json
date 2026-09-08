@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/presentation/mutation/set-layout-master.json",
+  "title": "SetLayoutMaster",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "master_id"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "master_id": {
+      "type": "string"
+    },
+    "mutation": {
+      "const": "setLayoutMaster",
+      "description": "Aggregate discriminator spliced in by SemioPresentationMutation; absent when the payload stands alone."
+    }
+  }
+}

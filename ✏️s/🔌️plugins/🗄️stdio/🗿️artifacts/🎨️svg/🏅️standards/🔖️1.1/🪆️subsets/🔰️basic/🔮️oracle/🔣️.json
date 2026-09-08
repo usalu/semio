@@ -95,7 +95,7 @@
         {
           "id": "insert-basic-element",
           "capability": "svg-1-1-basic-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied",
             "rejected"
@@ -116,7 +116,7 @@
         {
           "id": "insert-clip-path-shape",
           "capability": "svg-1-1-basic-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied",
             "rejected"
@@ -137,7 +137,7 @@
         {
           "id": "remove-element",
           "capability": "svg-1-1-basic-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -157,7 +157,7 @@
         {
           "id": "set-basic-attribute",
           "capability": "svg-1-1-basic-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied",
             "rejected"
@@ -178,7 +178,7 @@
         {
           "id": "set-clip-path-reference",
           "capability": "svg-1-1-basic-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied",
             "rejected"
@@ -199,7 +199,7 @@
         {
           "id": "set-snapshot",
           "capability": "svg-1-1-basic-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -219,7 +219,7 @@
         {
           "id": "set-text",
           "capability": "svg-1-1-basic-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -239,7 +239,7 @@
         {
           "id": "set-transform",
           "capability": "svg-1-1-basic-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -259,7 +259,7 @@
         {
           "id": "set-view-box",
           "capability": "svg-1-1-basic-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -279,7 +279,7 @@
         {
           "id": "stamp-base-profile",
           "capability": "svg-1-1-basic-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],

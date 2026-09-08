@@ -5,7 +5,7 @@
   "displayName": "Delete Battery",
   "emoji": "♒️",
   "aggregateVariant": "DeleteBattery",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "delete-battery",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

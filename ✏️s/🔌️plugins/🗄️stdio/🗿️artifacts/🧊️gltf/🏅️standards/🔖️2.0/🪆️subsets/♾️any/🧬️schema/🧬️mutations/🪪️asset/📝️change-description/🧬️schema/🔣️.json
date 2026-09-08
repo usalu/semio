@@ -1,0 +1,18 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/asset/change-description.json",
+  "title": "GltfChangeAssetDescriptiveMetadataMutation",
+  "type": "object",
+  "x-semio": {
+    "id": "s.stdio.gltf.mutation.change-asset-descriptive-metadata.v1",
+    "version": 1,
+    "phase": "mutation",
+    "touchedPaths": [
+      "document/asset/generator",
+      "document/asset/copyright",
+      "document/asset/minVersion"
+    ],
+    "referencePolicy": "none"
+  },
+  "x-semio-mutation": "change-asset-descriptive-metadata"
+}

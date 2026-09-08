@@ -1329,7 +1329,7 @@
       ]
     },
     "word": {
-      "$ref": "semio.actor.byte-page.v1#/definitions/word"
+      "$ref": "https://semio.tech/schema/framework/actor/page/schema.json#/definitions/word"
     }
   }
 }

@@ -1,8 +1,8 @@
 //! 🔺️ Diff for `CreateColumn`.
 
-use crate::artifacts::semio::standards::v1::subsets::table::schema::diff::{SemioTableColumnList, SemioTableDiff, SemioTableRowList};
-use crate::artifacts::semio::standards::v1::subsets::table::schema::snapshot::{SemioTableColumn, SemioTableSnapshot};
-use crate::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValue;
+use crate::standards::v1::subsets::table::schema::diff::{SemioTableColumnList, SemioTableDiff, SemioTableRowList};
+use crate::standards::v1::subsets::table::schema::snapshot::{SemioTableColumn, SemioTableSnapshot};
+use crate::standards::v1::subsets::value::schema::snapshot::SemioValue;
 
 //#region 🔖️Diff
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

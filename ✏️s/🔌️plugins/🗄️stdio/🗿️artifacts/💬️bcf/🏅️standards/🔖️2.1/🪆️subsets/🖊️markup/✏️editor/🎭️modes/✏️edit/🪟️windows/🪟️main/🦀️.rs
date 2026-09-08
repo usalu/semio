@@ -2,7 +2,7 @@
 //! built with the shared `TableWindowKit`'s EDITABLE variant (contract §2.6, action id `set-cell`).
 //! Render is identical to the viewer's read; mutation is the surface root's `handle()` responsibility.
 
-use crate::artifacts::bcf::standards::v2_1::subsets::any::schema::snapshot::BcfSnapshot;
+use crate::standards::v2_1::subsets::any::schema::snapshot::BcfSnapshot;
 use semio_framework_plugin::app::{TableView, TableWindowKit};
 use semio_framework_plugin::{BuiltNode, WindowKindDefinition, WindowKit};
 

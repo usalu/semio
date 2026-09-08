@@ -24,11 +24,11 @@
 /// 🧩 Ordered removed keys, modified values, and inserted items.
 pub(crate) type IndexedDiffParts<D, T> = (Vec<usize>, Vec<(usize, D)>, Vec<(usize, T)>);
 
-use crate::artifacts::stl::schema::snapshot::StlTriangle;
-use crate::artifacts::stl::StlSnapshot;
+use crate::schema::snapshot::StlTriangle;
+use crate::StlSnapshot;
 use protocol::command::DiffAlgebra;
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
-use schema::ArtifactSchema;
+use framework_schema::ArtifactSchema;
 use std::collections::{BTreeSet, HashMap, HashSet};
 
 //#region 🔖️TriangleDiff

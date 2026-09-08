@@ -5,7 +5,7 @@
   "displayName": "Change Weekly Schedule Day",
   "emoji": "🕗️",
   "aggregateVariant": "ChangeWeeklyScheduleDay",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-weekly-schedule-day",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

@@ -1,0 +1,456 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/framework/kernel/schema.json",
+  "title": "Kernel Schema Module",
+  "definitions": {
+    "dialect": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "artifactKind",
+        "standard",
+        "subset"
+      ],
+      "properties": {
+        "artifactKind": {
+          "type": "string",
+          "minLength": 1
+        },
+        "standard": {
+          "type": "string",
+          "minLength": 1
+        },
+        "subset": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "appRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "pluginId",
+        "appId"
+      ],
+      "properties": {
+        "pluginId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "appId": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  },
+  "$defs": {
+    "DescriptorLoadFixture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "pluginId",
+        "moduleUrl",
+        "descriptorUrl",
+        "descriptor",
+        "rejected"
+      ],
+      "properties": {
+        "pluginId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "moduleUrl": {
+          "type": "string",
+          "minLength": 1
+        },
+        "descriptorUrl": {
+          "type": "string",
+          "minLength": 1
+        },
+        "descriptor": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "manifest"
+          ],
+          "properties": {
+            "manifest": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "pluginId",
+                "label",
+                "version",
+                "apps"
+              ],
+              "properties": {
+                "pluginId": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "label": {
+                  "type": "string"
+                },
+                "version": {
+                  "type": "string"
+                },
+                "apps": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "id"
+                    ],
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "minLength": 1
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "rejected": {
+          "type": "array",
+          "minItems": 7,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "status",
+              "contentType",
+              "body",
+              "fault"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "status": {
+                "type": "integer",
+                "minimum": 200,
+                "maximum": 599
+              },
+              "contentType": {
+                "type": "string",
+                "minLength": 1
+              },
+              "body": {
+                "type": "string"
+              },
+              "fault": {
+                "enum": [
+                  "plugin.descriptor-unavailable",
+                  "plugin.descriptor-invalid",
+                  "plugin.descriptor-identity-mismatch"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "SourceWatchFixture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "streams"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "streams": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "source",
+              "watchUrl"
+            ],
+            "properties": {
+              "source": {
+                "enum": [
+                  "dev",
+                  "extension"
+                ]
+              },
+              "watchUrl": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        }
+      }
+    },
+    "TurnPatchOwnerFixture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "surface",
+        "payload",
+        "byteGrants",
+        "itemGrant",
+        "zeroGrantMutates",
+        "dropWaitsForArena",
+        "normalStepWaitsForArena",
+        "transportProducerDropWaitsForArena",
+        "transportLeaseDropWaitsForArena",
+        "transportNormalStepWaitsForArena",
+        "transportBlocksExternalReuse",
+        "transportPoisonIsFault",
+        "retirementSlotReuseBeforeTerminal",
+        "maximumPatchOwners",
+        "maximumRetirementSlots"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "surface": {
+          "const": "7:保留,🙂"
+        },
+        "payload": {
+          "const": "αβ,🙂/保留"
+        },
+        "byteGrants": {
+          "const": [
+            1,
+            64,
+            4096
+          ]
+        },
+        "itemGrant": {
+          "const": 1
+        },
+        "zeroGrantMutates": {
+          "const": false
+        },
+        "dropWaitsForArena": {
+          "const": false
+        },
+        "normalStepWaitsForArena": {
+          "const": false
+        },
+        "transportProducerDropWaitsForArena": {
+          "const": false
+        },
+        "transportLeaseDropWaitsForArena": {
+          "const": false
+        },
+        "transportNormalStepWaitsForArena": {
+          "const": false
+        },
+        "transportBlocksExternalReuse": {
+          "const": true
+        },
+        "transportPoisonIsFault": {
+          "const": true
+        },
+        "retirementSlotReuseBeforeTerminal": {
+          "const": false
+        },
+        "maximumPatchOwners": {
+          "const": 1
+        },
+        "maximumRetirementSlots": {
+          "const": 64
+        }
+      }
+    },
+    "AppRouterPluginFaultsFixture": {
+      "title": "AppRouter per-plugin fault isolation vectors",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "manifests",
+        "expectedOwners",
+        "expectedRoutes",
+        "expectedFaults"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "manifests": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "pluginId",
+              "apps"
+            ],
+            "properties": {
+              "pluginId": {
+                "type": "string",
+                "minLength": 1
+              },
+              "artifactKinds": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "id"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  }
+                }
+              },
+              "dependencies": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "pluginId",
+                    "version"
+                  ],
+                  "properties": {
+                    "pluginId": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "version": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  }
+                }
+              },
+              "apps": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "id",
+                    "role",
+                    "dialect"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "role": {
+                      "enum": [
+                        "viewer",
+                        "editor"
+                      ]
+                    },
+                    "dialect": {
+                      "$ref": "#/definitions/dialect"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "expectedOwners": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "artifactKind",
+              "pluginId"
+            ],
+            "properties": {
+              "artifactKind": {
+                "type": "string",
+                "minLength": 1
+              },
+              "pluginId": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        },
+        "expectedRoutes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "dialect",
+              "role",
+              "entries"
+            ],
+            "properties": {
+              "dialect": {
+                "$ref": "#/definitions/dialect"
+              },
+              "role": {
+                "enum": [
+                  "viewer",
+                  "editor"
+                ]
+              },
+              "entries": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/definitions/appRef"
+                }
+              }
+            }
+          }
+        },
+        "expectedFaults": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "pluginId",
+              "code",
+              "origin",
+              "severity"
+            ],
+            "properties": {
+              "pluginId": {
+                "type": "string",
+                "minLength": 1
+              },
+              "code": {
+                "enum": [
+                  "surface.contribution-not-permitted",
+                  "surface.conflict"
+                ]
+              },
+              "origin": {
+                "const": "framework"
+              },
+              "severity": {
+                "const": "error"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

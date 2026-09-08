@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeHT, base: &Din18599Snapshot) -> protocol::MutationOu
     if base.h_t == payload.new_h_t {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "Ht already has this value.");
     }
-    protocol::MutationOutcome::new(Din18599Diff { h_t: Some(payload.new_h_t.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(Din18599Diff { h_t: Some(payload.new_h_t), ..Default::default() })
 }
 //#endregion 🔖️Diff

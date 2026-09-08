@@ -5,7 +5,7 @@
   "displayName": "Change Lighting Gain Watts Per Area",
   "emoji": "🔌️",
   "aggregateVariant": "ChangeLightingGainWattsPerArea",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-lighting-gain-watts-per-area",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

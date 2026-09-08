@@ -75,7 +75,7 @@ impl ToValue for EnergyModelArtifact {
 impl FromValue for EnergyModelArtifact {
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
         let entries = DslValue::into_object(value)?;
-        let field = |key: &str| entries.iter().find(|(k, _)| k == key).map(|(_, v)| v.clone()).unwrap_or(DslValue::Null);
+        let field = |key: &str| entries.iter().find(|(k, _)| k == key).map_or(DslValue::Null, |(_, v)| v.clone());
         Ok(Self {
             schema: String::from_value(field("schema"))?,
             model: crate::model::Model::from_value(field("model"))?,

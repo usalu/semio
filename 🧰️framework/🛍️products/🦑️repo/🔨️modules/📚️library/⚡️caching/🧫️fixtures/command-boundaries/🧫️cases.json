@@ -25,6 +25,16 @@
         "ScriptRouter"
       ],
       "maximumInputs": 2
+    },
+    {
+      "name": "Demonstrator runtime configuration",
+      "entry": "♻️mit-bestand/🧺️demonstrator/🔨️modules/🧩️runtime/🟦️.ts",
+      "exports": [
+        "demonstratorRuntimeBuildVariants",
+        "demonstratorRuntimeModuleLayout",
+        "demonstratorPaneRuntimeVariant"
+      ],
+      "maximumInputs": 12
     }
   ]
 }

@@ -14,8 +14,8 @@
 //!   plain `Str` value and is dropped — see the serializer's own doc comment for the encode side.
 //! - `nodes` always decodes empty — CSV has no graph/reference concept.
 
-use crate::artifacts::csv::CsvSnapshot;
-use crate::artifacts::semio::standards::v1::subsets::value::schema::snapshot::{SemioValue, SemioValueEntry, SemioValueSnapshot, STDIO_SEMIOVALUE_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_csv::CsvSnapshot;
+use crate::standards::v1::subsets::value::schema::snapshot::{SemioValue, SemioValueEntry, SemioValueSnapshot, STDIO_SEMIOVALUE_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId};
 
 //#region 🔖️Deserializer
@@ -60,7 +60,7 @@ pub fn semio_value_from_csv(snapshot: &CsvSnapshot) -> SemioValue {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::csv::schema::snapshot::{CsvField, CsvRecord};
+    use semio_s_artifact_stdio_csv::schema::snapshot::{CsvField, CsvRecord};
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn field(s: &str) -> CsvField {
@@ -70,7 +70,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn header_rows_become_a_list_of_keyed_maps() {
         let snapshot = CsvSnapshot {
-            schema: crate::artifacts::csv::STDIO_CSV_DOCUMENT_SCHEMA.into(),
+            schema: semio_s_artifact_stdio_csv::STDIO_CSV_DOCUMENT_SCHEMA.into(),
             has_header: true,
             records: vec![CsvRecord { fields: vec![field("name"), field("age")] }, CsvRecord { fields: vec![field("Ada"), field("36")] }, CsvRecord { fields: vec![field("Grace"), field("85")] }],
         };
@@ -86,7 +86,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn ragged_short_record_omits_missing_trailing_keys() {
-        let snapshot = CsvSnapshot { schema: crate::artifacts::csv::STDIO_CSV_DOCUMENT_SCHEMA.into(), has_header: true, records: vec![CsvRecord { fields: vec![field("a"), field("b"), field("c")] }, CsvRecord { fields: vec![field("1")] }] };
+        let snapshot = CsvSnapshot { schema: semio_s_artifact_stdio_csv::STDIO_CSV_DOCUMENT_SCHEMA.into(), has_header: true, records: vec![CsvRecord { fields: vec![field("a"), field("b"), field("c")] }, CsvRecord { fields: vec![field("1")] }] };
         let value = semio_value_from_csv(&snapshot);
         match value {
             SemioValue::List { items } => match &items[0] {
@@ -99,7 +99,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn headerless_csv_becomes_a_list_of_lists() {
-        let snapshot = CsvSnapshot { schema: crate::artifacts::csv::STDIO_CSV_DOCUMENT_SCHEMA.into(), has_header: false, records: vec![CsvRecord { fields: vec![field("x"), field("y")] }] };
+        let snapshot = CsvSnapshot { schema: semio_s_artifact_stdio_csv::STDIO_CSV_DOCUMENT_SCHEMA.into(), has_header: false, records: vec![CsvRecord { fields: vec![field("x"), field("y")] }] };
         let value = semio_value_from_csv(&snapshot);
         match value {
             SemioValue::List { items } => match &items[0] {

@@ -1,7 +1,7 @@
 //! 🔺️ Diff for `set-snapshot`.
 
-use crate::artifacts::binary::BinarySnapshot;
-use crate::artifacts::binary::schema::diff::{BinaryDiff, diff_set_snapshot};
+use crate::BinarySnapshot;
+use crate::schema::diff::{BinaryDiff, diff_set_snapshot};
 
 /// 🔺️ Diff helper for set-snapshot.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

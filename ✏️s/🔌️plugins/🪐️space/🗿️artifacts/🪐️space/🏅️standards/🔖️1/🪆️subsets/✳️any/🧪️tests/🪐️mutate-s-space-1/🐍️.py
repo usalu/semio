@@ -4,7 +4,7 @@ No third party reads `.sspace.dsl.semio` — generic table readers and content-a
 were surveyed and DECLINED, not merely absent (the recorded survey is kept verbatim in this subset's
 `🔮️oracle/🔣️.json` history). The reference is therefore a second IMPLEMENTATION, written from this
 subset's own committed `../../🧬️schema/📸️snapshot/🔣️.json` and each mutation's
-`🧬️.schema.json`, and from
+`🧬️schema/🔣️.json`, and from
 `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-DIRECT-LEAF-OVERHAUL/📓️taxonomy.md`'s
 `create`/`delete`/`rename` verb entries plus `📓️derivation-rules.md`'s per-id-keyed-collection recipe
 (rule 2: `create-<singular>`, `delete-<singular>`, `rename-<singular>`, `change-<singular>-<field>`).

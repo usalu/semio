@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeQCKwh, base: &Din16798Snapshot) -> protocol::Mutatio
     if base.q_c_kwh == payload.new_q_c_kwh {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Cooling energy demand is already {}.", payload.new_q_c_kwh));
     }
-    protocol::MutationOutcome::new(Din16798Diff { q_c_kwh: Some(payload.new_q_c_kwh.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(Din16798Diff { q_c_kwh: Some(payload.new_q_c_kwh), ..Default::default() })
 }
 //#endregion 🔖️Diff

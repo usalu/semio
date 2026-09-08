@@ -1,5 +1,5 @@
 {
-  "$schema": "./🧬️favicon.schema.json",
+  "$schema": "./🧬️schema/🔣️.json",
   "version": 1,
   "svg": "🛡️favicon.svg",
   "ico": "🔖️favicon.ico"

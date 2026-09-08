@@ -5,9 +5,9 @@
 //! is a `NamedAdded { index: base.textures.len(), item }`. Textures are a third top-level
 //! collection alongside meshes and materials — creating one binds it to nothing.
 
-use crate::artifacts::semio::standards::v1::subsets::mesh::schema::diff::SemioMeshDiff;
-use crate::artifacts::semio::standards::v1::subsets::mesh::schema::mutations::SemioMeshMutation;
-use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
+use crate::standards::v1::subsets::mesh::schema::diff::SemioMeshDiff;
+use crate::standards::v1::subsets::mesh::schema::mutations::SemioMeshMutation;
+use crate::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
 use protocol::{Mutation, MutationDiff};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");

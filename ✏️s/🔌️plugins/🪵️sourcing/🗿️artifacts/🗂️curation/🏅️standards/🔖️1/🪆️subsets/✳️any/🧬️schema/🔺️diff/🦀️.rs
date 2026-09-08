@@ -2,7 +2,7 @@
 
 use crate::artifacts::curation::{CuratedItem, Filters, ObjectKindExtra};
 use schema::ArtifactSchema;
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
+use semio_s_artifact_stdio_semio::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
 
 //#region 🔖️Diff
 /// 🔺️ Sparse field delta for the curation artifact; persistent entries apply via [`MutationDiff`](protocol::MutationDiff).

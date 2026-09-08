@@ -2,8 +2,8 @@
 //! (called once from 🔌️plugin/🔧️setup via ⚙️engine::register), not per-leaf register().
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use crate::artifacts::las::standards::v1_0::subsets::any::schema::LasAnalyzer;
-    use crate::artifacts::las::LasSnapshot;
+    use crate::standards::v1_0::subsets::any::schema::LasAnalyzer;
+    use crate::LasSnapshot;
     use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.las", standard: StandardId("1.0"), subset: SubsetId("*") };
@@ -54,8 +54,8 @@ pub use derived_composition::*;
 // truth for where VLRs/point data start (no hardcoded 227-byte clamp), and falls back to the
 // LAS 1.4 extended point count (offset 247, u64) when the legacy count field (offset 107) is
 // zero. Encode always emits a fixed 227-byte header — see 🚫️EncodeScopeNote below.
-use crate::artifacts::las::schema::snapshot::{LasHeader, LasPoint, LasVlr};
-use crate::artifacts::las::{LasSnapshot, STDIO_LAS_DOCUMENT_SCHEMA};
+use crate::schema::snapshot::{LasHeader, LasPoint, LasVlr};
+use crate::{LasSnapshot, STDIO_LAS_DOCUMENT_SCHEMA};
 
 //#region 🔖️ByteHelpers
 /// 🔍 Reads a null/space-padded fixed-width ASCII field, trimmed of trailing padding.
@@ -467,7 +467,7 @@ pub fn encode_las(snap: &LasSnapshot) -> Result<Vec<u8>, String> {
 
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
-    use crate::artifacts::las::standards::v1_0::subsets::any::schema::LasComposer as LasRawAnyComposer;
+    use crate::standards::v1_0::subsets::any::schema::LasComposer as LasRawAnyComposer;
     use semio_framework_plugin::{composer_entry_of, ComposerEntry};
     use std::sync::OnceLock;
 
@@ -484,7 +484,7 @@ pub mod io_registry {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::las::schema::{demo_las_snapshot, empty_las_snapshot};
+    use crate::schema::{demo_las_snapshot, empty_las_snapshot};
 
     #[semio_framework_async_macros::async_test]
     async fn empty_snapshot_matches_schema() {
@@ -771,7 +771,7 @@ mod tests {
     /// `encode_pack`/`encode_op`/`encode_diff` bytes, and the fixture-honesty round-trip.
     mod conformance_laws {
         use super::*;
-        use crate::artifacts::las::schema::{diff, mutations, snapshot};
+        use crate::schema::{diff, mutations, snapshot};
         use protocol::{DiffCodec, OpBinary, OpText};
 
         #[semio_framework_async_macros::async_test]

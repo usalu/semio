@@ -762,6 +762,349 @@ pub async fn state_class_kebab(class: StateClass) -> &'static str {
 }
 //#endregion 🔖️StateClassKebab
 
+//#region 🔖️SchemaExportResolution
+/// 🗂️ One of the five schema formats a scope publishes, mirroring the taxonomy `schemaFormats` keys.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub enum SchemaFormat {
+    Rust,
+    Typescript,
+    Graphql,
+    JsonSchema,
+    Protobuf,
+}
+
+impl SchemaFormat {
+    /// 🧾 Every format, in taxonomy declaration order.
+    pub const ALL: [Self; 5] = [Self::Rust, Self::Typescript, Self::Graphql, Self::JsonSchema, Self::Protobuf];
+
+    /// 🏷️ Ascii format id used by the derived catalog and the `schema://` resolver.
+    pub fn id(self) -> &'static str {
+        match self {
+            Self::Rust => "rust",
+            Self::Typescript => "typescript",
+            Self::Graphql => "graphql",
+            Self::JsonSchema => "jsonschema",
+            Self::Protobuf => "protobuf",
+        }
+    }
+
+    /// 🧩 Taxonomy `schemaFormats` key this format is the twin of.
+    pub fn taxonomy_key(self) -> &'static str {
+        match self {
+            Self::Rust => "🦀️rust",
+            Self::Typescript => "🟦️typescript",
+            Self::Graphql => "🔗️graphql",
+            Self::JsonSchema => "🔣️jsonschema",
+            Self::Protobuf => "🛰️protobuf",
+        }
+    }
+
+    /// 🔎 Parses either the ascii id or the taxonomy key.
+    pub fn parse(id: &str) -> Option<Self> {
+        Self::ALL.into_iter().find(|format| format.id() == id || format.taxonomy_key() == id)
+    }
+
+    /// 🍃 The leaf body this format occupies inside a [`FacetLeaves`].
+    pub fn leaf(self, leaves: &FacetLeaves) -> &'static str {
+        match self {
+            Self::Rust => leaves.rust,
+            Self::Typescript => leaves.typescript,
+            Self::Graphql => leaves.graphql,
+            Self::JsonSchema => leaves.json_schema,
+            Self::Protobuf => leaves.proto,
+        }
+    }
+}
+
+impl std::fmt::Display for SchemaFormat {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        formatter.write_str(self.id())
+    }
+}
+
+/// 🏷️ One named export of a scope — the `(export id, five format leaves)` pair the resolution key
+/// `(scope id, export id, format id)` needs beyond the four fixed facets.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct SchemaExport {
+    pub id: &'static str,
+    pub leaves: FacetLeaves,
+}
+
+/// 🧬️ A scope's named exports. Sibling to [`ArtifactSchemaDescriptor`]'s four fixed facets for the
+/// same reason [`ArtifactInferenceDescriptor`] is a sibling: the four-facet descriptor is handcrafted
+/// at 235 call sites in 115 files, and a scope declares named exports independently of them.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct ScopeSchemaExports {
+    pub scope: &'static str,
+    pub exports: &'static [SchemaExport],
+}
+
+/// 🔒️ Export ids reserved by the four fixed facets of [`ArtifactSchemaDescriptor`].
+pub const RESERVED_FACET_EXPORT_IDS: [&str; 4] = ["artifact", "snapshot", "diff", "mutations"];
+
+/// ⚠️ Named-export registration rejects a conflicting or internally duplicated declaration.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum SchemaExportRegistryError {
+    ConflictingScope { scope: String },
+    DuplicateExportId { scope: String, export: String },
+}
+
+impl std::fmt::Display for SchemaExportRegistryError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::ConflictingScope { scope } => write!(formatter, "schema-export declaration conflicts for scope {scope}"),
+            Self::DuplicateExportId { scope, export } => write!(formatter, "scope {scope} declares export id {export} twice"),
+        }
+    }
+}
+
+impl std::error::Error for SchemaExportRegistryError {}
+
+/// ⚠️ Why `(scope id, export id, format id)` did not resolve to a leaf body.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum SchemaResolveError {
+    UnknownScope { scope: String },
+    UnknownExport { scope: String, export: String },
+    FormatAbsent { scope: String, export: String, format: SchemaFormat },
+    AmbiguousScope { scope: String, export: String },
+}
+
+impl std::fmt::Display for SchemaResolveError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::UnknownScope { scope } => write!(formatter, "unknown schema scope {scope}"),
+            Self::UnknownExport { scope, export } => write!(formatter, "scope {scope} declares no export {export}"),
+            Self::FormatAbsent { scope, export, format } => write!(formatter, "scope {scope} export {export} has no {format} leaf"),
+            Self::AmbiguousScope { scope, export } => write!(formatter, "scope {scope} resolves export {export} from both a fixed facet and a named export"),
+        }
+    }
+}
+
+impl std::error::Error for SchemaResolveError {}
+
+/// ⚠️ Boundary validation could not be prepared for a `(scope id, export id)` pair.
+#[derive(Debug, PartialEq, Eq)]
+pub enum SchemaBoundaryError {
+    Resolve(SchemaResolveError),
+    Schema(SchemaError),
+}
+
+impl std::fmt::Display for SchemaBoundaryError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Resolve(error) => error.fmt(formatter),
+            Self::Schema(error) => error.fmt(formatter),
+        }
+    }
+}
+
+impl std::error::Error for SchemaBoundaryError {}
+
+/// 📇️ One resolvable `(scope id, export id, format id)` triple with a non-empty leaf body.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct SchemaExportEntry {
+    pub scope: &'static str,
+    pub export: &'static str,
+    pub format: SchemaFormat,
+}
+
+/// 📚 Resolves `(scope id, export id, format id)` over the fixed facets of registered
+/// [`ArtifactSchemaDescriptor`]s plus every scope's [`ScopeSchemaExports`]. Exact resolution only —
+/// no nearest-parent search, no glob, no fixture-local fallback.
+pub struct SchemaExportRegistry {
+    facets: HashMap<&'static str, ArtifactSchemaDescriptor>,
+    named: HashMap<&'static str, &'static [SchemaExport]>,
+}
+
+impl Default for SchemaExportRegistry {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl SchemaExportRegistry {
+    /// 🏗️ Empty registry.
+    pub fn new() -> Self {
+        Self { facets: HashMap::new(), named: HashMap::new() }
+    }
+
+    /// 📎 Adds one descriptor's four fixed facets. Exact duplicates are accepted, conflicts are fatal.
+    pub fn register_descriptor(&mut self, descriptor: ArtifactSchemaDescriptor) -> Result<(), SchemaExportRegistryError> {
+        match self.facets.get(descriptor.id) {
+            Some(established) if *established == descriptor => Ok(()),
+            Some(_) => Err(SchemaExportRegistryError::ConflictingScope { scope: descriptor.id.to_string() }),
+            None => {
+                self.facets.insert(descriptor.id, descriptor);
+                Ok(())
+            }
+        }
+    }
+
+    /// 📎 Adds one scope's named exports. Export ids must be unique inside the scope; exact duplicate
+    /// declarations are accepted, conflicts are fatal.
+    pub fn register_exports(&mut self, declaration: ScopeSchemaExports) -> Result<(), SchemaExportRegistryError> {
+        for (index, export) in declaration.exports.iter().enumerate() {
+            if declaration.exports[..index].iter().any(|previous| previous.id == export.id) {
+                return Err(SchemaExportRegistryError::DuplicateExportId { scope: declaration.scope.to_string(), export: export.id.to_string() });
+            }
+        }
+        match self.named.get(declaration.scope) {
+            Some(established) if *established == declaration.exports => Ok(()),
+            Some(_) => Err(SchemaExportRegistryError::ConflictingScope { scope: declaration.scope.to_string() }),
+            None => {
+                self.named.insert(declaration.scope, declaration.exports);
+                Ok(())
+            }
+        }
+    }
+
+    /// 🚶 Every registered scope id, sorted.
+    pub fn scopes(&self) -> Vec<&'static str> {
+        let mut scopes: Vec<&'static str> = self.facets.keys().chain(self.named.keys()).copied().collect();
+        scopes.sort_unstable();
+        scopes.dedup();
+        scopes
+    }
+
+    /// 🧾 Every export id a scope publishes — the four fixed facets first, then the named exports in
+    /// declaration order.
+    pub fn exports(&self, scope: &str) -> Result<Vec<&'static str>, SchemaResolveError> {
+        let facets = self.facets.get(scope);
+        let named = self.named.get(scope);
+        if facets.is_none() && named.is_none() {
+            return Err(SchemaResolveError::UnknownScope { scope: scope.to_string() });
+        }
+        let mut exports: Vec<&'static str> = facets.map(|_| RESERVED_FACET_EXPORT_IDS.to_vec()).unwrap_or_default();
+        exports.extend(named.into_iter().flat_map(|exports| exports.iter().map(|export| export.id)));
+        Ok(exports)
+    }
+
+    /// 🔎 Resolves one `(scope id, export id, format id)` triple to its handcrafted leaf body.
+    pub fn resolve(&self, scope: &str, export: &str, format: SchemaFormat) -> Result<&'static str, SchemaResolveError> {
+        let leaves = self.leaves(scope, export)?;
+        let body = format.leaf(&leaves);
+        if body.trim().is_empty() {
+            return Err(SchemaResolveError::FormatAbsent { scope: scope.to_string(), export: export.to_string(), format });
+        }
+        Ok(body)
+    }
+
+    /// 🍃 The five format leaves behind one `(scope id, export id)` pair.
+    pub fn leaves(&self, scope: &str, export: &str) -> Result<FacetLeaves, SchemaResolveError> {
+        let descriptor = self.facets.get(scope);
+        let named = self.named.get(scope);
+        if descriptor.is_none() && named.is_none() {
+            return Err(SchemaResolveError::UnknownScope { scope: scope.to_string() });
+        }
+        let facet = descriptor.and_then(|descriptor| match export {
+            "artifact" => Some(descriptor.artifact),
+            "snapshot" => Some(descriptor.snapshot),
+            "diff" => Some(descriptor.diff),
+            "mutations" => Some(descriptor.mutations),
+            _ => None,
+        });
+        let declared = named.and_then(|exports| exports.iter().find(|candidate| candidate.id == export)).map(|candidate| candidate.leaves);
+        match (facet, declared) {
+            (Some(_), Some(_)) => Err(SchemaResolveError::AmbiguousScope { scope: scope.to_string(), export: export.to_string() }),
+            (Some(leaves), None) | (None, Some(leaves)) => Ok(leaves),
+            (None, None) => Err(SchemaResolveError::UnknownExport { scope: scope.to_string(), export: export.to_string() }),
+        }
+    }
+
+    /// ✅ Compiles the structural validator for one export's JSON Schema leaf. Every other
+    /// registered JSON Schema leaf is offered as a sibling document, so a cross-scope `$ref` naming
+    /// its target's `$id` resolves without a filesystem read. This is the entry point application
+    /// boundary code uses to structurally validate serialized input before any domain rule runs.
+    pub fn structural_validator(&self, scope: &str, export: &str) -> Result<crate::OwnedJsonSchemaValidator, SchemaBoundaryError> {
+        let body = self.resolve(scope, export, SchemaFormat::JsonSchema).map_err(SchemaBoundaryError::Resolve)?;
+        let mut documents: std::collections::BTreeMap<String, &'static str> = std::collections::BTreeMap::new();
+        for entry in self.entries().filter(|entry| entry.format == SchemaFormat::JsonSchema) {
+            let Ok(sibling) = self.resolve(entry.scope, entry.export, SchemaFormat::JsonSchema) else { continue };
+            let Some(id) = parse_json(sibling).ok().and_then(|document| document.get("$id").and_then(Value::as_str).map(str::to_string)) else { continue };
+            match documents.insert(id.clone(), sibling) {
+                Some(established) if established != sibling => return Err(SchemaBoundaryError::Schema(SchemaError::Validation(format!("two schema leaves declare `$id` {id}")))),
+                _ => {}
+            }
+        }
+        let bodies: Vec<&str> = documents.values().copied().collect();
+        crate::OwnedJsonSchemaValidator::compile_with_documents(body, &bodies).map_err(SchemaBoundaryError::Schema)
+    }
+
+    /// 🚶 Every resolvable `(scope, export, format)` triple with a non-empty leaf, in deterministic
+    /// order — the cross-check input for the derived schema catalog.
+    pub fn entries(&self) -> impl Iterator<Item = SchemaExportEntry> + '_ {
+        self.scopes().into_iter().flat_map(move |scope| {
+            let exports = self.exports(scope).unwrap_or_default();
+            exports.into_iter().flat_map(move |export| {
+                SchemaFormat::ALL.into_iter().filter_map(move |format| match self.resolve(scope, export, format) {
+                    Ok(_) => Some(SchemaExportEntry { scope, export, format }),
+                    Err(_) => None,
+                })
+            })
+        })
+    }
+}
+
+static SCOPE_SCHEMA_EXPORTS: std::sync::OnceLock<std::sync::Mutex<HashMap<&'static str, &'static [SchemaExport]>>> = std::sync::OnceLock::new();
+
+fn scope_schema_exports() -> &'static std::sync::Mutex<HashMap<&'static str, &'static [SchemaExport]>> {
+    SCOPE_SCHEMA_EXPORTS.get_or_init(|| std::sync::Mutex::new(HashMap::new()))
+}
+
+/// 🔌 Open named-export registry API for scope-owning crates — call [`register_scope_schema_exports`]
+/// from your own init code alongside [`register_artifact_schema_descriptor`], then resolve anywhere
+/// with [`resolve_schema_export`].
+///
+/// 📎 Registers one scope's named exports into the OS-wide catalog. Exact duplicates are accepted so a
+/// scope registered twice by two consumers is not an error; a differing declaration is fatal.
+pub fn register_scope_schema_exports(declaration: ScopeSchemaExports) -> Result<(), SchemaExportRegistryError> {
+    let mut registry = SchemaExportRegistry::new();
+    let established = scope_schema_exports().lock().expect("scope schema export catalog lock").clone();
+    for (scope, exports) in established {
+        registry.register_exports(ScopeSchemaExports { scope, exports })?;
+    }
+    registry.register_exports(declaration)?;
+    scope_schema_exports().lock().expect("scope schema export catalog lock").insert(declaration.scope, declaration.exports);
+    Ok(())
+}
+
+/// 🔎 Whether `scope` has registered named exports in the OS-wide catalog.
+pub fn scope_schema_exports_registered(scope: &str) -> bool {
+    scope_schema_exports().lock().expect("scope schema export catalog lock").contains_key(scope)
+}
+
+/// 📚 Invokes `visit` with a [`SchemaExportRegistry`] snapshot over every registered artifact schema
+/// descriptor and every registered named-export declaration.
+pub fn with_schema_export_registry<R>(visit: impl FnOnce(&SchemaExportRegistry) -> R) -> R {
+    let mut registry = SchemaExportRegistry::new();
+    with_kernel_artifact_schema_catalog(|entries| {
+        for entry in entries {
+            let _ = registry.register_descriptor(descriptor_from_kernel(entry));
+        }
+    });
+    for (scope, exports) in scope_schema_exports().lock().expect("scope schema export catalog lock").iter() {
+        let _ = registry.register_exports(ScopeSchemaExports { scope, exports });
+    }
+    visit(&registry)
+}
+
+/// 🔎 Resolves `(scope id, export id, format id)` against the OS-wide catalog.
+pub fn resolve_schema_export(scope: &str, export: &str, format: SchemaFormat) -> Result<&'static str, SchemaResolveError> {
+    with_schema_export_registry(|registry| registry.resolve(scope, export, format))
+}
+
+/// 🚶 Snapshots every resolvable `(scope, export, format)` triple in the OS-wide catalog.
+pub fn schema_export_catalog_entries() -> Vec<SchemaExportEntry> {
+    with_schema_export_registry(|registry| registry.entries().collect())
+}
+
+/// ✅ Compiles the OS-wide structural validator for one export — the application boundary entry
+/// point for validating serialized input before domain rules.
+pub fn structural_validator_for(scope: &str, export: &str) -> Result<crate::OwnedJsonSchemaValidator, SchemaBoundaryError> {
+    with_schema_export_registry(|registry| registry.structural_validator(scope, export))
+}
+//#endregion 🔖️SchemaExportResolution
+
 #[cfg(test)]
 //#region 🔖️Tests
 mod tests {
@@ -1191,5 +1534,208 @@ mod tests {
         assert!(GRAPHQL_STATE_PREAMBLE.contains("directive @state"));
     }
     //#endregion 🔖️AppSchemaRegistryParity
+
+    //#region 🔖️SchemaExportResolution
+    const EXPORT_LEAVES: FacetLeaves = FacetLeaves { rust: "pub struct Thing;", typescript: "export type Thing = {};", graphql: "type Thing { id: String! }", json_schema: r#"{"$id":"https://semio.tech/schema/test/thing.json","type":"object"}"#, proto: "" };
+
+    const NAMED_EXPORTS: [SchemaExport; 2] = [SchemaExport { id: "Thing", leaves: EXPORT_LEAVES }, SchemaExport { id: "Other", leaves: EXPORT_LEAVES }];
+
+    fn facet_descriptor(id: &'static str) -> ArtifactSchemaDescriptor {
+        let empty = FacetLeaves { rust: "", typescript: "", graphql: "", json_schema: "", proto: "" };
+        ArtifactSchemaDescriptor { id, artifact: EXPORT_LEAVES, snapshot: empty, diff: empty, mutations: empty }
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn schema_format_ids_mirror_the_taxonomy_schema_formats_keys() {
+        assert_eq!(SchemaFormat::ALL.map(|format| format.id()), ["rust", "typescript", "graphql", "jsonschema", "protobuf"]);
+        assert_eq!(SchemaFormat::ALL.map(|format| format.taxonomy_key()), ["🦀️rust", "🟦️typescript", "🔗️graphql", "🔣️jsonschema", "🛰️protobuf"]);
+        for format in SchemaFormat::ALL {
+            assert_eq!(SchemaFormat::parse(format.id()), Some(format));
+            assert_eq!(SchemaFormat::parse(format.taxonomy_key()), Some(format));
+        }
+        assert_eq!(SchemaFormat::parse("📜️wit"), None);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn schema_export_registration_is_duplicate_safe_and_conflict_fatal() {
+        const OTHER: [SchemaExport; 1] = [SchemaExport { id: "Thing", leaves: EXPORT_LEAVES }];
+        let mut registry = SchemaExportRegistry::new();
+        registry.register_descriptor(facet_descriptor("test.scope")).expect("first descriptor");
+        registry.register_descriptor(facet_descriptor("test.scope")).expect("exact duplicate descriptor");
+        registry.register_exports(ScopeSchemaExports { scope: "test.scope", exports: &NAMED_EXPORTS }).expect("first exports");
+        registry.register_exports(ScopeSchemaExports { scope: "test.scope", exports: &NAMED_EXPORTS }).expect("exact duplicate exports");
+        assert_eq!(
+            registry.register_exports(ScopeSchemaExports { scope: "test.scope", exports: &OTHER }),
+            Err(SchemaExportRegistryError::ConflictingScope { scope: "test.scope".to_string() })
+        );
+        let mut conflicting = facet_descriptor("test.scope");
+        conflicting.snapshot = EXPORT_LEAVES;
+        assert_eq!(registry.register_descriptor(conflicting), Err(SchemaExportRegistryError::ConflictingScope { scope: "test.scope".to_string() }));
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn schema_export_registration_rejects_a_duplicate_export_id_inside_one_scope() {
+        const DUPLICATED: [SchemaExport; 2] = [SchemaExport { id: "Thing", leaves: EXPORT_LEAVES }, SchemaExport { id: "Thing", leaves: EXPORT_LEAVES }];
+        let mut registry = SchemaExportRegistry::new();
+        assert_eq!(
+            registry.register_exports(ScopeSchemaExports { scope: "test.duplicate", exports: &DUPLICATED }),
+            Err(SchemaExportRegistryError::DuplicateExportId { scope: "test.duplicate".to_string(), export: "Thing".to_string() })
+        );
+        assert!(registry.scopes().is_empty());
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn schema_export_resolution_distinguishes_every_failure() {
+        const SHADOWING: [SchemaExport; 1] = [SchemaExport { id: "snapshot", leaves: EXPORT_LEAVES }];
+        let mut registry = SchemaExportRegistry::new();
+        registry.register_descriptor(facet_descriptor("test.resolve")).expect("descriptor");
+        registry.register_exports(ScopeSchemaExports { scope: "test.resolve", exports: &NAMED_EXPORTS }).expect("exports");
+
+        assert_eq!(registry.resolve("test.resolve", "Thing", SchemaFormat::Rust), Ok("pub struct Thing;"));
+        assert_eq!(registry.resolve("test.resolve", "artifact", SchemaFormat::Graphql), Ok("type Thing { id: String! }"));
+        assert_eq!(registry.resolve("test.missing", "Thing", SchemaFormat::Rust), Err(SchemaResolveError::UnknownScope { scope: "test.missing".to_string() }));
+        assert_eq!(
+            registry.resolve("test.resolve", "Absent", SchemaFormat::Rust),
+            Err(SchemaResolveError::UnknownExport { scope: "test.resolve".to_string(), export: "Absent".to_string() })
+        );
+        assert_eq!(
+            registry.resolve("test.resolve", "Thing", SchemaFormat::Protobuf),
+            Err(SchemaResolveError::FormatAbsent { scope: "test.resolve".to_string(), export: "Thing".to_string(), format: SchemaFormat::Protobuf })
+        );
+        assert_eq!(
+            registry.resolve("test.resolve", "snapshot", SchemaFormat::Rust),
+            Err(SchemaResolveError::FormatAbsent { scope: "test.resolve".to_string(), export: "snapshot".to_string(), format: SchemaFormat::Rust })
+        );
+
+        let mut shadowed = SchemaExportRegistry::new();
+        shadowed.register_descriptor(facet_descriptor("test.shadow")).expect("descriptor");
+        shadowed.register_exports(ScopeSchemaExports { scope: "test.shadow", exports: &SHADOWING }).expect("exports");
+        assert_eq!(
+            shadowed.resolve("test.shadow", "snapshot", SchemaFormat::Rust),
+            Err(SchemaResolveError::AmbiguousScope { scope: "test.shadow".to_string(), export: "snapshot".to_string() })
+        );
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn schema_export_registry_reports_every_scope_with_its_exports() {
+        let mut registry = SchemaExportRegistry::new();
+        registry.register_descriptor(facet_descriptor("test.beta")).expect("beta descriptor");
+        registry.register_exports(ScopeSchemaExports { scope: "test.alpha", exports: &NAMED_EXPORTS }).expect("alpha exports");
+        registry.register_exports(ScopeSchemaExports { scope: "test.beta", exports: &NAMED_EXPORTS }).expect("beta exports");
+
+        assert_eq!(registry.scopes(), vec!["test.alpha", "test.beta"]);
+        assert_eq!(registry.exports("test.alpha").expect("alpha exports"), vec!["Thing", "Other"]);
+        assert_eq!(registry.exports("test.beta").expect("beta exports"), vec!["artifact", "snapshot", "diff", "mutations", "Thing", "Other"]);
+        assert_eq!(registry.exports("test.absent"), Err(SchemaResolveError::UnknownScope { scope: "test.absent".to_string() }));
+
+        let entries: Vec<(&str, &str, &str)> = registry.entries().map(|entry| (entry.scope, entry.export, entry.format.id())).collect();
+        assert_eq!(entries.iter().filter(|(scope, _, _)| *scope == "test.alpha").count(), 8);
+        assert!(entries.contains(&("test.beta", "artifact", "jsonschema")));
+        assert!(!entries.iter().any(|(_, _, format)| *format == "protobuf"));
+        assert!(!entries.iter().any(|(scope, export, _)| *scope == "test.beta" && *export == "snapshot"));
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn structural_validator_resolves_cross_scope_refs_by_document_id() {
+        const SHARED: [SchemaExport; 1] = [SchemaExport {
+            id: "ScopeId",
+            leaves: FacetLeaves {
+                rust: "",
+                typescript: "",
+                graphql: "",
+                json_schema: r#"{"$id":"https://semio.tech/schema/test/shared.json","definitions":{"ScopeId":{"type":"string","pattern":"^[a-z][a-z0-9]*(\\.[a-z][a-z0-9-]*)+$"}}}"#,
+                proto: "",
+            },
+        }];
+        const CONSUMER: [SchemaExport; 1] = [SchemaExport {
+            id: "Binding",
+            leaves: FacetLeaves {
+                rust: "",
+                typescript: "",
+                graphql: "",
+                json_schema: r#"{"$id":"https://semio.tech/schema/test/binding.json","type":"object","required":["scope"],"additionalProperties":false,"properties":{"scope":{"$ref":"https://semio.tech/schema/test/shared.json#/definitions/ScopeId"}}}"#,
+                proto: "",
+            },
+        }];
+        let mut registry = SchemaExportRegistry::new();
+        registry.register_exports(ScopeSchemaExports { scope: "test.shared", exports: &SHARED }).expect("shared");
+        registry.register_exports(ScopeSchemaExports { scope: "test.consumer", exports: &CONSUMER }).expect("consumer");
+
+        let validator = registry.structural_validator("test.consumer", "Binding").expect("cross-scope validator");
+        assert!(validator.is_valid_json(r#"{"scope":"s.trinity.jack"}"#));
+        assert_eq!(validator.validate_json(r#"{"scope":"Trinity"}"#), Err(SchemaError::Validation("$.scope: string does not match pattern".to_string())));
+        assert_eq!(
+            registry.structural_validator("test.consumer", "Absent").err(),
+            Some(SchemaBoundaryError::Resolve(SchemaResolveError::UnknownExport { scope: "test.consumer".to_string(), export: "Absent".to_string() }))
+        );
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn scope_schema_exports_register_into_the_os_wide_catalog() {
+        const GLOBAL: [SchemaExport; 1] = [SchemaExport { id: "Thing", leaves: EXPORT_LEAVES }];
+        register_scope_schema_exports(ScopeSchemaExports { scope: "test.global", exports: &GLOBAL }).expect("register");
+        register_scope_schema_exports(ScopeSchemaExports { scope: "test.global", exports: &GLOBAL }).expect("exact duplicate");
+        assert!(scope_schema_exports_registered("test.global"));
+        assert_eq!(resolve_schema_export("test.global", "Thing", SchemaFormat::Typescript), Ok("export type Thing = {};"));
+        assert!(schema_export_catalog_entries().contains(&SchemaExportEntry { scope: "test.global", export: "Thing", format: SchemaFormat::Typescript }));
+    }
+    //#endregion 🔖️SchemaExportResolution
+
+    //#region 🔖️Draft07OracleVectors
+    const DRAFT07_VECTORS: &str = include_str!("🧪️fixtures/✅️draft07-validation-vectors.json");
+
+    fn pointer_to_owned_path(pointer: &str) -> String {
+        pointer.split('/').skip(1).fold("$".to_string(), |path, segment| if segment.chars().all(|entry| entry.is_ascii_digit()) { format!("{path}[{segment}]") } else { format!("{path}.{segment}") })
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn owned_validator_agrees_with_the_shared_draft07_vectors() {
+        let vectors = parse_json(DRAFT07_VECTORS).expect("vectors json");
+        let cases = vectors.get("cases").and_then(Value::as_array).expect("cases");
+        assert!(cases.len() >= 7, "expected the full vector corpus, found {}", cases.len());
+        for case in cases {
+            let id = case.get("id").and_then(Value::as_str).expect("case id");
+            let documents: Vec<String> = case.get("documents").and_then(Value::as_array).map(|documents| documents.iter().map(json_to_string).collect()).unwrap_or_default();
+            let documents: Vec<&str> = documents.iter().map(String::as_str).collect();
+            let schema = json_to_string(case.get("schema").expect("case schema"));
+            let validator = crate::OwnedJsonSchemaValidator::compile_with_documents(&schema, &documents).unwrap_or_else(|error| panic!("{id}: compile: {error}"));
+            for instance in case.get("valid").and_then(Value::as_array).expect("valid instances") {
+                let instance = json_to_string(instance);
+                assert!(validator.validate_json(&instance).is_ok(), "{id}: expected {instance} to validate, got {:?}", validator.validate_json(&instance));
+            }
+            for entry in case.get("invalid").and_then(Value::as_array).expect("invalid instances") {
+                let instance = json_to_string(entry.get("instance").expect("instance"));
+                let expected = pointer_to_owned_path(entry.get("errorPath").and_then(Value::as_str).expect("errorPath"));
+                let Err(SchemaError::Validation(message)) = validator.validate_json(&instance) else {
+                    panic!("{id}: expected {instance} to be rejected");
+                };
+                assert!(message.starts_with(&format!("{expected}: ")), "{id}: expected {instance} to fail at {expected}, got `{message}`");
+            }
+        }
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn owned_pattern_matcher_covers_the_supported_ecma_subset() {
+        let corpus: [(&str, &[(&str, bool)]); 8] = [
+            ("^[a-z][a-z0-9]*$", &[("scope", true), ("s9", true), ("Scope", false), ("", false)]),
+            ("^v\\d{1,3}$", &[("v1", true), ("v123", true), ("v1234", false), ("v", false)]),
+            ("^(rust|typescript|graphql)$", &[("rust", true), ("graphql", true), ("proto", false)]),
+            ("^[^,]+$", &[("plain", true), ("a,b", false)]),
+            ("a.c", &[("abc", true), ("a\nc", false), ("xxabcxx", true)]),
+            ("^\\w+(\\s\\w+)*$", &[("one two three", true), ("one  two", false)]),
+            ("^a{2,}b?$", &[("aa", true), ("aaab", true), ("a", false)]),
+            ("colou?r", &[("color", true), ("colour", true), ("colr", false)]),
+        ];
+        for (pattern, cases) in corpus {
+            let matcher = crate::PatternMatcher::compile(pattern).unwrap_or_else(|reason| panic!("{pattern}: {reason}"));
+            for (text, expected) in cases {
+                assert_eq!(matcher.is_match(text), *expected, "pattern {pattern} against {text}");
+            }
+        }
+        for rejected in ["(?=a)", "a\\1", "\\ba", "[z-a]", "(a", "*a"] {
+            assert!(crate::PatternMatcher::compile(rejected).is_err(), "expected {rejected} to be rejected");
+        }
+    }
+    //#endregion 🔖️Draft07OracleVectors
 }
 //#endregion 🔖️Tests

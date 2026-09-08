@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeSystemLossesKwh, base: &Din18599Snapshot) -> protoco
     if base.system_losses_kwh == payload.new_system_losses_kwh {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "System losses kwh already has this value.");
     }
-    protocol::MutationOutcome::new(Din18599Diff { system_losses_kwh: Some(payload.new_system_losses_kwh.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(Din18599Diff { system_losses_kwh: Some(payload.new_system_losses_kwh), ..Default::default() })
 }
 //#endregion 🔖️Diff

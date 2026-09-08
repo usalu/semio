@@ -1,7 +1,7 @@
 //! 🧬️ TxtSnapshot schema — persistent fields + real codecs.
 
-use crate::artifacts::txt::STDIO_TXT_DOCUMENT_SCHEMA;
-use schema::ArtifactSchema;
+use crate::STDIO_TXT_DOCUMENT_SCHEMA;
+use framework_schema::ArtifactSchema;
 
 //#region 🔖️LineEnding
 /// ⏎️ Which newline sequence terminates each line of a `stdio.txt` document.

@@ -1,0 +1,604 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/pptx/ecma-376/transitional/mutation/set-snapshot.json",
+  "title": "SetSnapshot",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "snapshot"
+  ],
+  "properties": {
+    "snapshot": {
+      "$ref": "#/$defs/PptxSnapshot"
+    }
+  },
+  "$defs": {
+    "PptxSnapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema"
+      ],
+      "properties": {
+        "schema": {
+          "type": "string"
+        },
+        "opc": {
+          "$ref": "#/$defs/OpcPackage"
+        },
+        "xmlParts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PptxXmlPart"
+          }
+        },
+        "presentation": {
+          "$ref": "#/$defs/PptxPresentation"
+        }
+      }
+    },
+    "OpcPackage": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "parts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/OpcPart"
+          }
+        },
+        "contentTypes": {
+          "$ref": "#/$defs/OpcContentTypes"
+        },
+        "comment": {
+          "type": "string"
+        }
+      }
+    },
+    "OpcPart": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "contentType"
+      ],
+      "properties": {
+        "path": {
+          "type": "string"
+        },
+        "contentType": {
+          "type": "string"
+        },
+        "bytes": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          }
+        }
+      }
+    },
+    "OpcContentTypes": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "defaults": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "additionalItems": false,
+            "minItems": 2,
+            "maxItems": 2
+          }
+        },
+        "overrides": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "additionalItems": false,
+            "minItems": 2,
+            "maxItems": 2
+          }
+        }
+      }
+    },
+    "PptxXmlPart": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "contentType",
+        "document"
+      ],
+      "properties": {
+        "path": {
+          "type": "string"
+        },
+        "contentType": {
+          "type": "string"
+        },
+        "document": {
+          "$ref": "#/$defs/XmlDocument"
+        }
+      }
+    },
+    "XmlDocument": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "root": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/XmlNode"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "doctype": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/XmlDoctype"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "declaration": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/XmlDeclaration"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "prolog": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/XmlNode"
+          }
+        }
+      }
+    },
+    "XmlNode": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "name"
+          ],
+          "properties": {
+            "kind": {
+              "const": "element"
+            },
+            "name": {
+              "type": "string"
+            },
+            "attrs": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/XmlAttr"
+              }
+            },
+            "children": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/XmlNode"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "text"
+          ],
+          "properties": {
+            "kind": {
+              "const": "text"
+            },
+            "text": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "text"
+          ],
+          "properties": {
+            "kind": {
+              "const": "cData"
+            },
+            "text": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "text"
+          ],
+          "properties": {
+            "kind": {
+              "const": "comment"
+            },
+            "text": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "target",
+            "data"
+          ],
+          "properties": {
+            "kind": {
+              "const": "processingInstruction"
+            },
+            "target": {
+              "type": "string"
+            },
+            "data": {
+              "type": "string"
+            }
+          }
+        }
+      ]
+    },
+    "XmlAttr": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "value"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        }
+      }
+    },
+    "XmlDoctype": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "externalId": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/XmlExternalId"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "declarations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/XmlDtdDeclaration"
+          }
+        }
+      }
+    },
+    "XmlExternalId": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "systemId"
+          ],
+          "properties": {
+            "kind": {
+              "const": "system"
+            },
+            "systemId": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "publicId",
+            "systemId"
+          ],
+          "properties": {
+            "kind": {
+              "const": "public"
+            },
+            "publicId": {
+              "type": "string"
+            },
+            "systemId": {
+              "type": "string"
+            }
+          }
+        }
+      ]
+    },
+    "XmlDtdDeclaration": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "parameter",
+            "name",
+            "value"
+          ],
+          "properties": {
+            "kind": {
+              "const": "entity"
+            },
+            "parameter": {
+              "type": "boolean"
+            },
+            "name": {
+              "type": "string"
+            },
+            "value": {
+              "type": "string"
+            }
+          }
+        }
+      ]
+    },
+    "XmlDeclaration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version"
+      ],
+      "properties": {
+        "version": {
+          "type": "string"
+        },
+        "encoding": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "standalone": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "PptxPresentation": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "slides": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PptxSlide"
+          }
+        }
+      }
+    },
+    "PptxSlide": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "shapes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PptxShape"
+          }
+        }
+      }
+    },
+    "PptxShape": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "shapeKind"
+          ],
+          "properties": {
+            "shapeKind": {
+              "const": "textBox"
+            },
+            "textFrame": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/PptxParagraph"
+              }
+            },
+            "position": {
+              "$ref": "#/$defs/PptxTransform"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "shapeKind",
+            "blipRelId"
+          ],
+          "properties": {
+            "shapeKind": {
+              "const": "picture"
+            },
+            "blipRelId": {
+              "type": "string"
+            },
+            "position": {
+              "$ref": "#/$defs/PptxTransform"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "shapeKind",
+            "kind"
+          ],
+          "properties": {
+            "shapeKind": {
+              "const": "placeholder"
+            },
+            "kind": {
+              "type": "string"
+            },
+            "textFrame": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/PptxParagraph"
+              }
+            },
+            "position": {
+              "$ref": "#/$defs/PptxTransform"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "shapeKind",
+            "node"
+          ],
+          "properties": {
+            "shapeKind": {
+              "const": "other"
+            },
+            "node": {
+              "$ref": "#/$defs/XmlNode"
+            }
+          }
+        }
+      ]
+    },
+    "PptxParagraph": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "runs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PptxRun"
+          }
+        }
+      }
+    },
+    "PptxRun": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "text"
+      ],
+      "properties": {
+        "text": {
+          "type": "string"
+        },
+        "bold": {
+          "type": "boolean"
+        },
+        "italic": {
+          "type": "boolean"
+        },
+        "fontSize": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4294967295
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "PptxTransform": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y",
+        "cx",
+        "cy"
+      ],
+      "properties": {
+        "x": {
+          "type": "integer"
+        },
+        "y": {
+          "type": "integer"
+        },
+        "cx": {
+          "type": "integer"
+        },
+        "cy": {
+          "type": "integer"
+        }
+      }
+    }
+  }
+}

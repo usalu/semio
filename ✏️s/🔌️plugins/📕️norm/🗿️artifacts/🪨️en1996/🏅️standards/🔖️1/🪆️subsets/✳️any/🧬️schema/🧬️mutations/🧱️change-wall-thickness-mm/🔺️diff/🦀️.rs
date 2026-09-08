@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeWallThicknessMm, base: &En1996Snapshot) -> protocol:
     if base.wall_thickness_mm == payload.new_wall_thickness_mm {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "Wall thickness mm already has this value.");
     }
-    protocol::MutationOutcome::new(En1996Diff { wall_thickness_mm: Some(payload.new_wall_thickness_mm.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1996Diff { wall_thickness_mm: Some(payload.new_wall_thickness_mm), ..Default::default() })
 }
 //#endregion 🔖️Diff

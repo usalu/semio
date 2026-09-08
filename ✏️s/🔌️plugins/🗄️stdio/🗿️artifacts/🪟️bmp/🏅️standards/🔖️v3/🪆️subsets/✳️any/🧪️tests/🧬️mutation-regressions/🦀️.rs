@@ -1,10 +1,10 @@
 //! 🧪️ Preserved raster sparse-diff and codec regression laws.
-use crate::artifacts::bmp::schema::diff::BmpDiff;
-use crate::artifacts::bmp::schema::snapshot::{BmpPaletteEntry, BmpRowOrder};
-use crate::artifacts::bmp::BmpSnapshot;
+use crate::schema::diff::BmpDiff;
+use crate::schema::snapshot::{BmpPaletteEntry, BmpRowOrder};
+use crate::BmpSnapshot;
 use protocol::{Mutation, MutationDiff};
 
-use crate::artifacts::bmp::schema::mutations::*;
+use crate::schema::mutations::*;
 //#region 🔖️DemoFixtures
 /// 🧬️ 4x3 8-bit indexed base with a small, non-trivial palette — enough to exercise
 /// insert/remove/set-entry mutations meaningfully. Module-level (not nested in `mod tests`,

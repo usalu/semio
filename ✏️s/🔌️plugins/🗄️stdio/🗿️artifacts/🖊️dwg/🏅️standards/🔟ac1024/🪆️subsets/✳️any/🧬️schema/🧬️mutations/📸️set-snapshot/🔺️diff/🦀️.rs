@@ -1,7 +1,7 @@
 //! 🧩 set_snapshot diff leaf.
 
-use crate::artifacts::dwg::schema::diff::{diff_set_snapshot, DwgDiff};
-use crate::artifacts::dwg::DwgSnapshot;
+use crate::schema::diff::{diff_set_snapshot, DwgDiff};
+use crate::DwgSnapshot;
 
 /// 🔺️ Diff helper for set-snapshot — sparse field-by-field `between(base, next)`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

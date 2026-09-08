@@ -2,7 +2,7 @@
 
 use super::remove_font_file::RemoveFontFile;
 use super::PdfVtMutation;
-use crate::artifacts::pdf::standards::v1_7::subsets::base::schema::{conformance_support as support, diff::PdfDiff, snapshot::{ObjRef, PdfObject, PdfSnapshot}};
+use crate::standards::v1_7::subsets::base::schema::{conformance_support as support, diff::PdfDiff, snapshot::{ObjRef, PdfObject, PdfSnapshot}};
 use protocol::command::DiffAlgebra;
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
 

@@ -6,9 +6,9 @@
 //! `SetMaterialPbr`), so the whole point of this case is that the diff mentions `metallic` and not
 //! `roughness`.
 
-use crate::artifacts::semio::standards::v1::subsets::mesh::schema::diff::SemioMeshDiff;
-use crate::artifacts::semio::standards::v1::subsets::mesh::schema::mutations::SemioMeshMutation;
-use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
+use crate::standards::v1::subsets::mesh::schema::diff::SemioMeshDiff;
+use crate::standards::v1::subsets::mesh::schema::mutations::SemioMeshMutation;
+use crate::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
 use protocol::{Mutation, MutationDiff};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");

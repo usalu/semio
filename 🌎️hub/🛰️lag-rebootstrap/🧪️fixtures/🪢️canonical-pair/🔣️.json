@@ -26,6 +26,13 @@
     { "id": "edited-with-zero-commit", "documentId": "doc:tokyo", "headEditOrdinal": 1, "headEditId": "edit:1", "lastCommitSeq": 0, "chainHash": "3333333333333333333333333333333333333333333333333333333333333333", "accepted": false },
     { "id": "edited-with-zero-chain", "documentId": "doc:tokyo", "headEditOrdinal": 1, "headEditId": "edit:1", "lastCommitSeq": 1, "chainHash": "0000000000000000000000000000000000000000000000000000000000000000", "accepted": false }
   ],
+  "hostile": [
+    { "id": "selection-unknown-member", "member": "selection", "mutation": { "locator": "private" }, "stage": "contract", "result": "rejected", "code": "unknown-member" },
+    { "id": "selection-short-descriptor-digest", "member": "selection", "mutation": { "descriptorDigest": "1111" }, "stage": "contract", "result": "rejected", "code": "digest-not-sha256" },
+    { "id": "selection-empty-document", "member": "selection", "mutation": { "documentId": "" }, "stage": "contract", "result": "rejected", "code": "empty-document-id" },
+    { "id": "baseline-negative-ordinal", "member": "selection.baseline", "mutation": { "headEditOrdinal": -1 }, "stage": "contract", "result": "rejected", "code": "ordinal-not-safe-unsigned" },
+    { "id": "baseline-unknown-member", "member": "selection.baseline", "mutation": { "storageKey": "private" }, "stage": "contract", "result": "rejected", "code": "unknown-member" }
+  ],
   "pack": { "length": 5001, "multiplier": 17, "increment": 3, "sha256": "5df441c4e2f9e82241d77329fbca62e4f0817e404796d652f3d258c3d01e137d" },
   "spr": { "length": 4097, "multiplier": 29, "increment": 7, "sha256": "1c33f7415ff963382f8b53da1b7c03352ab29641f939b0e47acdc99c1274e1f3" },
   "expected": {

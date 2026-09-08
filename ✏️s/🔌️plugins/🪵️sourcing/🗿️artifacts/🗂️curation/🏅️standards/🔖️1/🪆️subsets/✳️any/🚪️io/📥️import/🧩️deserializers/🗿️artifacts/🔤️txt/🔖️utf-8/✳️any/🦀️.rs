@@ -14,7 +14,7 @@ use semio_framework_plugin::{StandardId, SubsetId};
 
 pub const TXT_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.txt", standard: StandardId("utf-8"), subset: SubsetId::ANY };
 
-pub fn deserialize(_from: &semio_s_plugin_stdio::artifacts::txt::TxtSnapshot) -> Result<CurationSnapshot, String> {
+pub fn deserialize(_from: &semio_s_artifact_stdio_txt::TxtSnapshot) -> Result<CurationSnapshot, String> {
     Err("txt import not yet implemented".into())
 }
 pub fn deserialize_bytes(_bytes: &[u8]) -> Result<CurationSnapshot, String> {

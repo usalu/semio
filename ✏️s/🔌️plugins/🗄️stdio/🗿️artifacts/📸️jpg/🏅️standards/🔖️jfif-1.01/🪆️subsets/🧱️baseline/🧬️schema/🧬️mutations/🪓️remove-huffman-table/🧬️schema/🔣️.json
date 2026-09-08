@@ -1,0 +1,42 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/jpg/jfif-1.01/baseline/mutation/remove-huffman-table.json",
+  "title": "RemoveHuffmanTable",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "key"
+  ],
+  "properties": {
+    "key": {
+      "$ref": "#/$defs/JpgHuffmanTableKey"
+    }
+  },
+  "$defs": {
+    "JpgHuffmanTableKey": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "class",
+        "id"
+      ],
+      "properties": {
+        "class": {
+          "$ref": "#/$defs/JpgHuffmanClass"
+        },
+        "id": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        }
+      }
+    },
+    "JpgHuffmanClass": {
+      "type": "string",
+      "enum": [
+        "dc",
+        "ac"
+      ]
+    }
+  }
+}

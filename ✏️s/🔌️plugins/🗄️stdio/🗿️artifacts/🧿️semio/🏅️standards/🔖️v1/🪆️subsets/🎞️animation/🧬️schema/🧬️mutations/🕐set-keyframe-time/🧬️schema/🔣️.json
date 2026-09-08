@@ -1,0 +1,34 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/animation/mutation/set-keyframe-time.json",
+  "title": "SetKeyframeTime",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "timelineIndex",
+    "channelIndex",
+    "index",
+    "t"
+  ],
+  "properties": {
+    "timelineIndex": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "channelIndex": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "index": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "t": {
+      "type": "number"
+    },
+    "mutation": {
+      "const": "setKeyframeTime",
+      "description": "Aggregate discriminator spliced in by SemioAnimationMutation; absent when the payload stands alone."
+    }
+  }
+}

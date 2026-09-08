@@ -13,8 +13,8 @@ use semio_framework_plugin::app::{
     ArtifactDownloadOutput, ArtifactMediaExportCompletion, ArtifactMediaExportCredit, ArtifactMediaExportResult, ArtifactOutputChunks, ArtifactReservedToolJob, ArtifactSnapshotCloseLease, ArtifactToolCompletion,
 };
 use semio_framework_plugin::{ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactReservedJob, EditorApp, EphemeralEmit, Fault, MediaClass, MediaForm, MediaType, PluginCloseStep};
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioPoint3, SemioQuaternion, SemioRgba, SemioTransform};
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{DrawNode, PathSegment};
+use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioPoint3, SemioQuaternion, SemioRgba, SemioTransform};
+use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::{DrawNode, PathSegment};
 use std::sync::Arc;
 #[cfg(test)]
 use semio_framework_job::{BatchDriveConfig, BatchJobParams, Generation, InteractiveStage, RevisionId};
@@ -48,7 +48,7 @@ pub const MAX_LAYOUT_EXPORT_CHECKPOINT_BYTES: usize = 634;
 pub const MAX_LAYOUT_EXPORT_DECODED_ITEMS: usize = 131_072;
 pub const MAX_LAYOUT_EXPORT_PACKAGE_FRAGMENT_BYTES: usize = 64 << 10;
 const OUTPUT_CHUNK_BYTES: usize = 4_096;
-const MAX_LAYOUT_EXPORT_OUTPUT_CHUNKS: usize = (MAX_LAYOUT_EXPORT_OUTPUT_BYTES + OUTPUT_CHUNK_BYTES - 1) / OUTPUT_CHUNK_BYTES;
+const MAX_LAYOUT_EXPORT_OUTPUT_CHUNKS: usize = MAX_LAYOUT_EXPORT_OUTPUT_BYTES.div_ceil(OUTPUT_CHUNK_BYTES);
 const BASE64_INPUT_BYTES_PER_UNIT: usize = 3_072;
 const PNG_PIXELS_PER_UNIT: u32 = 256;
 const JSON_INPUT_BYTES_PER_UNIT: usize = 2_048;
@@ -1709,7 +1709,7 @@ impl TypedJsonCursor {
             }
             TypedJsonNode::BackgroundDrawing => self.push_sequence(vec![Self::static_node(b"{\"handle\":"), TypedJsonNode::ChildHandle, Self::static_node(b",\"content\":"), TypedJsonNode::Drawing, Self::static_node(b"}")]),
             TypedJsonNode::ChildHandle => {
-                self.push_sequence(vec![Self::static_node(b"{\"childId\":"), Self::string(StringSource::ChildId), Self::static_node(b",\"target\":"), TypedJsonNode::ArtifactRef { referenced: false }, Self::static_node(b"}")])
+                self.push_sequence(vec![Self::static_node(b"{\"childId\":"), Self::string(StringSource::ChildId), Self::static_node(b",\"target\":"), TypedJsonNode::ArtifactRef { referenced: false }, Self::static_node(b"}")]);
             }
             TypedJsonNode::ArtifactRef { referenced } => self.push_sequence(vec![
                 Self::static_node(b"{\"artifactId\":"),
@@ -1928,7 +1928,7 @@ impl TypedJsonCursor {
             }
             TypedJsonNode::DrawPoint2(value) => self.push_sequence(vec![Self::static_node(b"{\"x\":"), Self::scalar(&value.x)?, Self::static_node(b",\"y\":"), Self::scalar(&value.y)?, Self::static_node(b"}")]),
             TypedJsonNode::DrawPoint3(value) => {
-                self.push_sequence(vec![Self::static_node(b"{\"x\":"), Self::scalar(&value.x)?, Self::static_node(b",\"y\":"), Self::scalar(&value.y)?, Self::static_node(b",\"z\":"), Self::scalar(&value.z)?, Self::static_node(b"}")])
+                self.push_sequence(vec![Self::static_node(b"{\"x\":"), Self::scalar(&value.x)?, Self::static_node(b",\"y\":"), Self::scalar(&value.y)?, Self::static_node(b",\"z\":"), Self::scalar(&value.z)?, Self::static_node(b"}")]);
             }
             TypedJsonNode::DrawQuaternion(value) => self.push_sequence(vec![
                 Self::static_node(b"{\"x\":"),
@@ -2009,7 +2009,7 @@ impl TypedJsonCursor {
                 }
             }
             TypedJsonNode::MissingLink(index) => {
-                self.push_sequence(vec![Self::static_node(b"{\"kind\":\"missing-link\",\"linkId\":"), Self::string(StringSource::LinkId(index)), Self::static_node(b",\"path\":"), Self::string(StringSource::LinkPath(index)), Self::static_node(b"}")])
+                self.push_sequence(vec![Self::static_node(b"{\"kind\":\"missing-link\",\"linkId\":"), Self::string(StringSource::LinkId(index)), Self::static_node(b",\"path\":"), Self::string(StringSource::LinkPath(index)), Self::static_node(b"}")]);
             }
             TypedJsonNode::Manifest => self.push_sequence(vec![
                 Self::static_node(b"{\"schema\":\"layout.package-manifest/v1\",\"document\":\"document.json\",\"preflight\":\"preflight-report.json\",\"links\":"),
@@ -3803,7 +3803,7 @@ impl LayoutExportJob {
         self.base64_cursor += take;
         let complete = input.len() / 3 * 3;
         let mut encoded = Vec::with_capacity(complete / 3 * 4);
-        for triple in input[..complete].chunks_exact(3) {
+        for triple in input[..complete].as_chunks::<3>().0 {
             encoded.extend_from_slice(&[TABLE[(triple[0] >> 2) as usize], TABLE[((triple[0] & 3) << 4 | triple[1] >> 4) as usize], TABLE[((triple[1] & 15) << 2 | triple[2] >> 6) as usize], TABLE[(triple[2] & 63) as usize]]);
         }
         self.encoded.append(&encoded)?;
@@ -3913,14 +3913,14 @@ impl InteractiveJob for LayoutExportJob {
                 });
                 return self.drive_publication(context);
             }
-            if self.completed_units % 64 == 0 {
+            if self.completed_units.is_multiple_of(64) {
                 self.publication = Some(match self.checkpoint_publication() {
                     Ok(publication) => publication,
                     Err(error) => Self::fault_publication(&error),
                 });
                 return self.drive_publication(context);
             }
-            if self.completed_units % 16 == 0 {
+            if self.completed_units.is_multiple_of(16) {
                 self.publication = self.preview_publication().ok();
                 return self.drive_publication(context);
             }
@@ -4013,7 +4013,7 @@ fn export_rect(frame: &Frame, override_value: Option<&PageOverride>, page_width:
         return None;
     }
     let rgba = match frame {
-        Frame::Rect { fill, .. } => fill.map(|color| color.map(|channel| (channel.clamp(0.0, 1.0) * 255.0).round() as u8)).unwrap_or([0, 0, 0, 0]),
+        Frame::Rect { fill, .. } => fill.map_or([0, 0, 0, 0], |color| color.map(|channel| (channel.clamp(0.0, 1.0) * 255.0).round() as u8)),
         Frame::Text { .. } => [24, 24, 24, 255],
         Frame::Image { .. } => [220, 220, 220, 255],
     };
@@ -4229,7 +4229,7 @@ pub(crate) fn output_name(request: &LayoutExportRequest) -> String {
     if matches!(request.kind, LayoutExportKind::Package) {
         sanitize_filename(&request.snapshot.name)
     } else {
-        request.page_id.as_deref().map(sanitize_filename).unwrap_or_else(|| "layout".into())
+        request.page_id.as_deref().map_or_else(|| "layout".into(), sanitize_filename)
     }
 }
 

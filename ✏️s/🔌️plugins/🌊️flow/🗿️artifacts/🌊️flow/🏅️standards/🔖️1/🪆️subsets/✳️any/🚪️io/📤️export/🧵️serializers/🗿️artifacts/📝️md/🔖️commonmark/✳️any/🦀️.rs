@@ -1,6 +1,6 @@
 //! Serialize flow to stdio.md.
 use crate::artifacts::flow::FlowSnapshot;
-use semio_s_plugin_stdio::artifacts::md::{MdSnapshot, STDIO_MD_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_md::{MdSnapshot, STDIO_MD_DOCUMENT_SCHEMA};
 
 pub fn register() {}
 

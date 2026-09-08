@@ -1,7 +1,7 @@
 //! raster <- dwg
 use crate::artifacts::raster::RasterSnapshot;
-use semio_s_plugin_stdio::artifacts::dwg::schema::snapshot::decode_dwg;
-use semio_s_plugin_stdio::artifacts::dwg::{dwg_from_bytes, DwgDrawing};
+use semio_s_artifact_stdio_dwg::schema::snapshot::decode_dwg;
+use semio_s_artifact_stdio_dwg::{dwg_from_bytes, DwgDrawing};
 pub fn register() {}
 // 🪦 `deserialize(from: &DwgSnapshot)` (a `.bytes`-reconstructing wrapper around `deserialize_bytes`)
 // removed: stdio's `DwgSnapshot` no longer retains a raw byte blob (fully decomposed into structured

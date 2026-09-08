@@ -9,10 +9,10 @@
 //! leaf's own oracle. The derived `.op.semio`/`.spr.semio`/`.dsl.semio`/`.pack.semio`/
 //! `.patch.semio` encodings come from `fixtures generate`, not from here.
 
-use crate::artifacts::gltf::schema::mutations::delete_image::diff::GltfDeleteImageDiff;
-use crate::artifacts::gltf::schema::mutations::delete_image::GltfDeleteImagePayload;
-use crate::artifacts::gltf::schema::mutations::delete_image::{diff, inverse, mutation};
-use crate::artifacts::gltf::GltfSnapshot;
+use crate::schema::mutations::delete_image::diff::GltfDeleteImageDiff;
+use crate::schema::mutations::delete_image::GltfDeleteImagePayload;
+use crate::schema::mutations::delete_image::{diff, inverse, mutation};
+use crate::GltfSnapshot;
 
 const CASE: &str = "delete-image/removes-the-albedo-image-and-renumbers-the-texture-source";
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");

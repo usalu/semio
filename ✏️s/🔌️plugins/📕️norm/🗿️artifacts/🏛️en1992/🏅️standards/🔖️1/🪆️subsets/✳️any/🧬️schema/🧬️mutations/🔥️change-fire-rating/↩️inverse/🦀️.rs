@@ -7,6 +7,6 @@ use crate::artifacts::en1992::En1992Snapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(_payload: &ChangeFireRating, base: &En1992Snapshot) -> Vec<En1992Mutation> {
-    vec![En1992Mutation::ChangeFireRating(ChangeFireRating { new_fire_rating: base.fire_rating.clone() })]
+    vec![En1992Mutation::ChangeFireRating(ChangeFireRating { new_fire_rating: base.fire_rating })]
 }
 //#endregion 🔖️Inverse

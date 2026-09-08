@@ -30,6 +30,7 @@
         "closure",
         "executionProtocol",
         "receiptIdentity",
+        "browserHostReceipt",
         "sameDataRoot"
       ],
       "properties": {
@@ -57,6 +58,16 @@
             "profileId",
             "publicationRevision",
             "currentSha256"
+          ]
+        },
+        "browserHostReceipt": {
+          "const": [
+            "moduleSetSha256",
+            "activationReceiptSha256",
+            "spaceComponentSha256",
+            "spaceDescriptorSha256",
+            "selectedGisGenerationId",
+            "selectedGisCurrentSha256"
           ]
         },
         "sameDataRoot": {
@@ -97,12 +108,15 @@
     },
     "steps": {
       "type": "array",
-      "minItems": 16,
-      "maxItems": 16,
+      "minItems": 17,
+      "maxItems": 17,
       "uniqueItems": true,
       "prefixItems": [
         {
           "const": "materialize-and-validate-current"
+        },
+        {
+          "const": "stage-ticket-owned-space-and-selected-gis-browser-host"
         },
         {
           "const": "start-hub-with-receipt-data-root"
@@ -206,8 +220,8 @@
     },
     "hostiles": {
       "type": "array",
-      "minItems": 9,
-      "maxItems": 9,
+      "minItems": 10,
+      "maxItems": 10,
       "uniqueItems": true,
       "prefixItems": [
         {
@@ -236,6 +250,9 @@
         },
         {
           "const": "restart-without-post-undo-pair-revalidation"
+        },
+        {
+          "const": "global-browser-host-fallback"
         }
       ],
       "items": false

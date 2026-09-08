@@ -5,7 +5,7 @@
   "displayName": "Change Thermostat Heating Throttle Range",
   "emoji": "🎚️",
   "aggregateVariant": "ChangeThermostatHeatingThrottleRange",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-thermostat-heating-throttle-range",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

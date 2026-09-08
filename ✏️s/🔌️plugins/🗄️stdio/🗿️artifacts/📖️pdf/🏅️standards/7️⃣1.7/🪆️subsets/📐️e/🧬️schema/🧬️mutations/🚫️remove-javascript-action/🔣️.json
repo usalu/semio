@@ -5,7 +5,7 @@
   "displayName": "Remove JavaScript Action",
   "emoji": "🚫️",
   "aggregateVariant": "RemoveJavascriptAction",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "remove-javascript-action",
   "binaryTag": 3,
   "invertibility": "explicit-mutation",

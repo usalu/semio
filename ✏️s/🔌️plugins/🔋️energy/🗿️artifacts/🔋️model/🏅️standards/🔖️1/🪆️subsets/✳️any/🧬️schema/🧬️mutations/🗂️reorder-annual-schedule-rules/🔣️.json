@@ -5,7 +5,7 @@
   "displayName": "Reorder Annual Schedule Rules",
   "emoji": "🗂️",
   "aggregateVariant": "ReorderAnnualScheduleRules",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "reorder-annual-schedule-rules",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

@@ -5,7 +5,7 @@
   "displayName": "Rename Human Factor Requirement",
   "emoji": "🏷️",
   "aggregateVariant": "RenameHumanFactorRequirement",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

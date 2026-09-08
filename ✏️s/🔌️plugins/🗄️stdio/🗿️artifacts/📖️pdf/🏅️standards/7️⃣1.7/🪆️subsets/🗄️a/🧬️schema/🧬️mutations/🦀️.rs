@@ -2,8 +2,8 @@
 //! graph transforms, inverse plans, and tests live in direct semantic leaves; this root only mounts,
 //! re-exports, wraps, delegates, and assembles the generated registry.
 
-use crate::artifacts::pdf::standards::v1_7::subsets::base::schema::diff::PdfDiff;
-use crate::artifacts::pdf::standards::v1_7::subsets::base::schema::snapshot::PdfSnapshot;
+use crate::standards::v1_7::subsets::base::schema::diff::PdfDiff;
+use crate::standards::v1_7::subsets::base::schema::snapshot::PdfSnapshot;
 
 //#region 🔖️Leaves
 #[path = "🔤️embed-font-file/🦀️.rs"]

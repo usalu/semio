@@ -3,15 +3,15 @@
 //! keyword per semantic verb, grammar `keyword:arg1,arg2,...`. Reuses the snapshot facet's own
 //! real hex/bracket encoders for children/links/types/pieces/connections (never re-derived).
 
-pub use crate::artifacts::semio::standards::v1::subsets::kit::schema::mutations::SemioKitMutation;
+pub use crate::standards::v1::subsets::kit::schema::mutations::SemioKitMutation;
 
-use crate::artifacts::semio::standards::v1::subsets::base::schema::triples::split_top_level;
-use crate::artifacts::semio::standards::v1::subsets::kit::schema::mutations::{
+use crate::standards::v1::subsets::base::schema::triples::split_top_level;
+use crate::standards::v1::subsets::kit::schema::mutations::{
     add_design::AddDesign, add_type::AddType, bind_representation::BindRepresentation, change_representation_pin::ChangeRepresentationPin, create_model::CreateModel,
     create_object::CreateObject, create_properties::CreateProperties, delete_model::DeleteModel, delete_object::DeleteObject, delete_properties::DeleteProperties, edit_design::EditDesign,
     remove_design::RemoveDesign, remove_type::RemoveType, rename_type::RenameType, unbind_representation::UnbindRepresentation,
 };
-use crate::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::{dec_connection, dec_piece, dec_pin, dec_ref, dec_str, enc_connection, enc_piece, enc_pin, enc_ref, enc_str};
+use crate::standards::v1::subsets::kit::schema::snapshot::{dec_connection, dec_piece, dec_pin, dec_ref, dec_str, enc_connection, enc_piece, enc_pin, enc_ref, enc_str};
 
 //#region 📖️SemioGrammar
 pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
@@ -24,20 +24,20 @@ fn parse_usize(s: &str) -> Result<usize, String> {
     s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_pieces(pieces: &[crate::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::SemioKitPiece]) -> String {
+fn enc_pieces(pieces: &[crate::standards::v1::subsets::kit::schema::snapshot::SemioKitPiece]) -> String {
     format!("[{}]", pieces.iter().map(enc_piece).collect::<Vec<_>>().join(","))
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_pieces(s: &str) -> Result<Vec<crate::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::SemioKitPiece>, String> {
+fn dec_pieces(s: &str) -> Result<Vec<crate::standards::v1::subsets::kit::schema::snapshot::SemioKitPiece>, String> {
     let inner = s.strip_prefix('[').and_then(|s| s.strip_suffix(']')).ok_or_else(|| format!("pieces: expected brackets, got {s:?}"))?;
     split_top_level(inner, ',').into_iter().filter(|s| !s.is_empty()).map(dec_piece).collect()
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_connections(cs: &[crate::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::SemioKitConnection]) -> String {
+fn enc_connections(cs: &[crate::standards::v1::subsets::kit::schema::snapshot::SemioKitConnection]) -> String {
     format!("[{}]", cs.iter().map(enc_connection).collect::<Vec<_>>().join(","))
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_connections(s: &str) -> Result<Vec<crate::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::SemioKitConnection>, String> {
+fn dec_connections(s: &str) -> Result<Vec<crate::standards::v1::subsets::kit::schema::snapshot::SemioKitConnection>, String> {
     let inner = s.strip_prefix('[').and_then(|s| s.strip_suffix(']')).ok_or_else(|| format!("connections: expected brackets, got {s:?}"))?;
     split_top_level(inner, ',').into_iter().filter(|s| !s.is_empty()).map(dec_connection).collect()
 }

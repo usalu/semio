@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/block/3d/1/any/mutation/resize-vortex.json",
+  "title": "ResizeVortex",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newRadius"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "newRadius": {
+      "type": "number"
+    }
+  }
+}

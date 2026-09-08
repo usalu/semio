@@ -88,10 +88,10 @@ fn round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::mutable_input;
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_plugin_stdio::artifacts::wav::standards::riff_pcm::subsets::any::io::{decode_wav, encode_wav};
-    use semio_s_plugin_stdio::artifacts::wav::standards::riff_pcm::subsets::any::schema::mutations;
-    use semio_s_plugin_stdio::artifacts::wav::standards::riff_pcm::subsets::any::schema::mutations::{apply_wav_mutation, WavMutation};
-    use semio_s_plugin_stdio::artifacts::wav::standards::riff_pcm::subsets::any::schema::snapshot::{RiffChunk, WavData, WavFmt, WavSnapshot};
+    use crate::standards::riff_pcm::subsets::any::io::{decode_wav, encode_wav};
+    use crate::standards::riff_pcm::subsets::any::schema::mutations;
+    use crate::standards::riff_pcm::subsets::any::schema::mutations::{apply_wav_mutation, WavMutation};
+    use crate::standards::riff_pcm::subsets::any::schema::snapshot::{RiffChunk, WavData, WavFmt, WavSnapshot};
     use semio_s_plugin_stdio_test_oracle::artifacts::wav::standards::v_riff_pcm::subsets::any::project_wav_mutation;
     use semio_s_plugin_stdio_test_oracle::law;
 

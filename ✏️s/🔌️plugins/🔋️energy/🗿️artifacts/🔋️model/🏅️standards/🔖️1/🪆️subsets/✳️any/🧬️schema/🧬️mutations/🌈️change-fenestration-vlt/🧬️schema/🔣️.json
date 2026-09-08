@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/energy/model/1/any/mutation/change-fenestration-vlt.json",
+  "title": "ChangeFenestrationVlt",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newVlt"
+  ],
+  "properties": {
+    "id": {
+      "type": "integer"
+    },
+    "newVlt": {
+      "type": "number"
+    }
+  }
+}

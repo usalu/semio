@@ -1,7 +1,7 @@
 //! 🔺️ Diff for `AddType`.
 
-use crate::artifacts::semio::standards::v1::subsets::kit::schema::diff::{SemioKitDiff, SemioKitTypeList};
-use crate::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::{SemioKitSnapshot, SemioKitType};
+use crate::standards::v1::subsets::kit::schema::diff::{SemioKitDiff, SemioKitTypeList};
+use crate::standards::v1::subsets::kit::schema::snapshot::{SemioKitSnapshot, SemioKitType};
 
 //#region 🔖️Diff
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

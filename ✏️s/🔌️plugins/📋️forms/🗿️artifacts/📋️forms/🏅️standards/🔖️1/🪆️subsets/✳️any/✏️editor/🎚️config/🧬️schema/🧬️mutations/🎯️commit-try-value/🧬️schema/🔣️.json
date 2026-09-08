@@ -1,0 +1,29 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/forms/forms/1/any/editor/config/mutation/commit-try-value.json",
+  "title": "CommitTryValue",
+  "type": "object",
+  "properties": {
+    "key": {
+      "type": "string"
+    },
+    "staging_id": {
+      "type": "string"
+    },
+    "content_id": {
+      "type": "string"
+    },
+    "chunk_count": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 18446744073709551615
+    }
+  },
+  "required": [
+    "key",
+    "staging_id",
+    "content_id",
+    "chunk_count"
+  ],
+  "additionalProperties": false
+}

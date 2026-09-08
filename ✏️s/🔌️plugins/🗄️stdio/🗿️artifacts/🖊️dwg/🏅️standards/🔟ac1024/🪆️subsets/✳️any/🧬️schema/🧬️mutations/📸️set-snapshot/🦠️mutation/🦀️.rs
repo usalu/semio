@@ -1,5 +1,5 @@
-use crate::artifacts::dwg::schema::mutations::{apply_dwg_mutation, DwgMutation};
-use crate::artifacts::dwg::DwgSnapshot;
+use crate::schema::mutations::{apply_dwg_mutation, DwgMutation};
+use crate::DwgSnapshot;
 
 /// ▶️ Applies a set-snapshot mutation.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

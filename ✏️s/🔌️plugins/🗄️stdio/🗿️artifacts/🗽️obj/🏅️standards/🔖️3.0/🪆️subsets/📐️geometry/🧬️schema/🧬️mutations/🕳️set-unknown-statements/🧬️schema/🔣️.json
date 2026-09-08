@@ -1,0 +1,41 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/obj/3.0/geometry/mutation/set-unknown-statements.json",
+  "title": "SetUnknownStatements",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "unknown_statements"
+  ],
+  "properties": {
+    "unknown_statements": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/ObjUnknownStatement"
+      }
+    },
+    "mutation": {
+      "const": "setUnknownStatements",
+      "description": "Aggregate discriminator spliced in by ObjMutation; absent when the payload stands alone."
+    }
+  },
+  "$defs": {
+    "ObjUnknownStatement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "lineIndex",
+        "raw"
+      ],
+      "properties": {
+        "lineIndex": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "raw": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

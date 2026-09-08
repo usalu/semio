@@ -91,7 +91,7 @@
         {
           "id": "set-data",
           "capability": "wav-riff-pcm-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -111,7 +111,7 @@
         {
           "id": "set-fmt",
           "capability": "wav-riff-pcm-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -131,7 +131,7 @@
         {
           "id": "set-other-chunks",
           "capability": "wav-riff-pcm-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -151,7 +151,7 @@
         {
           "id": "set-snapshot",
           "capability": "wav-riff-pcm-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],

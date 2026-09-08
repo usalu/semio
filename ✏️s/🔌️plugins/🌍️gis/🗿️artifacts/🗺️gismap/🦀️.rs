@@ -1,13 +1,14 @@
 //! 🗺️ GIS map artifact — the document entity the 2d app edits (constitutional: general).
 
 use semio_framework_value_derive::{FromValue, ToValue};
+/// 📸️ Persisted GIS map snapshot — defined in `📸️ snapshot/🧬️ schema`, re-exported here.
 pub use crate::artifacts::gismap::schema::snapshot::GisMapSnapshot;
 
 use protocol::{Identified, Patchable};
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot;
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::value::schema::snapshot::{SemioValue, SemioValueEntry, SemioValueSnapshot, STDIO_SEMIOVALUE_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot;
+use semio_s_artifact_stdio_semio::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
+use semio_s_artifact_stdio_semio::standards::v1::subsets::value::schema::snapshot::{SemioValue, SemioValueEntry, SemioValueSnapshot, STDIO_SEMIOVALUE_DOCUMENT_SCHEMA};
 #[cfg(test)]
 use serde::{Deserialize, Serialize};
 
@@ -59,7 +60,6 @@ impl Patchable<MapFeaturePatch> for MapFeature {
     }
 }
 
-/// 📸️ Persisted GIS map snapshot — defined in `📸️ snapshot/🧬️ schema`, re-exported here.
 //#endregion 🔹Types
 
 //#region 🔖️Composition

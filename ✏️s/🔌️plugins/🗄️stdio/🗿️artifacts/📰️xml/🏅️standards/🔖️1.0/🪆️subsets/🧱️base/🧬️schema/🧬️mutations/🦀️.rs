@@ -1,6 +1,6 @@
 //! 🧬️ Transparent XmlMutation aggregate.
-use crate::artifacts::xml::schema::diff::XmlDiff;
-use crate::artifacts::xml::XmlSnapshot;
+use crate::schema::diff::XmlDiff;
+use crate::XmlSnapshot;
 
 pub use super::set_declaration::{SetDeclarationMutation, SetDeclarationPayload};
 pub use super::set_doctype::{SetDoctypeMutation, SetDoctypePayload};
@@ -8,7 +8,7 @@ pub use super::insert_element::{InsertElementMutation, InsertElementPayload};
 pub use super::remove_element::{RemoveElementMutation, RemoveElementPayload};
 pub use super::set_attribute::{SetAttributeMutation, SetAttributePayload};
 pub use super::set_text::{SetTextMutation, SetTextPayload};
-pub use crate::artifacts::xml::schema::mutation_support::XmlNodePath;
+pub use crate::schema::mutation_support::XmlNodePath;
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
 #[value(tag = "mutation", content = "payload", rename_all = "camelCase")]
@@ -30,7 +30,7 @@ pub fn apply_xml_mutation(snapshot: &mut XmlSnapshot, mutation: &XmlMutation) ->
 
 #[cfg(test)]
 pub(crate) fn demo_mutation_cases() -> Vec<XmlMutation> {
-    use crate::artifacts::xml::schema::snapshot::XmlNode;
+    use crate::schema::snapshot::XmlNode;
     vec![
         XmlMutation::SetDeclaration(SetDeclarationMutation::Apply(SetDeclarationPayload { declaration: None })),
         XmlMutation::SetDoctype(SetDoctypeMutation::Apply(SetDoctypePayload { doctype: None })),

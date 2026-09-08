@@ -236,7 +236,8 @@ struct WipeVec(Vec<u8>);
 
 impl Drop for WipeVec {
     fn drop(&mut self) {
-        let _length = self.0.len();
+        #[cfg(test)]
+        let length = self.0.len();
         self.0.fill(0);
         #[cfg(test)]
         TEST_WIPED_BYTES.fetch_add(length as u64, Ordering::SeqCst);
@@ -286,7 +287,8 @@ impl PairBytes {
 
 impl Drop for PairBytes {
     fn drop(&mut self) {
-        let _length = self.len();
+        #[cfg(test)]
+        let length = self.len();
         self.pack.fill(0);
         self.spr.fill(0);
         #[cfg(test)]

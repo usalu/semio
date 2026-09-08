@@ -34,7 +34,7 @@ pub fn handle(payload: &AddSolid, doc: &ArtifactView<'_, Fem3dSnapshot>, _cfg: &
         holes: Vec::new(),
         base_z: payload.base_z.unwrap_or(0.0),
         height: payload.height,
-        layers: payload.layers.map(|v| v as usize).unwrap_or(1),
+        layers: payload.layers.map_or(1, |v| v as usize),
         mesh_size: payload.mesh_size.unwrap_or(0.5),
         material_id: payload.material_id.clone(),
     };

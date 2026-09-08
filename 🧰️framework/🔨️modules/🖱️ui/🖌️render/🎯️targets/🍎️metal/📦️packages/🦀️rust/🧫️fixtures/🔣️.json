@@ -1,5 +1,5 @@
 {
-  "$schema": "../🧬️schema/🔣️.schema.json",
+  "$schema": "../🧬️schema/🔣️.json",
   "schemaVersion": 1,
   "contract": "owned-objective-c-runtime",
   "oracle": { "package": "objc2", "version": "0.6.4" },

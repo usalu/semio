@@ -1,15 +1,15 @@
 //! 🧵️ WordprocessingML (docx) export — `DocxDocument` → `word/document.xml`/`word/styles.xml`
 //! XML render, and the OPC package assembly/sync around it. Zip/OPC/XML byte-level work is never
-//! reimplemented here: it is reused from the shared `crate::artifacts::zip::opc` layer and,
-//! transitively, `crate::artifacts::zip::engine` + `crate::artifacts::xml::schema::snapshot`.
+//! reimplemented here: it is reused from the shared `semio_s_artifact_stdio_zip::opc` layer and,
+//! transitively, `semio_s_artifact_stdio_zip::engine` + `semio_s_artifact_stdio_xml::schema::snapshot`.
 
 use super::super::super::{DocxError, MAIN_DOCUMENT_CONTENT_TYPE, MAIN_DOCUMENT_PART, REL_TYPE_STYLES, STRICT_REL_TYPE_OFFICE_DOCUMENT, STRICT_REL_TYPE_STYLES, STYLES_CONTENT_TYPE, STYLES_PART, STYLES_REL_TARGET, W_NS};
-use crate::artifacts::docx::{
+use crate::{
     schema::snapshot::{DocxBlock, DocxDocument, DocxParagraph, DocxRun, DocxStyle, DocxTable, DocxTableCell, DocxTableRow},
     DocxSnapshot,
 };
-use crate::artifacts::xml::schema::snapshot::{xml_document_to_text, XmlAttr, XmlDocument, XmlNode};
-use crate::artifacts::zip::opc::{self, OpcPackage, RELS_CONTENT_TYPE, REL_TYPE_OFFICE_DOCUMENT};
+use semio_s_artifact_stdio_xml::schema::snapshot::{xml_document_to_text, XmlAttr, XmlDocument, XmlNode};
+use semio_s_artifact_stdio_zip::opc::{self, OpcPackage, RELS_CONTENT_TYPE, REL_TYPE_OFFICE_DOCUMENT};
 
 //#region 🔖️XmlHelpers
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -165,7 +165,7 @@ pub fn build_minimal_docx(document: DocxDocument) -> DocxSnapshot {
 fn part_already_projects<T: PartialEq>(snap: &DocxSnapshot, path: &str, expected: &T, project: impl Fn(&XmlDocument) -> Option<T>) -> bool {
     let Some(part) = snap.opc.part(path) else { return false };
     let Ok(text) = std::str::from_utf8(&part.bytes) else { return false };
-    let Ok(document) = crate::artifacts::xml::schema::snapshot::xml_document_from_text(text) else { return false };
+    let Ok(document) = semio_s_artifact_stdio_xml::schema::snapshot::xml_document_from_text(text) else { return false };
     project(&document).is_some_and(|actual| &actual == expected)
 }
 
@@ -236,7 +236,7 @@ fn styles_into_part(existing: Option<&XmlDocument>, styles: &[DocxStyle]) -> Xml
 fn parsed_part(snap: &DocxSnapshot, path: &str) -> Option<XmlDocument> {
     let part = snap.opc.part(path)?;
     let text = std::str::from_utf8(&part.bytes).ok()?;
-    crate::artifacts::xml::schema::snapshot::xml_document_from_text(text).ok()
+    semio_s_artifact_stdio_xml::schema::snapshot::xml_document_from_text(text).ok()
 }
 
 /// 🔄️ Syncs `snap.opc`'s `word/document.xml` (and `word/styles.xml`, when styles are present) part
@@ -253,7 +253,7 @@ fn parsed_part(snap: &DocxSnapshot, path: &str) -> Option<XmlDocument> {
 /// may never spend that authority to re-render markup nothing asked it to change.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn sync_main_part(snap: &mut DocxSnapshot) {
-    if !part_already_projects(snap, MAIN_DOCUMENT_PART, &snap.document.body, |document| crate::artifacts::docx::standards::v_ecma_376::subsets::base::io::import::deserializers::document_from_xml(document).ok()) {
+    if !part_already_projects(snap, MAIN_DOCUMENT_PART, &snap.document.body, |document| crate::standards::v_ecma_376::subsets::base::io::import::deserializers::document_from_xml(document).ok()) {
         let bytes = xml_document_to_text(&document_into_part(parsed_part(snap, MAIN_DOCUMENT_PART).as_ref(), &snap.document)).into_bytes();
         let content_type = snap.opc.content_types.resolve(MAIN_DOCUMENT_PART).map_or_else(|| MAIN_DOCUMENT_CONTENT_TYPE.into(), str::to_string);
         snap.opc.set_part(MAIN_DOCUMENT_PART, &content_type, bytes);
@@ -263,7 +263,7 @@ pub fn sync_main_part(snap: &mut DocxSnapshot) {
         snap.opc.add_relationship("", "rId1", REL_TYPE_OFFICE_DOCUMENT, MAIN_DOCUMENT_PART);
     }
     if !snap.document.styles.is_empty() {
-        if !part_already_projects(snap, STYLES_PART, &snap.document.styles, |document| crate::artifacts::docx::standards::v_ecma_376::subsets::base::io::import::deserializers::styles_from_xml(document).ok()) {
+        if !part_already_projects(snap, STYLES_PART, &snap.document.styles, |document| crate::standards::v_ecma_376::subsets::base::io::import::deserializers::styles_from_xml(document).ok()) {
             let styles_bytes = xml_document_to_text(&styles_into_part(parsed_part(snap, STYLES_PART).as_ref(), &snap.document.styles)).into_bytes();
             let styles_content_type = snap.opc.content_types.resolve(STYLES_PART).map_or_else(|| STYLES_CONTENT_TYPE.into(), str::to_string);
             snap.opc.set_part(STYLES_PART, &styles_content_type, styles_bytes);

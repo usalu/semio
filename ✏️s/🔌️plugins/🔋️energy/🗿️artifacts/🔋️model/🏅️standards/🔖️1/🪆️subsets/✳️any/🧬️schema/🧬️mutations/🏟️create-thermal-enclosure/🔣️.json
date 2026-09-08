@@ -5,7 +5,7 @@
   "displayName": "Create Thermal Enclosure",
   "emoji": "🏟️",
   "aggregateVariant": "CreateThermalEnclosure",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "create-thermal-enclosure",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

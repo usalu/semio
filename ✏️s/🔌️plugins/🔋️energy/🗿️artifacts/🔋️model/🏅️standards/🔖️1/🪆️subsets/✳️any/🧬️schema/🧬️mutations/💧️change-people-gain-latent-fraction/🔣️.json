@@ -5,7 +5,7 @@
   "displayName": "Change People Gain Latent Fraction",
   "emoji": "💧️",
   "aggregateVariant": "ChangePeopleGainLatentFraction",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-people-gain-latent-fraction",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

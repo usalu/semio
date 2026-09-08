@@ -10,8 +10,8 @@
 //! bespoke grammar) and handed to lowpoly's own `parse_dsl`.
 use crate::artifacts::lowpoly::schema::snapshot::text::parse_dsl;
 use crate::artifacts::lowpoly::schema::snapshot::{dec_str, LowpolySnapshot};
-use semio_s_plugin_stdio::artifacts::obj::engine::decode_obj;
-use semio_s_plugin_stdio::artifacts::obj::ObjSnapshot;
+use semio_s_artifact_stdio_obj::engine::decode_obj;
+use semio_s_artifact_stdio_obj::ObjSnapshot;
 
 pub fn register() {}
 

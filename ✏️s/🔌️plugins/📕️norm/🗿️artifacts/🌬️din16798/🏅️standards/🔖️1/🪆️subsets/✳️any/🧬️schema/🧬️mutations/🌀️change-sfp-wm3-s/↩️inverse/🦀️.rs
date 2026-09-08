@@ -7,6 +7,6 @@ use crate::artifacts::din16798::Din16798Snapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(_payload: &ChangeSfpWM3S, base: &Din16798Snapshot) -> Vec<Din16798Mutation> {
-    vec![Din16798Mutation::ChangeSfpWM3S(ChangeSfpWM3S { new_sfp_w_m3_s: base.sfp_w_m3_s.clone() })]
+    vec![Din16798Mutation::ChangeSfpWM3S(ChangeSfpWM3S { new_sfp_w_m3_s: base.sfp_w_m3_s })]
 }
 //#endregion 🔖️Inverse

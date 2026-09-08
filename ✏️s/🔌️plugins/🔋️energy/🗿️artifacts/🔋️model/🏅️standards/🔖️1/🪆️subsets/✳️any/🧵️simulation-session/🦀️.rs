@@ -301,7 +301,7 @@ impl CaptureCensus {
             3 => nested!(zones, |item: &crate::model::Zone| (item.name.capacity(), item.name.capacity())),
             4 => nested!(spaces, |item: &crate::model::Space| (item.name.capacity(), item.name.capacity())),
             5 => {
-                nested!(surfaces, |item: &crate::model::Surface| { (item.name.capacity().saturating_add(item.vertices_m.capacity()), item.name.capacity().saturating_add(item.vertices_m.capacity().saturating_mul(size_of::<[f64; 3]>())),) })
+                nested!(surfaces, |item: &crate::model::Surface| { (item.name.capacity().saturating_add(item.vertices_m.capacity()), item.name.capacity().saturating_add(item.vertices_m.capacity().saturating_mul(size_of::<[f64; 3]>())),) });
             }
             6 => nested!(fenestrations, |item: &crate::model::Fenestration| (item.name.capacity(), item.name.capacity())),
             7 => nested!(materials, |item: &crate::model::Material| (item.name.capacity(), item.name.capacity())),
@@ -872,7 +872,7 @@ fn take_captured_model_for_admission(
     if mounted != expected || !mounted.matches_render(render) || mounted.request != live_request || mounted.config_digest != retained_config_digest || !snapshot_fresh || cancelled {
         return Err("energy.session.admission-stale-or-cancelled");
     }
-    Ok(std::mem::replace(capture, None).ok_or("energy.session.capture-missing")?.finish())
+    Ok(capture.take().ok_or("energy.session.capture-missing")?.finish())
 }
 //#endregion 🧮️RetainedInput
 
@@ -1291,7 +1291,7 @@ impl MountedState {
         match self.close_lane {
             0 => {
                 if !self.close_outcome_one(maximum_bytes) {
-                    return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
+                    PluginCloseStep::Pending { released_items: 1, released_bytes: 0 }
                 } else {
                     self.close_lane += 1;
                     PluginCloseStep::Pending { released_items: 1, released_bytes: 0 }
@@ -1303,7 +1303,7 @@ impl MountedState {
                     if packet.terminal_is_empty() {
                         self.preview_packet = None;
                     }
-                    return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
+                    PluginCloseStep::Pending { released_items: 1, released_bytes: 0 }
                 } else {
                     self.close_lane += 1;
                     PluginCloseStep::Pending { released_items: 1, released_bytes: 0 }
@@ -1367,10 +1367,10 @@ impl MountedState {
                     match job.close_step(1, maximum_bytes) {
                         semio_framework_job::InteractiveJobCloseStep::Complete => {
                             self.job = None;
-                            return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
+                            PluginCloseStep::Pending { released_items: 1, released_bytes: 0 }
                         }
-                        semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes } => return PluginCloseStep::Pending { released_items, released_bytes },
-                        semio_framework_job::InteractiveJobCloseStep::Blocked => return PluginCloseStep::Blocked { reason: "Energy numerical owner close blocked" },
+                        semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes } => PluginCloseStep::Pending { released_items, released_bytes },
+                        semio_framework_job::InteractiveJobCloseStep::Blocked => PluginCloseStep::Blocked { reason: "Energy numerical owner close blocked" },
                     }
                 } else {
                     self.close_lane += 1;
@@ -1429,7 +1429,7 @@ impl MountedState {
                 PluginCloseStep::Pending { released_items: 1, released_bytes: 0 }
             }
             11 => {
-                if let Some(capture) = std::mem::replace(&mut self.capture, None) {
+                if let Some(capture) = self.capture.take() {
                     self.capture_close = Some(EnergyModelCloseCursor::new(capture.finish()));
                     return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
                 }
@@ -1455,15 +1455,15 @@ impl MountedState {
                     return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
                 }
                 self.close_lane += 1;
-                return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
+                PluginCloseStep::Pending { released_items: 1, released_bytes: 0 }
             }
             14 => {
                 self.projection.tiers = [None; 4];
                 self.close_lane += 1;
-                return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
+                PluginCloseStep::Pending { released_items: 1, released_bytes: 0 }
             }
-            _ if self.worker_attached && !self.worker_returned => return PluginCloseStep::Blocked { reason: "Energy process owner has not published its fixed recovery witness" },
-            _ => return PluginCloseStep::Complete,
+            _ if self.worker_attached && !self.worker_returned => PluginCloseStep::Blocked { reason: "Energy process owner has not published its fixed recovery witness" },
+            _ => PluginCloseStep::Complete,
         }
     }
 
@@ -1722,7 +1722,7 @@ impl Registry {
 
 thread_local! {
     static REGISTRY: RefCell<Registry> = RefCell::new(Registry::new());
-    static RECOVERY: RefCell<[Option<RecoveryRecord>; SHELL_SLOTS]> = RefCell::new([None; SHELL_SLOTS]);
+    static RECOVERY: RefCell<[Option<RecoveryRecord>; SHELL_SLOTS]> = const { RefCell::new([None; SHELL_SLOTS]) };
 }
 //#endregion 🧰️FixedArena
 
@@ -2271,7 +2271,7 @@ pub fn maintenance_step(app_instance_id: u32, maximum_items: usize, maximum_byte
                     state.begin_close();
                 }
             }
-            if !matched && !registry.retiring.iter().any(|entry| *entry == Some(shell)) {
+            if !matched && !registry.retiring.contains(&Some(shell)) {
                 return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
             }
             if let Some(slot) = registry.slot_for(app_instance_id) {
@@ -2282,7 +2282,7 @@ pub fn maintenance_step(app_instance_id: u32, maximum_items: usize, maximum_byte
                     registry.pending[slot] = None;
                 }
             }
-            if registry.retiring.iter().any(|entry| *entry == Some(shell)) || registry.retire_shell(shell) {
+            if registry.retiring.contains(&Some(shell)) || registry.retire_shell(shell) {
                 PluginCloseStep::Pending { released_items: 1, released_bytes: 0 }
             } else {
                 PluginCloseStep::Blocked { reason: "Energy fixed recovery retirement reservation is unavailable" }

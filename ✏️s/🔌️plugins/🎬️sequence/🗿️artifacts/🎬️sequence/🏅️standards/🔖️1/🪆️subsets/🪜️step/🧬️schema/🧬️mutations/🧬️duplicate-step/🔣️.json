@@ -5,7 +5,7 @@
   "displayName": "Duplicate Step",
   "emoji": "🧬",
   "aggregateVariant": "DuplicateStep",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

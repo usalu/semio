@@ -1,5 +1,5 @@
-use crate::artifacts::avi::standards::v1_0::subsets::any::schema::mutations::AviMutation;
-use crate::artifacts::avi::standards::v1_0::subsets::any::schema::snapshot::AviSnapshot;
+use crate::standards::v1_0::subsets::any::schema::mutations::AviMutation;
+use crate::standards::v1_0::subsets::any::schema::snapshot::AviSnapshot;
 use protocol::Mutation;
 
 /// ↩️ Inverse of set-snapshot.

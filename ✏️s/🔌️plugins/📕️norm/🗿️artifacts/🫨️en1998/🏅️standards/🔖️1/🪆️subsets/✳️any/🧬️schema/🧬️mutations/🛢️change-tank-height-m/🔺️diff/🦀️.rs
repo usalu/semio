@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeTankHeightM, base: &En1998Snapshot) -> protocol::Mut
     if base.tank_height_m == payload.new_tank_height_m {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Tank height [m] is already {}.", payload.new_tank_height_m));
     }
-    protocol::MutationOutcome::new(En1998Diff { tank_height_m: Some(payload.new_tank_height_m.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1998Diff { tank_height_m: Some(payload.new_tank_height_m), ..Default::default() })
 }
 //#endregion 🔖️Diff

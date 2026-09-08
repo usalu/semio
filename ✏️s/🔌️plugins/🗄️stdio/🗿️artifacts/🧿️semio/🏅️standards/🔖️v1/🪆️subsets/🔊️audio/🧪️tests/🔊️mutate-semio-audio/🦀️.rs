@@ -42,11 +42,11 @@ const KINDS: &[&str] = &["no-mutation", "set-snapshot", "set-sample-rate", "set-
 mod subject {
     use semio_repo_test_host::{digest, Context, Json, Outcome};
     use semio_s_plugin_stdio_test_oracle::law::carrier_is_exact;
-    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::base::schema::mutations::semio_mutation_refusals;
-    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::audio::schema::mutations::{
+    use crate::standards::v1::subsets::base::schema::mutations::semio_mutation_refusals;
+    use crate::standards::v1::subsets::audio::schema::mutations::{
         apply_semio_audio_mutation, insert_channel, insert_tag, inverse_semio_audio_mutation, remove_channel, remove_tag, set_channel_samples, set_format, set_sample_rate, set_snapshot, set_tag_value, SemioAudioMutation,
     };
-    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::audio::schema::snapshot::{parse_semio_audio_dsl, print_semio_audio_dsl, SemioAudioChannel, SemioAudioFormat, SemioAudioSnapshot, SemioAudioTag};
+    use crate::standards::v1::subsets::audio::schema::snapshot::{parse_semio_audio_dsl, print_semio_audio_dsl, SemioAudioChannel, SemioAudioFormat, SemioAudioSnapshot, SemioAudioTag};
 
     /// 🎤️ The document every mutation row runs on: the first real second of the real committed
     /// "Bauen mit Bestand" recording — 8 000 real 16-bit PCM samples at the file's own 8 000 Hz —

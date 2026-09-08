@@ -5,7 +5,7 @@
   "displayName": "Remove Dpart Root",
   "emoji": "🧹️",
   "aggregateVariant": "RemoveDpartRoot",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "remove-dpart-root",
   "binaryTag": 15,
   "invertibility": "explicit-mutation",

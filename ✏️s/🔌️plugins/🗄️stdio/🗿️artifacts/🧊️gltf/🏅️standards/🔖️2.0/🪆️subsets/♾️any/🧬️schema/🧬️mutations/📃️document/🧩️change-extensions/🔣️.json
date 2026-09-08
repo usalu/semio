@@ -5,7 +5,7 @@
   "displayName": "Change Document Extension Data",
   "emoji": "🧩️",
   "aggregateVariant": "ChangeDocumentExtensionData",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

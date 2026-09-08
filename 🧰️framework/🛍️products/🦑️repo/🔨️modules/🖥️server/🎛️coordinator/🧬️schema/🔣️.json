@@ -1,0 +1,388 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/repo/server/coordinator/schema.json",
+  "title": "RepoServerCoordinator",
+  "description": "Wire contracts of the repo coordinator REST API (auth, diff, event, repo, ticket) and of the language-neutral G3 event log.",
+  "$defs": {
+    "Timestamp": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(?:\\.[0-9]+)?(?:Z|[+-][0-9]{2}:[0-9]{2})$"
+    },
+    "NullableTimestamp": {
+      "anyOf": [{ "$ref": "#/$defs/Timestamp" }, { "type": "null" }]
+    },
+    "NullableString": {
+      "anyOf": [{ "type": "string" }, { "type": "null" }]
+    },
+    "NullableInteger": {
+      "anyOf": [{ "type": "integer" }, { "type": "null" }]
+    },
+    "EmailAddress": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$"
+    },
+    "DeveloperRole": {
+      "type": "string",
+      "enum": ["developer", "admin", "owner"]
+    },
+    "ErrorResponse": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["error"],
+      "properties": {
+        "error": { "type": "string", "minLength": 1 }
+      }
+    },
+    "StatusResponse": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status"],
+      "properties": {
+        "status": { "const": "ok" }
+      }
+    },
+    "AuthWhoAmIResponse": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "email", "github_login", "display_name", "role", "trusted"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "email": { "$ref": "#/$defs/EmailAddress" },
+        "github_login": { "$ref": "#/$defs/NullableString" },
+        "display_name": { "type": "string" },
+        "role": { "$ref": "#/$defs/DeveloperRole" },
+        "trusted": { "type": "boolean" }
+      }
+    },
+    "Developer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "email", "github_login", "display_name", "trusted", "active", "role", "discord_user_id", "created_at", "revoked_at"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "email": { "$ref": "#/$defs/EmailAddress" },
+        "github_login": { "$ref": "#/$defs/NullableString" },
+        "display_name": { "type": "string" },
+        "trusted": { "type": "boolean" },
+        "active": { "type": "boolean" },
+        "role": { "$ref": "#/$defs/DeveloperRole" },
+        "discord_user_id": { "$ref": "#/$defs/NullableString" },
+        "created_at": { "$ref": "#/$defs/Timestamp" },
+        "revoked_at": { "$ref": "#/$defs/NullableTimestamp" }
+      }
+    },
+    "DeveloperApiKey": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "developer_id", "key_hash", "label", "created_at", "last_used_at", "revoked_at"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "developer_id": { "type": "string", "minLength": 1 },
+        "key_hash": { "type": "string", "minLength": 1 },
+        "label": { "type": "string" },
+        "created_at": { "$ref": "#/$defs/Timestamp" },
+        "last_used_at": { "$ref": "#/$defs/NullableTimestamp" },
+        "revoked_at": { "$ref": "#/$defs/NullableTimestamp" }
+      }
+    },
+    "CreateDeveloperRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["action", "email", "display_name"],
+      "properties": {
+        "action": { "const": "create-developer" },
+        "email": { "$ref": "#/$defs/EmailAddress" },
+        "github_login": { "type": "string", "default": "" },
+        "display_name": { "type": "string", "minLength": 1 },
+        "trusted": { "type": "boolean", "default": false },
+        "role": { "allOf": [{ "$ref": "#/$defs/DeveloperRole" }], "default": "developer" }
+      }
+    },
+    "CreateKeyRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["action", "developer_email"],
+      "properties": {
+        "action": { "const": "create-key" },
+        "developer_email": { "$ref": "#/$defs/EmailAddress" },
+        "label": { "type": "string", "default": "cli" }
+      }
+    },
+    "CreateKeyResponse": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["key", "id", "label"],
+      "properties": {
+        "key": { "type": "string", "minLength": 1 },
+        "id": { "type": "string", "minLength": 1 },
+        "label": { "type": "string" }
+      }
+    },
+    "RevokeKeyRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["action", "key_id"],
+      "properties": {
+        "action": { "const": "revoke-key" },
+        "key_id": { "type": "string", "minLength": 1 }
+      }
+    },
+    "Ticket": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "status", "title", "prompt", "summary", "llm", "client", "author", "github_issue", "goal", "parent", "created_at", "closed_at"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "status": { "type": "string", "enum": ["open", "closed"] },
+        "title": { "type": "string" },
+        "prompt": { "type": "string" },
+        "summary": { "type": "string" },
+        "llm": { "type": "string" },
+        "client": { "type": "string" },
+        "author": { "type": "string" },
+        "github_issue": { "type": "string" },
+        "goal": { "type": "string" },
+        "parent": { "$ref": "#/$defs/NullableString" },
+        "created_at": { "$ref": "#/$defs/Timestamp" },
+        "closed_at": { "$ref": "#/$defs/NullableTimestamp" }
+      }
+    },
+    "TicketOpenRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["action", "ticket_id", "title"],
+      "properties": {
+        "action": { "const": "open" },
+        "ticket_id": { "type": "string", "minLength": 1 },
+        "title": { "type": "string", "minLength": 1 },
+        "prompt": { "type": "string", "default": "" },
+        "llm": { "type": "string", "default": "" },
+        "client": { "type": "string", "default": "" },
+        "author": { "type": "string", "default": "" },
+        "github_issue": { "type": "string", "default": "" },
+        "goal": { "type": "string", "default": "" },
+        "parent": { "allOf": [{ "$ref": "#/$defs/NullableString" }], "default": null }
+      }
+    },
+    "TicketCloseRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["action", "ticket_id", "summary"],
+      "properties": {
+        "action": { "const": "close" },
+        "ticket_id": { "type": "string", "minLength": 1 },
+        "summary": { "type": "string", "minLength": 1 },
+        "files": { "type": "array", "items": { "type": "string" }, "default": [] }
+      }
+    },
+    "TicketReopenRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["action", "ticket_id", "prompt"],
+      "properties": {
+        "action": { "const": "reopen" },
+        "ticket_id": { "type": "string", "minLength": 1 },
+        "prompt": { "type": "string", "minLength": 1 },
+        "llm": { "type": "string", "default": "" },
+        "title": { "type": "string", "default": "" },
+        "client": { "type": "string", "default": "" }
+      }
+    },
+    "TicketListResponse": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/Ticket" }
+    },
+    "TicketDetailResponse": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["ticket", "claims"],
+      "properties": {
+        "ticket": { "$ref": "#/$defs/Ticket" },
+        "claims": { "type": "array", "items": { "$ref": "#/$defs/Scope" } }
+      }
+    },
+    "Scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "kind", "file_path", "section_path", "definition_name", "start_line", "end_line", "updated_at"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "kind": { "type": "string", "enum": ["file", "section", "definition"] },
+        "file_path": { "type": "string" },
+        "section_path": { "type": "string" },
+        "definition_name": { "type": "string" },
+        "start_line": { "type": "integer", "minimum": 0 },
+        "end_line": { "type": "integer", "minimum": 0 },
+        "updated_at": { "$ref": "#/$defs/Timestamp" }
+      }
+    },
+    "ScopeListResponse": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/Scope" }
+    },
+    "Warning": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "kind", "severity", "message", "ticket_id", "scope_id", "created_at", "acknowledged_at", "ack_by"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "kind": { "type": "string" },
+        "severity": { "type": "string", "enum": ["info", "warning", "error"] },
+        "message": { "type": "string" },
+        "ticket_id": { "type": "string" },
+        "scope_id": { "type": "string" },
+        "created_at": { "$ref": "#/$defs/Timestamp" },
+        "acknowledged_at": { "$ref": "#/$defs/NullableTimestamp" },
+        "ack_by": { "type": "string" }
+      }
+    },
+    "WarningListResponse": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/Warning" }
+    },
+    "Breach": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "kind", "priority", "scope_id", "file_path", "line", "col", "summary", "excerpt", "autofixable", "detected_at", "ticket_id", "resolved_at"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "kind": { "type": "string" },
+        "priority": { "type": "string" },
+        "scope_id": { "type": "string" },
+        "file_path": { "type": "string" },
+        "line": { "$ref": "#/$defs/NullableInteger" },
+        "col": { "$ref": "#/$defs/NullableInteger" },
+        "summary": { "type": "string" },
+        "excerpt": { "type": "string" },
+        "autofixable": { "type": "boolean" },
+        "detected_at": { "$ref": "#/$defs/Timestamp" },
+        "ticket_id": { "type": "string" },
+        "resolved_at": { "$ref": "#/$defs/NullableTimestamp" }
+      }
+    },
+    "BreachListResponse": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/Breach" }
+    },
+    "FileSnapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "content"],
+      "properties": {
+        "path": { "type": "string", "minLength": 1 },
+        "content": { "type": "string" }
+      }
+    },
+    "DiffIngestRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["ticket_id", "patch"],
+      "properties": {
+        "ticket_id": { "type": "string", "minLength": 1 },
+        "repo_id": { "type": "string", "default": "" },
+        "patch": { "type": "string", "minLength": 1 },
+        "snapshots": { "type": "array", "items": { "$ref": "#/$defs/FileSnapshot" }, "default": [] }
+      }
+    },
+    "DiffIngestResponse": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["changed_files", "claimed_scopes", "warnings", "breachs", "blockers"],
+      "properties": {
+        "changed_files": { "type": "array", "items": { "type": "string" } },
+        "claimed_scopes": { "type": "array", "items": { "type": "string" } },
+        "warnings": { "type": "array", "items": { "$ref": "#/$defs/Warning" } },
+        "breachs": { "type": "array", "items": { "$ref": "#/$defs/Breach" } },
+        "blockers": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "EventPublishRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind"],
+      "properties": {
+        "kind": { "type": "string", "minLength": 1 },
+        "source": { "type": "string", "default": "" },
+        "payload": { "default": {} }
+      }
+    },
+    "EventPublishResponse": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "event_id"],
+      "properties": {
+        "status": { "const": "ok" },
+        "event_id": { "type": "string", "minLength": 1 }
+      }
+    },
+    "Event": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "kind", "source", "payload_json", "created_at"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "kind": { "type": "string", "minLength": 1 },
+        "source": { "type": "string" },
+        "payload_json": {},
+        "created_at": { "$ref": "#/$defs/Timestamp" }
+      }
+    },
+    "EventListResponse": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/Event" }
+    },
+    "IndexFileRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["action", "file_path"],
+      "properties": {
+        "action": { "const": "index-file" },
+        "file_path": { "type": "string", "minLength": 1 },
+        "content": { "type": "string", "default": "" }
+      }
+    },
+    "ReindexRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["action"],
+      "properties": {
+        "action": { "const": "reindex" }
+      }
+    },
+    "ReindexResponse": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["files"],
+      "properties": {
+        "files": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "G3EventEnvelope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["stream", "sequence", "id", "generation", "type", "payload", "checksum"],
+      "properties": {
+        "stream": { "type": "string", "minLength": 1 },
+        "sequence": { "type": "integer", "minimum": 1 },
+        "id": { "type": "string", "minLength": 1 },
+        "generation": { "type": "integer", "minimum": 1 },
+        "type": { "type": "string", "minLength": 1 },
+        "payload": {},
+        "checksum": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+      }
+    },
+    "G3EventLogContract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "encoding", "scalar", "fields", "checksum"],
+      "properties": {
+        "schema": { "const": "semio.coordinator.event/1" },
+        "encoding": { "const": "canonical-jsonl-lf" },
+        "scalar": { "const": "nonempty-no-nul" },
+        "fields": { "const": ["stream", "sequence", "id", "generation", "type", "payload", "checksum"] },
+        "checksum": { "const": "sha256(stream+nul+sequence+nul+id+nul+generation+nul+type+nul+canonical-payload)" }
+      }
+    }
+  }
+}

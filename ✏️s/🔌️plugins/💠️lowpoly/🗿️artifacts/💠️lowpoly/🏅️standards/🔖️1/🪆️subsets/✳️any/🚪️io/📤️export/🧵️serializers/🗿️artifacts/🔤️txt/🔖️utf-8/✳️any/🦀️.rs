@@ -7,7 +7,7 @@
 //! carried verbatim as the txt body -- never a second bespoke grammar.
 use crate::artifacts::lowpoly::schema::snapshot::text::print_dsl;
 use crate::artifacts::lowpoly::schema::snapshot::LowpolySnapshot;
-use semio_s_plugin_stdio::artifacts::txt::TxtSnapshot;
+use semio_s_artifact_stdio_txt::TxtSnapshot;
 
 pub fn register() {}
 

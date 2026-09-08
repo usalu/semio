@@ -5,7 +5,7 @@
   "displayName": "Remove Font File",
   "emoji": "🧺️",
   "aggregateVariant": "RemoveFontFile",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "remove-font-file",
   "binaryTag": 7,
   "invertibility": "explicit-mutation",

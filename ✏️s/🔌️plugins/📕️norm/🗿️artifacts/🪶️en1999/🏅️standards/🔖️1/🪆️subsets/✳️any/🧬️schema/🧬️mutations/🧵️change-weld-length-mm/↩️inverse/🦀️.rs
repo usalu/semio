@@ -7,6 +7,6 @@ use crate::artifacts::en1999::En1999Snapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(_payload: &ChangeWeldLengthMm, base: &En1999Snapshot) -> Vec<En1999Mutation> {
-    vec![En1999Mutation::ChangeWeldLengthMm(ChangeWeldLengthMm { new_weld_length_mm: base.weld_length_mm.clone() })]
+    vec![En1999Mutation::ChangeWeldLengthMm(ChangeWeldLengthMm { new_weld_length_mm: base.weld_length_mm })]
 }
 //#endregion 🔖️Inverse

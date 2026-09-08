@@ -10,14 +10,14 @@
 //! there — this file's `validate_body` is called directly by diff constructors on their own
 //! ephemeral rep, never on a persisted snapshot.
 
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::engine::Aabb;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::inferences::bounding_volume::face_aabb;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::inferences::mass_properties;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::{ArenaId, EdgeId, FaceId};
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::curve_ops;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::error::ValidationIssue;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::surface::Surface;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::Body;
+use crate::standards::v1::subsets::brep::schema::engine::Aabb;
+use crate::standards::v1::subsets::brep::schema::inferences::bounding_volume::face_aabb;
+use crate::standards::v1::subsets::brep::schema::inferences::mass_properties;
+use crate::standards::v1::subsets::brep::schema::snapshot::arena::{ArenaId, EdgeId, FaceId};
+use crate::standards::v1::subsets::brep::schema::snapshot::curve::curve_ops;
+use crate::standards::v1::subsets::brep::schema::snapshot::error::ValidationIssue;
+use crate::standards::v1::subsets::brep::schema::snapshot::surface::Surface;
+use crate::standards::v1::subsets::brep::schema::snapshot::topology::Body;
 
 // #region 🔖️Topology
 
@@ -73,7 +73,7 @@ fn check_tolerance_containment(body: &Body, issues: &mut Vec<ValidationIssue>) {
     for (edge_id, edge) in body.edges.iter() {
         for v in [edge.v0, edge.v1] {
             let Some(vertex) = body.vertices.get(v) else { continue };
-            if let Some((finer, coarser)) = crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::tolerance::check_containment(&format!("vertex-{}", v.raw_index()), vertex.tol, &format!("edge-{}", edge_id.raw_index()), edge.tol) {
+            if let Some((finer, coarser)) = crate::standards::v1::subsets::brep::schema::snapshot::tolerance::check_containment(&format!("vertex-{}", v.raw_index()), vertex.tol, &format!("edge-{}", edge_id.raw_index()), edge.tol) {
                 issues.push(ValidationIssue { entity: finer.clone(), code: "tolerance-containment-violated", message: format!("{finer}'s tolerance exceeds its containing {coarser}'s") });
             }
         }
@@ -83,7 +83,7 @@ fn check_tolerance_containment(body: &Body, issues: &mut Vec<ValidationIssue>) {
             let Some(coedge) = body.coedges.get(coedge_id) else { continue };
             let Some(edge) = body.edges.get(coedge.edge) else { continue };
             if let Some((finer, coarser)) =
-                crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::tolerance::check_containment(&format!("edge-{}", coedge.edge.raw_index()), edge.tol, &format!("face-{}", face_id.raw_index()), face.tol)
+                crate::standards::v1::subsets::brep::schema::snapshot::tolerance::check_containment(&format!("edge-{}", coedge.edge.raw_index()), edge.tol, &format!("face-{}", face_id.raw_index()), face.tol)
             {
                 issues.push(ValidationIssue { entity: finer.clone(), code: "tolerance-containment-violated", message: format!("{finer}'s tolerance exceeds its containing {coarser}'s") });
             }
@@ -134,7 +134,7 @@ fn check_same_parameter(body: &Body, issues: &mut Vec<ValidationIssue>) {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn same_parameter_deviation_at(surface: &Surface, pcurve: &crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::Curve2, curve3: &crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::Curve3, prange: (f64, f64), range: (f64, f64), s: f64) -> f64 {
+fn same_parameter_deviation_at(surface: &Surface, pcurve: &crate::standards::v1::subsets::brep::schema::snapshot::curve::Curve2, curve3: &crate::standards::v1::subsets::brep::schema::snapshot::curve::Curve3, prange: (f64, f64), range: (f64, f64), s: f64) -> f64 {
     let p = prange.0 + (prange.1 - prange.0) * s;
     let t = range.0 + (range.1 - range.0) * s;
     let uv = pcurve.eval(p);
@@ -146,8 +146,8 @@ fn same_parameter_deviation_at(surface: &Surface, pcurve: &crate::artifacts::sem
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn same_parameter_deviations(
     surface: &Surface,
-    pcurve: &crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::Curve2,
-    curve3: &crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::Curve3,
+    pcurve: &crate::standards::v1::subsets::brep::schema::snapshot::curve::Curve2,
+    curve3: &crate::standards::v1::subsets::brep::schema::snapshot::curve::Curve3,
     prange: (f64, f64),
     range: (f64, f64),
     base_samples: usize,
@@ -334,13 +334,13 @@ pub fn validate_body(body: &Body) -> Vec<ValidationIssue> {
 //#region 🧪️Tests
 mod tests {
     use super::*;
-    use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::euler::{add_face, add_shell, add_solid, make_edge, make_loop, make_vertex};
-    use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::Curve3;
-    use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::surface::Surface;
-    use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::tolerance::Tol;
-    use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::history::OpRecorder;
-    use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Frame3;
-    use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::{Pnt3, Vec3};
+    use crate::standards::v1::subsets::brep::schema::diff::euler::{add_face, add_shell, add_solid, make_edge, make_loop, make_vertex};
+    use crate::standards::v1::subsets::brep::schema::snapshot::curve::Curve3;
+    use crate::standards::v1::subsets::brep::schema::snapshot::surface::Surface;
+    use crate::standards::v1::subsets::brep::schema::snapshot::tolerance::Tol;
+    use crate::standards::v1::subsets::brep::schema::snapshot::topology::history::OpRecorder;
+    use crate::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Frame3;
+    use crate::standards::v1::subsets::brep::schema::snapshot::vector::{Pnt3, Vec3};
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn attach_planar_pcurves(body: &mut Body, face: FaceId, frame: &Frame3) {
@@ -350,9 +350,9 @@ mod tests {
             let Curve3::Line { origin, dir } = *body.curves3.get(edge.curve).unwrap() else { continue };
             let local_o = frame.to_local(origin);
             let local_d = frame.to_local_vector(dir);
-            let pcurve = body.curves2.insert(crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::Curve2::Line {
-                origin: crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::Pnt2::new(local_o.x, local_o.y),
-                dir: crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::Vec2::new(local_d.x, local_d.y),
+            let pcurve = body.curves2.insert(crate::standards::v1::subsets::brep::schema::snapshot::curve::Curve2::Line {
+                origin: crate::standards::v1::subsets::brep::schema::snapshot::vector::Pnt2::new(local_o.x, local_o.y),
+                dir: crate::standards::v1::subsets::brep::schema::snapshot::vector::Vec2::new(local_d.x, local_d.y),
             });
             // 🩺 A p-curve is always parametrized in the EDGE's own curve order — never reversed
             // to match a particular coedge's traversal direction (W1-E's binding convention, see
@@ -370,7 +370,7 @@ mod tests {
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn build_tetrahedron_with_windings(body: &mut Body, rec: &mut OpRecorder, face_defs: [[usize; 3]; 4]) -> crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::SolidId {
+    fn build_tetrahedron_with_windings(body: &mut Body, rec: &mut OpRecorder, face_defs: [[usize; 3]; 4]) -> crate::standards::v1::subsets::brep::schema::snapshot::arena::SolidId {
         let positions = [Pnt3::new(0.0, 0.0, 0.0), Pnt3::new(1.0, 0.0, 0.0), Pnt3::new(0.0, 1.0, 0.0), Pnt3::new(0.0, 0.0, 1.0)];
         let vertices: Vec<_> = positions.iter().map(|&p| make_vertex(body, p, Tol::DEFAULT, rec)).collect();
         let edge_pairs = [(0, 1), (1, 2), (2, 0), (0, 3), (1, 3), (2, 3)];
@@ -415,12 +415,12 @@ mod tests {
     // [2,0,3]]` — the OLD `build_tetrahedron_globally_reversed` — is each of those faces with its
     // last two vertices swapped, i.e. the genuinely OUTWARD-facing tetrahedron. The fixtures were
     // simply mislabeled; the validator's `shell-orientation-inward` check was correct both times.
-    fn build_tetrahedron(body: &mut Body, rec: &mut OpRecorder) -> crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::SolidId {
+    fn build_tetrahedron(body: &mut Body, rec: &mut OpRecorder) -> crate::standards::v1::subsets::brep::schema::snapshot::arena::SolidId {
         build_tetrahedron_with_windings(body, rec, [[0, 2, 1], [0, 1, 3], [1, 2, 3], [2, 0, 3]])
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn build_tetrahedron_globally_reversed(body: &mut Body, rec: &mut OpRecorder) -> crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::SolidId {
+    fn build_tetrahedron_globally_reversed(body: &mut Body, rec: &mut OpRecorder) -> crate::standards::v1::subsets::brep::schema::snapshot::arena::SolidId {
         build_tetrahedron_with_windings(body, rec, [[0, 1, 2], [0, 3, 1], [1, 3, 2], [2, 3, 0]])
     }
 
@@ -470,7 +470,7 @@ mod tests {
         let curve = body.curves3.insert(Curve3::Line { origin: Pnt3::new(0.0, 0.0, 0.0), dir: Vec3::X });
         let edge = make_edge(&mut body, curve, (0.0, 1.0), v0, v1, Tol::DEFAULT, &mut rec);
         for _ in 0..3 {
-            body.coedges.insert(crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::Coedge {
+            body.coedges.insert(crate::standards::v1::subsets::brep::schema::snapshot::topology::Coedge {
                 edge,
                 forward: true,
                 pcurve: None,
@@ -494,9 +494,9 @@ mod tests {
         let coedge_id = body.loop_coedges(outer)[0];
         // Attach a pcurve that does NOT correspond to the face's surface at all — a constant,
         // clearly-wrong 2D point far from where the 3D edge actually projects.
-        let bad_pcurve = body.curves2.insert(crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::Curve2::Line {
-            origin: crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::Pnt2::new(500.0, 500.0),
-            dir: crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::Vec2::new(0.0, 0.0),
+        let bad_pcurve = body.curves2.insert(crate::standards::v1::subsets::brep::schema::snapshot::curve::Curve2::Line {
+            origin: crate::standards::v1::subsets::brep::schema::snapshot::vector::Pnt2::new(500.0, 500.0),
+            dir: crate::standards::v1::subsets::brep::schema::snapshot::vector::Vec2::new(0.0, 0.0),
         });
         let coedge = body.coedges.get_mut(coedge_id).unwrap();
         coedge.pcurve = Some(bad_pcurve);
@@ -578,8 +578,8 @@ mod tests {
     async fn self_intersection_probe_warns_on_overlapping_non_adjacent_faces() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
-        let a = crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::primitives::make_box(&mut body, 1.0, 1.0, 1.0, &mut rec).unwrap();
-        let b = crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::primitives::make_box(&mut body, 1.0, 1.0, 1.0, &mut rec).unwrap();
+        let a = crate::standards::v1::subsets::brep::schema::diff::primitives::make_box(&mut body, 1.0, 1.0, 1.0, &mut rec).unwrap();
+        let b = crate::standards::v1::subsets::brep::schema::diff::primitives::make_box(&mut body, 1.0, 1.0, 1.0, &mut rec).unwrap();
         let mut faces = body.solid_faces(a);
         faces.extend(body.solid_faces(b));
         let shell = add_shell(&mut body, faces, &mut rec);

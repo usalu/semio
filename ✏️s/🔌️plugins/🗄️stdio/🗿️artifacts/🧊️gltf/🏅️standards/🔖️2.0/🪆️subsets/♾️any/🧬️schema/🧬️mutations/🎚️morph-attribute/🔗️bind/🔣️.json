@@ -5,7 +5,7 @@
   "displayName": "Bind Morph Target Attribute",
   "emoji": "🔗️",
   "aggregateVariant": "BindMorphTargetAttribute",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

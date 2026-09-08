@@ -5,7 +5,7 @@
   "displayName": "Change Surface Multiplier",
   "emoji": "🔁️",
   "aggregateVariant": "ChangeSurfaceMultiplier",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-surface-multiplier",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

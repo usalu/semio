@@ -17,8 +17,8 @@
 /// 🧩 Ordered removed keys, modified values, and inserted items.
 pub(crate) type IndexedDiffParts<D, T> = (Vec<usize>, Vec<(usize, D)>, Vec<(usize, T)>);
 
-use crate::artifacts::gltf::engine::{GltfAccessorType, GltfComponentType};
-use crate::artifacts::gltf::schema::snapshot::{
+use crate::engine::{GltfAccessorType, GltfComponentType};
+use crate::schema::snapshot::{
     GltfAccessor, GltfAlphaMode, GltfAnimation, GltfAnimationChannel, GltfAnimationChannelTarget, GltfAnimationPath, GltfAnimationSampler, GltfAsset, GltfBuffer, GltfBufferView, GltfCamera, GltfCameraProjection, GltfImage, GltfInterpolation,
     GltfJson, GltfMaterial, GltfMesh, GltfMorphTarget, GltfNode, GltfNormalTextureInfo, GltfOcclusionTextureInfo, GltfOrthographic, GltfPbrMetallicRoughness, GltfPerspective, GltfPrimitive, GltfSampler, GltfScene, GltfSkin, GltfSnapshot,
     GltfSourceForm, GltfSparseAccessor, GltfSparseIndices, GltfSparseValues, GltfTexture, GltfTextureInfo,
@@ -27,10 +27,10 @@ use crate::artifacts::gltf::schema::snapshot::{
 // below are all inside `#[cfg(test)]`), so — like the reactor/puzzle wasm-only imports elsewhere in
 // this ticket — it must be gated to its actual consumer or it warns unused on the plain `lib` build.
 #[cfg(test)]
-use crate::artifacts::gltf::schema::snapshot::GltfDocument;
+use crate::schema::snapshot::GltfDocument;
 use protocol::os_spr::command::DiffAlgebra;
 use protocol::MutationDiff;
-use schema::ArtifactSchema;
+use framework_schema::ArtifactSchema;
 
 //#region 🔖️IndexTransport
 /// 📐️ Shared rank/unrank arithmetic for index-keyed collection diffs (`between`/`absorb`/
@@ -1550,7 +1550,7 @@ impl DiffAlgebra<GltfSnapshot> for GltfDiff {
 /// (⚙️engine/component.rs), mirroring json's own `demo_diff_cases()` role in its pilot report.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn demo_diff_cases() -> Vec<GltfDiff> {
-    let base = crate::artifacts::gltf::engine::demo_gltf_snapshot();
+    let base = crate::engine::demo_gltf_snapshot();
     let mut other = base.clone();
     other.document.asset.generator = Some("semio-fg3".into());
     other.document.scene = Some(1);
@@ -1831,7 +1831,7 @@ pub(crate) fn dec_json(s: &str) -> Result<GltfJson, String> {
 
 //#region 🔖️UnitEnumCodecs
 /// 🔢️ Wire code, not a word tag -- reuses [`GltfComponentType::code`]/`from_code` (the same spec
-/// numeric code the JSON serde impl uses, `crate::artifacts::gltf::engine`).
+/// numeric code the JSON serde impl uses, `crate::engine`).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn enc_component_type(t: GltfComponentType) -> String {
     t.code().to_string()
@@ -4007,7 +4007,7 @@ impl protocol::DiffCodec for GltfDiff {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::gltf::STDIO_GLTF_DOCUMENT_SCHEMA;
+    use crate::STDIO_GLTF_DOCUMENT_SCHEMA;
 
     //#region 🔖️Fixtures
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -4325,7 +4325,7 @@ mod tests {
 #[cfg(test)]
 mod handcrafted_diff_codec_tests {
     use super::*;
-    use crate::artifacts::gltf::STDIO_GLTF_DOCUMENT_SCHEMA;
+    use crate::STDIO_GLTF_DOCUMENT_SCHEMA;
     use protocol::DiffCodec;
 
     //#region 🔖️Fixtures

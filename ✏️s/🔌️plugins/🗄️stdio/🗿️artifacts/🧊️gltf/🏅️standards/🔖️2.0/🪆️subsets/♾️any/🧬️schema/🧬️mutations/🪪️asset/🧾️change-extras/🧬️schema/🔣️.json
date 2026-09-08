@@ -1,0 +1,16 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/asset/change-extras.json",
+  "title": "GltfChangeAssetExtraDataMutation",
+  "type": "object",
+  "x-semio": {
+    "id": "s.stdio.gltf.mutation.change-asset-extra-data.v1",
+    "version": 1,
+    "phase": "mutation",
+    "touchedPaths": [
+      "document/asset/extras"
+    ],
+    "referencePolicy": "none"
+  },
+  "x-semio-mutation": "change-asset-extra-data"
+}

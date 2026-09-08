@@ -22,10 +22,10 @@
 //! variant's `RecordSpec` to its inner type's own `DslField` impl — which is why every leaf payload
 //! struct below derives `dsl::DslRecord` in addition to `dsl::MutationLeaf`.
 
-use crate::artifacts::gif::standards::v87a::subsets::any::schema::diff::{self, GifDiff, GifImageAdded, GifImageDiff, GifImageModified, GifImagesDiff};
+use crate::standards::v87a::subsets::any::schema::diff::{self, GifDiff, GifImageAdded, GifImageDiff, GifImageModified, GifImagesDiff};
 #[cfg(test)]
-use crate::artifacts::gif::standards::v87a::subsets::any::schema::snapshot::GifRgb;
-use crate::artifacts::gif::standards::v87a::subsets::any::schema::snapshot::{GifColorTable, GifImage, GifSnapshot};
+use crate::standards::v87a::subsets::any::schema::snapshot::GifRgb;
+use crate::standards::v87a::subsets::any::schema::snapshot::{GifColorTable, GifImage, GifSnapshot};
 use protocol::{Mutation, MutationDiff};
 use protocol::{OpBinary, OpText};
 
@@ -92,7 +92,7 @@ pub const KINDS: &[&str] = &["set-snapshot", "set-screen-size", "set-global-colo
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_mutation_cases() -> Vec<GifMutation> {
-    let base = crate::artifacts::gif::standards::v87a::subsets::any::schema::demo_gif_snapshot();
+    let base = crate::standards::v87a::subsets::any::schema::demo_gif_snapshot();
     let sample_image = GifImage { left: 0, top: 0, width: 2, height: 2, interlace: false, lct: Some(GifColorTable { sorted: false, colors: vec![GifRgb { r: 9, g: 9, b: 9 }; 2] }), indices: vec![0, 1, 1, 0] };
     vec![
         GifMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() }),
@@ -249,7 +249,7 @@ impl OpBinary for GifMutation {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::gif::standards::v87a::subsets::any::schema::snapshot::GifRgb;
+    use crate::standards::v87a::subsets::any::schema::snapshot::GifRgb;
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn sample_image(seed: u8) -> GifImage {

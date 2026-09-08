@@ -1,9 +1,9 @@
 //! 🧬️ XlsxArtifact schema — full artifact state.
 
-use crate::artifacts::xlsx::schema::snapshot::XlsxWorkbook;
-use crate::artifacts::xlsx::XlsxSnapshot;
-use crate::artifacts::zip::opc::OpcPackage;
-use schema::ArtifactSchema;
+use crate::schema::snapshot::XlsxWorkbook;
+use crate::XlsxSnapshot;
+use semio_s_artifact_stdio_zip::opc::OpcPackage;
+use framework_schema::ArtifactSchema;
 
 //#region Artifact
 /// 🧬️ Full `stdio.xlsx` artifact state.
@@ -55,31 +55,31 @@ impl XlsxArtifact {
 //#region Descriptor
 /// 🧬️ Descriptor for `s.stdio.xlsx`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn xlsx_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
-    schema::ArtifactSchemaDescriptor {
+pub fn xlsx_artifact_schema_descriptor() -> framework_schema::ArtifactSchemaDescriptor {
+    framework_schema::ArtifactSchemaDescriptor {
         id: "s.stdio.xlsx",
-        artifact: schema::FacetLeaves {
+        artifact: framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),
             json_schema: include_str!("🔣️.json"),
             proto: include_str!("🛰️.proto"),
         },
-        snapshot: schema::FacetLeaves {
+        snapshot: framework_schema::FacetLeaves {
             rust: include_str!("📸️snapshot/🦀️.rs"),
             typescript: include_str!("📸️snapshot/🟦️.ts"),
             graphql: include_str!("📸️snapshot/🔗️.graphql"),
             json_schema: include_str!("📸️snapshot/🔣️.json"),
             proto: include_str!("📸️snapshot/🛰️.proto"),
         },
-        diff: schema::FacetLeaves {
+        diff: framework_schema::FacetLeaves {
             rust: include_str!("🔺️diff/🦀️.rs"),
             typescript: include_str!("🔺️diff/🟦️.ts"),
             graphql: include_str!("🔺️diff/🔗️.graphql"),
             json_schema: include_str!("🔺️diff/🔣️.json"),
             proto: include_str!("🔺️diff/🛰️.proto"),
         },
-        mutations: schema::FacetLeaves {
+        mutations: framework_schema::FacetLeaves {
             rust: include_str!("🧬️mutations/🦀️.rs"),
             typescript: include_str!("🧬️mutations/🟦️.ts"),
             graphql: include_str!("🧬️mutations/🔗️.graphql"),
@@ -91,8 +91,8 @@ pub fn xlsx_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
 //#endregion Descriptor
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use crate::artifacts::xlsx::schema::snapshot::{XlsxCell, XlsxCellValue, XlsxSheet};
-    use crate::artifacts::xlsx::{XlsxDiff, XlsxMutation, XlsxSnapshot};
+    use crate::schema::snapshot::{XlsxCell, XlsxCellValue, XlsxSheet};
+    use crate::{XlsxDiff, XlsxMutation, XlsxSnapshot};
     use semio_framework_plugin::ArtifactBuilder;
 
     //#region 🔖️Builder
@@ -120,7 +120,7 @@ pub mod derived_construction {
             Ok(Self::from_snapshot(<XlsxSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
         fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
-            let diff = crate::artifacts::xlsx::schema::mutations::apply_xlsx_mutation(&mut self.snapshot, &mutation);
+            let diff = crate::schema::mutations::apply_xlsx_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
         fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
@@ -160,7 +160,7 @@ pub mod derived_construction {
 
         // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         fn rebuild(mut self) -> Self {
-            self.snapshot = crate::artifacts::xlsx::standards::v_ecma_376::subsets::base::io::export::serializers::build_minimal_xlsx(self.snapshot.workbook);
+            self.snapshot = crate::standards::v_ecma_376::subsets::base::io::export::serializers::build_minimal_xlsx(self.snapshot.workbook);
             self
         }
     }
@@ -171,7 +171,7 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use crate::artifacts::xlsx::XlsxSnapshot;
+    use crate::XlsxSnapshot;
     use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     //#region 🔖️Parts
@@ -194,7 +194,7 @@ pub mod derived_analysis {
             // 🕵️ Real sniff: OPC-shaped bytes whose root officeDocument relationship resolves under
             // `xl/` — disambiguates from docx/pptx, which share the same zip magic and OPC shape.
             match source {
-                AnalyzeSource::Binary(bytes) if crate::artifacts::xlsx::standards::v_ecma_376::subsets::base::io::import::deserializers::sniff_xlsx_bytes(bytes) => IoConfidence::High,
+                AnalyzeSource::Binary(bytes) if crate::standards::v_ecma_376::subsets::base::io::import::deserializers::sniff_xlsx_bytes(bytes) => IoConfidence::High,
                 AnalyzeSource::Binary(_) | AnalyzeSource::Text(_) => IoConfidence::Low,
             }
         }
@@ -245,9 +245,9 @@ pub fn empty_xlsx_snapshot() -> XlsxSnapshot {
 /// pattern-setter).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn demo_xlsx_snapshot() -> XlsxSnapshot {
-    use crate::artifacts::xlsx::schema::snapshot::{XlsxCell, XlsxCellValue, XlsxSheet};
-    use crate::artifacts::xlsx::standards::v_ecma_376::subsets::base::io::export::serializers::{build_minimal_xlsx, encode_xlsx};
-    use crate::artifacts::xlsx::standards::v_ecma_376::subsets::base::io::import::deserializers::decode_xlsx;
+    use crate::schema::snapshot::{XlsxCell, XlsxCellValue, XlsxSheet};
+    use crate::standards::v_ecma_376::subsets::base::io::export::serializers::{build_minimal_xlsx, encode_xlsx};
+    use crate::standards::v_ecma_376::subsets::base::io::import::deserializers::decode_xlsx;
     let workbook = XlsxWorkbook {
         sheets: vec![
             XlsxSheet {
@@ -299,15 +299,15 @@ semio_framework_plugin::derive_artifact_facets!(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::xlsx::schema::snapshot::{XlsxCell, XlsxCellValue, XlsxSheet};
-    use crate::artifacts::xlsx::standards::v_ecma_376::subsets::base::io::export::serializers::{build_minimal_xlsx, encode_xlsx};
-    use crate::artifacts::xlsx::standards::v_ecma_376::subsets::base::io::import::deserializers::{decode_xlsx, sniff_xlsx_bytes};
-    use crate::artifacts::xlsx::standards::v_ecma_376::subsets::base::io::{
+    use crate::schema::snapshot::{XlsxCell, XlsxCellValue, XlsxSheet};
+    use crate::standards::v_ecma_376::subsets::base::io::export::serializers::{build_minimal_xlsx, encode_xlsx};
+    use crate::standards::v_ecma_376::subsets::base::io::import::deserializers::{decode_xlsx, sniff_xlsx_bytes};
+    use crate::standards::v_ecma_376::subsets::base::io::{
         column_index, column_letter, XlsxError, REL_TYPE_OFFICE_DOCUMENT_STRICT, REL_TYPE_SHARED_STRINGS, REL_TYPE_SHARED_STRINGS_STRICT, REL_TYPE_WORKSHEET, SHARED_STRINGS_CONTENT_TYPE, SHARED_STRINGS_PART, WORKBOOK_CONTENT_TYPE, WORKBOOK_PART,
         WORKSHEET_CONTENT_TYPE,
     };
-    use crate::artifacts::xml::schema::snapshot::xml_document_from_text;
-    use crate::artifacts::zip::opc::{self, OpcPackage, RELS_CONTENT_TYPE, REL_TYPE_OFFICE_DOCUMENT};
+    use semio_s_artifact_stdio_xml::schema::snapshot::xml_document_from_text;
+    use semio_s_artifact_stdio_zip::opc::{self, OpcPackage, RELS_CONTENT_TYPE, REL_TYPE_OFFICE_DOCUMENT};
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn cell(row: u32, col: u32, value: XlsxCellValue) -> XlsxCell {
@@ -543,7 +543,7 @@ mod tests {
     /// framework's `m5` auto-discovery does not reach at all.
     mod conformance_laws {
         use super::*;
-        use crate::artifacts::xlsx::schema::{diff, mutations, snapshot};
+        use crate::schema::{diff, mutations, snapshot};
         use protocol::{DiffCodec, OpBinary, OpText};
 
         /// ✅️ "committed files parse": all 6 handcrafted `.grammar.semio`/`.protocol.semio` files
@@ -581,7 +581,7 @@ mod tests {
 
             let demo = demo_xlsx_snapshot();
             let bytes = encode_xlsx(&demo).expect("encode demo xlsx");
-            let zip = crate::artifacts::zip::standards::v2_0::subsets::base::io::decode_zip(&bytes).expect("decode zip");
+            let zip = semio_s_artifact_stdio_zip::standards::v2_0::subsets::base::io::decode_zip(&bytes).expect("decode zip");
 
             let modeled_fixed = ["[Content_Types].xml", "_rels/.rels", "xl/workbook.xml", "xl/_rels/workbook.xml.rels", "xl/sharedStrings.xml"];
             let mut checked = 0;

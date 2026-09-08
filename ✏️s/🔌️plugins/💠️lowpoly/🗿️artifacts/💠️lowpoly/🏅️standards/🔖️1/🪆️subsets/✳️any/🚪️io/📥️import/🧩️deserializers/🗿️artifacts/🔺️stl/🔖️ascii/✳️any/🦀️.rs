@@ -4,7 +4,7 @@
 //! import would need to synthesize a `LowpolyObject` (and a resolvable mesh child artifact) from
 //! parsed triangles -- an out-of-scope architecture change, not a pure `&StlSnapshot -> …` mapping.
 use crate::artifacts::lowpoly::schema::snapshot::LowpolySnapshot;
-use semio_s_plugin_stdio::artifacts::stl::StlSnapshot;
+use semio_s_artifact_stdio_stl::StlSnapshot;
 
 pub fn register() {}
 

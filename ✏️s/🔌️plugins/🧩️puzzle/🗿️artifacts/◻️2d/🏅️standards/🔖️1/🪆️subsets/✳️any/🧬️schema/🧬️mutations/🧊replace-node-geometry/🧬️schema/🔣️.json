@@ -1,0 +1,44 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/puzzle/2d/1/any/mutation/replace-node-geometry.json",
+  "title": "ReplaceNodeGeometry",
+  "description": "The `replace-node-geometry` mutation record — internally tagged `\"mutation\": \"replaceNodeGeometry\"`, the one branch the aggregate `../🔣️.json` union carries for this kind.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "replaceNodeGeometry"
+    },
+    "id": {
+      "type": "string"
+    },
+    "newShape": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "newRadius": {
+      "type": [
+        "number",
+        "null"
+      ]
+    },
+    "newWidth": {
+      "type": [
+        "number",
+        "null"
+      ]
+    },
+    "newHeight": {
+      "type": [
+        "number",
+        "null"
+      ]
+    }
+  }
+}

@@ -15,9 +15,9 @@
 //! `.pack.semio`/`.patch.semio` encodings are derived from it by `fixtures generate` and are
 //! asserted by the shared codec-matrix harness, not here.
 
-use crate::artifacts::gif::standards::v87a::subsets::any::schema::diff::GifDiff;
-use crate::artifacts::gif::standards::v87a::subsets::any::schema::mutations::{apply_gif_mutation, GifMutation};
-use crate::artifacts::gif::standards::v87a::subsets::any::schema::snapshot::GifSnapshot;
+use crate::standards::v87a::subsets::any::schema::diff::GifDiff;
+use crate::standards::v87a::subsets::any::schema::mutations::{apply_gif_mutation, GifMutation};
+use crate::standards::v87a::subsets::any::schema::snapshot::GifSnapshot;
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");

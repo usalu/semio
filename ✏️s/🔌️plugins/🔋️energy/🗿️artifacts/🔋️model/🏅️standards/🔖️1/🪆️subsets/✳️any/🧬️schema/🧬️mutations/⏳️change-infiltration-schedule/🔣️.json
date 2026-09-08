@@ -5,7 +5,7 @@
   "displayName": "Change Infiltration Schedule",
   "emoji": "⏳️",
   "aggregateVariant": "ChangeInfiltrationSchedule",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-infiltration-schedule",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

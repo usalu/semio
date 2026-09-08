@@ -195,10 +195,10 @@ fn round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::{inverse_spec, json_obj, json_spec, mutable_input};
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_plugin_stdio::artifacts::ifc::standards::v2x3::subsets::base::io::{decode_ifc2x3, encode_ifc2x3};
-    use semio_s_plugin_stdio::artifacts::ifc::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot;
-    use semio_s_plugin_stdio::artifacts::ifc::standards::v2x3::subsets::sav::schema::mutations::{apply_ifc2x3_sav_mutation, Ifc2x3SavMutation, SavAnalysisModel, SavGroupAssignment, SavLoadGroup};
-    use semio_s_plugin_stdio::artifacts::step::standards::v_ap214::engine::part21::Part21Value;
+    use crate::standards::v2x3::subsets::base::io::{decode_ifc2x3, encode_ifc2x3};
+    use crate::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot;
+    use crate::standards::v2x3::subsets::sav::schema::mutations::{apply_ifc2x3_sav_mutation, Ifc2x3SavMutation, SavAnalysisModel, SavGroupAssignment, SavLoadGroup};
+    use semio_s_artifact_stdio_step::standards::v_ap214::engine::part21::Part21Value;
     use semio_s_plugin_stdio_test_oracle::artifacts::ifc::standards::v2x3::subsets::sav::project_ifc_2x3_sav;
 
     //#region 🔖️SpecReading
@@ -267,9 +267,9 @@ mod subject {
                 }
                 let mut snapshot = base.clone();
                 snapshot.document.header.file_schema = vec![Part21Value::List(schemas.into_iter().map(Part21Value::Str).collect())];
-                Ifc2x3SavMutation::SetSnapshot(semio_s_plugin_stdio::artifacts::ifc::standards::v2x3::subsets::sav::schema::mutations::set_snapshot::SetSnapshot { snapshot })
+                Ifc2x3SavMutation::SetSnapshot(crate::standards::v2x3::subsets::sav::schema::mutations::set_snapshot::SetSnapshot { snapshot })
             }
-            "set-view-definition" => Ifc2x3SavMutation::SetViewDefinition(semio_s_plugin_stdio::artifacts::ifc::standards::v2x3::subsets::sav::schema::mutations::set_view_definition::SetViewDefinition { view: str_field(params, "view")? }),
+            "set-view-definition" => Ifc2x3SavMutation::SetViewDefinition(crate::standards::v2x3::subsets::sav::schema::mutations::set_view_definition::SetViewDefinition { view: str_field(params, "view")? }),
             "set-analysis-model" => {
                 let model = match params.get("model") {
                     Some(value @ Json::Object(_)) => Some(SavAnalysisModel {
@@ -280,7 +280,7 @@ mod subject {
                     }),
                     _ => None,
                 };
-                Ifc2x3SavMutation::SetAnalysisModel(semio_s_plugin_stdio::artifacts::ifc::standards::v2x3::subsets::sav::schema::mutations::set_analysis_model::SetAnalysisModel { id: u64_field(params, "id")?, model })
+                Ifc2x3SavMutation::SetAnalysisModel(crate::standards::v2x3::subsets::sav::schema::mutations::set_analysis_model::SetAnalysisModel { id: u64_field(params, "id")?, model })
             }
             "set-load-group" => {
                 let group = match params.get("group") {
@@ -294,7 +294,7 @@ mod subject {
                     }),
                     _ => None,
                 };
-                Ifc2x3SavMutation::SetLoadGroup(semio_s_plugin_stdio::artifacts::ifc::standards::v2x3::subsets::sav::schema::mutations::set_load_group::SetLoadGroup { id: u64_field(params, "id")?, group })
+                Ifc2x3SavMutation::SetLoadGroup(crate::standards::v2x3::subsets::sav::schema::mutations::set_load_group::SetLoadGroup { id: u64_field(params, "id")?, group })
             }
             "set-group-assignment" => {
                 let assignment = match params.get("assignment") {
@@ -306,7 +306,7 @@ mod subject {
                     }),
                     _ => None,
                 };
-                Ifc2x3SavMutation::SetGroupAssignment(semio_s_plugin_stdio::artifacts::ifc::standards::v2x3::subsets::sav::schema::mutations::set_group_assignment::SetGroupAssignment { id: u64_field(params, "id")?, assignment })
+                Ifc2x3SavMutation::SetGroupAssignment(crate::standards::v2x3::subsets::sav::schema::mutations::set_group_assignment::SetGroupAssignment { id: u64_field(params, "id")?, assignment })
             }
             other => return Err(format!("unrecognised mutation kind {other:?}")),
         })

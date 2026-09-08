@@ -486,7 +486,7 @@ mod tests {
             ("snapshot", include_str!("../../../../4️⃣ac1018/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs")),
             ("oracle", include_str!("../../../../4️⃣ac1018/🪆️subsets/✳️any/🔮️oracle/🦀️.rs")),
         ] {
-            assert!(source.contains("pub use crate::artifacts::dwg::standards::v_ac1024::subsets::any::"), "the ac1018 {facet} facet is no longer a re-export of ac1024's — the two catalogs can no longer claim to be identical by construction");
+            assert!(source.contains("pub use crate::standards::v_ac1024::subsets::any::"), "the ac1018 {facet} facet is no longer a re-export of ac1024's — the two catalogs can no longer claim to be identical by construction");
         }
     }
 }

@@ -7,8 +7,8 @@
 //! `DocBlock` node (table cells included); `wordCount` is a whitespace-split word count over every
 //! Paragraph/Heading run's text plus every Code block's literal text plus every slide's notes.
 
-use crate::artifacts::semio::standards::v1::subsets::document::schema::snapshot::{DocBlock, DocRun};
-use crate::artifacts::semio::standards::v1::subsets::presentation::schema::snapshot::{SemioPresentationSnapshot, SlideShape};
+use crate::standards::v1::subsets::document::schema::snapshot::{DocBlock, DocRun};
+use crate::standards::v1::subsets::presentation::schema::snapshot::{SemioPresentationSnapshot, SlideShape};
 
 //#region 🔖️Outline
 /// 🧾️ One `sectionOutline` entry — a heading's level + flattened run text.
@@ -146,8 +146,8 @@ pub fn compute_semio_presentation_outline(snapshot: &SemioPresentationSnapshot) 
 //#region 🧪️Tests
 mod tests {
     use super::*;
-    use crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioPoint2;
-    use crate::artifacts::semio::standards::v1::subsets::presentation::schema::snapshot::{PlaceholderKind, Slide, SlideFrame, SlideLayout, SlideMaster, SlideTableCell, SlideTableRow, STDIO_SEMIOPRESENTATION_DOCUMENT_SCHEMA};
+    use crate::standards::v1::subsets::base::schema::geometry::SemioPoint2;
+    use crate::standards::v1::subsets::presentation::schema::snapshot::{PlaceholderKind, Slide, SlideFrame, SlideLayout, SlideMaster, SlideTableCell, SlideTableRow, STDIO_SEMIOPRESENTATION_DOCUMENT_SCHEMA};
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn frame() -> SlideFrame {

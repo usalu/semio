@@ -5,7 +5,7 @@
   "displayName": "Set Editor Selection",
   "emoji": "🔤️",
   "aggregateVariant": "SetEditorSelection",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "set-editor-selection",
   "binaryTag": 9,
   "invertibility": "explicit-mutation",

@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeWeldLengthMm, base: &En1999Snapshot) -> protocol::Mu
     if base.weld_length_mm == payload.new_weld_length_mm {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Weld length [mm] is already {}.", payload.new_weld_length_mm));
     }
-    protocol::MutationOutcome::new(En1999Diff { weld_length_mm: Some(payload.new_weld_length_mm.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1999Diff { weld_length_mm: Some(payload.new_weld_length_mm), ..Default::default() })
 }
 //#endregion 🔖️Diff

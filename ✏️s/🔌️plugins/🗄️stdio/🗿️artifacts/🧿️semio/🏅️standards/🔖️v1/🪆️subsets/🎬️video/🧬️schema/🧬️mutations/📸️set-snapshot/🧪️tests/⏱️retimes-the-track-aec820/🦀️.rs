@@ -9,9 +9,9 @@
 //! sample, and the whole second (subtitle) stream are untouched — so `SemioVideoDiff` must nest two
 //! index-keyed triples (`streams.modified[0] → samples.modified[1]`) and set nothing else.
 
-use crate::artifacts::semio::standards::v1::subsets::video::schema::diff::SemioVideoDiff;
-use crate::artifacts::semio::standards::v1::subsets::video::schema::mutations::{apply_semio_video_mutation, SemioVideoMutation};
-use crate::artifacts::semio::standards::v1::subsets::video::schema::snapshot::{SemioRational, SemioVideoSnapshot};
+use crate::standards::v1::subsets::video::schema::diff::SemioVideoDiff;
+use crate::standards::v1::subsets::video::schema::mutations::{apply_semio_video_mutation, SemioVideoMutation};
+use crate::standards::v1::subsets::video::schema::snapshot::{SemioRational, SemioVideoSnapshot};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");

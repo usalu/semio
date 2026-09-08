@@ -2,8 +2,8 @@
 //! 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §2.1). `DwgAc1018Editor`
 //! implements `ArtifactEditor`, wiring the shared `MeshWindowKit` to a single Main window.
 
-use crate::artifacts::dwg::standards::v_ac1018::subsets::any::schema::mutations::DwgMutation;
-use crate::artifacts::dwg::standards::v_ac1018::subsets::any::schema::snapshot::DwgSnapshot;
+use crate::standards::v_ac1018::subsets::any::schema::mutations::DwgMutation;
+use crate::standards::v_ac1018::subsets::any::schema::snapshot::DwgSnapshot;
 use crate::editor::dwg_ac1018::modes::edit;
 use crate::editor::dwg_ac1018::modes::edit::windows::main;
 use semio_framework_plugin::app::InteractionView;

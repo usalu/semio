@@ -7,7 +7,7 @@ import { testBuiltTreeRetirementFixture } from "../../../🧬️contract/♻️r
 export function testRuntimeTreeRetirement(): void {
   const read = (path: string) => readFileSync(new URL(path, import.meta.url), "utf8");
   const fixture = JSON.parse(read("./🧫️fixture/🔣️.json"));
-  const validate = new Ajv({ strict: true, allErrors: true }).compile(JSON.parse(read("./🧬️schema.json")));
+  const validate = new Ajv({ strict: true, allErrors: true }).compile(JSON.parse(read("./🧬️schema/🔣️.json")));
   assert(validate(fixture), JSON.stringify(validate.errors));
   let active: Uint8Array | undefined;
   let handback: Uint8Array | undefined;

@@ -2,8 +2,8 @@
 //! (constructs the sparse `TsvDiff` directly — apply-and-capture is banned); `inverse()` is
 //! handcrafted per variant, index-aware, reading the pre-state it needs from `base`.
 
-use crate::artifacts::tsv::standards::iana::subsets::any::schema::diff::{dec_row, dec_str, diff_set_snapshot, enc_row, enc_str, split_top_level, strip_brackets, TsvDiff, TsvRowAdded, TsvRowDiff, TsvRowModified, TsvRowsDiff};
-use crate::artifacts::tsv::standards::iana::subsets::any::schema::snapshot::{LineEnding, TsvSnapshot};
+use crate::standards::iana::subsets::any::schema::diff::{dec_row, dec_str, diff_set_snapshot, enc_row, enc_str, split_top_level, strip_brackets, TsvDiff, TsvRowAdded, TsvRowDiff, TsvRowModified, TsvRowsDiff};
+use crate::standards::iana::subsets::any::schema::snapshot::{LineEnding, TsvSnapshot};
 use protocol::OpBinary;
 use protocol::{Mutation, MutationDiff, OpText};
 
@@ -115,7 +115,7 @@ fn enc_tsv_snapshot(s: &TsvSnapshot) -> String {
         "[{},{},{},[{}]]",
         enc_str(&s.schema),
         if s.trailing_newline { 1 } else { 0 },
-        crate::artifacts::tsv::standards::iana::subsets::any::schema::diff::enc_line_ending(s.line_ending),
+        crate::standards::iana::subsets::any::schema::diff::enc_line_ending(s.line_ending),
         s.records.iter().map(|r| enc_row(r)).collect::<Vec<_>>().join(","),
     )
 }
@@ -126,7 +126,7 @@ fn dec_tsv_snapshot(s: &str) -> Result<TsvSnapshot, String> {
         return Err(format!("tsv snapshot: expected 4 fields, got {}", parts.len()));
     };
     let records = split_top_level(strip_brackets(records)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_row).collect::<Result<Vec<_>, String>>()?;
-    Ok(TsvSnapshot { schema: dec_str(schema)?, trailing_newline: *trailing_newline == "1", line_ending: crate::artifacts::tsv::standards::iana::subsets::any::schema::diff::dec_line_ending(line_ending)?, records })
+    Ok(TsvSnapshot { schema: dec_str(schema)?, trailing_newline: *trailing_newline == "1", line_ending: crate::standards::iana::subsets::any::schema::diff::dec_line_ending(line_ending)?, records })
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -134,7 +134,7 @@ fn print_tsv_mutation(m: &TsvMutation) -> String {
     match m {
         TsvMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => format!("set-snapshot snapshot={}", enc_tsv_snapshot(snapshot)),
         TsvMutation::SetTrailingNewline(set_trailing_newline::SetTrailingNewline { trailing_newline }) => format!("set-trailing-newline trailing-newline={}", if *trailing_newline { 1 } else { 0 }),
-        TsvMutation::SetLineEnding(set_line_ending::SetLineEnding { line_ending }) => format!("set-line-ending line-ending={}", crate::artifacts::tsv::standards::iana::subsets::any::schema::diff::enc_line_ending(*line_ending)),
+        TsvMutation::SetLineEnding(set_line_ending::SetLineEnding { line_ending }) => format!("set-line-ending line-ending={}", crate::standards::iana::subsets::any::schema::diff::enc_line_ending(*line_ending)),
         TsvMutation::InsertRow(insert_row::InsertRow { index, row }) => format!("insert-row index={index} row={}", enc_row(row)),
         TsvMutation::RemoveRow(remove_row::RemoveRow { index }) => format!("remove-row index={index}"),
         TsvMutation::SetCell(set_cell::SetCell { row_index, field_index, value }) => format!("set-cell row-index={row_index} field-index={field_index} value={}", enc_str(value),),
@@ -149,7 +149,7 @@ fn parse_tsv_mutation(line: &str) -> Result<TsvMutation, String> {
     match keyword {
         "set-snapshot" => Ok(TsvMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: dec_tsv_snapshot(arg("snapshot")?)? })),
         "set-trailing-newline" => Ok(TsvMutation::SetTrailingNewline(set_trailing_newline::SetTrailingNewline { trailing_newline: arg("trailing-newline")? == "1" })),
-        "set-line-ending" => Ok(TsvMutation::SetLineEnding(set_line_ending::SetLineEnding { line_ending: crate::artifacts::tsv::standards::iana::subsets::any::schema::diff::dec_line_ending(arg("line-ending")?)? })),
+        "set-line-ending" => Ok(TsvMutation::SetLineEnding(set_line_ending::SetLineEnding { line_ending: crate::standards::iana::subsets::any::schema::diff::dec_line_ending(arg("line-ending")?)? })),
         "insert-row" => Ok(TsvMutation::InsertRow(insert_row::InsertRow { index: usize_arg("index")?, row: dec_row(arg("row")?)? })),
         "remove-row" => Ok(TsvMutation::RemoveRow(remove_row::RemoveRow { index: usize_arg("index")? })),
         "set-cell" => Ok(TsvMutation::SetCell(set_cell::SetCell { row_index: usize_arg("row-index")?, field_index: usize_arg("field-index")?, value: dec_str(arg("value")?)? })),

@@ -13,11 +13,11 @@
 //! just unreferenced, exactly mirroring what the deserializer harvests independently of material
 //! texture refs. `SemioMeshSnapshot` has no scene graph -- `scenes`/`nodes` are left empty.
 
-use crate::artifacts::gltf::engine::{encode_data_uri, GltfAccessorType, GltfComponentType};
-use crate::artifacts::gltf::schema::snapshot::{GltfAccessor, GltfAlphaMode, GltfBuffer, GltfBufferView, GltfDocument, GltfImage, GltfMaterial, GltfMesh, GltfPbrMetallicRoughness, GltfPrimitive, GltfSourceForm, GltfTexture};
-use crate::artifacts::gltf::GltfSnapshot;
-use crate::artifacts::gltf::STDIO_GLTF_DOCUMENT_SCHEMA;
-use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::{SemioMeshSnapshot, SemioTopology};
+use semio_s_artifact_stdio_gltf::engine::{encode_data_uri, GltfAccessorType, GltfComponentType};
+use semio_s_artifact_stdio_gltf::schema::snapshot::{GltfAccessor, GltfAlphaMode, GltfBuffer, GltfBufferView, GltfDocument, GltfImage, GltfMaterial, GltfMesh, GltfPbrMetallicRoughness, GltfPrimitive, GltfSourceForm, GltfTexture};
+use semio_s_artifact_stdio_gltf::GltfSnapshot;
+use semio_s_artifact_stdio_gltf::STDIO_GLTF_DOCUMENT_SCHEMA;
+use crate::standards::v1::subsets::mesh::schema::snapshot::{SemioMeshSnapshot, SemioTopology};
 use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
 use std::collections::HashMap;
 
@@ -188,9 +188,9 @@ impl ArtifactSerializer for SemioMeshToGltf {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::{SemioPoint3, SemioRgba, SemioUv};
-    use crate::artifacts::semio::standards::v1::subsets::mesh::io::import::deserializers::artifacts::gltf::v2_0::any::SemioMeshFromGltf;
-    use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::{SemioMaterial, SemioMesh, SemioPrimitive, SemioTexture};
+    use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint3, SemioRgba, SemioUv};
+    use crate::standards::v1::subsets::mesh::io::import::deserializers::artifacts::gltf::v2_0::any::SemioMeshFromGltf;
+    use crate::standards::v1::subsets::mesh::schema::snapshot::{SemioMaterial, SemioMesh, SemioPrimitive, SemioTexture};
     use semio_framework_plugin::ArtifactDeserializer;
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9

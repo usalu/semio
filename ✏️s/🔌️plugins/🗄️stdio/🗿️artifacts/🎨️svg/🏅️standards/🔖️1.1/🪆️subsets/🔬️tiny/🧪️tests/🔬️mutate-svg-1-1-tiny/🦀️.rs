@@ -106,9 +106,9 @@ fn identity_round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::mutable_input;
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_plugin_stdio::artifacts::svg::standards::v1_1::subsets::base::schema::snapshot::{element_attr, parse_view_box, set_element_attr, view_box_to_string, NodePath, SvgSnapshot, TransformOp, ViewBox};
-    use semio_s_plugin_stdio::artifacts::svg::standards::v1_1::subsets::tiny::schema::mutations::{apply_svg_tiny_mutation, insert_tiny_element, inverse_svg_tiny_mutation, remove_element, set_snapshot, set_text, set_tiny_attribute, set_transform, set_view_box, stamp_base_profile, strip_non_tiny, SvgTinyMutation};
-    use semio_s_plugin_stdio::artifacts::xml::standards::v1_0::subsets::base::schema::snapshot::{XmlAttr, XmlNode};
+    use crate::standards::v1_1::subsets::base::schema::snapshot::{element_attr, parse_view_box, set_element_attr, view_box_to_string, NodePath, SvgSnapshot, TransformOp, ViewBox};
+    use crate::standards::v1_1::subsets::tiny::schema::mutations::{apply_svg_tiny_mutation, insert_tiny_element, inverse_svg_tiny_mutation, remove_element, set_snapshot, set_text, set_tiny_attribute, set_transform, set_view_box, stamp_base_profile, strip_non_tiny, SvgTinyMutation};
+    use semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::schema::snapshot::{XmlAttr, XmlNode};
     use semio_s_plugin_stdio_test_oracle::artifacts::svg::standards::v1_1::subsets::tiny::project_svg_tiny;
 
     //#region 🔖️SpecCodec

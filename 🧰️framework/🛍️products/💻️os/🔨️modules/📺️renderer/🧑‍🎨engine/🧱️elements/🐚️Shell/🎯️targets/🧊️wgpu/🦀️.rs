@@ -7,32 +7,22 @@
 //! 🖥️ OS shell chrome — navbar, footer, floating panels, overlays, and studio mode.
 
 #[cfg(test)]
-use crate::dock::{drop_zone_indicator_rect, push_window_silhouette_border, DockDropZone, DockRenderContext, DockStackTab};
-#[cfg(test)]
-use crate::engine_canvas::theme_is_dark;
-#[cfg(test)]
-use crate::interpreter::resolve_ui_image;
-#[cfg(test)]
-use semio_framework::{app_breadcrumb, app_window_label, resolve_app_breadcrumb};
+use crate::dock::{push_window_silhouette_border, DockDropZone, DockStackTab};
 #[cfg(all(test, not(target_arch = "wasm32")))]
 use semio_framework_os_kernel::os_directory::{client::DirectoryTransport, directory_command_sha256, DirectoryCommandOutcomeV1};
 #[cfg(test)]
 use ui_wgpu::wgpu::{push_chrome_group_border, Label, UiButtonNode, UiNode, UiPresence, UiSelectItem, UiSelectNode, UiStackNode, UiTextNode};
 
 use crate::dock::{compute_dock_drop_zone, parse_path, DockDragKind, DockDragPayload, DockDragState, DockState, WindowSilhouette};
-#[cfg(test)]
-use crate::interpreter::render_ui_document;
 use crate::interpreter::{begin_ui_document_opportunity, framework_widget_context, render_ui_document_step, UiDocumentFrameCursor};
 use crate::program_bridge::{is_space_mode, resolve_playground_app_id, resolve_plugin_host_config, PluginHostConfig, ProgramBridgeEntry};
 use crate::scenes::{clear_graph_node_context, resolve_graph_context_action, toggle_vfs_row_expanded, vfs_selection_for_click, AdmittedSurfaceMap, Board2dSurface, NodeGraphSurface, TiledMapSurface};
 use infinite_world::world::{enqueue_world3d_events, World3dState, WorldInteractionIntent, WorldInteractionPhase};
 #[cfg(test)]
 use ui_wgpu::wgpu::draw_text;
-#[cfg(test)]
-use ui_wgpu::wgpu::{WindowEngagementControl, WindowEngagementInput};
 use semio_framework::{AppDefinition, PanelGroup, PanelTabDefinition, ViewModel};
 #[cfg(test)]
-use semio_framework::{ExampleDefinition, IconName};
+use semio_framework::IconName;
 use semio_framework_os_kernel::os_directory::identity::IdentityEnv;
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashMap};
@@ -354,11 +344,6 @@ pub fn semio_wgpu_set_hub_env(hub_url: String, user: String, data_dir: String) {
     BOOT_HUB_ENV.with(|cell| *cell.borrow_mut() = Some((hub_url, user, data_dir)));
 }
 
-#[cfg(target_arch = "wasm32")]
-fn resolve_identity_env() -> Option<IdentityEnv> {
-    let _ = IdentityEnv::from_process_env; // never meaningful on this target; kept for symmetry with native's doc.
-    None
-}
 
 /// 🎭️ contract §C0's actor grammar: `user:{userId}#{sessionId}` once an identity is minted/restored,
 /// falling back to the pre-identity local default (`wgpu-{instanceId}`) — the same default this shell
@@ -1218,7 +1203,6 @@ struct ShellChromeBuildState {
     tooltip_hover: Option<ChromeTooltipHover>,
     dialog_stack: Vec<ChromeDialogRequest>,
     tour_state: Option<ChromeTourState>,
-    tour_auto_considered: Option<String>,
     previous_pointer_down: bool,
     clicked_this_frame: bool,
     tour_reveal_latch: Option<String>,
@@ -2676,7 +2660,6 @@ pub struct ShellState {
     pub tree_drag: Option<TreeDragState>,
     pub tree_hovered_id: Option<String>,
     pub widget_maps: WidgetInteractionMaps<ActionDescriptor>,
-    window_measure_actions: WindowMeasureActionRegistry,
     pub pending_tree_drag: Option<(String, HashMap<String, String>)>,
     pub tree_drag_origin: (f32, f32),
     pub dock_drag: Option<DockDragState>,
@@ -3206,7 +3189,6 @@ impl ShellState {
             tree_drag: None,
             tree_hovered_id: None,
             widget_maps: WidgetInteractionMaps::default(),
-            window_measure_actions: WindowMeasureActionRegistry::new(),
             pending_tree_drag: None,
             tree_drag_origin: (0.0, 0.0),
             dock_drag: None,
@@ -3473,13 +3455,7 @@ impl ShellState {
         }
     }
 
-    #[cfg(test)]
-    fn active_plugin_examples(&self) -> Vec<ExampleDefinition> {
-        let Some(session) = &self.session else {
-            return Vec::new();
-        };
-        self.plugins.iter().find(|p| p.plugin_id == session.plugin_id).map(|p| p.manifest.examples.iter().filter(|example| example.app_id.is_empty() || example.app_id == session.app.id).cloned().collect()).unwrap_or_default()
-    }
+
 
     fn flatten_panel_tab_leaves(tabs: &[PanelTabDefinition]) -> Vec<&PanelTabDefinition> {
         tabs.iter().flat_map(|tab| if tab.children.is_empty() { vec![tab] } else { Self::flatten_panel_tab_leaves(&tab.children) }).collect()
@@ -3518,11 +3494,7 @@ impl ShellState {
         self.pending_dock_drag = Some((payload, (x, y)));
     }
 
-    #[cfg(test)]
-    fn dock_tab_bars_for_drop(&self, atlas: &mut FontAtlas, theme: &Theme, canvas: Rect, labels: &HashMap<String, String>, icon_ids: &HashMap<String, String>) -> Vec<(Vec<usize>, WindowStackCorner, Rect, Vec<f32>)> {
-        let _ = icon_ids;
-        self.dock.stack_corner_tab_bar_rects(canvas, theme, atlas, labels)
-    }
+
 
     fn contributions_json_from_plugins(plugins: &[ProgramBridgeEntry]) -> String {
         #[derive(serde::Serialize)]
@@ -3700,107 +3672,11 @@ impl ShellState {
         }
     }
 
-    #[cfg(test)]
-    fn build_display_windows_ui(&self, session: &ActiveSession) -> UiNode {
-        let items: Vec<UiNode> = session
-            .app
-            .window_kinds
-            .iter()
-            .map(|kind| {
-                UiNode::Button(UiButtonNode {
-                    id: Some(format!("shell.display.window.{}", kind.id)),
-                    icon_id: kind.icon_id.clone(),
-                    label: Label::data(format!("{} — {}", kind.label.resolve(self.active_terminology(), self.active_locale()), kind.id)),
-                    action: ActionDescriptor { controller_id: session.app.controller_id.clone(), action: "noOperation".into(), args: None },
-                    style: None,
-                    presence: UiPresence::default(),
-                    menu: None,
-                })
-            })
-            .collect();
-        if items.is_empty() {
-            return UiNode::Text(UiTextNode { presence: UiPresence::default(), value: Label::data("—"), emphasize: None, data_attributes: None, menu: None });
-        }
-        UiNode::Stack(UiStackNode { direction: "column".into(), gap: None, padding: None, children: items, id: None, presence: UiPresence::default(), activate: None, drop_action: None, drop_overlay: None, menu: None })
-    }
 
-    #[cfg(test)]
-    fn build_display_layout_ui(&self, session: &ActiveSession) -> UiNode {
-        let items: Vec<UiNode> = session
-            .app
-            .named_layouts
-            .iter()
-            .map(|layout| {
-                UiNode::Button(UiButtonNode {
-                    id: Some(format!("shell.layout.{}", layout.id)),
-                    icon_id: layout.icon_id.clone().unwrap_or_else(|| "layout-grid".into()),
-                    label: Label::data(format!("{} ({})", layout.label, layout.origin)),
-                    action: ActionDescriptor { controller_id: session.app.controller_id.clone(), action: "noOperation".into(), args: None },
-                    style: None,
-                    presence: UiPresence::default(),
-                    menu: None,
-                })
-            })
-            .collect();
-        if items.is_empty() {
-            return UiNode::Text(UiTextNode { presence: UiPresence::default(), value: Label::data("No saved layouts"), emphasize: None, data_attributes: None, menu: None });
-        }
-        UiNode::Stack(UiStackNode { direction: "column".into(), gap: None, padding: None, children: items, id: None, presence: UiPresence::default(), activate: None, drop_action: None, drop_overlay: None, menu: None })
-    }
 
-    #[cfg(test)]
-    fn build_settings_general_ui(&self) -> UiNode {
-        UiNode::Stack(UiStackNode {
-            direction: "column".into(),
-            gap: None,
-            padding: None,
-            id: None,
-            children: vec![
-                UiNode::Text(UiTextNode { presence: UiPresence::default(), value: Label::data("General"), emphasize: Some(true), data_attributes: None, menu: None }),
-                UiNode::Select(UiSelectNode {
-                    presence: UiPresence::default(),
-                    id: "framework.settings.appearance".into(),
-                    value: self.appearance_id.clone(),
-                    items: vec![UiSelectItem { value: "system".into(), label: Label::data("System") }, UiSelectItem { value: "light".into(), label: Label::data("Light") }, UiSelectItem { value: "dark".into(), label: Label::data("Dark") }],
-                    placeholder: None,
-                    on_change: ActionDescriptor { controller_id: "framework".into(), action: "setAppearance".into(), args: None },
-                    menu: None,
-                }),
-                UiNode::Select(UiSelectNode {
-                    presence: UiPresence::default(),
-                    id: "framework.settings.driver".into(),
-                    value: self.driver_id.clone(),
-                    items: vec![UiSelectItem { value: "default".into(), label: Label::data("Default") }, UiSelectItem { value: "compact".into(), label: Label::data("Compact") }],
-                    placeholder: None,
-                    on_change: ActionDescriptor { controller_id: "framework".into(), action: "setDriver".into(), args: None },
-                    menu: None,
-                }),
-                UiNode::Select(UiSelectNode {
-                    presence: UiPresence::default(),
-                    id: "framework.settings.language".into(),
-                    value: self.locale_id.clone(),
-                    items: vec![UiSelectItem { value: "en".into(), label: Label::data("English") }, UiSelectItem { value: "de".into(), label: Label::data("Deutsch") }],
-                    placeholder: None,
-                    on_change: ActionDescriptor { controller_id: "framework".into(), action: "setLocale".into(), args: None },
-                    menu: None,
-                }),
-                UiNode::Select(UiSelectNode {
-                    presence: UiPresence::default(),
-                    id: "framework.settings.terminology".into(),
-                    value: self.terminology_id.clone(),
-                    items: self.active_terminologies().into_iter().map(|id| UiSelectItem { label: if id == "native" { Label::data("Native") } else { Label::data(id.clone()) }, value: id }).collect(),
-                    placeholder: None,
-                    on_change: ActionDescriptor { controller_id: "framework".into(), action: "setTerminology".into(), args: None },
-                    menu: None,
-                }),
-            ],
-            presence: UiPresence::default(),
-            activate: None,
-            drop_action: None,
-            drop_overlay: None,
-            menu: None,
-        })
-    }
+
+
+
 
     /// 🎨️ The wgpu mirror of React's `buildSettingsThemeTree`'s theme-selector section (`ui/js/react/
     /// index.tsx:9424-9498`) — deliberately scoped to picking/resetting/deleting a theme, same
@@ -4159,6 +4035,7 @@ fn patch_ops_from_action_result(result: &semio_framework::kernel::InvocationResu
 }
 
 impl ShellState {
+    #[cfg(not(target_arch = "wasm32"))]
     fn sync_document_id(&self) -> Option<String> {
         let session = self.session.as_ref()?;
         Some(format!("{}-{}", session.plugin_id, session.instance_id))
@@ -4311,23 +4188,7 @@ impl ShellState {
         changed
     }
 
-    /// @emoji 🚦️ Human-readable summary of a document's sync health for the attach card, mirroring
-    /// the React shell's `syncStatusLabel`.
-    #[cfg(not(target_arch = "wasm32"))]
-    #[cfg(test)]
-    fn sync_status_label(status: &ArtifactSyncStatus) -> String {
-        let remote = match &status.remote {
-            RemoteState::Live { peer_count } => {
-                format!("live · {peer_count} peer{}", if *peer_count == 1 { "" } else { "s" })
-            }
-            RemoteState::Connecting => "connecting…".to_string(),
-            RemoteState::Backoff { .. } => "reconnecting…".to_string(),
-            RemoteState::Detached => "offline".to_string(),
-        };
-        let persisted = if status.persisted { "saved" } else { "unsaved" };
-        let pending = if status.pending_mutations > 0 { format!(" · {} pending", status.pending_mutations) } else { String::new() };
-        format!("{remote} · {persisted}{pending}")
-    }
+
 
     /// 🚦️ ticket §C5 — the `#s-sync-status` footer pill's text, mirroring the React shell's
     /// `computeSyncPillState`/`syncPillText` three-way vocabulary (`persisted | pending(n) |
@@ -6714,11 +6575,6 @@ impl ShellState {
                     return Ok(true);
                 }
             }
-            id if self.window_measure_actions.get(id).is_some_and(|binding| matches!(binding.kind, WindowMeasureActionKind::Select)) => {
-                let opening = !self.open_selects.get(id).copied().unwrap_or(false);
-                self.open_selects.insert(id.to_string(), opening);
-                return Ok(true);
-            }
             id if self.widget_maps.select_metas.contains_key(id) => {
                 let opening = !self.open_selects.get(id).copied().unwrap_or(false);
                 for key in self.open_selects.keys().cloned().collect::<Vec<_>>() {
@@ -6729,27 +6585,12 @@ impl ShellState {
             }
             id if id.contains(".item.") => {
                 if let Some((select_id, value)) = id.rsplit_once(".item.") {
-                    if let Some(binding) = self.window_measure_actions.get(select_id).filter(|binding| matches!(binding.kind, WindowMeasureActionKind::Select)) {
-                        let controller_id = binding.controller.as_str().to_owned();
-                        let action = binding.action.as_str().to_owned();
-                        self.open_selects.insert(select_id.to_string(), false);
-                        self.dispatch_action(ActionDescriptor { controller_id, action, args: crate::action_args_json!({ "value": value }) }).await?;
-                        return Ok(true);
-                    }
                     if let Some(action) = self.widget_maps.select_metas.get(select_id).cloned() {
                         self.open_selects.insert(select_id.to_string(), false);
                         self.dispatch_action(ActionDescriptor { controller_id: action.controller_id, action: action.action, args: crate::action_args_json!({ "value": value }) }).await?;
                         return Ok(true);
                     }
                 }
-            }
-            id if self.window_measure_actions.get(id).is_some_and(|binding| matches!(binding.kind, WindowMeasureActionKind::Toggle(_))) => {
-                let Some(binding) = self.window_measure_actions.get(id) else { return Ok(false) };
-                let WindowMeasureActionKind::Toggle(pressed) = binding.kind else { return Ok(false) };
-                let controller_id = binding.controller.as_str().to_owned();
-                let action = binding.action.as_str().to_owned();
-                self.dispatch_action(ActionDescriptor { controller_id, action, args: crate::action_args_json!({ "pressed": !pressed }) }).await?;
-                return Ok(true);
             }
             id if self.widget_maps.toggle_metas.contains_key(id) => {
                 if let Some((pressed, action)) = self.widget_maps.toggle_metas.get(id).cloned() {
@@ -6833,10 +6674,6 @@ impl ShellState {
         if let Some(value) = self.widget_maps.slider_live_values.get(id).copied() {
             if let Some(meta) = self.widget_maps.slider_metas.get(id).cloned() {
                 self.dispatch_action(ActionDescriptor { controller_id: meta.on_change.controller_id, action: meta.on_change.action, args: crate::action_args_json!({ "value": value }) }).await?;
-            } else if let Some(binding) = self.window_measure_actions.get(id).filter(|binding| matches!(binding.kind, WindowMeasureActionKind::Slider)) {
-                let controller_id = binding.controller.as_str().to_owned();
-                let action = binding.action.as_str().to_owned();
-                self.dispatch_action(ActionDescriptor { controller_id, action, args: crate::action_args_json!({ "value": value }) }).await?;
             }
         } else if let Some(value) = self.widget_maps.ring_live_values.get(id).copied() {
             if let Some(meta) = self.widget_maps.ring_metas.get(id).cloned() {
@@ -7993,57 +7830,7 @@ fn chrome_icon(draw: &mut DrawList, icons: &IconAtlas, icon_id: &str, x: f32, y:
     }
 }
 
-/** @emoji 📑️ Shared side-panel tab strip for floating panels. */
-#[cfg(test)]
-fn render_panel_tab_bar(
-    chrome: &mut ShellChromeBuildState,
-    panel_draw: &mut DrawList,
-    atlas: &mut FontAtlas,
-    icons: &IconAtlas,
-    input: &mut InputState<ActionDescriptor>,
-    theme: &Theme,
-    panel: Rect,
-    tabs: &[PanelTabDefinition],
-    active_tab_id: &str,
-    side_left: bool,
-    inner_stroke: Rgba,
-    hair: f32,
-) -> f32 {
-    let tab_bar_h = theme.panel_header_height;
-    let tab_bar = Rect::new(panel.x + hair, panel.y, (panel.w - hair * 2.0).max(0.0), tab_bar_h);
-    panel_draw.push_scissor(tab_bar);
-    panel_draw.push_solid([tab_bar.x, tab_bar.y + tab_bar_h - hair, tab_bar.w, hair], inner_stroke);
-    let mut tab_x = tab_bar.x;
-    for (index, tab) in tabs.iter().enumerate() {
-        let icon_id = panel_tab_icon_id(tab);
-        // 🚧️ Not locale-aware yet: this free function has no locale/terminology threaded through its
-        // render path (see ticket 26/08/03/COMPILE-TIME-CHECKED-UI-LABELS-ACROSS-LOCALE-TERMINOLOGY-AND-BRAND).
-        let tab_label = tab.label.resolve(Terminology::Native, Locale::En);
-        let label_w = atlas.measure_text(tab_label, theme.font_size_small).0;
-        let tw = theme.padding_standard * 2.0 + CHROME_ICON_TINY + theme.gap_standard + label_w;
-        let rect = Rect::new(tab_x, tab_bar.y, tw, tab_bar_h);
-        if index > 0 {
-            panel_draw.push_solid([tab_x, tab_bar.y, hair, tab_bar_h], inner_stroke);
-        }
-        let active = tab.id() == active_tab_id;
-        let hovered = rect.contains(input.pointer_x, input.pointer_y);
-        if active {
-            panel_draw.push_solid([rect.x, rect.y, rect.w, rect.h], theme.selected);
-        } else if hovered {
-            panel_draw.push_solid([rect.x, rect.y, rect.w, rect.h], theme.button_hover);
-        }
-        let icon_x = rect.x + theme.padding_standard;
-        let icon_y = rect.y + (rect.h - CHROME_ICON_TINY) * 0.5;
-        chrome_icon(panel_draw, icons, icon_id, icon_x, icon_y, CHROME_ICON_TINY, chrome_item_text(theme, active, hovered));
-        chrome_text(panel_draw, atlas, input, theme, tab_label, icon_x + CHROME_ICON_TINY + theme.gap_standard, rect.y + (rect.h + theme.font_size_small) * 0.5 - 1.0, theme.font_size_small, chrome_item_text(theme, active, hovered));
-        let prefix = if side_left { "shell.panel.tab.left." } else { "shell.panel.tab.right." };
-        input.register_hit(HitTarget { rect, event: None, control_id: Some(format!("{prefix}{}", tab.id())), kind: HitKind::PanelTab, drag_axis: None, drag_data: None });
-        chrome.register_element_rect_fallback(semio_framework::panel_tab_element_id(tab.id()), rect);
-        tab_x += tw;
-    }
-    panel_draw.pop_scissor();
-    tab_bar_h
-}
+
 
 #[cfg(test)]
 fn chrome_group_border(draw: &mut DrawList, rect: Rect, theme: &Theme) {
@@ -8165,72 +7952,6 @@ fn measure_chrome_group_item(atlas: &mut FontAtlas, theme: &Theme, item: &Chrome
     theme.padding_standard * 2.0 + icon_w + text_w
 }
 
-#[cfg(test)]
-struct WindowMeasuresRailOutcome {
-    chip_hit: Option<(Rect, String)>,
-    reserve_width: f32,
-}
-
-#[cfg(test)]
-const WINDOW_MEASURE_TRAVERSAL_CAPACITY: usize = 64;
-const WINDOW_MEASURE_ACTION_CAPACITY: usize = 64;
-
-#[derive(Clone, Copy)]
-enum WindowMeasureActionKind {
-    Select,
-    Slider,
-    Toggle(bool),
-}
-
-struct WindowMeasureActionBinding {
-    control: UiText,
-    controller: UiText,
-    action: UiText,
-    kind: WindowMeasureActionKind,
-}
-
-struct WindowMeasureActionRegistry {
-    slots: [Option<WindowMeasureActionBinding>; WINDOW_MEASURE_ACTION_CAPACITY],
-}
-
-#[cfg(test)]
-struct WindowMeasureRenderFrame<'a> {
-    measure: &'a WindowMeasure,
-    inset: f32,
-}
-
-impl WindowMeasureActionRegistry {
-    fn new() -> Self {
-        Self { slots: std::array::from_fn(|_| None) }
-    }
-
-    fn try_upsert(&mut self, control: &str, descriptor: &ActionDescriptor, kind: WindowMeasureActionKind) -> Result<(), ()> {
-        let binding =
-            WindowMeasureActionBinding { control: UiText::try_from_str(control).ok_or(())?, controller: UiText::try_from_str(&descriptor.controller_id).ok_or(())?, action: UiText::try_from_str(&descriptor.action).ok_or(())?, kind };
-        if let Some(slot) = self.slots.iter_mut().find(|slot| slot.as_ref().is_some_and(|slot| slot.control.as_str() == control)) {
-            *slot = Some(binding);
-            return Ok(());
-        }
-        let Some(slot) = self.slots.iter_mut().find(|slot| slot.is_none()) else { return Err(()) };
-        *slot = Some(binding);
-        Ok(())
-    }
-
-    fn get(&self, control: &str) -> Option<&WindowMeasureActionBinding> {
-        self.slots.iter().flatten().find(|slot| slot.control.as_str() == control)
-    }
-}
-
-#[cfg(test)]
-fn window_overlay_max_width(content_w: f32, inset: f32) -> f32 {
-    (content_w - inset * 2.0).max(0.0)
-}
-
-#[cfg(test)]
-fn engagement_rail_width(theme: &Theme, content_w: f32, inset: f32, measures_reserve: f32) -> f32 {
-    let available = content_w - inset * 2.0 - measures_reserve;
-    theme.window_engagement_max_width.min(available.max(0.0))
-}
 
 fn floating_panel_available_width(body: Rect, theme: &Theme) -> f32 {
     (body.w - theme.panel_inset * 2.0).max(theme.panel_min_width)
@@ -8244,57 +7965,11 @@ fn floating_panel_width(width: f32, body: Rect, theme: &Theme) -> f32 {
     width.clamp(theme.panel_min_width, floating_panel_max_width(body, theme))
 }
 
-#[cfg(test)]
-fn measure_window_measure_height(theme: &Theme, collapsed_sections: &HashMap<String, bool>, measure: &WindowMeasure) -> Option<f32> {
-    let mut stack = UiFixedList::<&WindowMeasure, WINDOW_MEASURE_TRAVERSAL_CAPACITY>::default();
-    stack.try_push(measure).ok()?;
-    let mut height = 0.0;
-    while let Some(measure) = stack.pop() {
-        match measure {
-            WindowMeasure::Group { id, default_open, children, .. } => {
-                height += theme.control_height;
-                if !collapsed_sections.get(id).copied().unwrap_or(!default_open.unwrap_or(false)) {
-                    for child in children.iter().rev() {
-                        stack.try_push(child).ok()?;
-                    }
-                }
-            }
-            WindowMeasure::Select { .. } | WindowMeasure::Slider { .. } => height += 16.0 + theme.control_height,
-            WindowMeasure::Toggle { .. } => height += theme.control_height,
-        }
-    }
-    Some(height)
-}
 
-#[cfg(test)]
-fn measure_window_measures_body_height<'a>(theme: &Theme, collapsed_sections: &HashMap<String, bool>, measures: impl Iterator<Item = &'a WindowMeasure>) -> Option<f32> {
-    let mut height = 0.0;
-    for measure in measures {
-        height += measure_window_measure_height(theme, collapsed_sections, measure)?;
-    }
-    Some(height)
-}
 
-#[cfg(test)]
-fn measure_engagement_body_height(theme: &Theme, engagement: &WindowEngagement) -> f32 {
-    let mut h = 0.0f32;
-    if let Some(options) = &engagement.options {
-        h += options.len() as f32 * (theme.control_height + 4.0);
-    }
-    if engagement.input.is_some() {
-        h += theme.control_height * 2.0 + 8.0;
-    }
-    if engagement.control.is_some() {
-        h += theme.control_height;
-    }
-    if let Some(status_rows) = &engagement.status {
-        h += status_rows.len() as f32 * theme.control_height;
-    }
-    if let Some(possibles) = &engagement.possible_engagements {
-        h += possibles.len() as f32 * (theme.control_height + 2.0);
-    }
-    h
-}
+
+
+
 
 #[cfg(test)]
 fn render_chrome_group(draw: &mut DrawList, atlas: &mut FontAtlas, icons: &IconAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, rect: Rect, items: &[ChromeGroupItem<'_>], register_hits: bool) {
@@ -8410,37 +8085,7 @@ fn partition_utilities_by_category(utilities: &[UtilityNode]) -> [Vec<UtilityNod
     buckets
 }
 
-/// 👥️ ticket §5 — walks `ui_wgpu::wgpu::build_presence_bar`'s declarative `UiNode` tree (id
-/// `s-presence-peers`, per-peer `peer:<actor>` — contract §C0's frozen id grammar, the wgpu↔React
-/// parity join) and paints one `ChromeGroupItem` chip per peer, right-aligned in the footer, reusing
-/// the SAME `render_chrome_group`/`measure_chrome_group_item` primitives `render_footer_utility_nodes`
-/// already draws with (rather than the generic `render_ui_node` pipeline plugin surfaces use, which
-/// needs a `&mut GpuContext` this footer's own immediate-mode callers don't carry). Not clickable
-/// (`register_hits: false`) — a `peer:<actor>` hit is registered separately, with no `event`, purely
-/// so the id is discoverable for e2e/hit-testing.
-#[cfg(all(test, not(target_arch = "wasm32")))]
-#[cfg(test)]
-fn render_presence_bar(draw: &mut DrawList, atlas: &mut FontAtlas, icons: &IconAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, rows: &[ui_wgpu::wgpu::PresencePeerRow], right_edge: f32, btn_y: f32, btn_h: f32) {
-    if rows.is_empty() {
-        return;
-    }
-    let node = ui_wgpu::wgpu::build_presence_bar("s-presence-peers", rows, None);
-    let UiNode::Stack(root) = node else { return };
-    let mut x = right_edge;
-    for child in root.children.iter().rev() {
-        let UiNode::Stack(peer_stack) = child else { continue };
-        let label = peer_stack.children.iter().find_map(|node| if let UiNode::Text(text) = node { Some(text.value.as_str().to_string()) } else { None }).unwrap_or_default();
-        let item = ChromeGroupItem { control_id: "framework.presence.peer", icon_id: None, label: Some(label.as_str()), active: false, disabled: false, kind: HitKind::Button };
-        let item_w = measure_chrome_group_item(atlas, theme, &item);
-        x -= item_w;
-        let rect = Rect::new(x, btn_y, item_w, btn_h);
-        render_chrome_group(draw, atlas, icons, input, theme, rect, &[item], false);
-        if let Some(id) = &peer_stack.id {
-            input.register_hit(HitTarget { rect, event: None, control_id: Some(format!("framework.presence.{id}")), kind: HitKind::Button, drag_axis: None, drag_data: None });
-        }
-        x -= theme.gap_standard * 0.5;
-    }
-}
+
 
 /// 🚦️ ticket §C5 — `#s-sync-status` status pill + `#s-checkin` explicit check-in, painted directly in
 /// the footer left-to-right (same `ChromeGroupItem`/`render_chrome_group`/`measure_chrome_group_item`
@@ -8753,20 +8398,7 @@ fn panel_toggle_icon_id(kind: &str, session: Option<&ActiveSession>) -> &'static
     }
 }
 
-/// 🛡️ Chrome content must always win over window bodies; route it to the
-/// overlay compositing phase (guaranteed last) whenever one is available.
-#[cfg(test)]
-fn with_chrome_sink<F, R>(draw: &mut DrawList, overlay: &mut Option<&mut DrawList>, f: F) -> R
-where
-    F: FnOnce(&mut DrawList, &mut Option<&mut DrawList>) -> R,
-{
-    if let Some(chrome) = overlay.as_deref_mut() {
-        let mut nested_overlay = None;
-        f(chrome, &mut nested_overlay)
-    } else {
-        f(draw, overlay)
-    }
-}
+
 
 //#region ActionPanelAndUtilities
 /// 🧰️ Resolves the utilities a window kind presents in the utility bar — the utility mirror of
@@ -9141,13 +8773,11 @@ impl ShellState {
         })
     }
 
-    /// 🧮️ Validated effective args for execution: `None` when a required arg is still unset — the P2
-    /// gate that keeps arg-carrying actions from firing partially (delegates to the core-side pure
-    /// {@link semio_framework::missing_required_args}).
+    /// 🧮️ Resolves required presence and current catalog membership before native staged execution.
     pub(crate) fn resolved_execute_args(defs: &[semio_framework::ActionArgDef], staged: &serde_json::Map<String, Value>) -> Option<serde_json::Map<String, Value>> {
         let staged_dsl = DslValue::from(Value::Object(staged.clone()));
         let effective = semio_framework::effective_action_args(defs, &staged_dsl, None);
-        if semio_framework::missing_required_args(defs, &effective).is_empty() {
+        if semio_framework::unresolved_action_args(defs, &effective).is_empty() {
             Value::from(&effective).as_object().cloned()
         } else {
             None
@@ -10741,29 +10371,7 @@ impl ShellChromeBuildState {
     }
 }
 
-/// 💬️ Registers footer utility tooltips ahead of `render_footer_utility_nodes` (an off-limits
-/// `ShellInput`-adjacent function this wave — see the report) so hovering an already-carried-but-never-
-/// rendered `title` shows it, without touching that function's own body. Control-id format
-/// (`framework.utility.{button|toggle|collection}.{id}`) mirrors it exactly, including the flat
-/// (non-prefixed) child ids nested `Collection`s already use there.
-#[cfg(test)]
-fn chrome_register_utility_tooltips(chrome: &mut ShellChromeBuildState, utilities: &[UtilityNode]) {
-    for utility in utilities {
-        match utility {
-            UtilityNode::Button { id, label, text, title, .. } => {
-                chrome.register_tooltip(format!("framework.utility.button.{id}"), footer_utility_label(label, text, title, id));
-            }
-            UtilityNode::Toggle { id, label, text, title, .. } => {
-                chrome.register_tooltip(format!("framework.utility.toggle.{id}"), footer_utility_label(label, text, title, id));
-            }
-            UtilityNode::Collection { id, label, text, title, children, .. } => {
-                chrome.register_tooltip(format!("framework.utility.collection.{id}"), footer_utility_label(label, text, title, id));
-                chrome_register_utility_tooltips(chrome, children);
-            }
-            UtilityNode::Separator { .. } => {}
-        }
-    }
-}
+
 
 /// 🧭️ Item 5's "active-path tracking": true if `nodes` (recursively, through nested `Collection`s)
 /// contains a pressed `Toggle` — used so a *collapsed* ribbon `Collection` still highlights when the
@@ -10829,28 +10437,24 @@ fn utility_collection_path_to_id(nodes: &[UtilityNode], target_id: &str) -> Vec<
 /// `ui/js/react/index.tsx`'s `useIntroductionAnchorRect` "never downgrade" rule.
 struct ChromeElementRectEntry {
     rect: Rect,
-    fallback: bool,
 }
 
 impl ShellChromeBuildState {
     fn register_element_rect(&mut self, id: impl Into<String>, rect: Rect) {
-        self.element_rects.insert(id.into(), ChromeElementRectEntry { rect, fallback: false });
+        self.element_rects.insert(id.into(), ChromeElementRectEntry { rect });
     }
 
     #[cfg(test)]
     fn register_element_rect_fallback(&mut self, id: impl Into<String>, rect: Rect) {
         let id = id.into();
-        self.element_rects.entry(id).or_insert(ChromeElementRectEntry { rect, fallback: true });
+        self.element_rects.entry(id).or_insert(ChromeElementRectEntry { rect });
     }
 
     fn resolve_element_rect(&self, id: &str) -> Option<Rect> {
         self.element_rects.get(id).map(|entry| entry.rect)
     }
 
-    #[cfg(test)]
-    fn element_rect_is_fallback(&self, id: &str) -> bool {
-        self.element_rects.get(id).is_some_and(|entry| entry.fallback)
-    }
+
 }
 
 /// 🎓️ Punches `hole` out of `band`, returning up to four remaining rectangles (or the original band when
@@ -11731,91 +11335,7 @@ impl ShellState {
     //#endregion 🎬️Lifecycle
 
     //#region 🎬️Chrome
-    /// 🎬️ The tutorial control bar (play/pause, stop, scrubber, time, rate) — rendered right after
-    /// `render_navbar` in the chrome pass, reusing its own `ChromeGroupItem`/`render_chrome_group`
-    /// button plumbing and `chrome_clicked_this_frame` click-edge detection.
-    #[cfg(test)]
-    fn render_tutorial_bar(&mut self, draw: &mut DrawList, atlas: &mut FontAtlas, icons: &IconAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, width: f32) {
-        if self.tutorial.is_none() {
-            return;
-        }
-        let bar_h = tutorial_bar_height(theme);
-        let y = theme.navbar_height;
-        draw.push_solid([0.0, y, width, bar_h], theme.navbar);
-        draw.push_solid([0.0, y + bar_h - theme.stroke_hairline, width, theme.stroke_hairline], theme.border_normal);
 
-        let (mode, playhead_ms, duration_ms, rate) = {
-            let runtime = self.tutorial.as_ref().unwrap();
-            (runtime.mode, runtime.playhead_ms, runtime.definition.duration_ms, runtime.rate)
-        };
-        let btn_h = theme.control_height;
-        let btn_y = y + (bar_h - btn_h) * 0.5;
-        let mut x = theme.padding_standard;
-
-        if mode != TutorialMode::Recording {
-            let playing = mode == TutorialMode::Playing;
-            let play_item = ChromeGroupItem { control_id: "shell.tutorial.playPause", icon_id: Some(if playing { "pause" } else { "play" }), label: None, active: false, disabled: false, kind: HitKind::NavbarItem };
-            let play_w = measure_chrome_group_item(atlas, theme, &play_item).max(btn_h);
-            let play_rect = Rect::new(x, btn_y, play_w, btn_h);
-            self.chrome_build.register_tooltip(play_item.control_id, if playing { "Pause" } else { "Play" });
-            render_chrome_group(draw, atlas, icons, input, theme, play_rect, &[play_item], true);
-            if self.chrome_build.clicked_this_frame && play_rect.contains(input.pointer_x, input.pointer_y) {
-                self.tutorial_toggle_play_pause();
-            }
-            x += play_w + theme.gap_standard;
-        }
-
-        let stop_item = ChromeGroupItem { control_id: "shell.tutorial.stop", icon_id: Some("square"), label: None, active: false, disabled: false, kind: HitKind::NavbarItem };
-        let stop_w = measure_chrome_group_item(atlas, theme, &stop_item).max(btn_h);
-        let stop_rect = Rect::new(x, btn_y, stop_w, btn_h);
-        self.chrome_build.register_tooltip(stop_item.control_id, if mode == TutorialMode::Recording { "Stop recording" } else { "Stop tutorial" });
-        render_chrome_group(draw, atlas, icons, input, theme, stop_rect, &[stop_item], true);
-        if self.chrome_build.clicked_this_frame && stop_rect.contains(input.pointer_x, input.pointer_y) {
-            self.tutorial_stop();
-            return;
-        }
-        x += stop_w + theme.gap_standard;
-
-        let cur_s = (playhead_ms / 1000.0).max(0.0) as u64;
-        let time_label = if mode == TutorialMode::Recording {
-            format!("REC {}:{:02}", cur_s / 60, cur_s % 60)
-        } else {
-            let total_s = duration_ms / 1000;
-            format!("{}:{:02} / {}:{:02}", cur_s / 60, cur_s % 60, total_s / 60, total_s % 60)
-        };
-        chrome_text(draw, atlas, input, theme, &time_label, x, btn_y + (btn_h + theme.font_size_small) * 0.5 - 1.0, theme.font_size_small, theme.text);
-        x += atlas.measure_text(&time_label, theme.font_size_small).0 + theme.gap_standard * 2.0;
-
-        let mut rx = width - theme.padding_standard;
-        if mode != TutorialMode::Recording {
-            const RATES: [(f32, &str, &str); 4] = [(2.0, "2x", "shell.tutorial.rate.2"), (1.5, "1.5x", "shell.tutorial.rate.1_5"), (1.0, "1x", "shell.tutorial.rate.1"), (0.5, "0.5x", "shell.tutorial.rate.0_5")];
-            for (value, label, control_id) in RATES {
-                let item = ChromeGroupItem { control_id, icon_id: None, label: Some(label), active: (rate - value).abs() < 0.01, disabled: false, kind: HitKind::Toggle };
-                let item_w = measure_chrome_group_item(atlas, theme, &item);
-                rx -= item_w;
-                let item_rect = Rect::new(rx, btn_y, item_w, btn_h);
-                render_chrome_group(draw, atlas, icons, input, theme, item_rect, &[item], true);
-                if self.chrome_build.clicked_this_frame && item_rect.contains(input.pointer_x, input.pointer_y) {
-                    if let Some(r) = self.tutorial.as_mut() {
-                        r.rate = value;
-                    }
-                }
-            }
-            rx -= theme.gap_standard;
-        }
-
-        let scrubber_rect = Rect::new(x, btn_y, (rx - x).max(24.0), btn_h);
-        let track_y = btn_y + btn_h * 0.5 - 2.0;
-        draw.push_rounded([scrubber_rect.x, track_y, scrubber_rect.w, 4.0], theme.border_normal, 2.0);
-        let progress = tutorial_scrub_progress(playhead_ms, duration_ms);
-        let knob_x = scrubber_rect.x + scrubber_rect.w * progress;
-        draw.push_rounded([knob_x - 6.0, btn_y + btn_h * 0.5 - 6.0, 12.0, 12.0], theme.selected, 6.0);
-        input.register_hit(HitTarget { rect: scrubber_rect, event: None, control_id: Some("shell.tutorial.scrubber".into()), kind: HitKind::Slider, drag_axis: None, drag_data: None });
-        if mode != TutorialMode::Recording && input.pointer_down && scrubber_rect.contains(input.pointer_x, input.pointer_y) {
-            let target_ms = tutorial_scrub_target_ms(input.pointer_x, scrubber_rect, duration_ms);
-            self.tutorial_seek(target_ms);
-        }
-    }
     //#endregion 🎬️Chrome
 }
 
@@ -12115,7 +11635,6 @@ struct ShellChromeChildCursor {
     item: usize,
     scalar: usize,
     x: f32,
-    y: f32,
     right: f32,
     flag: bool,
     fault: bool,
@@ -12172,18 +11691,7 @@ impl ShellChromeFrameCursor {
 
 impl ShellState {
     /// 🎭️ Advances one retained chrome child per worker opportunity.
-    pub(crate) fn render_chrome_step(
-        &mut self,
-        cursor: &mut ShellChromeFrameCursor,
-        draw: &mut DrawList,
-        overlay: &mut DrawList,
-        atlas: &mut FontAtlas,
-        icons: &IconAtlas,
-        input: &mut InputState<ActionDescriptor>,
-        theme: &Theme,
-        engine_resources: &mut crate::engine_canvas::EngineCanvasBuildContext,
-        world_resources: &mut infinite_world::world::World3dBuildContext,
-    ) -> bool {
+    pub(crate) fn render_chrome_step(&mut self, cursor: &mut ShellChromeFrameCursor, draw: &mut DrawList, overlay: &mut DrawList, atlas: &mut FontAtlas, icons: &IconAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme) -> bool {
         let w = self.screen_w;
         let h = self.screen_h;
         let body = self.body_rect(theme);
@@ -12327,7 +11835,7 @@ impl ShellState {
                     Err(()) => return false,
                 };
                 let mut overlay_slot = Some(overlay);
-                let complete = self.render_main_window_step(&mut cursor.child, draw, &mut overlay_slot, atlas, icons, input, theme, body, engine_resources, world_resources);
+                let complete = self.render_main_window_step(&mut cursor.child, draw, &mut overlay_slot, atlas, icons, input, theme, body);
                 drop(binding);
                 if !complete {
                     return false;
@@ -12338,13 +11846,13 @@ impl ShellState {
                 cursor.advance(ShellChromeFramePhase::LeftPanel);
             }
             ShellChromeFramePhase::LeftPanel => {
-                if self.left_panel_open && self.has_left_tabs() && !self.render_panel_step(&mut cursor.child, true, overlay, None, atlas, icons, input, theme, body, engine_resources, world_resources) {
+                if self.left_panel_open && self.has_left_tabs() && !self.render_panel_step(&mut cursor.child, true, overlay, None, atlas, icons, input, theme, body) {
                     return false;
                 }
                 cursor.advance(ShellChromeFramePhase::RightPanel);
             }
             ShellChromeFramePhase::RightPanel => {
-                if self.right_panel_open && self.has_right_tabs() && !self.render_panel_step(&mut cursor.child, false, overlay, None, atlas, icons, input, theme, body, engine_resources, world_resources) {
+                if self.right_panel_open && self.has_right_tabs() && !self.render_panel_step(&mut cursor.child, false, overlay, None, atlas, icons, input, theme, body) {
                     return false;
                 }
                 cursor.advance(ShellChromeFramePhase::Navbar);
@@ -12615,117 +12123,13 @@ impl ShellState {
         self.session.is_some()
     }
 
-    #[cfg(test)]
-    fn left_tabs(&self, session: &ActiveSession) -> Vec<PanelTabDefinition> {
-        let is_de = self.locale_id == "de";
-        match self.active_left_kind {
-            LeftPanelKind::Display => vec![
-                PanelTabDefinition {
-                    kind: semio_framework::PanelTabKind::DisplayWindows,
-                    label: LocalizedLabel::data(shell_chrome_string("display.tab.windows", is_de)),
-                    group: PanelGroup::Display,
-                    body_key: Some(String::new()),
-                    children: Vec::new(),
-                },
-                PanelTabDefinition { kind: semio_framework::PanelTabKind::DisplayLayout, label: LocalizedLabel::data(shell_chrome_string("display.tab.layout", is_de)), group: PanelGroup::Display, body_key: Some(String::new()), children: Vec::new() },
-            ],
-            LeftPanelKind::Workbench => {
-                let mut tabs: Vec<PanelTabDefinition> = session.app.panel_tabs.iter().filter(|tab| group_side(tab.group) == "left").cloned().collect();
-                fn panel_tabs_contain_artifact(list: &[PanelTabDefinition]) -> bool {
-                    list.iter().any(|t| t.id() == FRAMEWORK_PANEL_TAB_ARTIFACT_ID || panel_tabs_contain_artifact(&t.children))
-                }
-                let has_document = panel_tabs_contain_artifact(&tabs);
-                if !has_document {
-                    tabs.insert(
-                        0,
-                        PanelTabDefinition {
-                            kind: semio_framework::PanelTabKind::App(FRAMEWORK_PANEL_TAB_ARTIFACT_ID.into()),
-                            label: LocalizedLabel::data(shell_panel_tab_label(FRAMEWORK_PANEL_TAB_ARTIFACT_ID, "Document", is_de)),
-                            group: PanelGroup::Workbench,
-                            body_key: Some(String::new()),
-                            children: Vec::new(),
-                        },
-                    );
-                }
-                tabs
-            }
-        }
-    }
 
-    #[cfg(test)]
-    fn right_tabs(&self, session: &ActiveSession) -> Vec<PanelTabDefinition> {
-        match self.active_right_kind {
-            RightPanelKind::Settings => {
-                let is_de = self.locale_id == "de";
-                let mut tabs = vec![PanelTabDefinition {
-                    kind: semio_framework::PanelTabKind::SettingsGeneral,
-                    label: LocalizedLabel::data(shell_chrome_string("settings.tab.general", is_de)),
-                    group: PanelGroup::Settings,
-                    body_key: Some(String::new()),
-                    children: Vec::new(),
-                }];
-                // 🔒️ Byte-identical to React's `createFrameworkSettingsPanelTab` (`ui/js/react/
-                // index.tsx:9526-9528`): a locked theme drops the whole Theme tab, not just its editor.
-                if shell_pref_locks().theme_id.is_none() {
-                    tabs.push(PanelTabDefinition {
-                        kind: semio_framework::PanelTabKind::SettingsTheme,
-                        label: LocalizedLabel::data(shell_chrome_string("settings.tab.theme", is_de)),
-                        group: PanelGroup::Settings,
-                        body_key: Some(String::new()),
-                        children: Vec::new(),
-                    });
-                }
-                // 🎛️ See `FRAMEWORK_SETTINGS_COMMANDS_TAB_ID`'s doc comment: the honest substitute for
-                // React's `bottom-middle`-anchored command palette dock, which this renderer's 2-column
-                // panel model has no equivalent surface for.
-                tabs.push(PanelTabDefinition {
-                    kind: semio_framework::PanelTabKind::App(FRAMEWORK_SETTINGS_COMMANDS_TAB_ID.into()),
-                    label: LocalizedLabel::data(shell_chrome_string("settings.tab.commands", is_de)),
-                    group: PanelGroup::Settings,
-                    body_key: Some(String::new()),
-                    children: Vec::new(),
-                });
-                tabs
-            }
-            RightPanelKind::Details => session.app.panel_tabs.iter().filter(|tab| group_side(tab.group) == "right").cloned().collect(),
-        }
-    }
 
-    #[cfg(test)]
-    fn active_left_tab_id(&self, session: &ActiveSession) -> String {
-        match self.active_left_kind {
-            LeftPanelKind::Display => FRAMEWORK_DISPLAY_WINDOWS_TAB_ID.into(),
-            LeftPanelKind::Workbench => {
-                if self.host_config().is_some_and(|cfg| session.app.id == cfg.host_app_id) {
-                    // 🏠️🧳️ `session.app` is confirmed to be the host app here, so its own first-declared
-                    // panel tab (self-declared via `AppBuilder::panel_tab`) is the catalogue default.
-                    Self::panel_state_from_view(&session.view_state).map(|p| p.active_panel_tab).unwrap_or_else(|| session.app.panel_tabs.first().map(|tab| tab.id().to_string()).unwrap_or_default())
-                } else {
-                    let tabs = self.left_tabs(session);
-                    if let Some(id) = &self.active_left_tab {
-                        if tabs.iter().any(|tab| tab.id() == *id) {
-                            return id.clone();
-                        }
-                    }
-                    tabs.first().map(|t| t.id().to_string()).unwrap_or_else(|| FRAMEWORK_PANEL_TAB_ARTIFACT_ID.into())
-                }
-            }
-        }
-    }
 
-    #[cfg(test)]
-    fn active_right_tab_id(&self, session: &ActiveSession) -> String {
-        // 🎨️🎛️ Settings now has 2-3 tabs (General / Theme / Commands — see `right_tabs`), so this needs
-        // to actually respect `self.active_right_tab` here too, same as every other panel column, instead
-        // of hardcoding General; falls back to General (first tab) exactly like before when unset/stale.
-        let tabs = self.right_tabs(session);
-        if let Some(id) = &self.active_right_tab {
-            if tabs.iter().any(|tab| tab.id() == *id) {
-                return id.clone();
-            }
-        }
-        tabs.first().map(|t| t.id().to_string()).unwrap_or_default()
-    }
+
+
+
+
 
     fn has_display_tabs(&self) -> bool {
         self.session.as_ref().is_some_and(|s| !s.app.window_kinds.is_empty())
@@ -12741,19 +12145,7 @@ impl ShellState {
         }
     }
 
-    fn render_main_window_step(
-        &mut self,
-        cursor: &mut ShellChromeChildCursor,
-        draw: &mut DrawList,
-        overlay: &mut Option<&mut DrawList>,
-        atlas: &mut FontAtlas,
-        icons: &IconAtlas,
-        input: &mut InputState<ActionDescriptor>,
-        theme: &Theme,
-        bounds: Rect,
-        engine_resources: &mut crate::engine_canvas::EngineCanvasBuildContext,
-        world_resources: &mut infinite_world::world::World3dBuildContext,
-    ) -> bool {
+    fn render_main_window_step(&mut self, cursor: &mut ShellChromeChildCursor, draw: &mut DrawList, overlay: &mut Option<&mut DrawList>, atlas: &mut FontAtlas, icons: &IconAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, bounds: Rect) -> bool {
         match cursor.phase {
             0 => {
                 draw.push_solid([bounds.x, bounds.y, bounds.w, bounds.h], theme.background);
@@ -12802,20 +12194,7 @@ impl ShellState {
                 let widget_maps = &mut self.widget_maps;
                 let mut ctx = framework_widget_context(draw, overlay.as_deref_mut(), atlas, Some(icons), input, theme, scroll_offsets, collapsed_sections, open_selects, Some(widget_maps));
                 ctx.pick_clip = Some(rect);
-                if !render_ui_document_step(
-                    &mut cursor.document,
-                    &document,
-                    rect,
-                    &mut ctx,
-                    window.as_str(),
-                    engine_resources,
-                    world_resources,
-                    &mut self.world3d_states,
-                    &mut self.node_graph_states,
-                    &mut self.tiled_map_states,
-                    &mut self.icon_render_states,
-                    &mut self.board2d_states,
-                ) {
+                if !render_ui_document_step(&mut cursor.document, &document, rect, &mut ctx, window.as_str()) {
                     return false;
                 }
                 cursor.phase = 5;
@@ -12830,20 +12209,7 @@ impl ShellState {
         false
     }
 
-    fn render_panel_step(
-        &mut self,
-        cursor: &mut ShellChromeChildCursor,
-        left: bool,
-        panel_draw: &mut DrawList,
-        overlay: Option<&mut DrawList>,
-        atlas: &mut FontAtlas,
-        icons: &IconAtlas,
-        input: &mut InputState<ActionDescriptor>,
-        theme: &Theme,
-        body: Rect,
-        engine_resources: &mut crate::engine_canvas::EngineCanvasBuildContext,
-        world_resources: &mut infinite_world::world::World3dBuildContext,
-    ) -> bool {
+    fn render_panel_step(&mut self, cursor: &mut ShellChromeChildCursor, left: bool, panel_draw: &mut DrawList, overlay: Option<&mut DrawList>, atlas: &mut FontAtlas, icons: &IconAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, body: Rect) -> bool {
         const PANEL_RESIZE_HIT_PX: f32 = 20.0;
         match cursor.phase {
             0 => {
@@ -12908,20 +12274,7 @@ impl ShellState {
                 let widget_maps = &mut self.widget_maps;
                 let mut ctx = framework_widget_context(panel_draw, overlay, atlas, Some(icons), input, theme, scroll_offsets, collapsed_sections, open_selects, Some(widget_maps));
                 ctx.pick_clip = Some(content);
-                if !render_ui_document_step(
-                    &mut cursor.document,
-                    &document,
-                    content,
-                    &mut ctx,
-                    window.as_str(),
-                    engine_resources,
-                    world_resources,
-                    &mut self.world3d_states,
-                    &mut self.node_graph_states,
-                    &mut self.tiled_map_states,
-                    &mut self.icon_render_states,
-                    &mut self.board2d_states,
-                ) {
+                if !render_ui_document_step(&mut cursor.document, &document, content, &mut ctx, window.as_str()) {
                     return false;
                 }
                 cursor.phase = 9;
@@ -13652,507 +13005,23 @@ impl ShellState {
         false
     }
 
-    #[cfg(test)]
-    fn render_navbar(&mut self, draw: &mut DrawList, atlas: &mut FontAtlas, icons: &IconAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, width: f32) {
-        let is_de = self.locale_id == "de";
-        let navbar_rect = Rect::new(0.0, 0.0, width, theme.navbar_height);
-        let navbar_hovered = navbar_rect.contains(input.pointer_x, input.pointer_y);
-        draw.push_solid([0.0, 0.0, width, theme.navbar_height], theme.navbar);
-        let border_color = if navbar_hovered { theme.border_emphasized } else { theme.border_normal };
-        draw.push_solid([0.0, theme.navbar_height - theme.stroke_hairline, width, theme.stroke_hairline], border_color);
-        let btn_h = theme.control_height;
-        let btn_y = (theme.navbar_height - btn_h) * 0.5;
-        let mut x = theme.padding_standard;
-        let logo_size = btn_h - theme.gap_standard;
-        chrome_icon(draw, icons, "semio-logo", x, btn_y + (btn_h - logo_size) * 0.5, logo_size, theme.text);
-        x += logo_size + theme.gap_standard;
-        let title = self.session.as_ref().map(|s| app_breadcrumb(resolve_app_breadcrumb(&s.app, &self.terminology_id))).unwrap_or_else(|| if self.space_mode { format!("semio · {}", self.plugin_filter) } else { "semio · os".into() });
-        chrome_text(draw, atlas, input, theme, &title, x, btn_y + (btn_h + theme.font_size_body) * 0.5 - 2.0, theme.font_size_body, theme.text);
-        x += atlas.measure_text(&title, theme.font_size_body).0 + theme.gap_standard * 2.0;
-        let examples = self.active_plugin_examples();
-        if !examples.is_empty() && !self.space_mode {
-            let active_example = examples.iter().find(|ex| Some(&ex.id) == self.active_example_id.as_ref());
-            let active_label = active_example.map(|ex| ex.label.resolve(self.active_terminology(), self.active_locale())).unwrap_or("Example");
-            let active_example_icon = active_example.map(|ex| ex.icon_id.as_str()).unwrap_or("file-text");
-            let fixture_w = atlas.measure_text(active_label, theme.font_size_small).0 + theme.padding_standard * 2.0 + theme.gap_standard;
-            let fixture_rect = Rect::new(x, btn_y, fixture_w.max(120.0), btn_h);
-            self.chrome_build.register_tooltip("playground.navbar.fixture", active_label);
-            render_chrome_group(
-                draw,
-                atlas,
-                icons,
-                input,
-                theme,
-                fixture_rect,
-                &[ChromeGroupItem {
-                    control_id: "playground.navbar.fixture",
-                    icon_id: Some(active_example_icon),
-                    label: Some(active_label),
-                    active: self.overlay_state == OverlayState::Dropdown("example".to_string()),
-                    disabled: false,
-                    kind: HitKind::NavbarItem,
-                }],
-                true,
-            );
-        }
-        let mut rx = width - theme.padding_standard;
-        let fullscreen_item = ChromeGroupItem {
-            control_id: "ui.fullscreen.toggle",
-            icon_id: Some(if self.fullscreen_active { "minimize-2" } else { "maximize-2" }),
-            label: Some(if self.fullscreen_active { shell_chrome_string("fullscreen.exit", is_de) } else { shell_chrome_string("fullscreen.toggle", is_de) }),
-            active: self.fullscreen_active,
-            disabled: false,
-            kind: HitKind::Toggle,
-        };
-        self.chrome_build.register_tooltip(fullscreen_item.control_id, fullscreen_item.label.unwrap_or_default());
-        let fullscreen_w = measure_chrome_group_item(atlas, theme, &fullscreen_item);
-        rx -= fullscreen_w;
-        render_chrome_group(draw, atlas, icons, input, theme, Rect::new(rx, btn_y, fullscreen_w, btn_h), &[fullscreen_item], true);
-        rx -= theme.gap_standard;
-        // 🎓️ Item 3's "simple direct trigger point" (the `introduceApp` os-command itself is
-        // `w3-command-palette`'s `shell::ActionPanelAndUtilities` scope, off-limits here) — only shown
-        // when the active app actually declares an `introduction`. Click handling is chrome-owned (not
-        // routed through `ActionDescriptor`/`ShellActions`), mirroring the dialog trigger above.
-        if self.session.as_ref().is_some_and(|s| s.app.introduction.is_some()) {
-            let tour_item = ChromeGroupItem { control_id: "shell.introduction.start", icon_id: Some("help-circle"), label: None, active: false, disabled: false, kind: HitKind::NavbarItem };
-            let tour_w = measure_chrome_group_item(atlas, theme, &tour_item);
-            rx -= tour_w;
-            let tour_rect = Rect::new(rx, btn_y, tour_w, btn_h);
-            self.chrome_build.register_tooltip(tour_item.control_id, "Start introduction");
-            render_chrome_group(draw, atlas, icons, input, theme, tour_rect, &[tour_item], true);
-            if !self.chrome_build.dialog_open() && self.chrome_build.clicked_this_frame && tour_rect.contains(input.pointer_x, input.pointer_y) {
-                // 🎬️ Introductions and tutorials are mutually exclusive (Design Decision 8) — starting one
-                // clears the other.
-                self.tutorial_stop();
-                self.chrome_build.start_introduction();
-            }
-            rx -= theme.gap_standard;
-        }
-        // 🎬️ "Play Tutorial" trigger, beside the introduction trigger above — same "simple direct trigger
-        // point" pattern (chrome-owned click, not routed through `ActionDescriptor`/`dispatch_action`),
-        // shown only when the active app declares at least one tutorial. Multiple declared tutorials are
-        // still fully reachable through the generic Action rail / command palette — the auto-injected
-        // `startTutorial` action already carries a `tutorialId` select arg per declared tutorial — this
-        // navbar shortcut always starts the first one rather than inventing a second picker UI here.
-        if self.tutorial.is_none() {
-            if let Some(tutorial_id) = self.session.as_ref().and_then(|s| s.app.tutorials.first().map(|t| t.id.clone())) {
-                let play_item = ChromeGroupItem { control_id: "shell.tutorial.trigger", icon_id: Some("play-circle"), label: None, active: false, disabled: false, kind: HitKind::NavbarItem };
-                let play_w = measure_chrome_group_item(atlas, theme, &play_item);
-                rx -= play_w;
-                let play_rect = Rect::new(rx, btn_y, play_w, btn_h);
-                self.chrome_build.register_tooltip(play_item.control_id, "Play tutorial");
-                render_chrome_group(draw, atlas, icons, input, theme, play_rect, &[play_item], true);
-                if !self.chrome_build.dialog_open() && self.chrome_build.clicked_this_frame && play_rect.contains(input.pointer_x, input.pointer_y) {
-                    self.tutorial_start(&tutorial_id);
-                }
-                rx -= theme.gap_standard;
-            }
-        }
-        let mut toggle_items: Vec<ChromeGroupItem<'_>> = Vec::new();
-        if self.has_display_tabs() {
-            toggle_items.push(ChromeGroupItem {
-                control_id: "ui.panelToggle.display",
-                icon_id: Some(panel_toggle_icon_id("display", self.session.as_ref())),
-                label: Some(shell_chrome_string("panelToggle.display", is_de)),
-                active: self.left_panel_open && self.active_left_kind == LeftPanelKind::Display,
-                disabled: false,
-                kind: HitKind::Toggle,
-            });
-        }
-        toggle_items.push(ChromeGroupItem {
-            control_id: "ui.panelToggle.workbench",
-            icon_id: Some(panel_toggle_icon_id("workbench", self.session.as_ref())),
-            label: Some(shell_chrome_string("panelToggle.workbench", is_de)),
-            active: self.left_panel_open && self.active_left_kind == LeftPanelKind::Workbench,
-            disabled: false,
-            kind: HitKind::Toggle,
-        });
-        toggle_items.push(ChromeGroupItem {
-            control_id: "ui.panelToggle.details",
-            icon_id: Some(panel_toggle_icon_id("details", self.session.as_ref())),
-            label: Some(shell_chrome_string("panelToggle.details", is_de)),
-            active: self.right_panel_open && self.active_right_kind == RightPanelKind::Details,
-            disabled: false,
-            kind: HitKind::Toggle,
-        });
-        toggle_items.push(ChromeGroupItem {
-            control_id: "ui.panelToggle.settings",
-            icon_id: Some(panel_toggle_icon_id("settings", self.session.as_ref())),
-            label: Some(shell_chrome_string("panelToggle.settings", is_de)),
-            active: self.right_panel_open && self.active_right_kind == RightPanelKind::Settings,
-            disabled: false,
-            kind: HitKind::Toggle,
-        });
-        for item in &toggle_items {
-            self.chrome_build.register_tooltip(item.control_id, item.label.unwrap_or_default());
-        }
-        let toggle_w: f32 = toggle_items.iter().map(|item| measure_chrome_group_item(atlas, theme, item)).sum();
-        rx -= toggle_w;
-        render_chrome_group(draw, atlas, icons, input, theme, Rect::new(rx, btn_y, toggle_w, btn_h), &toggle_items, true);
-        rx -= theme.gap_standard;
-        if let Some(session) = &self.session {
-            if session.app.modes.len() > 1 {
-                // 🚧️ `modes` is a `NonEmptyVec`, whose `iter()` yields an opaque non-double-ended
-                // iterator — collect before reversing for the right-to-left navbar order.
-                let modes: Vec<&semio_framework::ModeDefinition> = session.app.modes.iter().collect();
-                let mode_control_ids: Vec<String> = modes.iter().rev().map(|mode| format!("playground.navbar.modes.{}", mode.id)).collect();
-                let mode_items: Vec<ChromeGroupItem<'_>> = modes
-                    .iter()
-                    .rev()
-                    .zip(mode_control_ids.iter())
-                    .map(|(mode, control_id)| {
-                        let active_mode = session.view_state.active_mode_id.as_deref().unwrap_or(session.app.default_mode_id.as_str());
-                        ChromeGroupItem {
-                            control_id: control_id.as_str(),
-                            icon_id: Some(mode.icon_id.as_str()),
-                            label: Some(mode.label.resolve(self.active_terminology(), self.active_locale())),
-                            active: active_mode == mode.id,
-                            disabled: false,
-                            kind: HitKind::NavbarItem,
-                        }
-                    })
-                    .collect();
-                for item in &mode_items {
-                    self.chrome_build.register_tooltip(item.control_id, item.label.unwrap_or_default());
-                }
-                let mode_w: f32 = mode_items.iter().map(|item| measure_chrome_group_item(atlas, theme, item)).sum();
-                rx -= mode_w;
-                render_chrome_group(draw, atlas, icons, input, theme, Rect::new(rx, btn_y, mode_w, btn_h), &mode_items, true);
-            }
-        }
-    }
 
-    #[cfg(test)]
-    fn render_footer(&mut self, draw: &mut DrawList, atlas: &mut FontAtlas, icons: &IconAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, width: f32, height: f32) {
-        let y = height - theme.footer_height;
-        let footer_rect = Rect::new(0.0, y, width, theme.footer_height);
-        let footer_hovered = footer_rect.contains(input.pointer_x, input.pointer_y);
-        draw.push_solid([0.0, y, width, theme.footer_height], theme.navbar);
-        let border_color = if footer_hovered { theme.border_emphasized } else { theme.border_normal };
-        draw.push_solid([0.0, y, width, theme.stroke_hairline], border_color);
-        if self.session.is_none() {
-            return;
-        }
-        let btn_h = theme.control_height;
-        let btn_y = y + (theme.footer_height - btn_h) * 0.5;
-        // 🧰️ Footer sections: Selection · Utilities · History · Sync. The former `UtilityCategory::Actions`
-        // section is deleted — window-scoped actions now live in the per-window Actions rail
-        // (Architecture Decision 8/9, P6).
-        chrome_register_utility_tooltips(&mut self.chrome_build, &self.active_utilities);
-        let partitions = partition_utilities_by_category(&self.active_utilities);
-        let sections = [partitions[0].as_slice(), partitions[1].as_slice(), partitions[2].as_slice(), partitions[3].as_slice()];
-        let mut utility_x = theme.padding_standard;
-        let mut first_section = true;
-        for utilities in sections {
-            if utilities.is_empty() {
-                continue;
-            }
-            if !first_section {
-                utility_x = render_footer_section_divider(draw, theme, utility_x, btn_y, btn_h);
-            }
-            first_section = false;
-            utility_x = render_footer_utility_nodes(&mut self.chrome_build, draw, atlas, icons, input, theme, utility_x, btn_y, btn_h, utilities, &self.utility_collection_expanded);
-        }
-        // 🚦️ ticket §C5 — `#s-sync-status`/`#s-checkin`, left-aligned right after the plugin-declared
-        // utility sections (own divider, `first_section` no longer matters past this point).
-        #[cfg(not(target_arch = "wasm32"))]
-        {
-            if !first_section {
-                utility_x = render_footer_section_divider(draw, theme, utility_x, btn_y, btn_h);
-            }
-            let uncommitted_count = uncommitted_edit_count(&self.history_entries);
-            let mut cursor = ShellChromeChildCursor::default();
-            loop {
-                match render_sync_status_and_checkin(&mut cursor, draw, atlas, icons, input, theme, self.sync_status.as_ref(), self.sync_bootstrap_progress.as_ref(), self.session.as_ref(), uncommitted_count, utility_x, btn_y, btn_h) {
-                    Ok(Some(next_x)) => {
-                        utility_x = next_x;
-                        break;
-                    }
-                    Ok(None) => {}
-                    Err(()) => break,
-                }
-            }
-        }
-        let _ = utility_x;
-        // 👥️ ticket §5 — the live presence roster, right-aligned in the footer, scoped to the
-        // CURRENTLY mounted session's own canonical surface (`presence_peer_rows_for_surface`'s pure
-        // decision, so a stale roster from a just-closed document/surface never leaks in).
-        #[cfg(not(target_arch = "wasm32"))]
-        if let Some(session) = &self.session {
-            let target_surface = semio_framework::manifest::surface_app_id(&session.app.dialect, session.app.role);
-            let rows = presence_peer_rows_for_surface(&self.presence_peers, self.presence_surface.as_deref(), &target_surface);
-            render_presence_bar(draw, atlas, icons, input, theme, &rows, width - theme.padding_standard, btn_y, btn_h);
-        }
-    }
 
-    #[cfg(test)]
-    fn render_floating_panel(
-        &mut self,
-        panel_draw: &mut DrawList,
-        overlay: Option<&mut DrawList>,
-        atlas: &mut FontAtlas,
-        icons: &IconAtlas,
-        input: &mut InputState<ActionDescriptor>,
-        theme: &Theme,
-        panel: Rect,
-        tabs: &[PanelTabDefinition],
-        active_tab_id: &str,
-        side_left: bool,
-        engine_resources: &mut crate::engine_canvas::EngineCanvasBuildContext,
-        world_resources: &mut infinite_world::world::World3dBuildContext,
-    ) {
-        const PANEL_RESIZE_HIT_PX: f32 = 20.0;
-        let resize_id = if side_left { "panel.resize.left" } else { "panel.resize.right" };
-        let resize_handle = if side_left { Rect::new(panel.x + panel.w - PANEL_RESIZE_HIT_PX, panel.y, PANEL_RESIZE_HIT_PX, panel.h) } else { Rect::new(panel.x, panel.y, PANEL_RESIZE_HIT_PX, panel.h) };
-        let resize_active = input.drag.active && input.drag.target_id.as_deref() == Some(resize_id);
-        let resize_handle_hovered = resize_handle.contains(input.pointer_x, input.pointer_y);
-        let resize_edge_hot = resize_active || resize_handle_hovered;
-        let panel_hovered = panel.contains(input.pointer_x, input.pointer_y);
-        let hair = theme.stroke_hairline;
-        let edge_color = |is_resize_edge: bool| {
-            if is_resize_edge && resize_active {
-                theme.accent
-            } else if is_resize_edge && resize_handle_hovered {
-                theme.border_emphasized
-            } else if panel_hovered && !resize_edge_hot {
-                theme.border_emphasized
-            } else {
-                theme.border_normal
-            }
-        };
-        let top = edge_color(false);
-        let bottom = edge_color(false);
-        let left = edge_color(!side_left);
-        let right = edge_color(side_left);
-        let inner_stroke = if panel_hovered && !resize_edge_hot { theme.border_emphasized } else { theme.border_normal };
-        let glass = panel_draw.push_glass([panel.x, panel.y, panel.w, panel.h], theme.border_radius, theme.glass(Level::Panel));
-        panel_draw.begin_glass_content(glass);
-        panel_draw.push_solid([panel.x, panel.y, panel.w, hair], top);
-        panel_draw.push_solid([panel.x, panel.y + panel.h - hair, panel.w, hair], bottom);
-        panel_draw.push_solid([panel.x, panel.y, hair, panel.h], left);
-        panel_draw.push_solid([panel.x + panel.w - hair, panel.y, hair, panel.h], right);
-        let tab_bar_h = render_panel_tab_bar(&mut self.chrome_build, panel_draw, atlas, icons, input, theme, panel, tabs, active_tab_id, side_left, inner_stroke, hair);
-        let content = Rect::new(panel.x + theme.gap_standard, panel.y + tab_bar_h, panel.w - theme.gap_standard * 2.0, panel.h - tab_bar_h - theme.gap_standard);
-        self.chrome_build.register_element_rect(semio_framework::panel_tab_element_id(active_tab_id), content);
-        let scroll_key = format!("panel.{}.{}", if side_left { "left" } else { "right" }, active_tab_id);
-        let scroll_y = *self.scroll_offsets.get(&scroll_key).unwrap_or(&0.0);
-        panel_draw.push_scissor(content);
-        input.register_hit(HitTarget { rect: content, event: None, control_id: Some(scroll_key.clone()), kind: HitKind::ScrollRegion, drag_axis: None, drag_data: None });
-        if self.panel_documents.contains_key(active_tab_id) {
-            let scrolled = Rect::new(content.x, content.y - scroll_y, content.w, content.h);
-            let scroll_offsets = &mut self.scroll_offsets;
-            let collapsed_sections = &mut self.collapsed_sections;
-            let open_selects = &mut self.open_selects;
-            let widget_maps = &mut self.widget_maps;
-            let mut ctx = framework_widget_context(panel_draw, overlay, atlas, Some(icons), input, theme, scroll_offsets, collapsed_sections, open_selects, Some(widget_maps));
-            ctx.pick_clip = Some(content);
-            if let Some(document) = self.panel_documents.get(active_tab_id) {
-                render_ui_document(
-                    document,
-                    scrolled,
-                    &mut ctx,
-                    active_tab_id,
-                    engine_resources,
-                    world_resources,
-                    &mut self.world3d_states,
-                    &mut self.node_graph_states,
-                    &mut self.tiled_map_states,
-                    &mut self.icon_render_states,
-                    &mut self.board2d_states,
-                );
-            }
-        }
-        panel_draw.pop_scissor();
-        panel_draw.end_glass_content();
-        input.register_hit(HitTarget { rect: resize_handle, event: None, control_id: Some(resize_id.into()), kind: HitKind::PanelResize, drag_axis: Some(DragAxis::Horizontal), drag_data: None });
-    }
 
-    #[cfg(test)]
-    fn render_left_panel(
-        &mut self,
-        panel_draw: &mut DrawList,
-        mut overlay: Option<&mut DrawList>,
-        atlas: &mut FontAtlas,
-        icons: &IconAtlas,
-        input: &mut InputState<ActionDescriptor>,
-        theme: &Theme,
-        body: Rect,
-        engine_resources: &mut crate::engine_canvas::EngineCanvasBuildContext,
-        world_resources: &mut infinite_world::world::World3dBuildContext,
-    ) {
-        let session = match self.session.as_ref() {
-            Some(s) => s.clone(),
-            None => return,
-        };
-        let tabs = self.left_tabs(&session);
-        if tabs.is_empty() {
-            return;
-        }
-        let active = self.active_left_tab_id(&session);
-        let panel = self.floating_panel_rect(true, body, theme);
-        self.render_floating_panel(panel_draw, overlay.as_deref_mut(), atlas, icons, input, theme, panel, &tabs, &active, true, engine_resources, world_resources);
-    }
 
-    #[cfg(test)]
-    fn render_right_panel(
-        &mut self,
-        panel_draw: &mut DrawList,
-        mut overlay: Option<&mut DrawList>,
-        atlas: &mut FontAtlas,
-        icons: &IconAtlas,
-        input: &mut InputState<ActionDescriptor>,
-        theme: &Theme,
-        body: Rect,
-        engine_resources: &mut crate::engine_canvas::EngineCanvasBuildContext,
-        world_resources: &mut infinite_world::world::World3dBuildContext,
-    ) {
-        let session = match self.session.as_ref() {
-            Some(s) => s.clone(),
-            None => return,
-        };
-        let tabs = self.right_tabs(&session);
-        if tabs.is_empty() {
-            return;
-        }
-        let active = self.active_right_tab_id(&session);
-        let panel = self.floating_panel_rect(false, body, theme);
-        self.render_floating_panel(panel_draw, overlay.as_deref_mut(), atlas, icons, input, theme, panel, &tabs, &active, false, engine_resources, world_resources);
-    }
 
-    #[cfg(test)]
-    fn render_main_window(
-        &mut self,
-        draw: &mut DrawList,
-        overlay: &mut Option<&mut DrawList>,
-        atlas: &mut FontAtlas,
-        icons: &IconAtlas,
-        input: &mut InputState<ActionDescriptor>,
-        theme: &Theme,
-        bounds: Rect,
-        engine_resources: &mut crate::engine_canvas::EngineCanvasBuildContext,
-        world_resources: &mut infinite_world::world::World3dBuildContext,
-    ) {
-        draw.push_solid([bounds.x, bounds.y, bounds.w, bounds.h], theme.background);
-        let session = match self.session.as_ref() {
-            Some(s) => s.clone(),
-            None => return,
-        };
-        let mut canvas = bounds.inset(theme.panel_inset);
-        canvas = self.render_studio_canvas_bars(draw, atlas, icons, input, theme, canvas, &session);
-        if self.space_mode {
-            if let Some(spawned_ui) = self.spawned_ui.take() {
-                self.render_window_content(draw, overlay.as_deref_mut(), atlas, icons, input, theme, canvas, canvas, &[canvas], &spawned_ui, "spawned", engine_resources, world_resources);
-                self.spawned_ui = Some(spawned_ui);
-                return;
-            }
-        }
-        let window_labels: HashMap<String, String> =
-            session.app.window_kinds.iter().map(|kind| (kind.id.clone(), app_window_label(&session.app, &self.terminology_id, self.active_locale(), kind.label.resolve(self.active_terminology(), self.active_locale())))).collect();
-        let window_icon_ids: HashMap<String, String> = session.app.window_kinds.iter().map(|kind| (kind.id.clone(), kind.icon_id.as_str().to_string())).collect();
-        self.dock_canvas_bounds = canvas;
-        self.dock_drop_tab_bars = self.dock_tab_bars_for_drop(atlas, theme, canvas, &window_labels, &window_icon_ids);
-        self.dock_drop_bodies = self.dock.stack_body_rects(canvas, theme, &window_labels, atlas).into_iter().map(|(path, rect, active)| (path, rect, active)).collect();
-        {
-            let mut dock_ctx = DockRenderContext { draw, atlas, icons, input, theme, window_labels: &window_labels, window_icon_ids: &window_icon_ids };
-            self.dock.register_hits(&mut dock_ctx, canvas);
-        }
-        let (placements, silhouettes) = self.dock.stack_body_rects_with_silhouettes(canvas, theme, &window_labels, atlas);
-        let show_fallback = placements.is_empty();
-        self.window_content_rects.clear();
-        self.window_silhouettes = silhouettes;
-        for (_, safe_body, window_id) in placements {
-            let window_kind = session.app.window_kinds.iter().find(|kind| kind.id == window_id).cloned();
-            let silhouette = self.window_silhouettes.get(&window_id).cloned();
-            let mut window_chip_hits: Vec<(Rect, String)> = Vec::new();
-            let content_viewport = silhouette.as_ref().map(WindowSilhouette::content_bounds).unwrap_or(safe_body);
-            self.window_content_rects.insert(window_id.clone(), content_viewport);
-            if let Some(ui) = self.window_ui.remove(&window_id) {
-                let content_layout = content_viewport;
-                let clip_rects = silhouette.as_ref().map(WindowSilhouette::content_clip_rects).unwrap_or_else(|| vec![safe_body]);
-                let hit_regions: Vec<Rect> = clip_rects.iter().filter_map(|clip| Self::intersect_content_rect(*clip, content_viewport)).collect();
-                draw.begin_silhouette_clip(&clip_rects);
-                self.render_window_content(draw, overlay.as_deref_mut(), atlas, icons, input, theme, content_viewport, content_layout, &hit_regions, &ui, &window_id, engine_resources, world_resources);
-                draw.end_silhouette_clip();
-                self.window_ui.insert(window_id.clone(), ui);
-            }
-            if let Some(kind) = window_kind {
-                let measures_outcome = self.render_window_measures_rail(draw, overlay, atlas, icons, input, theme, &safe_body, &window_id, &kind);
-                if let Some(hit) = measures_outcome.chip_hit {
-                    window_chip_hits.push(hit);
-                }
-                if let Some(hit) = self.render_window_engagement_rail(draw, overlay, atlas, icons, input, theme, &safe_body, &window_id, &kind, measures_outcome.reserve_width) {
-                    window_chip_hits.push(hit);
-                }
-                if let Some(hit) = self.render_window_actions_rail(draw, overlay, atlas, icons, input, theme, &safe_body, &window_id, &session.app, &kind) {
-                    window_chip_hits.push(hit);
-                }
-                self.render_utility_options_rail(draw, overlay, atlas, icons, input, theme, &safe_body, &window_id, &kind);
-            }
-            for (rect, control_id) in window_chip_hits {
-                input.register_hit(HitTarget { rect, event: None, control_id: Some(control_id), kind: HitKind::Button, drag_axis: None, drag_data: None });
-            }
-        }
-        with_chrome_sink(draw, overlay, |chrome, _select_overlay| {
-            let mut dock_ctx = DockRenderContext { draw: chrome, atlas, icons, input, theme, window_labels: &window_labels, window_icon_ids: &window_icon_ids };
-            self.dock.paint_chrome(&mut dock_ctx, canvas, false);
-        });
-        {
-            let mut resize_ctx = DockRenderContext { draw, atlas, icons, input, theme, window_labels: &window_labels, window_icon_ids: &window_icon_ids };
-            self.dock.register_resize_hits(&mut resize_ctx, canvas);
-        }
-        if show_fallback {
-            chrome_text(draw, atlas, input, theme, &app_breadcrumb(resolve_app_breadcrumb(&session.app, &self.terminology_id)), canvas.x + 16.0, canvas.y + 32.0, theme.font_size_body, theme.text_muted);
-        }
-        if let Some(drag) = &self.dock_drag {
-            if let Some(zone) = &drag.drop_zone {
-                if let Some(indicator) = drop_zone_indicator_rect(zone, &self.dock_drop_tab_bars, &self.dock_drop_bodies, self.dock_canvas_bounds, theme.gap_standard) {
-                    draw.push_rounded([indicator.x, indicator.y, indicator.w, indicator.h], theme.accent.with_alpha(0.2), theme.border_radius);
-                    let hair = theme.stroke_hairline;
-                    draw.push_solid([indicator.x, indicator.y, indicator.w, hair], theme.accent);
-                    draw.push_solid([indicator.x, indicator.y + indicator.h - hair, indicator.w, hair], theme.accent);
-                    draw.push_solid([indicator.x, indicator.y, hair, indicator.h], theme.accent);
-                    draw.push_solid([indicator.x + indicator.w - hair, indicator.y, hair, indicator.h], theme.accent);
-                }
-            }
-            let ghost = Rect::new(drag.x - 48.0, drag.y - 12.0, 120.0, theme.control_height);
-            if !matches!(drag.drop_zone, Some(DockDropZone::Tab { .. })) {
-                draw.push_rounded([ghost.x, ghost.y, ghost.w, ghost.h], theme.panel, theme.border_radius);
-                chrome_text(draw, atlas, input, theme, &drag.payload.ghost_label, ghost.x + theme.padding_standard, ghost.y + (ghost.h + theme.font_size_small) * 0.5 - 1.0, theme.font_size_small, theme.text);
-            }
-        }
-    }
 
-    #[cfg(test)]
-    fn render_studio_canvas_bars(&self, draw: &mut DrawList, atlas: &mut FontAtlas, icons: &IconAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, mut canvas: Rect, session: &ActiveSession) -> Rect {
-        if !self.host_config().is_some_and(|cfg| session.app.id == cfg.host_app_id) {
-            return canvas;
-        }
-        let bar_h = theme.control_height;
-        if self.spawned_ui.is_none() {
-            let item = ChromeGroupItem { control_id: "space.canvas.home", icon_id: Some("home"), label: Some(shell_chrome_string("common.home", self.locale_id == "de")), active: false, disabled: false, kind: HitKind::Button };
-            let bar_w = measure_chrome_group_item(atlas, theme, &item);
-            let bar = Rect::new(canvas.x, canvas.y, bar_w, bar_h);
-            render_chrome_group(draw, atlas, icons, input, theme, bar, &[item], true);
-            canvas.y += bar_h + theme.gap_standard;
-            canvas.h -= bar_h + theme.gap_standard;
-            return canvas;
-        }
-        if let Some(panel) = Self::panel_state_from_view(&session.view_state) {
-            if let Some(spawned) = panel.active_spawned_id.as_ref().and_then(|id| panel.spawned_apps.iter().find(|app| &app.id == id)) {
-                let label = format!("Back to Workflow · {}", app_breadcrumb(&spawned.breadcrumb));
-                let item = ChromeGroupItem { control_id: "space.canvas.back", icon_id: Some("chevron-left"), label: Some(&label), active: false, disabled: false, kind: HitKind::Button };
-                let bar_w = measure_chrome_group_item(atlas, theme, &item).min(canvas.w);
-                let bar = Rect::new(canvas.x, canvas.y, bar_w, bar_h);
-                render_chrome_group(draw, atlas, icons, input, theme, bar, &[item], true);
-                canvas.y += bar_h + theme.gap_standard;
-                canvas.h -= bar_h + theme.gap_standard;
-            }
-        }
-        canvas
-    }
+
+
+
+
+
+
+
 
     //#region SilhouetteContent
 
+    #[cfg(test)]
     fn intersect_content_rect(left: Rect, right: Rect) -> Option<Rect> {
         let x = left.x.max(right.x);
         let y = left.y.max(right.y);
@@ -14161,197 +13030,11 @@ impl ShellState {
         (x2 > x && y2 > y).then(|| Rect::new(x, y, x2 - x, y2 - y))
     }
 
-    #[cfg(test)]
-    fn render_window_content(
-        &mut self,
-        draw: &mut DrawList,
-        overlay: Option<&mut DrawList>,
-        atlas: &mut FontAtlas,
-        icons: &IconAtlas,
-        input: &mut InputState<ActionDescriptor>,
-        theme: &Theme,
-        viewport: Rect,
-        layout: Rect,
-        hit_regions: &[Rect],
-        ui: &UiDocumentLease,
-        window_id: &str,
-        engine_resources: &mut crate::engine_canvas::EngineCanvasBuildContext,
-        world_resources: &mut infinite_world::world::World3dBuildContext,
-    ) {
-        let scroll_key = format!("window.{window_id}");
-        let scroll_y = *self.scroll_offsets.get(&scroll_key).unwrap_or(&0.0);
-        draw.push_scissor(viewport);
-        for rect in hit_regions.iter().copied().filter(|rect| rect.w > 0.0 && rect.h > 0.0) {
-            input.register_hit(HitTarget { rect, event: None, control_id: Some(scroll_key.clone()), kind: HitKind::ScrollRegion, drag_axis: None, drag_data: None });
-        }
-        let generated_hit_start = input.hit_targets.len();
-        let pointer = (input.pointer_x, input.pointer_y);
-        if !hit_regions.iter().any(|rect| rect.contains(pointer.0, pointer.1)) {
-            input.pointer_x = -1_000_000.0;
-            input.pointer_y = -1_000_000.0;
-        }
-        let scrolled = Rect::new(layout.x, layout.y - scroll_y, layout.w, layout.h);
-        let scroll_offsets = &mut self.scroll_offsets;
-        let collapsed_sections = &mut self.collapsed_sections;
-        let open_selects = &mut self.open_selects;
-        let widget_maps = &mut self.widget_maps;
-        let mut ctx = framework_widget_context(draw, overlay, atlas, Some(icons), input, theme, scroll_offsets, collapsed_sections, open_selects, Some(widget_maps));
-        ctx.pick_clip = Some(viewport);
-        render_ui_document(ui, scrolled, &mut ctx, window_id, engine_resources, world_resources, &mut self.world3d_states, &mut self.node_graph_states, &mut self.tiled_map_states, &mut self.icon_render_states, &mut self.board2d_states);
-        drop(ctx);
-        input.pointer_x = pointer.0;
-        input.pointer_y = pointer.1;
-        let generated_hits: Vec<_> = input.hit_targets.drain(generated_hit_start..).collect();
-        for hit in generated_hits {
-            for rect in hit_regions.iter().filter_map(|clip| Self::intersect_content_rect(hit.rect, *clip)) {
-                let mut clipped = hit.clone();
-                clipped.rect = rect;
-                input.register_hit(clipped);
-            }
-        }
-        draw.pop_scissor();
-    }
+
 
     //#endregion SilhouetteContent
 
-    #[cfg(test)]
-    fn render_overlay(&mut self, overlay: &mut DrawList, atlas: &mut FontAtlas, icons: &IconAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, width: f32, height: f32) {
-        match &self.overlay_state {
-            OverlayState::Search => {
-                let items: Vec<(String, String, usize)> = self.filtered_search_items().into_iter().enumerate().map(|(index, item)| (item.group, item.label, index)).collect();
-                self.render_action_list(overlay, atlas, input, theme, width * 0.5 - 200.0, theme.navbar_height + 8.0, 400.0, height * 0.55, "Search", &self.search_query, "shell.search.input", self.search_selected, &items, "shell.search.item");
-            }
-            OverlayState::Find => {
-                let items: Vec<(String, String, usize)> = self.filtered_find_items().into_iter().enumerate().map(|(index, item)| (item.category.clone().unwrap_or_default(), item.label.clone(), index)).collect();
-                self.render_action_list(overlay, atlas, input, theme, width * 0.5 - 200.0, theme.navbar_height + 8.0, 400.0, height * 0.55, "Find in page", &self.find_query, "shell.find.input", self.find_selected, &items, "shell.find.item");
-            }
-            OverlayState::Dropdown(id) if id == "example" => {
-                let examples = self.active_plugin_examples();
-                let mapped: Vec<(String, String, usize)> = examples.iter().enumerate().map(|(index, ex)| ("Examples".into(), ex.label.resolve(self.active_terminology(), self.active_locale()).to_string(), index)).collect();
-                self.render_example_dropdown(overlay, atlas, input, theme, width * 0.25, theme.navbar_height + 4.0, 220.0, &mapped, &examples);
-            }
-            OverlayState::Dropdown(_) => {}
-            OverlayState::None => {}
-        }
-        if let Some(kind) = self.sync_card_kind.as_deref() {
-            let card_w = 320.0;
-            let card_h = 132.0;
-            let card_x = (width - card_w) * 0.5;
-            let card_y = height - theme.footer_height - card_h - theme.gap_standard;
-            overlay.push_solid([card_x, card_y, card_w, card_h], theme.panel);
-            overlay.push_solid([card_x, card_y, card_w, theme.stroke_hairline], theme.border_normal);
-            chrome_text(overlay, atlas, input, theme, &format!("{kind} backbone"), card_x + theme.padding_standard, card_y + theme.padding_standard, theme.font_size_small, theme.text);
-            if let Some(uri) = &self.sync_backbone_uri {
-                chrome_text(overlay, atlas, input, theme, uri, card_x + theme.padding_standard, card_y + theme.padding_standard + theme.font_size_small + 4.0, theme.font_size_small, theme.text_muted);
-                #[cfg(not(target_arch = "wasm32"))]
-                if let Some(status) = &self.sync_status {
-                    chrome_text(overlay, atlas, input, theme, &Self::sync_status_label(status), card_x + theme.padding_standard, card_y + theme.padding_standard + (theme.font_size_small + 4.0) * 2.0, theme.font_size_small, theme.text_muted);
-                }
-            }
-            let input_y = card_y + 52.0;
-            let input_h = theme.control_height;
-            overlay.push_solid([card_x + theme.padding_standard, input_y, card_w - theme.padding_standard * 2.0, input_h], theme.input_bg);
-            chrome_text(
-                overlay,
-                atlas,
-                input,
-                theme,
-                if self.sync_card_draft.is_empty() { "/absolute/path" } else { &self.sync_card_draft },
-                card_x + theme.padding_standard + 8.0,
-                input_y + (input_h + theme.font_size_small) * 0.5 - 1.0,
-                theme.font_size_small,
-                theme.text,
-            );
-            let attach_rect = Rect::new(card_x + theme.padding_standard, card_y + card_h - theme.control_height - theme.padding_standard, 72.0, theme.control_height);
-            overlay.push_solid([attach_rect.x, attach_rect.y, attach_rect.w, attach_rect.h], theme.accent);
-            chrome_text(overlay, atlas, input, theme, "Attach", attach_rect.x + 12.0, attach_rect.y + (attach_rect.h + theme.font_size_small) * 0.5 - 1.0, theme.font_size_small, theme.active_foreground);
-            input.register_hit(HitTarget {
-                rect: attach_rect,
-                event: Some(ActionDescriptor {
-                    controller_id: "framework.sync".into(),
-                    action: "attach".into(),
-                    args: crate::action_args_json!({
-                        "path": self.sync_card_draft,
-                        "kind": kind,
-                    }),
-                }),
-                control_id: Some("framework.sync.attach".into()),
-                kind: HitKind::Button,
-                drag_axis: None,
-                drag_data: None,
-            });
-            if self.sync_backbone_uri.is_some() {
-                let detach_rect = Rect::new(attach_rect.x + attach_rect.w + theme.gap_standard, attach_rect.y, 72.0, theme.control_height);
-                overlay.push_solid([detach_rect.x, detach_rect.y, detach_rect.w, detach_rect.h], theme.button);
-                chrome_text(overlay, atlas, input, theme, "Detach", detach_rect.x + 10.0, detach_rect.y + (detach_rect.h + theme.font_size_small) * 0.5 - 1.0, theme.font_size_small, theme.text);
-                // 🗨️ Detaching drops the live sync connection — gate it behind a real confirmation
-                // (item 2 of the WP15/16 brief) instead of dispatching `detach` on a bare click. The
-                // hit target itself carries no `event` any more; `chrome_open_dialog` stages the same
-                // `ActionDescriptor` onto the dialog's own Confirm button (see `render_chrome_dialog`),
-                // so confirming still flows through the existing `framework.sync`/`detach` handler
-                // unchanged — only the gate is new.
-                input.register_hit(HitTarget { rect: detach_rect, event: None, control_id: Some("framework.sync.detach".into()), kind: HitKind::Button, drag_axis: None, drag_data: None });
-                if !self.chrome_build.dialog_open() && self.chrome_build.clicked_this_frame && detach_rect.contains(input.pointer_x, input.pointer_y) {
-                    self.chrome_build.open_dialog(ChromeDialogRequest {
-                        id: "framework.sync.detach".into(),
-                        title: "Detach sync backbone?".into(),
-                        body: format!("This disconnects the live {kind} backbone. You can reattach it later from the same panel."),
-                        confirm_label: "Detach".into(),
-                        confirm_action: ActionDescriptor { controller_id: "framework.sync".into(), action: "detach".into(), args: None },
-                        cancel_label: "Cancel".into(),
-                    });
-                }
-            }
-        }
-        // 📌️ ticket §C5 item 3 — explicit check-in's message-prompt card, the SAME hand-painted
-        // overlay-card idiom the `sync_card_kind` block above already establishes (this footer's
-        // immediate-mode chrome has no generic text-input widget — `checkin_dialog_draft`'s own field
-        // doc explains why a shell-owned keyboard-routed draft field is used instead). Real typed
-        // messages now reach `commitCheckpoint`, closing the "fixed message" gap
-        // `📓️w3-a-report.md` documented.
-        #[cfg(not(target_arch = "wasm32"))]
-        if let Some(draft) = &self.checkin_dialog_draft {
-            let card_w = 320.0;
-            let card_h = 104.0;
-            let card_x = (width - card_w) * 0.5;
-            let card_y = height - theme.footer_height - card_h - theme.gap_standard;
-            overlay.push_solid([card_x, card_y, card_w, card_h], theme.panel);
-            overlay.push_solid([card_x, card_y, card_w, theme.stroke_hairline], theme.border_normal);
-            chrome_text(overlay, atlas, input, theme, "Check-in message", card_x + theme.padding_standard, card_y + theme.padding_standard, theme.font_size_small, theme.text);
-            let input_y = card_y + 36.0;
-            let input_h = theme.control_height;
-            overlay.push_solid([card_x + theme.padding_standard, input_y, card_w - theme.padding_standard * 2.0, input_h], theme.input_bg);
-            chrome_text(overlay, atlas, input, theme, if draft.is_empty() { "check-in" } else { draft.as_str() }, card_x + theme.padding_standard + 8.0, input_y + (input_h + theme.font_size_small) * 0.5 - 1.0, theme.font_size_small, theme.text);
-            let commit_rect = Rect::new(card_x + theme.padding_standard, card_y + card_h - theme.control_height - theme.padding_standard, 72.0, theme.control_height);
-            overlay.push_solid([commit_rect.x, commit_rect.y, commit_rect.w, commit_rect.h], theme.accent);
-            chrome_text(overlay, atlas, input, theme, "Commit", commit_rect.x + 12.0, commit_rect.y + (commit_rect.h + theme.font_size_small) * 0.5 - 1.0, theme.font_size_small, theme.active_foreground);
-            input.register_hit(HitTarget {
-                rect: commit_rect,
-                event: Some(ActionDescriptor { controller_id: "framework.checkin".into(), action: "submit".into(), args: crate::action_args_json!({ "message": draft }) }),
-                control_id: Some("s-checkin-commit".into()),
-                kind: HitKind::Button,
-                drag_axis: None,
-                drag_data: None,
-            });
-            let cancel_rect = Rect::new(commit_rect.x + commit_rect.w + theme.gap_standard, commit_rect.y, 72.0, theme.control_height);
-            overlay.push_solid([cancel_rect.x, cancel_rect.y, cancel_rect.w, cancel_rect.h], theme.button);
-            chrome_text(overlay, atlas, input, theme, "Cancel", cancel_rect.x + 12.0, cancel_rect.y + (cancel_rect.h + theme.font_size_small) * 0.5 - 1.0, theme.font_size_small, theme.text);
-            input.register_hit(HitTarget {
-                rect: cancel_rect,
-                event: Some(ActionDescriptor { controller_id: "framework.checkin".into(), action: "cancel".into(), args: None }),
-                control_id: Some("s-checkin-cancel".into()),
-                kind: HitKind::Button,
-                drag_axis: None,
-                drag_data: None,
-            });
-        }
-        if let Some(menu) = &self.context_menu {
-            self.render_context_menu(overlay, atlas, icons, input, theme, menu, width, height);
-        }
-        self.render_chrome_tooltip(overlay, atlas, input, theme, width, height);
-        self.render_chrome_dialog(overlay, atlas, input, theme, width, height);
-        self.render_chrome_tour(overlay, atlas, input, theme, width, height);
-    }
+
 
     /// 💬️ Paints the armed tooltip (item 1) — `AtPointer` placement/dismissal policy sourced from
     /// `ui_wgpu::wgpu::OverlayKind::Tooltip` via a scratch `UiTree` (empty; `Point` anchors never touch it).
@@ -14436,98 +13119,11 @@ impl ShellState {
         }
     }
 
-    /// 🆔️ Resolves an introduction element id to every on-screen rect this frame: `ui.navbar`/`ui.footer`
-    /// are geometric fast paths; `framework.window.{segment}` matches every dock-stack silhouette (full
-    /// chrome outline bounds — tabs + gap + controls + body) whose own segment OR whose declared
-    /// window-kind segment equals the target (kind-level introduce/show must raise Top + Perspective
-    /// together, mirroring React's `data-element-alias`); everything else resolves through
-    /// `resolve_element_rect` (utility buttons/toggles; panel tabs via registration).
-    /// `…firstDraggable` resolves to the first draggable tree-row hit inside the tab body when available.
-    #[cfg(test)]
-    fn resolve_introduction_element_rects(&self, id: &str, theme: &Theme, width: f32, height: f32, hit_targets: &[HitTarget<ActionDescriptor>]) -> Vec<Rect> {
-        if id == semio_framework::UI_NAVBAR_ELEMENT_ID {
-            return vec![Rect::new(0.0, 0.0, width, theme.navbar_height)];
-        }
-        if id == semio_framework::UI_FOOTER_ELEMENT_ID {
-            return vec![Rect::new(0.0, height - theme.footer_height, width, theme.footer_height)];
-        }
-        // 🆔️ `…firstDraggable` only resolves at tour time: draggability is a property of the rendered tree
-        // row (`tree.label.*` hits carry `drag_axis`), never knowable from the panel-tab id alone. Ladder:
-        // first draggable row inside the tab's real body → the body itself → the tab-bar chip fallback
-        // (via the base `framework.panelTab.{tabId}` lookup `resolve_element_rect` already does).
-        if let Some(tab_id) = id.strip_prefix("framework.panelTab.").and_then(|rest| rest.strip_suffix(".firstDraggable")) {
-            let base_id = semio_framework::panel_tab_element_id(tab_id);
-            let Some(base_rect) = self.chrome_build.resolve_element_rect(&base_id) else {
-                return Vec::new();
-            };
-            if !self.chrome_build.element_rect_is_fallback(&base_id) {
-                if let Some(row) = hit_targets.iter().find(|hit| hit.drag_axis.is_some() && hit.control_id.as_deref().is_some_and(|cid| cid.starts_with("tree.label.")) && base_rect.contains(hit.rect.x + 1.0, hit.rect.y + 1.0)) {
-                    return vec![row.rect];
-                }
-            }
-            return vec![base_rect];
-        }
-        if let Some(rect) = self.chrome_build.resolve_element_rect(id) {
-            return vec![rect];
-        }
-        if let Some(segment) = id.strip_prefix("framework.window.") {
-            let segment = segment.split('.').next().unwrap_or(segment);
-            let kind_segments: std::collections::HashSet<String> =
-                self.session.as_ref().map(|session| session.app.window_kinds.iter().filter(|kind| semio_framework::element_id_segment(&kind.id) == segment).map(|kind| kind.id.clone()).collect()).unwrap_or_default();
-            let matches_window = |window_id: &str| {
-                semio_framework::element_id_segment(window_id) == segment
-                    || kind_segments.iter().any(|kind_id| window_id == kind_id || window_id.starts_with(&format!("{kind_id}-")) || semio_framework::element_id_segment(window_id).starts_with(&semio_framework::element_id_segment(kind_id)))
-            };
-            let silhouette_rects: Vec<Rect> = self.window_silhouettes.iter().filter(|(window_id, _)| matches_window(window_id)).map(|(_, silhouette)| silhouette.bounds).collect();
-            if !silhouette_rects.is_empty() {
-                return silhouette_rects;
-            }
-            return self.window_content_rects.iter().filter(|(window_id, _)| matches_window(window_id)).map(|(_, rect)| *rect).collect();
-        }
-        Vec::new()
-    }
 
-    /// 🪟️ Resolves every dock-stack silhouette for an introduction window id (kind or instance).
-    #[cfg(test)]
-    fn resolve_introduction_window_silhouettes(&self, id: &str) -> Vec<WindowSilhouette> {
-        let Some(segment) = id.strip_prefix("framework.window.") else {
-            return Vec::new();
-        };
-        let segment = segment.split('.').next().unwrap_or(segment);
-        let kind_segments: std::collections::HashSet<String> =
-            self.session.as_ref().map(|session| session.app.window_kinds.iter().filter(|kind| semio_framework::element_id_segment(&kind.id) == segment).map(|kind| kind.id.clone()).collect()).unwrap_or_default();
-        self.window_silhouettes
-            .iter()
-            .filter(|(window_id, _)| {
-                semio_framework::element_id_segment(window_id) == segment
-                    || kind_segments.iter().any(|kind_id| *window_id == kind_id || window_id.starts_with(&format!("{kind_id}-")) || semio_framework::element_id_segment(window_id).starts_with(&semio_framework::element_id_segment(kind_id)))
-            })
-            .map(|(_, silhouette)| silhouette.clone())
-            .collect()
-    }
 
-    /// 🆔️ Convenience: first/only rect for an introduction id (info-box anchoring + single-target pulse).
-    #[cfg(test)]
-    fn resolve_introduction_element_rect(&self, id: &str, theme: &Theme, width: f32, height: f32, hit_targets: &[HitTarget<ActionDescriptor>]) -> Option<Rect> {
-        let rects = self.resolve_introduction_element_rects(id, theme, width, height, hit_targets);
-        match rects.as_slice() {
-            [] => None,
-            [only] => Some(*only),
-            many => {
-                let mut min_x = f32::INFINITY;
-                let mut min_y = f32::INFINITY;
-                let mut max_x = f32::NEG_INFINITY;
-                let mut max_y = f32::NEG_INFINITY;
-                for rect in many {
-                    min_x = min_x.min(rect.x);
-                    min_y = min_y.min(rect.y);
-                    max_x = max_x.max(rect.x + rect.w);
-                    max_y = max_y.max(rect.y + rect.h);
-                }
-                Some(Rect::new(min_x, min_y, max_x - min_x, max_y - min_y))
-            }
-        }
-    }
+
+
+
 
     /// 🎓️ The currently active introduction step (if a tour is running and its index still resolves) —
     /// shared by every wgpu tour touchpoint beyond painting (reveal, advance-by-doing, keyboard) so they
@@ -14669,799 +13265,36 @@ impl ShellState {
         self.chrome_build.advance_introduction(intro.steps.len());
     }
 
-    /// 🎓️ Paints the current introduction-tour step (item 3) — visual parity with `ui/js/react/index.tsx`'s
-    /// `UIIntroduction`, which now renders one fullscreen veil div and raises the introduced/shown
-    /// element's chrome unit above it via z-index. This painter achieves the identical *pixels* by solid
-    /// bands tiled around the `introduce`/`show` element ids that resolved to a rect this frame instead —
-    /// see `introduction_veil_bands`'s doc for why that's the correct approach here, not a shortcut. The
-    /// `introduce` rect pulses an inset ring (`introduced_pulse_thickness`), and the info box anchors
-    /// beside it via `resolve_introduction_placement`. Ids that don't resolve to a rect (see
-    /// `resolve_introduction_element_rect`'s doc comment for the current registration gaps) fall back to
-    /// a centered box with no cutout, same as a `None` `introduce`.
-    #[cfg(test)]
-    fn render_chrome_tour(&mut self, overlay: &mut DrawList, atlas: &mut FontAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, width: f32, height: f32) {
-        let Some(session) = self.session.as_ref() else {
-            self.chrome_build.tour_state = None;
-            return;
-        };
-        let Some(intro) = session.app.introduction.as_ref() else {
-            return;
-        };
-        // 🎓️ Auto-start once per app per session, the first frame this app_id is seen — `w3-prefs-i18n-themes`
-        // landed `read_stored_introduction_seen`/`write_stored_introduction_seen` (byte-identical to
-        // `ui/js/react/index.tsx`'s `readStoredIntroductionSeen`/`writeStoredIntroductionSeen`) explicitly for
-        // this wiring (see that function's own doc comment). The owned per-app latch guards against
-        // re-triggering every frame after the user skips/finishes within the same still-open session.
-        let already_considered = self.chrome_build.tour_auto_considered.as_deref() == Some(session.app.id.as_str());
-        if !already_considered {
-            self.chrome_build.tour_auto_considered = Some(session.app.id.clone());
-            if !self.chrome_build.introduction_was_seen(&session.app.id) && self.chrome_build.tour_state.is_none() {
-                self.chrome_build.start_introduction();
-            }
-        }
-        let Some(step_index) = self.chrome_build.tour_state.as_ref().map(|state| state.step_index) else {
-            return;
-        };
-        let Some(step) = intro.steps.get(step_index) else {
-            self.chrome_build.tour_state = None;
-            return;
-        };
 
-        let introduce_rects = step.introduce.as_deref().map(|id| self.resolve_introduction_element_rects(id, theme, width, height, &input.hit_targets)).unwrap_or_default();
-        let introduce_rect = step.introduce.as_deref().and_then(|id| self.resolve_introduction_element_rect(id, theme, width, height, &input.hit_targets));
-        let show_rects: Vec<Rect> = step.show.iter().flat_map(|id| self.resolve_introduction_element_rects(id, theme, width, height, &input.hit_targets)).collect();
-        let cutouts: Vec<Rect> = introduce_rects.iter().copied().chain(show_rects.iter().copied()).collect();
-        let bands = introduction_veil_bands(width, height, &cutouts);
-        // 🎓️ A targeted step that hasn't mounted yet (a folded utility bar/panel) must not trap the user
-        // behind an opaque-to-clicks veil — only screen-style steps (`introduce == None`) and steps whose
-        // target did resolve block pointer events; `show` rects alone also count as a resolved target.
-        let veil_blocks_pointer = step.introduce.is_none() || introduce_rect.is_some() || !show_rects.is_empty();
-        for band in &bands {
-            overlay.push_solid([band.x, band.y, band.w, band.h], Rgba::new(0.0, 0.0, 0.0, 0.35));
-            if veil_blocks_pointer {
-                input.register_hit(HitTarget { rect: *band, event: None, control_id: Some("shell.tour.veil".to_string()), kind: HitKind::Generic, drag_axis: None, drag_data: None });
-            }
-        }
-        let introduce_silhouettes = step.introduce.as_deref().map(|id| self.resolve_introduction_window_silhouettes(id)).unwrap_or_default();
-        let thickness = introduced_pulse_thickness(chrome_now_ms(), theme.stroke_hairline, 3.0);
-        if introduce_silhouettes.is_empty() {
-            for rect in &introduce_rects {
-                let ring = rect.inset(-thickness * 0.5);
-                overlay.push_solid([ring.x, ring.y, ring.w, thickness], theme.focus_ring);
-                overlay.push_solid([ring.x, ring.y + ring.h - thickness, ring.w, thickness], theme.focus_ring);
-                overlay.push_solid([ring.x, ring.y, thickness, ring.h], theme.focus_ring);
-                overlay.push_solid([ring.x + ring.w - thickness, ring.y, thickness, ring.h], theme.focus_ring);
-            }
-        } else {
-            for silhouette in &introduce_silhouettes {
-                push_window_silhouette_border(overlay, silhouette, thickness, theme.focus_ring);
-            }
-        }
 
-        let is_de = self.locale_id == "de";
-        // 🎓️ Logos (Part B's "info box" item) reuse the existing UI-image pipeline verbatim: `resolve_ui_image`
-        // queues/decodes async, returning `None` until cached — an un-cached logo is simply skipped this
-        // frame (it appears once its fetch lands, same as any other async `Image` node). Sized to a fixed
-        // row height at natural aspect ratio ("aspect-sum row math"), dark-mode picks `dark_src` when set.
-        let is_dark = theme_is_dark(theme);
-        let logo_h = 28.0_f32;
-        let resolved_logos: Vec<(String, f32)> = step
-            .logos
-            .iter()
-            .enumerate()
-            .filter_map(|(index, logo)| {
-                let src = if is_dark { logo.dark_src.as_deref().filter(|src| !src.is_empty()).unwrap_or(logo.src.as_str()) } else { logo.src.as_str() };
-                let (key, natural) = resolve_ui_image(&format!("shell.tour.logo.{index}"), src);
-                let key = key?;
-                let (nw, nh) = natural.filter(|(w, h)| *w > 0 && *h > 0).unwrap_or((1, 1));
-                Some((key, logo_h * nw as f32 / nh as f32))
-            })
-            .collect();
-        let logos_row_h = if resolved_logos.is_empty() { 0.0 } else { logo_h + theme.gap_standard };
 
-        let box_w = 320.0_f32;
-        let box_h = 168.0_f32 + logos_row_h;
-        let (x, y) = resolve_introduction_placement(step.placement, introduce_rect, (box_w, box_h), (width, height));
-        overlay.push_glass([x, y, box_w, box_h], theme.border_radius, theme.glass(Level::Dialog));
-        let pad = theme.padding_standard;
-        if !resolved_logos.is_empty() {
-            let total_w: f32 = resolved_logos.iter().map(|(_, w)| *w).sum::<f32>() + theme.gap_standard * (resolved_logos.len() as f32 - 1.0);
-            let mut lx = x + ((box_w - total_w) * 0.5).max(pad);
-            for (key, w) in &resolved_logos {
-                overlay.push_raster_quad(key, [lx, y + pad, *w, logo_h], [0.0, 0.0, 1.0, 1.0], 1.0);
-                lx += w + theme.gap_standard;
-            }
-        }
-        chrome_text(overlay, atlas, input, theme, step.title.resolve(self.active_terminology(), self.active_locale()), x + pad, y + pad + logos_row_h + theme.font_size_body, theme.font_size_body, theme.text);
-        chrome_text(
-            overlay,
-            atlas,
-            input,
-            theme,
-            step.body.resolve(self.active_terminology(), self.active_locale()),
-            x + pad,
-            y + pad + logos_row_h + theme.font_size_body + theme.gap_standard + theme.font_size_small,
-            theme.font_size_small,
-            theme.text_muted,
-        );
-        chrome_text(overlay, atlas, input, theme, &format!("{} / {}", step_index + 1, intro.steps.len()), x + box_w - pad - 40.0, y + pad + logos_row_h + theme.font_size_body, theme.font_size_small, theme.text_muted);
-        let btn_h = theme.control_height;
-        let is_last = step_index + 1 >= intro.steps.len();
-        let next_label = shell_chrome_string(if is_last { "introduction.done" } else { "introduction.next" }, is_de);
-        let advance_by_button = step.interactions.is_empty();
-        let next_rect = Rect::new(x + box_w - pad - 90.0, y + box_h - pad - btn_h, 90.0, btn_h);
-        let skip_rect = Rect::new(x + pad, y + box_h - pad - btn_h, 70.0, btn_h);
-        let back_rect = Rect::new(next_rect.x - 8.0 - 70.0, y + box_h - pad - btn_h, 70.0, btn_h);
-        overlay.push_rounded([skip_rect.x, skip_rect.y, skip_rect.w, skip_rect.h], theme.button, theme.border_radius);
-        chrome_text(overlay, atlas, input, theme, shell_chrome_string("introduction.skip", is_de), skip_rect.x + 10.0, skip_rect.y + (skip_rect.h + theme.font_size_small) * 0.5 - 1.0, theme.font_size_small, theme.text);
-        if step_index > 0 {
-            overlay.push_rounded([back_rect.x, back_rect.y, back_rect.w, back_rect.h], theme.button, theme.border_radius);
-            chrome_text(overlay, atlas, input, theme, shell_chrome_string("introduction.back", is_de), back_rect.x + 10.0, back_rect.y + (back_rect.h + theme.font_size_small) * 0.5 - 1.0, theme.font_size_small, theme.text);
-            input.register_hit(HitTarget { rect: back_rect, event: None, control_id: Some(format!("shell.tour.{}.back", step.id)), kind: HitKind::Button, drag_axis: None, drag_data: None });
-        }
-        if advance_by_button {
-            overlay.push_rounded([next_rect.x, next_rect.y, next_rect.w, next_rect.h], theme.accent, theme.border_radius);
-            chrome_text(overlay, atlas, input, theme, next_label, next_rect.x + 10.0, next_rect.y + (next_rect.h + theme.font_size_small) * 0.5 - 1.0, theme.font_size_small, theme.active_foreground);
-            input.register_hit(HitTarget { rect: next_rect, event: None, control_id: Some(format!("shell.tour.{}.next", step.id)), kind: HitKind::Button, drag_axis: None, drag_data: None });
-        } else {
-            // ✅️ Checklist hint: each interaction's label, ✓️-prefixed once completed, {n}.-prefixed when
-            // `ordered` so the user knows what's next — single line, this painter has no multi-line text.
-            let completed = self.chrome_build.tour_state.as_ref().map(|state| state.completed_interactions.clone()).unwrap_or_default();
-            let hint = step
-                .interactions
-                .iter()
-                .enumerate()
-                .map(|(i, interaction)| {
-                    let mark = if completed.contains(&i) {
-                        "✓️".to_string()
-                    } else if step.ordered {
-                        format!("{}.", i + 1)
-                    } else {
-                        "•".to_string()
-                    };
-                    format!("{mark} {}", interaction.label)
-                })
-                .collect::<Vec<_>>()
-                .join("   ");
-            chrome_text(overlay, atlas, input, theme, &hint, next_rect.x - 120.0, next_rect.y + (btn_h + theme.font_size_small) * 0.5 - 1.0, theme.font_size_small, theme.text_muted);
-        }
-        input.register_hit(HitTarget { rect: skip_rect, event: None, control_id: Some(format!("shell.tour.{}.skip", step.id)), kind: HitKind::Button, drag_axis: None, drag_data: None });
-        if self.chrome_build.clicked_this_frame {
-            let (px, py) = (input.pointer_x, input.pointer_y);
-            if advance_by_button && next_rect.contains(px, py) {
-                if is_last {
-                    self.chrome_build.mark_introduction_seen(&session.app.id);
-                }
-                self.chrome_build.advance_introduction(intro.steps.len());
-            } else if skip_rect.contains(px, py) {
-                self.chrome_build.mark_introduction_seen(&session.app.id);
-                self.chrome_build.skip_introduction();
-            } else if step_index > 0 && back_rect.contains(px, py) {
-                self.chrome_build.back_introduction();
-            }
-        }
-    }
 
-    #[cfg(test)]
-    fn render_example_dropdown(&self, overlay: &mut DrawList, atlas: &mut FontAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, x: f32, y: f32, w: f32, items: &[(String, String, usize)], examples: &[ExampleDefinition]) {
-        let row_h = theme.control_height;
-        let h = items.len() as f32 * row_h + theme.padding_standard * 2.0;
-        overlay.push_glass([x, y, w, h.max(row_h + 8.0)], theme.border_radius, theme.glass(Level::Menu));
-        for (index, (_group, label, _)) in items.iter().enumerate() {
-            let row = Rect::new(x + theme.gap_standard, y + theme.gap_standard + index as f32 * row_h, w - theme.gap_standard * 2.0, row_h);
-            let selected = examples.get(index).is_some_and(|ex| self.active_example_id.as_deref() == Some(ex.id.as_str()));
-            let hovered = row.contains(input.pointer_x, input.pointer_y);
-            let bg = if selected {
-                theme.selected
-            } else if hovered {
-                theme.button_hover
-            } else {
-                theme.button
-            };
-            overlay.push_rounded([row.x, row.y, row.w, row.h], bg, theme.border_radius);
-            chrome_text(overlay, atlas, input, theme, label, row.x + theme.padding_standard, row.y + (row.h + theme.font_size_small) * 0.5 - 1.0, theme.font_size_small, if selected || hovered { theme.active_foreground } else { theme.text });
-            if let Some(example) = examples.get(index) {
-                input.register_hit(HitTarget { rect: row, event: None, control_id: Some(format!("shell.example.{}", example.id)), kind: HitKind::DropdownItem, drag_axis: None, drag_data: None });
-            }
-        }
-    }
 
-    #[cfg(test)]
-    fn render_action_list(
-        &self,
-        overlay: &mut DrawList,
-        atlas: &mut FontAtlas,
-        input: &mut InputState<ActionDescriptor>,
-        theme: &Theme,
-        x: f32,
-        y: f32,
-        w: f32,
-        h: f32,
-        title: &str,
-        query: &str,
-        input_id: &str,
-        selected: usize,
-        items: &[(String, String, usize)],
-        item_prefix: &str,
-    ) {
-        overlay.push_glass([x, y, w, h], theme.border_radius, theme.glass(Level::Menu));
-        chrome_text(overlay, atlas, input, theme, title, x + 12.0, y + 20.0, theme.font_size_body, theme.text);
-        let filter_rect = Rect::new(x + 8.0, y + 32.0, w - 16.0, theme.control_height);
-        overlay.push_rounded([filter_rect.x, filter_rect.y, filter_rect.w, filter_rect.h], theme.input_bg, theme.border_radius);
-        let display_query = if query.is_empty() { "Type to filter…" } else { query };
-        chrome_text(overlay, atlas, input, theme, display_query, filter_rect.x + 8.0, filter_rect.y + (filter_rect.h + theme.font_size_small) * 0.5 - 1.0, theme.font_size_small, if query.is_empty() { theme.text_muted } else { theme.text });
-        input.register_hit(HitTarget { rect: filter_rect, event: None, control_id: Some(input_id.into()), kind: HitKind::Input, drag_axis: None, drag_data: None });
-        let list_top = y + 32.0 + theme.control_height + 8.0;
-        let list_h = h - (list_top - y) - 8.0;
-        let mut row_y = list_top;
-        let mut last_group = String::new();
-        for (group, label, index) in items {
-            if !group.is_empty() && group != &last_group {
-                chrome_text(overlay, atlas, input, theme, group, x + 12.0, row_y + 12.0, theme.font_size_small, theme.text_muted);
-                row_y += 18.0;
-                last_group = group.clone();
-            }
-            let row = Rect::new(x + 8.0, row_y, w - 16.0, theme.control_height);
-            if row_y + theme.control_height > list_top + list_h {
-                break;
-            }
-            let hovered = row.contains(input.pointer_x, input.pointer_y);
-            let is_selected = *index == selected;
-            let bg = if is_selected {
-                theme.selected
-            } else if hovered {
-                theme.button_hover
-            } else {
-                theme.button
-            };
-            overlay.push_rounded([row.x, row.y, row.w, row.h], bg, theme.border_radius);
-            chrome_text(overlay, atlas, input, theme, label, row.x + 8.0, row.y + (row.h + theme.font_size_small) * 0.5 - 1.0, theme.font_size_small, if is_selected || hovered { theme.active_foreground } else { theme.text });
-            input.register_hit(HitTarget { rect: row, event: None, control_id: Some(format!("{item_prefix}.{index}")), kind: HitKind::DropdownItem, drag_axis: None, drag_data: None });
-            row_y += theme.control_height + 2.0;
-        }
-    }
 
-    #[cfg(test)]
-    fn measures_for_kind(kind: &semio_framework::WindowKindDefinition) -> &[WindowMeasure] {
-        kind.options.measures.as_slice()
-    }
 
-    #[cfg(test)]
-    fn engagement_for_kind(&self, kind: &semio_framework::WindowKindDefinition) -> Option<WindowEngagement> {
-        self.window_engagements.get(&kind.id).cloned().or_else(|| kind.options.engagement.as_option().cloned()).or_else(|| if kind.surface_kind.is_viewport() { Some(ui_wgpu::wgpu::default_viewport_engagement()) } else { None })
-    }
 
-    #[cfg(test)]
-    fn render_window_measures_rail(
-        &mut self,
-        draw: &mut DrawList,
-        overlay: &mut Option<&mut DrawList>,
-        atlas: &mut FontAtlas,
-        icons: &IconAtlas,
-        input: &mut InputState<ActionDescriptor>,
-        theme: &Theme,
-        content: &Rect,
-        window_id: &str,
-        kind: &semio_framework::WindowKindDefinition,
-    ) -> WindowMeasuresRailOutcome {
-        let inset = theme.gap_standard;
-        let active_utility = self.active_utility_by_window.get(window_id).map(String::as_str);
-        let Ok(partition) = ui_wgpu::wgpu::partition_window_measures(Self::measures_for_kind(kind), active_utility) else {
-            return WindowMeasuresRailOutcome { chip_hit: None, reserve_width: 0.0 };
-        };
-        let measures = partition.general;
-        if measures.is_empty() {
-            return WindowMeasuresRailOutcome { chip_hit: None, reserve_width: 0.0 };
-        }
-        let folded = self.measures_folded.get(window_id).copied().unwrap_or(true);
-        let expanded = self.measures_expanded.get(window_id).copied().unwrap_or(false);
-        let is_de = self.locale_id == "de";
-        (|chrome: &mut DrawList, select_overlay: &mut Option<&mut DrawList>| {
-            if folded {
-                let item = ChromeGroupItem { control_id: "", icon_id: Some("chevron-left"), label: Some(shell_chrome_string("common.windowOptions", is_de)), active: false, disabled: false, kind: HitKind::Button };
-                let chip_w = measure_chrome_group_item(atlas, theme, &item);
-                let chip = Rect::new(content.x + content.w - chip_w - inset, content.y + inset, chip_w, theme.control_height);
-                render_chrome_group(chrome, atlas, icons, input, theme, chip, &[item], false);
-                return WindowMeasuresRailOutcome { chip_hit: Some((chip, format!("shell.measures.unfold.{window_id}"))), reserve_width: chip_w + inset };
-            }
-            let max_w = window_overlay_max_width(content.w, inset);
-            let default_w = *self.measures_width.get(window_id).unwrap_or(&theme.window_measures_default_width);
-            let width = if expanded { content.w } else { default_w.clamp(theme.panel_min_width, theme.panel_max_width).min(max_w) };
-            let Some(body_content_h) = measure_window_measures_body_height(theme, &self.collapsed_sections, measures.iter().copied()) else {
-                return WindowMeasuresRailOutcome { chip_hit: None, reserve_width: 0.0 };
-            };
-            let rail_h = if expanded {
-                content.h
-            } else {
-                let card_h = theme.panel_header_height + theme.gap_standard * 2.0 + body_content_h;
-                card_h.min((content.h - inset * 2.0).max(theme.panel_header_height))
-            };
-            let (rail_x, rail_y) = if expanded { (content.x, content.y) } else { (content.x + content.w - width - inset, content.y + inset) };
-            let rail = Rect::new(rail_x, rail_y, width, rail_h);
-            let glass = chrome.push_glass([rail.x, rail.y, rail.w, rail.h], theme.border_radius, theme.glass(Level::Pane));
-            chrome.begin_glass_content(glass);
-            let header = Rect::new(rail.x, rail.y, rail.w, theme.panel_header_height);
-            chrome.push_solid([header.x, header.y, header.w, header.h], theme.navbar);
-            let focus_label = if expanded { shell_chrome_string("common.unfocus", is_de) } else { shell_chrome_string("common.focus", is_de) };
-            let focus_item = ChromeGroupItem { control_id: "shell.measures.focus", icon_id: Some(if expanded { "minimize-2" } else { "maximize-2" }), label: Some(focus_label), active: false, disabled: false, kind: HitKind::Button };
-            let fold_item = ChromeGroupItem { control_id: "shell.measures.fold", icon_id: Some("chevron-right"), label: Some(shell_chrome_string("common.windowOptions", is_de)), active: false, disabled: false, kind: HitKind::Button };
-            let focus_w = measure_chrome_group_item(atlas, theme, &focus_item);
-            render_chrome_group(chrome, atlas, icons, input, theme, Rect::new(header.x, header.y, focus_w, header.h), &[focus_item], true);
-            input.register_hit(HitTarget { rect: Rect::new(header.x, header.y, focus_w, header.h), event: None, control_id: Some(format!("shell.measures.focus.{window_id}")), kind: HitKind::Button, drag_axis: None, drag_data: None });
-            let fold_w = measure_chrome_group_item(atlas, theme, &fold_item);
-            render_chrome_group(chrome, atlas, icons, input, theme, Rect::new(header.x + header.w - fold_w, header.y, fold_w, header.h), &[fold_item], true);
-            input.register_hit(HitTarget {
-                rect: Rect::new(header.x + header.w - fold_w, header.y, fold_w, header.h),
-                event: None,
-                control_id: Some(format!("shell.measures.fold.{window_id}")),
-                kind: HitKind::Button,
-                drag_axis: None,
-                drag_data: None,
-            });
-            let body = Rect::new(rail.x + theme.gap_standard, rail.y + theme.panel_header_height + theme.gap_standard, rail.w - theme.gap_standard * 2.0, rail.h - theme.panel_header_height - theme.gap_standard * 2.0);
-            let mut y = body.y;
-            for measure in measures.iter().copied() {
-                let Some(height) = self.render_window_measure_tree(chrome, select_overlay, atlas, icons, input, theme, Rect::new(body.x, y, body.w, body.h), measure) else {
-                    return WindowMeasuresRailOutcome { chip_hit: None, reserve_width: 0.0 };
-                };
-                y += height;
-            }
-            if !expanded {
-                let resize = Rect::new(rail.x - 3.0, rail.y, 6.0, rail.h);
-                input.register_hit(HitTarget { rect: resize, event: None, control_id: Some(format!("shell.measures.resize.{window_id}")), kind: HitKind::PanelResize, drag_axis: Some(DragAxis::Horizontal), drag_data: None });
-            }
-            chrome.end_glass_content();
-            WindowMeasuresRailOutcome { chip_hit: None, reserve_width: if expanded { width } else { width + inset } }
-        })(draw, overlay)
-    }
 
-    /// 🎯️ Bottom-left utility-scoped measure strip: the utility-scoped bucket of `partition_window_measures`,
-    /// rendered as a compact overlay directly above the footer utility bar (no detached "Utility Options" card).
-    /// Reuses [`Self::render_window_measure`] so Select/Slider/Toggle controls behave exactly as in the
-    /// general Measures rail.
-    #[cfg(test)]
-    fn render_utility_options_rail(
-        &mut self,
-        draw: &mut DrawList,
-        overlay: &mut Option<&mut DrawList>,
-        atlas: &mut FontAtlas,
-        icons: &IconAtlas,
-        input: &mut InputState<ActionDescriptor>,
-        theme: &Theme,
-        content: &Rect,
-        window_id: &str,
-        kind: &semio_framework::WindowKindDefinition,
-    ) {
-        let inset = theme.gap_standard;
-        let active_utility = self.active_utility_by_window.get(window_id).map(String::as_str);
-        let Ok(partition) = ui_wgpu::wgpu::partition_window_measures(Self::measures_for_kind(kind), active_utility) else {
-            return;
-        };
-        let utility_options = partition.utility_options;
-        if utility_options.is_empty() {
-            return;
-        }
-        (|chrome: &mut DrawList, select_overlay: &mut Option<&mut DrawList>| {
-            let width = theme.window_measures_default_width.clamp(theme.panel_min_width, theme.panel_max_width).min(window_overlay_max_width(content.w, inset));
-            let Some(body_content_h) = measure_window_measures_body_height(theme, &self.collapsed_sections, utility_options.iter().copied()) else {
-                return;
-            };
-            let card_h = body_content_h + theme.gap_standard * 2.0;
-            let footer_reserve = theme.footer_height + inset;
-            let rail = Rect::new(content.x + inset, content.y + content.h - card_h - footer_reserve, width, card_h);
-            let glass = chrome.push_glass([rail.x, rail.y, rail.w, rail.h], theme.border_radius, theme.glass(Level::Pane));
-            chrome.begin_glass_content(glass);
-            let body = Rect::new(rail.x + theme.gap_standard, rail.y + theme.gap_standard, rail.w - theme.gap_standard * 2.0, rail.h - theme.gap_standard * 2.0);
-            let mut y = body.y;
-            for measure in utility_options.iter().copied() {
-                let Some(height) = self.render_window_measure_tree(chrome, select_overlay, atlas, icons, input, theme, Rect::new(body.x, y, body.w, body.h), measure) else {
-                    return;
-                };
-                y += height;
-            }
-            chrome.end_glass_content();
-        })(draw, overlay)
-    }
 
-    #[cfg(test)]
-    fn render_window_measure_tree(
-        &mut self,
-        draw: &mut DrawList,
-        overlay: &mut Option<&mut DrawList>,
-        atlas: &mut FontAtlas,
-        icons: &IconAtlas,
-        input: &mut InputState<ActionDescriptor>,
-        theme: &Theme,
-        bounds: Rect,
-        measure: &WindowMeasure,
-    ) -> Option<f32> {
-        let mut stack = UiFixedList::<WindowMeasureRenderFrame<'_>, WINDOW_MEASURE_TRAVERSAL_CAPACITY>::default();
-        stack.try_push(WindowMeasureRenderFrame { measure, inset: 0.0 }).ok()?;
-        let mut y = bounds.y;
-        while let Some(frame) = stack.pop() {
-            let height = match frame.measure {
-                WindowMeasure::Group { .. } | WindowMeasure::Toggle { .. } => theme.control_height,
-                WindowMeasure::Select { .. } | WindowMeasure::Slider { .. } => theme.control_height + 16.0,
-            };
-            let leaf_bounds = Rect::new(bounds.x + frame.inset, y, (bounds.w - frame.inset).max(0.0), height);
-            self.render_window_measure_one(draw, overlay, atlas, icons, input, theme, leaf_bounds, frame.measure);
-            y += height;
-            if let WindowMeasure::Group { id, default_open, children, .. } = frame.measure {
-                let open = !self.collapsed_sections.get(id).copied().unwrap_or(!default_open.unwrap_or(false));
-                if open {
-                    for child in children.iter().rev() {
-                        stack.try_push(WindowMeasureRenderFrame { measure: child, inset: frame.inset + 12.0 }).ok()?;
-                    }
-                }
-            }
-        }
-        Some(y - bounds.y)
-    }
 
-    #[cfg(test)]
-    fn render_window_measure_one(&mut self, draw: &mut DrawList, overlay: &mut Option<&mut DrawList>, atlas: &mut FontAtlas, icons: &IconAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, bounds: Rect, measure: &WindowMeasure) {
-        use ui_wgpu::wgpu::widgets::{render_window_measure_select, render_window_measure_slider, render_window_measure_toggle};
-        let y = bounds.y;
-        match measure {
-            WindowMeasure::Group { id, label, default_open, .. } => {
-                let open = !self.collapsed_sections.get(id).copied().unwrap_or(!default_open.unwrap_or(false));
-                chrome_text(draw, atlas, input, theme, &format!("{} {}", if open { "v" } else { ">" }, label), bounds.x, y + 14.0, theme.font_size_small, theme.text);
-                input.register_hit(HitTarget { rect: Rect::new(bounds.x, y, bounds.w, theme.control_height), event: None, control_id: Some(format!("shell.measure.group.{id}")), kind: HitKind::Button, drag_axis: None, drag_data: None });
-            }
-            WindowMeasure::Select { id, label, value, items, on_change } => {
-                if let Some(label) = label {
-                    chrome_text(draw, atlas, input, theme, label, bounds.x, y + 14.0, theme.font_size_small, theme.text_muted);
-                }
-                let _ = self.window_measure_actions.try_upsert(id, on_change, WindowMeasureActionKind::Select);
-                let rect = Rect::new(bounds.x, y + 16.0, bounds.w, theme.control_height);
-                let scroll_offsets = &mut self.scroll_offsets;
-                let collapsed_sections = &mut self.collapsed_sections;
-                let open_selects = &mut self.open_selects;
-                let mut ctx = framework_widget_context(draw, overlay.as_deref_mut(), atlas, Some(icons), input, theme, scroll_offsets, collapsed_sections, open_selects, None);
-                render_window_measure_select(id, value, items, rect, &mut ctx);
-            }
-            WindowMeasure::Slider { id, label, value, min, max, step, ready, loading: _, waiting: _, disabled, reveal: _, on_change } => {
-                if let Some(label) = label {
-                    chrome_text(draw, atlas, input, theme, label, bounds.x, y + 14.0, theme.font_size_small, theme.text_muted);
-                }
-                if !disabled.unwrap_or(false) {
-                    let _ = self.window_measure_actions.try_upsert(id, on_change, WindowMeasureActionKind::Slider);
-                }
-                let rect = Rect::new(bounds.x, y + 16.0, bounds.w, theme.control_height);
-                let scroll_offsets = &mut self.scroll_offsets;
-                let collapsed_sections = &mut self.collapsed_sections;
-                let open_selects = &mut self.open_selects;
-                let mut ctx = framework_widget_context(draw, overlay.as_deref_mut(), atlas, Some(icons), input, theme, scroll_offsets, collapsed_sections, open_selects, None);
-                render_window_measure_slider(id, *value, *min, *max, step.unwrap_or(0.01), *ready, disabled.unwrap_or(false), rect, &mut ctx);
-            }
-            WindowMeasure::Toggle { id, icon_id, label, pressed, text, on_change } => {
-                let _ = self.window_measure_actions.try_upsert(id, on_change, WindowMeasureActionKind::Toggle(*pressed));
-                let rect = Rect::new(bounds.x, y, bounds.w, theme.control_height);
-                let scroll_offsets = &mut self.scroll_offsets;
-                let collapsed_sections = &mut self.collapsed_sections;
-                let open_selects = &mut self.open_selects;
-                let mut ctx = framework_widget_context(draw, overlay.as_deref_mut(), atlas, Some(icons), input, theme, scroll_offsets, collapsed_sections, open_selects, None);
-                render_window_measure_toggle(id, icon_id.clone(), *pressed, text.as_deref().or(label.as_deref()), rect, &mut ctx);
-            }
-        }
-    }
 
-    #[cfg(test)]
-    fn render_window_engagement_rail(
-        &mut self,
-        draw: &mut DrawList,
-        overlay: &mut Option<&mut DrawList>,
-        atlas: &mut FontAtlas,
-        icons: &IconAtlas,
-        input: &mut InputState<ActionDescriptor>,
-        theme: &Theme,
-        content: &Rect,
-        window_id: &str,
-        kind: &semio_framework::WindowKindDefinition,
-        measures_reserve: f32,
-    ) -> Option<(Rect, String)> {
-        let inset = theme.gap_standard;
-        let measures_expanded = self.measures_expanded.get(window_id).copied().unwrap_or(false);
-        if measures_expanded {
-            return None;
-        }
-        let window_active = self.active_window_id.as_deref() == Some(window_id);
-        if !window_active {
-            return None;
-        }
-        let engagement = self.engagement_for_kind(kind);
-        let Some(engagement) = engagement else {
-            return None;
-        };
-        let activated = self.engagement_activated.get(window_id).copied().unwrap_or(false);
-        (|chrome: &mut DrawList, select_overlay: &mut Option<&mut DrawList>| {
-            if !activated {
-                let item = ChromeGroupItem { control_id: "", icon_id: Some("chevron-right"), label: Some("Action"), active: false, disabled: false, kind: HitKind::Button };
-                let chip_w = measure_chrome_group_item(atlas, theme, &item);
-                let chip = Rect::new(content.x + inset, content.y + inset, chip_w, theme.control_height);
-                render_chrome_group(chrome, atlas, icons, input, theme, chip, &[item], false);
-                return Some((chip, format!("shell.engagement.toggle.{window_id}")));
-            }
-            let rail_w = engagement_rail_width(theme, content.w, inset, measures_reserve);
-            if rail_w <= 0.0 {
-                return None;
-            }
-            let body_content_h = measure_engagement_body_height(theme, &engagement);
-            let card_h = theme.panel_header_height + theme.gap_standard * 2.0 + body_content_h;
-            let rail_h = card_h.min((content.h - inset * 2.0).max(theme.panel_header_height));
-            let rail = Rect::new(content.x + inset, content.y + inset, rail_w, rail_h);
-            let glass = chrome.push_glass([rail.x, rail.y, rail.w, rail.h], theme.border_radius, theme.glass(Level::Pane));
-            chrome.begin_glass_content(glass);
-            let header = Rect::new(rail.x, rail.y, rail.w, theme.panel_header_height);
-            chrome.push_solid([header.x, header.y, header.w, header.h], theme.navbar);
-            let toggle_item = ChromeGroupItem { control_id: "shell.engagement.toggle", icon_id: Some("chevron-left"), label: Some("Action"), active: false, disabled: false, kind: HitKind::Button };
-            let toggle_w = measure_chrome_group_item(atlas, theme, &toggle_item);
-            let toggle_rect = Rect::new(header.x, header.y, toggle_w, header.h);
-            render_chrome_group(chrome, atlas, icons, input, theme, toggle_rect, &[toggle_item], true);
-            input.register_hit(HitTarget { rect: toggle_rect, event: None, control_id: Some(format!("shell.engagement.toggle.{window_id}")), kind: HitKind::Button, drag_axis: None, drag_data: None });
-            let mut y = rail.y + theme.panel_header_height + theme.gap_standard;
-            if let Some(options) = &engagement.options {
-                for option in options {
-                    let label = option.label.clone().unwrap_or_else(|| option.id.clone());
-                    let pressed = option.pressed.unwrap_or(false);
-                    let item = ChromeGroupItem { control_id: "shell.engagement.option", icon_id: None, label: Some(&label), active: pressed, disabled: false, kind: HitKind::Button };
-                    let item_w = measure_chrome_group_item(atlas, theme, &item);
-                    let rect = Rect::new(rail.x + 8.0, y, item_w, theme.control_height);
-                    render_chrome_group(chrome, atlas, icons, input, theme, rect, &[item], true);
-                    if let Some(action) = &option.action {
-                        input.register_hit(HitTarget { rect, event: Some(action.clone()), control_id: Some(format!("shell.engagement.option.{}.{}", window_id, option.id)), kind: HitKind::Button, drag_axis: None, drag_data: None });
-                    }
-                    y += theme.control_height + 4.0;
-                }
-            }
-            if let Some(input_spec) = &engagement.input {
-                self.render_engagement_input(chrome, select_overlay, atlas, icons, input, theme, Rect::new(rail.x + 8.0, y, rail.w - 16.0, theme.control_height * 2.0), window_id, input_spec, engagement.possible_engagements.as_deref());
-                y += theme.control_height * 2.0 + 8.0;
-            }
-            if let Some(control) = &engagement.control {
-                self.render_engagement_control(chrome, select_overlay, atlas, icons, input, theme, Rect::new(rail.x + 8.0, y, rail.w - 16.0, theme.control_height), control);
-                y += theme.control_height;
-            }
-            if let Some(status_rows) = &engagement.status {
-                for row in status_rows {
-                    y += theme.control_height;
-                    chrome_text(chrome, atlas, input, theme, &row.text, rail.x + 8.0, y, theme.font_size_small, theme.text_muted);
-                }
-            }
-            if let Some(possibles) = &engagement.possible_engagements {
-                for possible in possibles {
-                    y += theme.control_height + 2.0;
-                    let rect = Rect::new(rail.x + 8.0, y, rail.w - 16.0, theme.control_height);
-                    chrome.push_rounded([rect.x, rect.y, rect.w, rect.h], theme.button, theme.border_radius);
-                    chrome_text(chrome, atlas, input, theme, &possible.label, rect.x + 8.0, rect.y + (rect.h + theme.font_size_small) * 0.5 - 1.0, theme.font_size_small, theme.text);
-                    if let Some(action) = &possible.action {
-                        input.register_hit(HitTarget { rect, event: Some(action.clone()), control_id: Some(format!("shell.engagement.possible.{}.{}", window_id, possible.id)), kind: HitKind::Button, drag_axis: None, drag_data: None });
-                    }
-                }
-            }
-            chrome.end_glass_content();
-            None
-        })(draw, overlay)
-    }
 
-    #[cfg(test)]
-    fn render_engagement_input(
-        &mut self,
-        draw: &mut DrawList,
-        overlay: &mut Option<&mut DrawList>,
-        atlas: &mut FontAtlas,
-        icons: &IconAtlas,
-        input: &mut InputState<ActionDescriptor>,
-        theme: &Theme,
-        bounds: Rect,
-        window_id: &str,
-        spec: &WindowEngagementInput,
-        possibles: Option<&[ui_wgpu::wgpu::WindowEngagementPossible]>,
-    ) {
-        let id = spec.id.clone().unwrap_or_else(|| format!("engagement-input-{window_id}"));
-        let committed_value = self.engagement_inputs.get(&id).cloned().or_else(|| spec.value.clone()).unwrap_or_default();
-        // 👻️ Item 6: the live query for the ghost suffix is the in-progress edit buffer while focused
-        // (`InputState::text_buffer`, the same source the generic `Input` widget itself displays while
-        // focused), else the last-committed value — mirrors `engagementActiveInlineCompletion`'s own
-        // `query` input in `ui/js/react/index.tsx`.
-        let focused = input.focused_id.as_deref() == Some(id.as_str());
-        let live_query = if focused { input.text_view().to_string() } else { committed_value.clone() };
-        let node = ui_wgpu::wgpu::widgets::WidgetNode::Input { id: id.clone(), input_kind: "text".into(), value: committed_value, placeholder: spec.placeholder.clone(), commit: None, on_change: spec.on_change.clone() };
-        {
-            let scroll_offsets = &mut self.scroll_offsets;
-            let collapsed_sections = &mut self.collapsed_sections;
-            let open_selects = &mut self.open_selects;
-            let mut ctx = framework_widget_context(draw, overlay.as_deref_mut(), atlas, Some(icons), input, theme, scroll_offsets, collapsed_sections, open_selects, None);
-            ui_wgpu::wgpu::widgets::render_widget(&node, bounds, &mut ctx);
-        }
-        // #region GhostTextCompletion (item 6: engagement inline-completion ghost text)
-        // 👻️ Ports `engagementInlineCompletion`/`engagementCompletionSuffix` (`ui/js/react/index.tsx`) —
-        // the dimmed suffix drawn right after the live text, showing the top `possible_engagements`
-        // match's remaining characters.
-        let suffix = engagement_completion_suffix(&live_query, possibles);
-        if !suffix.is_empty() {
-            let text_padding = 8.0_f32;
-            let (query_w, _) = atlas.measure_text(&live_query, theme.font_size_small);
-            let ghost_x = bounds.x + text_padding + query_w;
-            let baseline_y = bounds.y + (theme.control_height + theme.font_size_small) * 0.5 - 1.0;
-            let mut ghost_color = theme.text_muted;
-            ghost_color.a *= 0.6;
-            chrome_text(draw, atlas, input, theme, &suffix, ghost_x, baseline_y, theme.font_size_small, ghost_color);
-            // 🖱️ Click-to-accept substitutes for the brief's "Tab or Right-arrow-at-end-of-input accepts"
-            // shortcut: this crate's keyboard queue (`InputState::pending_keys`/`queue_key`) is never
-            // populated anywhere in this codebase today (confirmed by grep across both crates) — real key
-            // events are handled directly inline in the off-limits `shell::ShellInput` region this wave,
-            // unreachable from here without editing it. See the report's honest scope-down.
-            let (suffix_w, _) = atlas.measure_text(&suffix, theme.font_size_small);
-            let ghost_rect = Rect::new(ghost_x, bounds.y, suffix_w.max(4.0), theme.control_height);
-            input.register_hit(HitTarget { rect: ghost_rect, event: None, control_id: Some(format!("shell.engagement.input.{id}.ghost-accept")), kind: HitKind::Generic, drag_axis: None, drag_data: None });
-            if let Some(accepted) = engagement_ghost_accept_on_click(ghost_rect, input.pointer_x, input.pointer_y, self.chrome_build.clicked_this_frame, &live_query, &suffix) {
-                self.engagement_inputs.insert(id.clone(), accepted.clone());
-                if focused {
-                    let accepted_len = accepted.len();
-                    input.focus_input_owned(id, accepted);
-                    input.cursor_pos = accepted_len;
-                }
-            }
-        }
-        // #endregion
-    }
 
-    #[cfg(test)]
-    fn render_engagement_control(
-        &mut self,
-        draw: &mut DrawList,
-        overlay: &mut Option<&mut DrawList>,
-        atlas: &mut FontAtlas,
-        icons: &IconAtlas,
-        input: &mut InputState<ActionDescriptor>,
-        theme: &Theme,
-        bounds: Rect,
-        control: &WindowEngagementControl,
-    ) {
-        use ui_wgpu::wgpu::widgets::{render_widget, WidgetNode};
-        let node = match control {
-            WindowEngagementControl::Slider { id, value, min, max, step, disabled, on_change, .. } => WidgetNode::Slider {
-                id: id.clone().unwrap_or_else(|| "engagement-slider".into()),
-                value: *value,
-                min: *min,
-                max: *max,
-                step: step.unwrap_or(0.01),
-                ready: None,
-                disabled: disabled.unwrap_or(false),
-                on_change: if disabled.unwrap_or(false) { None } else { on_change.clone() },
-            },
-            WindowEngagementControl::Stepper { id, value, step, on_change, .. } => {
-                WidgetNode::NumberStepper { id: id.clone().unwrap_or_else(|| "engagement-stepper".into()), value: *value, step: step.unwrap_or(1.0), uniform: false, on_absolute: on_change.clone(), on_delta: on_change.clone() }
-            }
-            WindowEngagementControl::Select { id, value, items, on_change, .. } => WidgetNode::Select {
-                id: id.clone().unwrap_or_else(|| "engagement-select".into()),
-                value: value.clone().unwrap_or_default(),
-                items: items.iter().map(|item| ui_wgpu::wgpu::widgets::SelectItem { value: item.value.clone(), label: item.label.clone() }).collect(),
-                placeholder: None,
-                on_change: on_change.clone(),
-            },
-            WindowEngagementControl::Ring { id, value, on_select, .. } => {
-                WidgetNode::Ring { id: id.clone().unwrap_or_else(|| "engagement-ring".into()), t: value.as_ref().and_then(|v| v.parse::<f64>().ok()).unwrap_or(0.5), disabled: false, on_change: on_select.clone() }
-            }
-            WindowEngagementControl::ToggleGroup { id, value, options, on_select, .. } => {
-                let label = value.clone().or_else(|| options.first().map(|o| o.id.clone())).unwrap_or_else(|| "toggle".into());
-                WidgetNode::Toggle { id: id.clone().unwrap_or_else(|| "engagement-toggle".into()), icon_id: IconName::CircleDot, pressed: false, text: Some(label), on_change: on_select.clone() }
-            }
-        };
-        let scroll_offsets = &mut self.scroll_offsets;
-        let collapsed_sections = &mut self.collapsed_sections;
-        let open_selects = &mut self.open_selects;
-        let mut ctx = framework_widget_context(draw, overlay.as_deref_mut(), atlas, Some(icons), input, theme, scroll_offsets, collapsed_sections, open_selects, None);
-        render_widget(&node, bounds, &mut ctx);
-    }
+
+
+
+
+
+
+
+
+
 
     // #region ActionsRail
-    /// 📇️ Renders a window's Actions rail (Architecture Decision 8, P1) anchored bottom-right — the free
-    /// corner (measures top-right, engagement top-left, utility bar bottom-left). Folded to a chip by
-    /// default; unfolded it lists window-scoped actions in manifest order: zero-arg rows ARE the execute
-    /// button, arg-carrying rows are accordion disclosures over a staged form. Returns the fold chip hit.
-    #[cfg(test)]
-    fn render_window_actions_rail(
-        &mut self,
-        draw: &mut DrawList,
-        overlay: &mut Option<&mut DrawList>,
-        atlas: &mut FontAtlas,
-        icons: &IconAtlas,
-        input: &mut InputState<ActionDescriptor>,
-        theme: &Theme,
-        content: &Rect,
-        window_id: &str,
-        app: &AppDefinition,
-        kind: &semio_framework::WindowKindDefinition,
-    ) -> Option<(Rect, String)> {
-        let actions: Vec<semio_framework::ActionDefinition> = semio_framework::resolve_window_actions(app, kind).into_iter().cloned().collect();
-        if actions.is_empty() {
-            return None;
-        }
-        let inset = theme.gap_standard;
-        let row_h = theme.control_height;
-        let folded = self.action_panel_folded.get(window_id).copied().unwrap_or(true);
-        let enabled = self.actions_enabled_for_window(app, window_id);
-        let expanded_action = self.action_panel_expanded.get(window_id).cloned();
-        (|chrome: &mut DrawList, select_overlay: &mut Option<&mut DrawList>| {
-            if folded {
-                let item = ChromeGroupItem { control_id: "", icon_id: Some("chevron-up"), label: Some("Actions"), active: false, disabled: false, kind: HitKind::Button };
-                let chip_w = measure_chrome_group_item(atlas, theme, &item);
-                let chip = Rect::new(content.x + content.w - chip_w - inset, content.y + content.h - row_h - inset, chip_w, row_h);
-                render_chrome_group(chrome, atlas, icons, input, theme, chip, &[item], false);
-                let segment = semio_framework::element_id_segment(window_id);
-                for action in &actions {
-                    self.chrome_build.register_element_rect_fallback(format!("framework.window.{segment}.action.{}", action.id), chip);
-                }
-                return Some((chip, format!("shell.action.fold.{window_id}")));
-            }
-            let width = theme.window_measures_default_width.clamp(theme.panel_min_width, theme.panel_max_width).min(window_overlay_max_width(content.w, inset));
-            let mut body_h = theme.gap_standard;
-            for action in &actions {
-                body_h += row_h;
-                if expanded_action.as_deref() == Some(action.id.as_str()) {
-                    body_h += self.staged_form_height(theme, action);
-                }
-            }
-            let card_h = (theme.panel_header_height + body_h + theme.gap_standard).min((content.h - inset * 2.0).max(theme.panel_header_height));
-            let rail = Rect::new(content.x + content.w - width - inset, content.y + content.h - card_h - inset, width, card_h);
-            let glass = chrome.push_glass([rail.x, rail.y, rail.w, rail.h], theme.border_radius, theme.glass(Level::Pane));
-            chrome.begin_glass_content(glass);
-            let header = Rect::new(rail.x, rail.y, rail.w, theme.panel_header_height);
-            chrome.push_solid([header.x, header.y, header.w, header.h], theme.navbar);
-            let fold_item = ChromeGroupItem { control_id: "shell.action.fold", icon_id: Some("chevron-down"), label: Some("Actions"), active: false, disabled: false, kind: HitKind::Button };
-            let fold_w = measure_chrome_group_item(atlas, theme, &fold_item);
-            render_chrome_group(chrome, atlas, icons, input, theme, Rect::new(header.x, header.y, fold_w, header.h), &[fold_item], true);
-            input.register_hit(HitTarget { rect: Rect::new(header.x, header.y, fold_w, header.h), event: None, control_id: Some(format!("shell.action.fold.{window_id}")), kind: HitKind::Button, drag_axis: None, drag_data: None });
-            let mut y = rail.y + theme.panel_header_height + theme.gap_standard;
-            let body_x = rail.x + theme.gap_standard;
-            let body_w = rail.w - theme.gap_standard * 2.0;
-            for action in &actions {
-                let is_expanded = expanded_action.as_deref() == Some(action.id.as_str());
-                let has_args = !action.args.is_empty();
-                let row = Rect::new(body_x, y, body_w, row_h);
-                let icon = if !has_args {
-                    Some(action.icon_id.as_str())
-                } else if is_expanded {
-                    Some("chevron-down")
-                } else {
-                    Some("chevron-right")
-                };
-                let item = ChromeGroupItem { control_id: "", icon_id: icon, label: Some(action.label.resolve(self.active_terminology(), self.active_locale())), active: is_expanded, disabled: !enabled, kind: HitKind::Button };
-                render_chrome_group(chrome, atlas, icons, input, theme, row, &[item], false);
-                self.chrome_build.register_element_rect(format!("framework.window.{}.action.{}", semio_framework::element_id_segment(window_id), action.id), row);
-                if enabled {
-                    let control_id = if has_args { format!("shell.action.expand::{window_id}::{}", action.id) } else { format!("shell.action.exec::{window_id}::{}", action.id) };
-                    input.register_hit(HitTarget { rect: row, event: None, control_id: Some(control_id), kind: HitKind::Button, drag_axis: None, drag_data: None });
-                }
-                y += row_h;
-                if is_expanded && has_args {
-                    y += self.render_staged_form(chrome, select_overlay, atlas, icons, input, theme, Rect::new(body_x, y, body_w, self.staged_form_height(theme, action)), window_id, action, enabled);
-                }
-            }
-            chrome.end_glass_content();
-            None
-        })(draw, overlay)
-    }
 
-    /// 📝️ Total height of one action's staged arg form (per-arg fields + the Execute/Reset row).
-    #[cfg(test)]
-    fn staged_form_height(&self, theme: &Theme, action: &semio_framework::ActionDefinition) -> f32 {
-        let mut h = theme.gap_standard;
-        for arg in &action.args {
-            h += self.staged_arg_height(theme, arg);
-        }
-        h + theme.control_height + theme.gap_standard
-    }
 
-    #[cfg(test)]
-    fn staged_arg_height(&self, theme: &Theme, arg: &semio_framework::ActionArgDef) -> f32 {
-        match arg.control() {
-            semio_framework::ActionArgControl::Toggle => theme.control_height + theme.gap_standard,
-            _ => theme.control_height * 2.0 + theme.gap_standard,
-        }
-    }
+
+
+
 
     /// 📝️ The effective value of one arg (staged if present, else the declared default).
     fn effective_arg_value(&self, window_id: &str, action_id: &str, arg: &semio_framework::ActionArgDef) -> Option<Value> {
@@ -15472,185 +13305,18 @@ impl ShellState {
         window_action_definition(&self.session.as_ref()?.app, window_kind_id, action_id)?.args.iter().find(|arg| arg.id == arg_id)?.default.as_ref().map(dsl_value_as_json)
     }
 
-    /// 📝️ Renders the staged form for one expanded action and returns its consumed height. Every control
-    /// writes to STAGING via shell-owned hit ids (never a live `on_change` dispatch) — P2.
-    #[cfg(test)]
-    fn render_staged_form(
-        &mut self,
-        draw: &mut DrawList,
-        overlay: &mut Option<&mut DrawList>,
-        atlas: &mut FontAtlas,
-        icons: &IconAtlas,
-        input: &mut InputState<ActionDescriptor>,
-        theme: &Theme,
-        bounds: Rect,
-        window_id: &str,
-        action: &semio_framework::ActionDefinition,
-        enabled: bool,
-    ) -> f32 {
-        let row_h = theme.control_height;
-        let mut y = bounds.y + theme.gap_standard;
-        for arg in &action.args {
-            let arg_h = self.staged_arg_height(theme, arg);
-            self.render_staged_arg(draw, overlay, atlas, icons, input, theme, Rect::new(bounds.x, y, bounds.w, arg_h), window_id, &action.id, arg, enabled);
-            y += arg_h;
-        }
-        // Execute / Reset row.
-        let is_de = self.locale_id == "de";
-        let staged = self.staged_map_for(window_id, &action.id);
-        let executable = Self::resolved_execute_args(&action.args, &staged).is_some();
-        let exec_item = ChromeGroupItem { control_id: "", icon_id: Some("play"), label: Some(shell_chrome_string("common.execute", is_de)), active: false, disabled: !(enabled && executable), kind: HitKind::Button };
-        let exec_w = measure_chrome_group_item(atlas, theme, &exec_item);
-        let exec_rect = Rect::new(bounds.x, y, exec_w, row_h);
-        render_chrome_group(draw, atlas, icons, input, theme, exec_rect, &[exec_item], false);
-        if enabled && executable {
-            input.register_hit(HitTarget { rect: exec_rect, event: None, control_id: Some(format!("shell.action.exec::{window_id}::{}", action.id)), kind: HitKind::Button, drag_axis: None, drag_data: None });
-        }
-        let reset_item = ChromeGroupItem { control_id: "", icon_id: Some("rotate-ccw"), label: Some(shell_chrome_string("common.reset", is_de)), active: false, disabled: false, kind: HitKind::Button };
-        let reset_w = measure_chrome_group_item(atlas, theme, &reset_item);
-        let reset_rect = Rect::new(bounds.x + exec_w + theme.gap_standard, y, reset_w, row_h);
-        render_chrome_group(draw, atlas, icons, input, theme, reset_rect, &[reset_item], false);
-        input.register_hit(HitTarget { rect: reset_rect, event: None, control_id: Some(format!("shell.action.reset::{window_id}::{}", action.id)), kind: HitKind::Button, drag_axis: None, drag_data: None });
-        self.staged_form_height(theme, action)
-    }
 
-    #[cfg(test)]
-    fn render_staged_arg(
-        &mut self,
-        draw: &mut DrawList,
-        _overlay: &mut Option<&mut DrawList>,
-        atlas: &mut FontAtlas,
-        icons: &IconAtlas,
-        input: &mut InputState<ActionDescriptor>,
-        theme: &Theme,
-        bounds: Rect,
-        window_id: &str,
-        action_id: &str,
-        arg: &semio_framework::ActionArgDef,
-        enabled: bool,
-    ) {
-        use semio_framework::ActionArgControl;
-        let row_h = theme.control_height;
-        let effective = self.effective_arg_value(window_id, action_id, arg);
-        match &arg.control() {
-            ActionArgControl::Toggle => {
-                let on = effective.as_ref().and_then(|v| v.as_bool()).unwrap_or(false);
-                let label = format!("{} · {}", arg.label.resolve(self.active_terminology(), self.active_locale()), if on { "on" } else { "off" });
-                let item = ChromeGroupItem { control_id: "", icon_id: Some(if on { "check-square" } else { "square" }), label: Some(label.as_str()), active: on, disabled: !enabled, kind: HitKind::Button };
-                let item_w = measure_chrome_group_item(atlas, theme, &item).min(bounds.w);
-                let rect = Rect::new(bounds.x, bounds.y, item_w, row_h);
-                render_chrome_group(draw, atlas, icons, input, theme, rect, &[item], false);
-                if enabled {
-                    input.register_hit(HitTarget { rect, event: None, control_id: Some(format!("shell.action.argtoggle::{window_id}::{action_id}::{}", arg.id)), kind: HitKind::Button, drag_axis: None, drag_data: None });
-                }
-            }
-            ActionArgControl::Select { options } => {
-                chrome_text(draw, atlas, input, theme, arg.label.resolve(self.active_terminology(), self.active_locale()), bounds.x, bounds.y + 14.0, theme.font_size_small, theme.text_muted);
-                let effective_str = effective.as_ref().and_then(|v| v.as_str()).map(String::from);
-                let mut x = bounds.x;
-                let chip_y = bounds.y + row_h;
-                for option in options {
-                    let active = effective_str.as_deref() == Some(option.value.as_str());
-                    let item = ChromeGroupItem { control_id: "", icon_id: None, label: Some(option.label.resolve(self.active_terminology(), self.active_locale())), active, disabled: !enabled, kind: HitKind::Button };
-                    let item_w = measure_chrome_group_item(atlas, theme, &item);
-                    let rect = Rect::new(x, chip_y, item_w, row_h);
-                    render_chrome_group(draw, atlas, icons, input, theme, rect, &[item], false);
-                    if enabled {
-                        input.register_hit(HitTarget { rect, event: None, control_id: Some(format!("shell.action.argselect::{window_id}::{action_id}::{}::{}", arg.id, option.value)), kind: HitKind::Button, drag_axis: None, drag_data: None });
-                    }
-                    x += item_w + theme.gap_standard;
-                }
-            }
-            ActionArgControl::IconSelect { .. } => {
-                // Icon classifiers are not enumerable at manifest altitude; fall back to a text field.
-                let value = self.staged_arg_display_string(window_id, action_id, arg, input, None);
-                self.render_staged_text_field(draw, atlas, icons, input, theme, bounds, window_id, action_id, arg, &value, enabled, None);
-            }
-            ActionArgControl::Vec3 => {
-                chrome_text(draw, atlas, input, theme, arg.label.resolve(self.active_terminology(), self.active_locale()), bounds.x, bounds.y + 14.0, theme.font_size_small, theme.text_muted);
-                let arr = effective.as_ref().and_then(|v| v.as_array());
-                let field_w = ((bounds.w - theme.gap_standard * 2.0) / 3.0).max(24.0);
-                for axis in 0..3usize {
-                    let control_id = format!("shell.action.argvec3::{window_id}::{action_id}::{}::{axis}", arg.id);
-                    let focused = input.focused_id.as_deref() == Some(control_id.as_str());
-                    let display = if focused { input.text_view().to_string() } else { fmt_num(arr.and_then(|a| a.get(axis)).and_then(|v| v.as_f64()).unwrap_or(0.0)) };
-                    let rect = Rect::new(bounds.x + axis as f32 * (field_w + theme.gap_standard), bounds.y + row_h, field_w, row_h);
-                    self.paint_staged_input_box(draw, atlas, input, theme, rect, &display, focused, enabled, &control_id);
-                }
-            }
-            _ => {
-                // Text / Number / Slider → a single focusable input, staged on commit.
-                let control_id = format!("shell.action.arginput::{window_id}::{action_id}::{}", arg.id);
-                let focused = input.focused_id.as_deref() == Some(control_id.as_str());
-                let display = self.staged_arg_display_string(window_id, action_id, arg, input, Some(&control_id));
-                self.render_staged_text_field(draw, atlas, icons, input, theme, bounds, window_id, action_id, arg, &display, enabled, Some(focused));
-            }
-        }
-    }
 
-    /// 📝️ The current display string of a scalar arg — the live focus buffer if focused, else the
-    /// effective staged/default value.
-    #[cfg(test)]
-    fn staged_arg_display_string(&self, window_id: &str, action_id: &str, arg: &semio_framework::ActionArgDef, input: &InputState<ActionDescriptor>, control_id: Option<&str>) -> String {
-        if let Some(control_id) = control_id {
-            if input.focused_id.as_deref() == Some(control_id) {
-                return input.text_view().to_string();
-            }
-        }
-        match self.effective_arg_value(window_id, action_id, arg) {
-            Some(Value::String(text)) => text,
-            Some(Value::Number(num)) => num.to_string(),
-            Some(Value::Bool(flag)) => flag.to_string(),
-            Some(other) => other.to_string(),
-            None => String::new(),
-        }
-    }
 
-    #[allow(clippy::too_many_arguments)]
-    #[cfg(test)]
-    fn render_staged_text_field(
-        &mut self,
-        draw: &mut DrawList,
-        atlas: &mut FontAtlas,
-        icons: &IconAtlas,
-        input: &mut InputState<ActionDescriptor>,
-        theme: &Theme,
-        bounds: Rect,
-        window_id: &str,
-        action_id: &str,
-        arg: &semio_framework::ActionArgDef,
-        display: &str,
-        enabled: bool,
-        focused_override: Option<bool>,
-    ) {
-        let _ = icons;
-        chrome_text(draw, atlas, input, theme, arg.label.resolve(self.active_terminology(), self.active_locale()), bounds.x, bounds.y + 14.0, theme.font_size_small, theme.text_muted);
-        let control_id = format!("shell.action.arginput::{window_id}::{action_id}::{}", arg.id);
-        let focused = focused_override.unwrap_or_else(|| input.focused_id.as_deref() == Some(control_id.as_str()));
-        let rect = Rect::new(bounds.x, bounds.y + theme.control_height, bounds.w, theme.control_height);
-        self.paint_staged_input_box(draw, atlas, input, theme, rect, display, focused, enabled, &control_id);
-    }
 
-    #[allow(clippy::too_many_arguments)]
-    #[cfg(test)]
-    fn paint_staged_input_box(&self, draw: &mut DrawList, atlas: &mut FontAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, rect: Rect, display: &str, focused: bool, enabled: bool, control_id: &str) {
-        draw.push_rounded([rect.x, rect.y, rect.w, rect.h], theme.input_bg, theme.border_radius);
-        if focused {
-            let hair = theme.stroke_hairline * 2.0;
-            draw.push_solid([rect.x, rect.y + rect.h - hair, rect.w, hair], theme.accent);
-        }
-        let text_color = if enabled { theme.text } else { theme.text_muted };
-        chrome_text(draw, atlas, input, theme, display, rect.x + theme.padding_standard, rect.y + (rect.h + theme.font_size_small) * 0.5 - 1.0, theme.font_size_small, text_color);
-        if enabled {
-            input.register_hit(HitTarget { rect, event: None, control_id: Some(control_id.to_string()), kind: HitKind::Input, drag_axis: None, drag_data: None });
-        }
-    }
+
+
+
+
+
     // #endregion
 
-    #[cfg(test)]
-    fn render_context_menu(&self, overlay: &mut DrawList, atlas: &mut FontAtlas, icons: &IconAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, menu: &ContextMenuState, viewport_w: f32, viewport_h: f32) {
-        Self::render_context_menu_level(overlay, atlas, icons, input, theme, menu, &menu.items, &[], menu.x, menu.y, viewport_w, viewport_h);
-    }
+
 
     /// 📏️ Shared width pass for a menu level — also used to size a submenu BEFORE deciding which side of
     /// its parent row it opens on (see `render_context_menu_level`'s flip-left check).
@@ -15801,6 +13467,7 @@ const OS_SHELL_CONFIG_STORAGE_KEY: &str = "semio.os.config";
 /// `localStorage` via raw `js_sys::Reflect`/`js_sys::Function` calls against the already-enabled
 /// "Window" feature rather than requesting a new one. The native backend is a small JSON file next
 /// to no new dependency (`serde_json` is already a dep) — zero-touch across devcontainer/win/mac/linux.
+#[cfg(any(target_arch = "wasm32", test))]
 trait PrefsStore {
     fn get(&self, key: &str) -> Option<String>;
     fn set(&mut self, key: &str, value: &str);
@@ -16089,6 +13756,7 @@ fn prefs_set_bounded(key: &str, value: &str) {
 /// in practice (wasm32-unknown-unknown has no process env at runtime, so this is always empty
 /// there — kiosk/demo locking is a native `semio-wgpu-native` deployment concern).
 #[derive(Clone, Debug, Default)]
+#[cfg(test)]
 struct ShellPrefLocks {
     appearance: Option<String>,
     locale: Option<String>,
@@ -16100,6 +13768,7 @@ fn env_lock(name: &str) -> Option<String> {
     std::env::var(name).ok().filter(|value| !value.is_empty())
 }
 
+#[cfg(test)]
 fn shell_pref_locks() -> ShellPrefLocks {
     ShellPrefLocks { appearance: env_lock("SEMIO_LOCKED_APPEARANCE"), locale: env_lock("SEMIO_LOCKED_LOCALE"), terminology: env_lock("SEMIO_LOCKED_TERMINOLOGY"), theme_id: env_lock("SEMIO_LOCKED_THEME") }
 }
@@ -16480,12 +14149,7 @@ fn shell_chrome_string(key: &'static str, is_de: bool) -> &'static str {
     }
 }
 
-/// 🗣️ `id`'s locale-aware label via `ui_wgpu::wgpu::framework_panel_tab_label` (the one existing
-/// locale-aware string helper, per a prior wave), falling back to `fallback` for app-declared ids.
-#[cfg(test)]
-fn shell_panel_tab_label(id: &str, fallback: &'static str, is_de: bool) -> String {
-    ui_wgpu::wgpu::framework_panel_tab_label(id, is_de).unwrap_or(fallback).to_string()
-}
+
 
 
 //#endregion 🗣️ChromeI18n
@@ -16502,6 +14166,7 @@ struct UiPrefsSnapshot {
     worker_count: u32,
 }
 
+#[cfg(test)]
 impl UiPrefsSnapshot {
     fn capture(state: &ShellState) -> Self {
         Self {
@@ -16516,6 +14181,7 @@ impl UiPrefsSnapshot {
     }
 }
 
+#[cfg(test)]
 fn persist_custom_themes(preferences: &ChromePrefsState) {
     let as_values: HashMap<String, Value> = preferences.custom_themes.iter().map(|(id, raw)| (id.clone(), serde_json::from_str(raw).unwrap_or(Value::Null))).collect();
     if let Ok(json) = serde_json::to_string(&as_values) {
@@ -16527,6 +14193,7 @@ impl ShellState {
     /// 💾️ Loads persisted uiPrefs into `self` exactly once per process, mirroring `os-shell.tsx`'s
     /// boot-time `locks.appearance ?? readStoredUiChromeAppearance()` fallback chain (`:862-868`).
     /// A locked pref (`SEMIO_LOCKED_*`) wins over storage, matching `resolveShellLocks`.
+    #[cfg(test)]
     fn load_ui_prefs_once(&mut self) {
         if self.chrome_present.preferences_loaded {
             return;
@@ -16548,6 +14215,7 @@ impl ShellState {
     /// 💾️ Writes any changed uiPrefs field to the store (skipping locked ones), mirroring
     /// `os-shell.tsx`'s persistence `useEffect` (`:3477-3491`): one combined-dependency effect that
     /// rewrites every non-locked pref whenever any of them changes, not a per-field diff.
+    #[cfg(test)]
     fn persist_ui_prefs_if_changed(&mut self) {
         let snapshot = UiPrefsSnapshot::capture(self);
         if self.chrome_present.last_synced_preferences.as_ref() == Some(&snapshot) {
@@ -17410,20 +15078,12 @@ async fn request_file_save(filename: &str) -> Option<std::path::PathBuf> {
     ui_host::select_native_paths(ui_host::NativeFileDialogRequest::save(filename, ["json"])).await.into_iter().next()
 }
 
-#[cfg(target_arch = "wasm32")]
-fn request_file_save(_filename: &str) -> Option<std::path::PathBuf> {
-    None
-}
 
 #[cfg(not(target_arch = "wasm32"))]
 async fn pick_folder() -> Option<String> {
     ui_host::select_native_paths(ui_host::NativeFileDialogRequest::folder()).await.into_iter().next().map(|path| path.display().to_string())
 }
 
-#[cfg(target_arch = "wasm32")]
-fn pick_folder() -> Option<String> {
-    None
-}
 
 /// 📤️ Opens the native file picker; one entry per selected file, in selection order.
 #[cfg(not(target_arch = "wasm32"))]
@@ -17481,6 +15141,7 @@ fn fallback_action_descriptor(controller_id: &str, fallback_action: &str, bytes:
 /// `sample_stride` floors at 1 (every frame); `max_frames` of 0 means "host default" (capped generously
 /// rather than truly unlimited, so a pathological request can't fill disk); `max_long_edge_px` of 0
 /// skips the scale filter entirely (native resolution).
+#[cfg(any(not(target_arch = "wasm32"), test))]
 fn ffmpeg_frame_extraction_args(sample_stride: u32, max_frames: u32, max_long_edge_px: u32, input: &std::path::Path, out_dir: &std::path::Path) -> Vec<String> {
     let stride = sample_stride.max(1);
     let filter = if max_long_edge_px > 0 { format!("select=not(mod(n\\,{stride})),scale={max_long_edge_px}:-2") } else { format!("select=not(mod(n\\,{stride}))") };
@@ -17493,6 +15154,7 @@ fn ffmpeg_frame_extraction_args(sample_stride: u32, max_frames: u32, max_long_ed
 /// `-frame_pts`/timebase math this ticket scopes out; documented simplification, same spirit as the D1
 /// wgpu point-sprite pass note above `render_world_3d`). Good enough for frame *ordering*/spacing; exact
 /// decode timestamps are future work if a downstream consumer needs true sub-frame sync.
+#[cfg(any(not(target_arch = "wasm32"), test))]
 fn approx_sampled_timestamp_ms(index: u32, sample_stride: u32, fps_hint: f64) -> f64 {
     let stride = sample_stride.max(1) as f64;
     let fps = if fps_hint > 0.0 { fps_hint } else { 30.0 };

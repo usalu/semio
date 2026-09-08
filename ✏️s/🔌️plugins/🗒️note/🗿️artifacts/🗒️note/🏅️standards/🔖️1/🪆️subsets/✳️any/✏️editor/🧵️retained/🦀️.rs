@@ -163,12 +163,12 @@ fn selection_units(command: &NoteCommand, selected: &[String]) -> Option<Vec<Not
     })
 }
 
-fn note_command_units(command: &NoteCommand, selected: &[String]) -> Result<Vec<NoteCommandUnit>, Fault> {
+fn note_command_units(command: &NoteCommand, selected: &[String]) -> Vec<NoteCommandUnit> {
     if let Some(units) = selection_units(command, selected) {
-        return Ok(units);
+        return units;
     }
     match command {
-        NoteCommand::PatchBlocks(payload) => Ok(if payload.block_ids.is_empty() {
+        NoteCommand::PatchBlocks(payload) => if payload.block_ids.is_empty() {
             vec![NoteCommandUnit { command: command.clone(), selected_block_ids: selected.to_vec() }]
         } else {
             payload
@@ -179,13 +179,13 @@ fn note_command_units(command: &NoteCommand, selected: &[String]) -> Result<Vec<
                     selected_block_ids: selected.to_vec(),
                 })
                 .collect()
-        }),
+        },
         NoteCommand::InkApplyEvents(payload) => {
             let events = serde_json::from_str::<serde_json::Value>(&payload.events_json)
                 .ok()
                 .and_then(|value| value.as_array().cloned())
                 .unwrap_or_default();
-            Ok(if events.is_empty() {
+            if events.is_empty() {
                 vec![NoteCommandUnit { command: command.clone(), selected_block_ids: selected.to_vec() }]
             } else {
                 events
@@ -195,9 +195,9 @@ fn note_command_units(command: &NoteCommand, selected: &[String]) -> Result<Vec<
                         selected_block_ids: selected.to_vec(),
                     })
                     .collect()
-            })
+            }
         }
-        _ => Ok(vec![NoteCommandUnit { command: command.clone(), selected_block_ids: selected.to_vec() }]),
+        _ => vec![NoteCommandUnit { command: command.clone(), selected_block_ids: selected.to_vec() }],
     }
 }
 //#endregion 🧭️Units
@@ -218,7 +218,7 @@ struct NoteCommandWork {
 
 impl NoteCommandWork {
     fn new(tool_id: &'static str, command: &NoteCommand, _snapshot: &NoteSnapshot, interaction: &protocol::InteractionState, operation: &AppOperationContext) -> Result<Self, Fault> {
-        let units = note_command_units(command, &selected_block_ids(interaction))?;
+        let units = note_command_units(command, &selected_block_ids(interaction));
         if units.is_empty() || units.len() > NOTE_RETAINED_MAXIMUM_UNITS {
             return Err(Fault::new(FaultOrigin::App, FaultCode::new("note.retained.extent"), "Note command exceeds its fixed semantic-unit envelope"));
         }
@@ -544,7 +544,7 @@ struct NoteTextChildMaterializationCursor {
     artifact_kind: Option<String>,
     standard: Option<String>,
     subset: Option<String>,
-    local_owner: Option<std::sync::Arc<semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::text::schema::snapshot::SemioTextSnapshot>>,
+    local_owner: Option<std::sync::Arc<semio_s_artifact_stdio_semio::standards::v1::subsets::text::schema::snapshot::SemioTextSnapshot>>,
     retirement: Vec<NoteStringMaterializationCursor>,
     closing: bool,
 }
@@ -559,13 +559,13 @@ impl NoteTextChildMaterializationCursor {
             artifact_kind: None,
             standard: None,
             subset: None,
-            local_owner: source.handle.local_owner::<semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::text::schema::snapshot::SemioTextSnapshot>(),
+            local_owner: source.handle.local_owner::<semio_s_artifact_stdio_semio::standards::v1::subsets::text::schema::snapshot::SemioTextSnapshot>(),
             retirement: Vec::new(),
             closing: false,
         }
     }
 
-    fn step(&mut self, source: &crate::artifacts::note::NoteTextChild) -> Result<Option<store::ArtifactChild<semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::text::schema::snapshot::SemioTextSnapshot>>, String> {
+    fn step(&mut self, source: &crate::artifacts::note::NoteTextChild) -> Result<Option<store::ArtifactChild<semio_s_artifact_stdio_semio::standards::v1::subsets::text::schema::snapshot::SemioTextSnapshot>>, String> {
         if self.closing {
             return Err("Note text-child materialization was stepped after cancellation".into());
         }
@@ -668,7 +668,7 @@ enum NoteTextContentMaterializationPhase {
 struct NoteTextContentMaterializationCursor {
     phase: NoteTextContentMaterializationPhase,
     handle: NoteTextChildMaterializationCursor,
-    materialized_handle: Option<store::ArtifactChild<semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::text::schema::snapshot::SemioTextSnapshot>>,
+    materialized_handle: Option<store::ArtifactChild<semio_s_artifact_stdio_semio::standards::v1::subsets::text::schema::snapshot::SemioTextSnapshot>>,
     paragraphs: Vec<crate::artifacts::note::NoteTextParagraph>,
     paragraph_cursor: usize,
     run_cursor: usize,
@@ -854,7 +854,7 @@ struct NoteOwnedRetirement {
     assets: Vec<crate::artifacts::note::NoteImageAsset>,
     asset_maps: Vec<std::collections::BTreeMap<String, crate::artifacts::note::NoteImageAsset>>,
     links: Vec<store::ArtifactLink>,
-    text_owners: Vec<std::sync::Arc<semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::text::schema::snapshot::SemioTextSnapshot>>,
+    text_owners: Vec<std::sync::Arc<semio_s_artifact_stdio_semio::standards::v1::subsets::text::schema::snapshot::SemioTextSnapshot>>,
 }
 
 impl NoteOwnedRetirement {
@@ -937,7 +937,7 @@ impl NoteOwnedRetirement {
         self.push_string(std::mem::take(&mut child.handle.target.dialect.subset));
         if let Some(owner) = child
             .handle
-            .local_owner::<semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::text::schema::snapshot::SemioTextSnapshot>()
+            .local_owner::<semio_s_artifact_stdio_semio::standards::v1::subsets::text::schema::snapshot::SemioTextSnapshot>()
         {
             self.text_owners.push(owner);
         }
@@ -2183,9 +2183,7 @@ fn note_semantic_edit<M>(forward: M, inverse: Vec<M>, description: Option<String
     }
 }
 
-fn prepare_note_config(base: &NoteConfig, mutation: NoteConfigMutation) -> Result<(NoteConfig, Vec<NoteConfigMutation>, NoteConfigMutation), String> {
-    Ok((mutation.diff(base).into_parts().0, mutation.inverse(base), mutation))
-}
+
 
 impl<P, M> store::ArtifactStoreOneItemPreparationFactory<P, M> for NoteStoreOneItemPreparationFactory<P, M>
 where
@@ -2615,7 +2613,7 @@ pub fn artifact_preparation_factory() -> std::sync::Arc<dyn store::ArtifactStore
 }
 
 pub fn config_preparation_factory() -> std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<NoteConfig, NoteConfigMutation>> {
-    std::sync::Arc::new(NoteStoreOneItemPreparationFactory::new(store::HistoryLane::Document, prepare_note_config))
+    std::sync::Arc::new(NoteStoreOneItemPreparationFactory::new(store::HistoryLane::Document, |base: &NoteConfig, mutation: NoteConfigMutation| Ok((mutation.diff(base).into_parts().0, mutation.inverse(base), mutation))))
 }
 //#endregion 📬️StorePreparation
 
@@ -2623,7 +2621,7 @@ pub fn config_preparation_factory() -> std::sync::Arc<dyn store::ArtifactStoreOn
 #[cfg(test)]
 mod materialization_tests {
     use super::*;
-    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::text::schema::snapshot::{SemioTextSnapshot, STDIO_SEMIOTEXT_DOCUMENT_SCHEMA};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::text::schema::snapshot::{SemioTextSnapshot, STDIO_SEMIOTEXT_DOCUMENT_SCHEMA};
 
     fn text_child(owner: Option<std::sync::Arc<SemioTextSnapshot>>, child_id: String) -> crate::artifacts::note::NoteTextChild {
         let target = store::os_io::ArtifactRef {

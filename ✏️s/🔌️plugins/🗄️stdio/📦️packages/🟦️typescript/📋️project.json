@@ -2,8 +2,46 @@
   "name": "@semio-tech/stdio-js",
   "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
   "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "inputs": ["production", "^production"],
+      "outputs": ["{projectRoot}/dist"],
+      "dependsOn": ["^build"],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🗄️stdio/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts build",
+        "forwardAllArgs": true
+      }
+    },
+    "check": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["^build"],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🗄️stdio/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts check",
+        "forwardAllArgs": true
+      }
+    },
+    "package-contract": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🗄️stdio/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts package-contract",
+        "forwardAllArgs": true
+      }
+    },
+    "package-graph": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🗄️stdio/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts package-graph",
+        "forwardAllArgs": true
+      }
+    },
     "test": {
       "executor": "nx:run-commands",
+      "dependsOn": ["^build"],
       "options": {
         "cwd": "✏️s/🔌️plugins/🗄️stdio/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test",

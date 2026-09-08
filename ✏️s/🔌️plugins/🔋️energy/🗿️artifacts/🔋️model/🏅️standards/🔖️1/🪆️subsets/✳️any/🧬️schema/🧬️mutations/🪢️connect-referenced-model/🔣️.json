@@ -5,7 +5,7 @@
   "displayName": "Connect Referenced Model",
   "emoji": "🪢️",
   "aggregateVariant": "ConnectReferencedModel",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "connect-referenced-model",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

@@ -5,7 +5,7 @@
   "displayName": "Change Infiltration Stack Height",
   "emoji": "🏭️",
   "aggregateVariant": "ChangeInfiltrationStackHeight",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-infiltration-stack-height",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

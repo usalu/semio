@@ -5,7 +5,7 @@
   "displayName": "Change Node Extension Data",
   "emoji": "🧩️",
   "aggregateVariant": "ChangeNodeExtensionData",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

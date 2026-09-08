@@ -1,0 +1,212 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/wav/riff-pcm/any/mutation/set-snapshot.json",
+  "title": "SetSnapshot",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "snapshot"
+  ],
+  "properties": {
+    "snapshot": {
+      "$ref": "#/$defs/WavSnapshot"
+    },
+    "mutation": {
+      "const": "setSnapshot",
+      "description": "Aggregate discriminator spliced in by WavMutation; absent when the payload stands alone."
+    }
+  },
+  "$defs": {
+    "WavSnapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "fmt",
+        "data"
+      ],
+      "properties": {
+        "schema": {
+          "type": "string"
+        },
+        "fmt": {
+          "$ref": "#/$defs/WavFmt"
+        },
+        "data": {
+          "$ref": "#/$defs/WavData"
+        },
+        "otherChunks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/RiffChunk"
+          }
+        }
+      }
+    },
+    "WavFmt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "audioFormat",
+        "channels",
+        "sampleRate",
+        "byteRate",
+        "blockAlign",
+        "bitsPerSample"
+      ],
+      "properties": {
+        "audioFormat": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "channels": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "sampleRate": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "byteRate": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "blockAlign": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "bitsPerSample": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "ext": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 255
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "WavData": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "pcm16"
+            },
+            "value": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": -32768,
+                "maximum": 32767
+              }
+            }
+          },
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "pcm8"
+            },
+            "value": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 255
+              }
+            }
+          },
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "float32"
+            },
+            "value": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              }
+            }
+          },
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "raw"
+            },
+            "value": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 255
+              }
+            }
+          },
+          "required": [
+            "kind",
+            "value"
+          ]
+        }
+      ]
+    },
+    "RiffChunk": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "fourcc"
+      ],
+      "properties": {
+        "fourcc": {
+          "type": "string"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          }
+        }
+      }
+    }
+  }
+}

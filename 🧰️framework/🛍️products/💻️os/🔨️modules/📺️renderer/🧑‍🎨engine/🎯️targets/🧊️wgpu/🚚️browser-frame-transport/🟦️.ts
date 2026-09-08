@@ -9,7 +9,11 @@ export const FRAME_WORKER_BYTE_CAPACITY = 256 * 1024;
  * proof of liveness and rearms it. The `s` boot plan mounts 57 plugin modules one macrotask at a time, so a
  * healthy cold boot legitimately outruns any fixed total budget, while a Worker that stops reporting still
  * fails closed within this window. */
-export const FRAME_WORKER_BOOT_STALL_TIMEOUT_MS = 15_000;
+/** @emoji ⏳️ Outer bound on a SILENT boot worker. Raised from 15 s so it stays above the browser-owned
+ * step ceiling the worker enforces (30 s) — otherwise a single legitimate blocking step, which cannot post
+ * `boot-liveness` while it blocks, trips this before its own budget. A worker that yields keeps re-arming
+ * this via `boot-liveness`, so a genuinely wedged one still dies here. */
+export const FRAME_WORKER_BOOT_STALL_TIMEOUT_MS = 60_000;
 export const FRAME_WORKER_POINTER_CAPACITY = 16;
 export const FRAME_WORKER_MESSAGE_BYTE_CAPACITY = 4 * 1024;
 export const FRAME_WORKER_TEXT_CHUNK_CODE_UNITS = 1024;
@@ -106,6 +110,7 @@ export type BrowserFrameUiMessage = BrowserFrameWorkerBoot | BrowserFrameWorkerB
 
 export type BrowserFrameWorkerMessage =
   | { readonly kind: "boot-progress"; readonly lifecycle: number; readonly stage: string; readonly progress: number }
+  | { readonly kind: "boot-liveness"; readonly lifecycle: number }
   | { readonly kind: "booted"; readonly lifecycle: number }
   | { readonly kind: "wake"; readonly lifecycle: number }
   | {
@@ -455,6 +460,10 @@ export class BrowserFrameTransport {
       this.interactiveJobs.ready();
       if (!this.runUiHook("ready-hook", () => this.onReady?.())) return;
       this.requestFrame();
+      return;
+    }
+    if (message.kind === "boot-liveness") {
+      if (this.status === "booting") this.armBootStallTimer();
       return;
     }
     if (message.kind === "boot-progress") {

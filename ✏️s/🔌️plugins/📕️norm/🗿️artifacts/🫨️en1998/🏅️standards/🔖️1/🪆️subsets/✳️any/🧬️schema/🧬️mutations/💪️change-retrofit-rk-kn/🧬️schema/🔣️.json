@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/norm/en1998/1/any/mutation/change-retrofit-rk-kn.json",
+  "title": "ChangeRetrofitRKKn",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newRetrofitRKKn"
+  ],
+  "properties": {
+    "newRetrofitRKKn": {
+      "type": "number"
+    }
+  }
+}

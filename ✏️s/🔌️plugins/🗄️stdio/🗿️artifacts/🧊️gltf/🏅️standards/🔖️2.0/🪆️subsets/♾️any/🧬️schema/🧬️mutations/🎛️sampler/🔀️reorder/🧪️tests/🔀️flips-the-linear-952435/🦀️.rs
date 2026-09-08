@@ -9,10 +9,10 @@
 //! leaf's own oracle. The derived `.op.semio`/`.spr.semio`/`.dsl.semio`/`.pack.semio`/
 //! `.patch.semio` encodings come from `fixtures generate`, not from here.
 
-use crate::artifacts::gltf::schema::mutations::reorder_samplers::diff::GltfReorderSamplersDiff;
-use crate::artifacts::gltf::schema::mutations::reorder_samplers::GltfReorderSamplersPayload;
-use crate::artifacts::gltf::schema::mutations::reorder_samplers::{diff, inverse, mutation};
-use crate::artifacts::gltf::GltfSnapshot;
+use crate::schema::mutations::reorder_samplers::diff::GltfReorderSamplersDiff;
+use crate::schema::mutations::reorder_samplers::GltfReorderSamplersPayload;
+use crate::schema::mutations::reorder_samplers::{diff, inverse, mutation};
+use crate::GltfSnapshot;
 
 const CASE: &str = "reorder-samplers/flips-the-linear-and-clamped-samplers";
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");

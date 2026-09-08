@@ -12,8 +12,8 @@
 //! ac1018 side — this facet pair is already in that post-fix shape, so the collision ticket never
 //! has to touch either file.
 
-use crate::artifacts::dwg::standards::v_ac1024::subsets::any::schema::snapshot::DwgSnapshot;
-use schema::ArtifactSchema;
+use crate::standards::v_ac1024::subsets::any::schema::snapshot::DwgSnapshot;
+use framework_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 
 use super::structure::{compute_dwg_structure, DwgStructure};
@@ -57,7 +57,7 @@ impl protocol::InferenceSpec<DwgSnapshot> for DwgInference {
 
 //#region 🔖️ArtifactInferrer
 /// 💡️ `structure` is a whole-snapshot fold over the logical drawing.
-impl ArtifactInferrer for crate::artifacts::dwg::standards::v_ac1024::subsets::any::schema::DwgBuilder {
+impl ArtifactInferrer for crate::standards::v_ac1024::subsets::any::schema::DwgBuilder {
     type Snapshot = DwgSnapshot;
     type Inference = DwgInference;
 }
@@ -67,10 +67,10 @@ impl ArtifactInferrer for crate::artifacts::dwg::standards::v_ac1024::subsets::a
 /// 💡️ Registers `s.stdio.dwg.inference`'s facet leaves into the OS-wide inference catalog —
 /// call once at plugin init, alongside `dwg_artifact_schema_descriptor`'s registration.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn dwg_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
-    schema::ArtifactInferenceDescriptor {
+pub fn dwg_artifact_inference_descriptor() -> framework_schema::ArtifactInferenceDescriptor {
+    framework_schema::ArtifactInferenceDescriptor {
         id: "s.stdio.dwg.inference",
-        inference: schema::FacetLeaves {
+        inference: framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),

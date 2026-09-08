@@ -47,20 +47,7 @@ pub use crate::workspace::*;
 // `semio://capability/{id}`-readable) and their `input_schema`/`output_schema`/`title`/`description`
 // have exactly one source of truth, read back by `tool_from_capability` below.
 fn capabilities_search_capability() -> CapabilityDefinition {
-    let input_schema = serde_json::json!({
-        "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "$id": "semio://capability/capabilities.search/input",
-        "type": "object",
-        "properties": {
-            "query": { "type": "string" },
-            "kind": { "type": "array", "items": { "type": "string" } },
-            "owner": { "type": "string" },
-            "artifactKind": { "type": "string" },
-            "requiresScope": { "type": "string" },
-        },
-        "required": ["query"],
-        "additionalProperties": false,
-    });
+    let input_schema = capabilities_search_input_schema();
     CapabilityDefinition {
         id: CapabilityRef("capabilities.search".to_string()),
         version: 1,
@@ -71,11 +58,7 @@ fn capabilities_search_capability() -> CapabilityDefinition {
         artifact_kind: None,
         use_when: vec!["find a capability".to_string(), "what can I do".to_string(), "search for an action".to_string()],
         input_schema,
-        // 🐛️ MCP's `tools/list` schema requires `outputSchema` (when present) to describe a JSON
-        // OBJECT at the top level — a bare `type: "array"` fails the SDK client's own Zod validation
-        // of the `Tool` shape (caught live running `bun nx run @semio-tech/framework-os-mcp:test-quick`,
-        // not from reading the spec text). The hits themselves are wrapped under a `results` property.
-        output_schema: serde_json::json!({ "$schema": "https://json-schema.org/draft/2020-12/schema", "$id": "semio://capability/capabilities.search/output", "type": "object", "properties": { "results": { "type": "array" } } }),
+        output_schema: capabilities_search_output_schema(),
         effects: Default::default(),
         policy: Default::default(),
         execution: Default::default(),
@@ -87,14 +70,7 @@ fn capabilities_search_capability() -> CapabilityDefinition {
 }
 
 fn capabilities_describe_capability() -> CapabilityDefinition {
-    let input_schema = serde_json::json!({
-        "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "$id": "semio://capability/capabilities.describe/input",
-        "type": "object",
-        "properties": { "capabilityId": { "type": "string" } },
-        "required": ["capabilityId"],
-        "additionalProperties": false,
-    });
+    let input_schema = capabilities_describe_input_schema();
     CapabilityDefinition {
         id: CapabilityRef("capabilities.describe".to_string()),
         version: 1,
@@ -105,7 +81,7 @@ fn capabilities_describe_capability() -> CapabilityDefinition {
         artifact_kind: None,
         use_when: vec!["show me the details of a capability".to_string(), "what arguments does this take".to_string()],
         input_schema,
-        output_schema: serde_json::json!({ "$schema": "https://json-schema.org/draft/2020-12/schema", "$id": "semio://capability/capabilities.describe/output", "type": "object" }),
+        output_schema: capabilities_describe_output_schema(),
         effects: Default::default(),
         policy: Default::default(),
         execution: Default::default(),
@@ -117,13 +93,7 @@ fn capabilities_describe_capability() -> CapabilityDefinition {
 }
 
 fn context_resolve_capability() -> CapabilityDefinition {
-    let input_schema = serde_json::json!({
-        "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "$id": "semio://capability/context.resolve/input",
-        "type": "object",
-        "properties": { "principal": { "type": "string" }, "locale": { "type": "string" } },
-        "additionalProperties": false,
-    });
+    let input_schema = context_resolve_input_schema();
     CapabilityDefinition {
         id: CapabilityRef("context.resolve".to_string()),
         version: 1,
@@ -134,7 +104,7 @@ fn context_resolve_capability() -> CapabilityDefinition {
         artifact_kind: None,
         use_when: vec!["start a session".to_string(), "what can this session do".to_string()],
         input_schema,
-        output_schema: serde_json::json!({ "$schema": "https://json-schema.org/draft/2020-12/schema", "$id": "semio://capability/context.resolve/output", "type": "object" }),
+        output_schema: context_resolve_output_schema(),
         effects: Default::default(),
         policy: Default::default(),
         execution: Default::default(),
@@ -321,73 +291,6 @@ fn parse_revision_stamp(value: &serde_json::Value) -> Option<RevisionStamp> {
     serde_json::from_value(value.clone()).ok()
 }
 
-fn action_prepare_input_schema() -> serde_json::Value {
-    serde_json::json!({
-        "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "$id": "semio://capability/action.prepare/input",
-        "type": "object",
-        "properties": { "capabilityId": { "type": "string" }, "input": { "type": "object" } },
-        "required": ["capabilityId"],
-        "additionalProperties": false,
-    })
-}
-
-fn action_invoke_input_schema() -> serde_json::Value {
-    serde_json::json!({
-        "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "$id": "semio://capability/action.invoke/input",
-        "type": "object",
-        "properties": {
-            "preparedActionHandle": { "type": "string" },
-            "capabilityId": { "type": "string" },
-            "input": { "type": "object" },
-            "expectedRevision": { "type": "object" },
-            "idempotencyKey": { "type": "string" },
-            "approvalHandle": { "type": "string" },
-        },
-        "additionalProperties": false,
-    })
-}
-
-fn handle_input_schema(field: &str, capability_id: &str) -> serde_json::Value {
-    serde_json::json!({
-        "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "$id": format!("semio://capability/{capability_id}/input"),
-        "type": "object",
-        "properties": { field: { "type": "string" } },
-        "required": [field],
-        "additionalProperties": false,
-    })
-}
-
-fn transaction_begin_input_schema() -> serde_json::Value {
-    serde_json::json!({
-        "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "$id": "semio://capability/transaction.begin/input",
-        "type": "object",
-        "properties": { "preparedHandles": { "type": "array", "items": { "type": "string" } } },
-        "required": ["preparedHandles"],
-        "additionalProperties": false,
-    })
-}
-
-/// 🐛️ post-unblock fix: `schemars::schema_for!(PreparedActionReport)` emits a bare JSON-Schema
-/// boolean `true` for `PreparedActionReport.preview`'s `serde_json::Value` field (valid JSON Schema —
-/// `true` means "any value is valid") — but the MCP SDK's own Zod validation of `Tool.outputSchema`
-/// rejects a boolean sub-schema outright, caught live by `bun nx run
-/// @semio-tech/framework-os-mcp:test-quick` (`$ZodError` at `tools[2].outputSchema.properties.preview`,
-/// "Invalid input"). The exact same class of bug P2's own `capabilities_search_capability` doc
-/// comment already documents for `type:"array"` vs `type:"object"` — a spec-shape detail schemars/the
-/// SDK disagree on, not a logic error. Fixed by overriding just that one sub-schema to the equivalent
-/// OBJECT-syntax "any value" form (`{}`) after generating the rest of the schema from the real type.
-fn prepared_action_report_output_schema() -> serde_json::Value {
-    let mut schema = serde_json::to_value(schemars::schema_for!(PreparedActionReport)).unwrap_or(serde_json::Value::Null);
-    if let Some(preview) = schema.pointer_mut("/properties/preview") {
-        *preview = serde_json::json!({});
-    }
-    schema
-}
-
 fn action_prepare_handler(catalog: &Catalog, actions: &ActionAdapter, principal: &AgentPrincipal, arguments: serde_json::Value) -> CallToolResult {
     let capability_id = match arguments.get("capabilityId").and_then(serde_json::Value::as_str) {
         Some(id) => id,
@@ -514,14 +417,14 @@ pub fn build_tool_registry(
     let mut action_prepare = Tool::new("action_prepare", action_prepare_input_schema());
     action_prepare.title = Some("Prepare Action".to_string());
     action_prepare.description = Some("Validates input, checks policy, captures the current revision, and dry-runs the capability — returns a PreparedActionReport.".to_string());
-    action_prepare.output_schema = Some(prepared_action_report_output_schema());
+    action_prepare.output_schema = Some(tool_output_schema("PreparedActionReport"));
     let (c, a, p) = (catalog.clone(), actions.clone(), principal.clone());
     registry.register(action_prepare, move |arguments| action_prepare_handler(&c, &a, &p, arguments)).expect("action_prepare is a valid tool name");
 
     let mut action_invoke = Tool::new("action_invoke", action_invoke_input_schema());
     action_invoke.title = Some("Invoke Action".to_string());
     action_invoke.description = Some("Commits a prepared (or freshly-prepared) action through the 2-phase transaction protocol — returns an InvocationReport.".to_string());
-    action_invoke.output_schema = Some(serde_json::to_value(schemars::schema_for!(InvocationReport)).unwrap_or(serde_json::Value::Null));
+    action_invoke.output_schema = Some(tool_output_schema("InvocationReport"));
     let (c, a, p) = (catalog.clone(), actions.clone(), principal.clone());
     registry.register(action_invoke, move |arguments| action_invoke_handler(&c, &a, &p, arguments)).expect("action_invoke is a valid tool name");
 

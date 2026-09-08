@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeDeltaSigmaEd, base: &En1999Snapshot) -> protocol::Mu
     if base.delta_sigma_ed == payload.new_delta_sigma_ed {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Fatigue design stress range [MPa] is already {}.", payload.new_delta_sigma_ed));
     }
-    protocol::MutationOutcome::new(En1999Diff { delta_sigma_ed: Some(payload.new_delta_sigma_ed.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1999Diff { delta_sigma_ed: Some(payload.new_delta_sigma_ed), ..Default::default() })
 }
 //#endregion 🔖️Diff

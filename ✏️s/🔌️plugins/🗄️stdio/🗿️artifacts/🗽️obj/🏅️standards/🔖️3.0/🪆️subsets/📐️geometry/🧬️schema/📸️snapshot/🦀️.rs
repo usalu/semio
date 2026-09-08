@@ -13,8 +13,8 @@
 //! `#[derive(dsl::DslOps)]` on `ObjMutation` (see `🧬️mutations`) works without a `FlowMutationDsl`
 //! -style mirror enum.
 
-use crate::artifacts::obj::STDIO_OBJ_DOCUMENT_SCHEMA;
-use schema::ArtifactSchema;
+use crate::STDIO_OBJ_DOCUMENT_SCHEMA;
+use framework_schema::ArtifactSchema;
 
 //#region 🔖️MeshModel
 /// 📍 A `v` position line: `x y z [w]` (spec default `w = 1.0` when omitted — `None` here
@@ -201,10 +201,10 @@ impl store::ArtifactDsl for ObjSnapshot {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
-        crate::artifacts::obj::engine::decode_obj(body).map_err(|e| store::TextError::new(format!("obj parse: {e}"), dsl::TextSpan::at(1, 1)))
+        crate::engine::decode_obj(body).map_err(|e| store::TextError::new(format!("obj parse: {e}"), dsl::TextSpan::at(1, 1)))
     }
     fn print_dsl(&self) -> String {
-        let body = crate::artifacts::obj::engine::encode_obj(self);
+        let body = crate::engine::encode_obj(self);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
@@ -213,7 +213,7 @@ impl store::ArtifactDsl for ObjSnapshot {
 impl store::ArtifactPack for ObjSnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
-        let raw = crate::artifacts::obj::engine::encode_obj(self).into_bytes();
+        let raw = crate::engine::encode_obj(self).into_bytes();
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
@@ -224,7 +224,7 @@ impl store::ArtifactPack for ObjSnapshot {
         }
         let _ = options;
         let text = String::from_utf8(inner).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        crate::artifacts::obj::engine::decode_obj(&text).map_err(store::PackError::Schema)
+        crate::engine::decode_obj(&text).map_err(store::PackError::Schema)
     }
 }
 //#endregion 🔖️HandcraftedArtifactCodecs

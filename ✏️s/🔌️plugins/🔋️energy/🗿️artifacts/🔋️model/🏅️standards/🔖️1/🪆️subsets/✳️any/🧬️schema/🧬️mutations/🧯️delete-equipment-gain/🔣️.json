@@ -5,7 +5,7 @@
   "displayName": "Delete Equipment Gain",
   "emoji": "🧯️",
   "aggregateVariant": "DeleteEquipmentGain",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "delete-equipment-gain",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

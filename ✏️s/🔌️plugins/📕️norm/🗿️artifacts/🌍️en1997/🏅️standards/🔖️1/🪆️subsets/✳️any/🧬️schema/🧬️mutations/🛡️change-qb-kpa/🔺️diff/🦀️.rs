@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeQBKpa, base: &En1997Snapshot) -> protocol::MutationO
     if base.q_b_kpa == payload.new_q_b_kpa {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Base resistance q_b [kPa] is already {}.", payload.new_q_b_kpa));
     }
-    protocol::MutationOutcome::new(En1997Diff { q_b_kpa: Some(payload.new_q_b_kpa.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1997Diff { q_b_kpa: Some(payload.new_q_b_kpa), ..Default::default() })
 }
 //#endregion 🔖️Diff

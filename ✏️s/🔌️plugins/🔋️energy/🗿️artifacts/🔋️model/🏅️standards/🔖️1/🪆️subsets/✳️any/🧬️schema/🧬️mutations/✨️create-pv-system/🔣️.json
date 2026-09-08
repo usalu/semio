@@ -5,7 +5,7 @@
   "displayName": "Create Pv System",
   "emoji": "✨️",
   "aggregateVariant": "CreatePvSystem",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "create-pv-system",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

@@ -1,0 +1,41 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/flow/mutation/set-node-position.json",
+  "title": "SetNodePosition",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "position"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "position": {
+      "$ref": "#/$defs/SemioPoint2"
+    },
+    "mutation": {
+      "const": "setNodePosition",
+      "description": "Aggregate discriminator spliced in by SemioFlowMutation; absent when the payload stands alone."
+    }
+  },
+  "$defs": {
+    "SemioPoint2": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y"
+      ],
+      "properties": {
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        }
+      }
+    }
+  }
+}

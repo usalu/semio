@@ -27,7 +27,7 @@
       "executor": "nx:run-commands",
       "options": {
         "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
-        "command": "bun ../../🔨️modules/🎨print-design-token-paints/📜️script.ts preview-generated"
+        "command": "bun ./📜️script.ts preview-generated"
       },
       "inputs": [
         "{workspaceRoot}/🧰️framework/🛍️products/📓️print/🔨️modules/🎨print-design-token-paints/**/*",

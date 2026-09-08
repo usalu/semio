@@ -1,0 +1,169 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/xlsx/ecma-376/base/mutation/insert-sheet.json",
+  "title": "InsertSheet",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "sheet"
+  ],
+  "properties": {
+    "sheet": {
+      "$ref": "#/$defs/XlsxSheet"
+    },
+    "mutation": {
+      "const": "insertSheet",
+      "description": "Aggregate discriminator spliced in by XlsxMutation; absent when the payload stands alone."
+    }
+  },
+  "$defs": {
+    "XlsxSheet": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "cells": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/XlsxCell"
+          }
+        }
+      }
+    },
+    "XlsxCell": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "row",
+        "col"
+      ],
+      "properties": {
+        "row": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "col": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "value": {
+          "$ref": "#/$defs/XlsxCellValue"
+        }
+      }
+    },
+    "XlsxCellValue": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ],
+          "properties": {
+            "kind": {
+              "const": "number"
+            },
+            "value": {
+              "type": "number"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ],
+          "properties": {
+            "kind": {
+              "const": "sharedString"
+            },
+            "value": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ],
+          "properties": {
+            "kind": {
+              "const": "inlineString"
+            },
+            "value": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ],
+          "properties": {
+            "kind": {
+              "const": "boolean"
+            },
+            "value": {
+              "type": "boolean"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "expr"
+          ],
+          "properties": {
+            "kind": {
+              "const": "formula"
+            },
+            "expr": {
+              "type": "string"
+            },
+            "cached": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/XlsxCellValue"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "empty"
+            }
+          }
+        }
+      ]
+    }
+  }
+}

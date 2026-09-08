@@ -93,18 +93,18 @@ impl Din18599Mutation {
     /// `Emit::commit`.
     pub fn from_snapshot(snapshot: &Din18599Snapshot) -> Vec<Din18599Mutation> {
         let mut mutations = Vec::with_capacity(13);
-        mutations.push(Din18599Mutation::ChangeUseClass(change_use_class::ChangeUseClass { new_use_class: snapshot.use_class.clone() }));
-        mutations.push(Din18599Mutation::ChangeHeatedAreaM2(change_heated_area_m2::ChangeHeatedAreaM2 { new_heated_area_m2: snapshot.heated_area_m2.clone() }));
-        mutations.push(Din18599Mutation::ChangeOccupants(change_occupants::ChangeOccupants { new_occupants: snapshot.occupants.clone() }));
-        mutations.push(Din18599Mutation::ChangeHT(change_h_t::ChangeHT { new_h_t: snapshot.h_t.clone() }));
-        mutations.push(Din18599Mutation::ChangeHV(change_h_v::ChangeHV { new_h_v: snapshot.h_v.clone() }));
-        mutations.push(Din18599Mutation::ChangeInternalGainsWM2(change_internal_gains_w_m2::ChangeInternalGainsWM2 { new_internal_gains_w_m2: snapshot.internal_gains_w_m2.clone() }));
-        mutations.push(Din18599Mutation::ChangeSolarGainsKwh(change_solar_gains_kwh::ChangeSolarGainsKwh { new_solar_gains_kwh: snapshot.solar_gains_kwh.clone() }));
-        mutations.push(Din18599Mutation::ChangeSystemLossesKwh(change_system_losses_kwh::ChangeSystemLossesKwh { new_system_losses_kwh: snapshot.system_losses_kwh.clone() }));
-        mutations.push(Din18599Mutation::ChangeRenewableKwh(change_renewable_kwh::ChangeRenewableKwh { new_renewable_kwh: snapshot.renewable_kwh.clone() }));
-        mutations.push(Din18599Mutation::ChangeAnnualLimitKwh(change_annual_limit_kwh::ChangeAnnualLimitKwh { new_annual_limit_kwh: snapshot.annual_limit_kwh.clone() }));
+        mutations.push(Din18599Mutation::ChangeUseClass(change_use_class::ChangeUseClass { new_use_class: snapshot.use_class }));
+        mutations.push(Din18599Mutation::ChangeHeatedAreaM2(change_heated_area_m2::ChangeHeatedAreaM2 { new_heated_area_m2: snapshot.heated_area_m2 }));
+        mutations.push(Din18599Mutation::ChangeOccupants(change_occupants::ChangeOccupants { new_occupants: snapshot.occupants }));
+        mutations.push(Din18599Mutation::ChangeHT(change_h_t::ChangeHT { new_h_t: snapshot.h_t }));
+        mutations.push(Din18599Mutation::ChangeHV(change_h_v::ChangeHV { new_h_v: snapshot.h_v }));
+        mutations.push(Din18599Mutation::ChangeInternalGainsWM2(change_internal_gains_w_m2::ChangeInternalGainsWM2 { new_internal_gains_w_m2: snapshot.internal_gains_w_m2 }));
+        mutations.push(Din18599Mutation::ChangeSolarGainsKwh(change_solar_gains_kwh::ChangeSolarGainsKwh { new_solar_gains_kwh: snapshot.solar_gains_kwh }));
+        mutations.push(Din18599Mutation::ChangeSystemLossesKwh(change_system_losses_kwh::ChangeSystemLossesKwh { new_system_losses_kwh: snapshot.system_losses_kwh }));
+        mutations.push(Din18599Mutation::ChangeRenewableKwh(change_renewable_kwh::ChangeRenewableKwh { new_renewable_kwh: snapshot.renewable_kwh }));
+        mutations.push(Din18599Mutation::ChangeAnnualLimitKwh(change_annual_limit_kwh::ChangeAnnualLimitKwh { new_annual_limit_kwh: snapshot.annual_limit_kwh }));
         mutations.push(Din18599Mutation::ChangeEnergyCarrier(change_energy_carrier::ChangeEnergyCarrier { new_energy_carrier: snapshot.energy_carrier.clone() }));
-        mutations.push(Din18599Mutation::ChangeReferenceQPKwh(change_reference_q_p_kwh::ChangeReferenceQPKwh { new_reference_q_p_kwh: snapshot.reference_q_p_kwh.clone() }));
+        mutations.push(Din18599Mutation::ChangeReferenceQPKwh(change_reference_q_p_kwh::ChangeReferenceQPKwh { new_reference_q_p_kwh: snapshot.reference_q_p_kwh }));
         mutations.push(Din18599Mutation::UpdateClimate(update_climate::UpdateClimate { new_climate: crate::artifacts::din18599::din18599_climate(snapshot) }));
         mutations
     }

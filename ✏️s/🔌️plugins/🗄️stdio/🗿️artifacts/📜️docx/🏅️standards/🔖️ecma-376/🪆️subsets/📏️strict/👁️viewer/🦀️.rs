@@ -5,7 +5,7 @@
 //! structurally emit an artifact mutation. Must not import anything from the sibling
 //! mutation-capable surface.
 
-use crate::artifacts::docx::{DocxMutation, DocxSnapshot, STDIO_DOCX_DOCUMENT_SCHEMA};
+use crate::{DocxMutation, DocxSnapshot, STDIO_DOCX_DOCUMENT_SCHEMA};
 use crate::viewer::docx::standards::v_ecma_376::subsets::strict::modes::view;
 use crate::viewer::docx::standards::v_ecma_376::subsets::strict::modes::view::windows::main;
 use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId, ViewEmit, Viewer};

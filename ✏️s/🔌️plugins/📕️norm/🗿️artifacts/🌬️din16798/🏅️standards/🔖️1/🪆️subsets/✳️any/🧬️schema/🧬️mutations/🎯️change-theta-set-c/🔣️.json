@@ -5,7 +5,7 @@
   "displayName": "Change Theta Set C",
   "emoji": "🎯️",
   "aggregateVariant": "ChangeThetaSetC",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

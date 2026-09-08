@@ -1,6 +1,6 @@
 //! 🧬️ Transparent PDF 1.4/X mutation registry and delegation.
 
-use crate::artifacts::pdf::standards::v1_4::subsets::base::schema::{diff::PdfDiff, snapshot::PdfSnapshot};
+use crate::standards::v1_4::subsets::base::schema::{diff::PdfDiff, snapshot::PdfSnapshot};
 
 //#region 🔖️Leaves
 #[path = "📐️set-page-size/🦀️.rs"]

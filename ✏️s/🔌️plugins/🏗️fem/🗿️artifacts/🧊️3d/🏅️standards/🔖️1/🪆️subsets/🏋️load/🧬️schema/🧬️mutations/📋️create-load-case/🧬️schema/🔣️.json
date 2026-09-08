@@ -1,0 +1,134 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/fem/3d/1/load/mutation/create-load-case.json",
+  "title": "CreateLoadCase",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "loadCase"
+  ],
+  "properties": {
+    "loadCase": {
+      "title": "FemLoadCase",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "loads",
+        "name",
+        "selfWeight"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "loads": {
+          "type": "array",
+          "items": {
+            "title": "FemLoad",
+            "oneOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "dof",
+                  "id",
+                  "kind",
+                  "nodeId",
+                  "value"
+                ],
+                "properties": {
+                  "kind": {
+                    "const": "nodal"
+                  },
+                  "id": {
+                    "type": "string"
+                  },
+                  "nodeId": {
+                    "type": "string"
+                  },
+                  "dof": {
+                    "type": "string",
+                    "enum": [
+                      "Tx",
+                      "Ty",
+                      "Tz",
+                      "Rx",
+                      "Ry",
+                      "Rz"
+                    ]
+                  },
+                  "value": {
+                    "type": "number"
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "elementId",
+                  "id",
+                  "kind",
+                  "wx",
+                  "wy",
+                  "wz"
+                ],
+                "properties": {
+                  "kind": {
+                    "const": "memberUdl"
+                  },
+                  "id": {
+                    "type": "string"
+                  },
+                  "elementId": {
+                    "type": "string"
+                  },
+                  "wx": {
+                    "type": "number"
+                  },
+                  "wy": {
+                    "type": "number"
+                  },
+                  "wz": {
+                    "type": "number"
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "id",
+                  "kind",
+                  "pressure",
+                  "solidId"
+                ],
+                "properties": {
+                  "kind": {
+                    "const": "area"
+                  },
+                  "id": {
+                    "type": "string"
+                  },
+                  "solidId": {
+                    "type": "string"
+                  },
+                  "pressure": {
+                    "type": "number"
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "selfWeight": {
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}

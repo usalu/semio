@@ -5,7 +5,7 @@
   "displayName": "Unbind Primitive Indices",
   "emoji": "✂️",
   "aggregateVariant": "UnbindPrimitiveIndices",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

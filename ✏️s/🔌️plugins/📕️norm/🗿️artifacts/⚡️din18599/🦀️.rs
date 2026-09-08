@@ -52,16 +52,16 @@ impl MonthlyClimate {
 /// internal diff/inverse implementation is rewired to mint a fresh content-addressed child handle,
 /// mirroring `➗️mathematical`'s/en1990's equivalent pattern.
 //#region 🔖️ChildTypes
-pub type Din18599ClimateChild = store::ArtifactChild<semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot>;
+pub type Din18599ClimateChild = store::ArtifactChild<semio_s_artifact_stdio_semio::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot>;
 //#endregion 🔖️ChildTypes
 
 //#region 🔖️Converters
 /// 🌉 REAL bidirectional converter: `MonthlyClimate`'s two parallel twelve-month arrays <-> `table`
 /// rows — one row per calendar month (index-addressed, month = row index + 1), two columns
 /// (`thetaEC: Float`, `gHWM2: Float`).
-pub fn din18599_climate_table_from_data(climate: &MonthlyClimate) -> semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot {
-    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::table::schema::snapshot::{SemioTableCellKind, SemioTableColumn, SemioTableRow, SemioTableSnapshot, STDIO_SEMIOTABLE_DOCUMENT_SCHEMA};
-    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValue;
+pub fn din18599_climate_table_from_data(climate: &MonthlyClimate) -> semio_s_artifact_stdio_semio::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot {
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::table::schema::snapshot::{SemioTableCellKind, SemioTableColumn, SemioTableRow, SemioTableSnapshot, STDIO_SEMIOTABLE_DOCUMENT_SCHEMA};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::value::schema::snapshot::SemioValue;
     SemioTableSnapshot {
         schema: STDIO_SEMIOTABLE_DOCUMENT_SCHEMA.into(),
         columns: vec![SemioTableColumn { name: "thetaEC".into(), kind: SemioTableCellKind::Float }, SemioTableColumn { name: "gHWM2".into(), kind: SemioTableCellKind::Float }],
@@ -72,9 +72,9 @@ pub fn din18599_climate_table_from_data(climate: &MonthlyClimate) -> semio_s_plu
 /// 🌉 Inverse of the converter above — real reconstruction, not a stub. A short/missing row
 /// degrades honestly (`0.0` for the missing month(s)) rather than panicking, since an
 /// externally-composed mismatch is possible in principle.
-pub fn din18599_climate_data_from_table(table: &semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot) -> MonthlyClimate {
-    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::table::schema::snapshot::SemioTableRow;
-    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValue;
+pub fn din18599_climate_data_from_table(table: &semio_s_artifact_stdio_semio::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot) -> MonthlyClimate {
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::table::schema::snapshot::SemioTableRow;
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::value::schema::snapshot::SemioValue;
     fn cell_f64(row: Option<&SemioTableRow>, index: usize) -> f64 {
         match row.and_then(|row| row.cells.get(index)) {
             Some(SemioValue::Float { lexeme }) | Some(SemioValue::Int { lexeme }) => lexeme.parse().unwrap_or(0.0),
@@ -122,7 +122,7 @@ pub fn din18599_climate_child_from_data(climate: &MonthlyClimate) -> Din18599Cli
 /// every energy-balance/compliance/inference/mutation-diff call path in this artifact now uses. A
 /// wire-only child fails soft until its child document is materialized by the host.
 pub fn din18599_climate(snapshot: &Din18599Snapshot) -> MonthlyClimate {
-    snapshot.climate.local_owner::<Din18599ClimateWorkingData>().map(|data| data.climate.clone()).unwrap_or(MonthlyClimate { theta_e_c: [0.0; 12], g_h_w_m2: [0.0; 12] })
+    snapshot.climate.local_owner::<Din18599ClimateWorkingData>().map_or(MonthlyClimate { theta_e_c: [0.0; 12], g_h_w_m2: [0.0; 12] }, |data| data.climate.clone())
 }
 //#endregion 🔖️WorkingScene
 //#endregion 🔖️Composition

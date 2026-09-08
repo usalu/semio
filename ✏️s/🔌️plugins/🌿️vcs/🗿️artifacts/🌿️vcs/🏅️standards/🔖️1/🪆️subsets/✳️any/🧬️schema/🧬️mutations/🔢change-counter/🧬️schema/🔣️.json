@@ -1,0 +1,37 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/vcs/vcs/1/any/mutation/change-counter.json",
+  "title": "ChangeCounter",
+  "$ref": "#/$defs/Payload",
+  "$defs": {
+    "Payload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "newCounter"
+      ],
+      "properties": {
+        "newCounter": {
+          "type": "integer"
+        }
+      }
+    },
+    "Wire": {
+      "title": "ChangeCounterMutation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "newCounter"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "changeCounter"
+        },
+        "newCounter": {
+          "$ref": "#/$defs/Payload/properties/newCounter"
+        }
+      }
+    }
+  }
+}

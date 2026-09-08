@@ -3,9 +3,9 @@
 //! the ORIGINAL NUMBER LEXEME verbatim (rfc8259 allows arbitrary precision — never round-tripped
 //! through `f64`). No `serde_json::Value` anywhere in this file.
 
-use crate::artifacts::json::STDIO_JSON_DOCUMENT_SCHEMA;
+use crate::STDIO_JSON_DOCUMENT_SCHEMA;
 use dsl::TextSpan;
-use schema::ArtifactSchema;
+use framework_schema::ArtifactSchema;
 use store::TextError;
 
 //#region 🔖️JsonModel

@@ -5,7 +5,7 @@
   "displayName": "Change Fault Severity",
   "emoji": "🌶️",
   "aggregateVariant": "ChangeFaultSeverity",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-fault-severity",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

@@ -2,7 +2,7 @@
 
 use super::remove_trailer_entry::RemoveTrailerEntry;
 use super::PdfMutation;
-use crate::artifacts::pdf::standards::v1_7::subsets::base::schema::{diff::{self, PdfDiff}, snapshot::{PdfObject, PdfSnapshot}};
+use crate::standards::v1_7::subsets::base::schema::{diff::{self, PdfDiff}, snapshot::{PdfObject, PdfSnapshot}};
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
 
 //#region 🔖️Mutation

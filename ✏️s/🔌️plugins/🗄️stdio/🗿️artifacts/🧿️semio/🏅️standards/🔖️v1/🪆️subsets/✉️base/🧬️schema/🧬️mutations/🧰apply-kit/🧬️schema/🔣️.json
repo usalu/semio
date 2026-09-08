@@ -1,0 +1,647 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/base/mutation/apply-kit.json",
+  "title": "ApplyKit",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation"
+  ],
+  "properties": {
+    "mutation": {
+      "$ref": "#/$defs/SemioKitMutation"
+    }
+  },
+  "$defs": {
+    "SemioKitMutation": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "CreateObject"
+          ],
+          "properties": {
+            "CreateObject": {
+              "$ref": "#/$defs/CreateObject"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "DeleteObject"
+          ],
+          "properties": {
+            "DeleteObject": {
+              "$ref": "#/$defs/DeleteObject"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "CreateModel"
+          ],
+          "properties": {
+            "CreateModel": {
+              "$ref": "#/$defs/CreateModel"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "DeleteModel"
+          ],
+          "properties": {
+            "DeleteModel": {
+              "$ref": "#/$defs/DeleteModel"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "CreateProperties"
+          ],
+          "properties": {
+            "CreateProperties": {
+              "$ref": "#/$defs/CreateProperties"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "DeleteProperties"
+          ],
+          "properties": {
+            "DeleteProperties": {
+              "$ref": "#/$defs/DeleteProperties"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "BindRepresentation"
+          ],
+          "properties": {
+            "BindRepresentation": {
+              "$ref": "#/$defs/BindRepresentation"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "UnbindRepresentation"
+          ],
+          "properties": {
+            "UnbindRepresentation": {
+              "$ref": "#/$defs/UnbindRepresentation"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "ChangeRepresentationPin"
+          ],
+          "properties": {
+            "ChangeRepresentationPin": {
+              "$ref": "#/$defs/ChangeRepresentationPin"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "AddType"
+          ],
+          "properties": {
+            "AddType": {
+              "$ref": "#/$defs/AddType"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "RemoveType"
+          ],
+          "properties": {
+            "RemoveType": {
+              "$ref": "#/$defs/RemoveType"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "RenameType"
+          ],
+          "properties": {
+            "RenameType": {
+              "$ref": "#/$defs/RenameType"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "AddDesign"
+          ],
+          "properties": {
+            "AddDesign": {
+              "$ref": "#/$defs/AddDesign"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "RemoveDesign"
+          ],
+          "properties": {
+            "RemoveDesign": {
+              "$ref": "#/$defs/RemoveDesign"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "EditDesign"
+          ],
+          "properties": {
+            "EditDesign": {
+              "$ref": "#/$defs/EditDesign"
+            }
+          }
+        }
+      ]
+    },
+    "CreateObject": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "child_id",
+        "target"
+      ],
+      "properties": {
+        "child_id": {
+          "type": "string"
+        },
+        "target": {
+          "$ref": "#/$defs/ArtifactRef"
+        }
+      }
+    },
+    "ArtifactRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "artifactId",
+        "dialect"
+      ],
+      "properties": {
+        "artifactId": {
+          "type": "string"
+        },
+        "dialect": {
+          "$ref": "#/$defs/ArtifactDialect"
+        }
+      }
+    },
+    "ArtifactDialect": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "artifactKind",
+        "standard",
+        "subset"
+      ],
+      "properties": {
+        "artifactKind": {
+          "type": "string"
+        },
+        "standard": {
+          "type": "string"
+        },
+        "subset": {
+          "type": "string"
+        }
+      }
+    },
+    "DeleteObject": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "child_id"
+      ],
+      "properties": {
+        "child_id": {
+          "type": "string"
+        }
+      }
+    },
+    "CreateModel": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "child_id",
+        "target"
+      ],
+      "properties": {
+        "child_id": {
+          "type": "string"
+        },
+        "target": {
+          "$ref": "#/$defs/ArtifactRef"
+        }
+      }
+    },
+    "DeleteModel": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "child_id"
+      ],
+      "properties": {
+        "child_id": {
+          "type": "string"
+        }
+      }
+    },
+    "CreateProperties": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "child_id",
+        "target"
+      ],
+      "properties": {
+        "child_id": {
+          "type": "string"
+        },
+        "target": {
+          "$ref": "#/$defs/ArtifactRef"
+        }
+      }
+    },
+    "DeleteProperties": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {}
+    },
+    "BindRepresentation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "target",
+        "pin",
+        "role"
+      ],
+      "properties": {
+        "target": {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        "pin": {
+          "$ref": "#/$defs/LinkPin"
+        },
+        "role": {
+          "type": "string"
+        }
+      }
+    },
+    "LinkPin": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "head"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "id"
+          ],
+          "properties": {
+            "kind": {
+              "const": "checkpoint"
+            },
+            "id": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "blob"
+          ],
+          "properties": {
+            "kind": {
+              "const": "snapshot"
+            },
+            "blob": {
+              "$ref": "#/$defs/BlobRef"
+            }
+          }
+        }
+      ]
+    },
+    "BlobRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "hash",
+        "size",
+        "mediaType"
+      ],
+      "properties": {
+        "hash": {
+          "type": "string"
+        },
+        "size": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "mediaType": {
+          "type": "string"
+        }
+      }
+    },
+    "UnbindRepresentation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "ChangeRepresentationPin": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "pin"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "pin": {
+          "$ref": "#/$defs/LinkPin"
+        }
+      }
+    },
+    "AddType": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "category"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "category": {
+          "type": "string"
+        }
+      }
+    },
+    "RemoveType": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        }
+      }
+    },
+    "RenameType": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "new_name"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "new_name": {
+          "type": "string"
+        }
+      }
+    },
+    "AddDesign": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        }
+      }
+    },
+    "RemoveDesign": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        }
+      }
+    },
+    "EditDesign": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "pieces",
+        "connections"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "pieces": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SemioKitPiece"
+          }
+        },
+        "connections": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SemioKitConnection"
+          }
+        }
+      }
+    },
+    "SemioKitPiece": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "typeId",
+        "transform"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "typeId": {
+          "type": "string"
+        },
+        "transform": {
+          "$ref": "#/$defs/SemioTransform"
+        }
+      }
+    },
+    "SemioTransform": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "translation",
+        "rotation",
+        "scale"
+      ],
+      "properties": {
+        "translation": {
+          "$ref": "#/$defs/SemioPoint3"
+        },
+        "rotation": {
+          "$ref": "#/$defs/SemioQuaternion"
+        },
+        "scale": {
+          "$ref": "#/$defs/SemioPoint3"
+        }
+      }
+    },
+    "SemioPoint3": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y",
+        "z"
+      ],
+      "properties": {
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "z": {
+          "type": "number"
+        }
+      }
+    },
+    "SemioQuaternion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y",
+        "z",
+        "w"
+      ],
+      "properties": {
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "z": {
+          "type": "number"
+        },
+        "w": {
+          "type": "number"
+        }
+      }
+    },
+    "SemioKitConnection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "connectingPieceId",
+        "connectingPort",
+        "connectedPieceId",
+        "connectedPort"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "connectingPieceId": {
+          "type": "string"
+        },
+        "connectingPort": {
+          "type": "string"
+        },
+        "connectedPieceId": {
+          "type": "string"
+        },
+        "connectedPort": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,79 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/json/rfc8259/i-json/mutation/set-top-level.json",
+  "title": "SetTopLevel",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "root"
+  ],
+  "properties": {
+    "root": {
+      "$ref": "#/$defs/JsonIJsonRoot"
+    },
+    "kind": {
+      "const": "setTopLevel",
+      "description": "Aggregate discriminator spliced in by JsonIJsonRoot; absent when the payload stands alone."
+    }
+  },
+  "$defs": {
+    "JsonIJsonRoot": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "members"
+          ],
+          "properties": {
+            "kind": {
+              "const": "object"
+            },
+            "members": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/JsonMember"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "items"
+          ],
+          "properties": {
+            "kind": {
+              "const": "array"
+            },
+            "items": {
+              "type": "array",
+              "items": {
+                "description": "any JSON value"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "JsonMember": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key",
+        "value"
+      ],
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "value": {
+          "description": "any JSON value"
+        }
+      }
+    }
+  }
+}

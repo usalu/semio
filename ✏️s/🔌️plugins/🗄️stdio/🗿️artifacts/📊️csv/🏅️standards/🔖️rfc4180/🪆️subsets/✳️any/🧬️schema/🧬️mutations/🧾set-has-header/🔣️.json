@@ -5,7 +5,7 @@
   "displayName": "Set Has Header",
   "emoji": "🧾",
   "aggregateVariant": "SetHasHeader",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

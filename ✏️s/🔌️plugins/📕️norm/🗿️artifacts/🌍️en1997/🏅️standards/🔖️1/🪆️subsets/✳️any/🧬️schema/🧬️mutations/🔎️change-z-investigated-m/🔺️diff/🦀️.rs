@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeZInvestigatedM, base: &En1997Snapshot) -> protocol::
     if base.z_investigated_m == payload.new_z_investigated_m {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Investigated depth [m] is already {}.", payload.new_z_investigated_m));
     }
-    protocol::MutationOutcome::new(En1997Diff { z_investigated_m: Some(payload.new_z_investigated_m.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1997Diff { z_investigated_m: Some(payload.new_z_investigated_m), ..Default::default() })
 }
 //#endregion 🔖️Diff

@@ -1,0 +1,17 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/forms/forms/1/any/editor/config/mutation/set-step-index.json",
+  "title": "SetStepIndex",
+  "type": "object",
+  "properties": {
+    "index": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 4294967295
+    }
+  },
+  "required": [
+    "index"
+  ],
+  "additionalProperties": false
+}

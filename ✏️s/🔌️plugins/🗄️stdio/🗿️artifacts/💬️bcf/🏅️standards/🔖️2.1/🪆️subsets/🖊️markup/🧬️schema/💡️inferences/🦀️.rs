@@ -6,8 +6,8 @@
 //! from `topics` alone — BCF is an issue-tracking format, not geometry, so the closest honest
 //! derived statistic is a count/fold over topics/comments/viewpoints/authors, not a bounding box).
 
-use crate::artifacts::bcf::standards::v2_1::subsets::any::schema::snapshot::BcfSnapshot;
-use schema::ArtifactSchema;
+use crate::standards::v2_1::subsets::any::schema::snapshot::BcfSnapshot;
+use framework_schema::ArtifactSchema;
 
 use super::topicstats::{compute_bcf_topic_stats, BcfTopicStats};
 
@@ -54,7 +54,7 @@ impl protocol::InferenceSpec<BcfSnapshot> for BcfInference {
 /// total topic/comment/viewpoint count), with no honest per-entity incremental decomposition (a
 /// merkle dep-chain over this flat whole-snapshot count/fold costs more than the fold it would
 /// cache) — the default `infer_cached` passthrough is exact.
-impl semio_framework_plugin::ArtifactInferrer for crate::artifacts::bcf::standards::v2_1::subsets::any::schema::BcfBuilder {
+impl semio_framework_plugin::ArtifactInferrer for crate::standards::v2_1::subsets::any::schema::BcfBuilder {
     type Snapshot = BcfSnapshot;
     type Inference = BcfInference;
 }
@@ -64,10 +64,10 @@ impl semio_framework_plugin::ArtifactInferrer for crate::artifacts::bcf::standar
 /// 💡️ Registers `s.stdio.bcf.inference`'s facet leaves into the OS-wide inference catalog — call
 /// once at plugin init, alongside `bcf_artifact_schema_descriptor`'s registration.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn bcf_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
-    schema::ArtifactInferenceDescriptor {
+pub fn bcf_artifact_inference_descriptor() -> framework_schema::ArtifactInferenceDescriptor {
+    framework_schema::ArtifactInferenceDescriptor {
         id: "s.stdio.bcf.inference",
-        inference: schema::FacetLeaves {
+        inference: framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),

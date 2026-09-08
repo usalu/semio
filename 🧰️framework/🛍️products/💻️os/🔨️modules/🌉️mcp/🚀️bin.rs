@@ -3,7 +3,8 @@
 //! [--folder <dir> | --hub <url> --space <id>] [--principal <id>] [--scopes a,b]
 //! [--audit-dir <dir>] [--allow-origin <origin>]…` (P1b + P1c +
 //! P7-headless-workspace) — this binary owns argv parsing only; all real logic lives in
-//! `semio_framework_os_mcp::{run_stdio, run_http}` (P1a's brief §2.5, "keep main thin, all logic in
+//! `semio_framework_os_mcp::{run_stdio, run_http}`. `semio-os-mcp schemas` additionally prints the
+//! `os.mcp` draft-07 schema mirror on stdout (the `schema-mirror` nx target's generator) (P1a's brief §2.5, "keep main thin, all logic in
 //! the lib" — mirrors `🏃️run/🚀️bin.rs`'s own split). Unknown modes exit with a clear message rather
 //! than silently doing nothing. `--folder`/`--hub` are mutually exclusive (`📋️master.md` §2.1:
 //! "`--folder <space dir>`…`--hub <url> --space <id>`"). Hub authority is claimed from protected fd 3
@@ -93,13 +94,13 @@ fn parse_args() -> Result<Mode, String> {
     let mut argv = std::env::args().skip(1);
     let Some(mode) = argv.next() else {
         return Err(
-            "usage: semio-os-mcp <stdio|http> [--folder <dir> | --hub <url> --space <id>] [--principal <id>] [--scopes a,b] [http-only: --port <p> --bind <addr> --audit-dir <dir> --allow-origin <origin>]".to_string()
+            "usage: semio-os-mcp <stdio|http|schemas> [--folder <dir> | --hub <url> --space <id>] [--principal <id>] [--scopes a,b] [http-only: --port <p> --bind <addr> --audit-dir <dir> --allow-origin <origin>]".to_string()
         );
     };
     match mode.as_str() {
         "stdio" => Ok(Mode::Stdio(parse_stdio_args(&mut argv)?)),
         "http" => Ok(Mode::Http(parse_http_args(&mut argv)?)),
-        other => Err(format!("unknown mode `{other}` — only `stdio`/`http` are implemented by this binary")),
+        other => Err(format!("unknown mode `{other}` — only `stdio`/`http`/`schemas` are implemented by this binary")),
     }
 }
 //#endregion 🔖️Args
@@ -144,6 +145,14 @@ fn benign_direct_child_environment_is_preserved() -> bool {
 }
 
 fn main() {
+    // 🪞️ `semio-os-mcp schemas` prints the `os.mcp` scope's whole draft-07 schema document on stdout —
+    // the generator behind `bun nx run @semio-tech/framework-os-mcp-rs:schema-mirror`. It reads no
+    // environment, no filesystem and no credential, so it deliberately runs BEFORE the process-entry
+    // seal every serving mode is gated on.
+    if std::env::args().nth(1).as_deref() == Some("schemas") {
+        print!("{}", semio_framework_os_mcp::schema_mirror_json());
+        return;
+    }
     if !protected_credential_environment_is_absent() {
         eprintln!("[semio-os-mcp] protected parent environment was not sealed");
         std::process::exit(1);

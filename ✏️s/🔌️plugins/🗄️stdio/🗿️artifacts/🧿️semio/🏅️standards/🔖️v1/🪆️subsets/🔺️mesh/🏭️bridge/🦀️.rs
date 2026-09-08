@@ -11,7 +11,6 @@
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
-extern crate semio_framework_schema as schema;
 
 // 🧬️ The production module tree, mirrored to the depth this subset actually needs. `🚪️io` is
 // deliberately absent: mesh's importers and exporters reach into six sibling artifacts, none of which

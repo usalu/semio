@@ -22,19 +22,17 @@ use crate::artifacts::remodeling::{
 };
 use semio_framework::{io_dispatch, resolve_ready, Dialect, ErasedComposeSource, IoDirection, IoKey, IoPayload, StandardId, SubsetId};
 use semio_framework_plugin::{ArtifactSerializer, MeshData};
-use semio_s_plugin_stdio::artifacts::{
-    las::standards::v1_0::engine as las_engine,
-    ply::standards::v1_0::engine as ply_engine,
-    png::PngSnapshot,
-    semio::standards::v1::{
+use semio_s_artifact_stdio_las::standards::v1_0::engine as las_engine;
+use semio_s_artifact_stdio_ply::standards::v1_0::engine as ply_engine;
+use semio_s_artifact_stdio_png::PngSnapshot;
+use semio_s_artifact_stdio_semio::standards::v1::{
         subsets::base::schema::geometry::{SemioPoint3, SemioRgba, SemioUv},
         subsets::image::schema::snapshot::SemioImageSnapshot,
         subsets::mesh::{
             io::export::serializers::artifacts::{las::v1_0::any::SemioMeshToLas, ply::v1_0::any::SemioMeshToPly},
             schema::snapshot::{SemioMesh, SemioMeshSnapshot, SemioPrimitive, SemioTopology},
         },
-    },
-};
+    };
 
 pub fn import_stdio_kinds() -> &'static [&'static str] {
     &["stdio.gltf", "stdio.json", "stdio.las", "stdio.obj", "stdio.ply", "stdio.png", "stdio.stl", "stdio.txt"]
@@ -165,8 +163,8 @@ fn packed_colors_to_unit(colors: &PackedU8) -> Vec<f32> {
 }
 
 fn point_cloud_semio(id: &str, positions: &[f32], colors: &[f32]) -> SemioMeshSnapshot {
-    let points: Vec<SemioPoint3> = positions.chunks_exact(3).map(|p| SemioPoint3 { x: f64::from(p[0]), y: f64::from(p[1]), z: f64::from(p[2]) }).collect();
-    let rgba: Vec<SemioRgba> = if colors.len() == points.len() * 3 { colors.chunks_exact(3).map(|c| SemioRgba { r: c[0], g: c[1], b: c[2], a: 1.0 }).collect() } else { Vec::new() };
+    let points: Vec<SemioPoint3> = positions.as_chunks::<3>().0.iter().map(|p| SemioPoint3 { x: f64::from(p[0]), y: f64::from(p[1]), z: f64::from(p[2]) }).collect();
+    let rgba: Vec<SemioRgba> = if colors.len() == points.len() * 3 { colors.as_chunks::<3>().0.iter().map(|c| SemioRgba { r: c[0], g: c[1], b: c[2], a: 1.0 }).collect() } else { Vec::new() };
     let primitive = SemioPrimitive { id: format!("remodeling-{id}-0"), topology: SemioTopology::Points, positions: points, normals: Vec::new(), uvs: Vec::new(), colors: rgba, indices: Vec::new(), material_id: None };
     SemioMeshSnapshot { schema: "stdio.semio.mesh".into(), meshes: vec![SemioMesh { id: format!("remodeling-{id}"), primitives: vec![primitive] }], materials: Vec::new(), textures: Vec::new() }
 }
@@ -292,7 +290,7 @@ pub fn scene_from_semio_cloud(semio: &SemioMeshSnapshot) -> Result<RemodelingSna
 /// 🖼️ One PNG file as a whole scene: a single-frame `MediaKind::ImageSequence` stream whose frame
 /// points at a real durable image asset, the same shape `📥️import-frames` builds for a photo set.
 pub fn scene_from_png_bytes(bytes: &[u8]) -> Result<RemodelingSnapshot, String> {
-    let png = semio_s_plugin_stdio::artifacts::png::io::decode_png(bytes)?;
+    let png = semio_s_artifact_stdio_png::io::decode_png(bytes)?;
     let asset = ImageAsset { mime: "image/png".into(), data: base64_codec::base64_standard_encode(bytes), width: png.width, height: png.height };
     let asset_id = "png-import-0".to_string();
     let mut scene = default_remodeling_scene();
@@ -340,14 +338,14 @@ fn semio_io_key(owner: &Dialect, direction: IoDirection, counterpart: &Dialect) 
 fn ensure_stdio_semio_and_png_registered() {
     static ONCE: std::sync::Once = std::sync::Once::new();
     ONCE.call_once(|| {
-        semio_s_plugin_stdio::artifacts::semio::register();
-        semio_s_plugin_stdio::artifacts::png::register();
+        semio_s_artifact_stdio_semio::register();
+        semio_s_artifact_stdio_png::register();
     });
 }
 
 pub(crate) fn semio_image_from_png_bytes(raw_png_bytes: &[u8]) -> Result<SemioImageSnapshot, String> {
     ensure_stdio_semio_and_png_registered();
-    let png_snapshot = semio_s_plugin_stdio::artifacts::png::io::decode_png(raw_png_bytes)?;
+    let png_snapshot = semio_s_artifact_stdio_png::io::decode_png(raw_png_bytes)?;
     let payload = IoPayload::Binary(<PngSnapshot as store::ArtifactPack>::encode_pack(&png_snapshot));
     let key = semio_io_key(&SEMIO_IMAGE_DIALECT, IoDirection::Import, &PNG_DIALECT);
     let composed = resolve_ready(io_dispatch(&key, &[ErasedComposeSource { dialect: PNG_DIALECT, payload }])).map_err(|error| error.message)?;
@@ -362,7 +360,7 @@ pub(crate) fn png_bytes_from_semio_image(image: &SemioImageSnapshot) -> Result<V
     let composed = resolve_ready(io_dispatch(&key, &[ErasedComposeSource { dialect: SEMIO_IMAGE_DIALECT, payload }])).map_err(|error| error.message)?;
     let IoPayload::Binary(bytes) = composed.payload else { return Err("s.stdio.png composer returned a non-binary payload".into()) };
     let png_snapshot = <PngSnapshot as store::ArtifactPack>::decode_pack(&bytes).map_err(|error| format!("{error:?}"))?;
-    semio_s_plugin_stdio::artifacts::png::io::encode_png(&png_snapshot)
+    semio_s_artifact_stdio_png::io::encode_png(&png_snapshot)
 }
 
 /// 🧩️ Real bidirectional CHILD-CONTENT converters between `ImageAsset` (mime + base64 text, the
@@ -412,8 +410,8 @@ pub mod derived_composition {
             for source in sources {
                 if source.dialect == DIALECT {
                     let native = match &source.payload {
-                        AnalyzeSource::Text(t) => AnalyzeSource::Text(*t),
-                        AnalyzeSource::Binary(b) => AnalyzeSource::Binary(*b),
+                        AnalyzeSource::Text(t) => AnalyzeSource::Text(t),
+                        AnalyzeSource::Binary(b) => AnalyzeSource::Binary(b),
                     };
                     let analysis = RemodelingAnalyzer::analyze(&[native]);
                     if let Some(snapshot) = analysis.parts.snapshot {
@@ -762,7 +760,7 @@ mod io_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn png_export_round_trips_a_stored_texture_asset() {
-        use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::image::schema::snapshot::{SemioColorspace, SemioImageFrame};
+        use semio_s_artifact_stdio_semio::standards::v1::subsets::image::schema::snapshot::{SemioColorspace, SemioImageFrame};
         let mut scene = default_remodeling_scene();
         let pixels: Vec<u8> = (0..4 * 4 * 4).map(|i| (i % 256) as u8).collect();
         let image = SemioImageSnapshot { width: 4, height: 4, colorspace: SemioColorspace::Rgba, bit_depth: 8, frames: vec![SemioImageFrame { delay_ms: 0, rgba8: pixels.clone() }], ..SemioImageSnapshot::default() };

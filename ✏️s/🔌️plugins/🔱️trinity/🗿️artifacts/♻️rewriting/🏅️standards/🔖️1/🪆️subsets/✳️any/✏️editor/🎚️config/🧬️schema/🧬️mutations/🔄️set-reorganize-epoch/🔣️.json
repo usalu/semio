@@ -5,7 +5,7 @@
   "displayName": "Set Reorganize Epoch",
   "emoji": "🔄️",
   "aggregateVariant": "SetReorganizeEpoch",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "set-reorganize-epoch",
   "binaryTag": 2,
   "invertibility": "explicit-mutation",

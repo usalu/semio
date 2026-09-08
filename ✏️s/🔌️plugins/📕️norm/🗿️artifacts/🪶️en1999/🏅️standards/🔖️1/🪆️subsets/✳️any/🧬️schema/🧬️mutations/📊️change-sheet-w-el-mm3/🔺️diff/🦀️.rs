@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeSheetWElMm3, base: &En1999Snapshot) -> protocol::Mut
     if base.sheet_w_el_mm3 == payload.new_sheet_w_el_mm3 {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Sheet elastic section modulus [mm3] is already {}.", payload.new_sheet_w_el_mm3));
     }
-    protocol::MutationOutcome::new(En1999Diff { sheet_w_el_mm3: Some(payload.new_sheet_w_el_mm3.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1999Diff { sheet_w_el_mm3: Some(payload.new_sheet_w_el_mm3), ..Default::default() })
 }
 //#endregion 🔖️Diff

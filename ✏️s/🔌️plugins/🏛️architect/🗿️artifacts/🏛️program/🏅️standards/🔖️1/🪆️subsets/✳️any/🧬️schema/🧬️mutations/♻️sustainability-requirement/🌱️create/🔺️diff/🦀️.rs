@@ -10,7 +10,7 @@ use crate::artifacts::program::ProgramSnapshot;
 pub fn diff(payload: &CreateSustainabilityRequirement, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
     let id = payload.sustainability_requirement.header.id.clone();
     if base.sustainability.iter().any(|row| row.header.id == id) {
-        return protocol::MutationOutcome::fatal("mutation.duplicate-id", "A sustainability requirement already exists with this id.", [id.0.clone()]);
+        return protocol::MutationOutcome::fatal("mutation.duplicate-id", "A sustainability requirement already exists with this id.", [id.0]);
     }
     protocol::MutationOutcome::new(ProgramDiff { sustainability: Some(ProgramSustainabilityDelta { added: vec![payload.sustainability_requirement.clone()], ..Default::default() }), ..Default::default() })
 }

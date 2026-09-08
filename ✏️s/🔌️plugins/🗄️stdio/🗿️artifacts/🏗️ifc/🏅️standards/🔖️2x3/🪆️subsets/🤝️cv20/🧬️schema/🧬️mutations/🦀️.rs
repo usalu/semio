@@ -28,19 +28,19 @@
 //! @see ../../../../🧬️mvd/🦀️.rs — the Part-21 editing primitives the three MVD subsets share.
 //! @see ../../🔣️oracle.json — the `ifc-2x3-cv20` catalog `KINDS` is checked against.
 
-use crate::artifacts::ifc::standards::v2x3::mvd;
-use crate::artifacts::ifc::standards::v2x3::subsets::base::schema::diff::Ifc2x3Diff;
-use crate::artifacts::ifc::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot;
-use crate::artifacts::step::engine::part21::Part21Value;
+use crate::standards::v2x3::mvd;
+use crate::standards::v2x3::subsets::base::schema::diff::Ifc2x3Diff;
+use crate::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot;
+use semio_s_artifact_stdio_step::engine::part21::Part21Value;
 use protocol::os_spr::command::DiffAlgebra;
 use protocol::Mutation;
 
-pub use crate::artifacts::ifc::standards::v2x3::subsets::base::schema::mutations::{apply_ifc2x3_mutation, Ifc2x3Mutation};
+pub use crate::standards::v2x3::subsets::base::schema::mutations::{apply_ifc2x3_mutation, Ifc2x3Mutation};
 
 //#region 🔖️Vocabulary
 /// 🚫️ Entity types Coordination View 2.0 excludes — the same list `check_cv20_conformance`
 /// hard-faults on, reached through the analysis module rather than restated here.
-use crate::artifacts::ifc::standards::v2x3::subsets::cv20::schema::derived_analysis::{FORBIDDEN_STRUCTURAL_TYPES, GEOMETRY_BEARING_PRODUCT_TYPES};
+use crate::standards::v2x3::subsets::cv20::schema::derived_analysis::{FORBIDDEN_STRUCTURAL_TYPES, GEOMETRY_BEARING_PRODUCT_TYPES};
 
 /// 📐️ `IfcProject.UnitsInContext` is attribute 9 of `IfcProject` (index 8).
 const PROJECT_UNITS_INDEX: usize = 8;
@@ -163,7 +163,7 @@ fn edit(base: &Ifc2x3Snapshot, mutation: &Ifc2x3Cv20Mutation) -> Result<Ifc2x3Sn
 // 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
 pub(crate) fn agg_diff(this: &Ifc2x3Cv20Mutation, base: &Ifc2x3Snapshot) -> protocol::MutationOutcome<Ifc2x3Diff> {
         match this {
-            Ifc2x3Cv20Mutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => match crate::artifacts::ifc::standards::v2x3::subsets::base::schema::snapshot::validate_ifc2x3_snapshot(snapshot) {
+            Ifc2x3Cv20Mutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => match crate::standards::v2x3::subsets::base::schema::snapshot::validate_ifc2x3_snapshot(snapshot) {
                 Ok(()) => protocol::MutationOutcome::new(Ifc2x3Diff::between(base, snapshot)),
                 Err(message) => rejected(message),
             },
@@ -197,7 +197,7 @@ pub(crate) fn agg_inverse(this: &Ifc2x3Cv20Mutation, base: &Ifc2x3Snapshot) -> V
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::step::engine::part21::{Part21Document, Part21Header};
+    use semio_s_artifact_stdio_step::engine::part21::{Part21Document, Part21Header};
 
     fn base() -> Ifc2x3Snapshot {
         let header = Part21Header {

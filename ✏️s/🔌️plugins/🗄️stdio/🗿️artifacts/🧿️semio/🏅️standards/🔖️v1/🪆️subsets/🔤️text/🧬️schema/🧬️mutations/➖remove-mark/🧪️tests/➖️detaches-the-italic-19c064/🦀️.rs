@@ -6,9 +6,9 @@
 //! the run exists and carries two marks, and the italic one at nested index 1 is detached while
 //! the bold one at index 0 stays.
 
-use crate::artifacts::semio::standards::v1::subsets::text::schema::diff::SemioTextDiff;
-use crate::artifacts::semio::standards::v1::subsets::text::schema::mutations::SemioTextMutation;
-use crate::artifacts::semio::standards::v1::subsets::text::schema::snapshot::{SemioTextMarkKind, SemioTextSnapshot};
+use crate::standards::v1::subsets::text::schema::diff::SemioTextDiff;
+use crate::standards::v1::subsets::text::schema::mutations::SemioTextMutation;
+use crate::standards::v1::subsets::text::schema::snapshot::{SemioTextMarkKind, SemioTextSnapshot};
 use protocol::{Mutation, MutationDiff};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");

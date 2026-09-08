@@ -4,8 +4,8 @@
 //! slug dirs directly — `🦀️.rs` is the sole mounting mechanism, same as mutations); each named
 //! inference gets its own `<emoji><slug>/` child (currently: `🧾outline/`).
 
-use crate::artifacts::txt::TxtSnapshot;
-use schema::ArtifactSchema;
+use crate::TxtSnapshot;
+use framework_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 
 use super::outline::TxtOutline;
@@ -41,7 +41,7 @@ impl protocol::InferenceSpec<TxtSnapshot> for TxtInference {
 //#endregion 🔖️Inference
 
 //#region 🔖️ArtifactInferrer
-impl ArtifactInferrer for crate::artifacts::txt::standards::v_utf_8::subsets::any::schema::TxtBuilder {
+impl ArtifactInferrer for crate::standards::v_utf_8::subsets::any::schema::TxtBuilder {
     type Snapshot = TxtSnapshot;
     type Inference = TxtInference;
 }
@@ -51,10 +51,10 @@ impl ArtifactInferrer for crate::artifacts::txt::standards::v_utf_8::subsets::an
 /// 💡️ Registers `s.stdio.txt.inference`'s facet leaves into the OS-wide inference catalog — call
 /// once at plugin init, alongside `txt_artifact_schema_descriptor`'s registration.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn txt_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
-    schema::ArtifactInferenceDescriptor {
+pub fn txt_artifact_inference_descriptor() -> framework_schema::ArtifactInferenceDescriptor {
+    framework_schema::ArtifactInferenceDescriptor {
         id: "s.stdio.txt.inference",
-        inference: schema::FacetLeaves {
+        inference: framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),

@@ -9,10 +9,10 @@
 //! leaf's own oracle. The derived `.op.semio`/`.spr.semio`/`.dsl.semio`/`.pack.semio`/
 //! `.patch.semio` encodings come from `fixtures generate`, not from here.
 
-use crate::artifacts::gltf::schema::mutations::create_skin::diff::GltfCreateSkinDiff;
-use crate::artifacts::gltf::schema::mutations::create_skin::GltfCreateSkinPayload;
-use crate::artifacts::gltf::schema::mutations::create_skin::{diff, inverse, mutation};
-use crate::artifacts::gltf::GltfSnapshot;
+use crate::schema::mutations::create_skin::diff::GltfCreateSkinDiff;
+use crate::schema::mutations::create_skin::GltfCreateSkinPayload;
+use crate::schema::mutations::create_skin::{diff, inverse, mutation};
+use crate::GltfSnapshot;
 
 const CASE: &str = "create-skin/inserts-an-empty-skin-ahead-of-the-jointed-skin";
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");

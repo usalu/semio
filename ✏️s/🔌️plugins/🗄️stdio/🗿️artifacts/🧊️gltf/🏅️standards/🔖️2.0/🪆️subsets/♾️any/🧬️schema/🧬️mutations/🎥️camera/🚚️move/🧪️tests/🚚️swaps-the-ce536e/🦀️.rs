@@ -9,10 +9,10 @@
 //! leaf's own oracle. The derived `.op.semio`/`.spr.semio`/`.dsl.semio`/`.pack.semio`/
 //! `.patch.semio` encodings come from `fixtures generate`, not from here.
 
-use crate::artifacts::gltf::schema::mutations::move_camera::diff::GltfMoveCameraDiff;
-use crate::artifacts::gltf::schema::mutations::move_camera::GltfMoveCameraPayload;
-use crate::artifacts::gltf::schema::mutations::move_camera::{diff, inverse, mutation};
-use crate::artifacts::gltf::GltfSnapshot;
+use crate::schema::mutations::move_camera::diff::GltfMoveCameraDiff;
+use crate::schema::mutations::move_camera::GltfMoveCameraPayload;
+use crate::schema::mutations::move_camera::{diff, inverse, mutation};
+use crate::GltfSnapshot;
 
 const CASE: &str = "move-camera/swaps-the-perspective-and-orthographic-cameras";
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
@@ -36,7 +36,7 @@ fn payload() -> GltfMoveCameraPayload {
 async fn applies_to_committed_after() {
     let snapshot = mutation::apply(&payload(), &before()).expect("move-camera applies to its committed before-snapshot");
     assert_eq!(snapshot, expected_after(), "{CASE}: applied state differs from committed after-snapshot");
-    assert!(matches!(snapshot.document.cameras[0].projection, crate::artifacts::gltf::schema::snapshot::GltfCameraProjection::Orthographic(_)), "{CASE}: the orthographic camera must end up first");
+    assert!(matches!(snapshot.document.cameras[0].projection, crate::schema::snapshot::GltfCameraProjection::Orthographic(_)), "{CASE}: the orthographic camera must end up first");
     assert_eq!((snapshot.document.nodes[0].camera, snapshot.document.nodes[1].camera), (Some(1), Some(0)), "{CASE}: repair(Cameras, Move(0, 1)) must swap both node.camera bindings");
 }
 
@@ -48,7 +48,7 @@ async fn inverse_restores_before() {
     let after = mutation::apply(&payload(), &base).expect("forward applies");
     let restored = inverse::apply_inverse(&inverse, &after).expect("inverse applies to the forward result");
     assert_eq!(restored, base, "{CASE}: inverse did not restore the before-snapshot");
-    assert!(matches!(restored.document.cameras[0].projection, crate::artifacts::gltf::schema::snapshot::GltfCameraProjection::Perspective(_)), "{CASE}: the inverse must put the perspective camera back first");
+    assert!(matches!(restored.document.cameras[0].projection, crate::schema::snapshot::GltfCameraProjection::Perspective(_)), "{CASE}: the inverse must put the perspective camera back first");
 }
 
 /// 🔣️ Both committed snapshots and this leaf's committed payload are canonical: decode→encode

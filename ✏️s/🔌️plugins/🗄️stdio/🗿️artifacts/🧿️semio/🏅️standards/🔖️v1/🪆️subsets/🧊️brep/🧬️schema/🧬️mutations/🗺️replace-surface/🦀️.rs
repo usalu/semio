@@ -2,8 +2,8 @@
 //! structured-payload reasoning as `replace-curve`: a NURBS surface's control-point grid is edited
 //! piecewise by the editor, so `replace`, never `change`.
 
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::mutations::SemioBrepMutation;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::{BrepSurface, SemioBrepSnapshot};
+use crate::standards::v1::subsets::brep::schema::mutations::SemioBrepMutation;
+use crate::standards::v1::subsets::brep::schema::snapshot::{BrepSurface, SemioBrepSnapshot};
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]

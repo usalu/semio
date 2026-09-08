@@ -3,10 +3,7 @@
 import { join } from "node:path";
 import { BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runCmd, runCmdStatus, runViteBunxDev, runVitest, spawnDaemon, waitForHttpUrl, withViteConfigLoader } from "../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { buildEngineWasm, buildPlugins, ensurePluginRegistry } from "../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts";
-import { PLAYGROUND_BUILD_TARGETS } from "../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🎮️playgrounds.ts";
-import { EXTENSION_TARGETS, PLUGIN_BUILD_TARGETS } from "../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🧩️plugins.ts";
-import { MODULE_SHARD_DIRECTORY, MODULE_VENDOR_DIRECTORY, moduleDirectoryName } from "../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
-import { DEMONSTRATOR_PANES, demonstratorPaneRuntimeVariant } from "./🪧️brand.ts";
+import { DEMONSTRATOR_RUNTIME_PANES, DEMONSTRATOR_RUNTIME_TARGETS, demonstratorRuntimeBuildVariants } from "./🔨️modules/🧩️runtime/🟦️.ts";
 
 const demonstratorRoot = import.meta.dir;
 
@@ -19,7 +16,8 @@ function demonstratorShouldBuildPlugins(skipPluginBuild: string | undefined): bo
 /** @emoji 🎯️ Builds only the primary crate behind a runtime variant; its contributed extensions are
  * already included by the demonstrator crate's own consumer closure. */
 async function buildRuntimePlugin(variant: string): Promise<void> {
-  const pluginId = runtimePluginId(variant);
+  const pluginId = DEMONSTRATOR_RUNTIME_TARGETS.find(row => row.variant === variant)?.pluginId;
+  if (!pluginId) throw new Error(`Unknown demonstrator runtime variant: ${variant}`);
   const previousPluginOnly = process.env.SEMIO_PLUGIN_ONLY;
   process.env.SEMIO_PLUGIN_ONLY = pluginId;
   try {
@@ -28,66 +26,6 @@ async function buildRuntimePlugin(variant: string): Promise<void> {
     if (previousPluginOnly === undefined) delete process.env.SEMIO_PLUGIN_ONLY;
     else process.env.SEMIO_PLUGIN_ONLY = previousPluginOnly;
   }
-}
-
-/** @emoji 🪪️ Resolves a playground variant to the plugin artifact it builds. */
-function runtimePluginId(variant: string): string {
-  const pluginId = PLAYGROUND_BUILD_TARGETS.find((target) => target.variant === variant)?.pluginId;
-  if (!pluginId) throw new Error(`unknown demonstrator runtime variant: ${variant}`);
-  return pluginId;
-}
-
-/** @emoji 🧮️ Returns one representative runtime variant for each additional plugin artifact. */
-export function demonstratorRuntimeBuildVariants(primaryVariant: string): readonly string[] {
-  const seenPluginIds = new Set([runtimePluginId(primaryVariant)]);
-  const variants: string[] = [];
-  for (const pane of DEMONSTRATOR_PANES) {
-    const variant = demonstratorPaneRuntimeVariant(pane.variant);
-    const pluginId = runtimePluginId(variant);
-    if (seenPluginIds.has(pluginId)) continue;
-    seenPluginIds.add(pluginId);
-    variants.push(variant);
-  }
-  return variants;
-}
-
-export type DemonstratorRuntimeModuleLayout = {
-  readonly pluginModuleDirNames: readonly string[];
-  readonly extensionModuleDirNames: readonly string[];
-};
-
-/** @emoji 🛣️ Separates runtime plugin and extension directories by their public catalog roots while preserving the full transitive dependency and contribution closure. */
-export function demonstratorRuntimeModuleLayout(rootPluginIds: readonly string[]): DemonstratorRuntimeModuleLayout {
-  const catalog = [...PLUGIN_BUILD_TARGETS, ...EXTENSION_TARGETS];
-  const byId = new Map(catalog.map((target) => [target.pluginId, target] as const));
-  const selected = new Set(rootPluginIds);
-  const queue = [...rootPluginIds];
-  for (let index = 0; index < queue.length; index++) {
-    const target = byId.get(queue[index]!);
-    if (!target) continue;
-    for (const dependency of target.dependsOn ?? []) {
-      if (selected.has(dependency)) continue;
-      selected.add(dependency);
-      queue.push(dependency);
-    }
-    const consumes = new Set(target.consumes ?? []);
-    if (consumes.size === 0) continue;
-    for (const extension of EXTENSION_TARGETS) {
-      if (selected.has(extension.pluginId) || !(extension.contributes ?? []).some((tag) => consumes.has(tag))) continue;
-      selected.add(extension.pluginId);
-      queue.push(extension.pluginId);
-    }
-  }
-  const pluginIds: string[] = [];
-  const extensionIds: string[] = [];
-  for (const id of selected) {
-    if (byId.get(id)?.role === "extension") extensionIds.push(id);
-    else pluginIds.push(id);
-  }
-  // 🗂️ Physical directory names, not public ids: modules materialize under their hand-authored emoji
-  // directory (`demonstrator` -> `🎪️demonstrator`), so serving the bare id 404s every module and the
-  // SPA fallback answers with HTML — which surfaces as `plugin.descriptor-invalid: … returned HTML`.
-  return { pluginModuleDirNames: [MODULE_VENDOR_DIRECTORY, MODULE_SHARD_DIRECTORY, ...pluginIds.map(moduleDirectoryName)], extensionModuleDirNames: extensionIds.map(moduleDirectoryName) };
 }
 
 /** @emoji 🎪️ Builds every pane's runtime plugin crate + declared engines into the shared
@@ -100,7 +38,7 @@ export function demonstratorRuntimeModuleLayout(rootPluginIds: readonly string[]
  * tiled-map), and each variant's own registry row carries its own `engines` list independently even
  * though they now share a `pluginId`. */
 async function buildDemonstratorPlugins(): Promise<void> {
-  const primaryVariant = DEMONSTRATOR_PANES[0]?.variant;
+  const primaryVariant = DEMONSTRATOR_RUNTIME_PANES[0]?.variant;
   const buildCurrentPlugins = demonstratorShouldBuildPlugins(process.env.SKIP_PLUGIN_BUILD);
   if (primaryVariant) {
     if (buildCurrentPlugins) await buildPlugins(primaryVariant);
@@ -110,7 +48,7 @@ async function buildDemonstratorPlugins(): Promise<void> {
     for (const variant of demonstratorRuntimeBuildVariants(primaryVariant ?? "generator")) await buildRuntimePlugin(variant);
   }
   if (primaryVariant) await ensurePluginRegistry(primaryVariant);
-  for (const pane of DEMONSTRATOR_PANES) {
+  for (const pane of DEMONSTRATOR_RUNTIME_PANES) {
     await buildEngineWasm(pane.variant, "react", join(demonstratorRoot, "package.json"));
   }
 }
@@ -145,7 +83,7 @@ class TestScript extends BundleScript {
       await this.runAcceptancePlaywright();
       return;
     }
-    runVitest(this.root, rest, "⚡️vitest.config.ts");
+    await runVitest(this.root, rest, "⚡️vitest.config.ts");
   }
 
   /** 🎪️ Demonstrator-local analog of root `📜️script.ts`'s `runStorybookPlaywright()` — the demonstrator is
@@ -197,28 +135,22 @@ if (import.meta.vitest) {
       expect(demonstratorRuntimeBuildVariants("generator")).toEqual(["generation3d"]);
     });
 
-    it("publishes plugins, the shared shard, and consumed extensions at their catalog URL roots", () => {
-      const layout = demonstratorRuntimeModuleLayout(["demonstrator", "procedural"]);
-      expect(layout.pluginModuleDirNames.slice(0, 2)).toEqual(["_vendor", "_shard"]);
-      expect(new Set(layout.pluginModuleDirNames.slice(2))).toEqual(new Set(["demonstrator", "procedural", "cad", "gis", "process", "puzzle", "sourcing", "stdio", "flow"]));
-      expect(new Set(layout.extensionModuleDirNames)).toEqual(
-        new Set([
-          "flow-extension-bim",
-          "flow-extension-brep",
-          "flow-extension-dictionary",
-          "flow-extension-draw",
-          "flow-extension-list",
-          "flow-extension-logic",
-          "flow-extension-math",
-          "flow-extension-primitive",
-          "flow-extension-text",
-          "process-extension-concrete",
-          "process-extension-metal",
-          "process-extension-robotic",
-          "process-extension-wood",
-        ]),
-      );
-      expect(layout.extensionModuleDirNames.every((id) => !layout.pluginModuleDirNames.includes(id))).toBe(true);
+    it("validates the authored runtime catalog against its owner schema module", async () => {
+      const { readFileSync } = await import("node:fs");
+      const { createRequire } = await import("node:module");
+      const { dirname } = await import("node:path");
+      const { fileURLToPath } = await import("node:url");
+      const modulePath = join(dirname(fileURLToPath(import.meta.url)), "🔨️modules/🧩️runtime");
+      const schema = JSON.parse(readFileSync(join(modulePath, "🧬️schema/🔣️.json"), "utf8"));
+      expect(schema.$schema).toBe("http://json-schema.org/draft-07/schema#");
+      expect(schema.$id).toBe("https://semio.tech/schema/mit-bestand/demonstrator/runtime/schema.json");
+      const ajv = new (createRequire(import.meta.url)("ajv").default)({ strict: false });
+      const validate = ajv.compile(schema);
+      expect(validate(JSON.parse(readFileSync(join(modulePath, "🔣️.json"), "utf8")))).toBe(true);
+      expect(validate({ schemaVersion: 1, host: "", assetsDirectory: "a", panes: [] })).toBe(false);
+      const validatePipeline = ajv.compile({ ...schema, $id: `${schema.$id}#pipeline`, $ref: "#/$defs/DemonstratorPipelineContract" });
+      expect(validatePipeline(JSON.parse(readFileSync(join(modulePath, "🧫️pipeline.json"), "utf8")))).toBe(true);
+      expect(validatePipeline({ schemaVersion: 2 })).toBe(false);
     });
   });
   //#endregion 🧪️DemonstratorPluginBuildTests

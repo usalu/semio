@@ -1,5 +1,5 @@
-use crate::artifacts::ifc::schema::mutations::IfcMutation;
-use crate::artifacts::ifc::IfcSnapshot;
+use crate::schema::mutations::IfcMutation;
+use crate::IfcSnapshot;
 use protocol::Mutation;
 
 /// ↩️ Inverse of set-snapshot.

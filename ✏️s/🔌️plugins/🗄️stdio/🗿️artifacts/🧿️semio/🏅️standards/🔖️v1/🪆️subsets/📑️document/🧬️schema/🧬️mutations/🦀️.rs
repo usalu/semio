@@ -13,12 +13,12 @@
 //! `OpText`/`OpBinary` hand-rolled below, reusing `SemioDocumentDiff`'s `pub(crate)` grammar
 //! primitives.
 
-use crate::artifacts::semio::standards::v1::subsets::base::schema::triples::{split_top_level, strip_brackets, IndexAdded, IndexModified, IndexedTripleDiff};
-use crate::artifacts::semio::standards::v1::subsets::document::schema::diff::{
+use crate::standards::v1::subsets::base::schema::triples::{split_top_level, strip_brackets, IndexAdded, IndexModified, IndexedTripleDiff};
+use crate::standards::v1::subsets::document::schema::diff::{
     dec_bool, dec_f64, dec_image, dec_run_style, dec_str, dec_style, dec_u8, decode_option, diff_block, diff_set_snapshot, enc_bool, enc_f64, enc_image, enc_run_style, enc_str, enc_style, enc_u8, encode_option, hex_decode, hex_encode, BlocksDiff,
     DocBlockDiff, DocHeadingDiff, DocParagraphDiff, DocQuoteDiff, DocRunDiff, DocTableCellDiff, DocTableRowDiff, ListItemsDiff, RunsDiff, SemioDocumentDiff, TableCellsDiff, TableRowsDiff,
 };
-use crate::artifacts::semio::standards::v1::subsets::document::schema::snapshot::{DocBlock, DocImage, DocRun, DocStyle, RunStyle, SemioDocumentSnapshot};
+use crate::standards::v1::subsets::document::schema::snapshot::{DocBlock, DocImage, DocRun, DocStyle, RunStyle, SemioDocumentSnapshot};
 use protocol::Mutation;
 /// 🔧️ Unconditional — the non-test `impl protocol::OpBinary for SemioDocumentMutation` block
 /// below calls `self.print_op()`/`Self::parse_op(...)` via method syntax, which needs `OpText` in
@@ -111,9 +111,9 @@ fn wrap_body_diff(path: &DocBlockPath, leaf: DocBlockLeaf) -> SemioDocumentDiff 
                         BlocksDiff { modified: vec![IndexModified { index: *block_index, diff: qd }], ..Default::default() }
                     }
                     DocPathSegment::ListItem { block_index, item } => {
-                        let item_diff = crate::artifacts::semio::standards::v1::subsets::document::schema::diff::DocListItemDiff { blocks: Some(inner) };
+                        let item_diff = crate::standards::v1::subsets::document::schema::diff::DocListItemDiff { blocks: Some(inner) };
                         let items_diff: ListItemsDiff = IndexedTripleDiff { modified: vec![IndexModified { index: *item, diff: item_diff }], ..Default::default() };
-                        let ld = DocBlockDiff::List(crate::artifacts::semio::standards::v1::subsets::document::schema::diff::DocListDiff { ordered: None, items: Some(items_diff) });
+                        let ld = DocBlockDiff::List(crate::standards::v1::subsets::document::schema::diff::DocListDiff { ordered: None, items: Some(items_diff) });
                         BlocksDiff { modified: vec![IndexModified { index: *block_index, diff: ld }], ..Default::default() }
                     }
                     DocPathSegment::TableCell { block_index, row, cell } => {
@@ -121,7 +121,7 @@ fn wrap_body_diff(path: &DocBlockPath, leaf: DocBlockLeaf) -> SemioDocumentDiff 
                         let cells_diff: TableCellsDiff = IndexedTripleDiff { modified: vec![IndexModified { index: *cell, diff: cell_diff }], ..Default::default() };
                         let row_diff = DocTableRowDiff { cells: Some(cells_diff) };
                         let rows_diff: TableRowsDiff = IndexedTripleDiff { modified: vec![IndexModified { index: *row, diff: row_diff }], ..Default::default() };
-                        let td = DocBlockDiff::Table(crate::artifacts::semio::standards::v1::subsets::document::schema::diff::DocTableDiff { rows: Some(rows_diff) });
+                        let td = DocBlockDiff::Table(crate::standards::v1::subsets::document::schema::diff::DocTableDiff { rows: Some(rows_diff) });
                         BlocksDiff { modified: vec![IndexModified { index: *block_index, diff: td }], ..Default::default() }
                     }
                 }
@@ -326,7 +326,7 @@ pub(crate) fn agg_diff(this: &SemioDocumentMutation, base: &SemioDocumentSnapsho
         },
         SemioDocumentMutation::SetListOrdered(set_list_ordered::SetListOrdered { path, ordered }) => match block_at(base, path) {
             Some(DocBlock::List { ordered: old, .. }) if old != ordered => {
-                wrap_body_diff(path, DocBlockLeaf::Modified(DocBlockDiff::List(crate::artifacts::semio::standards::v1::subsets::document::schema::diff::DocListDiff { ordered: Some(*ordered), items: None })))
+                wrap_body_diff(path, DocBlockLeaf::Modified(DocBlockDiff::List(crate::standards::v1::subsets::document::schema::diff::DocListDiff { ordered: Some(*ordered), items: None })))
             }
             _ => SemioDocumentDiff::default(),
         },
@@ -350,7 +350,7 @@ pub(crate) fn agg_diff(this: &SemioDocumentMutation, base: &SemioDocumentSnapsho
             if &run.style == style {
                 return protocol::MutationOutcome::new(SemioDocumentDiff::default());
             }
-            let style_diff = crate::artifacts::semio::standards::v1::subsets::document::schema::diff::RunStyleDiff {
+            let style_diff = crate::standards::v1::subsets::document::schema::diff::RunStyleDiff {
                 bold: Some(style.bold),
                 italic: Some(style.italic),
                 underline: Some(style.underline),
@@ -376,17 +376,17 @@ pub(crate) fn agg_diff(this: &SemioDocumentMutation, base: &SemioDocumentSnapsho
             _ => SemioDocumentDiff::default(),
         },
         SemioDocumentMutation::InsertStyle(insert_style::InsertStyle { style }) => {
-            SemioDocumentDiff { styles: Some(crate::artifacts::semio::standards::v1::subsets::document::schema::diff::StylesDiff { added: vec![style.clone()], ..Default::default() }), images: None, blocks: None }
+            SemioDocumentDiff { styles: Some(crate::standards::v1::subsets::document::schema::diff::StylesDiff { added: vec![style.clone()], ..Default::default() }), images: None, blocks: None }
         }
         SemioDocumentMutation::RemoveStyle(remove_style::RemoveStyle { id }) => {
-            SemioDocumentDiff { styles: Some(crate::artifacts::semio::standards::v1::subsets::document::schema::diff::StylesDiff { removed: vec![id.clone()], ..Default::default() }), images: None, blocks: None }
+            SemioDocumentDiff { styles: Some(crate::standards::v1::subsets::document::schema::diff::StylesDiff { removed: vec![id.clone()], ..Default::default() }), images: None, blocks: None }
         }
         SemioDocumentMutation::SetStyleName(set_style_name::SetStyleName { id, name }) => match style_at(base, id) {
             Some(old) if &old.name != name => SemioDocumentDiff {
-                styles: Some(crate::artifacts::semio::standards::v1::subsets::document::schema::diff::StylesDiff {
-                    modified: vec![crate::artifacts::semio::standards::v1::subsets::base::schema::triples::NamedModified {
+                styles: Some(crate::standards::v1::subsets::document::schema::diff::StylesDiff {
+                    modified: vec![crate::standards::v1::subsets::base::schema::triples::NamedModified {
                         key: id.clone(),
-                        diff: crate::artifacts::semio::standards::v1::subsets::document::schema::diff::DocStyleDiff { name: Some(name.clone()), based_on: None },
+                        diff: crate::standards::v1::subsets::document::schema::diff::DocStyleDiff { name: Some(name.clone()), based_on: None },
                     }],
                     ..Default::default()
                 }),
@@ -397,10 +397,10 @@ pub(crate) fn agg_diff(this: &SemioDocumentMutation, base: &SemioDocumentSnapsho
         },
         SemioDocumentMutation::SetStyleBasedOn(set_style_based_on::SetStyleBasedOn { id, based_on }) => match style_at(base, id) {
             Some(old) if &old.based_on != based_on => SemioDocumentDiff {
-                styles: Some(crate::artifacts::semio::standards::v1::subsets::document::schema::diff::StylesDiff {
-                    modified: vec![crate::artifacts::semio::standards::v1::subsets::base::schema::triples::NamedModified {
+                styles: Some(crate::standards::v1::subsets::document::schema::diff::StylesDiff {
+                    modified: vec![crate::standards::v1::subsets::base::schema::triples::NamedModified {
                         key: id.clone(),
-                        diff: crate::artifacts::semio::standards::v1::subsets::document::schema::diff::DocStyleDiff { name: None, based_on: Some(based_on.clone()) },
+                        diff: crate::standards::v1::subsets::document::schema::diff::DocStyleDiff { name: None, based_on: Some(based_on.clone()) },
                     }],
                     ..Default::default()
                 }),
@@ -410,18 +410,18 @@ pub(crate) fn agg_diff(this: &SemioDocumentMutation, base: &SemioDocumentSnapsho
             _ => SemioDocumentDiff::default(),
         },
         SemioDocumentMutation::InsertImage(insert_image::InsertImage { image }) => {
-            SemioDocumentDiff { styles: None, images: Some(crate::artifacts::semio::standards::v1::subsets::document::schema::diff::ImagesDiff { added: vec![image.clone()], ..Default::default() }), blocks: None }
+            SemioDocumentDiff { styles: None, images: Some(crate::standards::v1::subsets::document::schema::diff::ImagesDiff { added: vec![image.clone()], ..Default::default() }), blocks: None }
         }
         SemioDocumentMutation::RemoveImage(remove_image::RemoveImage { id }) => {
-            SemioDocumentDiff { styles: None, images: Some(crate::artifacts::semio::standards::v1::subsets::document::schema::diff::ImagesDiff { removed: vec![id.clone()], ..Default::default() }), blocks: None }
+            SemioDocumentDiff { styles: None, images: Some(crate::standards::v1::subsets::document::schema::diff::ImagesDiff { removed: vec![id.clone()], ..Default::default() }), blocks: None }
         }
         SemioDocumentMutation::SetImageBytes(set_image_bytes::SetImageBytes { id, mime, bytes }) => match image_at(base, id) {
             Some(old) if &old.mime != mime || &old.bytes != bytes => SemioDocumentDiff {
                 styles: None,
-                images: Some(crate::artifacts::semio::standards::v1::subsets::document::schema::diff::ImagesDiff {
-                    modified: vec![crate::artifacts::semio::standards::v1::subsets::base::schema::triples::NamedModified {
+                images: Some(crate::standards::v1::subsets::document::schema::diff::ImagesDiff {
+                    modified: vec![crate::standards::v1::subsets::base::schema::triples::NamedModified {
                         key: id.clone(),
-                        diff: crate::artifacts::semio::standards::v1::subsets::document::schema::diff::DocImageDiff { mime: Some(mime.clone()), bytes: Some(bytes.clone()) },
+                        diff: crate::standards::v1::subsets::document::schema::diff::DocImageDiff { mime: Some(mime.clone()), bytes: Some(bytes.clone()) },
                     }],
                     ..Default::default()
                 }),
@@ -558,11 +558,11 @@ fn dec_list<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Vec<T
 /// `pub(crate)` `enc_block`/`enc_style`/`enc_image` for the shared per-item shape.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn enc_block(b: &DocBlock) -> String {
-    crate::artifacts::semio::standards::v1::subsets::document::schema::diff::enc_block(b)
+    crate::standards::v1::subsets::document::schema::diff::enc_block(b)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_block(s: &str) -> Result<DocBlock, String> {
-    crate::artifacts::semio::standards::v1::subsets::document::schema::diff::dec_block(s)
+    crate::standards::v1::subsets::document::schema::diff::dec_block(s)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn enc_run_style_full(s: &RunStyle) -> String {
@@ -582,7 +582,7 @@ fn dec_snapshot(s: &str) -> Result<SemioDocumentSnapshot, String> {
     let parts = split_top_level(inner, ',');
     let [styles, images, blocks] = parts.as_slice() else { return Err(format!("snapshot: expected 3 fields, got {}", parts.len())) };
     Ok(SemioDocumentSnapshot {
-        schema: crate::artifacts::semio::standards::v1::subsets::document::schema::snapshot::STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA.into(),
+        schema: crate::standards::v1::subsets::document::schema::snapshot::STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA.into(),
         styles: dec_list(styles, dec_style)?,
         images: dec_list(images, dec_image)?,
         blocks: dec_list(blocks, dec_block)?,
@@ -729,12 +729,12 @@ impl OpBinary for SemioDocumentMutation {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_mutation_cases() -> Vec<SemioDocumentMutation> {
     let table_block = DocBlock::Table {
-        rows: vec![crate::artifacts::semio::standards::v1::subsets::document::schema::snapshot::DocTableRow {
-            cells: vec![crate::artifacts::semio::standards::v1::subsets::document::schema::snapshot::DocTableCell { blocks: vec![DocBlock::paragraph("cell")] }],
+        rows: vec![crate::standards::v1::subsets::document::schema::snapshot::DocTableRow {
+            cells: vec![crate::standards::v1::subsets::document::schema::snapshot::DocTableCell { blocks: vec![DocBlock::paragraph("cell")] }],
         }],
     };
     vec![
-        SemioDocumentMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: crate::artifacts::semio::standards::v1::subsets::document::schema::diff::snapshot_b() }),
+        SemioDocumentMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: crate::standards::v1::subsets::document::schema::diff::snapshot_b() }),
         SemioDocumentMutation::InsertBlock(insert_block::InsertBlock { path: DocBlockPath::top(1), block: table_block.clone() }),
         SemioDocumentMutation::InsertBlock(insert_block::InsertBlock { path: DocBlockPath { segments: vec![DocPathSegment::TableCell { block_index: 0, row: 0, cell: 0 }], index: 0 }, block: DocBlock::paragraph("nested") }),
         SemioDocumentMutation::RemoveBlock(remove_block::RemoveBlock { path: DocBlockPath::top(0) }),
@@ -760,8 +760,8 @@ pub(crate) fn demo_mutation_cases() -> Vec<SemioDocumentMutation> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::semio::standards::v1::subsets::document::schema::diff::DocBlockDiff as TestDocBlockDiff;
-    use crate::artifacts::semio::standards::v1::subsets::document::schema::snapshot::{DocListItem, DocTableCell, DocTableRow};
+    use crate::standards::v1::subsets::document::schema::diff::DocBlockDiff as TestDocBlockDiff;
+    use crate::standards::v1::subsets::document::schema::snapshot::{DocListItem, DocTableCell, DocTableRow};
     use protocol::command::DiffAlgebra;
     use protocol::MutationDiff;
 

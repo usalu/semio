@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/norm/iso16757/1/any/mutation/change-exchange-process.json",
+  "title": "ChangeExchangeProcess",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newExchangeProcess"
+  ],
+  "properties": {
+    "newExchangeProcess": {
+      "type": "string",
+      "enum": [
+        "CreateFromDictionary",
+        "ProvideCatalogue",
+        "DetermineProduct",
+        "IntegrateIntoSystem",
+        "ExchangeSystemModel"
+      ]
+    }
+  }
+}

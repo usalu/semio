@@ -1,6 +1,6 @@
 //! shooting -> bmp
 use crate::artifacts::shooting::schema::snapshot::ShootingSnapshot;
-use semio_s_plugin_stdio::artifacts::bmp::{BmpSnapshot, STDIO_BMP_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_bmp::{BmpSnapshot, STDIO_BMP_DOCUMENT_SCHEMA};
 
 pub fn register() {}
 

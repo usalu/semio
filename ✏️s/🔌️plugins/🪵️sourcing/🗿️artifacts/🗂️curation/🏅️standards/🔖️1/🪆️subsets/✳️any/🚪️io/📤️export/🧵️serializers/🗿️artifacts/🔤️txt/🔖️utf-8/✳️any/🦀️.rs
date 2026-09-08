@@ -8,7 +8,7 @@ use semio_framework_plugin::{StandardId, SubsetId};
 
 pub const TXT_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.txt", standard: StandardId("utf-8"), subset: SubsetId::ANY };
 
-pub fn serialize(_from: &CurationSnapshot) -> Result<semio_s_plugin_stdio::artifacts::txt::TxtSnapshot, String> {
+pub fn serialize(_from: &CurationSnapshot) -> Result<semio_s_artifact_stdio_txt::TxtSnapshot, String> {
     Err("txt export not yet implemented".into())
 }
 

@@ -5,7 +5,7 @@
   "displayName": "Replace Shading Surface Vertices",
   "emoji": "🗺️",
   "aggregateVariant": "ReplaceShadingSurfaceVertices",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "replace-shading-surface-vertices",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

@@ -181,7 +181,7 @@
         {
           "id": "create-brep",
           "capability": "semio-v1-object-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -200,7 +200,7 @@
         {
           "id": "create-mesh",
           "capability": "semio-v1-object-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -219,7 +219,7 @@
         {
           "id": "create-properties",
           "capability": "semio-v1-object-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -238,7 +238,7 @@
         {
           "id": "delete-brep",
           "capability": "semio-v1-object-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "rejected",
             "applied"
@@ -258,7 +258,7 @@
         {
           "id": "delete-mesh",
           "capability": "semio-v1-object-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "rejected",
             "applied"
@@ -278,7 +278,7 @@
         {
           "id": "delete-properties",
           "capability": "semio-v1-object-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "rejected",
             "applied"
@@ -298,7 +298,7 @@
         {
           "id": "move-object",
           "capability": "semio-v1-object-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -317,7 +317,7 @@
         {
           "id": "rotate-object",
           "capability": "semio-v1-object-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -336,7 +336,7 @@
         {
           "id": "scale-object",
           "capability": "semio-v1-object-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],

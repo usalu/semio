@@ -5,7 +5,7 @@
   "displayName": "Set Camera",
   "emoji": "📷️",
   "aggregateVariant": "SetCamera",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "set-camera",
   "binaryTag": 3,
   "invertibility": "explicit-mutation",

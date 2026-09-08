@@ -1,17 +1,80 @@
 {
-  "$id": "https://semio.tech/schema/s.stdio.binary/mutation.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/binary/raw/any/mutations.json",
   "title": "BinaryMutation",
-  "type": "object",
-  "properties": {
-    "mutation": {
-      "type": "string",
-      "enum": ["setSnapshot", "splice", "appendBytes", "truncateAt"]
+  "description": "Discriminated union over this module's mutation leaves (internally tagged); every payload is the leaf's own schema, referenced, never restated.",
+  "oneOf": [
+    {
+      "allOf": [
+        {
+          "$ref": "./➕️append-bytes/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "appendBytes"
+            }
+          }
+        }
+      ]
     },
-    "snapshot": { "$ref": "../📸️snapshot/🔣️.json" },
-    "offset": { "type": "integer", "minimum": 0 },
-    "removeLen": { "type": "integer", "minimum": 0 },
-    "insert": { "type": "array", "items": { "type": "integer", "minimum": 0, "maximum": 255 } },
-    "data": { "type": "array", "items": { "type": "integer", "minimum": 0, "maximum": 255 } }
-  },
-  "required": ["mutation"]
+    {
+      "allOf": [
+        {
+          "$ref": "./✂️replace-byte-range/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "replaceByteRange"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "./📸️set-snapshot/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setSnapshot"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "./🔪️truncate-at/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "truncateAt"
+            }
+          }
+        }
+      ]
+    }
+  ]
 }

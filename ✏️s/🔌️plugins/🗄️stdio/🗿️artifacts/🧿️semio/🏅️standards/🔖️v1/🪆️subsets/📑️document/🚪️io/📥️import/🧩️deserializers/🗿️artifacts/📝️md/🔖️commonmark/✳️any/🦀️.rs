@@ -19,9 +19,9 @@
 //!   empty since md only carries a URL, never raw bytes.
 //! - `styles` is always empty: CommonMark has no named-style concept.
 
-use crate::artifacts::md::schema::snapshot::{MdBlock, MdInline};
-use crate::artifacts::md::MdSnapshot;
-use crate::artifacts::semio::standards::v1::subsets::document::schema::snapshot::{DocBlock, DocImage, DocListItem, DocRun, RunStyle, SemioDocumentSnapshot, STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_md::schema::snapshot::{MdBlock, MdInline};
+use semio_s_artifact_stdio_md::MdSnapshot;
+use crate::standards::v1::subsets::document::schema::snapshot::{DocBlock, DocImage, DocListItem, DocRun, RunStyle, SemioDocumentSnapshot, STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId};
 
 //#region 🔖️FieldMapping
@@ -120,7 +120,7 @@ mod tests {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(crate) fn sample_md() -> MdSnapshot {
         MdSnapshot {
-            schema: crate::artifacts::md::STDIO_MD_DOCUMENT_SCHEMA.into(),
+            schema: semio_s_artifact_stdio_md::STDIO_MD_DOCUMENT_SCHEMA.into(),
             blocks: vec![
                 MdBlock::Heading { level: 1, inlines: vec![MdInline::Text { text: "Title".into() }] },
                 MdBlock::Paragraph { inlines: vec![MdInline::Strong { inlines: vec![MdInline::Text { text: "bold".into() }] }, MdInline::Text { text: " and plain".into() }] },
@@ -146,7 +146,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn inline_image_lifts_to_its_own_block() {
         let md = MdSnapshot {
-            schema: crate::artifacts::md::STDIO_MD_DOCUMENT_SCHEMA.into(),
+            schema: semio_s_artifact_stdio_md::STDIO_MD_DOCUMENT_SCHEMA.into(),
             blocks: vec![MdBlock::Paragraph { inlines: vec![MdInline::Text { text: "see: ".into() }, MdInline::Image { alt: "a cat".into(), url: "cat.png".into(), title: None }] }],
         };
         let semio = semio_framework_plugin::resolve_ready(SemioDocumentFromMd::deserialize(&md)).expect("deserialize");

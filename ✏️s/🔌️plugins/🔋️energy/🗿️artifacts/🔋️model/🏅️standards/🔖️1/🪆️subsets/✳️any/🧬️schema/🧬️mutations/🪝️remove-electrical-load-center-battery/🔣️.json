@@ -5,7 +5,7 @@
   "displayName": "Remove Electrical Load Center Battery",
   "emoji": "🪝️",
   "aggregateVariant": "RemoveElectricalLoadCenterBattery",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "remove-electrical-load-center-battery",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

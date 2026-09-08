@@ -1,7 +1,7 @@
 //! 🧬️ Direct change-material-double-sided mutation owner: payload, validation, typed diff, inverse, and outcomes.
-use crate::artifacts::gltf::schema::modules::mutation_support::top_level::rejection_outcome;
-use crate::artifacts::gltf::schema::modules::mutation_support::material_animation::{index, GltfMaterialAnimationFailure};
-use crate::artifacts::gltf::GltfSnapshot;
+use crate::schema::modules::mutation_support::top_level::rejection_outcome;
+use crate::schema::modules::mutation_support::material_animation::{index, GltfMaterialAnimationFailure};
+use crate::GltfSnapshot;
 pub const ID: &str = "s.stdio.gltf.mutation.change-material-double-sided.v1";
 pub const TOUCHED_PATHS: &[&str] = &["document/materials/{material}/doubleSided"];
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -61,15 +61,15 @@ mod tests {
 #[value(tag = "phase", content = "value", rename_all = "camelCase")]
 pub enum ChangeMaterialDoubleSidedMutation {
     Apply(GltfChangeMaterialDoubleSidedPayload),
-    Restore(Box<crate::artifacts::gltf::schema::diff::GltfDiff>),
+    Restore(Box<crate::schema::diff::GltfDiff>),
 }
 
 impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for ChangeMaterialDoubleSidedMutation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "material-double-sided", kind: "change-material-double-sided", record: "ChangedMaterialDoubleSided" };
 
-    fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<crate::artifacts::gltf::schema::diff::GltfDiff> {
+    fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<crate::schema::diff::GltfDiff> {
         match self {
-            Self::Apply(payload) => { let mut next = base.clone(); match apply(&mut next, payload) { Ok(()) => protocol::MutationOutcome::new(<crate::artifacts::gltf::schema::diff::GltfDiff as protocol::DiffAlgebra<GltfSnapshot>>::between(base, &next)), Err(error) => rejection_outcome(&error.code, &error.path, error.detail) } }
+            Self::Apply(payload) => { let mut next = base.clone(); match apply(&mut next, payload) { Ok(()) => protocol::MutationOutcome::new(<crate::schema::diff::GltfDiff as protocol::DiffAlgebra<GltfSnapshot>>::between(base, &next)), Err(error) => rejection_outcome(&error.code, &error.path, error.detail) } }
             Self::Restore(diff) => match protocol::MutationDiff::apply(diff.as_ref(), base) {
                 Ok(_) => protocol::MutationOutcome::new(diff.as_ref().clone()),
                 Err(error) => protocol::MutationOutcome::fatal("mutation.invariant", error.to_string(), error.target),
@@ -82,7 +82,7 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for ChangeMateria
         if !outcome.messages().is_empty() || outcome.diff().is_empty_diff() {
             return Vec::new();
         }
-        let inverse = <crate::artifacts::gltf::schema::diff::GltfDiff as protocol::DiffAlgebra<GltfSnapshot>>::inverse(outcome.diff(), base);
+        let inverse = <crate::schema::diff::GltfDiff as protocol::DiffAlgebra<GltfSnapshot>>::inverse(outcome.diff(), base);
         vec![super::GltfMutation::ChangeMaterialDoubleSided(Self::Restore(Box::new(inverse)))]
     }
 

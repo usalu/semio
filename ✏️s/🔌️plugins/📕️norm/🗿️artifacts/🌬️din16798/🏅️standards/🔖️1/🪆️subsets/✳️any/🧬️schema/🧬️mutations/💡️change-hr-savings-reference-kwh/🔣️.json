@@ -5,7 +5,7 @@
   "displayName": "Change Hr Savings Reference Kwh",
   "emoji": "💡️",
   "aggregateVariant": "ChangeHrSavingsReferenceKwh",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

@@ -56,12 +56,12 @@ const KINDS: &[&str] = &[
 #[cfg(feature = "sut")]
 mod subject {
     use semio_repo_test_host::{digest, Context, Json, Outcome};
-    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::base::schema::geometry::{SemioPoint3, SemioQuaternion, SemioTransform};
-    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::base::schema::mutations::semio_mutation_refusals;
-    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::model::schema::mutations::{
+    use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint3, SemioQuaternion, SemioTransform};
+    use crate::standards::v1::subsets::base::schema::mutations::semio_mutation_refusals;
+    use crate::standards::v1::subsets::model::schema::mutations::{
         apply_semio_model_mutation, insert_element, insert_relation, insert_spatial_node, remove_element, remove_relation, remove_spatial_node, semio_model_mutation_inverse, set_element, set_relation, set_snapshot, set_spatial_node, SemioModelMutation,
     };
-    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::model::schema::snapshot::{
+    use crate::standards::v1::subsets::model::schema::snapshot::{
         decode_semio_model_pack, encode_semio_model_pack, parse_semio_model_dsl, print_semio_model_dsl, ElementClass, GeometryRef, ModelRelation, Property, PropertySet, PsetValue, RelationKind, SemioModelElement, SemioModelSnapshot, SpatialKind, SpatialNode,
     };
     use semio_s_plugin_stdio_test_oracle::law::carrier_is_exact;

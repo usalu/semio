@@ -5,7 +5,7 @@
   "displayName": "Change Shw System Heater Capacity",
   "emoji": "🍵️",
   "aggregateVariant": "ChangeShwSystemHeaterCapacity",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-shw-system-heater-capacity",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

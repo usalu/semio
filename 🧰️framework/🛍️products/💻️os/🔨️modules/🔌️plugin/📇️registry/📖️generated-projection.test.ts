@@ -16,21 +16,30 @@ writeFileSync(join(generatedDir, "🔌️plugins.json"), `${JSON.stringify(vecto
 writeFileSync(join(generatedDir, "🎠️playgrounds.json"), `${JSON.stringify(vector.playgrounds, null, 2)}\n`);
 afterAll(() => rmSync(generatedDir, { recursive: true, force: true }));
 
-/** 🔮️ Independent closure oracle: topic consumers plus the transitive `dependsOn` set, computed by fixpoint iteration rather than the worklist the generator uses. */
+/** 🔮️ Independent fixed-point closure includes contributions consumed at every dependency depth. */
 function closureOracle(entries: readonly PluginRegistryEntry[], playgrounds: readonly PlaygroundEntry[], filter: string): Set<string> {
   const target = playgrounds.find((row) => row.variant === filter || row.aliases.includes(filter))?.pluginId ?? filter;
   const byId = new Map(entries.map((entry) => [entry.pluginId, entry]));
-  const ids = new Set([target]);
-  const targetEntry = byId.get(target);
-  if (targetEntry) for (const entry of entries) if (entry.pluginId !== target && entry.contributes.some((topic) => targetEntry.consumes.includes(topic))) ids.add(entry.pluginId);
+  const ids = new Set(byId.has(target) ? [target] : []);
   for (let changed = true; changed; ) {
     changed = false;
-    for (const id of [...ids]) for (const dep of byId.get(id)?.dependsOn ?? []) if (!ids.has(dep)) { ids.add(dep); changed = true; }
+    for (const id of [...ids]) {
+      const row = byId.get(id)!;
+      const dependencies = [...row.dependsOn, ...entries.filter(entry => row.host || entry.contributes.some(topic => row.consumes.includes(topic))).map(entry => entry.pluginId)];
+      for (const dep of dependencies) if (!ids.has(dep)) { ids.add(dep); changed = true; }
+    }
   }
   return ids;
 }
 
 describe("generated catalog projection", () => {
+  test("session filtering preserves recursively consumed contributions", () => {
+    const fixture = JSON.parse(readFileSync(join(import.meta.dirname, "../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🧫️fixtures/runtime-components/🔣️.json"), "utf8"));
+    for (const row of fixture.cases.filter((row: { roots: string[] }) => row.roots.length === 1)) {
+      expect(resolveRegistryPluginIdsForFilter(row.roots[0], fixture.components, []), row.name).toEqual(row.expected);
+    }
+  });
+
   test("reads the projected rows byte-for-byte and sorts entries like the generator", () => {
     const projection = readGeneratedCatalogProjection(generatedDir);
     expect(projection.entries.map((entry) => entry.pluginId)).toEqual(vector.entries.map((entry) => entry.pluginId));

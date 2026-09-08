@@ -5,7 +5,7 @@
   "displayName": "Remove Struct Tree Root",
   "emoji": "🪓️",
   "aggregateVariant": "RemoveStructTreeRoot",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "remove-struct-tree-root",
   "binaryTag": 3,
   "invertibility": "explicit-mutation",

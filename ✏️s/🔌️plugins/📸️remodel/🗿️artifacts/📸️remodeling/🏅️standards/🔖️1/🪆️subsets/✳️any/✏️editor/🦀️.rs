@@ -1094,7 +1094,7 @@ impl ArtifactEditor for RemodelingPlayApp {
                 match scene.streams.iter().any(|stream| stream.id == stream_id) {
                     true => mutations.push(crate::artifacts::remodeling::mutations::add_stream_frame(
                         stream_id.to_string(),
-                        FrameRef { index: frame_index, timestamp_ms: f64::from(frame_index) * 1000.0 / 30.0, asset_id: asset_key.clone() },
+                        FrameRef { index: frame_index, timestamp_ms: f64::from(frame_index) * 1000.0 / 30.0, asset_id: asset_key },
                         MediaKind::ImageSequence,
                     )),
                     false => mutations.push(crate::artifacts::remodeling::mutations::create_stream(MediaStream {
@@ -1104,7 +1104,7 @@ impl ArtifactEditor for RemodelingPlayApp {
                         camera_id: None,
                         sync_offset_ms: 0.0,
                         fps_hint: 30.0,
-                        frames: vec![FrameRef { index: 0, timestamp_ms: 0.0, asset_id: asset_key.clone() }],
+                        frames: vec![FrameRef { index: 0, timestamp_ms: 0.0, asset_id: asset_key }],
                         source: None,
                     })),
                 }

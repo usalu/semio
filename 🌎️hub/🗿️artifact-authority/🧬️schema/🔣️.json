@@ -1,0 +1,82 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/hub/artifact-authority/schema.json",
+  "$ref": "#/$defs/ArtifactCasManifestPlanV1",
+  "$defs": {
+    "hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "safeInteger": {"type": "integer", "minimum": 0, "maximum": 9007199254740991},
+    "chunkOrdinal": {"type": "integer", "minimum": 0, "maximum": 256},
+    "ArtifactCasObjectKeyV1": {"type": "string", "pattern": "^(chunk|manifest):[0-9a-f]{64}$"},
+    "ArtifactCasManifestPlanV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["length", "rawSha256", "chunkCount", "manifestBytes", "manifestId", "firstChunkId", "lastChunkId"],
+      "properties": {
+        "length": {"type": "integer", "minimum": 0, "maximum": 67108864},
+        "rawSha256": {"$ref": "#/$defs/hash"},
+        "chunkCount": {"$ref": "#/$defs/chunkOrdinal"},
+        "manifestBytes": {"type": "integer", "minimum": 1, "maximum": 65536},
+        "manifestId": {"$ref": "#/$defs/hash"},
+        "firstChunkId": {"oneOf": [{"$ref": "#/$defs/hash"}, {"type": "null"}]},
+        "lastChunkId": {"oneOf": [{"$ref": "#/$defs/hash"}, {"type": "null"}]}
+      },
+      "allOf": [
+        {
+          "if": {"properties": {"chunkCount": {"const": 0}}, "required": ["chunkCount"], "type": "object"},
+          "then": {"properties": {"length": {"const": 0}, "firstChunkId": {"type": "null"}, "lastChunkId": {"type": "null"}}, "type": "object"},
+          "else": {
+            "properties": {"length": {"type": "integer", "minimum": 1}, "firstChunkId": {"$ref": "#/$defs/hash"}, "lastChunkId": {"$ref": "#/$defs/hash"}},
+            "type": "object"
+          }
+        }
+      ]
+    },
+    "ArtifactCasRetentionLedgerEventV1": {
+      "type": "object",
+      "required": ["generation", "operation"],
+      "properties": {
+        "generation": {"type": "integer", "minimum": 1, "maximum": 9007199254740991},
+        "operation": {"enum": ["reserve", "publish", "retention", "space-delete"]},
+        "checkpointId": {"$ref": "#/$defs/hash"},
+        "expiresAtMs": {"$ref": "#/$defs/safeInteger"},
+        "objects": {"type": "array", "minItems": 1, "maxItems": 258, "uniqueItems": true, "items": {"$ref": "#/$defs/ArtifactCasObjectKeyV1"}}
+      },
+      "oneOf": [
+        {
+          "additionalProperties": false,
+          "required": ["generation", "operation", "checkpointId", "expiresAtMs", "objects"],
+          "properties": {
+            "generation": true,
+            "operation": {"const": "reserve"},
+            "checkpointId": true,
+            "expiresAtMs": {"type": "integer", "minimum": 1},
+            "objects": true
+          },
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "required": ["generation", "operation", "checkpointId"],
+          "properties": {"generation": true, "operation": {"enum": ["publish", "retention"]}, "checkpointId": true},
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "required": ["generation", "operation"],
+          "properties": {"generation": true, "operation": {"const": "space-delete"}},
+          "type": "object"
+        }
+      ]
+    },
+    "ArtifactCasSweepCursorV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["observedGeneration", "afterGeneration", "objectOffset"],
+      "properties": {
+        "observedGeneration": {"type": "integer", "minimum": 1, "maximum": 9007199254740991},
+        "afterGeneration": {"$ref": "#/$defs/safeInteger"},
+        "objectOffset": {"$ref": "#/$defs/safeInteger"}
+      }
+    }
+  }
+}

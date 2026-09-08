@@ -265,7 +265,7 @@ pub fn cad_window_engagement(envelope: &CadPlayView, pane: CadPaneId, labels: &C
                     "engagementPossibleSelect",
                     Some(DslValue::object([
                         ("pane".to_string(), DslValue::String(cad_pane_suffix(pane).to_string())),
-                        ("possibleId".to_string(), DslValue::String(transition.event_kind.clone())),
+                        ("possibleId".to_string(), DslValue::String(transition.event_kind)),
                     ])),
                 )),
             })

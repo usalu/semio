@@ -7,6 +7,6 @@ use crate::artifacts::en1996::En1996Snapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(_payload: &ChangeMortar, base: &En1996Snapshot) -> Vec<En1996Mutation> {
-    vec![En1996Mutation::ChangeMortar(ChangeMortar { new_mortar: base.mortar.clone() })]
+    vec![En1996Mutation::ChangeMortar(ChangeMortar { new_mortar: base.mortar })]
 }
 //#endregion 🔖️Inverse

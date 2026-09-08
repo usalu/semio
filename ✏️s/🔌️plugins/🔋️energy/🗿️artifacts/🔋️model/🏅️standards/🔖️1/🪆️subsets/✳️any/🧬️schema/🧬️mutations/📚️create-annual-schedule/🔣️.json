@@ -5,7 +5,7 @@
   "displayName": "Create Annual Schedule",
   "emoji": "📚️",
   "aggregateVariant": "CreateAnnualSchedule",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "create-annual-schedule",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

@@ -1,0 +1,10 @@
+{
+  "title": "Scope-Owned Schema Contracts",
+  "emoji": "🧬️",
+  "status": "open",
+  "description": "Refactor every application contract into one schema module per real application scope with native format implementations and named exports. Fixtures reference exports and never own contracts. Exhaustive audit (WP0) first, then invariants, mechanism, scope migration, fixture rebinding, publication, and permanent enforcement. Fleet: Fable 5.1 coordination, Opus 5 execution, Sonnet 5 read-only audits. Preserve concurrent work.",
+  "goal": "🎯aioptimizedrepo🎯repomechanisms🎯repoprojectmechanism",
+  "sessions": [
+    "⚪cd1780e5e2df474ca459b3835d585ab6"
+  ]
+}

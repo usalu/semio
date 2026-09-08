@@ -49,7 +49,7 @@ pub fn detect(context: &SequenceDetectionContext<'_>) -> Vec<SequenceDetectedMut
         .edges
         .iter()
         .enumerate()
-        .filter(|(_, edge)| context.before_edges.get(edge.id.as_str()).map_or(true, |before| before.from != edge.from || before.to != edge.to))
+        .filter(|(_, edge)| context.before_edges.get(edge.id.as_str()).is_none_or(|before| before.from != edge.from || before.to != edge.to))
         .map(|(index, edge)| SequenceDetectedMutation { order: (3, index, 1), mutation: SequenceMutation::ConnectSteps(ConnectSteps { id: edge.id.clone(), from: edge.from.clone(), to: edge.to.clone() }) })
         .collect()
 }

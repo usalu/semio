@@ -5,7 +5,7 @@
   "displayName": "Delete Ideal Loads System",
   "emoji": "🫥️",
   "aggregateVariant": "DeleteIdealLoadsSystem",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "delete-ideal-loads-system",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

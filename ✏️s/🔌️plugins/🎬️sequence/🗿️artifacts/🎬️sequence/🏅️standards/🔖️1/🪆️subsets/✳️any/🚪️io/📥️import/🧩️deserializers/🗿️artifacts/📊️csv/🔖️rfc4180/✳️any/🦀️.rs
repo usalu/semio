@@ -12,7 +12,7 @@ use crate::artifacts::sequence::{SequenceFixture, SequenceSnapshot, SequenceStep
 use semio_framework::io::io_mechanism::Deserializer;
 use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};
-use semio_s_plugin_stdio::artifacts::csv::{CsvSnapshot, STDIO_CSV_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_csv::{CsvSnapshot, STDIO_CSV_DOCUMENT_SCHEMA};
 
 pub const CSV_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.csv", standard: StandardId("rfc4180"), subset: SubsetId::ANY };
 
@@ -32,7 +32,7 @@ impl Deserializer<SequenceSnapshot> for CsvIntoSequence {
             .iter()
             .enumerate()
             .map(|(index, record)| {
-                let id = record.fields.first().map(|field| field.value.clone()).unwrap_or_else(|| format!("step-{index}"));
+                let id = record.fields.first().map_or_else(|| format!("step-{index}"), |field| field.value.clone());
                 let values: Vec<String> = record.fields.iter().skip(1).map(|field| field.value.clone()).collect();
                 SequenceStep {
                     id,

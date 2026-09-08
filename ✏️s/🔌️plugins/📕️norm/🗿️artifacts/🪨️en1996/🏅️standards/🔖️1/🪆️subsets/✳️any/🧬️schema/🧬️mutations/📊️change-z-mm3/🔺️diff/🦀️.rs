@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeZMm3, base: &En1996Snapshot) -> protocol::MutationOu
     if base.z_mm3 == payload.new_z_mm3 {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "Z mm3 already has this value.");
     }
-    protocol::MutationOutcome::new(En1996Diff { z_mm3: Some(payload.new_z_mm3.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1996Diff { z_mm3: Some(payload.new_z_mm3), ..Default::default() })
 }
 //#endregion 🔖️Diff

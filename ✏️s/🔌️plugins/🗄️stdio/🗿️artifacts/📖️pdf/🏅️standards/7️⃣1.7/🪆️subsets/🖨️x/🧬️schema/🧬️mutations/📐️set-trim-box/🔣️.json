@@ -5,7 +5,7 @@
   "displayName": "Set Trim Box",
   "emoji": "📐️",
   "aggregateVariant": "SetTrimBox",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "set-trim-box",
   "binaryTag": 4,
   "invertibility": "explicit-mutation",

@@ -1,16 +1,16 @@
 //! 📦️ OPC — Open Packaging Conventions (ECMA-376 Part 2 / ISO 29500-2 §9-10), the zip+XML
 //! container shape shared by every OOXML format (`📜️docx`/`📕️xlsx`/`🎞️pptx`). Real zip parsing is
-//! reused from `crate::artifacts::zip::standards::v2_0::subsets::base::io::{decode_zip, encode_zip}` and real XML parsing from
-//! `crate::artifacts::xml::schema::snapshot::{xml_document_from_text, xml_document_to_text}` —
+//! reused from `crate::standards::v2_0::subsets::base::io::{decode_zip, encode_zip}` and real XML parsing from
+//! `semio_s_artifact_stdio_xml::schema::snapshot::{xml_document_from_text, xml_document_to_text}` —
 //! neither is reimplemented here. This module owns exactly two typed metadata channels
 //! (`[Content_Types].xml` and every `*.rels` file) plus the verbatim byte payload of every other
 //! part — nothing observed in a real package is ever dropped.
 
 use std::collections::HashMap;
 
-use crate::artifacts::xml::schema::snapshot::{xml_document_from_text, xml_document_to_text, XmlAttr, XmlDocument, XmlNode};
-use crate::artifacts::zip::schema::snapshot::ZipEntry;
-use crate::artifacts::zip::{ZipSnapshot, STDIO_ZIP_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_xml::schema::snapshot::{xml_document_from_text, xml_document_to_text, XmlAttr, XmlDocument, XmlNode};
+use crate::schema::snapshot::ZipEntry;
+use crate::{ZipSnapshot, STDIO_ZIP_DOCUMENT_SCHEMA};
 
 //#region 🔖️Error
 /// ⚠️ Typed OPC decode/encode failure — an unreadable or non-conformant container never silently
@@ -226,7 +226,7 @@ impl OpcContentTypes {
             prolog: Vec::new(),
             root: Some(xml_elem("Types", vec![xml_attr("xmlns", CONTENT_TYPES_NS)], children)),
             doctype: None,
-            declaration: Some(crate::artifacts::xml::schema::snapshot::XmlDeclaration { version: "1.0".into(), encoding: Some("UTF-8".into()), standalone: Some(true) }),
+            declaration: Some(semio_s_artifact_stdio_xml::schema::snapshot::XmlDeclaration { version: "1.0".into(), encoding: Some("UTF-8".into()), standalone: Some(true) }),
         }
     }
 
@@ -359,7 +359,7 @@ fn relationships_to_xml(rels: &[OpcRelationship]) -> XmlDocument {
         prolog: Vec::new(),
         root: Some(xml_elem("Relationships", vec![xml_attr("xmlns", RELATIONSHIPS_NS)], children)),
         doctype: None,
-        declaration: Some(crate::artifacts::xml::schema::snapshot::XmlDeclaration { version: "1.0".into(), encoding: Some("UTF-8".into()), standalone: Some(true) }),
+        declaration: Some(semio_s_artifact_stdio_xml::schema::snapshot::XmlDeclaration { version: "1.0".into(), encoding: Some("UTF-8".into()), standalone: Some(true) }),
     }
 }
 
@@ -466,7 +466,7 @@ impl OpcPackage {
 /// relationship list, or a verbatim content `OpcPart` — never dropped, never fabricated.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn decode_opc(data: &[u8]) -> Result<OpcPackage, OpcError> {
-    let zip = crate::artifacts::zip::standards::v2_0::subsets::base::io::decode_zip(data).map_err(|e| OpcError::Zip(e.to_string()))?;
+    let zip = crate::standards::v2_0::subsets::base::io::decode_zip(data).map_err(|e| OpcError::Zip(e.to_string()))?;
 
     let ct_entry = zip.entries.iter().find(|e| e.name == CONTENT_TYPES_PART).ok_or(OpcError::MissingContentTypes)?;
     let ct_text = String::from_utf8(ct_entry.data.clone()).map_err(|_| OpcError::MalformedContentTypes("not valid utf-8".into()))?;
@@ -517,7 +517,7 @@ pub fn encode_opc(pkg: &OpcPackage) -> Result<Vec<u8>, OpcError> {
 /// is preserved by `decode_opc`, and an untouched package can therefore be emitted without a
 /// semantic part-order rewrite.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn encode_opc_with_package_order(pkg: &OpcPackage) -> Result<Vec<u8>, OpcError> {
+pub fn encode_opc_with_package_order(pkg: &OpcPackage) -> Result<Vec<u8>, OpcError> {
     encode_opc_with_path_order(pkg, |paths| {
         let mut ordered = Vec::with_capacity(paths.len());
         let mut take = |path: String| {
@@ -545,8 +545,9 @@ pub(crate) fn encode_opc_with_package_order(pkg: &OpcPackage) -> Result<Vec<u8>,
     })
 }
 
+/// 🧭 Re-encodes an OPC package after applying a caller-owned deterministic path order.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn encode_opc_with_path_order(pkg: &OpcPackage, order: impl FnOnce(&mut Vec<String>)) -> Result<Vec<u8>, OpcError> {
+pub fn encode_opc_with_path_order(pkg: &OpcPackage, order: impl FnOnce(&mut Vec<String>)) -> Result<Vec<u8>, OpcError> {
     let mut payloads = HashMap::<String, Vec<u8>>::new();
     let ct_text = xml_document_to_opc_text(&pkg.content_types.to_xml());
     payloads.insert(CONTENT_TYPES_PART.into(), ct_text.into_bytes());
@@ -576,7 +577,7 @@ pub(crate) fn encode_opc_with_path_order(pkg: &OpcPackage, order: impl FnOnce(&m
     }
 
     let snap = ZipSnapshot { schema: STDIO_ZIP_DOCUMENT_SCHEMA.into(), entries, comment: pkg.comment.clone() };
-    crate::artifacts::zip::standards::v2_0::subsets::base::io::encode_zip_with_entry_names(&snap, &new_paths).map_err(|e| OpcError::Zip(e.to_string()))
+    crate::standards::v2_0::subsets::base::io::encode_zip_with_entry_names(&snap, &new_paths).map_err(|e| OpcError::Zip(e.to_string()))
 }
 
 /// 🕵️ Structural sniff of OOXML-shaped bytes: recognizes the zip magic *and* the presence of a
@@ -584,7 +585,7 @@ pub(crate) fn encode_opc_with_path_order(pkg: &OpcPackage, order: impl FnOnce(&m
 /// (docx/xlsx/pptx callers inspect `word/`/`xl/`/`ppt/`-prefixed parts on top of this).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn sniff_opc_bytes(data: &[u8]) -> bool {
-    let Ok(zip) = crate::artifacts::zip::standards::v2_0::subsets::base::io::decode_zip(data) else { return false };
+    let Ok(zip) = crate::standards::v2_0::subsets::base::io::decode_zip(data) else { return false };
     zip.entries.iter().any(|e| e.name == CONTENT_TYPES_PART)
 }
 //#endregion 🔖️Package
@@ -650,7 +651,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn decode_rejects_missing_content_types() {
         let snap = ZipSnapshot { schema: STDIO_ZIP_DOCUMENT_SCHEMA.into(), entries: vec![ZipEntry { name: "word/document.xml".into(), data: b"<x/>".to_vec(), ..Default::default() }], comment: String::new() };
-        let bytes = crate::artifacts::zip::standards::v2_0::subsets::base::io::encode_zip(&snap).unwrap();
+        let bytes = crate::standards::v2_0::subsets::base::io::encode_zip(&snap).unwrap();
         let err = decode_opc(&bytes).expect_err("must reject a zip with no [Content_Types].xml");
         assert_eq!(err, OpcError::MissingContentTypes);
     }
@@ -662,7 +663,7 @@ mod tests {
         assert!(sniff_opc_bytes(&bytes));
         assert!(!sniff_opc_bytes(b"not a zip"));
 
-        let plain_zip = crate::artifacts::zip::standards::v2_0::subsets::base::io::encode_zip(&ZipSnapshot {
+        let plain_zip = crate::standards::v2_0::subsets::base::io::encode_zip(&ZipSnapshot {
             schema: STDIO_ZIP_DOCUMENT_SCHEMA.into(),
             entries: vec![ZipEntry { name: "a.txt".into(), data: b"hi".to_vec(), ..Default::default() }],
             comment: String::new(),

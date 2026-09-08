@@ -88,10 +88,10 @@ fn round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::{arranged_input, mutable_input};
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_plugin_stdio::artifacts::pptx::standards::v_ecma_376::subsets::base::io::export::serializers::encode_pptx;
-    use semio_s_plugin_stdio::artifacts::pptx::standards::v_ecma_376::subsets::base::io::import::deserializers::decode_pptx;
-    use semio_s_plugin_stdio::artifacts::pptx::standards::v_ecma_376::subsets::transitional::schema::mutations::{apply_pptx_transitional_mutation, stamp_conformance_class, PptxTransitionalMutation};
-    use semio_s_plugin_stdio::artifacts::pptx::PptxSnapshot;
+    use crate::standards::v_ecma_376::subsets::base::io::export::serializers::encode_pptx;
+    use crate::standards::v_ecma_376::subsets::base::io::import::deserializers::decode_pptx;
+    use crate::standards::v_ecma_376::subsets::transitional::schema::mutations::{apply_pptx_transitional_mutation, stamp_conformance_class, PptxTransitionalMutation};
+    use crate::PptxSnapshot;
     use semio_s_plugin_stdio_test_oracle::artifacts::pptx::standards::v_ecma_376::subsets::transitional::{oracle_inverse_spec, project_package};
 
     fn decode(bytes: &[u8]) -> Result<PptxSnapshot, String> {
@@ -113,11 +113,11 @@ mod subject {
     fn mutation_from_spec(ctx: &Context, spec: &Json) -> Result<PptxTransitionalMutation, String> {
         let params = spec.get("params").cloned().unwrap_or(Json::Null);
         Ok(match spec.str("kind").as_str() {
-            "set-snapshot" => PptxTransitionalMutation::SetSnapshot(semio_s_plugin_stdio::artifacts::pptx::standards::v_ecma_376::subsets::transitional::schema::mutations::set_snapshot::SetSnapshot { snapshot: stamped(&decode(&mutable_input(ctx)?)?, params.str("conformanceClass") == "strict")? }),
-            "set-main-namespace" => PptxTransitionalMutation::SetMainNamespace(semio_s_plugin_stdio::artifacts::pptx::standards::v_ecma_376::subsets::transitional::schema::mutations::set_main_namespace::SetMainNamespace { namespace: params.str("namespace") }),
-            "set-drawing-namespace" => PptxTransitionalMutation::SetDrawingNamespace(semio_s_plugin_stdio::artifacts::pptx::standards::v_ecma_376::subsets::transitional::schema::mutations::set_drawing_namespace::SetDrawingNamespace { namespace: params.str("namespace") }),
-            "set-relationship-base" => PptxTransitionalMutation::SetRelationshipBase(semio_s_plugin_stdio::artifacts::pptx::standards::v_ecma_376::subsets::transitional::schema::mutations::set_relationship_base::SetRelationshipBase { base: params.str("base") }),
-            "set-conformance-attribute" => PptxTransitionalMutation::SetConformanceAttribute(semio_s_plugin_stdio::artifacts::pptx::standards::v_ecma_376::subsets::transitional::schema::mutations::set_conformance_attribute::SetConformanceAttribute { value: params.str("value") }),
+            "set-snapshot" => PptxTransitionalMutation::SetSnapshot(crate::standards::v_ecma_376::subsets::transitional::schema::mutations::set_snapshot::SetSnapshot { snapshot: stamped(&decode(&mutable_input(ctx)?)?, params.str("conformanceClass") == "strict")? }),
+            "set-main-namespace" => PptxTransitionalMutation::SetMainNamespace(crate::standards::v_ecma_376::subsets::transitional::schema::mutations::set_main_namespace::SetMainNamespace { namespace: params.str("namespace") }),
+            "set-drawing-namespace" => PptxTransitionalMutation::SetDrawingNamespace(crate::standards::v_ecma_376::subsets::transitional::schema::mutations::set_drawing_namespace::SetDrawingNamespace { namespace: params.str("namespace") }),
+            "set-relationship-base" => PptxTransitionalMutation::SetRelationshipBase(crate::standards::v_ecma_376::subsets::transitional::schema::mutations::set_relationship_base::SetRelationshipBase { base: params.str("base") }),
+            "set-conformance-attribute" => PptxTransitionalMutation::SetConformanceAttribute(crate::standards::v_ecma_376::subsets::transitional::schema::mutations::set_conformance_attribute::SetConformanceAttribute { value: params.str("value") }),
             "remove-conformance-attribute" => PptxTransitionalMutation::RemoveConformanceAttribute(remove_conformance_attribute::RemoveConformanceAttribute {}),
             other => return Err(format!("no subject rule for kind {other:?}")),
         })

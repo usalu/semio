@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/tsv/iana/any/mutation/set-line-ending.json",
+  "title": "SetLineEndingMutation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "lineEnding"
+  ],
+  "properties": {
+    "lineEnding": {
+      "type": "string",
+      "enum": [
+        "lf",
+        "crlf"
+      ]
+    },
+    "mutation": {
+      "const": "setLineEnding",
+      "description": "Aggregate discriminator spliced in by TsvMutation; absent when the payload stands alone."
+    }
+  }
+}

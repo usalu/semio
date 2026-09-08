@@ -4,13 +4,13 @@
 //! functions the `dsl::Mutations` derive's synthesized leaves delegate into, per the stdio
 //! mutation-leaf migration recipe.
 
-use crate::artifacts::semio::standards::v1::subsets::document::schema::snapshot::DocBlock;
-use crate::artifacts::semio::standards::v1::subsets::presentation::schema::diff::{
+use crate::standards::v1::subsets::document::schema::snapshot::DocBlock;
+use crate::standards::v1::subsets::presentation::schema::diff::{
     dec_block, dec_frame, dec_layout, dec_list, dec_master, dec_shape, dec_slide, dec_str, decode_option, diff_insert_layout, diff_insert_master, diff_insert_shape, diff_insert_slide, diff_remove_layout, diff_remove_master, diff_remove_shape,
     diff_remove_slide, diff_set_layout_master, diff_set_shape_frame, diff_set_slide_layout, diff_set_slide_notes, diff_set_snapshot, diff_set_textbox_blocks, enc_block, enc_frame, enc_layout, enc_list, enc_master, enc_shape, enc_slide, enc_str,
     encode_option, frame_of, SemioPresentationDiff,
 };
-use crate::artifacts::semio::standards::v1::subsets::presentation::schema::snapshot::{SemioPresentationSnapshot, Slide, SlideFrame, SlideLayout, SlideMaster, SlideShape};
+use crate::standards::v1::subsets::presentation::schema::snapshot::{SemioPresentationSnapshot, Slide, SlideFrame, SlideLayout, SlideMaster, SlideShape};
 /// 🔧️ `OpBinary`/`OpText` both unconditional (not `#[cfg(test)]`-gated): the real
 /// `impl protocol::OpBinary for SemioPresentationMutation` below (production code) calls
 /// `self.print_op()`/`Self::parse_op(...)` via method syntax, which needs both traits in scope.
@@ -227,7 +227,7 @@ pub(crate) fn agg_inverse(this: &SemioPresentationMutation, base: &SemioPresenta
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn print_presentation_mutation(m: &SemioPresentationMutation) -> String {
     match m {
-        SemioPresentationMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => format!("set-snapshot snapshot={}", crate::artifacts::semio::standards::v1::subsets::presentation::schema::diff::enc_presentation_snapshot(snapshot)),
+        SemioPresentationMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => format!("set-snapshot snapshot={}", crate::standards::v1::subsets::presentation::schema::diff::enc_presentation_snapshot(snapshot)),
         SemioPresentationMutation::InsertSlide(insert_slide::InsertSlide { index, slide }) => format!("insert-slide index={index} slide={}", enc_slide(slide)),
         SemioPresentationMutation::RemoveSlide(remove_slide::RemoveSlide { index }) => format!("remove-slide index={index}"),
         SemioPresentationMutation::SetSlideLayout(set_slide_layout::SetSlideLayout { index, layout_id }) => format!("set-slide-layout index={index} layout-id={}", encode_option(layout_id, |v| enc_str(v))),
@@ -251,7 +251,7 @@ fn parse_presentation_mutation(line: &str) -> Result<SemioPresentationMutation, 
     let arg = |k: &str| args.get(k).copied().ok_or_else(|| format!("presentation mutation: missing arg '{k}' for '{keyword}'"));
     let usize_arg = |k: &str| -> Result<usize, String> { arg(k)?.parse().map_err(|e: std::num::ParseIntError| e.to_string()) };
     match keyword {
-        "set-snapshot" => Ok(SemioPresentationMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: crate::artifacts::semio::standards::v1::subsets::presentation::schema::diff::dec_presentation_snapshot(arg("snapshot")?)? })),
+        "set-snapshot" => Ok(SemioPresentationMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: crate::standards::v1::subsets::presentation::schema::diff::dec_presentation_snapshot(arg("snapshot")?)? })),
         "insert-slide" => Ok(SemioPresentationMutation::InsertSlide(insert_slide::InsertSlide { index: usize_arg("index")?, slide: dec_slide(arg("slide")?)? })),
         "remove-slide" => Ok(SemioPresentationMutation::RemoveSlide(remove_slide::RemoveSlide { index: usize_arg("index")? })),
         "set-slide-layout" => Ok(SemioPresentationMutation::SetSlideLayout(set_slide_layout::SetSlideLayout { index: usize_arg("index")?, layout_id: decode_option(arg("layout-id")?, dec_str)? })),
@@ -367,12 +367,12 @@ impl OpBinary for SemioPresentationMutation {
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_mutation_cases() -> Vec<SemioPresentationMutation> {
-    use crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioPoint2;
-    use crate::artifacts::semio::standards::v1::subsets::presentation::schema::snapshot::{PlaceholderKind, SlidePictureImage, SlideTableCell, SlideTableRow};
+    use crate::standards::v1::subsets::base::schema::geometry::SemioPoint2;
+    use crate::standards::v1::subsets::presentation::schema::snapshot::{PlaceholderKind, SlidePictureImage, SlideTableCell, SlideTableRow};
 
     let frame = SlideFrame { origin: SemioPoint2 { x: 1.5, y: 2.5 }, width: 3.5, height: 4.5 };
     vec![
-        SemioPresentationMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: crate::artifacts::semio::standards::v1::subsets::presentation::schema::diff::snapshot_b() }),
+        SemioPresentationMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: crate::standards::v1::subsets::presentation::schema::diff::snapshot_b() }),
         SemioPresentationMutation::InsertSlide(insert_slide::InsertSlide {
             index: 1,
             slide: Slide { id: "new".into(), layout_id: Some("layout1".into()), shapes: vec![SlideShape::Table { frame, rows: vec![SlideTableRow { cells: vec![SlideTableCell { blocks: vec![DocBlock::paragraph("cell")] }] }] }], notes: Vec::new() },
@@ -399,9 +399,9 @@ pub(crate) fn demo_mutation_cases() -> Vec<SemioPresentationMutation> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioPoint2;
-    use crate::artifacts::semio::standards::v1::subsets::document::schema::snapshot::DocRun;
-    use crate::artifacts::semio::standards::v1::subsets::presentation::schema::snapshot::{PlaceholderKind, SlidePictureImage, SlideTableCell, SlideTableRow};
+    use crate::standards::v1::subsets::base::schema::geometry::SemioPoint2;
+    use crate::standards::v1::subsets::document::schema::snapshot::DocRun;
+    use crate::standards::v1::subsets::presentation::schema::snapshot::{PlaceholderKind, SlidePictureImage, SlideTableCell, SlideTableRow};
     use protocol::command::DiffAlgebra;
     use protocol::MutationDiff;
 
@@ -580,7 +580,7 @@ mod tests {
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn slides_triple(diff: &SemioPresentationDiff) -> &crate::artifacts::semio::standards::v1::subsets::presentation::schema::diff::SlidesDiff {
+    fn slides_triple(diff: &SemioPresentationDiff) -> &crate::standards::v1::subsets::presentation::schema::diff::SlidesDiff {
         diff.slides.as_ref().expect("slides diff present")
     }
 

@@ -1,8 +1,8 @@
 //! program -> zip
 use crate::artifacts::program::ProgramSnapshot;
-use semio_s_plugin_stdio::artifacts::zip::STDIO_ZIP_DOCUMENT_SCHEMA;
-pub use semio_s_plugin_stdio::artifacts::zip::ZipSnapshot;
-pub use semio_s_plugin_stdio::artifacts::zip::schema::snapshot::ZipEntry;
+use semio_s_artifact_stdio_zip::STDIO_ZIP_DOCUMENT_SCHEMA;
+pub use semio_s_artifact_stdio_zip::ZipSnapshot;
+pub use semio_s_artifact_stdio_zip::schema::snapshot::ZipEntry;
 
 pub fn register() {}
 
@@ -24,13 +24,13 @@ pub fn serialize_bytes(snapshot: &ProgramSnapshot) -> Result<Vec<u8>, store::Tex
 
 pub fn serialize_raw_bytes(snapshot: &ProgramSnapshot) -> Result<Vec<u8>, store::TextError> {
     let archive = serialize(snapshot)?;
-    semio_s_plugin_stdio::artifacts::zip::standards::v2_0::subsets::base::io::encode_zip(&archive).map_err(|error| store::TextError::new(format!("program->zip: {error}"), dsl::TextSpan::at(1, 1)))
+    semio_s_artifact_stdio_zip::standards::v2_0::subsets::base::io::encode_zip(&archive).map_err(|error| store::TextError::new(format!("program->zip: {error}"), dsl::TextSpan::at(1, 1)))
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use semio_s_plugin_stdio::artifacts::zip::standards::v2_0::subsets::base::io::encode_zip;
+    use semio_s_artifact_stdio_zip::standards::v2_0::subsets::base::io::encode_zip;
     use std::io::Read;
 
     #[semio_framework_async_macros::async_test]

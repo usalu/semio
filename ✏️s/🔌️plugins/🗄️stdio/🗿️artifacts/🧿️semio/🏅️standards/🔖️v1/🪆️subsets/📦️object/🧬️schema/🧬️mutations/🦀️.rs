@@ -9,8 +9,8 @@
 //! — never hand-written. Every triad leaf is mounted directly as a `mutations`-sibling module in
 //! `🦀️.rs`.
 
-use crate::artifacts::semio::standards::v1::subsets::object::schema::diff::SemioObjectDiff;
-use crate::artifacts::semio::standards::v1::subsets::object::schema::snapshot::SemioObjectSnapshot;
+use crate::standards::v1::subsets::object::schema::diff::SemioObjectDiff;
+use crate::standards::v1::subsets::object::schema::snapshot::SemioObjectSnapshot;
 
 //#region 🔖️Leaves
 use super::create_brep;
@@ -84,8 +84,8 @@ pub fn decode_semio_object_mutation_json(text: &str) -> Result<SemioObjectMutati
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::{SemioPoint3, SemioQuaternion};
-    use crate::artifacts::semio::standards::v1::subsets::object::schema::snapshot::demo_object_snapshot;
+    use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint3, SemioQuaternion};
+    use crate::standards::v1::subsets::object::schema::snapshot::demo_object_snapshot;
     use protocol::{Mutation, MutationDiff, SemanticMutation};
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9

@@ -1,0 +1,2673 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/os/shell/component.json",
+  "title": "OS Shell",
+  "description": "🧬️ `os.shell` — every shell wire type the pure reduce() transition consumes and produces. This document is the authority: the Rust registry in `🦀️.rs` carries exactly one row per `$defs` export and renders `../🤖️generated/🟦️.ts` from it, and `🟦️.ts` parses against this document. Every field is required and nullability is spelled out, exactly as the TypeScript mirror declares it.",
+  "$defs": {
+    "ActiveSession": {
+      "title": "ActiveSession",
+      "description": "🎯️ The active app instance binding.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "pluginId",
+        "appId",
+        "instanceId"
+      ],
+      "properties": {
+        "pluginId": {
+          "type": "string"
+        },
+        "appId": {
+          "type": "string"
+        },
+        "instanceId": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        }
+      }
+    },
+    "Anchor": {
+      "title": "Anchor",
+      "description": "🧭️ The four docking edges a panel can attach to.",
+      "type": "string",
+      "enum": [
+        "left",
+        "right",
+        "top",
+        "bottom"
+      ]
+    },
+    "AppRole": {
+      "title": "AppRole",
+      "description": "🎭️ Which role group the Open panel focuses. Transparent newtype over a plain string.",
+      "type": "string"
+    },
+    "ArtifactSyncStatus": {
+      "title": "ArtifactSyncStatus",
+      "description": "🩺️ Per-document sync health.",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "clean"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "dirty"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "syncing"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "message"
+          ],
+          "properties": {
+            "kind": {
+              "const": "errored"
+            },
+            "message": {
+              "type": "string"
+            }
+          }
+        }
+      ]
+    },
+    "ByAnchor": {
+      "title": "ByAnchor",
+      "description": "🧭️ One value per Anchor. Generic in Rust/TypeScript (`ByAnchor<T>`); the item contract is refined at each use site, so the four edges are declared here without a value type.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "left",
+        "right",
+        "top",
+        "bottom"
+      ],
+      "properties": {
+        "left": {
+          "description": "Value docked to the left edge."
+        },
+        "right": {
+          "description": "Value docked to the right edge."
+        },
+        "top": {
+          "description": "Value docked to the top edge."
+        },
+        "bottom": {
+          "description": "Value docked to the bottom edge."
+        }
+      }
+    },
+    "Conflict": {
+      "title": "Conflict",
+      "description": "⚠️ One open conflict on the roster.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "conflictId",
+        "documentId",
+        "description"
+      ],
+      "properties": {
+        "conflictId": {
+          "type": "string"
+        },
+        "documentId": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        }
+      }
+    },
+    "DialogState": {
+      "title": "DialogState",
+      "description": "🪟️ One entry on the open-dialog stack.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "dialogId",
+        "seedArgs"
+      ],
+      "properties": {
+        "dialogId": {
+          "type": "string"
+        },
+        "seedArgs": {
+          "description": "Free-form dialog seed payload; any JSON value, including null."
+        }
+      }
+    },
+    "DockUiState": {
+      "title": "DockUiState",
+      "description": "🗂️ Restored dock UI state — a layout tree plus per-anchor visibility.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "layout",
+        "panelsVisible"
+      ],
+      "properties": {
+        "layout": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/LayoutNode"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "panelsVisible": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/ByAnchor"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "left": {
+                  "type": "boolean"
+                },
+                "right": {
+                  "type": "boolean"
+                },
+                "top": {
+                  "type": "boolean"
+                },
+                "bottom": {
+                  "type": "boolean"
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "ExtraWindowInstance": {
+      "title": "ExtraWindowInstance",
+      "description": "🪟️ One spawned/extra window instance.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "windowId",
+        "kind",
+        "params"
+      ],
+      "properties": {
+        "windowId": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "params": {
+          "description": "Free-form window seed payload; any JSON value, including null."
+        }
+      }
+    },
+    "IconName": {
+      "title": "IconName",
+      "description": "🖼️ Stable icon identifier. Transparent newtype over a plain string.",
+      "type": "string"
+    },
+    "InferencePortPhase": {
+      "title": "InferencePortPhase",
+      "description": "💡️ The complete rendered lifecycle of one host-owned ephemeral inference port; the last four are terminal.",
+      "type": "string",
+      "enum": [
+        "idle",
+        "submitting",
+        "running",
+        "offered",
+        "approving",
+        "applied",
+        "cancelled",
+        "stale",
+        "failed"
+      ]
+    },
+    "InferencePortStatus": {
+      "title": "InferencePortStatus",
+      "description": "💡️ Ephemeral per-document inference-port state. Never persisted.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "phase",
+        "jobId",
+        "cursor",
+        "completed",
+        "total",
+        "proposalHash",
+        "cancelRequested",
+        "code"
+      ],
+      "properties": {
+        "phase": {
+          "$ref": "#/$defs/InferencePortPhase"
+        },
+        "jobId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "cursor": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "completed": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "total": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "proposalHash": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "cancelRequested": {
+          "type": "boolean"
+        },
+        "code": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "LayoutNode": {
+      "title": "LayoutNode",
+      "description": "🧱️ Recursive window/dock layout tree — window ids at the leaves, nested splits above them.",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "windowId"
+          ],
+          "properties": {
+            "kind": {
+              "const": "leaf"
+            },
+            "windowId": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "orientation",
+            "children",
+            "sizes"
+          ],
+          "properties": {
+            "kind": {
+              "const": "split"
+            },
+            "orientation": {
+              "$ref": "#/$defs/SplitOrientation"
+            },
+            "children": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/LayoutNode"
+              }
+            },
+            "sizes": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "LoadedPlugin": {
+      "title": "LoadedPlugin",
+      "description": "🔌️ One loaded plugin's registry entry.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "pluginId",
+        "moduleUrl",
+        "label"
+      ],
+      "properties": {
+        "pluginId": {
+          "type": "string"
+        },
+        "moduleUrl": {
+          "type": "string"
+        },
+        "label": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "MergePolicy": {
+      "title": "MergePolicy",
+      "description": "🤝️ Conflict resolution strategy.",
+      "type": "string",
+      "enum": [
+        "preferLocal",
+        "preferRemote",
+        "manual"
+      ]
+    },
+    "NoticeKind": {
+      "title": "NoticeKind",
+      "description": "🔔️ Severity of a TransientNotice.",
+      "type": "string",
+      "enum": [
+        "info",
+        "success",
+        "warning",
+        "error"
+      ]
+    },
+    "PluginPanelStatus": {
+      "title": "PluginPanelStatus",
+      "description": "🪟️ Plugin panel open/collapsed UI state.",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "open"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "collapsed"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "message"
+          ],
+          "properties": {
+            "kind": {
+              "const": "errored"
+            },
+            "message": {
+              "type": "string"
+            }
+          }
+        }
+      ]
+    },
+    "PluginSupervisorState": {
+      "title": "PluginSupervisorState",
+      "description": "🚑️ Plugin resource/failure monitoring summary.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "healthy",
+        "restartCount",
+        "lastSignalMs"
+      ],
+      "properties": {
+        "healthy": {
+          "type": "boolean"
+        },
+        "restartCount": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "lastSignalMs": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      }
+    },
+    "ShellCapability": {
+      "title": "ShellCapability",
+      "description": "🛰️ One machine-readable descriptor per ShellCommand variant — what an MCP gateway compiles into its tool catalog.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "title",
+        "description",
+        "schema",
+        "observableOnly"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "schema": {
+          "description": "JSON Schema for this variant's payload, derived from ShellCommand."
+        },
+        "observableOnly": {
+          "type": "boolean"
+        }
+      }
+    },
+    "ShellCommand": {
+      "title": "ShellCommand",
+      "description": "🎮️ The vocabulary the LLM (and every other shell client) speaks. Declaration order matches SHELL_COMMAND_CATALOG, which stamps each variant's ShellCapability id.",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "plugin"
+          ],
+          "properties": {
+            "type": {
+              "const": "registerLoadedPlugin"
+            },
+            "plugin": {
+              "$ref": "#/$defs/LoadedPlugin"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "pluginId"
+          ],
+          "properties": {
+            "type": {
+              "const": "unregisterLoadedPlugin"
+            },
+            "pluginId": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "pluginId",
+            "status"
+          ],
+          "properties": {
+            "type": {
+              "const": "setPluginStatus"
+            },
+            "pluginId": {
+              "type": "string"
+            },
+            "status": {
+              "$ref": "#/$defs/PluginPanelStatus"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "pluginId",
+            "state"
+          ],
+          "properties": {
+            "type": {
+              "const": "setPluginSupervisorState"
+            },
+            "pluginId": {
+              "type": "string"
+            },
+            "state": {
+              "$ref": "#/$defs/PluginSupervisorState"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "session"
+          ],
+          "properties": {
+            "type": {
+              "const": "setActiveSession"
+            },
+            "session": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/ActiveSession"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "error"
+          ],
+          "properties": {
+            "type": {
+              "const": "setSessionError"
+            },
+            "error": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "appId",
+            "labelKey",
+            "value"
+          ],
+          "properties": {
+            "type": {
+              "const": "setAppLabelOverride"
+            },
+            "appId": {
+              "type": "string"
+            },
+            "labelKey": {
+              "type": "string"
+            },
+            "value": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "windowId",
+            "folded"
+          ],
+          "properties": {
+            "type": {
+              "const": "setActionPaneFolded"
+            },
+            "windowId": {
+              "type": "string"
+            },
+            "folded": {
+              "type": "boolean"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "windowId",
+            "actionId"
+          ],
+          "properties": {
+            "type": {
+              "const": "setActionPaneExpanded"
+            },
+            "windowId": {
+              "type": "string"
+            },
+            "actionId": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "windowId",
+            "actionId",
+            "argId",
+            "value"
+          ],
+          "properties": {
+            "type": {
+              "const": "stageActionArg"
+            },
+            "windowId": {
+              "type": "string"
+            },
+            "actionId": {
+              "type": "string"
+            },
+            "argId": {
+              "type": "string"
+            },
+            "value": {
+              "description": "Free-form staged argument value; any JSON value."
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "windowId",
+            "actionId"
+          ],
+          "properties": {
+            "type": {
+              "const": "resetActionArgs"
+            },
+            "windowId": {
+              "type": "string"
+            },
+            "actionId": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "windowId",
+            "utilityId"
+          ],
+          "properties": {
+            "type": {
+              "const": "setActiveUtility"
+            },
+            "windowId": {
+              "type": "string"
+            },
+            "utilityId": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "toolId"
+          ],
+          "properties": {
+            "type": {
+              "const": "setActiveTool"
+            },
+            "toolId": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "commandId"
+          ],
+          "properties": {
+            "type": {
+              "const": "setCommandExpanded"
+            },
+            "commandId": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "commandId",
+            "argId",
+            "value"
+          ],
+          "properties": {
+            "type": {
+              "const": "stageCommandArg"
+            },
+            "commandId": {
+              "type": "string"
+            },
+            "argId": {
+              "type": "string"
+            },
+            "value": {
+              "description": "Free-form staged argument value; any JSON value."
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "commandId"
+          ],
+          "properties": {
+            "type": {
+              "const": "resetCommandArgs"
+            },
+            "commandId": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "anchor",
+            "visible"
+          ],
+          "properties": {
+            "type": {
+              "const": "setPanelVisible"
+            },
+            "anchor": {
+              "$ref": "#/$defs/Anchor"
+            },
+            "visible": {
+              "type": "boolean"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "anchor",
+            "size"
+          ],
+          "properties": {
+            "type": {
+              "const": "setPanelSize"
+            },
+            "anchor": {
+              "$ref": "#/$defs/Anchor"
+            },
+            "size": {
+              "type": "number",
+              "description": "Requested panel size. A negative or non-finite request is representable here and rejected by reduce() with ShellError.invalidPanelSize."
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "anchor",
+            "path"
+          ],
+          "properties": {
+            "type": {
+              "const": "setPanelPath"
+            },
+            "anchor": {
+              "$ref": "#/$defs/Anchor"
+            },
+            "path": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "dock"
+          ],
+          "properties": {
+            "type": {
+              "const": "setDockOverride"
+            },
+            "dock": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/LayoutNode"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "panelKey",
+            "path"
+          ],
+          "properties": {
+            "type": {
+              "const": "setPanelPathMemory"
+            },
+            "panelKey": {
+              "type": "string"
+            },
+            "path": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "treeId",
+            "open"
+          ],
+          "properties": {
+            "type": {
+              "const": "setTreeOpenState"
+            },
+            "treeId": {
+              "type": "string"
+            },
+            "open": {
+              "type": "boolean"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "dock"
+          ],
+          "properties": {
+            "type": {
+              "const": "hydrateDockUi"
+            },
+            "dock": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/DockUiState"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "const": "resetDock"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "windowId"
+          ],
+          "properties": {
+            "type": {
+              "const": "focusWindow"
+            },
+            "windowId": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "layout"
+          ],
+          "properties": {
+            "type": {
+              "const": "setShellLayout"
+            },
+            "layout": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/LayoutNode"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "exampleId"
+          ],
+          "properties": {
+            "type": {
+              "const": "setActiveExample"
+            },
+            "exampleId": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "path"
+          ],
+          "properties": {
+            "type": {
+              "const": "setMobilePanelPath"
+            },
+            "path": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "visible"
+          ],
+          "properties": {
+            "type": {
+              "const": "setMobilePanelVisible"
+            },
+            "visible": {
+              "type": "boolean"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "windows"
+          ],
+          "properties": {
+            "type": {
+              "const": "setExtraWindows"
+            },
+            "windows": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/ExtraWindowInstance"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "windowId",
+            "title"
+          ],
+          "properties": {
+            "type": {
+              "const": "setWindowTitle"
+            },
+            "windowId": {
+              "type": "string"
+            },
+            "title": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "windowId",
+            "icon"
+          ],
+          "properties": {
+            "type": {
+              "const": "setWindowIcon"
+            },
+            "windowId": {
+              "type": "string"
+            },
+            "icon": {
+              "$ref": "#/$defs/IconName"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "open"
+          ],
+          "properties": {
+            "type": {
+              "const": "setSearchOpen"
+            },
+            "open": {
+              "type": "boolean"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "open"
+          ],
+          "properties": {
+            "type": {
+              "const": "setFindOpen"
+            },
+            "open": {
+              "type": "boolean"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "key"
+          ],
+          "properties": {
+            "type": {
+              "const": "autoStartIntroduction"
+            },
+            "key": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "stepIndex"
+          ],
+          "properties": {
+            "type": {
+              "const": "setIntroductionStep"
+            },
+            "stepIndex": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 4294967295
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "interactionIndex"
+          ],
+          "properties": {
+            "type": {
+              "const": "completeIntroductionInteraction"
+            },
+            "interactionIndex": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4294967295
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "dialogId",
+            "seedArgs"
+          ],
+          "properties": {
+            "type": {
+              "const": "openDialog"
+            },
+            "dialogId": {
+              "type": "string"
+            },
+            "seedArgs": {
+              "description": "Free-form dialog seed payload; any JSON value, including null."
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "dialogId"
+          ],
+          "properties": {
+            "type": {
+              "const": "closeDialog"
+            },
+            "dialogId": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "notice"
+          ],
+          "properties": {
+            "type": {
+              "const": "showTransientNotice"
+            },
+            "notice": {
+              "$ref": "#/$defs/TransientNotice"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "const": "dismissTransientNotice"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "role"
+          ],
+          "properties": {
+            "type": {
+              "const": "setOpenWithFocusRole"
+            },
+            "role": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/AppRole"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "tutorialId"
+          ],
+          "properties": {
+            "type": {
+              "const": "setActiveTutorial"
+            },
+            "tutorialId": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "appearance"
+          ],
+          "properties": {
+            "type": {
+              "const": "setUiAppearance"
+            },
+            "appearance": {
+              "$ref": "#/$defs/UiAppearance"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "layout"
+          ],
+          "properties": {
+            "type": {
+              "const": "setUiLayout"
+            },
+            "layout": {
+              "$ref": "#/$defs/UiChromeLayout"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "driverId"
+          ],
+          "properties": {
+            "type": {
+              "const": "setUiDriver"
+            },
+            "driverId": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "driverId",
+            "driver"
+          ],
+          "properties": {
+            "type": {
+              "const": "setUiCustomDriver"
+            },
+            "driverId": {
+              "type": "string"
+            },
+            "driver": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/UiDriver"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "draft"
+          ],
+          "properties": {
+            "type": {
+              "const": "setUiDriverDraft"
+            },
+            "draft": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/UiDriver"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "locale"
+          ],
+          "properties": {
+            "type": {
+              "const": "setUiLocale"
+            },
+            "locale": {
+              "$ref": "#/$defs/UiLocale"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "terminologyId"
+          ],
+          "properties": {
+            "type": {
+              "const": "setUiTerminology"
+            },
+            "terminologyId": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "themeId"
+          ],
+          "properties": {
+            "type": {
+              "const": "setUiTheme"
+            },
+            "themeId": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "themeId",
+            "theme"
+          ],
+          "properties": {
+            "type": {
+              "const": "setUiCustomTheme"
+            },
+            "themeId": {
+              "type": "string"
+            },
+            "theme": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/UiTheme"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "draft"
+          ],
+          "properties": {
+            "type": {
+              "const": "setUiThemeDraft"
+            },
+            "draft": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/UiTheme"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "controlId",
+            "keys"
+          ],
+          "properties": {
+            "type": {
+              "const": "setUiKeybindingOverride"
+            },
+            "controlId": {
+              "type": "string"
+            },
+            "keys": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "uri"
+          ],
+          "properties": {
+            "type": {
+              "const": "setSyncBackboneUri"
+            },
+            "uri": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "kind"
+          ],
+          "properties": {
+            "type": {
+              "const": "setSyncCardKind"
+            },
+            "kind": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/SyncCardKind"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "path"
+          ],
+          "properties": {
+            "type": {
+              "const": "setSyncDraftPath"
+            },
+            "path": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "documentId",
+            "status"
+          ],
+          "properties": {
+            "type": {
+              "const": "setDocumentSyncStatus"
+            },
+            "documentId": {
+              "type": "string"
+            },
+            "status": {
+              "$ref": "#/$defs/ArtifactSyncStatus"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "documentId",
+            "port"
+          ],
+          "properties": {
+            "type": {
+              "const": "setDocumentInferencePort"
+            },
+            "documentId": {
+              "type": "string"
+            },
+            "port": {
+              "$ref": "#/$defs/InferencePortStatus"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "documentId"
+          ],
+          "properties": {
+            "type": {
+              "const": "clearDocumentInferencePort"
+            },
+            "documentId": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "policy"
+          ],
+          "properties": {
+            "type": {
+              "const": "setMergePolicy"
+            },
+            "policy": {
+              "$ref": "#/$defs/MergePolicy"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "conflicts"
+          ],
+          "properties": {
+            "type": {
+              "const": "setConflicts"
+            },
+            "conflicts": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Conflict"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "conflictId"
+          ],
+          "properties": {
+            "type": {
+              "const": "selectConflict"
+            },
+            "conflictId": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "scope"
+          ],
+          "properties": {
+            "type": {
+              "const": "setStorageScope"
+            },
+            "scope": {
+              "$ref": "#/$defs/ShellScope"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "role",
+            "dialectId"
+          ],
+          "properties": {
+            "type": {
+              "const": "setOpeningPreference"
+            },
+            "role": {
+              "type": "string"
+            },
+            "dialectId": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "ShellError": {
+      "title": "ShellError",
+      "description": "🚨️ Why a command was rejected. reduce() never panics.",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "field"
+          ],
+          "properties": {
+            "kind": {
+              "const": "emptyIdentifier"
+            },
+            "field": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "pluginId"
+          ],
+          "properties": {
+            "kind": {
+              "const": "unknownPlugin"
+            },
+            "pluginId": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "dialogId"
+          ],
+          "properties": {
+            "kind": {
+              "const": "unknownDialog"
+            },
+            "dialogId": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "conflictId"
+          ],
+          "properties": {
+            "kind": {
+              "const": "unknownConflict"
+            },
+            "conflictId": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "anchor",
+            "size"
+          ],
+          "properties": {
+            "kind": {
+              "const": "invalidPanelSize"
+            },
+            "anchor": {
+              "$ref": "#/$defs/Anchor"
+            },
+            "size": {
+              "type": "number"
+            }
+          }
+        }
+      ]
+    },
+    "ShellEvent": {
+      "title": "ShellEvent",
+      "description": "📣️ What reduce() reports happened. `applied` is emitted exactly once, last, for every accepted command.",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "capabilityId",
+            "revision"
+          ],
+          "properties": {
+            "type": {
+              "const": "applied"
+            },
+            "capabilityId": {
+              "type": "string"
+            },
+            "revision": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "previous",
+            "current"
+          ],
+          "properties": {
+            "type": {
+              "const": "windowFocusChanged"
+            },
+            "previous": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "current": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "windowId",
+            "previous",
+            "current"
+          ],
+          "properties": {
+            "type": {
+              "const": "activeUtilityChanged"
+            },
+            "windowId": {
+              "type": "string"
+            },
+            "previous": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "current": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "previous",
+            "current"
+          ],
+          "properties": {
+            "type": {
+              "const": "activeToolChanged"
+            },
+            "previous": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "current": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "const": "dockReset"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "dialogId"
+          ],
+          "properties": {
+            "type": {
+              "const": "dialogOpened"
+            },
+            "dialogId": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "dialogId"
+          ],
+          "properties": {
+            "type": {
+              "const": "dialogClosed"
+            },
+            "dialogId": {
+              "type": "string"
+            }
+          }
+        }
+      ]
+    },
+    "ShellScope": {
+      "title": "ShellScope",
+      "description": "💾️ Storage backend for shell state persistence.",
+      "type": "string",
+      "enum": [
+        "localStorage",
+        "memory"
+      ]
+    },
+    "ShellState": {
+      "title": "ShellState",
+      "description": "📋️ The shell's entire semantic UI state — the single source of truth. Render caches are deliberately absent. `revision` increments on every successfully applied ShellCommand.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "revision",
+        "loadedPlugins",
+        "pluginStatusById",
+        "pluginSupervisorById",
+        "activeSession",
+        "sessionError",
+        "appLabelsOverlay",
+        "actionPaneFoldedByWindow",
+        "actionPaneExpandedByWindow",
+        "stagedActionArgs",
+        "activeUtilityByWindow",
+        "activeToolId",
+        "commandPanelExpanded",
+        "stagedCommandArgs",
+        "panelsVisible",
+        "panelsSize",
+        "panelsPath",
+        "dockOverride",
+        "panelPathMemory",
+        "treeOpenStates",
+        "activeWindowId",
+        "shellLayout",
+        "activeExampleId",
+        "mobilePanelPath",
+        "mobilePanelVisible",
+        "extraWindows",
+        "windowTitlesById",
+        "windowIconsById",
+        "searchOpen",
+        "findOpen",
+        "introductionStepIndex",
+        "introductionAutoStartedKeys",
+        "introductionCompletedInteractions",
+        "dialogStack",
+        "transientNotice",
+        "openWithFocusRole",
+        "activeTutorialId",
+        "uiAppearance",
+        "uiLayout",
+        "uiDriverId",
+        "uiCustomDrivers",
+        "uiDriverDraft",
+        "uiLocale",
+        "uiTerminology",
+        "uiThemeId",
+        "uiCustomThemes",
+        "uiThemeDraft",
+        "uiKeybindingOverrides",
+        "syncBackboneUri",
+        "syncCardKind",
+        "syncDraftPath",
+        "syncStatusByDocument",
+        "inferencePortByDocument",
+        "mergePolicy",
+        "conflicts",
+        "selectedConflictId",
+        "storageScope",
+        "openingPreferences"
+      ],
+      "properties": {
+        "revision": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "loadedPlugins": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/LoadedPlugin"
+          }
+        },
+        "pluginStatusById": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/PluginPanelStatus"
+          }
+        },
+        "pluginSupervisorById": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/PluginSupervisorState"
+          }
+        },
+        "activeSession": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ActiveSession"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "sessionError": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "appLabelsOverlay": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        },
+        "actionPaneFoldedByWindow": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "boolean"
+          }
+        },
+        "actionPaneExpandedByWindow": {
+          "type": "object",
+          "additionalProperties": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "stagedActionArgs": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "object",
+              "additionalProperties": {
+                "description": "Free-form staged argument value; any JSON value."
+              }
+            }
+          }
+        },
+        "activeUtilityByWindow": {
+          "type": "object",
+          "additionalProperties": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "activeToolId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "commandPanelExpanded": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "stagedCommandArgs": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": {
+              "description": "Free-form staged argument value; any JSON value."
+            }
+          }
+        },
+        "panelsVisible": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/ByAnchor"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "left": {
+                  "type": "boolean"
+                },
+                "right": {
+                  "type": "boolean"
+                },
+                "top": {
+                  "type": "boolean"
+                },
+                "bottom": {
+                  "type": "boolean"
+                }
+              }
+            }
+          ]
+        },
+        "panelsSize": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/ByAnchor"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "left": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "right": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "top": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "bottom": {
+                  "type": "number",
+                  "minimum": 0
+                }
+              }
+            }
+          ]
+        },
+        "panelsPath": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/ByAnchor"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "left": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "right": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "top": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "bottom": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        "dockOverride": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/LayoutNode"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "panelPathMemory": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "treeOpenStates": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "boolean"
+          }
+        },
+        "activeWindowId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "shellLayout": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/LayoutNode"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "activeExampleId": {
+          "type": "string"
+        },
+        "mobilePanelPath": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "mobilePanelVisible": {
+          "type": "boolean"
+        },
+        "extraWindows": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ExtraWindowInstance"
+          }
+        },
+        "windowTitlesById": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "windowIconsById": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/IconName"
+          }
+        },
+        "searchOpen": {
+          "type": "boolean"
+        },
+        "findOpen": {
+          "type": "boolean"
+        },
+        "introductionStepIndex": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "introductionAutoStartedKeys": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "introductionCompletedInteractions": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4294967295
+          }
+        },
+        "dialogStack": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/DialogState"
+          }
+        },
+        "transientNotice": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/TransientNotice"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "openWithFocusRole": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/AppRole"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "activeTutorialId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "uiAppearance": {
+          "$ref": "#/$defs/UiAppearance"
+        },
+        "uiLayout": {
+          "$ref": "#/$defs/UiChromeLayout"
+        },
+        "uiDriverId": {
+          "type": "string"
+        },
+        "uiCustomDrivers": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/UiDriver"
+          }
+        },
+        "uiDriverDraft": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/UiDriver"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "uiLocale": {
+          "$ref": "#/$defs/UiLocale"
+        },
+        "uiTerminology": {
+          "type": "string"
+        },
+        "uiThemeId": {
+          "type": "string"
+        },
+        "uiCustomThemes": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/UiTheme"
+          }
+        },
+        "uiThemeDraft": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/UiTheme"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "uiKeybindingOverrides": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "syncBackboneUri": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "syncCardKind": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SyncCardKind"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "syncDraftPath": {
+          "type": "string"
+        },
+        "syncStatusByDocument": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/ArtifactSyncStatus"
+          }
+        },
+        "inferencePortByDocument": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/InferencePortStatus"
+          }
+        },
+        "mergePolicy": {
+          "$ref": "#/$defs/MergePolicy"
+        },
+        "conflicts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Conflict"
+          }
+        },
+        "selectedConflictId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "storageScope": {
+          "$ref": "#/$defs/ShellScope"
+        },
+        "openingPreferences": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "SplitOrientation": {
+      "title": "SplitOrientation",
+      "description": "🧱️ How the child regions of a split are arranged.",
+      "type": "string",
+      "enum": [
+        "horizontal",
+        "vertical"
+      ]
+    },
+    "SyncCardKind": {
+      "title": "SyncCardKind",
+      "description": "🗂️ Check-in target type.",
+      "type": "string",
+      "enum": [
+        "file",
+        "folder",
+        "remote"
+      ]
+    },
+    "TransientNotice": {
+      "title": "TransientNotice",
+      "description": "🔔️ A non-blocking auto-dismiss notice.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "message",
+        "kind",
+        "expiresAtMs"
+      ],
+      "properties": {
+        "message": {
+          "type": "string"
+        },
+        "kind": {
+          "$ref": "#/$defs/NoticeKind"
+        },
+        "expiresAtMs": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      }
+    },
+    "UiAppearance": {
+      "title": "UiAppearance",
+      "description": "🎨️ Appearance preference.",
+      "type": "string",
+      "enum": [
+        "system",
+        "light",
+        "dark"
+      ]
+    },
+    "UiChromeLayout": {
+      "title": "UiChromeLayout",
+      "description": "📐️ UI chrome density.",
+      "type": "string",
+      "enum": [
+        "default",
+        "compact"
+      ]
+    },
+    "UiDriver": {
+      "title": "UiDriver",
+      "description": "🚗️ A user-defined UI driver.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "driverId",
+        "label",
+        "config"
+      ],
+      "properties": {
+        "driverId": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "config": {
+          "description": "Driver-specific configuration; any JSON value."
+        }
+      }
+    },
+    "UiLocale": {
+      "title": "UiLocale",
+      "description": "🌐️ Interface language. English first, then German; a host MUST make an explicit choice — there is no default language.",
+      "type": "string",
+      "enum": [
+        "en",
+        "de"
+      ]
+    },
+    "UiTheme": {
+      "title": "UiTheme",
+      "description": "🎨️ A user-defined UI theme.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "themeId",
+        "label",
+        "tokens"
+      ],
+      "properties": {
+        "themeId": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "tokens": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

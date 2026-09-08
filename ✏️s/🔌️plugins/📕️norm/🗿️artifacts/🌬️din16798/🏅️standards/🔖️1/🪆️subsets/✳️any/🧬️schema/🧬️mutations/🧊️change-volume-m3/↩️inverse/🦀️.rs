@@ -7,6 +7,6 @@ use crate::artifacts::din16798::Din16798Snapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(_payload: &ChangeVolumeM3, base: &Din16798Snapshot) -> Vec<Din16798Mutation> {
-    vec![Din16798Mutation::ChangeVolumeM3(ChangeVolumeM3 { new_volume_m3: base.volume_m3.clone() })]
+    vec![Din16798Mutation::ChangeVolumeM3(ChangeVolumeM3 { new_volume_m3: base.volume_m3 })]
 }
 //#endregion 🔖️Inverse

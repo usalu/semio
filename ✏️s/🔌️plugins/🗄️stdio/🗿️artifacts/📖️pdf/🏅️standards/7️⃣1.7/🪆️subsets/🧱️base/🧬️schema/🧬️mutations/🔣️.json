@@ -1,55 +1,296 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s.stdio.pdf.1.7/mutation.json",
+  "$id": "https://semio.tech/schema/s/stdio/pdf/1.7/base/mutations.json",
   "title": "PdfMutation",
+  "description": "Discriminated union over this module's mutation leaves (internally tagged); every payload is the leaf's own schema, referenced, never restated.",
   "oneOf": [
     {
-      "$ref": "./📥️insert-page/🧬️.schema.json"
+      "allOf": [
+        {
+          "$ref": "./➕️append-page-content/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "appendPageContent"
+            }
+          }
+        }
+      ]
     },
     {
-      "$ref": "./🗑️remove-page/🧬️.schema.json"
+      "allOf": [
+        {
+          "$ref": "./📦️insert-object/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "insertObject"
+            }
+          }
+        }
+      ]
     },
     {
-      "$ref": "./📐️set-page-media-box/🧬️.schema.json"
+      "allOf": [
+        {
+          "$ref": "./📥️insert-page/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "insertPage"
+            }
+          }
+        }
+      ]
     },
     {
-      "$ref": "./✂️set-page-crop-box/🧬️.schema.json"
+      "allOf": [
+        {
+          "$ref": "./🔀️move-page/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "movePage"
+            }
+          }
+        }
+      ]
     },
     {
-      "$ref": "./➕️append-page-content/🧬️.schema.json"
+      "allOf": [
+        {
+          "$ref": "./🚫️remove-dict-entry/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "removeDictEntry"
+            }
+          }
+        }
+      ]
     },
     {
-      "$ref": "./ℹ️set-info/🧬️.schema.json"
+      "allOf": [
+        {
+          "$ref": "./🧹️remove-object/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "removeObject"
+            }
+          }
+        }
+      ]
     },
     {
-      "$ref": "./📦️insert-object/🧬️.schema.json"
+      "allOf": [
+        {
+          "$ref": "./🗑️remove-page/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "removePage"
+            }
+          }
+        }
+      ]
     },
     {
-      "$ref": "./🧹️remove-object/🧬️.schema.json"
+      "allOf": [
+        {
+          "$ref": "./🧽️remove-trailer-entry/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "removeTrailerEntry"
+            }
+          }
+        }
+      ]
     },
     {
-      "$ref": "./🔧️set-object-value/🧬️.schema.json"
+      "allOf": [
+        {
+          "$ref": "./🔑️set-dict-entry/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setDictEntry"
+            }
+          }
+        }
+      ]
     },
     {
-      "$ref": "./🔑️set-dict-entry/🧬️.schema.json"
+      "allOf": [
+        {
+          "$ref": "./ℹ️set-info/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setInfo"
+            }
+          }
+        }
+      ]
     },
     {
-      "$ref": "./🚫️remove-dict-entry/🧬️.schema.json"
+      "allOf": [
+        {
+          "$ref": "./🔧️set-object-value/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setObjectValue"
+            }
+          }
+        }
+      ]
     },
     {
-      "$ref": "./🧳️set-trailer-entry/🧬️.schema.json"
+      "allOf": [
+        {
+          "$ref": "./✏️set-page-content/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setPageContent"
+            }
+          }
+        }
+      ]
     },
     {
-      "$ref": "./🧽️remove-trailer-entry/🧬️.schema.json"
+      "allOf": [
+        {
+          "$ref": "./✂️set-page-crop-box/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setPageCropBox"
+            }
+          }
+        }
+      ]
     },
     {
-      "$ref": "./🔀️move-page/🧬️.schema.json"
+      "allOf": [
+        {
+          "$ref": "./📐️set-page-media-box/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setPageMediaBox"
+            }
+          }
+        }
+      ]
     },
     {
-      "$ref": "./✏️set-page-content/🧬️.schema.json"
+      "allOf": [
+        {
+          "$ref": "./🔄️set-page-rotation/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setPageRotation"
+            }
+          }
+        }
+      ]
     },
     {
-      "$ref": "./🔄️set-page-rotation/🧬️.schema.json"
+      "allOf": [
+        {
+          "$ref": "./🧳️set-trailer-entry/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setTrailerEntry"
+            }
+          }
+        }
+      ]
     }
   ]
 }

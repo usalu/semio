@@ -7,8 +7,8 @@
 //! `SetCompressionParams`/`SetPresetDictionary` (see the window's own doc comment for why `payload`
 //! itself is never shown or parsed here — a compressed byte stream has no honest text form).
 
-use crate::artifacts::deflate::schema::mutations::{set_compression_params, set_preset_dictionary};
-use crate::artifacts::deflate::{DeflateMutation, DeflateSnapshot, STDIO_DEFLATE_DOCUMENT_SCHEMA};
+use crate::schema::mutations::{set_compression_params, set_preset_dictionary};
+use crate::{DeflateMutation, DeflateSnapshot, STDIO_DEFLATE_DOCUMENT_SCHEMA};
 use crate::editor::deflate::modes::edit;
 use crate::editor::deflate::modes::edit::windows::main;
 #[cfg(test)]
@@ -97,7 +97,7 @@ impl protocol::OpBinary for DeflateEditorCommand {
 /// or malformed required key — the caller treats that as a whole-command no-op, never a partial
 /// apply.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn parse_header_summary(text: &str) -> Option<(u8, u8, crate::artifacts::deflate::schema::snapshot::DeflateLevelHint, Option<u32>)> {
+fn parse_header_summary(text: &str) -> Option<(u8, u8, crate::schema::snapshot::DeflateLevelHint, Option<u32>)> {
     let mut fields = std::collections::BTreeMap::new();
     for line in text.lines() {
         let line = line.trim();
@@ -207,14 +207,14 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn parse_header_summary_round_trips_a_rendered_snapshot() {
-        let document = DeflateSnapshot { compression_method: 8, window_bits: 9, compression_level_hint: crate::artifacts::deflate::schema::snapshot::DeflateLevelHint::Maximum, dict_id: Some(7), payload: vec![9, 9], ..DeflateSnapshot::default() };
+        let document = DeflateSnapshot { compression_method: 8, window_bits: 9, compression_level_hint: crate::schema::snapshot::DeflateLevelHint::Maximum, dict_id: Some(7), payload: vec![9, 9], ..DeflateSnapshot::default() };
         let node = main::render(&document).expect("render");
         let Component::Surface(props) = node.component else { panic!("expected a retained text surface") };
         let scene: semio_framework_ui_scene::TextEditorScene = semio_framework_ui_scene::decode(&props).expect("decode text scene");
         let (method, window_bits, level_hint, dict_id) = parse_header_summary(&scene.buffer).expect("well-formed summary must parse");
         assert_eq!(method, 8);
         assert_eq!(window_bits, 9);
-        assert_eq!(level_hint, crate::artifacts::deflate::schema::snapshot::DeflateLevelHint::Maximum);
+        assert_eq!(level_hint, crate::schema::snapshot::DeflateLevelHint::Maximum);
         assert_eq!(dict_id, Some(7));
     }
 

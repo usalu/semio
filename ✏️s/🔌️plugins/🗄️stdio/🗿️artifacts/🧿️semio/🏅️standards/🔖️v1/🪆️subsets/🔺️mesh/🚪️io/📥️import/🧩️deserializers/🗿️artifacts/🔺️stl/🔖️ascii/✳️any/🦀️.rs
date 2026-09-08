@@ -12,9 +12,9 @@
 //! `colors` stay empty, `material_id` stays `None`, and `solid_name` (the one file-level string
 //! STL carries) becomes the single `SemioMesh.id`.
 
-use crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioPoint3;
-use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::{SemioMesh, SemioMeshSnapshot, SemioPrimitive, SemioTopology, STDIO_SEMIOMESH_DOCUMENT_SCHEMA};
-use crate::artifacts::stl::StlSnapshot;
+use crate::standards::v1::subsets::base::schema::geometry::SemioPoint3;
+use crate::standards::v1::subsets::mesh::schema::snapshot::{SemioMesh, SemioMeshSnapshot, SemioPrimitive, SemioTopology, STDIO_SEMIOMESH_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_stl::StlSnapshot;
 use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId};
 
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.stl", standard: StandardId("ascii"), subset: SubsetId::ANY };
@@ -48,7 +48,7 @@ impl ArtifactDeserializer for SemioMeshFromStl {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::stl::schema::snapshot::StlTriangle;
+    use semio_s_artifact_stdio_stl::schema::snapshot::StlTriangle;
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn sample_stl() -> StlSnapshot {

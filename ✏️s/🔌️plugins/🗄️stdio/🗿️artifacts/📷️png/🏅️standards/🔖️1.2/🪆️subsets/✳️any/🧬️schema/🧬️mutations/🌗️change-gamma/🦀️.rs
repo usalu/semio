@@ -1,7 +1,7 @@
 //! 🧬️ Authoritative change-gamma mutation.
-use crate::artifacts::png::schema::diff::*;
-use crate::artifacts::png::schema::mutations::PngMutation;
-use crate::artifacts::png::schema::snapshot::*;
+use crate::schema::diff::*;
+use crate::schema::mutations::PngMutation;
+use crate::schema::snapshot::*;
 
 //#region Payload
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]

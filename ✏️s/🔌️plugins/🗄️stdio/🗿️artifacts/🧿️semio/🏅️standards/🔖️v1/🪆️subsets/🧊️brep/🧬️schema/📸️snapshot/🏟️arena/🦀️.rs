@@ -28,7 +28,7 @@ macro_rules! define_id {
             index: u32,
             generation: u32,
         }
-        impl $crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::ArenaId for $name {
+        impl $crate::standards::v1::subsets::brep::schema::snapshot::arena::ArenaId for $name {
             fn from_raw(index: u32, generation: u32) -> Self {
                 $name { index, generation }
             }
@@ -145,7 +145,7 @@ impl<T, Id: ArenaId> Store<T, Id> {
         self.len() == 0
     }
     /// 🗄️ Frees `id`'s slot without needing its value back — the arena-GC primitive [`Body::compact`]
-    /// (`crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::Body`) calls per unreachable id: bumps the slot's generation
+    /// (`crate::standards::v1::subsets::brep::schema::snapshot::topology::Body`) calls per unreachable id: bumps the slot's generation
     /// (see [`Self::remove`]) so a still-held stale id self-detects instead of aliasing whatever
     /// reuses the slot next. Returns `false` (no-op) for an already-stale or out-of-range id.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9

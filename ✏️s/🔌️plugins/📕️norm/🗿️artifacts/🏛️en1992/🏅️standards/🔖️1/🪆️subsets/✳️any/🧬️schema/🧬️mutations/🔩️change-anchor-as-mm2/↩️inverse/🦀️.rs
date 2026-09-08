@@ -7,6 +7,6 @@ use crate::artifacts::en1992::En1992Snapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(_payload: &ChangeAnchorASMm2, base: &En1992Snapshot) -> Vec<En1992Mutation> {
-    vec![En1992Mutation::ChangeAnchorASMm2(ChangeAnchorASMm2 { new_anchor_a_s_mm2: base.anchor_a_s_mm2.clone() })]
+    vec![En1992Mutation::ChangeAnchorASMm2(ChangeAnchorASMm2 { new_anchor_a_s_mm2: base.anchor_a_s_mm2 })]
 }
 //#endregion 🔖️Inverse

@@ -198,8 +198,7 @@ impl OsHost {
                     self.present_fault = Some("render snapshot revision exhausted".to_string());
                     return;
                 };
-                let timestamp_us = (self.now_seconds() * 1_000_000.0) as u64;
-                self.snapshot_sink.publish(crate::render_snapshot::RenderSnapshot::new(revision, generation, timestamp_us, semio_cursor_to_request(cursor), None));
+                self.snapshot_sink.publish(crate::render_snapshot::RenderSnapshot::new(revision, semio_cursor_to_request(cursor), None));
             }
             Ok(crate::AppPresentStep::Pending) => self.scheduler.invalidate(InvalidationReason::RESOURCE_READY),
             Ok(crate::AppPresentStep::Idle) => {}
@@ -383,7 +382,6 @@ fn key_action_from_dispatch(key: &str, pressed: bool) -> Option<ui_wgpu::wgpu::K
 #[cfg(not(target_arch = "wasm32"))]
 mod native {
     use super::{advance_frame_generation, DispatchEvent, EventModifiers, InvalidationReason, OsHost, PointerButton, WindowDelegate, WindowMetrics};
-    use crate::kernel_seam::KernelSeam;
     use crate::os_host::OsHostRetirement;
     use crate::RuntimeMailbox;
     use std::sync::Arc;
@@ -718,10 +716,6 @@ mod native {
                     }));
                     #[cfg(target_arch = "wasm32")]
                     host.runtime.set_waker(std::rc::Rc::new(move || {
-                        let _ = proxy.send_event(HostUserEvent::Wake);
-                    }));
-                    let proxy = self.proxy.clone();
-                    host.kernel.set_waker(crate::kernel_seam::HostWaker::new(move || {
                         let _ = proxy.send_event(HostUserEvent::Wake);
                     }));
                     #[cfg(not(target_arch = "wasm32"))]

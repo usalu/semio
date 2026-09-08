@@ -5,7 +5,7 @@
   "displayName": "Change Equipment Gain Radiant Fraction",
   "emoji": "🌠️",
   "aggregateVariant": "ChangeEquipmentGainRadiantFraction",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-equipment-gain-radiant-fraction",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

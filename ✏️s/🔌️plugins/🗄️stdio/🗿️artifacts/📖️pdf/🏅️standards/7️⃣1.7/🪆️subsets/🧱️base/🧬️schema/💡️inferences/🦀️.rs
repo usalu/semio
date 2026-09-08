@@ -4,8 +4,8 @@
 //! slug dirs directly — `🦀️.rs` is the sole mounting mechanism, same as mutations); each named
 //! inference gets its own `<emoji><slug>/` child (currently: `🧾outline/`).
 
-use crate::artifacts::pdf::standards::v1_7::subsets::base::schema::snapshot::PdfSnapshot;
-use schema::ArtifactSchema;
+use crate::standards::v1_7::subsets::base::schema::snapshot::PdfSnapshot;
+use framework_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 
 use super::outline::Pdf17Outline;
@@ -41,7 +41,7 @@ impl protocol::InferenceSpec<PdfSnapshot> for Pdf17Inference {
 //#endregion 🔖️Inference
 
 //#region 🔖️ArtifactInferrer
-impl ArtifactInferrer for crate::artifacts::pdf::standards::v1_7::subsets::base::schema::PdfBuilder {
+impl ArtifactInferrer for crate::standards::v1_7::subsets::base::schema::PdfBuilder {
     type Snapshot = PdfSnapshot;
     type Inference = Pdf17Inference;
 }
@@ -51,10 +51,10 @@ impl ArtifactInferrer for crate::artifacts::pdf::standards::v1_7::subsets::base:
 /// 💡️ Registers `s.stdio.pdf.1.7.inference`'s facet leaves into the OS-wide inference catalog —
 /// call once at plugin init, alongside `pdf_artifact_schema_descriptor`'s registration.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn pdf17_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
-    schema::ArtifactInferenceDescriptor {
+pub fn pdf17_artifact_inference_descriptor() -> framework_schema::ArtifactInferenceDescriptor {
+    framework_schema::ArtifactInferenceDescriptor {
         id: "s.stdio.pdf.1.7.inference",
-        inference: schema::FacetLeaves {
+        inference: framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),

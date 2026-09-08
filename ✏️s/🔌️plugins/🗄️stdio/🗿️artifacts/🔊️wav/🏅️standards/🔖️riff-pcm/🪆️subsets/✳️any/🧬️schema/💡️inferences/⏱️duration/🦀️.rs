@@ -5,7 +5,7 @@
 //! the same "bytes per interleaved frame" quantity the RIFF spec itself defines `data`'s size in
 //! terms of). A pure whole-snapshot scalar — no `InferredField` needed.
 
-use crate::artifacts::wav::standards::riff_pcm::subsets::any::schema::snapshot::{WavData, WavSnapshot};
+use crate::standards::riff_pcm::subsets::any::schema::snapshot::{WavData, WavSnapshot};
 
 //#region 🔖️Duration
 /// ⏱️ wav's `fmt`/`data`-derived playback duration.
@@ -56,7 +56,7 @@ pub fn compute_wav_duration(snapshot: &WavSnapshot) -> WavDuration {
 //#region 🧪️Tests
 mod tests {
     use super::*;
-    use crate::artifacts::wav::standards::riff_pcm::subsets::any::schema::snapshot::WavFmt;
+    use crate::standards::riff_pcm::subsets::any::schema::snapshot::WavFmt;
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn snapshot(sample_rate: u32, channels: u16, data: WavData) -> WavSnapshot {

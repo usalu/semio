@@ -1,8 +1,8 @@
 //! 🧬️ Direct insert-element mutation owner.
-use crate::artifacts::svg::schema::diff::{diff_at_path, SvgChildAdded, SvgChildrenDiff, SvgDiff, SvgElementDiff, SvgNodeDiff};
-use crate::artifacts::svg::schema::snapshot::NodePath;
-use crate::artifacts::svg::SvgSnapshot;
-use crate::artifacts::xml::schema::snapshot::XmlNode;
+use crate::schema::diff::{diff_at_path, SvgChildAdded, SvgChildrenDiff, SvgDiff, SvgElementDiff, SvgNodeDiff};
+use crate::schema::snapshot::NodePath;
+use crate::SvgSnapshot;
+use semio_s_artifact_stdio_xml::schema::snapshot::XmlNode;
 
 #[path = "📝️text/🦀️.rs"]
 pub mod text;

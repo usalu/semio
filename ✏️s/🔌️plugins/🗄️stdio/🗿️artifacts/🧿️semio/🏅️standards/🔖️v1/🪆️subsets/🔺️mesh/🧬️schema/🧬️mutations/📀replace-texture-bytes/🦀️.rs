@@ -1,7 +1,7 @@
 //! 📀 `replace-texture-bytes` — whole-value swap of a texture's raw byte payload. Raw image bytes are the \"large\" swapped payload (matches `replace-primitive-geometry`'s exact rename rationale), never edited byte-by-byte from outside, so `replace`, not `change`/`set`.
 
-use crate::artifacts::semio::standards::v1::subsets::mesh::schema::mutations::SemioMeshMutation;
-use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
+use crate::standards::v1::subsets::mesh::schema::mutations::SemioMeshMutation;
+use crate::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]

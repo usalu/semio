@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeThetaRmC, base: &Din16798Snapshot) -> protocol::Muta
     if base.theta_rm_c == payload.new_theta_rm_c {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Running mean outdoor temperature is already {}.", payload.new_theta_rm_c));
     }
-    protocol::MutationOutcome::new(Din16798Diff { theta_rm_c: Some(payload.new_theta_rm_c.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(Din16798Diff { theta_rm_c: Some(payload.new_theta_rm_c), ..Default::default() })
 }
 //#endregion 🔖️Diff

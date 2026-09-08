@@ -21,7 +21,7 @@
 //! gets wrong are applied by [`normalize_html_root_whitespace`] — see its own doc comment.
 
 use dsl::TextSpan;
-use schema::ArtifactSchema;
+use framework_schema::ArtifactSchema;
 use store::TextError;
 
 //#region 🔖️Ids

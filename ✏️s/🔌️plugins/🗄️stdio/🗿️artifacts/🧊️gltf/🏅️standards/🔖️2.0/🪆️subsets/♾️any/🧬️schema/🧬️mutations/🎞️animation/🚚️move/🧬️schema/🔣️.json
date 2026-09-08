@@ -1,0 +1,29 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/animation/move.json",
+  "title": "GltfMoveAnimationPayloadV1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "index",
+    "position"
+  ],
+  "properties": {
+    "index": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "position": {
+      "type": "integer",
+      "minimum": 0
+    }
+  },
+  "x-semio": {
+    "id": "s.stdio.gltf.mutation.move-animation.v1",
+    "version": 1,
+    "phase": "mutation",
+    "touchedPathPattern": "document/animations",
+    "referencePolicy": "typed references remap, repair, or reject"
+  },
+  "x-semio-mutation": "move-animation"
+}

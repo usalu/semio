@@ -5,7 +5,7 @@
   "displayName": "Change People Gain People Per Area",
   "emoji": "👥️",
   "aggregateVariant": "ChangePeopleGainPeoplePerArea",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-people-gain-people-per-area",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

@@ -14,13 +14,13 @@
 //! - `media_box` is fixed at US Letter (612x792pt) — `SemioDocumentSnapshot` has no page-size
 //!   concept to draw a real value from.
 
-use crate::artifacts::pdf::standards::v1_7::subsets::base::schema::snapshot::{PdfInfo, PdfPage, PdfSnapshot};
-use crate::artifacts::semio::standards::v1::subsets::document::schema::snapshot::{DocBlock, SemioDocumentSnapshot};
+use semio_s_artifact_stdio_pdf::standards::v1_7::subsets::base::schema::snapshot::{PdfInfo, PdfPage, PdfSnapshot};
+use crate::standards::v1::subsets::document::schema::snapshot::{DocBlock, SemioDocumentSnapshot};
 use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
 
 //#region 🔖️FieldMapping
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn join_runs(runs: &[crate::artifacts::semio::standards::v1::subsets::document::schema::snapshot::DocRun]) -> String {
+fn join_runs(runs: &[crate::standards::v1::subsets::document::schema::snapshot::DocRun]) -> String {
     runs.iter().map(|r| r.text.as_str()).collect::<Vec<_>>().join("")
 }
 
@@ -71,7 +71,7 @@ impl ArtifactSerializer for SemioDocumentToPdf {
             }
             pages.push(make_page(&current));
         }
-        Ok(PdfSnapshot { schema: crate::artifacts::pdf::standards::v1_7::subsets::base::schema::snapshot::STDIO_PDF17_DOCUMENT_SCHEMA.into(), declared_version: "1.7".into(), pages, info: PdfInfo::default(), objects: Vec::new(), trailer: Vec::new() })
+        Ok(PdfSnapshot { schema: semio_s_artifact_stdio_pdf::standards::v1_7::subsets::base::schema::snapshot::STDIO_PDF17_DOCUMENT_SCHEMA.into(), declared_version: "1.7".into(), pages, info: PdfInfo::default(), objects: Vec::new(), trailer: Vec::new() })
     }
 }
 //#endregion 🔖️Serializer
@@ -80,7 +80,7 @@ impl ArtifactSerializer for SemioDocumentToPdf {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::semio::standards::v1::subsets::document::schema::snapshot::{DocRun, STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA};
+    use crate::standards::v1::subsets::document::schema::snapshot::{DocRun, STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA};
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn sample_semio() -> SemioDocumentSnapshot {

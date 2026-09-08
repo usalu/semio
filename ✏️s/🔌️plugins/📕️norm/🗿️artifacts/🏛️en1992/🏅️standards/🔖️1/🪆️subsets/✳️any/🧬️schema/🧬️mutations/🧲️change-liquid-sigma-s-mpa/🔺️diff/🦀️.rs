@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeLiquidSigmaSMpa, base: &En1992Snapshot) -> protocol:
     if base.liquid_sigma_s_mpa == payload.new_liquid_sigma_s_mpa {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "Liquid sigma s mpa already has this value.");
     }
-    protocol::MutationOutcome::new(En1992Diff { liquid_sigma_s_mpa: Some(payload.new_liquid_sigma_s_mpa.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1992Diff { liquid_sigma_s_mpa: Some(payload.new_liquid_sigma_s_mpa), ..Default::default() })
 }
 //#endregion 🔖️Diff

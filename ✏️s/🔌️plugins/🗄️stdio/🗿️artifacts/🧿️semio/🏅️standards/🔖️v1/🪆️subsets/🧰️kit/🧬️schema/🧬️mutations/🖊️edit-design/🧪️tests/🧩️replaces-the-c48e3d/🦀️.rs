@@ -6,9 +6,9 @@
 //! replaced wholesale on the matched design — a design's content is edited as one value, never
 //! piece-by-piece, and `id`/`name` are left alone.
 
-use crate::artifacts::semio::standards::v1::subsets::kit::schema::diff::SemioKitDiff;
-use crate::artifacts::semio::standards::v1::subsets::kit::schema::mutations::SemioKitMutation;
-use crate::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
+use crate::standards::v1::subsets::kit::schema::diff::SemioKitDiff;
+use crate::standards::v1::subsets::kit::schema::mutations::SemioKitMutation;
+use crate::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
 use protocol::{Mutation, MutationDiff};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");

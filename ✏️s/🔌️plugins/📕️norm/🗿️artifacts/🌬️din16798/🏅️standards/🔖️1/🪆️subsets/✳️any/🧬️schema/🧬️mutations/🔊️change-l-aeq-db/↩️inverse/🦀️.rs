@@ -7,6 +7,6 @@ use crate::artifacts::din16798::Din16798Snapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(_payload: &ChangeLAeqDb, base: &Din16798Snapshot) -> Vec<Din16798Mutation> {
-    vec![Din16798Mutation::ChangeLAeqDb(ChangeLAeqDb { new_l_aeq_db: base.l_aeq_db.clone() })]
+    vec![Din16798Mutation::ChangeLAeqDb(ChangeLAeqDb { new_l_aeq_db: base.l_aeq_db })]
 }
 //#endregion 🔖️Inverse

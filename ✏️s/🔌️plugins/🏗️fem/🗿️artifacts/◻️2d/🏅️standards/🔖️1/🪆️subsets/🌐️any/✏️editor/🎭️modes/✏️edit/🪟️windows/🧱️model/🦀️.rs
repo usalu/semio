@@ -4,6 +4,9 @@
 //! `⚙️engine` because they take/return app-facing `semio_framework_plugin` scene types and their only
 //! two consumers are these two sibling windows, both at app level.
 
+/// 🔺️ Region mesh element identity, screen coordinates and node identities.
+pub(crate) type Fem2dRegionMeshTriangle = (String, [(f64, f64); 3], [String; 3]);
+
 use crate::artifacts::fem2d::{element_id, Fem2dSnapshot, FemCamera, FemDof, FemElement, FemLoad};
 use crate::model::Dof;
 use semio_framework_plugin::{BuiltNode, Canvas2dScene};
@@ -1087,7 +1090,7 @@ pub(crate) fn fem2d_region_triangles(doc: &Fem2dSnapshot) -> Vec<(String, [(f64,
 /// 🗺️ Every meshed region's triangles as `(element_id, screen points, node ids)` — like
 /// `fem2d_region_triangles` but also carrying each vertex's mesh node id, needed to look values up in
 /// `fem2d_nodal_von_mises`'s node-keyed map for banded contour rendering.
-pub(crate) fn fem2d_region_mesh_triangles(doc: &Fem2dSnapshot) -> Vec<(String, [(f64, f64); 3], [String; 3])> {
+pub(crate) fn fem2d_region_mesh_triangles(doc: &Fem2dSnapshot) -> Vec<Fem2dRegionMeshTriangle> {
     let mut out = Vec::new();
     let Ok(meshes) = crate::fem2d_engine::mesh_preview::fem2d_mesh_preview(doc) else { return out };
     for mesh in &meshes {

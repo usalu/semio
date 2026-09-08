@@ -4,9 +4,9 @@
 //! id ⇒ Error `mutation.target-missing`; non-finite `new_position` ⇒ FATAL `mutation.invariant`;
 //! position already equal ⇒ Warning `mutation.no-op`. Otherwise ONLY `nodes[i].position` is
 //! assigned. `(6, -2.5)` is dyadic, so the canonical-JSON assertion is exact.
-use crate::artifacts::semio::standards::v1::subsets::graph::schema::diff::SemioGraphDiff;
-use crate::artifacts::semio::standards::v1::subsets::graph::schema::mutations::SemioGraphMutation;
-use crate::artifacts::semio::standards::v1::subsets::graph::schema::snapshot::SemioGraphSnapshot;
+use crate::standards::v1::subsets::graph::schema::diff::SemioGraphDiff;
+use crate::standards::v1::subsets::graph::schema::mutations::SemioGraphMutation;
+use crate::standards::v1::subsets::graph::schema::snapshot::SemioGraphSnapshot;
 use protocol::{Mutation, MutationDiff};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");

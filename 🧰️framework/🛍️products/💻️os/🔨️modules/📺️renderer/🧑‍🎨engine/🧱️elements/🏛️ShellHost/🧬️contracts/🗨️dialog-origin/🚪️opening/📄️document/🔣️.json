@@ -1,0 +1,79 @@
+{
+  "cases": [
+    {
+      "id": "socket-rejected",
+      "fail": "socket",
+      "replace": "none",
+      "outcome": "failed",
+      "sequence": [
+        "socket",
+        "close",
+        "retire"
+      ],
+      "timers": 0
+    },
+    {
+      "id": "attach-rejected",
+      "fail": "attach",
+      "replace": "none",
+      "outcome": "failed",
+      "sequence": [
+        "socket",
+        "attach",
+        "close",
+        "retire"
+      ],
+      "timers": 0
+    },
+    {
+      "id": "socket-deadline",
+      "fail": "deadline",
+      "replace": "none",
+      "outcome": "failed",
+      "sequence": [
+        "socket",
+        "close",
+        "retire"
+      ],
+      "timers": 0
+    },
+    {
+      "id": "replaced-before-attach",
+      "fail": "none",
+      "replace": "socket",
+      "outcome": "retired",
+      "sequence": [
+        "socket",
+        "close",
+        "retire"
+      ],
+      "timers": 0
+    },
+    {
+      "id": "replaced-during-attach",
+      "fail": "none",
+      "replace": "attach",
+      "outcome": "retired",
+      "sequence": [
+        "socket",
+        "attach",
+        "close",
+        "retire"
+      ],
+      "timers": 0
+    },
+    {
+      "id": "attached",
+      "fail": "none",
+      "replace": "none",
+      "outcome": "ready",
+      "sequence": [
+        "socket",
+        "attach",
+        "commit",
+        "retire"
+      ],
+      "timers": 0
+    }
+  ]
+}

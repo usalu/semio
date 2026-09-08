@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/energy/model/1/any/mutation/change-air-loop-supply-node.json",
+  "title": "ChangeAirLoopSupplyNode",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newSupplyNodeId"
+  ],
+  "properties": {
+    "id": {
+      "type": "integer"
+    },
+    "newSupplyNodeId": {
+      "type": "integer"
+    }
+  }
+}

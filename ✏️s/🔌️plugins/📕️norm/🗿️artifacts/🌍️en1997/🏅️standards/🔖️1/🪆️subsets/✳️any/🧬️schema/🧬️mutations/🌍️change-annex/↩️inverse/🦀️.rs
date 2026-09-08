@@ -7,6 +7,6 @@ use crate::artifacts::en1997::En1997Snapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(_payload: &ChangeAnnex, base: &En1997Snapshot) -> Vec<En1997Mutation> {
-    vec![En1997Mutation::ChangeAnnex(ChangeAnnex { new_annex: base.annex.clone() })]
+    vec![En1997Mutation::ChangeAnnex(ChangeAnnex { new_annex: base.annex })]
 }
 //#endregion 🔖️Inverse

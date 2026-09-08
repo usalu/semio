@@ -1,7 +1,7 @@
 //! 📥️ `png` (1.2) → `s.stdio.semio/v1/image` — PNG's own decoded `pixels` are already canonical
 //! RGBA8 (png's `encode_png` hardcodes color-type 6/bit-depth 8 on write regardless of the
 //! source IHDR, see that engine's own doc), so this leaf is a pure struct-to-struct remap: no
-//! byte-level codec work happens here (that stays in `crate::artifacts::png::engine`).
+//! byte-level codec work happens here (that stays in `semio_s_artifact_stdio_png::engine`).
 //!
 //! Honest lossy points (documented, never silently fabricated):
 //! - `icc`: PNG's typed snapshot does not model the `iCCP` chunk (only IHDR/PLTE/tRNS/gAMA/cHRM/
@@ -15,12 +15,12 @@
 //!   `SemioImageMetadataEntry` and are dropped on import.
 
 #[cfg(test)]
-use crate::artifacts::png::schema::snapshot::{PngChunkMarker, PngTextKind};
-use crate::artifacts::png::{
+use semio_s_artifact_stdio_png::schema::snapshot::{PngChunkMarker, PngTextKind};
+use semio_s_artifact_stdio_png::{
     schema::snapshot::{PngColorType, PngTextChunk},
     PngSnapshot,
 };
-use crate::artifacts::semio::standards::v1::subsets::image::schema::snapshot::{SemioColorspace, SemioImageFrame, SemioImageMetadataEntry, SemioImageSnapshot, STDIO_SEMIOIMAGE_DOCUMENT_SCHEMA};
+use crate::standards::v1::subsets::image::schema::snapshot::{SemioColorspace, SemioImageFrame, SemioImageMetadataEntry, SemioImageSnapshot, STDIO_SEMIOIMAGE_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId};
 
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.png", standard: StandardId("1.2"), subset: SubsetId::ANY };
@@ -71,7 +71,7 @@ impl ArtifactDeserializer for SemioImageFromPng {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::png::schema::snapshot::PngRgb;
+    use semio_s_artifact_stdio_png::schema::snapshot::PngRgb;
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn sample_png() -> PngSnapshot {

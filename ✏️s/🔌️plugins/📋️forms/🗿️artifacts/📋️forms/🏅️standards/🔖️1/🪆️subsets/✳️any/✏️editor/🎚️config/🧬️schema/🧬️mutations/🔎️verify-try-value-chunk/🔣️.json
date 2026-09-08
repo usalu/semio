@@ -5,7 +5,7 @@
   "displayName": "Verify Try Value Chunk",
   "emoji": "🔎️",
   "aggregateVariant": "VerifyTryValueChunk",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "verify-try-value-chunk",
   "binaryTag": 4,
   "invertibility": "non-invertible",

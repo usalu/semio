@@ -1,6 +1,6 @@
 //! Serialize layout to stdio.png.
 use crate::artifacts::layout::LayoutSnapshot;
-use semio_s_plugin_stdio::artifacts::png::PngSnapshot;
+use semio_s_artifact_stdio_png::PngSnapshot;
 
 pub fn register() {}
 

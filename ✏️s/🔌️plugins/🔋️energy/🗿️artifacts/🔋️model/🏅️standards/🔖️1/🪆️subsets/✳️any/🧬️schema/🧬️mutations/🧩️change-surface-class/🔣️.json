@@ -5,7 +5,7 @@
   "displayName": "Change Surface Class",
   "emoji": "🧩️",
   "aggregateVariant": "ChangeSurfaceClass",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-surface-class",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

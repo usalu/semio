@@ -5,7 +5,7 @@
   "displayName": "Delete Sampler",
   "emoji": "🗑️",
   "aggregateVariant": "DeleteSampler",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

@@ -16,10 +16,10 @@
 //! insert/remove/reorder, at the IDENTICAL index, to every row's `cells` — see
 //! `🧬️mutations/🏗️create-column`/`🗑️delete-column`/`🔀reorder-columns`.
 
-use crate::artifacts::semio::standards::v1::subsets::base::schema::triples::{split_top_level, strip_brackets};
-use crate::artifacts::semio::standards::v1::subsets::value::schema::diff::{dec_semio_value, dec_str, enc_semio_value, enc_str, read_str_lp, write_str_lp};
-use crate::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValue;
-use schema::ArtifactSchema;
+use crate::standards::v1::subsets::base::schema::triples::{split_top_level, strip_brackets};
+use crate::standards::v1::subsets::value::schema::diff::{dec_semio_value, dec_str, enc_semio_value, enc_str, read_str_lp, write_str_lp};
+use crate::standards::v1::subsets::value::schema::snapshot::SemioValue;
+use framework_schema::ArtifactSchema;
 
 //#region 🔖️Ids
 /// 🏷️ Document schema / DSL envelope id AND `ArtifactSchema` descriptor id — same literal for
@@ -216,7 +216,7 @@ pub(crate) fn read_column(reader: &mut store::ByteReader<'_>) -> Result<SemioTab
 pub(crate) fn write_row(out: &mut Vec<u8>, r: &SemioTableRow) {
     store::pack_rt::write_varint_u64(out, r.cells.len() as u64);
     for cell in &r.cells {
-        crate::artifacts::semio::standards::v1::subsets::value::schema::diff::enc_semio_value_bin(cell, out);
+        crate::standards::v1::subsets::value::schema::diff::enc_semio_value_bin(cell, out);
     }
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -224,7 +224,7 @@ pub(crate) fn read_row(reader: &mut store::ByteReader<'_>) -> Result<SemioTableR
     let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut cells = Vec::with_capacity(count as usize);
     for _ in 0..count {
-        cells.push(crate::artifacts::semio::standards::v1::subsets::value::schema::diff::dec_semio_value_bin(reader)?);
+        cells.push(crate::standards::v1::subsets::value::schema::diff::dec_semio_value_bin(reader)?);
     }
     Ok(SemioTableRow { cells })
 }

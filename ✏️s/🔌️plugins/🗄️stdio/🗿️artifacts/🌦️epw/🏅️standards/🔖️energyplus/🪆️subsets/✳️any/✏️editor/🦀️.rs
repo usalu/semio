@@ -8,8 +8,8 @@
 //! `EpwMutation::SetRecordField` directly — no whole-document decode/re-encode round trip is needed
 //! (unlike `energy`'s composed-child `Model`, `EpwSnapshot`'s fields ARE the wire fields).
 
-use crate::artifacts::epw::standards::energyplus::subsets::any::schema::mutations::set_record_field;
-use crate::artifacts::epw::{EpwMutation, EpwSnapshot, STDIO_EPW_DOCUMENT_SCHEMA};
+use crate::standards::energyplus::subsets::any::schema::mutations::set_record_field;
+use crate::{EpwMutation, EpwSnapshot, STDIO_EPW_DOCUMENT_SCHEMA};
 use crate::editor::epw::modes::edit;
 use crate::editor::epw::modes::edit::windows::main;
 use semio_framework_plugin::{

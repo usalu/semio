@@ -3,7 +3,7 @@
 //! `dict_id`), so every field here is a plain `Option<T>` "changed or not" slot — the same
 //! "Scalars: LWW" shape `DeflateDiff` uses, adapted to wav's own value types.
 
-use crate::artifacts::wav::standards::riff_pcm::subsets::any::schema::snapshot::{RiffChunk, WavData, WavFmt, WavSnapshot};
+use crate::standards::riff_pcm::subsets::any::schema::snapshot::{RiffChunk, WavData, WavFmt, WavSnapshot};
 use protocol::command::DiffAlgebra;
 use protocol::MutationDiff;
 

@@ -1,7 +1,7 @@
 //! Serialize stdio.deflate to stdio.binary (zlib-inflate payload).
 
-use crate::artifacts::binary::{BinarySnapshot, STDIO_BINARY_DOCUMENT_SCHEMA};
-use crate::artifacts::deflate::DeflateSnapshot;
+use semio_s_artifact_stdio_binary::{BinarySnapshot, STDIO_BINARY_DOCUMENT_SCHEMA};
+use crate::DeflateSnapshot;
 
 //#region Codec
 /// Register serializer hooks.
@@ -11,7 +11,7 @@ pub fn register() {}
 /// 🗜️ Zlib-inflate deflate stream into a BinarySnapshot payload.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn serialize(from: &DeflateSnapshot) -> Result<BinarySnapshot, store::PackError> {
-    let bytes = crate::artifacts::deflate::standards::v_rfc1950::subsets::any::io::zlib_decompress(&from.payload).map_err(store::PackError::Schema)?;
+    let bytes = crate::standards::v_rfc1950::subsets::any::io::zlib_decompress(&from.payload).map_err(store::PackError::Schema)?;
     Ok(BinarySnapshot { schema: STDIO_BINARY_DOCUMENT_SCHEMA.into(), bytes })
 }
 

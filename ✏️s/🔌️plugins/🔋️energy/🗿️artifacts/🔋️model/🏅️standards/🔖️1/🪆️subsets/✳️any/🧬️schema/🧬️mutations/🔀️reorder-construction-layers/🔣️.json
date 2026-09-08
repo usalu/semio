@@ -5,7 +5,7 @@
   "displayName": "Reorder Construction Layers",
   "emoji": "🔀️",
   "aggregateVariant": "ReorderConstructionLayers",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "reorder-construction-layers",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

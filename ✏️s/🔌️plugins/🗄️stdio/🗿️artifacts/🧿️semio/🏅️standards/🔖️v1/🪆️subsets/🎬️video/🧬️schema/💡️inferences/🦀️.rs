@@ -7,8 +7,8 @@
 //! derived from each stream's own `pts`/`rate`, never the opaque sample payload this subset's own
 //! module doc comment names as W3/W4's job, not this snapshot's).
 
-use crate::artifacts::semio::standards::v1::subsets::video::schema::snapshot::SemioVideoSnapshot;
-use schema::ArtifactSchema;
+use crate::standards::v1::subsets::video::schema::snapshot::SemioVideoSnapshot;
+use framework_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 
 use super::duration::{compute_semio_video_duration, SemioVideoDuration};
@@ -57,7 +57,7 @@ impl protocol::InferenceSpec<SemioVideoSnapshot> for SemioVideoInference {
 /// 💡️ No `InferredField`s here (a per-stream max-pts fold across already-flat `streams` is a
 /// single whole-snapshot pass) — the default `infer_cached` passthrough
 /// (`ArtifactInferrer::infer_cached`) is exact.
-impl ArtifactInferrer for crate::artifacts::semio::standards::v1::subsets::video::schema::SemioVideoBuilder {
+impl ArtifactInferrer for crate::standards::v1::subsets::video::schema::SemioVideoBuilder {
     type Snapshot = SemioVideoSnapshot;
     type Inference = SemioVideoInference;
 }
@@ -67,10 +67,10 @@ impl ArtifactInferrer for crate::artifacts::semio::standards::v1::subsets::video
 /// 💡️ Registers `s.stdio.semio.video.inference`'s facet leaves into the OS-wide inference catalog
 /// — call once at plugin init, alongside `semio_video_artifact_schema_descriptor`'s registration.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn semio_video_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
-    schema::ArtifactInferenceDescriptor {
+pub fn semio_video_artifact_inference_descriptor() -> framework_schema::ArtifactInferenceDescriptor {
+    framework_schema::ArtifactInferenceDescriptor {
         id: "s.stdio.semio.video.inference",
-        inference: schema::FacetLeaves {
+        inference: framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),

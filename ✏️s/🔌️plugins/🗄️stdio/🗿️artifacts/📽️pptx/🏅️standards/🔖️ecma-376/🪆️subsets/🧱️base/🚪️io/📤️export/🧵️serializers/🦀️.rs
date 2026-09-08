@@ -1,7 +1,7 @@
 //! 🧵️ PresentationML (pptx) export — `PptxPresentation` → `ppt/presentation.xml`/
 //! `ppt/slides/slideN.xml` XML render, and the OPC package assembly/sync around it. Zip/OPC/XML
 //! byte-level work is never reimplemented here: it is reused from the shared
-//! `crate::artifacts::zip::opc` layer. `ppt/slideMasters`/`ppt/slideLayouts`/`ppt/theme` are
+//! `semio_s_artifact_stdio_zip::opc` layer. `ppt/slideMasters`/`ppt/slideLayouts`/`ppt/theme` are
 //! unmodeled boilerplate every real reader still needs to open the package validly: they are
 //! synthesized once (fixed minimal-but-schema-shaped constants) when building a package from
 //! scratch, while decoded packages preserve their logical XML documents.
@@ -10,12 +10,12 @@ use super::super::super::{
     attr, resolve_office_document_relationship, PptxError, A_NS, MINIMAL_SLIDE_LAYOUT_XML, MINIMAL_SLIDE_MASTER_XML, MINIMAL_THEME_XML, PRESENTATION_CONTENT_TYPE, PRESENTATION_PART, P_NS, REL_TYPE_SLIDE, REL_TYPE_SLIDE_LAYOUT, REL_TYPE_SLIDE_MASTER,
     REL_TYPE_THEME, R_NS, SLIDE_CONTENT_TYPE, SLIDE_LAYOUT_CONTENT_TYPE, SLIDE_LAYOUT_PART, SLIDE_MASTER_CONTENT_TYPE, SLIDE_MASTER_PART, THEME_CONTENT_TYPE, THEME_PART,
 };
-use crate::artifacts::pptx::{
+use crate::{
     schema::snapshot::{pptx_part_is_xml, PptxParagraph, PptxPresentation, PptxRun, PptxShape, PptxSlide, PptxTransform},
     PptxSnapshot,
 };
-use crate::artifacts::xml::schema::snapshot::{xml_document_to_text, XmlDocument, XmlNode};
-use crate::artifacts::zip::opc::{OpcPackage, OpcRelationship, OpcTargetMode, REL_TYPE_OFFICE_DOCUMENT};
+use semio_s_artifact_stdio_xml::schema::snapshot::{xml_document_to_text, XmlDocument, XmlNode};
+use semio_s_artifact_stdio_zip::opc::{OpcPackage, OpcRelationship, OpcTargetMode, REL_TYPE_OFFICE_DOCUMENT};
 
 //#region 🔖️TextXml
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -266,7 +266,7 @@ fn regenerate_presentation_parts(opc: &mut OpcPackage, presentation: &PptxPresen
     opc.parts.retain(|p| !p.path.starts_with("ppt/slides/") && p.path != PRESENTATION_PART);
     opc.relationships.retain(|owner, _| !owner.starts_with("ppt/slides/"));
 
-    opc.content_types.set_default("rels", crate::artifacts::zip::opc::RELS_CONTENT_TYPE);
+    opc.content_types.set_default("rels", semio_s_artifact_stdio_zip::opc::RELS_CONTENT_TYPE);
     opc.content_types.set_default("xml", "application/xml");
 
     if opc.part(SLIDE_MASTER_PART).is_none() {
@@ -309,12 +309,12 @@ fn regenerate_presentation_parts(opc: &mut OpcPackage, presentation: &PptxPresen
 pub fn build_minimal_pptx(presentation: PptxPresentation) -> PptxSnapshot {
     let draft = PptxSnapshot::from_parts(OpcPackage::empty(), Vec::new(), presentation);
     let bytes = encode_pptx(&draft).expect("minimal logical pptx materialization");
-    crate::artifacts::pptx::standards::v_ecma_376::subsets::base::io::import::deserializers::decode_pptx(&bytes).expect("minimal logical pptx decode")
+    crate::standards::v_ecma_376::subsets::base::io::import::deserializers::decode_pptx(&bytes).expect("minimal logical pptx decode")
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn xml_document_to_pptx_text(path: &str, document: &XmlDocument) -> String {
-    let mut text = crate::artifacts::zip::opc::xml_document_to_opc_text(document);
+    let mut text = semio_s_artifact_stdio_zip::opc::xml_document_to_opc_text(document);
     if path == "docProps/app.xml" {
         text = text.replace("<Template/>", "<Template></Template>");
     }
@@ -445,7 +445,7 @@ pub fn encode_pptx(snap: &PptxSnapshot) -> Result<Vec<u8>, PptxError> {
                 existing.content_type = part.content_type.clone();
                 existing.bytes = bytes;
             } else {
-                opc.parts.push(crate::artifacts::zip::opc::OpcPart { path: part.path.clone(), content_type: part.content_type.clone(), bytes });
+                opc.parts.push(semio_s_artifact_stdio_zip::opc::OpcPart { path: part.path.clone(), content_type: part.content_type.clone(), bytes });
             }
         } else {
             opc.set_part(&part.path, &part.content_type, bytes);
@@ -461,10 +461,10 @@ pub fn encode_pptx(snap: &PptxSnapshot) -> Result<Vec<u8>, PptxError> {
     }
     let presentation_path = resolve_office_document_relationship(&opc);
     let has_authoritative_presentation_xml = presentation_path.as_ref().is_some_and(|path| snap.xml_parts.iter().any(|part| &part.path == path));
-    let presentation_changed = has_authoritative_presentation_xml && crate::artifacts::pptx::standards::v_ecma_376::subsets::base::io::import::deserializers::project_presentation(&snap.opc, &snap.xml_parts)? != snap.presentation;
+    let presentation_changed = has_authoritative_presentation_xml && crate::standards::v_ecma_376::subsets::base::io::import::deserializers::project_presentation(&snap.opc, &snap.xml_parts)? != snap.presentation;
     if !has_authoritative_presentation_xml || presentation_changed {
         regenerate_presentation_parts(&mut opc, &snap.presentation);
     }
-    Ok(crate::artifacts::zip::opc::encode_opc_with_path_order(&opc, order_pptx_paths)?)
+    Ok(semio_s_artifact_stdio_zip::opc::encode_opc_with_path_order(&opc, order_pptx_paths)?)
 }
 //#endregion 🔖️Codec

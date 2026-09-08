@@ -10,8 +10,8 @@
 //! rather than crashing): reference-style links/images, footnotes, setext headings, tables (GFM),
 //! lazy blockquote continuation, link reference definitions.
 
-use crate::artifacts::md::STDIO_MD_DOCUMENT_SCHEMA;
-use schema::ArtifactSchema;
+use crate::STDIO_MD_DOCUMENT_SCHEMA;
+use framework_schema::ArtifactSchema;
 
 //#region 🔖️CommonMarkModel
 /// 🧩 A real CommonMark inline node. `MdInline` is a WEAK entity (recipe: weak entities are
@@ -117,13 +117,13 @@ impl Default for MdSnapshot {
 impl MdSnapshot {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn from_text(text: &str) -> Self {
-        let blocks = crate::artifacts::md::standards::v_commonmark::subsets::any::io::import::deserializers::parse_markdown_blocks(text);
+        let blocks = crate::standards::v_commonmark::subsets::any::io::import::deserializers::parse_markdown_blocks(text);
         Self { schema: STDIO_MD_DOCUMENT_SCHEMA.into(), blocks }
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn to_text(&self) -> String {
-        crate::artifacts::md::standards::v_commonmark::subsets::any::io::export::serializers::render_markdown_blocks(&self.blocks)
+        crate::standards::v_commonmark::subsets::any::io::export::serializers::render_markdown_blocks(&self.blocks)
     }
 }
 //#endregion 🔖️CommonMarkModel
@@ -140,12 +140,12 @@ impl store::ArtifactDsl for MdSnapshot {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
-        let blocks = crate::artifacts::md::standards::v_commonmark::subsets::any::io::import::deserializers::parse_markdown_blocks(body);
+        let blocks = crate::standards::v_commonmark::subsets::any::io::import::deserializers::parse_markdown_blocks(body);
         Ok(Self { schema: STDIO_MD_DOCUMENT_SCHEMA.into(), blocks })
     }
     fn print_dsl(&self) -> String {
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
-        let body = crate::artifacts::md::standards::v_commonmark::subsets::any::io::export::serializers::render_markdown_blocks(&self.blocks);
+        let body = crate::standards::v_commonmark::subsets::any::io::export::serializers::render_markdown_blocks(&self.blocks);
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
@@ -153,7 +153,7 @@ impl store::ArtifactDsl for MdSnapshot {
 impl store::ArtifactPack for MdSnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
-        let raw = crate::artifacts::md::standards::v_commonmark::subsets::any::io::export::serializers::render_markdown_blocks(&self.blocks);
+        let raw = crate::standards::v_commonmark::subsets::any::io::export::serializers::render_markdown_blocks(&self.blocks);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, raw.as_bytes()))
     }
@@ -164,7 +164,7 @@ impl store::ArtifactPack for MdSnapshot {
         }
         let _ = options;
         let body = String::from_utf8(inner).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        let blocks = crate::artifacts::md::standards::v_commonmark::subsets::any::io::import::deserializers::parse_markdown_blocks(&body);
+        let blocks = crate::standards::v_commonmark::subsets::any::io::import::deserializers::parse_markdown_blocks(&body);
         Ok(Self { schema: STDIO_MD_DOCUMENT_SCHEMA.into(), blocks })
     }
 }

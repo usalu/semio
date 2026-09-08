@@ -1,7 +1,7 @@
 //! Deserialize stdio.bcf from stdio.binary (parse ZIP bytes).
 
-use crate::artifacts::bcf::{BcfSnapshot, STDIO_BCF_DOCUMENT_SCHEMA};
-use crate::artifacts::binary::BinarySnapshot;
+use crate::{BcfSnapshot, STDIO_BCF_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_binary::BinarySnapshot;
 
 //#region Codec
 /// Register deserializer hooks.
@@ -11,7 +11,7 @@ pub fn register() {}
 /// 🎒️ Parse ZIP container bytes into a BcfSnapshot.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn deserialize(from: &BinarySnapshot) -> Result<BcfSnapshot, store::PackError> {
-    let mut snap = crate::artifacts::bcf::io::decode_bcf(&from.bytes).map_err(store::PackError::Schema)?;
+    let mut snap = crate::io::decode_bcf(&from.bytes).map_err(store::PackError::Schema)?;
     snap.schema = STDIO_BCF_DOCUMENT_SCHEMA.into();
     Ok(snap)
 }

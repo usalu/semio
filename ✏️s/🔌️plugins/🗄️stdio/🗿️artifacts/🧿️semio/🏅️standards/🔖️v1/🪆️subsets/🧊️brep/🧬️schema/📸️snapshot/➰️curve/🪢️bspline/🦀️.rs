@@ -1,6 +1,6 @@
 //! 🧵️ Knot vectors, B-spline basis functions and de Boor evaluation for rational curves and
-//! tensor-product surfaces — the machinery [`crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::Curve3::Nurbs`] and
-//! [`crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::surface::Surface::Nurbs`] are built on. Curves and surfaces themselves stay in their
+//! tensor-product surfaces — the machinery [`crate::standards::v1::subsets::brep::schema::snapshot::curve::Curve3::Nurbs`] and
+//! [`crate::standards::v1::subsets::brep::schema::snapshot::surface::Surface::Nurbs`] are built on. Curves and surfaces themselves stay in their
 //! own modules; this file is purely the numerical core, independent of any particular dimension.
 //!
 //! Moved from `🧰️framework/🔨️modules/🧊️3d/📐️brep/🪢️bspline` in ticket
@@ -261,7 +261,7 @@ pub fn insert_knot(knots: &KnotVector, control_values: &[f64], u: f64) -> (KnotV
     (KnotVector { knots: new_knots, degree: p }, new_values)
 }
 
-/// 🧵️ Elevates a Bézier segment's degree by one via the shared [`crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::bezier`] elevation
+/// 🧵️ Elevates a Bézier segment's degree by one via the shared [`crate::standards::v1::subsets::brep::schema::snapshot::curve::bezier`] elevation
 /// formula, exposed here so B-spline code can raise a single-span curve's degree without
 /// round-tripping through the `Bernstein`/`Poly` types.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -768,8 +768,8 @@ mod tests {
         let control_values = vec![0.0, 3.0, -2.0, 5.0];
         let elevated = elevate_bezier_span(&control_values);
         assert_eq!(elevated.len(), control_values.len() + 1);
-        let b = super::super::bezier::RationalBezier2::unweighted(control_values.iter().map(|&v| crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::Pnt2::new(v, 0.0)).collect());
-        let be = super::super::bezier::RationalBezier2::unweighted(elevated.iter().map(|&v| crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::Pnt2::new(v, 0.0)).collect());
+        let b = super::super::bezier::RationalBezier2::unweighted(control_values.iter().map(|&v| crate::standards::v1::subsets::brep::schema::snapshot::vector::Pnt2::new(v, 0.0)).collect());
+        let be = super::super::bezier::RationalBezier2::unweighted(elevated.iter().map(|&v| crate::standards::v1::subsets::brep::schema::snapshot::vector::Pnt2::new(v, 0.0)).collect());
         for i in 0..=10 {
             let t = i as f64 / 10.0;
             assert!((b.eval(t).x - be.eval(t).x).abs() < 1e-9);
@@ -920,7 +920,7 @@ mod tests {
                 let n_cp = degree + 1;
                 let kv = KnotVector::clamped_uniform(n_cp, degree);
                 let values: Vec<f64> = (0..n_cp).map(|_| rng.next_f64() * 10.0 - 5.0).collect();
-                let bernstein = crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::polynomial::Bernstein::new(values.clone());
+                let bernstein = crate::standards::v1::subsets::brep::schema::snapshot::polynomial::Bernstein::new(values.clone());
                 for i in 0..=20 {
                     let u = i as f64 / 20.0;
                     let via_de_boor = de_boor(&kv, &values, u);

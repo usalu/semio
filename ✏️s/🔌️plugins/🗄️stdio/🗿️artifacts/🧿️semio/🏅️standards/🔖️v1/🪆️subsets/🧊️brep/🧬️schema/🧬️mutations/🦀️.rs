@@ -26,10 +26,10 @@
 //! `📸️set-snapshot` is DELETED, with no replacement, per the locked decision
 //! (`📌️important.md`): whole-document replace goes through `ArtifactStore::reset`, outside history.
 
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::{
+use crate::standards::v1::subsets::brep::schema::diff::{
     dec_curve, dec_list, dec_point3, dec_shell_face, dec_solid_shell, dec_str, dec_surface, enc_bool, enc_curve, enc_list, enc_point3, enc_shell_face, enc_solid_shell, enc_str, enc_surface, SemioBrepDiff,
 };
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
+use crate::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
 /// 🔧️ Unconditional — the non-test `impl protocol::OpBinary` block below calls
 /// `self.print_op()`/`Self::parse_op(...)` via method syntax, which needs `OpText` in scope in
 /// production code too, not merely under `#[cfg(test)]` (same fix this facet's OLD file already
@@ -157,7 +157,7 @@ fn parse_brep_mutation(line: &str) -> Result<SemioBrepMutation, String> {
             outer_loop: dec_str(arg("outer")?)?,
             inner_loops: dec_list(arg("inner")?, dec_str)?,
             surface: dec_surface(arg("surface")?)?,
-            orientation: crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::parse_bool(arg("orientation")?)?,
+            orientation: crate::standards::v1::subsets::brep::schema::diff::parse_bool(arg("orientation")?)?,
         })),
         "delete-face" => Ok(SemioBrepMutation::DeleteFace(delete_face::DeleteFace { id: dec_str(arg("id")?)? })),
         "create-shell" => Ok(SemioBrepMutation::CreateShell(create_shell::CreateShell { id: dec_str(arg("id")?)?, faces: dec_list(arg("faces")?, dec_shell_face)? })),
@@ -249,8 +249,8 @@ impl OpBinary for SemioBrepMutation {
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn fixture() -> SemioBrepSnapshot {
-    use crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioPoint3;
-    use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::{BrepCurve, BrepEdge, BrepFace, BrepLoop, BrepLoopEdge, BrepShell, BrepShellFace, BrepSolid, BrepSolidShell, BrepSurface, BrepVertex};
+    use crate::standards::v1::subsets::base::schema::geometry::SemioPoint3;
+    use crate::standards::v1::subsets::brep::schema::snapshot::{BrepCurve, BrepEdge, BrepFace, BrepLoop, BrepLoopEdge, BrepShell, BrepShellFace, BrepSolid, BrepSolidShell, BrepSurface, BrepVertex};
     let mut s = SemioBrepSnapshot::default();
     s.vertices = vec![BrepVertex { tol: 1e-7, id: "v1".into(), point: SemioPoint3 { x: 0.0, y: 0.0, z: 0.0 } }, BrepVertex { tol: 1e-7, id: "v2".into(), point: SemioPoint3 { x: 1.0, y: 0.0, z: 0.0 } }];
     s.edges = vec![BrepEdge { tol: 1e-7, id: "e1".into(), start_vertex: "v1".into(), end_vertex: "v2".into(), curve: BrepCurve::Line { origin: SemioPoint3::default(), direction: SemioPoint3 { x: 1.0, y: 0.0, z: 0.0 } } }];
@@ -264,8 +264,8 @@ pub(crate) fn fixture() -> SemioBrepSnapshot {
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_mutation_cases() -> Vec<SemioBrepMutation> {
-    use crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioPoint3;
-    use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::{BrepCurve, BrepShellFace, BrepSolidShell, BrepSurface};
+    use crate::standards::v1::subsets::base::schema::geometry::SemioPoint3;
+    use crate::standards::v1::subsets::brep::schema::snapshot::{BrepCurve, BrepShellFace, BrepSolidShell, BrepSurface};
     vec![
         SemioBrepMutation::CreateVertex(create_vertex::CreateVertex { id: "v-new".into(), point: SemioPoint3 { x: 9.0, y: 9.0, z: 9.0 } }),
         SemioBrepMutation::DeleteVertex(delete_vertex::DeleteVertex { id: "v1".into() }),
@@ -349,7 +349,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn create_delete_vertex_round_trips_explicitly() {
         let base = fixture();
-        let create = SemioBrepMutation::CreateVertex(create_vertex::CreateVertex { id: "v3".into(), point: crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioPoint3 { x: 2.0, y: 2.0, z: 2.0 } });
+        let create = SemioBrepMutation::CreateVertex(create_vertex::CreateVertex { id: "v3".into(), point: crate::standards::v1::subsets::base::schema::geometry::SemioPoint3 { x: 2.0, y: 2.0, z: 2.0 } });
         let after_create = round_trip(&base, &create);
         assert!(after_create.vertices.iter().any(|v| v.id == "v3"));
 
@@ -391,15 +391,15 @@ mod tests {
         let base = fixture();
         let replace = SemioBrepMutation::ReplaceCurve(replace_curve::ReplaceCurve {
             edge_id: "e-missing".into(),
-            new_curve: crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::BrepCurve::Line {
-                origin: crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioPoint3::default(),
-                direction: crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioPoint3::default(),
+            new_curve: crate::standards::v1::subsets::brep::schema::snapshot::BrepCurve::Line {
+                origin: crate::standards::v1::subsets::base::schema::geometry::SemioPoint3::default(),
+                direction: crate::standards::v1::subsets::base::schema::geometry::SemioPoint3::default(),
             },
         });
         assert!(replace.inverse(&base).is_empty());
         assert_eq!(replace.diff(&base).diff().apply(&base).expect("apply must succeed for a well-formed fixture"), base, "replace-curve on an absent edge is a no-op");
 
-        let mv = SemioBrepMutation::MoveVertex(move_vertex::MoveVertex { vertex_id: "v-missing".into(), new_point: crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioPoint3::default() });
+        let mv = SemioBrepMutation::MoveVertex(move_vertex::MoveVertex { vertex_id: "v-missing".into(), new_point: crate::standards::v1::subsets::base::schema::geometry::SemioPoint3::default() });
         assert!(mv.inverse(&base).is_empty());
         assert_eq!(mv.diff(&base).diff().apply(&base).expect("apply must succeed for a well-formed fixture"), base, "move-vertex on an absent vertex is a no-op");
     }

@@ -826,13 +826,13 @@
     {
       "id": "drawing-exact",
       "description": "📏️ Near-exact, because a 2D vector carrier has no tessellation freedom. An SVG `d` attribute IS the curve and this subset lowers one PathSegment to one command, so unlike a BRep there is no 'different but equally valid' re-encoding of the same path — only number formatting and attribute order, and the comparison already normalizes both by parsing. The floors here admit IEEE-754 round-tripping of a decimal literal and nothing else.",
-      "absoluteLength": 1e-9,
+      "absoluteLength": 1e-09,
       "relativeLength": 1e-12,
-      "absoluteArea": 1e-9,
+      "absoluteArea": 1e-09,
       "relativeArea": 1e-11,
-      "absoluteVolume": 1e-9,
+      "absoluteVolume": 1e-09,
       "relativeVolume": 1e-11,
-      "normalizedHausdorffMax": 1e-9,
+      "normalizedHausdorffMax": 1e-09,
       "normalizedCentroidDistanceMax": 1e-10,
       "maxOverrideFactor": 1
     }
@@ -926,7 +926,7 @@
         {
           "id": "change-stroke-color",
           "capability": "semio-v1-drawing-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "rejected",
             "applied"
@@ -959,7 +959,7 @@
         {
           "id": "change-stroke-width",
           "capability": "semio-v1-drawing-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "rejected",
             "applied"
@@ -992,7 +992,7 @@
         {
           "id": "create-layer",
           "capability": "semio-v1-drawing-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -1038,7 +1038,7 @@
         {
           "id": "create-node",
           "capability": "semio-v1-drawing-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -1084,7 +1084,7 @@
         {
           "id": "delete-layer",
           "capability": "semio-v1-drawing-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied",
             "rejected"
@@ -1131,7 +1131,7 @@
         {
           "id": "delete-node",
           "capability": "semio-v1-drawing-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "rejected",
             "applied"
@@ -1178,7 +1178,7 @@
         {
           "id": "drag-nodes",
           "capability": "semio-v1-drawing-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied",
             "rejected"
@@ -1218,7 +1218,7 @@
         {
           "id": "flatten-node",
           "capability": "semio-v1-drawing-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "rejected",
             "applied"
@@ -1251,7 +1251,7 @@
         {
           "id": "group-nodes",
           "capability": "semio-v1-drawing-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "rejected",
             "applied"
@@ -1284,7 +1284,7 @@
         {
           "id": "move-node",
           "capability": "semio-v1-drawing-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "rejected",
             "applied"
@@ -1324,7 +1324,7 @@
         {
           "id": "reorder-nodes",
           "capability": "semio-v1-drawing-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied",
             "rejected"
@@ -1364,7 +1364,7 @@
         {
           "id": "replace-fill",
           "capability": "semio-v1-drawing-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "rejected",
             "applied"
@@ -1397,7 +1397,7 @@
         {
           "id": "replace-path",
           "capability": "semio-v1-drawing-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied",
             "rejected"
@@ -1437,7 +1437,7 @@
         {
           "id": "rotate-node",
           "capability": "semio-v1-drawing-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "rejected",
             "applied"
@@ -1470,7 +1470,7 @@
         {
           "id": "scale-node",
           "capability": "semio-v1-drawing-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "rejected",
             "applied"
@@ -1503,7 +1503,7 @@
         {
           "id": "unflatten-node",
           "capability": "semio-v1-drawing-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "rejected",
             "applied"
@@ -1536,7 +1536,7 @@
         {
           "id": "ungroup-node",
           "capability": "semio-v1-drawing-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "rejected",
             "applied"

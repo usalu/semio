@@ -13,7 +13,7 @@ import { tmpdir } from "node:os";
 import { basename, dirname, join, relative, sep } from "node:path";
 import { clearContributionCache, isTestContributionPath, scanDeclaredDependencies, testContributionDirectoryName } from "./🟦️.ts";
 import contributionDirectoryCases from "../../🧪️tests/🧭️contribution-directory-ownership/🔣️.json";
-import contributionDirectorySchema from "../../🧪️tests/🧭️contribution-directory-ownership/🧬️schema/🔣️.json";
+import protocolSchema from "../../🧬️schema/🔣️.json";
 
 /** 🧭️ Repo-relative, forward-slashed path — the shape every discovered record carries. */
 const relativeToRepo = (root: string, target: string): string => relative(root, target).split(sep).join("/");
@@ -1016,7 +1016,13 @@ describe("🧭️ contribution directory ownership", () => {
   test("handpicked owner directories match neutral cases and the lodash map oracle", async () => {
     const { default: Ajv } = await import("ajv");
     const { default: lodash } = await import("lodash");
-    expect(new Ajv({ strict: true }).validate(contributionDirectorySchema, contributionDirectoryCases)).toBe(true);
+    // 🧭️The case directory holds EXAMPLES; the contract they satisfy is a named export of the owning
+    // module, resolved out of it rather than restated beside them.
+    const compiler = new Ajv({ strict: false, allErrors: true });
+    compiler.addSchema(protocolSchema, "protocol");
+    const contract = compiler.getSchema("protocol#/$defs/ContributionDirectoryOwnershipCases");
+    expect(contract).toBeDefined();
+    expect(contract!(contributionDirectoryCases)).toBe(true);
     const taxonomy = { ...testTaxonomy(repoRoot), testContributionDirName: contributionDirectoryCases.defaultDirectory, testContributionDirectoryOverrides: contributionDirectoryCases.overrides };
     const expected = contributionDirectoryCases.cases.map(({ directory }) => directory);
     expect(contributionDirectoryCases.cases.map(({ owner }) => testContributionDirectoryName(taxonomy, owner))).toEqual(expected);

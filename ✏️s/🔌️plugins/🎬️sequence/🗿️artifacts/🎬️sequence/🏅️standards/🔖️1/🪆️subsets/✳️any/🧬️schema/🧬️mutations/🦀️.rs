@@ -90,14 +90,11 @@ mod structural_correspondence_tests {
             assert_eq!(source.contains("pub fn detect("), participation == "detect");
             assert_eq!(descriptor["semanticKind"], kind);
             assert_eq!(descriptor["aggregateVariant"], variant);
-            assert_eq!(descriptor["payloadSchema"], "🧬️.schema.json");
+            assert_eq!(descriptor["payloadSchema"], "🧬️schema/🔣️.json");
             assert_eq!(descriptor["diffParticipation"], participation);
             assert_eq!(descriptor["requiredLanguageSurfaces"], serde_json::json!(["rust", "typescript", "graphql", "protobuf", "json-schema"]));
             {
-                assert!(owner.join("🧬️.schema.json").is_file());
-            }
-            {
-                assert!(owner.join("🛜️wire/🔣️.schema.json").is_file());
+                assert!(owner.join("🧬️schema/🔣️.json").is_file());
             }
             {
                 assert!(owner.join("🟦️.ts").is_file());
@@ -123,14 +120,11 @@ mod structural_correspondence_tests {
             assert_eq!(source.contains("pub fn detect("), participation == "detect");
             assert_eq!(descriptor["semanticKind"], kind);
             assert_eq!(descriptor["aggregateVariant"], variant);
-            assert_eq!(descriptor["payloadSchema"], "🧬️.schema.json");
+            assert_eq!(descriptor["payloadSchema"], "🧬️schema/🔣️.json");
             assert_eq!(descriptor["diffParticipation"], participation);
             assert_eq!(descriptor["requiredLanguageSurfaces"], serde_json::json!(["rust", "typescript", "graphql", "protobuf", "json-schema"]));
             {
-                assert!(owner.join("🧬️.schema.json").is_file());
-            }
-            {
-                assert!(owner.join("🛜️wire/🔣️.schema.json").is_file());
+                assert!(owner.join("🧬️schema/🔣️.json").is_file());
             }
             {
                 assert!(owner.join("🟦️.ts").is_file());
@@ -156,14 +150,11 @@ mod structural_correspondence_tests {
             assert_eq!(source.contains("pub fn detect("), participation == "detect");
             assert_eq!(descriptor["semanticKind"], kind);
             assert_eq!(descriptor["aggregateVariant"], variant);
-            assert_eq!(descriptor["payloadSchema"], "🧬️.schema.json");
+            assert_eq!(descriptor["payloadSchema"], "🧬️schema/🔣️.json");
             assert_eq!(descriptor["diffParticipation"], participation);
             assert_eq!(descriptor["requiredLanguageSurfaces"], serde_json::json!(["rust", "typescript", "graphql", "protobuf", "json-schema"]));
             {
-                assert!(owner.join("🧬️.schema.json").is_file());
-            }
-            {
-                assert!(owner.join("🛜️wire/🔣️.schema.json").is_file());
+                assert!(owner.join("🧬️schema/🔣️.json").is_file());
             }
             {
                 assert!(owner.join("🟦️.ts").is_file());
@@ -189,14 +180,11 @@ mod structural_correspondence_tests {
             assert_eq!(source.contains("pub fn detect("), participation == "detect");
             assert_eq!(descriptor["semanticKind"], kind);
             assert_eq!(descriptor["aggregateVariant"], variant);
-            assert_eq!(descriptor["payloadSchema"], "🧬️.schema.json");
+            assert_eq!(descriptor["payloadSchema"], "🧬️schema/🔣️.json");
             assert_eq!(descriptor["diffParticipation"], participation);
             assert_eq!(descriptor["requiredLanguageSurfaces"], serde_json::json!(["rust", "typescript", "graphql", "protobuf", "json-schema"]));
             {
-                assert!(owner.join("🧬️.schema.json").is_file());
-            }
-            {
-                assert!(owner.join("🛜️wire/🔣️.schema.json").is_file());
+                assert!(owner.join("🧬️schema/🔣️.json").is_file());
             }
             {
                 assert!(owner.join("🟦️.ts").is_file());
@@ -222,14 +210,11 @@ mod structural_correspondence_tests {
             assert_eq!(source.contains("pub fn detect("), participation == "detect");
             assert_eq!(descriptor["semanticKind"], kind);
             assert_eq!(descriptor["aggregateVariant"], variant);
-            assert_eq!(descriptor["payloadSchema"], "🧬️.schema.json");
+            assert_eq!(descriptor["payloadSchema"], "🧬️schema/🔣️.json");
             assert_eq!(descriptor["diffParticipation"], participation);
             assert_eq!(descriptor["requiredLanguageSurfaces"], serde_json::json!(["rust", "typescript", "graphql", "protobuf", "json-schema"]));
             {
-                assert!(owner.join("🧬️.schema.json").is_file());
-            }
-            {
-                assert!(owner.join("🛜️wire/🔣️.schema.json").is_file());
+                assert!(owner.join("🧬️schema/🔣️.json").is_file());
             }
             {
                 assert!(owner.join("🟦️.ts").is_file());
@@ -255,14 +240,11 @@ mod structural_correspondence_tests {
             assert_eq!(source.contains("pub fn detect("), participation == "detect");
             assert_eq!(descriptor["semanticKind"], kind);
             assert_eq!(descriptor["aggregateVariant"], variant);
-            assert_eq!(descriptor["payloadSchema"], "🧬️.schema.json");
+            assert_eq!(descriptor["payloadSchema"], "🧬️schema/🔣️.json");
             assert_eq!(descriptor["diffParticipation"], participation);
             assert_eq!(descriptor["requiredLanguageSurfaces"], serde_json::json!(["rust", "typescript", "graphql", "protobuf", "json-schema"]));
             {
-                assert!(owner.join("🧬️.schema.json").is_file());
-            }
-            {
-                assert!(owner.join("🛜️wire/🔣️.schema.json").is_file());
+                assert!(owner.join("🧬️schema/🔣️.json").is_file());
             }
             {
                 assert!(owner.join("🟦️.ts").is_file());
@@ -288,14 +270,11 @@ mod structural_correspondence_tests {
             assert_eq!(source.contains("pub fn detect("), participation == "detect");
             assert_eq!(descriptor["semanticKind"], kind);
             assert_eq!(descriptor["aggregateVariant"], variant);
-            assert_eq!(descriptor["payloadSchema"], "🧬️.schema.json");
+            assert_eq!(descriptor["payloadSchema"], "🧬️schema/🔣️.json");
             assert_eq!(descriptor["diffParticipation"], participation);
             assert_eq!(descriptor["requiredLanguageSurfaces"], serde_json::json!(["rust", "typescript", "graphql", "protobuf", "json-schema"]));
             {
-                assert!(owner.join("🧬️.schema.json").is_file());
-            }
-            {
-                assert!(owner.join("🛜️wire/🔣️.schema.json").is_file());
+                assert!(owner.join("🧬️schema/🔣️.json").is_file());
             }
             {
                 assert!(owner.join("🟦️.ts").is_file());
@@ -321,14 +300,11 @@ mod structural_correspondence_tests {
             assert_eq!(source.contains("pub fn detect("), participation == "detect");
             assert_eq!(descriptor["semanticKind"], kind);
             assert_eq!(descriptor["aggregateVariant"], variant);
-            assert_eq!(descriptor["payloadSchema"], "🧬️.schema.json");
+            assert_eq!(descriptor["payloadSchema"], "🧬️schema/🔣️.json");
             assert_eq!(descriptor["diffParticipation"], participation);
             assert_eq!(descriptor["requiredLanguageSurfaces"], serde_json::json!(["rust", "typescript", "graphql", "protobuf", "json-schema"]));
             {
-                assert!(owner.join("🧬️.schema.json").is_file());
-            }
-            {
-                assert!(owner.join("🛜️wire/🔣️.schema.json").is_file());
+                assert!(owner.join("🧬️schema/🔣️.json").is_file());
             }
             {
                 assert!(owner.join("🟦️.ts").is_file());

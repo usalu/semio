@@ -2,8 +2,8 @@
 //! pure O(1) read of already-decoded IFD 0 tags — nothing here is per-entity/incremental, so this
 //! holds only the value type + its pure `compute` fn (no `InferredField`).
 
-use crate::artifacts::tiff::schema::snapshot::{TAG_BITS_PER_SAMPLE, TAG_SAMPLES_PER_PIXEL};
-use crate::artifacts::tiff::TiffSnapshot;
+use crate::schema::snapshot::{TAG_BITS_PER_SAMPLE, TAG_SAMPLES_PER_PIXEL};
+use crate::TiffSnapshot;
 
 //#region 🔖️Dimensions
 /// 📐️ TIFF baseline-tag-derived raster geometry (TIFF6 §8/§19). `bit_depth` reads
@@ -39,7 +39,7 @@ pub fn compute_tiff_dimensions(snapshot: &TiffSnapshot) -> TiffDimensions {
 //#region 🧪️Tests
 mod tests {
     use super::*;
-    use crate::artifacts::tiff::schema::snapshot::{TiffFieldType, TiffIfd, TiffTag, TiffValues, TAG_IMAGE_LENGTH, TAG_IMAGE_WIDTH};
+    use crate::schema::snapshot::{TiffFieldType, TiffIfd, TiffTag, TiffValues, TAG_IMAGE_LENGTH, TAG_IMAGE_WIDTH};
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn snapshot_with_tags(tags: Vec<TiffTag>) -> TiffSnapshot {

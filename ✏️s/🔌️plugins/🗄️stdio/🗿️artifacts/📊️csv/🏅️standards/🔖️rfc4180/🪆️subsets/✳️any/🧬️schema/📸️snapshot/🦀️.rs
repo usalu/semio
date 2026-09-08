@@ -3,8 +3,8 @@
 //! `ArtifactDsl`/`ArtifactPack` impls that call it directly, mirroring `json`'s own already-
 //! established `parse_json_text`/`write_json_text` placement in its `📸️snapshot/🦀️.rs`).
 
-use crate::artifacts::csv::STDIO_CSV_DOCUMENT_SCHEMA;
-use schema::ArtifactSchema;
+use crate::STDIO_CSV_DOCUMENT_SCHEMA;
+use framework_schema::ArtifactSchema;
 
 fn default_true() -> bool {
     true
@@ -183,7 +183,7 @@ pub fn empty_csv_snapshot() -> CsvSnapshot {
 /// of truth `🗣️.dsl.semio` is genuinely `print_dsl` of (P2-P1 `fixture_honesty_law`),
 /// same pattern as `note::semio_example_snapshot`.
 pub fn demo_csv_snapshot() -> CsvSnapshot {
-    <CsvSnapshot as store::ArtifactDsl>::parse_dsl(crate::artifacts::csv::examples::demo::PRIMARY_TEXT).unwrap_or_else(|_| empty_csv_snapshot())
+    <CsvSnapshot as store::ArtifactDsl>::parse_dsl(crate::examples::demo::PRIMARY_TEXT).unwrap_or_else(|_| empty_csv_snapshot())
 }
 //#endregion 🔖️DocumentHelpers
 
@@ -231,7 +231,7 @@ impl store::ArtifactPack for CsvSnapshot {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::csv::CsvMutation;
+    use crate::CsvMutation;
 
     #[semio_framework_async_macros::async_test]
     async fn empty_snapshot_matches_schema() {
@@ -355,7 +355,7 @@ mod tests {
         let mut pack_path = assets.clone();
         pack_path.push("🎒️.pack.semio");
         std::fs::write(pack_path, &pack_bytes).unwrap();
-        let mutation = CsvMutation::InsertRecord(crate::artifacts::csv::schema::mutations::insert_record::InsertRecord { index: 1, record: CsvRecord { fields: vec![CsvField { value: "brand-new".into(), quoted: true }] } });
+        let mutation = CsvMutation::InsertRecord(crate::schema::mutations::insert_record::InsertRecord { index: 1, record: CsvRecord { fields: vec![CsvField { value: "brand-new".into(), quoted: true }] } });
         let op_bytes = <CsvMutation as protocol::OpBinary>::encode_op(&mutation).unwrap();
         let mut op_path = assets.clone();
         op_path.push("📡️example.spr.semio");

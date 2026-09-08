@@ -8,7 +8,7 @@ use crate::artifacts::wires::WiresSnapshot;
 //#region 🔖️Inverse
 pub fn inverse(payload: &super::DeleteNode, base: &WiresSnapshot) -> Vec<WiresMutation> {
     match find_board_node(base, &payload.node_id) {
-        Some(node) => vec![crate::artifacts::wires::mutations::create_node::create_node(node.clone())],
+        Some(node) => vec![crate::artifacts::wires::mutations::create_node::create_node(node)],
         None => Vec::new(),
     }
 }

@@ -986,8 +986,6 @@ semio_framework_plugin::plugin_exports!(plugin::plugin, plugin::ShootingApps);
 pub mod examples {
     #[path = "../../🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🦀️.rs"]
     pub mod app_shooting_demo_session;
-    #[path = "../../🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️.rs"]
-    pub mod art_shooting_demo;
 }
 //#endregion 📚️Examples
 

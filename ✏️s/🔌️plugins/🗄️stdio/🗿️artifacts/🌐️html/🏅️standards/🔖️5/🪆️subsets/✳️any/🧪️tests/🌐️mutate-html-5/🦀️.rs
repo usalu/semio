@@ -118,10 +118,10 @@ fn identity_round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::{mutable_input, KINDS};
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_plugin_stdio::artifacts::html::standards::v5::subsets::any::schema::mutations::{
+    use crate::standards::v5::subsets::any::schema::mutations::{
         apply_html_mutation, insert_node::InsertNode, remove_node::RemoveNode, set_attribute::SetAttribute, set_comment::SetComment, set_doctype::SetDoctype, set_element_name::SetElementName, set_raw_text::SetRawText, set_snapshot::SetSnapshot, set_text::SetText, HtmlMutation,
     };
-    use semio_s_plugin_stdio::artifacts::html::standards::v5::subsets::any::schema::snapshot::{element_attr, node_at, parse_html_document, write_html_document, HtmlAttr, HtmlNode, HtmlSnapshot, RawTextKind, STDIO_HTML_DOCUMENT_SCHEMA};
+    use crate::standards::v5::subsets::any::schema::snapshot::{element_attr, node_at, parse_html_document, write_html_document, HtmlAttr, HtmlNode, HtmlSnapshot, RawTextKind, STDIO_HTML_DOCUMENT_SCHEMA};
     use semio_s_plugin_stdio_test_oracle::artifacts::html::standards::v5::subsets::any::project_html_5;
 
     //#region 🔖️SpecCodec

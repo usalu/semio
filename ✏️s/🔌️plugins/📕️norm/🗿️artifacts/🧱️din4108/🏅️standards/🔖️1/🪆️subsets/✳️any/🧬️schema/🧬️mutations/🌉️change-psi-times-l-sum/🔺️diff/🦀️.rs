@@ -11,6 +11,6 @@ pub fn diff(payload: &ChangePsiTimesLSum, base: &Din4108Snapshot) -> protocol::M
     if base.psi_times_l_sum == payload.new_psi_times_l_sum {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "Psi times l sum already has this value.");
     }
-    protocol::MutationOutcome::new(Din4108Diff { psi_times_l_sum: Some(payload.new_psi_times_l_sum.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(Din4108Diff { psi_times_l_sum: Some(payload.new_psi_times_l_sum), ..Default::default() })
 }
 //#endregion 🔖️Diff

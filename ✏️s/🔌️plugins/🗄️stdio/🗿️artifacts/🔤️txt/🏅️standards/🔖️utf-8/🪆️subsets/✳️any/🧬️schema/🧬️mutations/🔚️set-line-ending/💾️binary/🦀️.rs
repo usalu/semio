@@ -1,7 +1,7 @@
 //! 💾️ Canonical binary payload codec for set-line-ending/SetLineEnding.
 //#region 💾️PayloadCodec
 use super::SetLineEndingPayload;
-use crate::artifacts::txt::schema::mutations::TxtMutation;
+use crate::schema::mutations::TxtMutation;
 pub const BINARY_TAG: u32 = 2;
 pub fn encode_payload(value: &SetLineEndingPayload) -> Result<Vec<u8>, String> {
     Ok(pack::to_json_string(value).into_bytes())

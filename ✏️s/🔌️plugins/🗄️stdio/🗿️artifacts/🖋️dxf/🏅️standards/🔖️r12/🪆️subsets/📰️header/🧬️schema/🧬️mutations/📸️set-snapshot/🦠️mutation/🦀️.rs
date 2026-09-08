@@ -1,5 +1,5 @@
-use crate::artifacts::dxf::schema::mutations::{apply_dxf_mutation, DxfMutation};
-use crate::artifacts::dxf::{DxfDiff, DxfSnapshot};
+use crate::schema::mutations::{apply_dxf_mutation, DxfMutation};
+use crate::{DxfDiff, DxfSnapshot};
 
 /// ▶️ Applies a set-snapshot mutation.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

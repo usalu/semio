@@ -1,8 +1,8 @@
 //! 🧬️ Transparent BmpMutation aggregate.
-use crate::artifacts::bmp::schema::diff::BmpDiff;
-use crate::artifacts::bmp::BmpSnapshot;
+use crate::schema::diff::BmpDiff;
+use crate::BmpSnapshot;
 
-pub use crate::artifacts::bmp::schema::operations::{apply_bmp_mutation, inverse_bmp_mutation};
+pub use crate::schema::operations::{apply_bmp_mutation, inverse_bmp_mutation};
 
 //#region Owners
 pub use super::change_header_fields::ChangeHeaderFieldsMutation;
@@ -29,10 +29,10 @@ pub enum BmpMutation {
 #[cfg(test)]
 pub(crate) fn demo_mutation_cases() -> Vec<BmpMutation> {
     vec![
-        crate::artifacts::bmp::schema::mutations::change_header_fields::test_case(),
-        crate::artifacts::bmp::schema::mutations::insert_palette_entry::test_case(),
-        crate::artifacts::bmp::schema::mutations::remove_palette_entry::test_case(),
-        crate::artifacts::bmp::schema::mutations::replace_palette_entry::test_case(),
-        crate::artifacts::bmp::schema::mutations::replace_pixel_data::test_case(),
+        crate::schema::mutations::change_header_fields::test_case(),
+        crate::schema::mutations::insert_palette_entry::test_case(),
+        crate::schema::mutations::remove_palette_entry::test_case(),
+        crate::schema::mutations::replace_palette_entry::test_case(),
+        crate::schema::mutations::replace_pixel_data::test_case(),
     ]
 }

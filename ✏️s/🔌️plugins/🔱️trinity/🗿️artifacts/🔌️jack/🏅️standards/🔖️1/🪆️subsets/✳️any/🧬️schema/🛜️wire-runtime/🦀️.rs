@@ -244,17 +244,17 @@ impl JackOwnedRetirement {
         Self { owner: std::mem::ManuallyDrop::new(Some(owner)), active: std::mem::ManuallyDrop::new(None), phase: 0 }
     }
 
-    fn string_step(value: &mut String, maximum_items: usize, maximum_bytes: usize) -> Option<store::SnapshotRetirementStep> {
+    fn string_step(value: &mut String, maximum_items: usize, maximum_bytes: usize) -> store::SnapshotRetirementStep {
         if maximum_items == 0 || value.len() > maximum_bytes {
-            return Some(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+            return store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 };
         }
         let released_bytes = value.len();
         drop(std::mem::take(value));
-        Some(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes })
+        store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes }
     }
 
     fn phased_string_step(value: &mut String, phase: &mut u8, next: u8, maximum_items: usize, maximum_bytes: usize) -> store::SnapshotRetirementStep {
-        let step = Self::string_step(value, maximum_items, maximum_bytes).expect("required Jack string owner remains established");
+        let step = Self::string_step(value, maximum_items, maximum_bytes);
         if matches!(step, store::SnapshotRetirementStep::Pending { released_items: 1, .. }) {
             *phase = next;
         }
@@ -262,7 +262,7 @@ impl JackOwnedRetirement {
     }
 
     fn optional_string_step(value: &mut Option<String>, maximum_items: usize, maximum_bytes: usize) -> Option<store::SnapshotRetirementStep> {
-        let Some(string) = value.as_ref() else { return None };
+        let string = value.as_ref()?;
         if maximum_items == 0 || string.len() > maximum_bytes {
             return Some(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
@@ -290,55 +290,55 @@ impl JackOwnedRetirement {
         Some(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes })
     }
 
-    fn advance(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, String> {
-        let Some(owner) = self.owner.as_mut() else { return Ok(store::SnapshotRetirementStep::Complete) };
+    fn advance(&mut self, maximum_items: usize, maximum_bytes: usize) -> store::SnapshotRetirementStep {
+        let Some(owner) = self.owner.as_mut() else { return store::SnapshotRetirementStep::Complete };
         match owner {
             JackRetirementOwner::Snapshot(value) => match self.phase {
-                0 => Ok(Self::phased_string_step(&mut value.schema, &mut self.phase, 1, maximum_items, maximum_bytes)),
-                1 => Ok(Self::phased_string_step(&mut value.name, &mut self.phase, 2, maximum_items, maximum_bytes)),
+                0 => Self::phased_string_step(&mut value.schema, &mut self.phase, 1, maximum_items, maximum_bytes),
+                1 => Self::phased_string_step(&mut value.name, &mut self.phase, 2, maximum_items, maximum_bytes),
                 2 => {
                     if let Some(step) = Self::optional_string_step(&mut value.manifest_id, maximum_items, maximum_bytes) {
-                        return Ok(step);
+                        return step;
                     }
                     self.phase = 3;
-                    Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 })
+                    store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }
                 }
                 3 => {
                     if let Some(kind) = value.manifest.node_kinds.pop() {
-                        return Ok(Self::spawn(&mut self.active, JackRetirementOwner::NodeKind(kind)));
+                        return Self::spawn(&mut self.active, JackRetirementOwner::NodeKind(kind));
                     }
                     self.phase = 4;
-                    Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
+                    store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 }
                 }
                 4 => {
                     if let Some(kind) = value.manifest.edge_kinds.pop() {
-                        return Ok(Self::spawn(&mut self.active, JackRetirementOwner::EdgeKind(kind)));
+                        return Self::spawn(&mut self.active, JackRetirementOwner::EdgeKind(kind));
                     }
                     self.phase = 5;
-                    Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
+                    store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 }
                 }
                 5 => {
                     if let Some(kind) = value.manifest.port_kinds.pop() {
-                        return Ok(Self::spawn(&mut self.active, JackRetirementOwner::PortKind(kind)));
+                        return Self::spawn(&mut self.active, JackRetirementOwner::PortKind(kind));
                     }
                     self.phase = 6;
-                    Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
+                    store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 }
                 }
-                6 => Ok(Self::phased_string_step(&mut value.content.child_id, &mut self.phase, 7, maximum_items, maximum_bytes)),
-                7 => Ok(Self::phased_string_step(&mut value.content.target.artifact_id, &mut self.phase, 8, maximum_items, maximum_bytes)),
-                8 => Ok(Self::phased_string_step(&mut value.content.target.dialect.artifact_kind, &mut self.phase, 9, maximum_items, maximum_bytes)),
-                9 => Ok(Self::phased_string_step(&mut value.content.target.dialect.standard, &mut self.phase, 10, maximum_items, maximum_bytes)),
-                10 => Ok(Self::phased_string_step(&mut value.content.target.dialect.subset, &mut self.phase, 11, maximum_items, maximum_bytes)),
+                6 => Self::phased_string_step(&mut value.content.child_id, &mut self.phase, 7, maximum_items, maximum_bytes),
+                7 => Self::phased_string_step(&mut value.content.target.artifact_id, &mut self.phase, 8, maximum_items, maximum_bytes),
+                8 => Self::phased_string_step(&mut value.content.target.dialect.artifact_kind, &mut self.phase, 9, maximum_items, maximum_bytes),
+                9 => Self::phased_string_step(&mut value.content.target.dialect.standard, &mut self.phase, 10, maximum_items, maximum_bytes),
+                10 => Self::phased_string_step(&mut value.content.target.dialect.subset, &mut self.phase, 11, maximum_items, maximum_bytes),
                 11 => {
                     if let Some(step) = Self::optional_string_step(&mut value.root_node_id, maximum_items, maximum_bytes) {
-                        return Ok(step);
+                        return step;
                     }
                     self.phase = 12;
-                    Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 })
+                    store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }
                 }
                 _ => {
                     drop(self.owner.take());
-                    Ok(store::SnapshotRetirementStep::Complete)
+                    store::SnapshotRetirementStep::Complete
                 }
             },
             JackRetirementOwner::Mutation(_) => {
@@ -357,262 +357,262 @@ impl JackOwnedRetirement {
                     TrinityGraphMutation::RemoveDataProperty(value) => JackMutationFields::RemoveDataProperty { entity: Some(value.entity), key: value.key },
                 };
                 *self.owner = Some(JackRetirementOwner::MutationFields(fields));
-                Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 })
+                store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }
             }
             JackRetirementOwner::MutationFields(fields) => match fields {
                 JackMutationFields::CreateNode(value) => {
                     if let Some(value) = value.take() {
-                        return Ok(Self::spawn(&mut self.active, JackRetirementOwner::Node(value)));
+                        return Self::spawn(&mut self.active, JackRetirementOwner::Node(value));
                     }
                     drop(self.owner.take());
-                    Ok(store::SnapshotRetirementStep::Complete)
+                    store::SnapshotRetirementStep::Complete
                 }
                 JackMutationFields::DeleteNode(value) | JackMutationFields::DeleteEdge(value) | JackMutationFields::MoveNode(value) => {
                     if self.phase == 0 {
-                        return Ok(Self::phased_string_step(value, &mut self.phase, 1, maximum_items, maximum_bytes));
+                        return Self::phased_string_step(value, &mut self.phase, 1, maximum_items, maximum_bytes);
                     }
                     drop(self.owner.take());
-                    Ok(store::SnapshotRetirementStep::Complete)
+                    store::SnapshotRetirementStep::Complete
                 }
                 JackMutationFields::CreateEdge(value) => {
                     if let Some(value) = value.take() {
-                        return Ok(Self::spawn(&mut self.active, JackRetirementOwner::Edge(value)));
+                        return Self::spawn(&mut self.active, JackRetirementOwner::Edge(value));
                     }
                     drop(self.owner.take());
-                    Ok(store::SnapshotRetirementStep::Complete)
+                    store::SnapshotRetirementStep::Complete
                 }
                 JackMutationFields::RenameNode { id, name } => {
                     let value = if self.phase == 0 { id } else { name };
                     if self.phase < 2 {
                         let next = self.phase + 1;
-                        return Ok(Self::phased_string_step(value, &mut self.phase, next, maximum_items, maximum_bytes));
+                        return Self::phased_string_step(value, &mut self.phase, next, maximum_items, maximum_bytes);
                     }
                     drop(self.owner.take());
-                    Ok(store::SnapshotRetirementStep::Complete)
+                    store::SnapshotRetirementStep::Complete
                 }
                 JackMutationFields::ChangeDataProperty { entity, key, value } => match self.phase {
                     0 => {
                         if let Some(step) = Self::entity_step(entity, maximum_items, maximum_bytes) {
-                            return Ok(step);
+                            return step;
                         }
                         self.phase = 1;
-                        Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 })
+                        store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }
                     }
-                    1 => Ok(Self::phased_string_step(key, &mut self.phase, 2, maximum_items, maximum_bytes)),
+                    1 => Self::phased_string_step(key, &mut self.phase, 2, maximum_items, maximum_bytes),
                     2 => {
                         if let Some(value) = value.take() {
                             self.phase = 3;
-                            return Ok(Self::spawn(&mut self.active, JackRetirementOwner::Property(value)));
+                            return Self::spawn(&mut self.active, JackRetirementOwner::Property(value));
                         }
                         self.phase = 3;
-                        Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 })
+                        store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }
                     }
                     _ => {
                         drop(self.owner.take());
-                        Ok(store::SnapshotRetirementStep::Complete)
+                        store::SnapshotRetirementStep::Complete
                     }
                 },
                 JackMutationFields::RemoveDataProperty { entity, key } => match self.phase {
                     0 => {
                         if let Some(step) = Self::entity_step(entity, maximum_items, maximum_bytes) {
-                            return Ok(step);
+                            return step;
                         }
                         self.phase = 1;
-                        Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 })
+                        store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }
                     }
-                    1 => Ok(Self::phased_string_step(key, &mut self.phase, 2, maximum_items, maximum_bytes)),
+                    1 => Self::phased_string_step(key, &mut self.phase, 2, maximum_items, maximum_bytes),
                     _ => {
                         drop(self.owner.take());
-                        Ok(store::SnapshotRetirementStep::Complete)
+                        store::SnapshotRetirementStep::Complete
                     }
                 },
             },
             JackRetirementOwner::Property(value) => match value {
-                PropertyValue::String(value) if self.phase == 0 => Ok(Self::phased_string_step(value, &mut self.phase, 1, maximum_items, maximum_bytes)),
+                PropertyValue::String(value) if self.phase == 0 => Self::phased_string_step(value, &mut self.phase, 1, maximum_items, maximum_bytes),
                 PropertyValue::Array(values) => {
                     if let Some(value) = values.pop() {
-                        return Ok(Self::spawn(&mut self.active, JackRetirementOwner::Property(value)));
+                        return Self::spawn(&mut self.active, JackRetirementOwner::Property(value));
                     }
                     drop(self.owner.take());
-                    Ok(store::SnapshotRetirementStep::Complete)
+                    store::SnapshotRetirementStep::Complete
                 }
                 PropertyValue::Object(values) => {
                     if let Some((key, value)) = values.pop_first() {
                         if key.len() > maximum_bytes || maximum_items == 0 {
                             values.insert(key, value);
-                            return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+                            return store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 };
                         }
                         let released_bytes = key.len();
                         drop(key);
                         *self.active = Some(Box::new(Self::new(JackRetirementOwner::Property(value))));
-                        return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes });
+                        return store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes };
                     }
                     drop(self.owner.take());
-                    Ok(store::SnapshotRetirementStep::Complete)
+                    store::SnapshotRetirementStep::Complete
                 }
                 _ => {
                     drop(self.owner.take());
-                    Ok(store::SnapshotRetirementStep::Complete)
+                    store::SnapshotRetirementStep::Complete
                 }
             },
             JackRetirementOwner::Bag(values) => {
                 if let Some((key, value)) = values.pop_first() {
                     if key.len() > maximum_bytes || maximum_items == 0 {
                         values.insert(key, value);
-                        return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+                        return store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 };
                     }
                     let released_bytes = key.len();
                     drop(key);
                     *self.active = Some(Box::new(Self::new(JackRetirementOwner::Property(value))));
-                    return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes });
+                    return store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes };
                 }
                 drop(self.owner.take());
-                Ok(store::SnapshotRetirementStep::Complete)
+                store::SnapshotRetirementStep::Complete
             }
             JackRetirementOwner::Node(value) => match self.phase {
-                0 => Ok(Self::phased_string_step(&mut value.id, &mut self.phase, 1, maximum_items, maximum_bytes)),
-                1 => Ok(Self::phased_string_step(&mut value.kind, &mut self.phase, 2, maximum_items, maximum_bytes)),
-                2 => Ok(Self::phased_string_step(&mut value.name, &mut self.phase, 3, maximum_items, maximum_bytes)),
+                0 => Self::phased_string_step(&mut value.id, &mut self.phase, 1, maximum_items, maximum_bytes),
+                1 => Self::phased_string_step(&mut value.kind, &mut self.phase, 2, maximum_items, maximum_bytes),
+                2 => Self::phased_string_step(&mut value.name, &mut self.phase, 3, maximum_items, maximum_bytes),
                 3 => {
                     if !value.properties.is_empty() {
                         self.phase = 4;
-                        return Ok(Self::spawn(&mut self.active, JackRetirementOwner::Bag(std::mem::take(&mut value.properties))));
+                        return Self::spawn(&mut self.active, JackRetirementOwner::Bag(std::mem::take(&mut value.properties)));
                     }
                     self.phase = 4;
-                    Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 })
+                    store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }
                 }
                 4 => {
                     if let Some(port) = value.ports.pop() {
-                        return Ok(Self::spawn(&mut self.active, JackRetirementOwner::Port(port)));
+                        return Self::spawn(&mut self.active, JackRetirementOwner::Port(port));
                     }
                     self.phase = 5;
-                    Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
+                    store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 }
                 }
                 _ => {
                     drop(self.owner.take());
-                    Ok(store::SnapshotRetirementStep::Complete)
+                    store::SnapshotRetirementStep::Complete
                 }
             },
             JackRetirementOwner::Edge(value) => match self.phase {
-                0 => Ok(Self::phased_string_step(&mut value.id, &mut self.phase, 1, maximum_items, maximum_bytes)),
-                1 => Ok(Self::phased_string_step(&mut value.kind, &mut self.phase, 2, maximum_items, maximum_bytes)),
-                2 => Ok(Self::phased_string_step(&mut value.source, &mut self.phase, 3, maximum_items, maximum_bytes)),
-                3 => Ok(Self::phased_string_step(&mut value.target, &mut self.phase, 4, maximum_items, maximum_bytes)),
+                0 => Self::phased_string_step(&mut value.id, &mut self.phase, 1, maximum_items, maximum_bytes),
+                1 => Self::phased_string_step(&mut value.kind, &mut self.phase, 2, maximum_items, maximum_bytes),
+                2 => Self::phased_string_step(&mut value.source, &mut self.phase, 3, maximum_items, maximum_bytes),
+                3 => Self::phased_string_step(&mut value.target, &mut self.phase, 4, maximum_items, maximum_bytes),
                 4 => {
                     if !value.properties.is_empty() {
                         self.phase = 5;
-                        return Ok(Self::spawn(&mut self.active, JackRetirementOwner::Bag(std::mem::take(&mut value.properties))));
+                        return Self::spawn(&mut self.active, JackRetirementOwner::Bag(std::mem::take(&mut value.properties)));
                     }
                     self.phase = 5;
-                    Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 })
+                    store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }
                 }
                 _ => {
                     drop(self.owner.take());
-                    Ok(store::SnapshotRetirementStep::Complete)
+                    store::SnapshotRetirementStep::Complete
                 }
             },
             JackRetirementOwner::Port(value) => match self.phase {
-                0 => Ok(Self::phased_string_step(&mut value.id, &mut self.phase, 1, maximum_items, maximum_bytes)),
-                1 => Ok(Self::phased_string_step(&mut value.kind, &mut self.phase, 2, maximum_items, maximum_bytes)),
+                0 => Self::phased_string_step(&mut value.id, &mut self.phase, 1, maximum_items, maximum_bytes),
+                1 => Self::phased_string_step(&mut value.kind, &mut self.phase, 2, maximum_items, maximum_bytes),
                 2 => {
                     if !value.properties.is_empty() {
                         self.phase = 3;
-                        return Ok(Self::spawn(&mut self.active, JackRetirementOwner::Bag(std::mem::take(&mut value.properties))));
+                        return Self::spawn(&mut self.active, JackRetirementOwner::Bag(std::mem::take(&mut value.properties)));
                     }
                     self.phase = 3;
-                    Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 })
+                    store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }
                 }
                 _ => {
                     drop(self.owner.take());
-                    Ok(store::SnapshotRetirementStep::Complete)
+                    store::SnapshotRetirementStep::Complete
                 }
             },
             JackRetirementOwner::PropertyDef(value) => match self.phase {
-                0 => Ok(Self::phased_string_step(&mut value.name, &mut self.phase, 1, maximum_items, maximum_bytes)),
+                0 => Self::phased_string_step(&mut value.name, &mut self.phase, 1, maximum_items, maximum_bytes),
                 1 => {
                     if let Some(step) = Self::optional_string_step(&mut value.expr, maximum_items, maximum_bytes) {
-                        return Ok(step);
+                        return step;
                     }
                     self.phase = 2;
-                    Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 })
+                    store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }
                 }
                 2 => {
                     if maximum_items == 0 {
-                        return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+                        return store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 };
                     }
                     let value_type = match value.retire_value_type_step(maximum_bytes) {
                         Ok(value_type) => value_type,
-                        Err(_) => return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }),
+                        Err(_) => return store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 },
                     };
                     if let Some(value_type) = value_type {
                         let released_bytes = value_type.len();
                         drop(value_type);
-                        return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes });
+                        return store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes };
                     }
                     if !value.value_type_terminal_is_empty() {
-                        return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+                        return store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 };
                     }
                     self.phase = 3;
-                    Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 })
+                    store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }
                 }
                 _ => {
                     drop(self.owner.take());
-                    Ok(store::SnapshotRetirementStep::Complete)
+                    store::SnapshotRetirementStep::Complete
                 }
             },
             JackRetirementOwner::NodeKind(value) => match self.phase {
-                0 => Ok(Self::phased_string_step(&mut value.name, &mut self.phase, 1, maximum_items, maximum_bytes)),
+                0 => Self::phased_string_step(&mut value.name, &mut self.phase, 1, maximum_items, maximum_bytes),
                 1 => {
                     if let Some(value) = value.properties.pop() {
-                        return Ok(Self::spawn(&mut self.active, JackRetirementOwner::PropertyDef(value)));
+                        return Self::spawn(&mut self.active, JackRetirementOwner::PropertyDef(value));
                     }
                     self.phase = 2;
-                    Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
+                    store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 }
                 }
                 2 => {
                     if let Some(port_kind) = value.port_kinds.pop() {
                         if port_kind.len() > maximum_bytes || maximum_items == 0 {
                             value.port_kinds.push(port_kind);
-                            return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+                            return store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 };
                         }
                         let released_bytes = port_kind.len();
                         drop(port_kind);
-                        return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes });
+                        return store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes };
                     }
                     self.phase = 3;
-                    Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
+                    store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 }
                 }
                 _ => {
                     drop(self.owner.take());
-                    Ok(store::SnapshotRetirementStep::Complete)
+                    store::SnapshotRetirementStep::Complete
                 }
             },
             JackRetirementOwner::EdgeKind(value) => match self.phase {
-                0 => Ok(Self::phased_string_step(&mut value.name, &mut self.phase, 1, maximum_items, maximum_bytes)),
+                0 => Self::phased_string_step(&mut value.name, &mut self.phase, 1, maximum_items, maximum_bytes),
                 1 => {
                     if let Some(value) = value.properties.pop() {
-                        return Ok(Self::spawn(&mut self.active, JackRetirementOwner::PropertyDef(value)));
+                        return Self::spawn(&mut self.active, JackRetirementOwner::PropertyDef(value));
                     }
                     self.phase = 2;
-                    Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
+                    store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 }
                 }
                 _ => {
                     drop(self.owner.take());
-                    Ok(store::SnapshotRetirementStep::Complete)
+                    store::SnapshotRetirementStep::Complete
                 }
             },
             JackRetirementOwner::PortKind(value) => match self.phase {
-                0 => Ok(Self::phased_string_step(&mut value.name, &mut self.phase, 1, maximum_items, maximum_bytes)),
+                0 => Self::phased_string_step(&mut value.name, &mut self.phase, 1, maximum_items, maximum_bytes),
                 1 => {
                     if let Some(value) = value.properties.pop() {
-                        return Ok(Self::spawn(&mut self.active, JackRetirementOwner::PropertyDef(value)));
+                        return Self::spawn(&mut self.active, JackRetirementOwner::PropertyDef(value));
                     }
                     self.phase = 2;
-                    Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
+                    store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 }
                 }
                 _ => {
                     drop(self.owner.take());
-                    Ok(store::SnapshotRetirementStep::Complete)
+                    store::SnapshotRetirementStep::Complete
                 }
             },
         }
@@ -631,7 +631,7 @@ impl store::ErasedSnapshotRetirement for JackOwnedRetirement {
                 step => Ok(step),
             };
         }
-        self.advance(maximum_items.min(1), maximum_bytes)
+        Ok(self.advance(maximum_items.min(1), maximum_bytes))
     }
 
     fn terminal_is_empty(&self) -> bool {
@@ -1502,7 +1502,7 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<JackSnapshot, 
                     }
                     1 => self.phase = JackStoreInitializationPhase::SeedHistory { edit, lane: 2, index: 0 },
                     2 if index < entry.mutation_meta.len() => {
-                        runtime.observe_timestamp(entry.mutation_meta[index].timestamp.clone());
+                        runtime.observe_timestamp(entry.mutation_meta[index].timestamp);
                         self.phase = JackStoreInitializationPhase::SeedHistory { edit, lane, index: index + 1 };
                     }
                     _ => self.phase = JackStoreInitializationPhase::SeedHistory { edit: edit + 1, lane: 0, index: 0 },
@@ -1692,8 +1692,8 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<JackSnapshot, 
             JackStoreInitializationPhase::RetireCancelled | JackStoreInitializationPhase::RetireFault => match self.pump_terminal_retirement() {
                 Ok(false) => semio_framework_job::StepOutcome::Yield,
                 Ok(true) => {
-                    drop(self.initial_digest.take());
-                    drop(self.edit_digest.take());
+                    self.initial_digest = None;
+                    self.edit_digest = None;
                     self.terminal_handoff = true;
                     if self.phase == JackStoreInitializationPhase::RetireCancelled {
                         self.phase = JackStoreInitializationPhase::Cancelled;
@@ -1742,8 +1742,8 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<JackSnapshot, 
         match self.pump_terminal_retirement() {
             Ok(false) => Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 1, released_bytes: 0 }),
             Ok(true) => {
-                drop(self.initial_digest.take());
-                drop(self.edit_digest.take());
+                self.initial_digest = None;
+                self.edit_digest = None;
                 self.terminal_handoff = true;
                 Ok(semio_framework_plugin::PluginCloseStep::Complete)
             }
@@ -1756,8 +1756,8 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<JackSnapshot, 
             return None;
         }
         let candidate = self.candidate.take()?;
-        drop(self.initial_digest.take());
-        drop(self.edit_digest.take());
+        self.initial_digest = None;
+        self.edit_digest = None;
         self.terminal_handoff = true;
         Some(candidate)
     }

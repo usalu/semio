@@ -15,13 +15,6 @@ extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_schema as schema;
-// 🧯️ `clippy::result_large_err` — every `🎮️commands/*` handler returns
-// `Result<Emit<RemodelingMutation, RemodelingConfigMutation>, Fault>`, the exact signature
-// `ArtifactApp::handle` and `app_commands!`'s generated `dispatch` require. `Fault` is a
-// framework-owned error type; boxing it here would diverge from the trait it must satisfy, and the
-// lint does not fire on the trait impl itself (only on the free functions the taxonomy split creates),
-// so this is a pure artefact of decomposition.
-#[allow(clippy::result_large_err)]
 //#region 🧮️MathInternals
 // 🧮️ 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS wave M3d: crate-root
 // aliases onto the compute-internals mounted below in `artifacts::remodeling::…::schema` — every
@@ -1439,8 +1432,6 @@ semio_framework_plugin::plugin_exports!(plugin::plugin, RemodelApps);
 pub mod examples {
     #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🦀️.rs"]
     pub mod app_remodeling_demo_session;
-    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️.rs"]
-    pub mod art_remodeling_demo;
 }
 //#endregion 📚️Examples
 

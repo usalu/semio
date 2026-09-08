@@ -1,7 +1,8 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/stdio/gltf/2.0/mutation/scene",
+  "$id": "https://semio.tech/schema/s/stdio/gltf/2.0/scene/mutations.json",
   "title": "glTF Scene Mutation",
+  "description": "View over the any subset's mutation leaves (adjacently tagged); every payload is the owning leaf's own schema, referenced, never restated.",
   "oneOf": [
     {
       "type": "object",
@@ -12,10 +13,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "bind-default-scene"
+          "const": "bindDefaultScene"
         },
         "payload": {
-          "$ref": "🏠️default-scene/🔗️bind/🧬️.schema.json"
+          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🏠️default-scene/🔗️bind/🧬️schema/🔣️.json"
         }
       }
     },
@@ -28,10 +29,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "bind-node-camera"
+          "const": "bindNodeCamera"
         },
         "payload": {
-          "$ref": "📷️node-camera/🔗️bind/🧬️.schema.json"
+          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/📷️node-camera/🔗️bind/🧬️schema/🔣️.json"
         }
       }
     },
@@ -44,10 +45,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "bind-node-child"
+          "const": "bindNodeChild"
         },
         "payload": {
-          "$ref": "🌿️node-child/🔗️bind/🧬️.schema.json"
+          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🌿️node-child/🔗️bind/🧬️schema/🔣️.json"
         }
       }
     },
@@ -60,10 +61,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "bind-node-mesh"
+          "const": "bindNodeMesh"
         },
         "payload": {
-          "$ref": "🏗️node-mesh/🔗️bind/🧬️.schema.json"
+          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🏗️node-mesh/🔗️bind/🧬️schema/🔣️.json"
         }
       }
     },
@@ -76,10 +77,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "bind-node-skin"
+          "const": "bindNodeSkin"
         },
         "payload": {
-          "$ref": "🩻️node-skin/🔗️bind/🧬️.schema.json"
+          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🩻️node-skin/🔗️bind/🧬️schema/🔣️.json"
         }
       }
     },
@@ -92,10 +93,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "bind-scene-root-node"
+          "const": "bindSceneRootNode"
         },
         "payload": {
-          "$ref": "🌲️scene-root/🔗️bind/🧬️.schema.json"
+          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🌲️scene-root/🔗️bind/🧬️schema/🔣️.json"
         }
       }
     },
@@ -108,10 +109,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "change-node-extension-data"
+          "const": "changeNodeExtensionData"
         },
         "payload": {
-          "$ref": "🌳️node/🧩️change-extensions/🧬️.schema.json"
+          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🌳️node/🧩️change-extensions/🧬️schema/🔣️.json"
         }
       }
     },
@@ -124,10 +125,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "change-node-extra-data"
+          "const": "changeNodeExtraData"
         },
         "payload": {
-          "$ref": "🌳️node/📝️change-extras/🧬️.schema.json"
+          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🌳️node/📝️change-extras/🧬️schema/🔣️.json"
         }
       }
     },
@@ -140,10 +141,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "change-node-morph-weights"
+          "const": "changeNodeMorphWeights"
         },
         "payload": {
-          "$ref": "🌳️node/⚖️change-weights/🧬️.schema.json"
+          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🌳️node/⚖️change-weights/🧬️schema/🔣️.json"
         }
       }
     },
@@ -156,10 +157,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "change-node-name"
+          "const": "changeNodeName"
         },
         "payload": {
-          "$ref": "🌳️node/🏷️rename/🧬️schema/🔣️.json"
+          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🌳️node/🏷️rename/🧬️schema/🔣️.json"
         }
       }
     },
@@ -172,10 +173,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "change-scene-extension-data"
+          "const": "changeSceneExtensionData"
         },
         "payload": {
-          "$ref": "🎬️scene/🧩️change-extensions/🧬️.schema.json"
+          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🎬️scene/🧩️change-extensions/🧬️schema/🔣️.json"
         }
       }
     },
@@ -188,10 +189,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "change-scene-extra-data"
+          "const": "changeSceneExtraData"
         },
         "payload": {
-          "$ref": "🎬️scene/📝️change-extras/🧬️.schema.json"
+          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🎬️scene/📝️change-extras/🧬️schema/🔣️.json"
         }
       }
     },
@@ -204,10 +205,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "change-scene-name"
+          "const": "changeSceneName"
         },
         "payload": {
-          "$ref": "🎬️scene/🏷️rename/🧬️.schema.json"
+          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🎬️scene/🏷️rename/🧬️schema/🔣️.json"
         }
       }
     },
@@ -220,10 +221,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "create-node"
+          "const": "createNode"
         },
         "payload": {
-          "$ref": "🌳️node/🌱️create/🧬️.schema.json"
+          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🌳️node/🌱️create/🧬️schema/🔣️.json"
         }
       }
     },
@@ -236,10 +237,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "create-scene"
+          "const": "createScene"
         },
         "payload": {
-          "$ref": "🎬️scene/🌱️create/🧬️.schema.json"
+          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🎬️scene/🌱️create/🧬️schema/🔣️.json"
         }
       }
     },
@@ -252,10 +253,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "delete-node"
+          "const": "deleteNode"
         },
         "payload": {
-          "$ref": "🌳️node/🗑️delete/🧬️.schema.json"
+          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🌳️node/🗑️delete/🧬️schema/🔣️.json"
         }
       }
     },
@@ -268,10 +269,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "delete-scene"
+          "const": "deleteScene"
         },
         "payload": {
-          "$ref": "🎬️scene/🗑️delete/🧬️.schema.json"
+          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🎬️scene/🗑️delete/🧬️schema/🔣️.json"
         }
       }
     },
@@ -284,10 +285,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "move-node"
+          "const": "moveNode"
         },
         "payload": {
-          "$ref": "🌳️node/🚚️move/🧬️.schema.json"
+          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🌳️node/🚚️move/🧬️schema/🔣️.json"
         }
       }
     },
@@ -300,10 +301,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "move-node-child"
+          "const": "moveNodeChild"
         },
         "payload": {
-          "$ref": "🌿️node-child/🚚️move/🧬️.schema.json"
+          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🌿️node-child/🚚️move/🧬️schema/🔣️.json"
         }
       }
     },
@@ -316,10 +317,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "move-scene"
+          "const": "moveScene"
         },
         "payload": {
-          "$ref": "🎬️scene/🚚️move/🧬️.schema.json"
+          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🎬️scene/🚚️move/🧬️schema/🔣️.json"
         }
       }
     },
@@ -332,10 +333,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "move-scene-root-node"
+          "const": "moveSceneRootNode"
         },
         "payload": {
-          "$ref": "🌲️scene-root/🚚️move/🧬️.schema.json"
+          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🌲️scene-root/🚚️move/🧬️schema/🔣️.json"
         }
       }
     },
@@ -348,10 +349,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "reorder-node-children"
+          "const": "reorderNodeChildren"
         },
         "payload": {
-          "$ref": "🌿️node-child/🔀️reorder/🧬️.schema.json"
+          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🌿️node-child/🔀️reorder/🧬️schema/🔣️.json"
         }
       }
     },
@@ -364,10 +365,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "reorder-nodes"
+          "const": "reorderNodes"
         },
         "payload": {
-          "$ref": "🌳️node/🔀️reorder/🧬️.schema.json"
+          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🌳️node/🔀️reorder/🧬️schema/🔣️.json"
         }
       }
     },
@@ -380,10 +381,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "reorder-scene-root-nodes"
+          "const": "reorderSceneRootNodes"
         },
         "payload": {
-          "$ref": "🌲️scene-root/🔀️reorder/🧬️.schema.json"
+          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🌲️scene-root/🔀️reorder/🧬️schema/🔣️.json"
         }
       }
     },
@@ -396,10 +397,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "reorder-scenes"
+          "const": "reorderScenes"
         },
         "payload": {
-          "$ref": "🎬️scene/🔀️reorder/🧬️.schema.json"
+          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🎬️scene/🔀️reorder/🧬️schema/🔣️.json"
         }
       }
     },
@@ -412,10 +413,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "move-node-parent"
+          "const": "moveNodeParent"
         },
         "payload": {
-          "$ref": "🌳️node/🌿️reparent/🧬️.schema.json"
+          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🌳️node/🌿️reparent/🧬️schema/🔣️.json"
         }
       }
     },
@@ -428,10 +429,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "change-node-transform"
+          "const": "changeNodeTransform"
         },
         "payload": {
-          "$ref": "🌳️node/📐️transform/🧬️.schema.json"
+          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🌳️node/📐️transform/🧬️schema/🔣️.json"
         }
       }
     },
@@ -444,10 +445,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "unbind-default-scene"
+          "const": "unbindDefaultScene"
         },
         "payload": {
-          "$ref": "🏠️default-scene/✂️unbind/🧬️.schema.json"
+          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🏠️default-scene/✂️unbind/🧬️schema/🔣️.json"
         }
       }
     },
@@ -460,10 +461,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "unbind-node-camera"
+          "const": "unbindNodeCamera"
         },
         "payload": {
-          "$ref": "📷️node-camera/✂️unbind/🧬️.schema.json"
+          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/📷️node-camera/✂️unbind/🧬️schema/🔣️.json"
         }
       }
     },
@@ -476,10 +477,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "unbind-node-child"
+          "const": "unbindNodeChild"
         },
         "payload": {
-          "$ref": "🌿️node-child/✂️unbind/🧬️.schema.json"
+          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🌿️node-child/✂️unbind/🧬️schema/🔣️.json"
         }
       }
     },
@@ -492,10 +493,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "unbind-node-mesh"
+          "const": "unbindNodeMesh"
         },
         "payload": {
-          "$ref": "🏗️node-mesh/✂️unbind/🧬️.schema.json"
+          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🏗️node-mesh/✂️unbind/🧬️schema/🔣️.json"
         }
       }
     },
@@ -508,10 +509,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "unbind-node-skin"
+          "const": "unbindNodeSkin"
         },
         "payload": {
-          "$ref": "🩻️node-skin/✂️unbind/🧬️.schema.json"
+          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🩻️node-skin/✂️unbind/🧬️schema/🔣️.json"
         }
       }
     },
@@ -524,10 +525,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "unbind-scene-root-node"
+          "const": "unbindSceneRootNode"
         },
         "payload": {
-          "$ref": "🌲️scene-root/✂️unbind/🧬️.schema.json"
+          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🌲️scene-root/✂️unbind/🧬️schema/🔣️.json"
         }
       }
     }

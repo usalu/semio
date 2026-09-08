@@ -129,7 +129,7 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
 pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
     use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
 
-    let rows: &[(&str, &str, &str, &[(&str, &str)], Option<(&str, &str)>)] = &[
+    let rows: &[semio_framework_plugin::ArtifactCapabilityRow<'_>] = &[
         ("s.shooting.shooting.standard.v1", "standard", "1", &[], None),
         ("s.shooting.shooting.standard.v1.profile.any", "profile", "any", &[], None),
         ("s.shooting.shooting.schema.artifact", "schema", "s.shooting.shooting", &[("schema", "s.shooting.shooting")], None),
@@ -453,7 +453,7 @@ pub fn shooting_resolve_shot_camera(snapshot: &ShootingSnapshot, shot: &Shooting
 /// reason to decline, per the recipe's own allowance ("unless you find a concrete technical reason
 /// they can't — document precisely if so, don't generalize from one blocked field to the whole
 /// plugin").
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::image::schema::snapshot::{SemioColorspace, SemioImageFrame, SemioImageMetadataEntry, SemioImageSnapshot, STDIO_SEMIOIMAGE_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_semio::standards::v1::subsets::image::schema::snapshot::{SemioColorspace, SemioImageFrame, SemioImageMetadataEntry, SemioImageSnapshot, STDIO_SEMIOIMAGE_DOCUMENT_SCHEMA};
 
 pub type ShootingEmblemChild = store::ArtifactChild<SemioImageSnapshot>;
 

@@ -7,9 +7,9 @@
 //! CONCURRENT wave M3d dissolved `semio_framework_math::algebra` entirely) sibling-subset
 //! `🔢️value/🧬️schema/➕️algebra-internals` for `MatD`/`VecD` — see that file's own doc comment.
 
-use crate::artifacts::semio::standards::v1::subsets::table::schema::probability_internals::{ChiSquared, Continuous, Normal, StudentT};
-use crate::artifacts::semio::standards::v1::subsets::table::schema::tabular_internals::Table;
-use crate::artifacts::semio::standards::v1::subsets::value::schema::algebra_internals::{MatD, VecD};
+use crate::standards::v1::subsets::table::schema::probability_internals::{ChiSquared, Continuous, Normal, StudentT};
+use crate::standards::v1::subsets::table::schema::tabular_internals::Table;
+use crate::standards::v1::subsets::value::schema::algebra_internals::{MatD, VecD};
 use std::collections::HashMap;
 
 // #region 🔖️Error
@@ -21,8 +21,8 @@ pub enum StatisticsError {
     SingularMatrix,
     NoConvergence { iterations: usize },
     InvalidArgument(&'static str),
-    Tabular(crate::artifacts::semio::standards::v1::subsets::table::schema::tabular_internals::TabularError),
-    Probability(crate::artifacts::semio::standards::v1::subsets::table::schema::probability_internals::ProbabilityError),
+    Tabular(crate::standards::v1::subsets::table::schema::tabular_internals::TabularError),
+    Probability(crate::standards::v1::subsets::table::schema::probability_internals::ProbabilityError),
 }
 
 impl std::fmt::Display for StatisticsError {
@@ -49,14 +49,14 @@ impl std::error::Error for StatisticsError {
     }
 }
 
-impl From<crate::artifacts::semio::standards::v1::subsets::table::schema::tabular_internals::TabularError> for StatisticsError {
-    fn from(error: crate::artifacts::semio::standards::v1::subsets::table::schema::tabular_internals::TabularError) -> Self {
+impl From<crate::standards::v1::subsets::table::schema::tabular_internals::TabularError> for StatisticsError {
+    fn from(error: crate::standards::v1::subsets::table::schema::tabular_internals::TabularError) -> Self {
         Self::Tabular(error)
     }
 }
 
-impl From<crate::artifacts::semio::standards::v1::subsets::table::schema::probability_internals::ProbabilityError> for StatisticsError {
-    fn from(error: crate::artifacts::semio::standards::v1::subsets::table::schema::probability_internals::ProbabilityError) -> Self {
+impl From<crate::standards::v1::subsets::table::schema::probability_internals::ProbabilityError> for StatisticsError {
+    fn from(error: crate::standards::v1::subsets::table::schema::probability_internals::ProbabilityError) -> Self {
         Self::Probability(error)
     }
 }
@@ -205,7 +205,7 @@ pub fn partial_correlation(corr: &MatD, i: usize, j: usize, given: &[usize]) -> 
 
 // #region 🔖️Ols
 /// 📐️ Ordinary least squares fit. Internally solved via normal equations `(XᵀX)β = Xᵀy` and
-/// `crate::artifacts::semio::standards::v1::subsets::value::schema::algebra_internals::MatD::lu_solve` — adequate at causal-discovery scale (small `p`, modest
+/// `crate::standards::v1::subsets::value::schema::algebra_internals::MatD::lu_solve` — adequate at causal-discovery scale (small `p`, modest
 /// condition numbers); swap to Householder QR internally if that ever becomes a bottleneck, the
 /// public API here would not need to change.
 #[derive(Clone, Debug, value_derive::ToValue, value_derive::FromValue)]
@@ -373,14 +373,14 @@ pub fn logistic_predict(fit: &LogisticFit, x: &MatD, intercept: bool) -> Result<
 fn build_strata(x: &[u32], y: &[u32], given: &[&[u32]], nx: usize, ny: usize, given_levels: &[usize]) -> HashMap<usize, MatD> {
     let mut tables: HashMap<usize, MatD> = HashMap::new();
     for row in 0..x.len() {
-        if x[row] == crate::artifacts::semio::standards::v1::subsets::table::schema::tabular_internals::MISSING_CODE || y[row] == crate::artifacts::semio::standards::v1::subsets::table::schema::tabular_internals::MISSING_CODE {
+        if x[row] == crate::standards::v1::subsets::table::schema::tabular_internals::MISSING_CODE || y[row] == crate::standards::v1::subsets::table::schema::tabular_internals::MISSING_CODE {
             continue;
         }
         let mut stratum = 0usize;
         let mut stride = 1usize;
         let mut missing = false;
         for (k, g) in given.iter().enumerate() {
-            if g[row] == crate::artifacts::semio::standards::v1::subsets::table::schema::tabular_internals::MISSING_CODE {
+            if g[row] == crate::standards::v1::subsets::table::schema::tabular_internals::MISSING_CODE {
                 missing = true;
                 break;
             }
@@ -427,7 +427,7 @@ pub fn crosstab(x: &[u32], y: &[u32], nx: usize, ny: usize) -> Result<MatD, Stat
     }
     let mut m = MatD::zeros(nx, ny);
     for (&xi, &yi) in x.iter().zip(y) {
-        if xi == crate::artifacts::semio::standards::v1::subsets::table::schema::tabular_internals::MISSING_CODE || yi == crate::artifacts::semio::standards::v1::subsets::table::schema::tabular_internals::MISSING_CODE {
+        if xi == crate::standards::v1::subsets::table::schema::tabular_internals::MISSING_CODE || yi == crate::standards::v1::subsets::table::schema::tabular_internals::MISSING_CODE {
             continue;
         }
         m.add_at(xi as usize, yi as usize, 1.0);
@@ -537,7 +537,7 @@ pub fn entropy(codes: &[u32], n_levels: usize) -> Result<f64, StatisticsError> {
     let mut counts = vec![0usize; n_levels];
     let mut total = 0usize;
     for &c in codes {
-        if c == crate::artifacts::semio::standards::v1::subsets::table::schema::tabular_internals::MISSING_CODE {
+        if c == crate::standards::v1::subsets::table::schema::tabular_internals::MISSING_CODE {
             continue;
         }
         counts[c as usize] += 1;
@@ -635,10 +635,10 @@ mod tests {
             assert_eq!(error.to_string(), message);
             assert!(std::error::Error::source(&error).is_none());
         }
-        let tabular: StatisticsError = crate::artifacts::semio::standards::v1::subsets::table::schema::tabular_internals::TabularError::UnknownColumn("x".into()).into();
+        let tabular: StatisticsError = crate::standards::v1::subsets::table::schema::tabular_internals::TabularError::UnknownColumn("x".into()).into();
         assert_eq!(tabular.to_string(), "no column named `x`");
         assert!(std::error::Error::source(&tabular).is_some());
-        let probability: StatisticsError = crate::artifacts::semio::standards::v1::subsets::table::schema::probability_internals::ProbabilityError::NoConvergence { what: "cdf" }.into();
+        let probability: StatisticsError = crate::standards::v1::subsets::table::schema::probability_internals::ProbabilityError::NoConvergence { what: "cdf" }.into();
         assert_eq!(probability.to_string(), "no convergence in cdf");
         assert!(std::error::Error::source(&probability).is_some());
     }

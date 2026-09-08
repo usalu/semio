@@ -1,0 +1,53 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/sequence/sequence/1/step/mutation/move-step.json",
+  "title": "MoveStep",
+  "$ref": "#/$defs/Payload",
+  "$defs": {
+    "Payload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "x",
+        "y"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        }
+      }
+    },
+    "Wire": {
+      "title": "MoveStepMutation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "id",
+        "x",
+        "y"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "moveStep"
+        },
+        "id": {
+          "$ref": "#/$defs/Payload/properties/id"
+        },
+        "x": {
+          "$ref": "#/$defs/Payload/properties/x"
+        },
+        "y": {
+          "$ref": "#/$defs/Payload/properties/y"
+        }
+      }
+    }
+  }
+}

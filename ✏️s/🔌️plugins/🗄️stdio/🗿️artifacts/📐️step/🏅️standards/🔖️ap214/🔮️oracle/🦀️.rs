@@ -156,7 +156,7 @@ pub mod part21 {
     /// `📐️mutate-step-ap214` parity comparisons apart until this wave. The real IfcOpenShell
     /// `🏗️nakagin-capsule-tower.ifc` carries the same problem the other way round, as `'\\'`.
     ///
-    /// Written from scratch here, NOT by calling `crate::artifacts::step::…::engine::part21`: a
+    /// Written from scratch here, NOT by calling `crate::…::engine::part21`: a
     /// projection that decoded with the codec under test would be comparing that codec against
     /// itself, which is the exact failure this whole oracle exists to prevent.
     ///
@@ -833,7 +833,7 @@ mod tests {
     /// checked here rather than asserted in prose four times.
     #[test]
     fn the_four_interior_classes_share_one_vocabulary_because_their_ceilings_share_one_place() {
-        use crate::artifacts::step::standards::v_ap214::subsets::{cc1, cc2, cc3, cc4, cc5, cc6};
+        use crate::standards::v_ap214::subsets::{cc1, cc2, cc3, cc4, cc5, cc6};
 
         for (class, rung, kinds) in [("cc2", cc2::MAX_RUNG, cc2::KINDS), ("cc3", cc3::MAX_RUNG, cc3::KINDS), ("cc4", cc4::MAX_RUNG, cc4::KINDS), ("cc5", cc5::MAX_RUNG, cc5::KINDS)] {
             assert!(ladder::ceiling_type_of(rung).is_some(), "{class} sits inside the ladder, so it has a ceiling type to write and to demote onto");

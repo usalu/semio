@@ -3,7 +3,11 @@
   "$id": "https://semio.tech/schema/s/space/home/mutation.json",
   "title": "SHomeMutation",
   "oneOf": [
-    {"$ref": "./🔢️change-catalog-generation/🧬️.schema.json"}
+    {
+      "$ref": "./🔢️change-catalog-generation/🧬️schema/🔣️.json"
+    }
   ],
-  "x-semio-mutationKinds": ["change-catalog-generation"]
+  "x-semio-mutationKinds": [
+    "change-catalog-generation"
+  ]
 }

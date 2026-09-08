@@ -1,6 +1,6 @@
 //! ⚙️ Shared application and inversion of JpgMutation.
-use crate::artifacts::jpg::schema::{diff::JpgDiff, mutations::JpgMutation};
-use crate::artifacts::jpg::JpgSnapshot;
+use crate::schema::{diff::JpgDiff, mutations::JpgMutation};
+use crate::JpgSnapshot;
 
 //#region Operations
 pub fn apply_jpg_mutation(snapshot: &mut JpgSnapshot, mutation: &JpgMutation) -> protocol::MutationOutcome<JpgDiff> {

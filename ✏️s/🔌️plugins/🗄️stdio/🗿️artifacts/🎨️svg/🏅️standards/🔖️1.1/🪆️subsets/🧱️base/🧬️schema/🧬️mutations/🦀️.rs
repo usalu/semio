@@ -1,6 +1,6 @@
 //! 🧬️ Transparent SvgMutation aggregate.
-use crate::artifacts::svg::schema::diff::SvgDiff;
-use crate::artifacts::svg::SvgSnapshot;
+use crate::schema::diff::SvgDiff;
+use crate::SvgSnapshot;
 
 pub use super::set_declaration::{SetDeclarationMutation, SetDeclarationPayload};
 pub use super::set_doctype::{SetDoctypeMutation, SetDoctypePayload};
@@ -35,7 +35,7 @@ pub fn apply_svg_mutation(snapshot: &mut SvgSnapshot, mutation: &SvgMutation) ->
 
 #[cfg(test)]
 pub(crate) fn demo_mutation_cases() -> Vec<SvgMutation> {
-    use crate::artifacts::xml::schema::snapshot::XmlNode;
+    use semio_s_artifact_stdio_xml::schema::snapshot::XmlNode;
     vec![
         SvgMutation::SetDeclaration(SetDeclarationMutation::Apply(SetDeclarationPayload { declaration: None })),
         SvgMutation::SetDoctype(SetDoctypeMutation::Apply(SetDoctypePayload { doctype: None })),

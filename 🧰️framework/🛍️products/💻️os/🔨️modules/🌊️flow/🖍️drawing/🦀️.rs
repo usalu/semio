@@ -395,8 +395,8 @@ impl DrawingStore {
         &mut self.cache
     }
 
-    fn derive_node(&mut self, node: StoredNode) -> Result<DrawingHandle, semio_framework_2d::DrawingError> {
-        let pack = StoredNode::encode_pack(&node).map_err(semio_framework_2d::DrawingError::InvalidInput)?;
+    fn derive_node(&mut self, node: &StoredNode) -> Result<DrawingHandle, semio_framework_2d::DrawingError> {
+        let pack = StoredNode::encode_pack(node).map_err(semio_framework_2d::DrawingError::InvalidInput)?;
         let kernel_handle = self.cache.derive(DrawingEngine::ENGINE_ID, &pack).map_err(map_engine_fault)?;
         let drawing = drawing_handle_from_key(kernel_handle.key);
         self.live.insert(drawing.as_str().to_string());
@@ -404,21 +404,21 @@ impl DrawingStore {
     }
 
     fn register(&mut self, kind: DrawingKind, node: DrawingNode) -> Result<DrawingHandle, semio_framework_2d::DrawingError> {
-        self.derive_node(StoredNode { kind, node, transform: Affine2D::identity(), fill: None, stroke: None, clip: None, opacity: 1.0 })
+        self.derive_node(&StoredNode { kind, node, transform: Affine2D::identity(), fill: None, stroke: None, clip: None, opacity: 1.0 })
     }
 
     fn fork(&mut self, source: &DrawingHandle) -> Result<DrawingHandle, semio_framework_2d::DrawingError> {
-        let entry = self.entry(source)?.clone();
-        self.derive_node(entry)
+        let entry = self.entry(source)?;
+        self.derive_node(&entry)
     }
 
     fn with_mutated<F>(&mut self, source: &DrawingHandle, mutate: F) -> Result<DrawingHandle, semio_framework_2d::DrawingError>
     where
         F: FnOnce(&mut StoredNode),
     {
-        let mut entry = self.entry(source)?.clone();
+        let mut entry = self.entry(source)?;
         mutate(&mut entry);
-        self.derive_node(entry)
+        self.derive_node(&entry)
     }
 
     fn entry(&self, handle: &DrawingHandle) -> Result<StoredNode, semio_framework_2d::DrawingError> {
@@ -924,45 +924,39 @@ pub fn retain_drawing_handles(live: &[String]) {
 pub fn render_scene_json(handle: &str) -> String {
     drawing_kernel()
         .lock()
-        .ok()
-        .map(|store| {
+        .ok().map_or_else(json_kernel_unavailable, |store| {
             let drawing = DrawingHandle(handle.to_string());
             match store.flatten_scene(&drawing) {
                 Ok(scene) => serde_json::to_string(&scene).unwrap_or_else(|_| "{}".into()),
                 Err(error) => json_error(error),
             }
         })
-        .unwrap_or_else(json_kernel_unavailable)
 }
 
 /// 📄️ Exports a drawing handle as SVG JSON wrapper.
 pub fn export_svg_json(handle: &str) -> String {
     drawing_kernel()
         .lock()
-        .ok()
-        .map(|store| {
+        .ok().map_or_else(json_kernel_unavailable, |store| {
             let drawing = DrawingHandle(handle.to_string());
             match store.export_svg(&drawing) {
                 Ok(svg) => json_field("svg", svg),
                 Err(error) => json_error(error),
             }
         })
-        .unwrap_or_else(json_kernel_unavailable)
 }
 
 /// 📑️ Exports a drawing handle as base64 PDF JSON wrapper.
 pub fn export_pdf_json(handle: &str) -> String {
     drawing_kernel()
         .lock()
-        .ok()
-        .map(|store| {
+        .ok().map_or_else(json_kernel_unavailable, |store| {
             let drawing = DrawingHandle(handle.to_string());
             match store.export_pdf(&drawing) {
                 Ok(pdf) => json_field("pdf", drawing_base64_encode(&pdf)),
                 Err(error) => json_error(error),
             }
         })
-        .unwrap_or_else(json_kernel_unavailable)
 }
 
 
@@ -1003,15 +997,13 @@ pub fn boolean_segments_json(a_json: &str, b_json: &str, operation: &str) -> Str
     };
     drawing_kernel()
         .lock()
-        .ok()
-        .map(|store| match (parse(a_json), parse(b_json)) {
+        .ok().map_or_else(json_kernel_unavailable, |store| match (parse(a_json), parse(b_json)) {
             (Ok(a), Ok(b)) => match store.boolean_segments(&a, &b, operation) {
                 Ok(segments) => serde_json::json!({ "segments": segments }).to_string(),
                 Err(error) => json_error(error),
             },
             (Err(error), _) | (_, Err(error)) => json_error(error),
         })
-        .unwrap_or_else(json_kernel_unavailable)
 }
 
 fn drawing_base64_encode(data: &[u8]) -> String {

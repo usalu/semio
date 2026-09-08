@@ -12,8 +12,8 @@
 use semio_framework::MeshData;
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 use semio_framework_value_derive::{FromValue, ToValue};
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
+use semio_s_artifact_stdio_semio::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
+use semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 use std::sync::{Arc, Mutex, OnceLock};
@@ -53,7 +53,7 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
     use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
 
-    let rows: &[(&str, &str, &str, &[(&str, &str)], Option<(&str, &str)>)] = &[
+    let rows: &[semio_framework_plugin::ArtifactCapabilityRow<'_>] = &[
         ("s.remodel.remodeling.standard.v1", "standard", "1", &[], None),
         ("s.remodel.remodeling.standard.v1.profile.any", "profile", "any", &[], None),
         ("s.remodel.remodeling.schema.artifact", "schema", "s.remodel.remodeling", &[("schema", "s.remodel.remodeling")], None),
@@ -271,7 +271,7 @@ pub fn durable_remodeling_asset(asset: &ImageAsset) -> Option<RemodelingDurableA
         mime: Some(asset.mime.clone()),
         width: asset.width,
         height: asset.height,
-        chunks: bytes.chunks(REMODELING_DURABLE_CHUNK_RAW_BYTES).map(|chunk| base64_codec::base64_standard_encode(chunk)).collect(),
+        chunks: bytes.chunks(REMODELING_DURABLE_CHUNK_RAW_BYTES).map(base64_codec::base64_standard_encode).collect(),
     })
 }
 
@@ -519,7 +519,7 @@ fn apply_mesh_chunk(mesh: &mut MeshData, last_field: Option<u8>, bytes: &[u8]) -
             if target.len().checked_add(component_count).is_none_or(|count| count > limit) {
                 return false;
             }
-            target.extend(values.chunks_exact(4).map(|value| f32::from_le_bytes(value.try_into().expect("four-byte mesh f32"))));
+            target.extend(values.as_chunks::<4>().0.iter().map(|value| f32::from_le_bytes(value.try_into().expect("four-byte mesh f32"))));
         }
         3 | 5 | 6 | 8 if values.len() % 4 == 0 => {
             let target = match field {
@@ -537,7 +537,7 @@ fn apply_mesh_chunk(mesh: &mut MeshData, last_field: Option<u8>, bytes: &[u8]) -
             if target.len().checked_add(component_count).is_none_or(|count| count > limit) {
                 return false;
             }
-            target.extend(values.chunks_exact(4).map(|value| u32::from_le_bytes(value.try_into().expect("four-byte mesh u32"))));
+            target.extend(values.as_chunks::<4>().0.iter().map(|value| u32::from_le_bytes(value.try_into().expect("four-byte mesh u32"))));
         }
         10 => {
             if mesh.edge_is_seam.len().checked_add(values.len()).is_none_or(|count| count > REMODELING_BOUNDED_MESH_TRIANGLES * 3) {
@@ -684,8 +684,8 @@ pub fn placeholder_remodeling_mesh_handle() -> RemodelingMeshChild {
 fn mesh_is_within_resolution_envelope(mesh: &MeshData) -> bool {
     let vertices = mesh.positions.len().checked_div(3);
     let triangles = mesh.indices.len().checked_div(3);
-    let Some(vertices) = vertices.filter(|_| mesh.positions.len() % 3 == 0) else { return false };
-    let Some(triangles) = triangles.filter(|_| mesh.indices.len() % 3 == 0) else { return false };
+    let Some(vertices) = vertices.filter(|_| mesh.positions.len().is_multiple_of(3)) else { return false };
+    let Some(triangles) = triangles.filter(|_| mesh.indices.len().is_multiple_of(3)) else { return false };
     vertices <= REMODELING_BOUNDED_MESH_VERTICES
         && triangles <= REMODELING_BOUNDED_MESH_TRIANGLES
         && mesh.indices.iter().all(|index| usize::try_from(*index).ok().is_some_and(|index| index < vertices))

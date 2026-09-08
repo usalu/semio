@@ -1,8 +1,8 @@
 //! 🧪️ Rust executor for the shared bind-node-child vectors.
 #[cfg(test)]
 mod tests {
-    use crate::artifacts::gltf::schema::mutations::bind_node_child::{diff, inverse, mutation};
-    use crate::artifacts::gltf::GltfSnapshot;
+    use crate::schema::mutations::bind_node_child::{diff, inverse, mutation};
+    use crate::GltfSnapshot;
 
     #[derive(value_derive::FromValue)]
     #[value(rename_all = "camelCase")]

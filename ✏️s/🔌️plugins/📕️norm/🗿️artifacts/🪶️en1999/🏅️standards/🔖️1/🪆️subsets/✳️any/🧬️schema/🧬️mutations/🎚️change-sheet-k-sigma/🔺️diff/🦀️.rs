@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeSheetKSigma, base: &En1999Snapshot) -> protocol::Mut
     if base.sheet_k_sigma == payload.new_sheet_k_sigma {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Sheet plate buckling factor k_sigma is already {}.", payload.new_sheet_k_sigma));
     }
-    protocol::MutationOutcome::new(En1999Diff { sheet_k_sigma: Some(payload.new_sheet_k_sigma.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1999Diff { sheet_k_sigma: Some(payload.new_sheet_k_sigma), ..Default::default() })
 }
 //#endregion 🔖️Diff

@@ -6,12 +6,12 @@
 //! — `📓️taxonomy.md`'s whole-list-replace convention, unchanged by D2's resolution (Concern B:
 //! the shape itself was never the defect).
 
-use crate::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::{SemioKitDesign, SemioKitSnapshot, SemioKitType};
-use crate::artifacts::semio::standards::v1::subsets::model::schema::snapshot::SemioModelSnapshot;
-use crate::artifacts::semio::standards::v1::subsets::object::schema::snapshot::SemioObjectSnapshot;
-use crate::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValueSnapshot;
+use crate::standards::v1::subsets::kit::schema::snapshot::{SemioKitDesign, SemioKitSnapshot, SemioKitType};
+use crate::standards::v1::subsets::model::schema::snapshot::SemioModelSnapshot;
+use crate::standards::v1::subsets::object::schema::snapshot::SemioObjectSnapshot;
+use crate::standards::v1::subsets::value::schema::snapshot::SemioValueSnapshot;
 use protocol::MutationDiff;
-use schema::ArtifactSchema;
+use framework_schema::ArtifactSchema;
 
 //#region 🔖️ListWrappers
 /// 📋 Whole-list wrappers, one per collection field — every mutation triad rebuilds the full
@@ -150,7 +150,7 @@ impl protocol::command::DiffAlgebra<SemioKitSnapshot> for SemioKitDiff {
 //#endregion 🔖️Diff
 
 //#region 🔖️HandcraftedDiffCodec
-use crate::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::{dec_child_list, dec_child_opt, dec_design_list, dec_link_list, dec_type_list, enc_child_list, enc_child_opt, enc_design_list, enc_link_list, enc_type_list};
+use crate::standards::v1::subsets::kit::schema::snapshot::{dec_child_list, dec_child_opt, dec_design_list, dec_link_list, dec_type_list, enc_child_list, enc_child_opt, enc_design_list, enc_link_list, enc_type_list};
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn print_kit_diff(d: &SemioKitDiff) -> String {
@@ -208,7 +208,7 @@ impl protocol::DiffCodec for SemioKitDiff {
     /// bit2=objects, bit3=models, bit4=properties, bit5=representations), then each present
     /// field's own real encoding in bit order.
     fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        use crate::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::{write_child_list, write_child_opt, write_design_list, write_link_list, write_type_list};
+        use crate::standards::v1::subsets::kit::schema::snapshot::{write_child_list, write_child_opt, write_design_list, write_link_list, write_type_list};
         const DIFF_BINARY_FORMAT: u8 = 1;
         let mut presence: u8 = 0;
         if self.types.is_some() {
@@ -251,7 +251,7 @@ impl protocol::DiffCodec for SemioKitDiff {
         Ok(out)
     }
     fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        use crate::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::{read_child_list, read_child_opt, read_design_list, read_link_list, read_type_list};
+        use crate::standards::v1::subsets::kit::schema::snapshot::{read_child_list, read_child_opt, read_design_list, read_link_list, read_type_list};
         const DIFF_BINARY_FORMAT: u8 = 1;
         if bytes.len() < 2 {
             return Err(protocol::ProtocolError::Malformed { what: "diff header", offset: 0, detail: "truncated".to_string() });
@@ -279,7 +279,7 @@ impl protocol::DiffCodec for SemioKitDiff {
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_diff_cases() -> Vec<SemioKitDiff> {
-    use crate::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::demo_kit_snapshot;
+    use crate::standards::v1::subsets::kit::schema::snapshot::demo_kit_snapshot;
     vec![
         SemioKitDiff::default(),
         SemioKitDiff { types: Some(SemioKitTypeList { values: demo_kit_snapshot().types }), ..Default::default() },
@@ -293,7 +293,7 @@ pub(crate) fn demo_diff_cases() -> Vec<SemioKitDiff> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::demo_kit_snapshot;
+    use crate::standards::v1::subsets::kit::schema::snapshot::demo_kit_snapshot;
     use protocol::DiffCodec;
 
     #[semio_framework_async_macros::async_test]

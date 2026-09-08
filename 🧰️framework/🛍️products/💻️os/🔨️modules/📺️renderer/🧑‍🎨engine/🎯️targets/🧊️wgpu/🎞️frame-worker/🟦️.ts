@@ -51,7 +51,9 @@ const BOOT_HEARTBEAT_MS = 2;
 /** @emoji 💓️ How often a still-running browser-owned suspension re-posts its stage to the UI isolate.
  * `FRAME_WORKER_BOOT_TIMEOUT_MS` fires on SILENCE, not on slowness, and a cold `shell-boot` of a 5.4 MB-manifest
  * plugin legitimately outlasts it while yielding normally — so liveness is reported rather than the watchdog
- * loosened, and a genuinely wedged worker still trips it. */
+ * loosened, and a genuinely wedged worker still trips it. Posts `boot-liveness`, NOT `boot-progress`: the
+ * latter runs the UI isolate's `progress-hook`, whose DOM work overran `FRAME_UI_TURN_BUDGET_MS` (2 ms)
+ * once it fired every second. Liveness only needs to re-arm the stall timer. */
 const BOOT_LIVENESS_INTERVAL_MS = 1_000;
 let lastProgressValue = 0;
 /** @emoji 🧮️ Fixed boot credit taken from the generated catalog itself. A boot plan is by construction a
@@ -70,8 +72,14 @@ const INTROSPECTION_STEP_BUDGET_MS = 64;
  * owns and can slice; a `WebAssembly.instantiate` of the renderer module or a `requestDevice` is neither
  * ours nor sliceable, so measuring it against the frame budget only ever reports the browser's own cost as a
  * Worker fault (measured: instantiating the debug renderer blocks ~62 ms, which failed the 8 ms frame
- * budget and killed every boot). The UI isolate's `FRAME_WORKER_BOOT_TIMEOUT_MS` remains the outer bound. */
-const BROWSER_OWNED_SUSPENSION_BUDGET_MS = 1_000;
+ * budget and killed every boot). The UI isolate's `FRAME_WORKER_BOOT_TIMEOUT_MS` remains the outer bound.
+ * 📈️ Raised from 1 s: a COLD `WebAssembly.instantiate` of the multi-MB renderer measured 1093 ms and the
+ * font-atlas `renderer-bootstrap` step 12002 ms, both on a machine at load average ~36 across 10 cores.
+ * None of this work is sliceable — the browser and the GPU driver own it. This is a BOOT ceiling only;
+ * the per-frame budgets (`WORKER_STEP_BUDGET_MS` 8 ms, `FRAME_UI_TURN_BUDGET_MS` 2 ms) are untouched.
+ * Still well under the outer boot timeout, which `monitoredSuspension`'s liveness heartbeat now keeps
+ * honest, so a genuinely wedged instantiate still fails rather than hanging forever. */
+const BROWSER_OWNED_SUSPENSION_BUDGET_MS = 30_000;
 
 function ownedStep<T>(stage: string, callback: () => T, budgetMs: number = WORKER_STEP_BUDGET_MS): T {
   const startedAt = performance.now();
@@ -91,7 +99,7 @@ async function monitoredSuspension<T>(stage: string, operation: () => Promise<T>
     lastBeat = now;
     if (now - lastLivenessAt >= BOOT_LIVENESS_INTERVAL_MS) {
       lastLivenessAt = now;
-      progress(stage, lastProgressValue);
+      if (!closed && !closing && !failed) post({ kind: "boot-liveness", lifecycle });
     }
   }, BOOT_HEARTBEAT_MS);
   try {

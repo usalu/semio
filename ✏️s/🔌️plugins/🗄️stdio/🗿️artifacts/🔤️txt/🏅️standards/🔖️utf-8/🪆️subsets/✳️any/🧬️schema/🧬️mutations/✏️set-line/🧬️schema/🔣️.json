@@ -1,5 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/txt/utf-8/any/mutation/set-line.json",
   "title": "SetLinePayload",
   "description": "Canonical payload schema for set-line.",
   "type": "object",

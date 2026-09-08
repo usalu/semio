@@ -5,7 +5,7 @@
   "displayName": "Change Solar Thermal System Collector Area",
   "emoji": "🟩️",
   "aggregateVariant": "ChangeSolarThermalSystemCollectorArea",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-solar-thermal-system-collector-area",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

@@ -4,8 +4,8 @@
 //! 📤️export/🧵️serializers.
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use crate::artifacts::avi::standards::v1_0::subsets::any::schema::snapshot::AviSnapshot;
-    use crate::artifacts::avi::standards::v1_0::subsets::any::schema::AviAnalyzer;
+    use crate::standards::v1_0::subsets::any::schema::snapshot::AviSnapshot;
+    use crate::standards::v1_0::subsets::any::schema::AviAnalyzer;
     use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.avi", standard: StandardId("1.0"), subset: SubsetId("*") };
@@ -45,10 +45,10 @@ pub mod derived_composition {
     /// this artifact's standard-level `engine::register()`.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn register() {
-        ::schema::register_artifact_schema_descriptor(crate::artifacts::avi::standards::v1_0::subsets::any::schema::avi_artifact_schema_descriptor());
+        ::framework_schema::register_artifact_schema_descriptor(crate::standards::v1_0::subsets::any::schema::avi_artifact_schema_descriptor());
         register_artifact_inferences();
-        store::register_document_codec(store::ArtifactCodec::of::<AviSnapshot, crate::artifacts::avi::standards::v1_0::subsets::any::schema::mutations::AviMutation>(
-            crate::artifacts::avi::standards::v1_0::subsets::any::schema::snapshot::STDIO_AVI_DOCUMENT_SCHEMA,
+        store::register_document_codec(store::ArtifactCodec::of::<AviSnapshot, crate::standards::v1_0::subsets::any::schema::mutations::AviMutation>(
+            crate::standards::v1_0::subsets::any::schema::snapshot::STDIO_AVI_DOCUMENT_SCHEMA,
         )).expect("static Stdio registration must be available and conflict-free");
     }
 
@@ -57,14 +57,14 @@ pub mod derived_composition {
     /// ticket 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING P2/S3+S4).
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn register_artifact_inferences() {
-        ::schema::register_artifact_inference_descriptor(crate::artifacts::avi::standards::v1_0::subsets::any::schema::inferences::avi_artifact_inference_descriptor());
+        ::framework_schema::register_artifact_inference_descriptor(crate::standards::v1_0::subsets::any::schema::inferences::avi_artifact_inference_descriptor());
     }
     //#endregion 🔖️Register
 }
 pub use derived_composition::*;
 //#endregion 🎹️DerivedComposition
 
-use crate::artifacts::avi::standards::v1_0::subsets::any::schema::snapshot::{AviChunk, AviMainHeader, AviSnapshot, AviStream, AviStreamFormat, AviStreamHeader, RiffChunk, STDIO_AVI_DOCUMENT_SCHEMA};
+use crate::standards::v1_0::subsets::any::schema::snapshot::{AviChunk, AviMainHeader, AviSnapshot, AviStream, AviStreamFormat, AviStreamHeader, RiffChunk, STDIO_AVI_DOCUMENT_SCHEMA};
 
 //#region 🔖️Riff
 struct RiffEntry<'a> {
@@ -707,7 +707,7 @@ mod codec_tests {
 
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
-    use crate::artifacts::avi::standards::v1_0::subsets::any::schema::AviComposer as AviRawAnyComposer;
+    use crate::standards::v1_0::subsets::any::schema::AviComposer as AviRawAnyComposer;
     use semio_framework_plugin::{composer_entry_of, ComposerEntry};
     use std::sync::OnceLock;
 

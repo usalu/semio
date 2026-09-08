@@ -13,16 +13,16 @@
 //! Mounted as a submodule of `➡️sweep` in ticket 26/09/03/BREP-KERNEL-DEPENDENCY-FREE-RUNTIME wave
 //! W2-C via `#[path]` from `➡️sweep/🦀️.rs`.
 
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::{FaceId, SolidId};
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::bspline::{elevate_degree, KnotVector};
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::curve_ops::{interpolate_curve, ParamMethod};
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::{Curve2, Curve3, NurbsCurve3};
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::error::KernelError;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::surface::Surface;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::tolerance::Tol;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::history::OpRecorder;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::Body;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::{Pnt2, Pnt3, Vec2};
+use crate::standards::v1::subsets::brep::schema::snapshot::arena::{FaceId, SolidId};
+use crate::standards::v1::subsets::brep::schema::snapshot::curve::bspline::{elevate_degree, KnotVector};
+use crate::standards::v1::subsets::brep::schema::snapshot::curve::curve_ops::{interpolate_curve, ParamMethod};
+use crate::standards::v1::subsets::brep::schema::snapshot::curve::{Curve2, Curve3, NurbsCurve3};
+use crate::standards::v1::subsets::brep::schema::snapshot::error::KernelError;
+use crate::standards::v1::subsets::brep::schema::snapshot::surface::Surface;
+use crate::standards::v1::subsets::brep::schema::snapshot::tolerance::Tol;
+use crate::standards::v1::subsets::brep::schema::snapshot::topology::history::OpRecorder;
+use crate::standards::v1::subsets::brep::schema::snapshot::topology::Body;
+use crate::standards::v1::subsets::brep::schema::snapshot::vector::{Pnt2, Pnt3, Vec2};
 
 use super::core::{build_face, finish_solid, LoopSpec};
 
@@ -125,8 +125,8 @@ pub fn loft_profiles(body: &mut Body, profiles: &[FaceId], smooth: bool, rec: &m
             let right_fit = fit_column(&right_positions, degree_v);
             let left_curve = body.curves3.insert(Curve3::Nurbs { knots: left_fit.knots.clone(), controls: left_fit.controls, weights: vec![1.0; n] });
             let right_curve = body.curves3.insert(Curve3::Nurbs { knots: right_fit.knots.clone(), controls: right_fit.controls, weights: vec![1.0; n] });
-            let left_rail = crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::euler::make_edge(body, left_curve, left_fit.knots.domain(), start_v0, end_v0, Tol::DEFAULT, rec);
-            let right_rail = crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::euler::make_edge(body, right_curve, right_fit.knots.domain(), start_v1, end_v1, Tol::DEFAULT, rec);
+            let left_rail = crate::standards::v1::subsets::brep::schema::diff::euler::make_edge(body, left_curve, left_fit.knots.domain(), start_v0, end_v0, Tol::DEFAULT, rec);
+            let right_rail = crate::standards::v1::subsets::brep::schema::diff::euler::make_edge(body, right_curve, right_fit.knots.domain(), start_v1, end_v1, Tol::DEFAULT, rec);
 
             let u0 = harmonized[0].knots.domain().0;
             let u1 = harmonized[0].knots.domain().1;
@@ -147,7 +147,7 @@ pub fn loft_profiles(body: &mut Body, profiles: &[FaceId], smooth: bool, rec: &m
     }
     let bottom = profiles[0];
     let top = profiles[n - 1];
-    let n0 = super::core::planar_outward_normal(body, bottom).unwrap_or(crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::Vec3::Z);
+    let n0 = super::core::planar_outward_normal(body, bottom).unwrap_or(crate::standards::v1::subsets::brep::schema::snapshot::vector::Vec3::Z);
     let bottom_origin = body.faces.get(bottom).and_then(|f| match body.surfaces.get(f.surface) { Some(Surface::Plane { frame }) => Some(frame.origin), _ => None }).unwrap_or(Pnt3::new(0.0, 0.0, 0.0));
     let top_origin = body.faces.get(top).and_then(|f| match body.surfaces.get(f.surface) { Some(Surface::Plane { frame }) => Some(frame.origin), _ => None }).unwrap_or(bottom_origin);
     let travel = top_origin - bottom_origin;

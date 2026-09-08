@@ -1,7 +1,7 @@
 //! 🧬️ Transparent PDF 1.7/UA conformance mutation dispatch. Concrete payloads, graph transforms,
 //! inverses, codecs, schemas, and tests live in direct semantic leaves.
 
-use crate::artifacts::pdf::standards::v1_7::subsets::base::schema::{diff::PdfDiff, snapshot::PdfSnapshot};
+use crate::standards::v1_7::subsets::base::schema::{diff::PdfDiff, snapshot::PdfSnapshot};
 
 //#region 🔖️Leaves
 #[path = "✅️set-mark-info/🦀️.rs"]

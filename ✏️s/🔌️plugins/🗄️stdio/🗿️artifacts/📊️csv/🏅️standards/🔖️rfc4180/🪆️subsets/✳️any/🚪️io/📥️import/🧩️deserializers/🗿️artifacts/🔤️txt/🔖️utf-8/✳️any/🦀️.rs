@@ -1,7 +1,7 @@
 //! 📥️ Deserialize `stdio.csv` from stdio.txt.
 
-use crate::artifacts::csv::CsvSnapshot;
-use crate::artifacts::txt::TxtSnapshot;
+use crate::CsvSnapshot;
+use semio_s_artifact_stdio_txt::TxtSnapshot;
 
 //#region 🔖️Codec
 /// 🗂️ Register deserializer hooks.
@@ -11,7 +11,7 @@ pub fn register() {}
 /// 📥 Parse csv text into a CsvSnapshot.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn deserialize(from: &TxtSnapshot) -> Result<CsvSnapshot, store::TextError> {
-    Ok(crate::artifacts::csv::schema::snapshot::decode_csv_with(&from.to_body(), true))
+    Ok(crate::schema::snapshot::decode_csv_with(&from.to_body(), true))
 }
 
 /// 📥 Parse DSL/text bytes via txt then csv.

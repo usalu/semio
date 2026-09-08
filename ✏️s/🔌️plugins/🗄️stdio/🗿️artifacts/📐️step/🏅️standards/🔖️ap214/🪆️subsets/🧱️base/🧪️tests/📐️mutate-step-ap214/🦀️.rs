@@ -206,11 +206,11 @@ fn round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::{inverse_spec, json_spec, json_obj, mutable_input};
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_plugin_stdio::artifacts::step::standards::v_ap214::engine::part21::{parse_part21, write_part21};
-    use semio_s_plugin_stdio::artifacts::step::standards::v_ap214::subsets::base::schema::mutations::{
+    use crate::standards::v_ap214::engine::part21::{parse_part21, write_part21};
+    use crate::standards::v_ap214::subsets::base::schema::mutations::{
         apply_step_mutation, insert_entity, insert_entity_arg, remove_entity, remove_entity_arg, set_entity_arg, set_entity_name, set_file_description, set_file_name, set_file_schema, set_snapshot, StepMutation,
     };
-    use semio_s_plugin_stdio::artifacts::step::standards::v_ap214::subsets::base::schema::snapshot::{StepEntity, StepFileDescription, StepFileName, StepFileSchema, StepSnapshot, StepValue};
+    use crate::standards::v_ap214::subsets::base::schema::snapshot::{StepEntity, StepFileDescription, StepFileName, StepFileSchema, StepSnapshot, StepValue};
     use semio_s_plugin_stdio_test_oracle::artifacts::step::standards::v_ap214::subsets::base::project_step_ap214_any;
 
     //#region 🔖️SpecReading

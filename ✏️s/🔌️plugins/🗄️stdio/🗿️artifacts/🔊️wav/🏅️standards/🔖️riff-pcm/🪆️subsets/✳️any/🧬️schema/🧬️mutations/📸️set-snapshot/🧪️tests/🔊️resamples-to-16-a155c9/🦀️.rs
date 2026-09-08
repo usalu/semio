@@ -9,9 +9,9 @@
 //! alone — so `WavDiff::between` must emit a whole-value `fmt` plus a whole-value `data` and must
 //! leave `other_chunks` absent.
 
-use crate::artifacts::wav::standards::riff_pcm::subsets::any::schema::diff::WavDiff;
-use crate::artifacts::wav::standards::riff_pcm::subsets::any::schema::mutations::{apply_wav_mutation, WavMutation};
-use crate::artifacts::wav::standards::riff_pcm::subsets::any::schema::snapshot::{WavData, WavSnapshot};
+use crate::standards::riff_pcm::subsets::any::schema::diff::WavDiff;
+use crate::standards::riff_pcm::subsets::any::schema::mutations::{apply_wav_mutation, WavMutation};
+use crate::standards::riff_pcm::subsets::any::schema::snapshot::{WavData, WavSnapshot};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");

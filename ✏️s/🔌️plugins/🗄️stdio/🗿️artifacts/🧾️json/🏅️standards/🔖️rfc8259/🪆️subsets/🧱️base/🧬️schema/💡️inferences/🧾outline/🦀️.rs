@@ -4,8 +4,8 @@
 //! `rootKind` names the root value's own kind (`"object"`/`"array"`/`"string"`/`"number"`/
 //! `"bool"`/`"null"`).
 
-use crate::artifacts::json::schema::snapshot::JsonValue;
-use crate::artifacts::json::JsonSnapshot;
+use crate::schema::snapshot::JsonValue;
+use crate::JsonSnapshot;
 
 //#region 🔖️Outline
 /// 🧾️ `Json` document outline.
@@ -71,7 +71,7 @@ impl JsonOutline {
 //#region 🧪️Tests
 mod tests {
     use super::*;
-    use crate::artifacts::json::schema::snapshot::JsonMember;
+    use crate::schema::snapshot::JsonMember;
 
     #[semio_framework_async_macros::async_test]
     async fn counts_nodes_and_depth_over_nested_structure() {

@@ -5,7 +5,7 @@
   "displayName": "Set Frame Cursor",
   "emoji": "🎞️",
   "aggregateVariant": "SetFrameCursor",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "set-frame-cursor",
   "binaryTag": 3,
   "invertibility": "explicit-mutation",

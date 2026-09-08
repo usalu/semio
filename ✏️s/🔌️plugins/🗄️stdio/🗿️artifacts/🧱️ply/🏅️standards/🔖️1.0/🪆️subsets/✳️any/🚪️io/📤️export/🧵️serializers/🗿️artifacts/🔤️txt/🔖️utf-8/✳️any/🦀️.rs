@@ -1,7 +1,7 @@
 //! 📤️ Serialize `stdio.ply` to stdio.txt.
 
-use crate::artifacts::ply::PlySnapshot;
-use crate::artifacts::txt::TxtSnapshot;
+use crate::PlySnapshot;
+use semio_s_artifact_stdio_txt::TxtSnapshot;
 
 //#region 🔖️Codec
 /// 🗂️ Register serializer hooks.
@@ -13,7 +13,7 @@ pub fn register() {}
 /// 26/08/10/ARTIFACT-SYSTEM-OVERHAUL).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn serialize(from: &PlySnapshot) -> Result<TxtSnapshot, store::PackError> {
-    let bytes = crate::artifacts::ply::engine::encode_ply(from).map_err(store::PackError::Schema)?;
+    let bytes = crate::engine::encode_ply(from).map_err(store::PackError::Schema)?;
     let text = String::from_utf8(bytes).map_err(|e| store::PackError::Schema(format!("ply: encoded body not utf8: {e}")))?;
     Ok(TxtSnapshot::from_body(&text))
 }

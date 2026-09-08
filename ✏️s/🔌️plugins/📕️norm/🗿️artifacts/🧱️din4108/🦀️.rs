@@ -15,7 +15,6 @@ pub struct LayerDocument {
     pub lambda_w_mk: f64,
 }
 
-/// 📸️ Persisted snapshot — defined in `📸️snapshot/🧬️schema`, re-exported here.
 //#endregion 🔖️Types
 
 //#region 🔖️ArtifactKind

@@ -12,8 +12,8 @@ pub mod set_frames;
 pub mod set_id3v1;
 //#endregion 🔖️Leaves
 
-use crate::artifacts::mp3::standards::mpeg1_layer3::subsets::any::schema::diff::{diff_set_frames, diff_set_id3v1, diff_set_id3v2, diff_set_snapshot, Mp3Diff};
-use crate::artifacts::mp3::standards::mpeg1_layer3::subsets::any::schema::snapshot::{Id3v1Tag, Id3v2Tag, Mp3Frame, Mp3Snapshot};
+use crate::standards::mpeg1_layer3::subsets::any::schema::diff::{diff_set_frames, diff_set_id3v1, diff_set_id3v2, diff_set_snapshot, Mp3Diff};
+use crate::standards::mpeg1_layer3::subsets::any::schema::snapshot::{Id3v1Tag, Id3v2Tag, Mp3Frame, Mp3Snapshot};
 use protocol::Mutation;
 use protocol::{OpBinary, OpText};
 
@@ -125,7 +125,7 @@ pub(crate) fn agg_inverse(this: &Mp3Mutation, base: &Mp3Snapshot) -> Vec<Mp3Muta
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::mp3::standards::mpeg1_layer3::subsets::any::schema::snapshot::{Id3Frame, Mp3FrameHeader};
+    use crate::standards::mpeg1_layer3::subsets::any::schema::snapshot::{Id3Frame, Mp3FrameHeader};
     use protocol::command::DiffAlgebra;
     use protocol::MutationDiff;
 

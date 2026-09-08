@@ -1,8 +1,8 @@
 //! 🧬️ Transparent PngMutation aggregate.
-use crate::artifacts::png::schema::diff::PngDiff;
-use crate::artifacts::png::PngSnapshot;
+use crate::schema::diff::PngDiff;
+use crate::PngSnapshot;
 
-pub use crate::artifacts::png::schema::operations::{apply_png_mutation, inverse_png_mutation};
+pub use crate::schema::operations::{apply_png_mutation, inverse_png_mutation};
 
 //#region Owners
 pub use super::change_background::ChangeBackgroundMutation;
@@ -49,20 +49,20 @@ pub enum PngMutation {
 #[cfg(test)]
 pub(crate) fn demo_mutation_cases() -> Vec<PngMutation> {
     vec![
-        crate::artifacts::png::schema::mutations::change_header::test_case(),
-        crate::artifacts::png::schema::mutations::replace_palette::test_case(),
-        crate::artifacts::png::schema::mutations::change_transparency::test_case(),
-        crate::artifacts::png::schema::mutations::change_gamma::test_case(),
-        crate::artifacts::png::schema::mutations::change_chromaticities::test_case(),
-        crate::artifacts::png::schema::mutations::change_srgb_intent::test_case(),
-        crate::artifacts::png::schema::mutations::change_physical_dims::test_case(),
-        crate::artifacts::png::schema::mutations::change_timestamp::test_case(),
-        crate::artifacts::png::schema::mutations::change_background::test_case(),
-        crate::artifacts::png::schema::mutations::insert_text_chunk::test_case(),
-        crate::artifacts::png::schema::mutations::remove_text_chunk::test_case(),
-        crate::artifacts::png::schema::mutations::replace_text_chunk::test_case(),
-        crate::artifacts::png::schema::mutations::replace_pixels::test_case(),
-        crate::artifacts::png::schema::mutations::insert_unknown_chunk::test_case(),
-        crate::artifacts::png::schema::mutations::remove_unknown_chunk::test_case(),
+        crate::schema::mutations::change_header::test_case(),
+        crate::schema::mutations::replace_palette::test_case(),
+        crate::schema::mutations::change_transparency::test_case(),
+        crate::schema::mutations::change_gamma::test_case(),
+        crate::schema::mutations::change_chromaticities::test_case(),
+        crate::schema::mutations::change_srgb_intent::test_case(),
+        crate::schema::mutations::change_physical_dims::test_case(),
+        crate::schema::mutations::change_timestamp::test_case(),
+        crate::schema::mutations::change_background::test_case(),
+        crate::schema::mutations::insert_text_chunk::test_case(),
+        crate::schema::mutations::remove_text_chunk::test_case(),
+        crate::schema::mutations::replace_text_chunk::test_case(),
+        crate::schema::mutations::replace_pixels::test_case(),
+        crate::schema::mutations::insert_unknown_chunk::test_case(),
+        crate::schema::mutations::remove_unknown_chunk::test_case(),
     ]
 }

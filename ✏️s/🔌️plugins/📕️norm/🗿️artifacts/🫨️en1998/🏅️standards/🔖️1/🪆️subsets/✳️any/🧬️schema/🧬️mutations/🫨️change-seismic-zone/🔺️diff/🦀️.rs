@@ -9,6 +9,6 @@ pub fn diff(payload: &ChangeSeismicZone, base: &En1998Snapshot) -> protocol::Mut
     if base.seismic_zone == payload.new_seismic_zone {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Seismic zone is already {}.", payload.new_seismic_zone));
     }
-    protocol::MutationOutcome::new(En1998Diff { seismic_zone: Some(payload.new_seismic_zone.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1998Diff { seismic_zone: Some(payload.new_seismic_zone), ..Default::default() })
 }
 //#endregion 🔖️Diff

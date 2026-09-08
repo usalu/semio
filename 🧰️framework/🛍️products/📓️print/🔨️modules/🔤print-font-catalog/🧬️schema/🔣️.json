@@ -1,0 +1,47 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/print/print-font-catalog/schema.json",
+  "title": "PrintFontCatalog",
+  "description": "Fonts published into every print document build.",
+  "$ref": "#/$defs/PrintFontCatalog",
+  "$defs": {
+    "PrintFontCatalog": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/PrintFontDescriptor"
+      }
+    },
+    "PrintFontDescriptor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "family",
+        "directory",
+        "filename",
+        "texFilename"
+      ],
+      "properties": {
+        "family": {
+          "type": "string",
+          "minLength": 1
+        },
+        "directory": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[^/\\\\]+$"
+        },
+        "filename": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[^/\\\\]+$"
+        },
+        "texFilename": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[^/\\\\]+$"
+        }
+      }
+    }
+  }
+}

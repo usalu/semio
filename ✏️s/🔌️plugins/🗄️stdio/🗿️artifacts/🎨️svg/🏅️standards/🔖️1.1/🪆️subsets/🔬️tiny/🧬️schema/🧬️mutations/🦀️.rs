@@ -20,10 +20,10 @@
 //! @see ../../🔣️oracle.json — the catalog `KINDS` below must match exactly.
 //! @see ../../../../../../🧪️tests/🔬️mutate-svg-1-1-tiny/🥒️.feature — the case that exercises it.
 
-use crate::artifacts::svg::schema::diff::{diff_at_path, diff_set_snapshot, SvgAttrAdded, SvgAttrModified, SvgAttributesDiff, SvgChildAdded, SvgChildrenDiff, SvgDiff, SvgElementDiff, SvgNodeDiff};
-use crate::artifacts::svg::schema::snapshot::{element_attr, node_at, parse_transform_list, parse_view_box, transform_list_to_string, view_box_to_string, NodePath, TransformOp, ViewBox};
-use crate::artifacts::svg::SvgSnapshot;
-use crate::artifacts::xml::schema::snapshot::{XmlAttr, XmlNode};
+use crate::schema::diff::{diff_at_path, diff_set_snapshot, SvgAttrAdded, SvgAttrModified, SvgAttributesDiff, SvgChildAdded, SvgChildrenDiff, SvgDiff, SvgElementDiff, SvgNodeDiff};
+use crate::schema::snapshot::{element_attr, node_at, parse_transform_list, parse_view_box, transform_list_to_string, view_box_to_string, NodePath, TransformOp, ViewBox};
+use crate::SvgSnapshot;
+use semio_s_artifact_stdio_xml::schema::snapshot::{XmlAttr, XmlNode};
 use protocol::Mutation;
 
 //#region 🔖️Mutations
@@ -329,7 +329,7 @@ mod tests {
     /// statements of SVG Tiny 1.1's excluded vocabulary cannot drift apart.
     #[test]
     fn blocklists_agree_with_the_subset_conformance_checker() {
-        use crate::artifacts::svg::standards::v1_1::subsets::tiny::schema::check_svg_tiny_conformance;
+        use crate::standards::v1_1::subsets::tiny::schema::check_svg_tiny_conformance;
         let hard = |snapshot: &SvgSnapshot| check_svg_tiny_conformance(snapshot).into_iter().any(|d| matches!(d.severity, dsl::Severity::Error | dsl::Severity::Fatal));
         let root = |children: Vec<XmlNode>| document(elem("svg", vec![("baseProfile", "tiny"), ("version", "1.1")], children));
         let excluded_elements: Vec<&str> = BLOCKED_ELEMENTS.iter().copied().chain(["feGaussianBlur"]).collect();

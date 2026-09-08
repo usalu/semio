@@ -125,32 +125,32 @@ impl En1999Mutation {
     /// bundle a bulk document replacement into a single atomic `Emit::commit`.
     pub fn from_snapshot(snapshot: &En1999Snapshot) -> Vec<En1999Mutation> {
         let mut mutations = Vec::with_capacity(26);
-        mutations.push(En1999Mutation::ChangeNEdKn(change_n_ed_kn::ChangeNEdKn { new_n_ed_kn: snapshot.n_ed_kn.clone() }));
-        mutations.push(En1999Mutation::ChangeMEdKnm(change_m_ed_knm::ChangeMEdKnm { new_m_ed_knm: snapshot.m_ed_knm.clone() }));
-        mutations.push(En1999Mutation::ChangeAMm2(change_a_mm2::ChangeAMm2 { new_a_mm2: snapshot.a_mm2.clone() }));
-        mutations.push(En1999Mutation::ChangeWElMm3(change_w_el_mm3::ChangeWElMm3 { new_w_el_mm3: snapshot.w_el_mm3.clone() }));
+        mutations.push(En1999Mutation::ChangeNEdKn(change_n_ed_kn::ChangeNEdKn { new_n_ed_kn: snapshot.n_ed_kn }));
+        mutations.push(En1999Mutation::ChangeMEdKnm(change_m_ed_knm::ChangeMEdKnm { new_m_ed_knm: snapshot.m_ed_knm }));
+        mutations.push(En1999Mutation::ChangeAMm2(change_a_mm2::ChangeAMm2 { new_a_mm2: snapshot.a_mm2 }));
+        mutations.push(En1999Mutation::ChangeWElMm3(change_w_el_mm3::ChangeWElMm3 { new_w_el_mm3: snapshot.w_el_mm3 }));
         mutations.push(En1999Mutation::ChangeAlloy(change_alloy::ChangeAlloy { new_alloy: snapshot.alloy.clone() }));
-        mutations.push(En1999Mutation::ChangeChi(change_chi::ChangeChi { new_chi: snapshot.chi.clone() }));
-        mutations.push(En1999Mutation::ChangeITMm4(change_i_t_mm4::ChangeITMm4 { new_i_t_mm4: snapshot.i_t_mm4.clone() }));
-        mutations.push(En1999Mutation::ChangeLCrMm(change_l_cr_mm::ChangeLCrMm { new_l_cr_mm: snapshot.l_cr_mm.clone() }));
-        mutations.push(En1999Mutation::ChangeThetaC(change_theta_c::ChangeThetaC { new_theta_c: snapshot.theta_c.clone() }));
-        mutations.push(En1999Mutation::ChangeDeltaSigmaEd(change_delta_sigma_ed::ChangeDeltaSigmaEd { new_delta_sigma_ed: snapshot.delta_sigma_ed.clone() }));
-        mutations.push(En1999Mutation::ChangeDeltaSigmaC(change_delta_sigma_c::ChangeDeltaSigmaC { new_delta_sigma_c: snapshot.delta_sigma_c.clone() }));
-        mutations.push(En1999Mutation::ChangeFatigueM(change_fatigue_m::ChangeFatigueM { new_fatigue_m: snapshot.fatigue_m.clone() }));
-        mutations.push(En1999Mutation::ChangeNCycles(change_n_cycles::ChangeNCycles { new_n_cycles: snapshot.n_cycles.clone() }));
-        mutations.push(En1999Mutation::ChangeVWeldEdKn(change_v_weld_ed_kn::ChangeVWeldEdKn { new_v_weld_ed_kn: snapshot.v_weld_ed_kn.clone() }));
-        mutations.push(En1999Mutation::ChangeWeldThroatMm(change_weld_throat_mm::ChangeWeldThroatMm { new_weld_throat_mm: snapshot.weld_throat_mm.clone() }));
-        mutations.push(En1999Mutation::ChangeWeldLengthMm(change_weld_length_mm::ChangeWeldLengthMm { new_weld_length_mm: snapshot.weld_length_mm.clone() }));
-        mutations.push(En1999Mutation::ChangeBetaW(change_beta_w::ChangeBetaW { new_beta_w: snapshot.beta_w.clone() }));
-        mutations.push(En1999Mutation::ChangeSheetBMm(change_sheet_b_mm::ChangeSheetBMm { new_sheet_b_mm: snapshot.sheet_b_mm.clone() }));
-        mutations.push(En1999Mutation::ChangeSheetTMm(change_sheet_t_mm::ChangeSheetTMm { new_sheet_t_mm: snapshot.sheet_t_mm.clone() }));
-        mutations.push(En1999Mutation::ChangeSheetKSigma(change_sheet_k_sigma::ChangeSheetKSigma { new_sheet_k_sigma: snapshot.sheet_k_sigma.clone() }));
-        mutations.push(En1999Mutation::ChangeSheetWElMm3(change_sheet_w_el_mm3::ChangeSheetWElMm3 { new_sheet_w_el_mm3: snapshot.sheet_w_el_mm3.clone() }));
-        mutations.push(En1999Mutation::ChangeSheetMEdKnm(change_sheet_m_ed_knm::ChangeSheetMEdKnm { new_sheet_m_ed_knm: snapshot.sheet_m_ed_knm.clone() }));
-        mutations.push(En1999Mutation::ChangeShellTMm(change_shell_t_mm::ChangeShellTMm { new_shell_t_mm: snapshot.shell_t_mm.clone() }));
-        mutations.push(En1999Mutation::ChangeShellRMm(change_shell_r_mm::ChangeShellRMm { new_shell_r_mm: snapshot.shell_r_mm.clone() }));
-        mutations.push(En1999Mutation::ChangeSigmaEdShellMpa(change_sigma_ed_shell_mpa::ChangeSigmaEdShellMpa { new_sigma_ed_shell_mpa: snapshot.sigma_ed_shell_mpa.clone() }));
-        mutations.push(En1999Mutation::ChangeAnnex(change_annex::ChangeAnnex { new_annex: snapshot.annex.clone() }));
+        mutations.push(En1999Mutation::ChangeChi(change_chi::ChangeChi { new_chi: snapshot.chi }));
+        mutations.push(En1999Mutation::ChangeITMm4(change_i_t_mm4::ChangeITMm4 { new_i_t_mm4: snapshot.i_t_mm4 }));
+        mutations.push(En1999Mutation::ChangeLCrMm(change_l_cr_mm::ChangeLCrMm { new_l_cr_mm: snapshot.l_cr_mm }));
+        mutations.push(En1999Mutation::ChangeThetaC(change_theta_c::ChangeThetaC { new_theta_c: snapshot.theta_c }));
+        mutations.push(En1999Mutation::ChangeDeltaSigmaEd(change_delta_sigma_ed::ChangeDeltaSigmaEd { new_delta_sigma_ed: snapshot.delta_sigma_ed }));
+        mutations.push(En1999Mutation::ChangeDeltaSigmaC(change_delta_sigma_c::ChangeDeltaSigmaC { new_delta_sigma_c: snapshot.delta_sigma_c }));
+        mutations.push(En1999Mutation::ChangeFatigueM(change_fatigue_m::ChangeFatigueM { new_fatigue_m: snapshot.fatigue_m }));
+        mutations.push(En1999Mutation::ChangeNCycles(change_n_cycles::ChangeNCycles { new_n_cycles: snapshot.n_cycles }));
+        mutations.push(En1999Mutation::ChangeVWeldEdKn(change_v_weld_ed_kn::ChangeVWeldEdKn { new_v_weld_ed_kn: snapshot.v_weld_ed_kn }));
+        mutations.push(En1999Mutation::ChangeWeldThroatMm(change_weld_throat_mm::ChangeWeldThroatMm { new_weld_throat_mm: snapshot.weld_throat_mm }));
+        mutations.push(En1999Mutation::ChangeWeldLengthMm(change_weld_length_mm::ChangeWeldLengthMm { new_weld_length_mm: snapshot.weld_length_mm }));
+        mutations.push(En1999Mutation::ChangeBetaW(change_beta_w::ChangeBetaW { new_beta_w: snapshot.beta_w }));
+        mutations.push(En1999Mutation::ChangeSheetBMm(change_sheet_b_mm::ChangeSheetBMm { new_sheet_b_mm: snapshot.sheet_b_mm }));
+        mutations.push(En1999Mutation::ChangeSheetTMm(change_sheet_t_mm::ChangeSheetTMm { new_sheet_t_mm: snapshot.sheet_t_mm }));
+        mutations.push(En1999Mutation::ChangeSheetKSigma(change_sheet_k_sigma::ChangeSheetKSigma { new_sheet_k_sigma: snapshot.sheet_k_sigma }));
+        mutations.push(En1999Mutation::ChangeSheetWElMm3(change_sheet_w_el_mm3::ChangeSheetWElMm3 { new_sheet_w_el_mm3: snapshot.sheet_w_el_mm3 }));
+        mutations.push(En1999Mutation::ChangeSheetMEdKnm(change_sheet_m_ed_knm::ChangeSheetMEdKnm { new_sheet_m_ed_knm: snapshot.sheet_m_ed_knm }));
+        mutations.push(En1999Mutation::ChangeShellTMm(change_shell_t_mm::ChangeShellTMm { new_shell_t_mm: snapshot.shell_t_mm }));
+        mutations.push(En1999Mutation::ChangeShellRMm(change_shell_r_mm::ChangeShellRMm { new_shell_r_mm: snapshot.shell_r_mm }));
+        mutations.push(En1999Mutation::ChangeSigmaEdShellMpa(change_sigma_ed_shell_mpa::ChangeSigmaEdShellMpa { new_sigma_ed_shell_mpa: snapshot.sigma_ed_shell_mpa }));
+        mutations.push(En1999Mutation::ChangeAnnex(change_annex::ChangeAnnex { new_annex: snapshot.annex }));
         mutations
     }
 }

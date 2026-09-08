@@ -1,7 +1,7 @@
 //! 🧬️ Transparent glTF mutation aggregate. Every concrete payload, outcome, diff, inverse, and test lives in its direct semantic leaf.
 
-use crate::artifacts::gltf::schema::diff::GltfDiff;
-use crate::artifacts::gltf::GltfSnapshot;
+use crate::schema::diff::GltfDiff;
+use crate::GltfSnapshot;
 
 pub use super::bind_default_scene::BindDefaultSceneMutation;
 pub use super::bind_morph_target_attribute::BindMorphTargetAttributeMutation;
@@ -273,7 +273,7 @@ mod tests {
     fn mutation_rejection_messages_match_the_language_neutral_json_oracle() {
         let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/📨️mutation-carriers/🔣️.json")).unwrap();
         for case in fixture["rejections"].as_array().unwrap() {
-            let outcome = crate::artifacts::gltf::schema::modules::mutation_support::top_level::rejection_outcome(
+            let outcome = crate::schema::modules::mutation_support::top_level::rejection_outcome(
                 case["code"].as_str().unwrap(),
                 case["path"].as_str().unwrap(),
                 case["detail"].as_str().unwrap().to_owned(),

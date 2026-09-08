@@ -101,10 +101,10 @@ fn identity_round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::{mutable_input, KINDS};
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_plugin_stdio::artifacts::avi::standards::v1_0::subsets::any::io::{decode_avi, encode_avi};
-    use semio_s_plugin_stdio::artifacts::avi::standards::v1_0::subsets::any::schema::mutations;
-    use semio_s_plugin_stdio::artifacts::avi::standards::v1_0::subsets::any::schema::mutations::{apply_avi_mutation, AviMutation};
-    use semio_s_plugin_stdio::artifacts::avi::standards::v1_0::subsets::any::schema::snapshot::{AviChunk, AviMainHeader, AviSnapshot, AviStream, AviStreamFormat, AviStreamHeader, RiffChunk, STDIO_AVI_DOCUMENT_SCHEMA};
+    use crate::standards::v1_0::subsets::any::io::{decode_avi, encode_avi};
+    use crate::standards::v1_0::subsets::any::schema::mutations;
+    use crate::standards::v1_0::subsets::any::schema::mutations::{apply_avi_mutation, AviMutation};
+    use crate::standards::v1_0::subsets::any::schema::snapshot::{AviChunk, AviMainHeader, AviSnapshot, AviStream, AviStreamFormat, AviStreamHeader, RiffChunk, STDIO_AVI_DOCUMENT_SCHEMA};
     use semio_s_plugin_stdio_test_oracle::artifacts::avi::standards::v1_0::subsets::any::project_avi_1_0;
 
     //#region 🔖️Hex

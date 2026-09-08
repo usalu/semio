@@ -1,0 +1,37 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/drawing/mutation/move-node.json",
+  "title": "MoveNode",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "at",
+    "newOrigin"
+  ],
+  "properties": {
+    "at": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "newOrigin": {
+      "title": "SemioPoint2",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y"
+      ],
+      "properties": {
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        }
+      }
+    }
+  }
+}

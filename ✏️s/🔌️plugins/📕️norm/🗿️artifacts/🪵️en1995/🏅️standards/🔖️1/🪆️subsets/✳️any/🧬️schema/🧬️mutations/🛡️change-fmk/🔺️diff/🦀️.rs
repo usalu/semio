@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeFMK, base: &En1995Snapshot) -> protocol::MutationOut
     if base.f_m_k == payload.new_f_m_k {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "Fmk already has this value.");
     }
-    protocol::MutationOutcome::new(En1995Diff { f_m_k: Some(payload.new_f_m_k.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1995Diff { f_m_k: Some(payload.new_f_m_k), ..Default::default() })
 }
 //#endregion 🔖️Diff

@@ -1,6 +1,8 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/svg/1.1/base/mutations.json",
   "title": "SvgMutation",
+  "description": "Discriminated union over this module's mutation leaves (adjacently tagged); every payload is the leaf's own schema, referenced, never restated.",
   "oneOf": [
     {
       "type": "object",
@@ -11,10 +13,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "set-declaration"
+          "const": "insertElement"
         },
         "payload": {
-          "$ref": "📣️set-declaration/🧬️.schema.json"
+          "$ref": "./📥️insert-element/🧬️schema/🔣️.json"
         }
       }
     },
@@ -27,10 +29,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "set-doctype"
+          "const": "removeElement"
         },
         "payload": {
-          "$ref": "📜️set-doctype/🧬️.schema.json"
+          "$ref": "./🗑️remove-element/🧬️schema/🔣️.json"
         }
       }
     },
@@ -43,10 +45,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "insert-element"
+          "const": "setAttribute"
         },
         "payload": {
-          "$ref": "📥️insert-element/🧬️.schema.json"
+          "$ref": "./🏷️set-attribute/🧬️schema/🔣️.json"
         }
       }
     },
@@ -59,10 +61,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "remove-element"
+          "const": "setDeclaration"
         },
         "payload": {
-          "$ref": "🗑️remove-element/🧬️.schema.json"
+          "$ref": "./📣️set-declaration/🧬️schema/🔣️.json"
         }
       }
     },
@@ -75,10 +77,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "set-element-name"
+          "const": "setDoctype"
         },
         "payload": {
-          "$ref": "🔤️set-element-name/🧬️.schema.json"
+          "$ref": "./📜️set-doctype/🧬️schema/🔣️.json"
         }
       }
     },
@@ -91,10 +93,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "set-attribute"
+          "const": "setElementName"
         },
         "payload": {
-          "$ref": "🏷️set-attribute/🧬️.schema.json"
+          "$ref": "./🔤️set-element-name/🧬️schema/🔣️.json"
         }
       }
     },
@@ -107,10 +109,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "set-text"
+          "const": "setText"
         },
         "payload": {
-          "$ref": "✍️set-text/🧬️.schema.json"
+          "$ref": "./✍️set-text/🧬️schema/🔣️.json"
         }
       }
     },
@@ -123,10 +125,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "set-view-box"
+          "const": "setTransform"
         },
         "payload": {
-          "$ref": "🖼️set-view-box/🧬️.schema.json"
+          "$ref": "./🔄️set-transform/🧬️schema/🔣️.json"
         }
       }
     },
@@ -139,10 +141,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "set-transform"
+          "const": "setViewBox"
         },
         "payload": {
-          "$ref": "🔄️set-transform/🧬️.schema.json"
+          "$ref": "./🖼️set-view-box/🧬️schema/🔣️.json"
         }
       }
     }

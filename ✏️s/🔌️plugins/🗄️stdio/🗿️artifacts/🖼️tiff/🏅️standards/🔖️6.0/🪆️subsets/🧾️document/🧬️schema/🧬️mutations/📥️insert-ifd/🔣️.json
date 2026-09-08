@@ -5,7 +5,7 @@
   "displayName": "Insert Ifd",
   "emoji": "📥️",
   "aggregateVariant": "InsertIfd",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "insert-ifd",
   "binaryTag": 3,
   "invertibility": "explicit-mutation",

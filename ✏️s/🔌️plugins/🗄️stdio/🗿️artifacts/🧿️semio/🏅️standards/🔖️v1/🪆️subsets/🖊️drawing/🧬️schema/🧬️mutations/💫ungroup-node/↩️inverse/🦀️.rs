@@ -1,9 +1,9 @@
 //! ↩️ Inverse for `UngroupNode`.
 
-use crate::artifacts::semio::standards::v1::subsets::drawing::schema::diff::node_at;
-use crate::artifacts::semio::standards::v1::subsets::drawing::schema::mutations::{SemioDrawingMutation, group_nodes};
-use crate::artifacts::semio::standards::v1::subsets::drawing::schema::mutations::delete_node::parent_and_index;
-use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{DrawNode, SemioDrawingSnapshot};
+use crate::standards::v1::subsets::drawing::schema::diff::node_at;
+use crate::standards::v1::subsets::drawing::schema::mutations::{SemioDrawingMutation, group_nodes};
+use crate::standards::v1::subsets::drawing::schema::mutations::delete_node::parent_and_index;
+use crate::standards::v1::subsets::drawing::schema::snapshot::{DrawNode, SemioDrawingSnapshot};
 
 //#region 🔖️Inverse
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

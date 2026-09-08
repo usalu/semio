@@ -5,7 +5,7 @@
 //! exists so `🪆️subsets/📏️strict/🧬️schema/` is present per `🔣️taxonomy.json`'s `subsetChildDirs`,
 //! without duplicating the schema definition.
 
-pub use crate::artifacts::docx::standards::v_ecma_376::subsets::base::schema::*;
+pub use crate::standards::v_ecma_376::subsets::base::schema::*;
 //#region 🧬️Mutations
 // 🧬️ This subset's OWN conformance-class vocabulary, mounted here rather than in the crate's shared
 // `🦀️.rs`: that file is one wiring file for every stdio artifact at once, and the rationale the
@@ -21,13 +21,13 @@ pub mod mutations;
 
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use crate::artifacts::docx::schema::snapshot::{DocxDocument, DocxParagraph, DocxRun};
+    use crate::schema::snapshot::{DocxDocument, DocxParagraph, DocxRun};
     #[cfg(test)]
-    use crate::artifacts::docx::schema::mutations::set_snapshot;
-    use crate::artifacts::docx::standards::v_ecma_376::subsets::strict::schema::{check_strict_conformance, STRICT_REL_BASE};
-    use crate::artifacts::docx::{DocxDiff, DocxMutation, DocxSnapshot};
-    use crate::artifacts::xml::schema::snapshot::{xml_document_to_text, XmlAttr, XmlDocument, XmlNode};
-    use crate::artifacts::zip::opc::{OpcPackage, RELS_CONTENT_TYPE};
+    use crate::schema::mutations::set_snapshot;
+    use crate::standards::v_ecma_376::subsets::strict::schema::{check_strict_conformance, STRICT_REL_BASE};
+    use crate::{DocxDiff, DocxMutation, DocxSnapshot};
+    use semio_s_artifact_stdio_xml::schema::snapshot::{xml_document_to_text, XmlAttr, XmlDocument, XmlNode};
+    use semio_s_artifact_stdio_zip::opc::{OpcPackage, RELS_CONTENT_TYPE};
     use dsl::{Diagnostic, Severity};
     use semio_framework_plugin::ArtifactBuilder;
 
@@ -66,7 +66,7 @@ pub mod derived_construction {
             .body
             .iter()
             .filter_map(|block| match block {
-                crate::artifacts::docx::schema::snapshot::DocxBlock::Paragraph(p) => Some(p),
+                crate::schema::snapshot::DocxBlock::Paragraph(p) => Some(p),
                 _ => None,
             })
             .map(|p| {
@@ -118,7 +118,7 @@ pub mod derived_construction {
         /// ➕️ Appends a paragraph, re-serializing the strict-namespaced `word/document.xml` part.
         // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn add_paragraph(mut self, paragraph: DocxParagraph) -> Self {
-            self.snapshot.document.body.push(crate::artifacts::docx::schema::snapshot::DocxBlock::Paragraph(paragraph));
+            self.snapshot.document.body.push(crate::schema::snapshot::DocxBlock::Paragraph(paragraph));
             self.snapshot = build_minimal_strict_docx(self.snapshot.document);
             self
         }
@@ -158,7 +158,7 @@ pub mod derived_construction {
         }
 
         fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
-            let diff = crate::artifacts::docx::schema::mutations::apply_docx_mutation(&mut self.snapshot, &mutation);
+            let diff = crate::schema::mutations::apply_docx_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
 
@@ -206,7 +206,7 @@ pub mod derived_construction {
             snapshot.opc.set_part("word/legacyDrawing.xml", "application/xml", b"<v:shape xmlns:v=\"urn:schemas-microsoft-com:vml\"/>".to_vec());
             let (mutated, _diff) = DocxStrictBuilderConstruction::from_snapshot(DocxSnapshot::default()).mutate(DocxMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }));
             let err = mutated.build().expect_err("VML content must fail build()");
-            assert!(err.iter().any(|d| d.code.0 == crate::artifacts::docx::standards::v_ecma_376::subsets::strict::schema::CODE_VML_PRESENT));
+            assert!(err.iter().any(|d| d.code.0 == crate::standards::v_ecma_376::subsets::strict::schema::CODE_VML_PRESENT));
         }
     }
 }
@@ -215,9 +215,9 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use crate::artifacts::docx::standards::v_ecma_376::subsets::base::schema::{DocxAnalyzer as DocxAnyAnalyzer, DocxParts};
-    use crate::artifacts::docx::DocxSnapshot;
-    use crate::artifacts::zip::opc::{resolve_relationship_target, OpcPackage, OpcPart};
+    use crate::standards::v_ecma_376::subsets::base::schema::{DocxAnalyzer as DocxAnyAnalyzer, DocxParts};
+    use crate::DocxSnapshot;
+    use semio_s_artifact_stdio_zip::opc::{resolve_relationship_target, OpcPackage, OpcPart};
     use dsl::{Diagnostic, FaultCode, FaultScope, Severity, TextSpan};
     use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
@@ -348,7 +348,7 @@ pub mod derived_analysis {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use crate::artifacts::zip::opc::{OpcPackage, RELS_CONTENT_TYPE, REL_TYPE_OFFICE_DOCUMENT};
+        use semio_s_artifact_stdio_zip::opc::{OpcPackage, RELS_CONTENT_TYPE, REL_TYPE_OFFICE_DOCUMENT};
 
         // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         fn strict_document_bytes() -> Vec<u8> {

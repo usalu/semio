@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeFanQVM3S, base: &Din16798Snapshot) -> protocol::Muta
     if base.fan_q_v_m3_s == payload.new_fan_q_v_m3_s {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Fan volume flow is already {}.", payload.new_fan_q_v_m3_s));
     }
-    protocol::MutationOutcome::new(Din16798Diff { fan_q_v_m3_s: Some(payload.new_fan_q_v_m3_s.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(Din16798Diff { fan_q_v_m3_s: Some(payload.new_fan_q_v_m3_s), ..Default::default() })
 }
 //#endregion 🔖️Diff

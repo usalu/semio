@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/las/1.0/header/mutation/set-system-identifier.json",
+  "title": "SetSystemIdentifier",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "systemIdentifier"
+  ],
+  "properties": {
+    "systemIdentifier": {
+      "type": "string"
+    },
+    "mutation": {
+      "const": "setSystemIdentifier",
+      "description": "Aggregate discriminator spliced in by LasMutation; absent when the payload stands alone."
+    }
+  }
+}

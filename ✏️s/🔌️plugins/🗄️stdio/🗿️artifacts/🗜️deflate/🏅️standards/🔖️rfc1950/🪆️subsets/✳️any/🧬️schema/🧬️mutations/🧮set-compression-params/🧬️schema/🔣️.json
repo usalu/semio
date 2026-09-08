@@ -1,0 +1,42 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/deflate/rfc1950/any/mutation/set-compression-params.json",
+  "title": "SetCompressionParams",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "method",
+    "window_bits",
+    "level_hint"
+  ],
+  "properties": {
+    "method": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 255
+    },
+    "window_bits": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 255
+    },
+    "level_hint": {
+      "$ref": "#/$defs/DeflateLevelHint"
+    },
+    "mutation": {
+      "const": "setCompressionParams",
+      "description": "Aggregate discriminator spliced in by DeflateMutation; absent when the payload stands alone."
+    }
+  },
+  "$defs": {
+    "DeflateLevelHint": {
+      "type": "string",
+      "enum": [
+        "fastest",
+        "fast",
+        "default",
+        "maximum"
+      ]
+    }
+  }
+}

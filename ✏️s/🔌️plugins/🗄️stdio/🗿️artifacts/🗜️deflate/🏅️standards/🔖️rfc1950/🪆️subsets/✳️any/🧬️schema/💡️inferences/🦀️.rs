@@ -8,8 +8,8 @@
 //! dishonest, so this facet instead derives real RFC1950 zlib HEADER semantics (CMF window size,
 //! FLG.FLEVEL, FDICT) that zip has no equivalent of at all.
 
-use crate::artifacts::deflate::standards::v_rfc1950::subsets::any::schema::snapshot::DeflateSnapshot;
-use schema::ArtifactSchema;
+use crate::standards::v_rfc1950::subsets::any::schema::snapshot::DeflateSnapshot;
+use framework_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 
 use super::window::{compute_deflate_window, DeflateWindow};
@@ -58,7 +58,7 @@ impl protocol::InferenceSpec<DeflateSnapshot> for DeflateInference {
 /// `payload`, already O(n) in payload size with no honest per-entity incremental decomposition (a
 /// merkle dep-chain over one flat `Vec<u8>` payload costs more than the fold it would cache) —
 /// the default `infer_cached` passthrough is exact.
-impl ArtifactInferrer for crate::artifacts::deflate::standards::v_rfc1950::subsets::any::schema::DeflateBuilder {
+impl ArtifactInferrer for crate::standards::v_rfc1950::subsets::any::schema::DeflateBuilder {
     type Snapshot = DeflateSnapshot;
     type Inference = DeflateInference;
 }
@@ -68,10 +68,10 @@ impl ArtifactInferrer for crate::artifacts::deflate::standards::v_rfc1950::subse
 /// 💡️ Registers `s.stdio.deflate.inference`'s facet leaves into the OS-wide inference catalog —
 /// call once at plugin init, alongside `deflate_artifact_schema_descriptor`'s registration.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn deflate_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
-    schema::ArtifactInferenceDescriptor {
+pub fn deflate_artifact_inference_descriptor() -> framework_schema::ArtifactInferenceDescriptor {
+    framework_schema::ArtifactInferenceDescriptor {
         id: "s.stdio.deflate.inference",
-        inference: schema::FacetLeaves {
+        inference: framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),
@@ -86,7 +86,7 @@ pub fn deflate_artifact_inference_descriptor() -> schema::ArtifactInferenceDescr
 //#region 🧪️Tests
 mod tests {
     use super::*;
-    use crate::artifacts::deflate::standards::v_rfc1950::subsets::any::schema::demo_deflate_snapshot;
+    use crate::standards::v_rfc1950::subsets::any::schema::demo_deflate_snapshot;
     use protocol::Inference;
 
     #[semio_framework_async_macros::async_test]
@@ -108,7 +108,7 @@ mod tests {
     /// `encode_diff` bytes, and the fixture-honesty round-trip.
     mod conformance_laws {
         use super::*;
-        use crate::artifacts::deflate::schema::{diff, mutations, snapshot};
+        use crate::schema::{diff, mutations, snapshot};
         use protocol::{DiffCodec, OpBinary, OpText};
 
         /// ✅️ "committed files parse": all 6 handcrafted `.grammar.semio`/`.protocol.semio` files
@@ -216,7 +216,7 @@ mod tests {
         #[cfg(not(target_arch = "wasm32"))]
         async fn schema_spec_registration_resolves() {
             use dsl::os_pack::cli::SchemaResolver;
-            crate::artifacts::deflate::standards::v_rfc1950::subsets::any::io::register_schema_specs();
+            crate::standards::v_rfc1950::subsets::any::io::register_schema_specs();
             let resolver = dsl::registry::full_resolver();
             assert!(resolver.await.resolve("stdio.deflate").await.is_some(), "stdio.deflate must resolve");
         }

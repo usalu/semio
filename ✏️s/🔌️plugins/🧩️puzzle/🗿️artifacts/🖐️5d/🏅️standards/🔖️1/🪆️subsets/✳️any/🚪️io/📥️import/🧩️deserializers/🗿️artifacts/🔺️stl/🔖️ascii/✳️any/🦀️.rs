@@ -1,6 +1,6 @@
 //! puzzle5d <- stl
 use crate::artifacts::puzzle5d::Puzzle5dSnapshot;
-use semio_s_plugin_stdio::artifacts::stl::{StlSnapshot, STDIO_STL_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_stl::{StlSnapshot, STDIO_STL_DOCUMENT_SCHEMA};
 
 pub fn register() {}
 

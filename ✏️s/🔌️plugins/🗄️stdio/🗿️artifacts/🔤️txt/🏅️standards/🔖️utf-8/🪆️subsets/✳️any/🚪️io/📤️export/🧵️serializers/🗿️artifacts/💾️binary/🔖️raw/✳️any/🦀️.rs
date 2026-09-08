@@ -1,7 +1,7 @@
 //! Serialize stdio.txt to stdio.binary.
 
-use crate::artifacts::binary::{BinarySnapshot, STDIO_BINARY_DOCUMENT_SCHEMA};
-use crate::artifacts::txt::TxtSnapshot;
+use semio_s_artifact_stdio_binary::{BinarySnapshot, STDIO_BINARY_DOCUMENT_SCHEMA};
+use crate::TxtSnapshot;
 
 //#region Codec
 /// Register serializer hooks.

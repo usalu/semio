@@ -7,6 +7,6 @@ use crate::artifacts::en1998::En1998Snapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(_payload: &ChangeSiloQNominal, base: &En1998Snapshot) -> Vec<En1998Mutation> {
-    vec![En1998Mutation::ChangeSiloQNominal(ChangeSiloQNominal { new_silo_q_nominal: base.silo_q_nominal.clone() })]
+    vec![En1998Mutation::ChangeSiloQNominal(ChangeSiloQNominal { new_silo_q_nominal: base.silo_q_nominal })]
 }
 //#endregion 🔖️Inverse

@@ -5,7 +5,7 @@
   "displayName": "Change Infiltration Discharge Coefficient",
   "emoji": "🚰️",
   "aggregateVariant": "ChangeInfiltrationDischargeCoefficient",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-infiltration-discharge-coefficient",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

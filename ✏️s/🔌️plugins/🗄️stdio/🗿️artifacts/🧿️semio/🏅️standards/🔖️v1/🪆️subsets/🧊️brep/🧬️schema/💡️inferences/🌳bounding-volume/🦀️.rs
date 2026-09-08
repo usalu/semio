@@ -14,7 +14,7 @@ pub mod spatial {
     //! `Bvh<FaceId>`/`Bvh<EdgeId>` internally) using only this file's own `engine::contract`'s `Vec3`/`Aabb`
     //! types, so this crate never depends on brep and stays reusable by other 3D kernels.
 
-    use crate::artifacts::semio::standards::v1::subsets::brep::schema::engine::{Aabb, Vec3};
+    use crate::standards::v1::subsets::brep::schema::engine::{Aabb, Vec3};
 
     // #region 🔖️AabbHelpers
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -416,14 +416,14 @@ pub mod spatial {
 
 // 🌳 B-Rep entity BVH adapters over `spatial::Bvh` (ray / AABB / nearest by leaf bounds).
 
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::inferences::mass_properties::closest_point_on_face;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::{EdgeId, FaceId, SolidId};
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::Curve3;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::error::KernelError;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::surface::Surface;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::Body;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::Pnt3;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::engine::{Aabb, Vec3};
+use crate::standards::v1::subsets::brep::schema::inferences::mass_properties::closest_point_on_face;
+use crate::standards::v1::subsets::brep::schema::snapshot::arena::{EdgeId, FaceId, SolidId};
+use crate::standards::v1::subsets::brep::schema::snapshot::curve::Curve3;
+use crate::standards::v1::subsets::brep::schema::snapshot::error::KernelError;
+use crate::standards::v1::subsets::brep::schema::snapshot::surface::Surface;
+use crate::standards::v1::subsets::brep::schema::snapshot::topology::Body;
+use crate::standards::v1::subsets::brep::schema::snapshot::vector::Pnt3;
+use crate::standards::v1::subsets::brep::schema::engine::{Aabb, Vec3};
 use spatial::Bvh;
 
 // #region 🔖️Bounds
@@ -702,13 +702,13 @@ impl SolidBvh {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::euler::{add_face, add_shell, add_solid, make_edge, make_loop, make_vertex};
-    use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::ArenaId;
-    use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::Curve3;
-    use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::surface::Surface;
-    use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::tolerance::Tol;
-    use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::history::OpRecorder;
-    use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Frame3;
+    use crate::standards::v1::subsets::brep::schema::diff::euler::{add_face, add_shell, add_solid, make_edge, make_loop, make_vertex};
+    use crate::standards::v1::subsets::brep::schema::snapshot::arena::ArenaId;
+    use crate::standards::v1::subsets::brep::schema::snapshot::curve::Curve3;
+    use crate::standards::v1::subsets::brep::schema::snapshot::surface::Surface;
+    use crate::standards::v1::subsets::brep::schema::snapshot::tolerance::Tol;
+    use crate::standards::v1::subsets::brep::schema::snapshot::topology::history::OpRecorder;
+    use crate::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Frame3;
     use std::collections::HashMap;
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9

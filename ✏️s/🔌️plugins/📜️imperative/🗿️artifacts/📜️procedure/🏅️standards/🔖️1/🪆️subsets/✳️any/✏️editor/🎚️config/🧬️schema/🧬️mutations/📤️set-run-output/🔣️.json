@@ -5,7 +5,7 @@
   "displayName": "Set Run Output",
   "emoji": "📤️",
   "aggregateVariant": "SetRunOutput",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "set-run-output",
   "binaryTag": 1,
   "invertibility": "explicit-mutation",

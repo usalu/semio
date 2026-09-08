@@ -1,8 +1,8 @@
-use crate::artifacts::semio::standards::v1::subsets::image::schema::diff::SemioImageDiff;
-use crate::artifacts::semio::standards::v1::subsets::image::schema::mutations::SemioImageMutation;
-use crate::artifacts::semio::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
+use crate::standards::v1::subsets::image::schema::diff::SemioImageDiff;
+use crate::standards::v1::subsets::image::schema::mutations::SemioImageMutation;
+use crate::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
 use protocol::Mutation;
-use crate::artifacts::semio::standards::v1::subsets::image::schema::mutations::set_frame_pixels;
+use crate::standards::v1::subsets::image::schema::mutations::set_frame_pixels;
 
 /// 🔺️ Diff helper for set-frame-pixels — an absent BASE frame `index` is `mutation.target-missing`
 /// (Error, empty diff). A `rgba8` buffer whose length does not match `base.width * base.height *

@@ -4,9 +4,9 @@
 //! slug dirs directly — `🦀️.rs` is the sole mounting mechanism, same as mutations); each named
 //! inference gets its own `<emoji><slug>/` child (currently: `🧾outline/`).
 
-use crate::artifacts::html::HtmlSnapshot;
+use crate::HtmlSnapshot;
 use protocol::Inference;
-use schema::ArtifactSchema;
+use framework_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 
 use super::outline::HtmlOutline;
@@ -52,7 +52,7 @@ impl protocol::InferenceSpec<HtmlSnapshot> for HtmlInference {
 //#endregion 🔖️Inference
 
 //#region 🔖️ArtifactInferrer
-impl ArtifactInferrer for crate::artifacts::html::standards::v5::subsets::any::schema::HtmlBuilder {
+impl ArtifactInferrer for crate::standards::v5::subsets::any::schema::HtmlBuilder {
     type Snapshot = HtmlSnapshot;
     type Inference = HtmlInference;
 }
@@ -62,10 +62,10 @@ impl ArtifactInferrer for crate::artifacts::html::standards::v5::subsets::any::s
 /// 💡️ Registers `s.stdio.html.inference`'s facet leaves into the OS-wide inference catalog —
 /// call once at plugin init, alongside `html_artifact_schema_descriptor`'s registration.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn html_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
-    schema::ArtifactInferenceDescriptor {
+pub fn html_artifact_inference_descriptor() -> framework_schema::ArtifactInferenceDescriptor {
+    framework_schema::ArtifactInferenceDescriptor {
         id: "s.stdio.html.inference",
-        inference: schema::FacetLeaves {
+        inference: framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),

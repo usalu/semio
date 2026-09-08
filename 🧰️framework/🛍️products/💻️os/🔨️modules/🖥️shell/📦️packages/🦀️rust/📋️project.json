@@ -3,7 +3,9 @@
   "$schema": "../../../../../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust",
   "namedInputs": {
-    "default": ["{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/**/*.rs", "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/🧫️fixtures/**/*", "{projectRoot}/**/*"]
+    "default": ["{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/**/*.rs", "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/🧬️schema/**/*", "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/🧫️fixtures/**/*", "{projectRoot}/**/*"],
+    "schemaModule": ["{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/🧬️schema/**/*", "{projectRoot}/Cargo.toml", "{projectRoot}/🦀️.rs", "{projectRoot}/📜️script.ts"],
+    "renderedMirror": ["{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/🤖️generated/**/*"]
   },
   "targets": {
     "check": {
@@ -47,7 +49,17 @@
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts typegen"
       },
+      "inputs": ["schemaModule"],
       "outputs": ["{projectRoot}/../../🤖️generated"]
+    },
+    "schema-check": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts schema-check"
+      },
+      "inputs": ["schemaModule", "renderedMirror"],
+      "outputs": []
     },
     "preview-generated": {
       "executor": "nx:run-commands",

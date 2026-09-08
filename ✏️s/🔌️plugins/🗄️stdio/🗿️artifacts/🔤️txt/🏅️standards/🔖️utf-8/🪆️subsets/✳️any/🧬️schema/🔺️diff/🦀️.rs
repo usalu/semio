@@ -2,14 +2,14 @@
 //! `lines` triple. No `snapshot: Option<TxtSnapshot>` full-replace slot anywhere, incl. SetSnapshot
 //! (its diff is `TxtDiff::between(base, next)`, field-by-field, same as every other mutation).
 
-use crate::artifacts::txt::TxtSnapshot;
-use crate::artifacts::txt::schema::snapshot::LineEnding;
+use crate::TxtSnapshot;
+use crate::schema::snapshot::LineEnding;
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
 // 🧭️ `DiffAlgebra` isn't yet on the `protocol` facade's curated re-export list (S1 added the
 // trait but the facade wasn't updated — see s1-spine-report.md) so it's reached via the
 // still-public `os_spr::command` path instead of touching that framework facade file.
 use protocol::os_spr::command::DiffAlgebra;
-use schema::ArtifactSchema;
+use framework_schema::ArtifactSchema;
 use std::collections::HashSet;
 
 //#region 🔖️LinesDiff
@@ -504,7 +504,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn diff_grammar_conformance_law() {
         use protocol::DiffCodec;
-        let grammar_text = crate::artifacts::txt::schema::diff::text::COMPONENT_GRAMMAR_SEMIO;
+        let grammar_text = crate::schema::diff::text::COMPONENT_GRAMMAR_SEMIO;
         let grammar = dsl::parse_grammar(grammar_text).expect("parse diff grammar");
         let recognizer = dsl::Recognizer::compile(&grammar);
 

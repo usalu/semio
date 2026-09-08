@@ -14,10 +14,10 @@
 //! geometry (flattened by walk order only, not by matrix) — same simplification the dxf↔drawing
 //! bridge's own entity walk makes.
 
-use crate::artifacts::dwg::schema::snapshot::DwgLogicalDrawing;
-use crate::artifacts::dwg::{paths_to_dwg_drawing, DwgColor, DwgDrawing, DwgEntity, DwgGeometry, DwgPathSegment, DwgSnapshot};
-use crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioPoint2;
-use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{DrawNode, PathSegment, SemioDrawingSnapshot};
+use semio_s_artifact_stdio_dwg::schema::snapshot::DwgLogicalDrawing;
+use semio_s_artifact_stdio_dwg::{paths_to_dwg_drawing, DwgColor, DwgDrawing, DwgEntity, DwgGeometry, DwgPathSegment, DwgSnapshot};
+use crate::standards::v1::subsets::base::schema::geometry::SemioPoint2;
+use crate::standards::v1::subsets::drawing::schema::snapshot::{DrawNode, PathSegment, SemioDrawingSnapshot};
 use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
 
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("drawing") };
@@ -98,9 +98,9 @@ impl ArtifactSerializer for SemioDrawingToDwg {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioTransform;
-    use crate::artifacts::semio::standards::v1::subsets::drawing::io::import::deserializers::artifacts::dwg::v_ac1024::any::SemioDrawingFromDwg;
-    use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::DrawLayer;
+    use crate::standards::v1::subsets::base::schema::geometry::SemioTransform;
+    use crate::standards::v1::subsets::drawing::io::import::deserializers::artifacts::dwg::v_ac1024::any::SemioDrawingFromDwg;
+    use crate::standards::v1::subsets::drawing::schema::snapshot::DrawLayer;
     use semio_framework_plugin::ArtifactDeserializer;
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9

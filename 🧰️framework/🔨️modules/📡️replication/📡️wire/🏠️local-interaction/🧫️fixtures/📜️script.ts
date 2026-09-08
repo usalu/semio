@@ -8,11 +8,11 @@ import { createHash } from "node:crypto";
 import leb from "@webassemblyjs/leb128/lib/leb.js";
 
 //#region 🧬️Contract
-const schema = await Bun.file(new URL("../🧬️schema/🏠️local-interaction/🔣️.schema.json", import.meta.url)).json();
-const fixtureSchema = await Bun.file(new URL("./🏠️local-interaction/🧬️.schema.json", import.meta.url)).json();
+const schema = await Bun.file(new URL("../🧬️schema/🔣️.json", import.meta.url)).json();
+const fixtureSchema = schema;
 const fixture = await Bun.file(new URL("./🏠️local-interaction/🔣️.json", import.meta.url)).json();
 const ajv = new Ajv({ strict: true, allErrors: true }).addSchema(schema);
-const validate = ajv.compile(fixtureSchema);
+const validate = ajv.getSchema(`${schema.$id}#/$defs/LocalInteractionFixture`)!;
 assert(validate(fixture), JSON.stringify(validate.errors));
 assert.equal(new Set(fixture.cases.map((row: any) => row.id)).size, fixture.cases.length);
 const { applyLocalInteractionRestoreCold, localInteractionIdentityEquals } = await import("../🟦️.ts");
@@ -77,7 +77,7 @@ console.log(`[DEBUG] Local-interaction source cases=${fixture.cases.length} host
 
 //#region 🌳️RetainedRootContract
 const rootFixture = await Bun.file(new URL("../🌳️root/🧫️fixture/🔣️.json", import.meta.url)).json();
-const rootSchema = await Bun.file(new URL("../🌳️root/📐️schema/🔣️.json", import.meta.url)).json();
+const rootSchema = await Bun.file(new URL("../🌳️root/🧬️schema/🔣️.json", import.meta.url)).json();
 const validateRoot = ajv.compile(rootSchema);
 assert(validateRoot(rootFixture), JSON.stringify(validateRoot.errors));
 for (const invalid of [
@@ -103,7 +103,7 @@ console.log(`[DEBUG] Local-interaction retained-root oracle=lodash+immer bytes=$
 
 //#region 🩹️RetainedUpdateContract
 const updateFixture = await Bun.file(new URL("../🌳️root/🩹️update/🧫️fixture/🔣️.json", import.meta.url)).json();
-const updateSchema = await Bun.file(new URL("../🌳️root/🩹️update/📐️schema/🔣️.json", import.meta.url)).json();
+const updateSchema = await Bun.file(new URL("../🌳️root/🩹️update/🧬️schema/🔣️.json", import.meta.url)).json();
 const validateUpdate = ajv.compile(updateSchema);
 assert(validateUpdate(updateFixture), JSON.stringify(validateUpdate.errors));
 for (const field of ["partialCandidateReadable", "cancelPublishesCandidate", "comparisonBytesAreRetiredBytes", "zeroGrantMutates"]) assert(!validateUpdate({ ...updateFixture, [field]: true }));
@@ -143,8 +143,8 @@ console.log("[DEBUG] Interaction mutation leaf schema=actual-four-field-stored-s
 
 //#region ♻️RetirementContract
 const retirement = await Bun.file(new URL("./♻️retirement/🔣️.json", import.meta.url)).json();
-const retirementSchema = await Bun.file(new URL("./♻️retirement/🧬️.schema.json", import.meta.url)).json();
-const validateRetirement = ajv.compile(retirementSchema);
+const retirementSchema = schema;
+const validateRetirement = ajv.addSchema(schema).getSchema(`${schema.$id}#/$defs/RetirementFixture`)!;
 assert(validateRetirement(retirement), JSON.stringify(validateRetirement.errors));
 for (const row of retirement.cases) {
   const source = fixture.cases.find((value: any) => value.id === row.sourceCase)[row.sourceField];
@@ -166,8 +166,8 @@ console.log(`[DEBUG] Local-interaction retirement source cases=${retirement.case
 
 //#region 📃️QueryContract
 const query = await Bun.file(new URL("./📃️query/🔣️.json", import.meta.url)).json();
-const querySchema = await Bun.file(new URL("./📃️query/🧬️.schema.json", import.meta.url)).json();
-const validateQuery = ajv.compile(querySchema);
+const querySchema = schema;
+const validateQuery = ajv.getSchema(`${schema.$id}#/$defs/QueryFixture`)!;
 assert(validateQuery(query), JSON.stringify(validateQuery.errors));
 assert.equal(`{"first":${JSON.stringify(query.partialError.first)},"second":`, query.partialError.expectedPrefix);
 assert.equal(Buffer.byteLength(query.partialError.expectedPrefix), new TextEncoder().encode(query.partialError.expectedPrefix).length);
@@ -198,8 +198,8 @@ console.log(`[DEBUG] Local-interaction query source cases=${query.sourceCases.le
 
 //#region 🔐️TopologyInputAuthority
 const topologyAuthority = await Bun.file(new URL("./🔐️topology-authority/🔣️.json", import.meta.url)).json();
-const topologyAuthoritySchema = await Bun.file(new URL("./🔐️topology-authority/🧬️.schema.json", import.meta.url)).json();
-const validateTopologyAuthority = ajv.compile(topologyAuthoritySchema);
+const topologyAuthoritySchema = schema;
+const validateTopologyAuthority = ajv.addSchema(schema).getSchema(`${schema.$id}#/$defs/TopologyAuthorityFixture`)!;
 assert(validateTopologyAuthority(topologyAuthority), JSON.stringify(validateTopologyAuthority.errors));
 for (const row of topologyAuthority.cases) {
   const generation = Buffer.alloc(8); generation.writeBigUInt64LE(BigInt(row.uiGeneration));
@@ -213,9 +213,9 @@ console.log(`[DEBUG] Local-interaction topology input-authority source cases=${t
 
 //#region 📡️TransportCodec
 const transport = await Bun.file(new URL("../📡️transport/🧫️fixtures/🔣️.json", import.meta.url)).json();
-const transportFixtureSchema = await Bun.file(new URL("../📡️transport/📐️schema/🔣️.json", import.meta.url)).json();
+const transportFixtureSchema = await Bun.file(new URL("../📡️transport/🧬️schema/🔣️.json", import.meta.url)).json();
 const transportSchema = await Bun.file(new URL("../📡️transport/🧬️schema/🔣️.json", import.meta.url)).json();
-const validateTransportFixture = ajv.compile(transportFixtureSchema);
+const validateTransportFixture = ajv.addSchema(transportFixtureSchema).getSchema(`${transportFixtureSchema.$id}#/$defs/TransportFixture`)!;
 const validateTransport = ajv.compile(transportSchema);
 assert(validateTransportFixture(transport), JSON.stringify(validateTransportFixture.errors));
 const wire = await import("../📡️transport/🟦️.ts");

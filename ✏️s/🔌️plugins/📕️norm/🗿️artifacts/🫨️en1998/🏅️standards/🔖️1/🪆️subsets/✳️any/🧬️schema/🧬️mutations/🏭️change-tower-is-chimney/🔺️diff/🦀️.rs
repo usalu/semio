@@ -9,6 +9,6 @@ pub fn diff(payload: &ChangeTowerIsChimney, base: &En1998Snapshot) -> protocol::
     if base.tower_is_chimney == payload.new_tower_is_chimney {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Tower-is-chimney flag is already {}.", payload.new_tower_is_chimney));
     }
-    protocol::MutationOutcome::new(En1998Diff { tower_is_chimney: Some(payload.new_tower_is_chimney.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1998Diff { tower_is_chimney: Some(payload.new_tower_is_chimney), ..Default::default() })
 }
 //#endregion 🔖️Diff

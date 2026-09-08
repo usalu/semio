@@ -17,9 +17,9 @@
 //!   guessed `Heading` (guessing heading level from a style NAME string would be fabrication, not
 //!   honest extraction).
 
-use crate::artifacts::docx::schema::snapshot::{DocxBlock, DocxParagraph, DocxRun, DocxTable};
-use crate::artifacts::docx::DocxSnapshot;
-use crate::artifacts::semio::standards::v1::subsets::document::schema::snapshot::{DocBlock, DocRun, DocStyle, DocTableCell, DocTableRow, RunStyle, SemioDocumentSnapshot, STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_docx::schema::snapshot::{DocxBlock, DocxParagraph, DocxRun, DocxTable};
+use semio_s_artifact_stdio_docx::DocxSnapshot;
+use crate::standards::v1::subsets::document::schema::snapshot::{DocBlock, DocRun, DocStyle, DocTableCell, DocTableRow, RunStyle, SemioDocumentSnapshot, STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId};
 
 //#region 🔖️FieldMapping
@@ -74,8 +74,8 @@ impl ArtifactDeserializer for SemioDocumentFromDocx {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::docx::schema::snapshot::{DocxDocument, DocxStyle, DocxTableCell, DocxTableRow};
-    use crate::artifacts::zip::opc::OpcPackage;
+    use semio_s_artifact_stdio_docx::schema::snapshot::{DocxDocument, DocxStyle, DocxTableCell, DocxTableRow};
+    use semio_s_artifact_stdio_zip::opc::OpcPackage;
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(crate) fn sample_docx() -> DocxSnapshot {

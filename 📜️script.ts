@@ -30,6 +30,7 @@ import {
   fixedDirectoryContractIdsForPath,
   fixedFilenameContractIdsForPath,
   loadTaxonomy,
+  resolveSchemaFacetKind,
   schemaFacetFormatEntries,
   semanticDirectoryKindId,
   enforceCoverageThreshold,
@@ -107,6 +108,12 @@ import {
   parseGeneratorInputProjection,
   generatorProjectedInputView,
   registryCatalogInputView,
+  inventorySchemaScopes,
+  renderSchemaCatalog,
+  renderSchemaCatalogDocument,
+  renderSchemaCheckReport,
+  type SchemaScopeDiagnostic,
+  type SchemaScopeInventory,
   loadCatalogTaxonomy,
   resolveWorkspaceTaxonomyAuthority,
   validateTaxonomy,
@@ -773,6 +780,11 @@ export function resolveNxInvocation(segments: string[]): { args: string[]; env: 
     if (selected.length) throw new Error("Report targets accept no compiler arguments");
     if (report[2] && !catalog.documents.some(document => document.id === report[2])) throw new Error(`Unknown report document: ${report[2]}`);
     return { args: ["run", target, ...options], env: {}, ...(report[1] === "watch" && !options.some(argument => /^--(?:graph|help)(?:=|$)/.test(argument)) ? { watch: target.replace(":watch", ":build") } : {}) };
+  }
+  const demonstratorPreparation = target?.match(/^@semio-tech\/mit-bestand-demonstrator:prepare-(dev|release)$/);
+  if (demonstratorPreparation) {
+    if (selected.length) throw new Error("Demonstrator preparation targets accept no compiler arguments");
+    return { args: segments, env: { SEMIO_BUILD_MODE: demonstratorPreparation[1] === "release" ? "ship" : "dev", SEMIO_RENDERER: "react" } };
   }
   const preparation = target?.match(/^@semio-tech\/framework-os-dev:(prepare|activate|serve|dev)-(.+)-react-(dev|release)$/);
   if (preparation) return { args: segments, env: { SEMIO_BUILD_MODE: preparation[3] === "release" ? "ship" : "dev", SEMIO_PLUGIN: preparation[2], SEMIO_RENDERER: "react" }, ...(preparation[1] === "dev" && !options.some((argument) => /^--(?:graph|help)(?:=|$)/.test(argument)) ? { watch: `@semio-tech/framework-os-dev:activate-${preparation[2]}-react-${preparation[3]}` } : {}) };
@@ -4167,7 +4179,7 @@ function toolJobRasterEnvelopeCallerRetainedExact(store: string, raster: string,
   const rasterMountedOutputEntryPoints = (raster.match(/pub fn serialize_bytes\(snapshot: &RasterSnapshot\) -> Result<Vec<u8>, String> \{/g) ?? []).length;
   const rasterMountedPixelComposites = (raster.match(/raster_composite_image\(snapshot\)/g) ?? []).length;
   const rasterMountedPixelDialects = (raster.match(/semio_image_to_format\(&image, /g) ?? []).length;
-  const rasterMountedStdioEncoders = (raster.match(/semio_s_plugin_stdio::artifacts::[A-Za-z0-9_:]*io::encode_[a-z0-9]+\(/g) ?? []).length;
+  const rasterMountedStdioEncoders = (raster.match(/semio_s_artifact_stdio_[a-z0-9_]*::[A-Za-z0-9_:]*io::encode_[a-z0-9]+\(/g) ?? []).length;
   const rasterMountedVectorComposites = (raster.match(/raster_document_json_to_svg\(snapshot\)/g) ?? []).length;
   const rasterMountedTypedDeclines = (raster.match(/Err\(RASTER_(?:PDF|DWG)_EXPORT_UNSUPPORTED\.to_string\(\)\)/g) ?? []).length;
   const rasterMountedOutputGuards = (raster.match(/snapshot\.require_empty_output_shell\(\)\.map_err\(str::to_owned\)\?;/g) ?? []).length;
@@ -8304,9 +8316,9 @@ async fn publish_mounted_typed_operation_unit() {
     "RasterOwnedRetirement::new(RasterRetirementOwner::AssetEntry { key: rejected_asset.key, child: Some(rejected_asset.value) })",
     ...["bmp", "png", "tiff", "jpg"].map(
       (format) =>
-        `pub fn serialize_bytes(snapshot: &RasterSnapshot) -> Result<Vec<u8>, String> { let image = raster_composite_image(snapshot)?; let target = semio_image_to_format(&image, ${format.toUpperCase()}_DIALECT)?; semio_s_plugin_stdio::artifacts::${format}::io::encode_${format}(&target) }`,
+        `pub fn serialize_bytes(snapshot: &RasterSnapshot) -> Result<Vec<u8>, String> { let image = raster_composite_image(snapshot)?; let target = semio_image_to_format(&image, ${format.toUpperCase()}_DIALECT)?; semio_s_artifact_stdio_${format}::io::encode_${format}(&target) }`,
     ),
-    "pub fn serialize_bytes(snapshot: &RasterSnapshot) -> Result<Vec<u8>, String> { let image = raster_composite_image(snapshot)?; let gif89a = semio_image_to_format(&image, GIF89A_DIALECT)?; semio_s_plugin_stdio::artifacts::gif::standards::v87a::subsets::any::io::encode_gif(&gif87a::from_89a(&gif89a)) }",
+    "pub fn serialize_bytes(snapshot: &RasterSnapshot) -> Result<Vec<u8>, String> { let image = raster_composite_image(snapshot)?; let gif89a = semio_image_to_format(&image, GIF89A_DIALECT)?; semio_s_artifact_stdio_gif::standards::v87a::subsets::any::io::encode_gif(&gif87a::from_89a(&gif89a)) }",
     "pub fn serialize_bytes(snapshot: &RasterSnapshot) -> Result<Vec<u8>, String> { let (svg, _width, _height) = crate::artifacts::raster::io::raster_document_json_to_svg(snapshot)?; Ok(svg.into_bytes()) }",
     'pub const RASTER_PDF_EXPORT_UNSUPPORTED: &str = "pdf export not supported for a raster document";',
     "pub fn serialize_bytes(snapshot: &RasterSnapshot) -> Result<Vec<u8>, String> { let _ = snapshot; Err(RASTER_PDF_EXPORT_UNSUPPORTED.to_string()) }",
@@ -8465,7 +8477,7 @@ async fn publish_mounted_typed_operation_unit() {
     }
 }`;
   if (toolJobRasterEnvelopeCallerRetainedExact(retainedJackStore, `${retainedRasterCodec}\n${restoredRasterWriteParamsLoop}`, retainedRasterEditor, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Raster-snapshot-pack-parameter-map-whole-loop-restoration was falsely accepted.");
-  if (toolJobRasterEnvelopeCallerRetainedExact(retainedJackStore, retainedRasterCodec.replace("semio_s_plugin_stdio::artifacts::png::io::encode_png(&target)", "Ok(<RasterSnapshot as store::ArtifactDsl>::print_dsl(snapshot).into_bytes())"), retainedRasterEditor, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Raster-mounted-exporter-DSL-print-under-foreign-extension-restoration was falsely accepted.");
+  if (toolJobRasterEnvelopeCallerRetainedExact(retainedJackStore, retainedRasterCodec.replace("semio_s_artifact_stdio_png::io::encode_png(&target)", "Ok(<RasterSnapshot as store::ArtifactDsl>::print_dsl(snapshot).into_bytes())"), retainedRasterEditor, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Raster-mounted-exporter-DSL-print-under-foreign-extension-restoration was falsely accepted.");
   if (toolJobRasterEnvelopeCallerRetainedExact(retainedJackStore, retainedRasterCodec.replace("let image = raster_composite_image(snapshot)?;", "let image = SemioImage::default();"), retainedRasterEditor, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Raster-mounted-exporter-document-composite-bypass was falsely accepted.");
   if (toolJobRasterEnvelopeCallerRetainedExact(retainedJackStore, retainedRasterCodec.replace("crate::artifacts::raster::io::raster_document_json_to_svg(snapshot)?", 'Ok::<_, String>((String::from("<svg/>"), 0u32, 0u32))?'), retainedRasterEditor, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Raster-mounted-vector-exporter-composite-removal was falsely accepted.");
   if (toolJobRasterEnvelopeCallerRetainedExact(retainedJackStore, retainedRasterCodec.replace("Err(RASTER_PDF_EXPORT_UNSUPPORTED.to_string())", "Ok(Vec::new())"), retainedRasterEditor, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Raster-mounted-exporter-silent-empty-output-instead-of-typed-decline was falsely accepted.");
@@ -22712,6 +22724,146 @@ class CleanMechanismNewScript extends Script {
 }
 //#endregion 🔖️CleanMechanismNewScript
 
+//#region 🔖️SchemaScript
+/** 🧬️ Scope-owned schema contracts: catalog generation, invariant checking and the generated index. */
+export class SchemaScript extends Script {
+  run(segments: string[]): void {
+    const sub = segments[0];
+    const rest = segments.slice(1);
+    if (sub === "generate") return this.generate(rest);
+    if (sub === "check") return this.check(rest);
+    if (sub === "verify") return this.verify();
+    if (sub === "audit") return this.audit(rest);
+    if (sub === "docs") return this.docs();
+    if (sub === "test") {
+      runCmd("bun", ["🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📜️script.ts", "test", "schema", ...rest], { cwd: this.root });
+      return;
+    }
+    throw new Error(`unknown schema subcommand: ${JSON.stringify(sub)} (expected audit | check | docs | generate | test | verify).`);
+  }
+
+  private inventory(): SchemaScopeInventory {
+    return inventorySchemaScopes(this.root, loadCatalogTaxonomy());
+  }
+
+  private catalogPath(): string {
+    return loadCatalogTaxonomy().schemaExportResolution.catalogPath;
+  }
+
+  private documentPath(): string {
+    return loadCatalogTaxonomy().schemaExportResolution.catalogDocumentPath;
+  }
+
+  /** 📇️ Rewrites the derived scope catalog from the schema modules on disk. */
+  private generate(args: string[]): void {
+    const inventory = this.inventory();
+    const rel = this.catalogPath();
+    const rendered = renderSchemaCatalog(inventory.catalog);
+    const abs = join(this.root, rel);
+    if (args.includes("--check")) {
+      const current = existsSync(abs) ? readFileSync(abs, "utf8") : "";
+      if (current !== rendered) {
+        console.error(`[schema generate] ${rel} is stale; run bun ./📜️script.ts schema generate.`);
+        process.exit(1);
+      }
+      console.log(`[schema generate] ${rel} is current (${Object.keys(inventory.catalog.scopes).length} scopes).`);
+      return;
+    }
+    writeFileSync(abs, rendered);
+    console.log(`[schema generate] ${rel}: ${Object.keys(inventory.catalog.scopes).length} scopes, ${inventory.diagnostics.length} diagnostics.`);
+  }
+
+  /** 🚦️ Reports every scope invariant violation as stable JSON lines plus a summary. */
+  private check(args: string[]): void {
+    const inventory = this.inventory();
+    const rel = this.catalogPath();
+    const abs = join(this.root, rel);
+    const findings: SchemaScopeDiagnostic[] = [...inventory.diagnostics, ...inventory.placement];
+    const rendered = renderSchemaCatalog(inventory.catalog);
+    if (!existsSync(abs)) findings.push({ code: "catalog-absent", path: rel, detail: "Run bun ./📜️script.ts schema generate." });
+    else if (readFileSync(abs, "utf8") !== rendered) findings.push({ code: "catalog-stale", path: rel, detail: "The catalog does not match the schema modules on disk." });
+    const sorted = findings.slice().sort((left, right) => Buffer.from(left.path).compare(Buffer.from(right.path)) || Buffer.from(left.code).compare(Buffer.from(right.code)) || Buffer.from(left.detail).compare(Buffer.from(right.detail)));
+    const reportIndex = args.indexOf("--report");
+    if (reportIndex >= 0) {
+      const target = args[reportIndex + 1];
+      if (!target) throw new Error("[schema check] --report requires a path.");
+      const path = isAbsolute(target) ? target : join(this.root, target);
+      mkdirSync(dirname(path), { recursive: true });
+      writeFileSync(path, renderSchemaCheckReport(sorted));
+      console.log(`[schema check] wrote ${sorted.length} findings to ${target}`);
+    } else for (const finding of sorted) console.log(JSON.stringify(finding));
+    const counts = new Map<string, number>();
+    for (const finding of sorted) counts.set(finding.code, (counts.get(finding.code) ?? 0) + 1);
+    console.log(`[schema check] modules=${inventory.modules.length} scopes=${Object.keys(inventory.catalog.scopes).length} findings=${sorted.length}`);
+    for (const [code, count] of [...counts].sort(([left], [right]) => left.localeCompare(right))) console.log(`[schema check] ${code}=${count}`);
+    if (sorted.length > 0) process.exit(1);
+  }
+
+  /** 🔒️ Proves the tracked catalog and index are exactly what the current sources render. */
+  private verify(): void {
+    const inventory = this.inventory();
+    const stale: string[] = [];
+    for (const [rel, rendered] of [[this.catalogPath(), renderSchemaCatalog(inventory.catalog)], [this.documentPath(), renderSchemaCatalogDocument(inventory.catalog)]] as const) {
+      const abs = join(this.root, rel);
+      if (!existsSync(abs) || readFileSync(abs, "utf8") !== rendered) stale.push(rel);
+    }
+    const catalog = existsSync(join(this.root, this.catalogPath())) ? JSON.parse(readFileSync(join(this.root, this.catalogPath()), "utf8")) as { generator?: string; taxonomySchemaVersion?: number } : null;
+    if (catalog && (catalog.generator !== inventory.catalog.generator || catalog.taxonomySchemaVersion !== inventory.catalog.taxonomySchemaVersion)) stale.push(`${this.catalogPath()} (provenance)`);
+    if (stale.length > 0) {
+      console.error(`[schema verify] stale generated output: ${stale.join(", ")}. Run bun ./📜️script.ts schema generate && bun ./📜️script.ts schema docs.`);
+      process.exit(1);
+    }
+    console.log(`[schema verify] catalog and index are current (${Object.keys(inventory.catalog.scopes).length} scopes, generator ${inventory.catalog.generator}).`);
+  }
+
+  /** 📊️ Writes the full scope/diagnostic evidence pair into a report directory. */
+  private audit(args: string[]): void {
+    const outIndex = args.indexOf("--out");
+    const target = args[outIndex + 1];
+    if (outIndex < 0 || !target) throw new Error("[schema audit] --out <directory> is required.");
+    const directory = isAbsolute(target) ? target : join(this.root, target);
+    mkdirSync(directory, { recursive: true });
+    const inventory = this.inventory();
+    const findings = [...inventory.diagnostics, ...inventory.placement];
+    const counts = new Map<string, number>();
+    for (const finding of findings) counts.set(finding.code, (counts.get(finding.code) ?? 0) + 1);
+    const byLevel = new Map<string, number>();
+    for (const module of inventory.modules) byLevel.set(module.level ?? "(ineligible)", (byLevel.get(module.level ?? "(ineligible)") ?? 0) + 1);
+    writeFileSync(join(directory, "📊️schema-audit.json"), `${JSON.stringify({ catalog: inventory.catalog, modules: inventory.modules.map(({ modulePath, ownerPath, level, facetKindId, scopeId }) => ({ modulePath, ownerPath, level, facetKindId, scopeId })), findings }, null, 2)}\n`);
+    const lines = [
+      "# 🧬️ Schema scope audit",
+      "",
+      `- modules: \`${inventory.modules.length}\``,
+      `- catalogued scopes: \`${Object.keys(inventory.catalog.scopes).length}\``,
+      `- findings: \`${findings.length}\``,
+      "",
+      "## Modules per declared level",
+      "",
+      "| Level | Modules |",
+      "| --- | --- |",
+      ...[...byLevel].sort(([left], [right]) => left.localeCompare(right)).map(([level, count]) => `| ${level} | ${count} |`),
+      "",
+      "## Findings per code",
+      "",
+      "| Code | Findings |",
+      "| --- | --- |",
+      ...[...counts].sort(([left], [right]) => left.localeCompare(right)).map(([code, count]) => `| \`${code}\` | ${count} |`),
+      "",
+    ];
+    writeFileSync(join(directory, "📓️schema-audit.md"), lines.join("\n"));
+    console.log(`[schema audit] ${inventory.modules.length} modules, ${findings.length} findings -> ${target}`);
+  }
+
+  /** 📓️ Rewrites the Markdown scope/export index beside the catalog. */
+  private docs(): void {
+    const inventory = this.inventory();
+    const rel = this.documentPath();
+    writeFileSync(join(this.root, rel), renderSchemaCatalogDocument(inventory.catalog));
+    console.log(`[schema docs] ${rel}: ${Object.keys(inventory.catalog.scopes).length} scopes.`);
+  }
+}
+//#endregion 🔖️SchemaScript
+
 //#region 🔖️Dispatch
 const router = new ScriptRouter(WORKSPACE_ROOT, WORKSPACE_ROOT)
   .register("os", OsScript)
@@ -22739,6 +22891,7 @@ const router = new ScriptRouter(WORKSPACE_ROOT, WORKSPACE_ROOT)
     },
   )
   .register("new", CleanMechanismNewScript)
+  .register("schema", SchemaScript)
   .register("lint", LintScript)
   .register("verify", VerifyScript)
   .register("format", FormatScript)
@@ -26127,11 +26280,13 @@ export function policyEmojiPrefixBreaches(repoRoot: string): BreachRecord[] {
 }
 
 /**
- * 🔌️ Every plugin owner under `✏️s/🔌️plugins/` must carry its contract leaf and facets directly at its root.
+ * 🔌️ Every plugin owner under `✏️s/🔌️plugins/` must carry its contract leaf and every REQUIRED facet directly
+ * at its root. `pluginChildDirs` is the ADMITTED set (`policyPluginClosedShapeBreaches` reads it, and it now
+ * admits the plugin-root `🧬️schema` scope); `pluginRequiredChildDirs` is the set every plugin owes.
  */
 function policyPluginRootShapeBreaches(repoRoot: string): BreachRecord[] {
   const taxonomy = loadTaxonomy();
-  const children = taxonomy.pluginChildDirs;
+  const children = taxonomy.pluginRequiredChildDirs;
   const pluginsRoot = "✏️s/🔌️plugins";
   const breaches: BreachRecord[] = [];
   for (const entry of policyReaddirSafe(repoRoot, pluginsRoot)) {
@@ -26169,7 +26324,7 @@ function policyPluginRootShapeBreaches(repoRoot: string): BreachRecord[] {
           kind: "taxonomy/plugin-root-shape",
           scope: ownerRel,
           priority: "high",
-          reason: `${child} is a required direct plugin-root facet (taxonomy.pluginChildDirs).`,
+          reason: `${child} is a required direct plugin-root facet (taxonomy.pluginRequiredChildDirs).`,
           solution: `Add ${ownerRel}/${child}/${POLICY_RS_COMPONENT_LEAF_NAME}.`,
         });
       }
@@ -27644,7 +27799,7 @@ export function policyOsConfigShapeBreaches(repoRoot: string): BreachRecord[] {
     });
     return breaches;
   }
-  for (const format of schemaFacetFormatEntries(repoRoot, schemaRel, taxonomy).map(([, f]) => f)) {
+  for (const format of schemaFacetFormatEntries(schemaRel, taxonomy).map(([, f]) => f)) {
     const leafFilename = canonicalFilenameForKind(format.fileKindId, taxonomy);
     if (existsSync(join(repoRoot, schemaRel, leafFilename))) continue;
     breaches.push({
@@ -29575,7 +29730,7 @@ function policyInferenceFamilyRootCompletenessBreaches(repoRoot: string): Breach
   const breaches: BreachRecord[] = [];
   for (const inferencesRel of policyFindAllInferencesDirs(repoRoot)) {
     const artRel = policyArtifactRootOfInferencesDir(inferencesRel);
-    const rootLeaves = schemaFacetFormatEntries(repoRoot, inferencesRel, taxonomy).map(([, format]) => canonicalFilenameForKind(format.fileKindId, taxonomy));
+    const rootLeaves = schemaFacetFormatEntries(inferencesRel, taxonomy).map(([, format]) => canonicalFilenameForKind(format.fileKindId, taxonomy));
     for (const leaf of rootLeaves) {
       const rel = `${inferencesRel}/${leaf}`;
       if (existsSync(join(repoRoot, rel))) continue;
@@ -29885,64 +30040,6 @@ export type PolicySchemaLeafExtract = {
 /** 🧭️§2 facet paths relative to an artifact root. */
 const POLICY_SCHEMA_FACET_RELS = ["🧬️schema", "📸️snapshot/🧬️schema", "🔺️diff/🧬️schema"] as const;
 
-/** 🏷️§10 prefix table keyed by `policyStripEmoji(plugin)/policyStripEmoji(artifact)`. */
-const POLICY_ARTIFACT_SCHEMA_PREFIXES: Readonly<Record<string, string>> = {
-  "writer/writer": "Writer",
-  "mathematical/equation": "Equation",
-  "procedural/generation2d": "Generation2d",
-  "procedural/generation3d": "Generation3d",
-  "flow/flow": "Flow",
-  "gis/gisterrain": "GisTerrain",
-  "gis/gismap": "GisMap",
-  "vcs/vcs": "Vcs",
-  "animate/presentation": "Presentation",
-  "shooting/shooting": "Shooting",
-  "demonstrator/playground": "Playground",
-  "sequence/sequence": "Sequence",
-  "fem/2d": "Fem2d",
-  "fem/3d": "Fem3d",
-  "architect/program": "Program",
-  "process/process3d": "Process3d",
-  "lowpoly/lowpoly": "Lowpoly",
-  "reasoning/wires": "Wires",
-  "forms/forms": "Forms",
-  "layout/layout": "Layout",
-  "cad/cad": "Cad",
-  "norm/iso16757": "Iso16757",
-  "norm/vdi3805": "Vdi3805",
-  "norm/din4108": "Din4108",
-  "norm/din16798": "Din16798",
-  "norm/en1990": "En1990",
-  "norm/en1991": "En1991",
-  "norm/en1992": "En1992",
-  "norm/en1993": "En1993",
-  "norm/en1994": "En1994",
-  "norm/en1995": "En1995",
-  "norm/en1996": "En1996",
-  "norm/en1997": "En1997",
-  "norm/en1998": "En1998",
-  "norm/en1999": "En1999",
-  "norm/din18599": "Din18599",
-  "playbook/playbook": "Playbook",
-  "imperative/imperative": "Imperative",
-  "remodel/remodel": "Remodel",
-  "energy/model": "EnergyModel",
-  "trinity/rewriting": "Rewriting",
-  "trinity/jack": "Jack",
-  "dag/dag": "Dag",
-  "draw/drawing": "Drawing",
-  "raster/raster": "Raster",
-  "note/note": "Note",
-  "puzzle/2d": "Puzzle2d",
-  "puzzle/5d": "Puzzle5d",
-  "puzzle/3d": "Puzzle3d",
-  "block/2d": "Block2d",
-  "block/5d": "Block5d",
-  "block/3d": "Block3d",
-  "space/home": "SHome",
-  "sourcing/curate": "Curate",
-};
-
 /** 🔤Normalize state-class tokens to kebab (persistent / shared-ui / …). */
 function policyCanonicalState(raw: string): string {
   return raw.trim().toLowerCase().replace(/_/g, "-");
@@ -29970,55 +30067,45 @@ function policyCanonicalScalar(raw: string): string {
   return table[t] ?? t;
 }
 
-/** 🏷️§10 prefix for an artifact rel path, or null when the artifact is absent from the table. */
-function policyArtifactSchemaPrefix(artRel: string): string | null {
-  const parts = artRel.replaceAll("\\", "/").split("/");
-  const artifactsIdx = parts.indexOf("🗿️artifacts");
-  if (artifactsIdx < 1 || artifactsIdx + 1 >= parts.length) return null;
-  const plugin = policyStripEmoji(parts[artifactsIdx - 1] ?? "");
-  const artifact = policyStripEmoji(parts[artifactsIdx + 1] ?? "");
-  return POLICY_ARTIFACT_SCHEMA_PREFIXES[`${plugin}/${artifact}`] ?? null;
-}
-
-/** 🏷️Expected type name for a facet path given prefix X. */
-function policyExpectedSchemaTypeName(prefix: string, facetRel: string): string {
-  if (facetRel === "🧬️schema") return `${prefix}Artifact`;
-  if (facetRel === "📸️snapshot/🧬️schema") return `${prefix}Snapshot`;
-  return `${prefix}Diff`;
+/**
+ * 🏷️ The export id one schema facet declares: the `title` of its normative JSON Schema, which is also the
+ * root export the generated `🔣️schema-catalog.json` catalogues for that scope. There is no prefix table and
+ * no name derived from a path — a facet that declares no export id is a breach, never a silent skip.
+ */
+function policyDeclaredSchemaExportName(repoRoot: string, facetRel: string): string | null {
+  const taxonomy = loadTaxonomy();
+  const format = taxonomy.schemaFormats[taxonomy.schemaFacetKinds![resolveSchemaFacetKind(facetRel, taxonomy)]!.normativeFormat]!;
+  const abs = join(repoRoot, facetRel, canonicalPrimaryFilenameForKind(format.fileKindId, taxonomy));
+  if (!existsSync(abs)) return null;
+  try {
+    const parsed = JSON.parse(readFileSync(abs, "utf8")) as { title?: unknown };
+    return typeof parsed.title === "string" && parsed.title ? parsed.title : null;
+  } catch {
+    return null;
+  }
 }
 
 /**
- * 🔎Locate the declaration a schema leaf is expected to carry, by name rather than by position.
- * Helper types may legally precede the facet type in a leaf, so scanning for the first declaration
- * would silently compare the wrong body; when `expected` is absent or undeclared the first
- * declaration is returned so the type-name-parity rule still reports the mismatch.
+ * 🔎Locate the declaration a schema leaf is expected to carry, strictly by name. Helper types may legally
+ * precede the facet type in a leaf, so there is no positional fallback: an absent `expected` (the facet
+ * declares no export id) and an `expected` the leaf never declares both resolve to nothing, and the
+ * type-name-parity rule reports the leaf as missing its declared export.
  */
 function policyFindSchemaDeclaration(
   text: string,
   declRe: RegExp,
   expected: string | null,
 ): { typeName: string; bodyStart: number } | null {
+  if (!expected) return null;
   const re = new RegExp(declRe.source, declRe.flags.includes("g") ? declRe.flags : `${declRe.flags}g`);
-  let first: { typeName: string; bodyStart: number } | null = null;
   let m: RegExpExecArray | null;
   while ((m = re.exec(text))) {
-    const found = { typeName: m[1]!, bodyStart: m.index + m[0].length };
-    first ??= found;
-    if (expected && found.typeName === expected) return found;
+    if (m[1] === expected) return { typeName: m[1]!, bodyStart: m.index + m[0].length };
   }
-  return first;
+  return null;
 }
 
-/** 🏷️Expected type name for a facet path such as `…/🗿️artifacts/X/📸️snapshot/🧬️schema`. */
-function policyExpectedSchemaTypeNameForFacetPath(facetAbs: string): string | null {
-  const rel = facetAbs.replaceAll("\\", "/");
-  const facetRel = [...POLICY_SCHEMA_FACET_RELS]
-    .sort((a, b) => b.length - a.length)
-    .find((f) => rel.endsWith(`/${f}`));
-  if (!facetRel) return null;
-  const prefix = policyArtifactSchemaPrefix(rel.slice(0, rel.length - facetRel.length - 1));
-  return prefix ? policyExpectedSchemaTypeName(prefix, facetRel) : null;
-}
+
 
 /** 🧩Parse Rust type into optional/cardinality/scalar. */
 function policyParseRustFieldType(typeText: string): Pick<PolicySchemaFieldShape, "optional" | "cardinality" | "scalar"> {
@@ -30334,9 +30421,9 @@ function policyLoadSchemaFacetLeaves(
   facetRel: string,
 ): { formatId: string; leafFilename: string; fieldCasing: string; relPath: string; extract: PolicySchemaLeafExtract | null }[] {
   const taxonomy = loadTaxonomy();
-  const expected = policyExpectedSchemaTypeNameForFacetPath(facetRel);
+  const expected = policyDeclaredSchemaExportName(repoRoot, facetRel);
   const out: { formatId: string; leafFilename: string; fieldCasing: string; relPath: string; extract: PolicySchemaLeafExtract | null }[] = [];
-  for (const [formatId, format] of schemaFacetFormatEntries(repoRoot, facetRel, taxonomy)) {
+  for (const [formatId, format] of schemaFacetFormatEntries(facetRel, taxonomy)) {
     const leafFilename = canonicalFilenameForKind(format.fileKindId, taxonomy);
     const relPath = `${facetRel}/${leafFilename}`;
     const abs = join(repoRoot, relPath);
@@ -30397,7 +30484,7 @@ function policyArtifactSchemaFacetCompletenessBreaches(repoRoot: string): Breach
         });
         continue;
       }
-      for (const [formatId, format] of schemaFacetFormatEntries(repoRoot, facetAbs, taxonomy)) {
+      for (const [formatId, format] of schemaFacetFormatEntries(facetAbs, taxonomy)) {
         const leafFilename = canonicalFilenameForKind(format.fileKindId, taxonomy);
         const leafRel = `${facetAbs}/${leafFilename}`;
         if (existsSync(join(repoRoot, leafRel))) continue;
@@ -30618,54 +30705,41 @@ function policyArtifactSchemaDiffCoverageBreaches(repoRoot: string): BreachRecor
 }
 
 /**
- * 📏️Type-name parity: XArtifact / XSnapshot / XDiff spelled identically across all five leaves of their facet.
+ * 📏️Type-name parity: the export id the facet's normative JSON Schema declares (`title`, the same root
+ * export `🔣️schema-catalog.json` catalogues) is spelled identically in all five leaves of that facet.
  */
 function policyArtifactSchemaTypeNameParityBreaches(repoRoot: string): BreachRecord[] {
   const breaches: BreachRecord[] = [];
   for (const artRel of policyListPluginArtifactDirs(repoRoot)) {
-    const prefix = policyArtifactSchemaPrefix(artRel);
-    if (!prefix) {
-      breaches.push({
-        id: `artifact-schema-prefix-unknown-${artRel}`,
-        summary: `"${artRel}" has no §10 schema type prefix mapping`,
-        kind: "artifact-schema/type-name-parity",
-        scope: artRel,
-        priority: "high",
-        reason: "Type-name parity derives the expected XArtifact/XSnapshot/XDiff names from the normative §10 prefix table — never by guessing.",
-        solution: `Add a prefix entry for this artifact to POLICY_ARTIFACT_SCHEMA_PREFIXES in 📜️script.ts (see normative-spec §10).`,
-      });
-      continue;
-    }
     for (const facetRel of POLICY_SCHEMA_FACET_RELS) {
       const facetAbs = `${artRel}/${facetRel}`;
       if (!existsSync(join(repoRoot, facetAbs))) continue;
-      const expected = policyExpectedSchemaTypeName(prefix, facetRel);
+      const expected = policyDeclaredSchemaExportName(repoRoot, facetAbs);
+      if (!expected) {
+        breaches.push({
+          id: `artifact-schema-export-undeclared-${facetAbs}`,
+          summary: `"${facetAbs}" declares no export id in its normative JSON Schema`,
+          kind: "artifact-schema/type-name-parity",
+          scope: artRel,
+          priority: "high",
+          reason: "A scope names its exports itself: the facet's JSON Schema title is the root export id every other format must spell.",
+          solution: `Declare the PascalCase root export as "title" in ${facetAbs}/${canonicalPrimaryFilenameForKind(loadTaxonomy().schemaFormats["🔣️jsonschema"]!.fileKindId)}.`,
+        });
+        continue;
+      }
       const leaves = policyLoadSchemaFacetLeaves(repoRoot, facetAbs);
       for (const leaf of leaves) {
         if (!leaf.extract) continue;
-        if (!leaf.extract.typeName) {
-          breaches.push({
-            id: `artifact-schema-type-name-missing-${leaf.relPath}`,
-            summary: `"${leaf.relPath}" does not declare top-level type ${expected}`,
-            kind: "artifact-schema/type-name-parity",
-            scope: artRel,
-            priority: "high",
-            reason: `Every leaf of facet ${facetRel} must declare the same top-level type name ${expected}.`,
-            solution: `Declare ${expected} as the top-level type in ${leaf.relPath}.`,
-          });
-          continue;
-        }
-        if (leaf.extract.typeName !== expected) {
-          breaches.push({
-            id: `artifact-schema-type-name-${leaf.relPath}`,
-            summary: `"${leaf.relPath}" declares ${leaf.extract.typeName} but §10 expects ${expected}`,
-            kind: "artifact-schema/type-name-parity",
-            scope: artRel,
-            priority: "high",
-            reason: `Type-name parity requires ${expected} in all five leaves of ${facetRel} (prefix ${prefix} from §10).`,
-            solution: `Rename the top-level type in ${leaf.relPath} to ${expected}.`,
-          });
-        }
+        if (leaf.extract.typeName === expected) continue;
+        breaches.push({
+          id: `artifact-schema-type-name-missing-${leaf.relPath}`,
+          summary: `"${leaf.relPath}" does not declare the facet export ${expected}`,
+          kind: "artifact-schema/type-name-parity",
+          scope: artRel,
+          priority: "high",
+          reason: `Every leaf of facet ${facetRel} must declare the export id its JSON Schema title names (${expected}).`,
+          solution: `Declare ${expected} as the top-level type in ${leaf.relPath}.`,
+        });
       }
     }
   }
@@ -30853,7 +30927,7 @@ function policyAppSchemaFacetCompletenessBreaches(repoRoot: string): BreachRecor
         });
         continue;
       }
-      for (const [formatId, format] of schemaFacetFormatEntries(repoRoot, facetAbs, taxonomy)) {
+      for (const [formatId, format] of schemaFacetFormatEntries(facetAbs, taxonomy)) {
         const leafFilename = canonicalFilenameForKind(format.fileKindId, taxonomy);
         const leafRel = `${facetAbs}/${leafFilename}`;
         if (existsSync(join(repoRoot, leafRel))) continue;
@@ -31892,7 +31966,7 @@ function policySchemaFormatLeafBreaches(
   taxonomy: ReturnType<typeof loadTaxonomy>,
 ): BreachRecord[] {
   const breaches: BreachRecord[] = [];
-  for (const [formatId, format] of schemaFacetFormatEntries(repoRoot, facetAbs, taxonomy)) {
+  for (const [formatId, format] of schemaFacetFormatEntries(facetAbs, taxonomy)) {
     const leafFilename = canonicalFilenameForKind(format.fileKindId, taxonomy);
     const leafRel = `${facetAbs}/${leafFilename}`;
     if (existsSync(join(repoRoot, leafRel))) continue;

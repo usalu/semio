@@ -10,6 +10,9 @@
 //! `semio_framework_3d::rigid` (vectors/points/quaternions/isometries) and
 //! `semio_framework_3d::collision` (BVH triangle-mesh intersection + winding-number containment).
 
+/// 🗃️ Fixed-capacity storage for owned map entries.
+type FixedOwnerMapPage<K, V, const N: usize> = Box<[Option<(K, V)>; N]>;
+
 use crate::artifacts::puzzle3d::schema::{Quat, Vec3, WorldVolumeProps};
 use semio_framework_3d::{collision, rigid};
 use std::borrow::Borrow;
@@ -108,7 +111,7 @@ impl<T, const N: usize> Drop for FixedOwnerVec<T, N> {
 
 #[derive(Debug)]
 pub(crate) struct FixedOwnerMap<K, V, const N: usize = FIXED_OWNER_SLOTS> {
-    page: Option<Box<[Option<(K, V)>; N]>>,
+    page: Option<FixedOwnerMapPage<K, V, N>>,
     len: usize,
 }
 

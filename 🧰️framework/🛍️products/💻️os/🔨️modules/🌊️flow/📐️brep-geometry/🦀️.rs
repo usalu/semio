@@ -8,7 +8,7 @@
 
 use base64::Engine;
 use neural_engine::{Atom, Cardinality, ChannelSpec, Dictionary, EvalError, FieldSpec, Operator, OperatorImpl, OperatorInfo, Registry, Schema, Value, ValueType};
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::{Brep, BrepKernel, GeometryHandle, GeometryKind, ParamDomain, PointClassification, Vec3};
+use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::engine::{Brep, BrepKernel, GeometryHandle, GeometryKind, ParamDomain, PointClassification, Vec3};
 use std::collections::{HashMap, HashSet};
 use std::sync::{Mutex, OnceLock, RwLock};
 
@@ -50,14 +50,14 @@ pub fn evict_mesh_cache_for_handle(handle: &str) {
 // #region 🔖️Helpers
 pub fn with_kernel<T>(f: impl FnOnce(&mut Brep) -> Result<T, EvalError>) -> Result<T, EvalError> {
     let mut guard = kernel().write().map_err(|_| EvalError::InvalidInput("brep kernel lock poisoned".into()))?;
-    f(&mut **guard)
+    f(&mut guard)
 }
 
 /// 🔓️ Read-only kernel access — lets concurrent queries (tessellate, volume, closest-point, …)
 /// proceed in parallel with each other while still serializing against mutating operations.
 pub fn with_kernel_read<T>(f: impl FnOnce(&Brep) -> Result<T, EvalError>) -> Result<T, EvalError> {
     let guard = kernel().read().map_err(|_| EvalError::InvalidInput("brep kernel lock poisoned".into()))?;
-    f(&**guard)
+    f(&guard)
 }
 
 pub fn kind_label(kind: GeometryKind) -> &'static str {
@@ -233,7 +233,7 @@ pub fn encode_base64(data: &[u8]) -> String {
     base64::engine::general_purpose::STANDARD.encode(data)
 }
 
-pub fn map_kernel_error(error: semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::BrepError) -> EvalError {
+pub fn map_kernel_error(error: semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::engine::BrepError) -> EvalError {
     EvalError::InvalidInput(error.to_string())
 }
 
@@ -451,7 +451,7 @@ pub fn text_schema() -> Schema {
 #[derive(Debug)]
 pub enum BrepModuleError {
     LockPoisoned,
-    Kernel(semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::BrepError),
+    Kernel(semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::engine::BrepError),
     Codec(EvalError),
     Mesh(String),
     UnsupportedExportFormat(String),
@@ -485,8 +485,8 @@ impl std::error::Error for BrepModuleError {
     }
 }
 
-impl From<semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::BrepError> for BrepModuleError {
-    fn from(error: semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::BrepError) -> Self {
+impl From<semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::engine::BrepError> for BrepModuleError {
+    fn from(error: semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::engine::BrepError) -> Self {
         Self::Kernel(error)
     }
 }
@@ -521,7 +521,7 @@ pub fn tessellate_geometry(handle: &str, tolerance: f64) -> Result<semio_framewo
         let geometry = GeometryHandle(handle.to_string());
         guard.tessellate(&geometry, tolerance).map_err(|error| error.to_string())?
     };
-    let data = semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::mesh_data_from_mesh_transfer(&mesh);
+    let data = semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::engine::mesh_data_from_mesh_transfer(&mesh);
     if let Ok(mut cache) = mesh_cache().lock() {
         cache.insert(key, data.clone());
     }
@@ -605,7 +605,7 @@ pub fn export_glb_via_tessellation(kernel: &Brep, shapes: &[GeometryHandle], def
     let mut merged = semio_framework::MeshData::default();
     for shape in shapes {
         let transfer = kernel.tessellate(shape, deflection)?;
-        let mesh = semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::mesh_data_from_mesh_transfer(&transfer);
+        let mesh = semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::engine::mesh_data_from_mesh_transfer(&transfer);
         let offset = (merged.positions.len() / 3) as u32;
         merged.positions.extend(mesh.positions);
         merged.normals.extend(mesh.normals);
@@ -724,7 +724,7 @@ fn unit_result() -> crate::os_pack::json::Value {
     crate::os_pack::json::object([])
 }
 
-fn topology_result(topology: semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::BrepTopology) -> crate::os_pack::json::Value {
+fn topology_result(topology: semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::engine::BrepTopology) -> crate::os_pack::json::Value {
     let handle_array = |handles: Vec<GeometryHandle>| crate::os_pack::json::array(handles.into_iter().map(|handle| crate::os_pack::json::Value::String(handle.0)));
     crate::os_pack::json::object([
         ("vertices".to_string(), handle_array(topology.vertices)),
@@ -734,7 +734,7 @@ fn topology_result(topology: semio_s_plugin_stdio::artifacts::semio::standards::
     ])
 }
 
-fn mesh_result(mesh: &semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::MeshTransfer) -> crate::os_pack::json::Value {
+fn mesh_result(mesh: &semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::engine::MeshTransfer) -> crate::os_pack::json::Value {
     crate::os_pack::json::from_dsl_value(&crate::os_dsl::ToValue::to_value(mesh))
 }
 

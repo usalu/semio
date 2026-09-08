@@ -1,0 +1,24 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/puzzle/5d/1/any/mutation/move-part3d.json",
+  "title": "MovePart3d",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newOrigin"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "newOrigin": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      },
+      "minItems": 3,
+      "maxItems": 3
+    }
+  }
+}

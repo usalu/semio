@@ -1,342 +1,158 @@
 {
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://semio.tech/schema/s/block/block3d/mutation.json",
   "title": "Block3dMutation",
   "description": "One of 37 semantic mutation kinds — see x-mutation-kind on each $def.",
   "oneOf": [
     {
-      "$ref": "#/$defs/RenameObjectKind"
+      "$ref": "./🔩add-attribute/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/ChangeObjectKindLabel"
+      "$ref": "./👤add-author/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/ChangeObjectKindVariant"
+      "$ref": "./➕add-compatibility-rule/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/ChangeObjectKindDescription"
+      "$ref": "./🧩add-representation-attribute/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/ChangeObjectKindIcon"
+      "$ref": "./🔖add-representation-tag/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/ChangeObjectKindUnit"
+      "$ref": "./💬change-meta-description/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/CreateRepresentation"
+      "$ref": "./📃️change-object-kind-description/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/DeleteRepresentation"
+      "$ref": "./🖼️change-object-kind-icon/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/RenameRepresentation"
+      "$ref": "./🏷️change-object-kind-label/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/ChangeRepresentationMeshUrl"
+      "$ref": "./📐change-object-kind-unit/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/ChangeRepresentationLod"
+      "$ref": "./🔀️change-object-kind-variant/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/ChangeRepresentationDescription"
+      "$ref": "./📜change-representation-description/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/AddRepresentationTag"
+      "$ref": "./🏔️change-representation-lod/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/RemoveRepresentationTag"
+      "$ref": "./🌐change-representation-mesh-url/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/AddRepresentationAttribute"
+      "$ref": "./🎨change-vortex-kind-color/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/RemoveRepresentationAttribute"
+      "$ref": "./🔌change-vortex-kind-default-cable-kind/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/CreateVortexKind"
+      "$ref": "./🎫change-vortex-kind-label/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/DeleteVortexKind"
+      "$ref": "./🪧change-vortex-label/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/RenameVortexKind"
+      "$ref": "./🧷change-vortex-vortex-kind/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/ChangeVortexKindLabel"
+      "$ref": "./🧱create-representation/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/ChangeVortexKindColor"
+      "$ref": "./🌀create-vortex/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/ChangeVortexKindDefaultCableKind"
+      "$ref": "./🌱create-vortex-kind/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/CreateVortex"
+      "$ref": "./🗑️delete-representation/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/DeleteVortex"
+      "$ref": "./🕳️delete-vortex/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/MoveVortex"
+      "$ref": "./❌delete-vortex-kind/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/ResizeVortex"
+      "$ref": "./🎥move-camera3d/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/ChangeVortexVortexKind"
+      "$ref": "./📍move-vortex/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/ChangeVortexLabel"
+      "$ref": "./🚷remove-attribute/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/AddCompatibilityRule"
+      "$ref": "./🙅remove-author/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/RemoveCompatibilityRule"
+      "$ref": "./✂️remove-compatibility-rule/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/AddAttribute"
+      "$ref": "./➖remove-representation-attribute/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/RemoveAttribute"
+      "$ref": "./🚫remove-representation-tag/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/AddAuthor"
+      "$ref": "./✏️rename-object-kind/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/RemoveAuthor"
+      "$ref": "./✒️rename-representation/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/MoveCamera3d"
+      "$ref": "./🖋️rename-vortex-kind/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/ScaleCamera3d"
+      "$ref": "./📏resize-vortex/🧬️schema/🔣️.json"
     },
     {
-      "$ref": "#/$defs/ChangeMetaDescription"
+      "$ref": "./🔍scale-camera3d/🧬️schema/🔣️.json"
     }
   ],
-  "$defs": {
-    "RenameObjectKind": {
-      "title": "RenameObjectKind",
-      "type": "object",
-      "x-mutation-kind": "rename-object-kind",
-      "additionalProperties": true
-    },
-    "ChangeObjectKindLabel": {
-      "title": "ChangeObjectKindLabel",
-      "type": "object",
-      "x-mutation-kind": "change-object-kind-label",
-      "additionalProperties": true
-    },
-    "ChangeObjectKindVariant": {
-      "title": "ChangeObjectKindVariant",
-      "type": "object",
-      "x-mutation-kind": "change-object-kind-variant",
-      "additionalProperties": true
-    },
-    "ChangeObjectKindDescription": {
-      "title": "ChangeObjectKindDescription",
-      "type": "object",
-      "x-mutation-kind": "change-object-kind-description",
-      "additionalProperties": true
-    },
-    "ChangeObjectKindIcon": {
-      "title": "ChangeObjectKindIcon",
-      "type": "object",
-      "x-mutation-kind": "change-object-kind-icon",
-      "additionalProperties": true
-    },
-    "ChangeObjectKindUnit": {
-      "title": "ChangeObjectKindUnit",
-      "type": "object",
-      "x-mutation-kind": "change-object-kind-unit",
-      "additionalProperties": true
-    },
-    "CreateRepresentation": {
-      "title": "CreateRepresentation",
-      "type": "object",
-      "x-mutation-kind": "create-representation",
-      "additionalProperties": true
-    },
-    "DeleteRepresentation": {
-      "title": "DeleteRepresentation",
-      "type": "object",
-      "x-mutation-kind": "delete-representation",
-      "additionalProperties": true
-    },
-    "RenameRepresentation": {
-      "title": "RenameRepresentation",
-      "type": "object",
-      "x-mutation-kind": "rename-representation",
-      "additionalProperties": true
-    },
-    "ChangeRepresentationMeshUrl": {
-      "title": "ChangeRepresentationMeshUrl",
-      "type": "object",
-      "x-mutation-kind": "change-representation-mesh-url",
-      "additionalProperties": true
-    },
-    "ChangeRepresentationLod": {
-      "title": "ChangeRepresentationLod",
-      "type": "object",
-      "x-mutation-kind": "change-representation-lod",
-      "additionalProperties": true
-    },
-    "ChangeRepresentationDescription": {
-      "title": "ChangeRepresentationDescription",
-      "type": "object",
-      "x-mutation-kind": "change-representation-description",
-      "additionalProperties": true
-    },
-    "AddRepresentationTag": {
-      "title": "AddRepresentationTag",
-      "type": "object",
-      "x-mutation-kind": "add-representation-tag",
-      "additionalProperties": true
-    },
-    "RemoveRepresentationTag": {
-      "title": "RemoveRepresentationTag",
-      "type": "object",
-      "x-mutation-kind": "remove-representation-tag",
-      "additionalProperties": true
-    },
-    "AddRepresentationAttribute": {
-      "title": "AddRepresentationAttribute",
-      "type": "object",
-      "x-mutation-kind": "add-representation-attribute",
-      "additionalProperties": true
-    },
-    "RemoveRepresentationAttribute": {
-      "title": "RemoveRepresentationAttribute",
-      "type": "object",
-      "x-mutation-kind": "remove-representation-attribute",
-      "additionalProperties": true
-    },
-    "CreateVortexKind": {
-      "title": "CreateVortexKind",
-      "type": "object",
-      "x-mutation-kind": "create-vortex-kind",
-      "additionalProperties": true
-    },
-    "DeleteVortexKind": {
-      "title": "DeleteVortexKind",
-      "type": "object",
-      "x-mutation-kind": "delete-vortex-kind",
-      "additionalProperties": true
-    },
-    "RenameVortexKind": {
-      "title": "RenameVortexKind",
-      "type": "object",
-      "x-mutation-kind": "rename-vortex-kind",
-      "additionalProperties": true
-    },
-    "ChangeVortexKindLabel": {
-      "title": "ChangeVortexKindLabel",
-      "type": "object",
-      "x-mutation-kind": "change-vortex-kind-label",
-      "additionalProperties": true
-    },
-    "ChangeVortexKindColor": {
-      "title": "ChangeVortexKindColor",
-      "type": "object",
-      "x-mutation-kind": "change-vortex-kind-color",
-      "additionalProperties": true
-    },
-    "ChangeVortexKindDefaultCableKind": {
-      "title": "ChangeVortexKindDefaultCableKind",
-      "type": "object",
-      "x-mutation-kind": "change-vortex-kind-default-cable-kind",
-      "additionalProperties": true
-    },
-    "CreateVortex": {
-      "title": "CreateVortex",
-      "type": "object",
-      "x-mutation-kind": "create-vortex",
-      "additionalProperties": true
-    },
-    "DeleteVortex": {
-      "title": "DeleteVortex",
-      "type": "object",
-      "x-mutation-kind": "delete-vortex",
-      "additionalProperties": true
-    },
-    "MoveVortex": {
-      "title": "MoveVortex",
-      "type": "object",
-      "x-mutation-kind": "move-vortex",
-      "additionalProperties": true
-    },
-    "ResizeVortex": {
-      "title": "ResizeVortex",
-      "type": "object",
-      "x-mutation-kind": "resize-vortex",
-      "additionalProperties": true
-    },
-    "ChangeVortexVortexKind": {
-      "title": "ChangeVortexVortexKind",
-      "type": "object",
-      "x-mutation-kind": "change-vortex-vortex-kind",
-      "additionalProperties": true
-    },
-    "ChangeVortexLabel": {
-      "title": "ChangeVortexLabel",
-      "type": "object",
-      "x-mutation-kind": "change-vortex-label",
-      "additionalProperties": true
-    },
-    "AddCompatibilityRule": {
-      "title": "AddCompatibilityRule",
-      "type": "object",
-      "x-mutation-kind": "add-compatibility-rule",
-      "additionalProperties": true
-    },
-    "RemoveCompatibilityRule": {
-      "title": "RemoveCompatibilityRule",
-      "type": "object",
-      "x-mutation-kind": "remove-compatibility-rule",
-      "additionalProperties": true
-    },
-    "AddAttribute": {
-      "title": "AddAttribute",
-      "type": "object",
-      "x-mutation-kind": "add-attribute",
-      "additionalProperties": true
-    },
-    "RemoveAttribute": {
-      "title": "RemoveAttribute",
-      "type": "object",
-      "x-mutation-kind": "remove-attribute",
-      "additionalProperties": true
-    },
-    "AddAuthor": {
-      "title": "AddAuthor",
-      "type": "object",
-      "x-mutation-kind": "add-author",
-      "additionalProperties": true
-    },
-    "RemoveAuthor": {
-      "title": "RemoveAuthor",
-      "type": "object",
-      "x-mutation-kind": "remove-author",
-      "additionalProperties": true
-    },
-    "MoveCamera3d": {
-      "title": "MoveCamera3d",
-      "type": "object",
-      "x-mutation-kind": "move-camera3d",
-      "additionalProperties": true
-    },
-    "ScaleCamera3d": {
-      "title": "ScaleCamera3d",
-      "type": "object",
-      "x-mutation-kind": "scale-camera3d",
-      "additionalProperties": true
-    },
-    "ChangeMetaDescription": {
-      "title": "ChangeMetaDescription",
-      "type": "object",
-      "x-mutation-kind": "change-meta-description",
-      "additionalProperties": true
-    }
-  }
+  "x-semio-mutationKinds": [
+    "add-attribute",
+    "add-author",
+    "add-compatibility-rule",
+    "add-representation-attribute",
+    "add-representation-tag",
+    "change-meta-description",
+    "change-object-kind-description",
+    "change-object-kind-icon",
+    "change-object-kind-label",
+    "change-object-kind-unit",
+    "change-object-kind-variant",
+    "change-representation-description",
+    "change-representation-lod",
+    "change-representation-mesh-url",
+    "change-vortex-kind-color",
+    "change-vortex-kind-default-cable-kind",
+    "change-vortex-kind-label",
+    "change-vortex-label",
+    "change-vortex-vortex-kind",
+    "create-representation",
+    "create-vortex",
+    "create-vortex-kind",
+    "delete-representation",
+    "delete-vortex",
+    "delete-vortex-kind",
+    "move-camera3d",
+    "move-vortex",
+    "remove-attribute",
+    "remove-author",
+    "remove-compatibility-rule",
+    "remove-representation-attribute",
+    "remove-representation-tag",
+    "rename-object-kind",
+    "rename-representation",
+    "rename-vortex-kind",
+    "resize-vortex",
+    "scale-camera3d"
+  ]
 }

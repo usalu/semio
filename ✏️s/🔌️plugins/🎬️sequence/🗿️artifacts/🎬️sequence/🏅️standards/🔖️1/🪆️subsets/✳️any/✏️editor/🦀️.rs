@@ -2632,7 +2632,7 @@ pub fn create_sequence_app() -> AppDefinition {
             // — `Editor::builder(...)` has no such methods, and `PluginBuilder::editor::<E>(def)`
             // wraps `def` in `App { definition: def, examples: Vec::new() }`, discarding `App.examples`
             // even if it were populated. The subset's own `📚️examples/🎬️demo` facet (mounted at the
-            // plugin root as `examples::art_sequence_demo`) is the closest surviving carrier of this
+            // plugin root as `artifacts::sequence::examples::demo`) is the closest surviving carrier of this
             // content today.
             .build_definition()
 }

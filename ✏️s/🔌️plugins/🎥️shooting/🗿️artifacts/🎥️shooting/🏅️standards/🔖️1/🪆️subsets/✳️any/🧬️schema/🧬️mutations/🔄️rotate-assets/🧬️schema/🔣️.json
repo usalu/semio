@@ -1,0 +1,34 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/shooting/shooting/1/any/mutation/rotate-assets.json",
+  "title": "RotateAssets",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "angle",
+    "assetIds",
+    "ax",
+    "ay",
+    "az"
+  ],
+  "properties": {
+    "assetIds": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "ax": {
+      "type": "number"
+    },
+    "ay": {
+      "type": "number"
+    },
+    "az": {
+      "type": "number"
+    },
+    "angle": {
+      "type": "number"
+    }
+  }
+}

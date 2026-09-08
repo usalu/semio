@@ -1,10 +1,17 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://semio.tech/schema/gis/gis3d/mutations",
-  "type": "object",
+  "title": "SGisGisterrain1AnyEditorConfigMutation",
   "oneOf": [
-    {"allOf": [{"$ref": "https://semio.tech/schema/gis/gis3d/set-camera#/$defs/payload"}, {"type":"object","required":["operation"],"properties":{"operation":{"const":"setCamera"}}}], "unevaluatedProperties": false},
-    {"allOf": [{"$ref": "https://semio.tech/schema/gis/gis3d/set-locale#/$defs/payload"}, {"type":"object","required":["operation"],"properties":{"operation":{"const":"setLocale"}}}], "unevaluatedProperties": false}
+    {
+      "$ref": "./🎥️set-camera/🧬️schema/🔣️.json"
+    },
+    {
+      "$ref": "./🗣️set-locale/🧬️schema/🔣️.json"
+    }
   ],
-  "unevaluatedProperties": false
+  "x-semio-mutationKinds": [
+    "set-camera",
+    "set-locale"
+  ]
 }

@@ -5,7 +5,7 @@
   "displayName": "Delete Scene",
   "emoji": "🗑️",
   "aggregateVariant": "DeleteScene",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

@@ -1,21 +1,152 @@
 {
-  "$id": "https://semio.tech/schema/s.stdio.pptx/mutation.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/pptx/ecma-376/base/mutations.json",
   "title": "PptxMutation",
-  "type": "object",
-  "properties": {
-    "mutation": {
-      "enum": ["setSnapshot", "insertSlide", "removeSlide", "moveSlide", "insertShape", "removeShape", "setShapeText", "setShapePosition"]
+  "description": "Discriminated union over this module's mutation leaves (internally tagged); every payload is the leaf's own schema, referenced, never restated.",
+  "oneOf": [
+    {
+      "allOf": [
+        {
+          "$ref": "./🔷insert-shape/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "insertShape"
+            }
+          }
+        }
+      ]
     },
-    "snapshot": { "type": "object" },
-    "index": { "type": "integer", "minimum": 0 },
-    "from": { "type": "integer", "minimum": 0 },
-    "to": { "type": "integer", "minimum": 0 },
-    "slideIndex": { "type": "integer", "minimum": 0 },
-    "shapeIndex": { "type": "integer", "minimum": 0 },
-    "slide": { "type": "object" },
-    "shape": { "type": "object" },
-    "textFrame": { "type": "array", "items": { "type": "object" } },
-    "position": { "type": "object" }
-  },
-  "required": ["mutation"]
+    {
+      "allOf": [
+        {
+          "$ref": "./➕insert-slide/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "insertSlide"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "./🔀move-slide/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "moveSlide"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "./🔶remove-shape/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "removeShape"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "./➖remove-slide/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "removeSlide"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "./📐set-shape-position/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setShapePosition"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "./✍️set-shape-text/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setShapeText"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "./📸️set-snapshot/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setSnapshot"
+            }
+          }
+        }
+      ]
+    }
+  ]
 }

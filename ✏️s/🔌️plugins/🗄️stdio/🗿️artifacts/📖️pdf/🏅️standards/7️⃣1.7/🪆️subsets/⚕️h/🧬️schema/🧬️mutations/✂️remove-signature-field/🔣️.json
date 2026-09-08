@@ -5,7 +5,7 @@
   "displayName": "Remove Signature Field",
   "emoji": "✂️",
   "aggregateVariant": "RemoveSignatureField",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "remove-signature-field",
   "binaryTag": 7,
   "invertibility": "explicit-mutation",

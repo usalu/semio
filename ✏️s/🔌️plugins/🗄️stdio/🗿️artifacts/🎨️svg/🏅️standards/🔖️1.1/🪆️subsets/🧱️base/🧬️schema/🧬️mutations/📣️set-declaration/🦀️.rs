@@ -1,7 +1,7 @@
 //! 🧬️ Direct set-declaration mutation owner.
-use crate::artifacts::svg::schema::diff::SvgDiff;
-use crate::artifacts::svg::SvgSnapshot;
-use crate::artifacts::xml::schema::snapshot::XmlDeclaration;
+use crate::schema::diff::SvgDiff;
+use crate::SvgSnapshot;
+use semio_s_artifact_stdio_xml::schema::snapshot::XmlDeclaration;
 
 #[path = "📝️text/🦀️.rs"]
 pub mod text;

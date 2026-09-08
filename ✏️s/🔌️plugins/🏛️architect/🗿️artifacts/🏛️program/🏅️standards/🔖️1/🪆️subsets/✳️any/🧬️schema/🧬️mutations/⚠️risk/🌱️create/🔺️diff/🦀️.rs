@@ -10,7 +10,7 @@ use crate::artifacts::program::ProgramSnapshot;
 pub fn diff(payload: &CreateRisk, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
     let id = payload.risk.header.id.clone();
     if base.risks.iter().any(|row| row.header.id == id) {
-        return protocol::MutationOutcome::fatal("mutation.duplicate-id", "A risk already exists with this id.", [id.0.clone()]);
+        return protocol::MutationOutcome::fatal("mutation.duplicate-id", "A risk already exists with this id.", [id.0]);
     }
     protocol::MutationOutcome::new(ProgramDiff { risks: Some(ProgramRisksDelta { added: vec![payload.risk.clone()], ..Default::default() }), ..Default::default() })
 }

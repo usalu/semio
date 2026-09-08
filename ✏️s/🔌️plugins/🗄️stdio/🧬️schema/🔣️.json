@@ -1,0 +1,266 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/schema.json",
+  "$defs": {
+    "StdioCatalogRoot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "pluginId",
+        "packageId",
+        "wasmOut",
+        "limits",
+        "vectors",
+        "wasmStructures"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": 2
+        },
+        "pluginId": {
+          "const": "stdio"
+        },
+        "packageId": {
+          "const": "semio:stdio"
+        },
+        "wasmOut": {
+          "const": "semio_s_plugin_stdio.wasm"
+        },
+        "limits": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "artifactBytes",
+            "ioChunkBytes",
+            "deadlineMs"
+          ],
+          "properties": {
+            "artifactBytes": {
+              "const": 67108864
+            },
+            "ioChunkBytes": {
+              "const": 65536
+            },
+            "deadlineMs": {
+              "const": 1200000
+            }
+          }
+        },
+        "vectors": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "raw",
+              "core",
+              "distinct"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "raw": {
+                "type": "string",
+                "pattern": "^(?:[0-9a-f]{2})+$"
+              },
+              "core": {
+                "type": "string",
+                "pattern": "^(?:[0-9a-f]{2})+$"
+              },
+              "distinct": {
+                "type": "boolean"
+              }
+            }
+          }
+        },
+        "wasmStructures": {
+          "type": "array",
+          "minItems": 3,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "core",
+              "definedFunctions",
+              "componentizable"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "core": {
+                "type": "string",
+                "pattern": "^(?:[0-9a-f]{2})+$"
+              },
+              "definedFunctions": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "componentizable": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      },
+      "title": "StdioCatalogRoot"
+    },
+    "StdioHomeIoSurface": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "features",
+        "directArtifacts",
+        "sharedCodecs",
+        "fullArtifactCount",
+        "nativeCodecCount",
+        "surfaceCases"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.stdio.home-io-surface/v1"
+        },
+        "features": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "homeIo",
+            "fullArtifactCatalog",
+            "componentAppAssembly",
+            "spaceGuest"
+          ],
+          "properties": {
+            "homeIo": {
+              "const": "home-io"
+            },
+            "fullArtifactCatalog": {
+              "const": "full-artifact-catalog"
+            },
+            "componentAppAssembly": {
+              "const": "component-app-assembly"
+            },
+            "spaceGuest": {
+              "const": "space-guest"
+            }
+          }
+        },
+        "directArtifacts": {
+          "type": "array",
+          "items": [
+            {
+              "const": "csv"
+            },
+            {
+              "const": "json"
+            },
+            {
+              "const": "xlsx"
+            },
+            {
+              "const": "zip"
+            }
+          ],
+          "additionalItems": false,
+          "minItems": 4,
+          "maxItems": 4
+        },
+        "sharedCodecs": {
+          "type": "array",
+          "items": [
+            {
+              "const": "binary"
+            },
+            {
+              "const": "deflate"
+            },
+            {
+              "const": "txt"
+            },
+            {
+              "const": "xml"
+            }
+          ],
+          "additionalItems": false,
+          "minItems": 4,
+          "maxItems": 4
+        },
+        "fullArtifactCount": {
+          "const": 36
+        },
+        "nativeCodecCount": {
+          "const": 26
+        },
+        "surfaceCases": {
+          "type": "array",
+          "minItems": 6,
+          "maxItems": 6,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "selected",
+              "catalog",
+              "apps",
+              "exports"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "selected": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 2,
+                "uniqueItems": true,
+                "items": {
+                  "enum": [
+                    "default",
+                    "plugin-root",
+                    "home-io",
+                    "full-artifact-catalog",
+                    "component-app-assembly"
+                  ]
+                }
+              },
+              "catalog": {
+                "enum": [
+                  8,
+                  36
+                ]
+              },
+              "apps": {
+                "type": "boolean"
+              },
+              "exports": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      },
+      "title": "StdioHomeIoSurface"
+    },
+    "StdioDwgArtifactOwnership": {
+      "type": "string",
+      "anyOf": [
+        {
+          "pattern": "^✏️s/🔌️plugins/[^/]+/🗿️artifacts/🖊️dwg(?:/|$)"
+        },
+        {
+          "pattern": "^✏️s/🔌️plugins/[^/]+/🗿️artifacts/[^/]+(?:/[^/]+)*/🚪️io(?:/|$)"
+        }
+      ],
+      "title": "StdioDwgArtifactOwnership"
+    }
+  }
+}

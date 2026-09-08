@@ -92,7 +92,7 @@
         {
           "id": "insert-list-item",
           "capability": "semio-v1-value-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -111,7 +111,7 @@
         {
           "id": "remove-list-item",
           "capability": "semio-v1-value-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -130,7 +130,7 @@
         {
           "id": "remove-map-entry",
           "capability": "semio-v1-value-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -149,7 +149,7 @@
         {
           "id": "remove-node",
           "capability": "semio-v1-value-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -168,7 +168,7 @@
         {
           "id": "set-map-entry",
           "capability": "semio-v1-value-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -187,7 +187,7 @@
         {
           "id": "set-node",
           "capability": "semio-v1-value-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -206,7 +206,7 @@
         {
           "id": "set-snapshot",
           "capability": "semio-v1-value-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -225,7 +225,7 @@
         {
           "id": "set-value",
           "capability": "semio-v1-value-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],

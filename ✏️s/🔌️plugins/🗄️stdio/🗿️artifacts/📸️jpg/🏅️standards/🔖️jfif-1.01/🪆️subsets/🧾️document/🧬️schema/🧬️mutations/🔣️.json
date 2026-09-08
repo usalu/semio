@@ -1,6 +1,8 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/jpg/jfif-1.01/document/mutations.json",
   "title": "JpgMutation",
+  "description": "Discriminated union over this module's mutation leaves (adjacently tagged); every payload is the leaf's own schema, referenced, never restated.",
   "oneOf": [
     {
       "type": "object",
@@ -14,135 +16,7 @@
           "const": "change-jfif-header"
         },
         "payload": {
-          "$ref": "🪪️change-jfif-header/🧬️.schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "replace-quant-table"
-        },
-        "payload": {
-          "$ref": "📊️replace-quant-table/🧬️.schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "remove-quant-table"
-        },
-        "payload": {
-          "$ref": "🧹️remove-quant-table/🧬️.schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "replace-huffman-table"
-        },
-        "payload": {
-          "$ref": "🌳️replace-huffman-table/🧬️.schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "remove-huffman-table"
-        },
-        "payload": {
-          "$ref": "🪓️remove-huffman-table/🧬️.schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "change-restart-interval"
-        },
-        "payload": {
-          "$ref": "🔁️change-restart-interval/🧬️.schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "insert-other-segment"
-        },
-        "payload": {
-          "$ref": "📥️insert-other-segment/🧬️.schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "remove-other-segment"
-        },
-        "payload": {
-          "$ref": "🗑️remove-other-segment/🧬️.schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "replace-pixels"
-        },
-        "payload": {
-          "$ref": "🔲️replace-pixels/🧬️.schema.json"
+          "$ref": "./🪪️change-jfif-header/🧬️schema/🔣️.json"
         }
       }
     },
@@ -158,7 +32,135 @@
           "const": "change-re-encode-quality"
         },
         "payload": {
-          "$ref": "🎚️change-re-encode-quality/🧬️.schema.json"
+          "$ref": "./🎚️change-re-encode-quality/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "change-restart-interval"
+        },
+        "payload": {
+          "$ref": "./🔁️change-restart-interval/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "insert-other-segment"
+        },
+        "payload": {
+          "$ref": "./📥️insert-other-segment/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "remove-huffman-table"
+        },
+        "payload": {
+          "$ref": "./🪓️remove-huffman-table/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "remove-other-segment"
+        },
+        "payload": {
+          "$ref": "./🗑️remove-other-segment/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "remove-quant-table"
+        },
+        "payload": {
+          "$ref": "./🧹️remove-quant-table/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "replace-huffman-table"
+        },
+        "payload": {
+          "$ref": "./🌳️replace-huffman-table/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "replace-pixels"
+        },
+        "payload": {
+          "$ref": "./🔲️replace-pixels/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "replace-quant-table"
+        },
+        "payload": {
+          "$ref": "./📊️replace-quant-table/🧬️schema/🔣️.json"
         }
       }
     }

@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeBM, base: &En1997Snapshot) -> protocol::MutationOutc
     if base.b_m == payload.new_b_m {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Footing width B [m] is already {}.", payload.new_b_m));
     }
-    protocol::MutationOutcome::new(En1997Diff { b_m: Some(payload.new_b_m.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1997Diff { b_m: Some(payload.new_b_m), ..Default::default() })
 }
 //#endregion 🔖️Diff

@@ -5,7 +5,7 @@
   "displayName": "Rename Column",
   "emoji": "🏷️",
   "aggregateVariant": "RenameColumn",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

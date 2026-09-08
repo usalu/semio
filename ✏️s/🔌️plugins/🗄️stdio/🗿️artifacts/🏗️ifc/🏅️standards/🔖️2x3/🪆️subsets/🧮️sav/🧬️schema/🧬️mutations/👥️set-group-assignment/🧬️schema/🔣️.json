@@ -1,0 +1,64 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/ifc/2x3/sav/mutation/set-group-assignment.json",
+  "title": "SetGroupAssignment",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id"
+  ],
+  "properties": {
+    "id": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "assignment": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/SavGroupAssignment"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "$defs": {
+    "SavGroupAssignment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "globalId",
+        "relatedObjects",
+        "relatingGroup"
+      ],
+      "properties": {
+        "globalId": {
+          "type": "string"
+        },
+        "ownerHistory": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "relatedObjects": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "relatingGroup": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    }
+  }
+}

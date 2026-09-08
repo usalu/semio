@@ -20,12 +20,12 @@ pub(crate) type IndexedDiffParts<D, T> = (Vec<usize>, Vec<(usize, D)>, Vec<(usiz
 
 use std::collections::{BTreeMap, BTreeSet, HashSet};
 
-use crate::artifacts::ply::schema::snapshot::{PlyElement, PlyFormat, PlyProperty, PlyRow, PlyScalarType, PlyValue};
-use crate::artifacts::ply::PlySnapshot;
+use crate::schema::snapshot::{PlyElement, PlyFormat, PlyProperty, PlyRow, PlyScalarType, PlyValue};
+use crate::PlySnapshot;
 use protocol::command::DiffAlgebra;
 use protocol::DiffCodec;
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
-use schema::ArtifactSchema;
+use framework_schema::ArtifactSchema;
 
 //#region 🔖️RowFieldDiff
 /// 🔣️ One changed cell inside a row's sparse patch, keyed by the owning element's property
@@ -1540,7 +1540,7 @@ impl DiffCodec for PlyDiff {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn sweep_a() -> PlySnapshot {
     PlySnapshot {
-        schema: crate::artifacts::ply::STDIO_PLY_DOCUMENT_SCHEMA.into(),
+        schema: crate::STDIO_PLY_DOCUMENT_SCHEMA.into(),
         format: PlyFormat::Ascii,
         comments: vec!["a".into()],
         elements: vec![
@@ -1564,7 +1564,7 @@ fn sweep_a() -> PlySnapshot {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn sweep_b() -> PlySnapshot {
     PlySnapshot {
-        schema: crate::artifacts::ply::STDIO_PLY_DOCUMENT_SCHEMA.into(),
+        schema: crate::STDIO_PLY_DOCUMENT_SCHEMA.into(),
         format: PlyFormat::BinaryLittleEndian,
         comments: vec!["a".into(), "b".into()],
         elements: vec![

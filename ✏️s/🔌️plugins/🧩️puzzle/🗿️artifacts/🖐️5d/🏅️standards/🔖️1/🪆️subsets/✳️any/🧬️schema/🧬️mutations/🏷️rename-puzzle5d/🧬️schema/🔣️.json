@@ -1,0 +1,12 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/puzzle/5d/1/any/mutation/rename-puzzle5d.json",
+  "title": "RenamePuzzle5d",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "newLabel": {
+      "type": "string"
+    }
+  }
+}

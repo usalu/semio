@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeThetaC, base: &En1999Snapshot) -> protocol::Mutation
     if base.theta_c == payload.new_theta_c {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Fatigue detail category theta_C [MPa] is already {}.", payload.new_theta_c));
     }
-    protocol::MutationOutcome::new(En1999Diff { theta_c: Some(payload.new_theta_c.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1999Diff { theta_c: Some(payload.new_theta_c), ..Default::default() })
 }
 //#endregion 🔖️Diff

@@ -1,0 +1,109 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/mp4/isobmff/any/mutation/set-track-codec.json",
+  "title": "SetTrackCodec",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "track_index",
+    "codec"
+  ],
+  "properties": {
+    "track_index": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "codec": {
+      "$ref": "#/$defs/Mp4Codec"
+    },
+    "mutation": {
+      "const": "setTrackCodec",
+      "description": "Aggregate discriminator spliced in by Mp4Mutation; absent when the payload stands alone."
+    }
+  },
+  "$defs": {
+    "Mp4Codec": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "nalLengthSize"
+      ],
+      "properties": {
+        "sps": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 255
+            }
+          }
+        },
+        "pps": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 255
+            }
+          }
+        },
+        "nalLengthSize": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "extension": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Mp4AvcExtension"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "Mp4AvcExtension": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "chromaFormat",
+        "bitDepthLumaMinus8",
+        "bitDepthChromaMinus8"
+      ],
+      "properties": {
+        "chromaFormat": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "bitDepthLumaMinus8": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "bitDepthChromaMinus8": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "spsExt": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 255
+            }
+          }
+        }
+      }
+    }
+  }
+}

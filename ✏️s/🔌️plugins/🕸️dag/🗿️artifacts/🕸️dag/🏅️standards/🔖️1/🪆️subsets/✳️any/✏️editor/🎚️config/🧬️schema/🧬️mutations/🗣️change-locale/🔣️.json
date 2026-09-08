@@ -5,7 +5,7 @@
   "displayName": "Change Locale",
   "emoji": "🗣️",
   "aggregateVariant": "ChangeLocale",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-locale",
   "binaryTag": 2,
   "invertibility": "explicit-mutation",

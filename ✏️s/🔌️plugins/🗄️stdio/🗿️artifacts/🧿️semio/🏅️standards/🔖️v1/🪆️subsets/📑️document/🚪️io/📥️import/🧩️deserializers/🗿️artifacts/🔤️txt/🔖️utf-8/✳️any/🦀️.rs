@@ -6,8 +6,8 @@
 //! `SemioDocumentSnapshot` for them to land in; a genuine, spec-mandated type gap, not an
 //! oversight).
 
-use crate::artifacts::semio::standards::v1::subsets::document::schema::snapshot::{DocBlock, DocRun, SemioDocumentSnapshot, STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA};
-use crate::artifacts::txt::TxtSnapshot;
+use crate::standards::v1::subsets::document::schema::snapshot::{DocBlock, DocRun, SemioDocumentSnapshot, STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_txt::TxtSnapshot;
 use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId};
 
 //#region 🔖️Deserializer
@@ -30,11 +30,11 @@ impl ArtifactDeserializer for SemioDocumentFromTxt {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::txt::schema::snapshot::LineEnding;
+    use semio_s_artifact_stdio_txt::schema::snapshot::LineEnding;
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(crate) fn sample_txt() -> TxtSnapshot {
-        TxtSnapshot { schema: crate::artifacts::txt::STDIO_TXT_DOCUMENT_SCHEMA.into(), lines: vec!["First line.".into(), String::new(), "Third line.".into()], trailing_newline: true, line_ending: LineEnding::Lf }
+        TxtSnapshot { schema: semio_s_artifact_stdio_txt::STDIO_TXT_DOCUMENT_SCHEMA.into(), lines: vec!["First line.".into(), String::new(), "Third line.".into()], trailing_newline: true, line_ending: LineEnding::Lf }
     }
 
     #[semio_framework_async_macros::async_test]

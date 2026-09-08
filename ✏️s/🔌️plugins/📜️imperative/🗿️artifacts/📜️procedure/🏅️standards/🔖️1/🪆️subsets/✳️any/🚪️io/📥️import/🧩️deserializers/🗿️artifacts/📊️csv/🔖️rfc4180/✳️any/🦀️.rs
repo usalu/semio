@@ -1,6 +1,6 @@
 //! imperative <- csv
 use crate::artifacts::procedure::schema::snapshot::ProcedureSnapshot;
-use semio_s_plugin_stdio::artifacts::csv::{CsvSnapshot, STDIO_CSV_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_csv::{CsvSnapshot, STDIO_CSV_DOCUMENT_SCHEMA};
 
 pub fn register() {}
 

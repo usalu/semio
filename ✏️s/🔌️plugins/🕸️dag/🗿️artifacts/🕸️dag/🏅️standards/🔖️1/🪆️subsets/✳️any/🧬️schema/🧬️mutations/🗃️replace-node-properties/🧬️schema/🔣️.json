@@ -1,0 +1,20 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/dag/dag/1/any/mutation/replace-node-properties.json",
+  "title": "ReplaceNodeProperties",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newProperties"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "newProperties": {
+      "type": "object",
+      "additionalProperties": true
+    }
+  }
+}

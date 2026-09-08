@@ -5,7 +5,7 @@
   "displayName": "Remove Dict Entry",
   "emoji": "🚫️",
   "aggregateVariant": "RemoveDictEntry",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "remove-dict-entry",
   "binaryTag": 10,
   "invertibility": "explicit-mutation",

@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeT1S, base: &En1998Snapshot) -> protocol::MutationOut
     if base.t1_s == payload.new_t1_s {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Fundamental period T1 [s] is already {}.", payload.new_t1_s));
     }
-    protocol::MutationOutcome::new(En1998Diff { t1_s: Some(payload.new_t1_s.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1998Diff { t1_s: Some(payload.new_t1_s), ..Default::default() })
 }
 //#endregion 🔖️Diff

@@ -1,8 +1,8 @@
 //! 🧬️ WavMutation — the real per-field mutation vocabulary over `WavSnapshot`'s three
 //! top-level fields (`fmt`/`data`/`other_chunks`), plus `SetSnapshot` for full replace.
 
-use crate::artifacts::wav::standards::riff_pcm::subsets::any::schema::diff::{diff_set_data, diff_set_fmt, diff_set_other_chunks, diff_set_snapshot, WavDiff};
-use crate::artifacts::wav::standards::riff_pcm::subsets::any::schema::snapshot::{RiffChunk, WavData, WavFmt, WavSnapshot};
+use crate::standards::riff_pcm::subsets::any::schema::diff::{diff_set_data, diff_set_fmt, diff_set_other_chunks, diff_set_snapshot, WavDiff};
+use crate::standards::riff_pcm::subsets::any::schema::snapshot::{RiffChunk, WavData, WavFmt, WavSnapshot};
 use protocol::Mutation;
 use protocol::{OpBinary, OpText};
 

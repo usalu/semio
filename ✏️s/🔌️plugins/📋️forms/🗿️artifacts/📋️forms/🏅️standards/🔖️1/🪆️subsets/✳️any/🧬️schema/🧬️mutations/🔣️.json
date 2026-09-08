@@ -1,15 +1,49 @@
 {
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://semio.tech/schema/s/forms/forms/mutation.json",
   "title": "FormsMutation",
-  "type": "object",
-  "properties": {
-    "schema": {
-      "type": "string",
-      "x-semio-state": "artifact"
+  "oneOf": [
+    {
+      "$ref": "./🏷️change-form-title/🧬️schema/🔣️.json"
     },
-    "value": {
-      "type": "string",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "./📝change-step-description/🧬️schema/🔣️.json"
+    },
+    {
+      "$ref": "./➕create-block/🧬️schema/🔣️.json"
+    },
+    {
+      "$ref": "./🌱create-step/🧬️schema/🔣️.json"
+    },
+    {
+      "$ref": "./➖delete-block/🧬️schema/🔣️.json"
+    },
+    {
+      "$ref": "./🗑️delete-step/🧬️schema/🔣️.json"
+    },
+    {
+      "$ref": "./📦move-block-to-step/🧬️schema/🔣️.json"
+    },
+    {
+      "$ref": "./✏️rename-step/🧬️schema/🔣️.json"
+    },
+    {
+      "$ref": "./🔀reorder-step/🧬️schema/🔣️.json"
+    },
+    {
+      "$ref": "./🔁replace-block/🧬️schema/🔣️.json"
     }
-  }
+  ],
+  "x-semio-mutationKinds": [
+    "change-form-title",
+    "change-step-description",
+    "create-block",
+    "create-step",
+    "delete-block",
+    "delete-step",
+    "move-block-to-step",
+    "rename-step",
+    "reorder-step",
+    "replace-block"
+  ]
 }

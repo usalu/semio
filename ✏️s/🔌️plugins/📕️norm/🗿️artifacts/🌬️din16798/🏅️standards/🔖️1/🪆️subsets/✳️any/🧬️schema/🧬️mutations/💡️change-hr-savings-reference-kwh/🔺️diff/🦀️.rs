@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeHrSavingsReferenceKwh, base: &Din16798Snapshot) -> p
     if base.hr_savings_reference_kwh == payload.new_hr_savings_reference_kwh {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Heat recovery savings reference is already {}.", payload.new_hr_savings_reference_kwh));
     }
-    protocol::MutationOutcome::new(Din16798Diff { hr_savings_reference_kwh: Some(payload.new_hr_savings_reference_kwh.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(Din16798Diff { hr_savings_reference_kwh: Some(payload.new_hr_savings_reference_kwh), ..Default::default() })
 }
 //#endregion 🔖️Diff

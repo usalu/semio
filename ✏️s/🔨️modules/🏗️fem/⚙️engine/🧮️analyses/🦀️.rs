@@ -106,6 +106,13 @@ impl MountedAnalysisSupport {
     }
 }
 
+/// 📦️ A mounted analysis admission request exceeds its fixed slot capacity.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct MountedAnalysisCapacityExceeded {
+    pub requested: usize,
+    pub maximum: usize,
+}
+
 /// 🧱 Fixed mounted analysis owner with one admitted slot, copied value, or close action per turn.
 pub struct MountedAnalysisModel {
     nodes: [Option<Node>; MOUNTED_ANALYSIS_NODE_SLOTS],
@@ -136,9 +143,9 @@ impl MountedAnalysisModel {
         }
     }
 
-    fn admit_one(admitted: &mut usize, target: usize, maximum: usize) -> Result<bool, ()> {
+    fn admit_one(admitted: &mut usize, target: usize, maximum: usize) -> Result<bool, MountedAnalysisCapacityExceeded> {
         if target > maximum {
-            return Err(());
+            return Err(MountedAnalysisCapacityExceeded { requested: target, maximum });
         }
         if *admitted < target {
             *admitted += 1;
@@ -147,15 +154,15 @@ impl MountedAnalysisModel {
         Ok(true)
     }
 
-    pub fn admit_node_one(&mut self, target: usize) -> Result<bool, ()> {
+    pub fn admit_node_one(&mut self, target: usize) -> Result<bool, MountedAnalysisCapacityExceeded> {
         Self::admit_one(&mut self.admitted_nodes, target, MOUNTED_ANALYSIS_NODE_SLOTS)
     }
 
-    pub fn admit_element_one(&mut self, target: usize) -> Result<bool, ()> {
+    pub fn admit_element_one(&mut self, target: usize) -> Result<bool, MountedAnalysisCapacityExceeded> {
         Self::admit_one(&mut self.admitted_elements, target, MOUNTED_ANALYSIS_ELEMENT_SLOTS)
     }
 
-    pub fn admit_support_one(&mut self, target: usize) -> Result<bool, ()> {
+    pub fn admit_support_one(&mut self, target: usize) -> Result<bool, MountedAnalysisCapacityExceeded> {
         Self::admit_one(&mut self.admitted_supports, target, MOUNTED_ANALYSIS_SUPPORT_SLOTS)
     }
 
@@ -242,7 +249,7 @@ impl MountedAnalysisModel {
                         if bytes > maximum_bytes {
                             return (false, 0, 0);
                         }
-                        return (false, 1, element.close_mounted_string_step().map_or(0, |bytes| bytes));
+                        return (false, 1, element.close_mounted_string_step().unwrap_or(0));
                     }
                     self.element_len -= 1;
                     self.elements[self.element_len] = None;
@@ -2094,7 +2101,7 @@ impl<'model> AssemblyJob<'model> {
                 }
                 self.state.resume_target = 0;
                 self.state.preview_due = true;
-                self.state.checkpoint_due = self.state.element_cursor % 16 == 0 || self.state.element_cursor == self.state.total_elements;
+                self.state.checkpoint_due = self.state.element_cursor.is_multiple_of(16) || self.state.element_cursor == self.state.total_elements;
             }
         }
         true
@@ -2896,7 +2903,7 @@ pub fn buckling(model: &AnalysisModel, reference_case: &LoadCase, count: usize) 
     // positive-definite everywhere without perturbing the physically meaningful lowest eigenvalues,
     // which are orders of magnitude below the huge spurious eigenvalues this regularization assigns
     // to the null-space directions.
-    let max_diag = diag_estimate.iter().cloned().fold(0.0_f64, f64::max);
+    let max_diag = diag_estimate.iter().copied().fold(0.0_f64, f64::max);
     let eps = max_diag.max(1e-12) * 1e-6;
     for i in 0..n_free {
         neg_kg_coo.add(i, i, eps);

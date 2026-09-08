@@ -9,9 +9,9 @@
 //! retained `JUNK` chunk alone — so `AviDiff::between` must nest two index-keyed triples
 //! (`streams.modified[0] → chunks.modified[1]`) and nothing else.
 
-use crate::artifacts::avi::standards::v1_0::subsets::any::schema::diff::AviDiff;
-use crate::artifacts::avi::standards::v1_0::subsets::any::schema::mutations::{apply_avi_mutation, AviMutation};
-use crate::artifacts::avi::standards::v1_0::subsets::any::schema::snapshot::AviSnapshot;
+use crate::standards::v1_0::subsets::any::schema::diff::AviDiff;
+use crate::standards::v1_0::subsets::any::schema::mutations::{apply_avi_mutation, AviMutation};
+use crate::standards::v1_0::subsets::any::schema::snapshot::AviSnapshot;
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");

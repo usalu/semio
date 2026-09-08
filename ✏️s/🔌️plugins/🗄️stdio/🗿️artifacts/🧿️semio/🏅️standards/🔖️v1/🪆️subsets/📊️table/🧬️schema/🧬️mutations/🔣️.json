@@ -1,15 +1,104 @@
 {
-  "$id": "https://semio.tech/schema/s.stdio.semio.table/mutations.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/table/mutations.json",
   "title": "SemioTableMutation",
-  "description": "Closed, eight-variant mutation dispatch over SemioTableSnapshot's name-keyed columns collection and index-keyed rows collection.",
+  "description": "Discriminated union over this module's mutation leaves (externally tagged); every payload is the leaf's own schema, referenced, never restated.",
   "oneOf": [
-    { "properties": { "mutation": { "const": "createColumn" }, "payload": { "type": "object", "properties": { "name": { "type": "string" }, "kind": { "type": "string" }, "index": { "type": ["integer", "null"] } } } } },
-    { "properties": { "mutation": { "const": "deleteColumn" }, "payload": { "type": "object", "properties": { "name": { "type": "string" } } } } },
-    { "properties": { "mutation": { "const": "renameColumn" }, "payload": { "type": "object", "properties": { "name": { "type": "string" }, "newName": { "type": "string" } } } } },
-    { "properties": { "mutation": { "const": "reorderColumns" }, "payload": { "type": "object", "properties": { "name": { "type": "string" }, "toIndex": { "type": "integer" } } } } },
-    { "properties": { "mutation": { "const": "insertRow" }, "payload": { "type": "object", "properties": { "index": { "type": "integer" }, "row": { "type": "object" } } } } },
-    { "properties": { "mutation": { "const": "removeRow" }, "payload": { "type": "object", "properties": { "index": { "type": "integer" } } } } },
-    { "properties": { "mutation": { "const": "reorderRows" }, "payload": { "type": "object", "properties": { "from": { "type": "integer" }, "to": { "type": "integer" } } } } },
-    { "properties": { "mutation": { "const": "editCell" }, "payload": { "type": "object", "properties": { "rowIndex": { "type": "integer" }, "columnName": { "type": "string" }, "newValue": { "type": "object" } } } } }
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "CreateColumn"
+      ],
+      "properties": {
+        "CreateColumn": {
+          "$ref": "./🏗️create-column/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "DeleteColumn"
+      ],
+      "properties": {
+        "DeleteColumn": {
+          "$ref": "./🗑️delete-column/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "EditCell"
+      ],
+      "properties": {
+        "EditCell": {
+          "$ref": "./✏️edit-cell/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "InsertRow"
+      ],
+      "properties": {
+        "InsertRow": {
+          "$ref": "./📥insert-row/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "RemoveRow"
+      ],
+      "properties": {
+        "RemoveRow": {
+          "$ref": "./➖remove-row/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "RenameColumn"
+      ],
+      "properties": {
+        "RenameColumn": {
+          "$ref": "./🏷️rename-column/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ReorderColumns"
+      ],
+      "properties": {
+        "ReorderColumns": {
+          "$ref": "./🔀reorder-columns/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ReorderRows"
+      ],
+      "properties": {
+        "ReorderRows": {
+          "$ref": "./🔃reorder-rows/🧬️schema/🔣️.json"
+        }
+      }
+    }
   ]
 }

@@ -1,0 +1,34 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/deflate/rfc1950/any/mutation/set-snapshot.json",
+  "title": "SetSnapshot",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "compressionMethod",
+    "compressionLevelHint"
+  ],
+  "properties": {
+    "schema": {
+      "type": "string"
+    },
+    "compressionMethod": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "compressionLevelHint": {
+      "type": "string",
+      "enum": [
+        "Fastest",
+        "Fast",
+        "Default",
+        "Maximum"
+      ]
+    },
+    "mutation": {
+      "const": "setSnapshot",
+      "description": "Aggregate discriminator spliced in by DeflateMutation; absent when the payload stands alone."
+    }
+  }
+}

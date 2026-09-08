@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeNightSetbackK, base: &Din16798Snapshot) -> protocol:
     if base.night_setback_k == payload.new_night_setback_k {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Night setback temperature is already {}.", payload.new_night_setback_k));
     }
-    protocol::MutationOutcome::new(Din16798Diff { night_setback_k: Some(payload.new_night_setback_k.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(Din16798Diff { night_setback_k: Some(payload.new_night_setback_k), ..Default::default() })
 }
 //#endregion 🔖️Diff

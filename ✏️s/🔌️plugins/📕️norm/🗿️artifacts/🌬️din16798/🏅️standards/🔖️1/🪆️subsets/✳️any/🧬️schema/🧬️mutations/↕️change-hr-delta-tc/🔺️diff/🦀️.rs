@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeHrDeltaTC, base: &Din16798Snapshot) -> protocol::Mut
     if base.hr_delta_t_c == payload.new_hr_delta_t_c {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Heat recovery temperature difference is already {}.", payload.new_hr_delta_t_c));
     }
-    protocol::MutationOutcome::new(Din16798Diff { hr_delta_t_c: Some(payload.new_hr_delta_t_c.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(Din16798Diff { hr_delta_t_c: Some(payload.new_hr_delta_t_c), ..Default::default() })
 }
 //#endregion 🔖️Diff

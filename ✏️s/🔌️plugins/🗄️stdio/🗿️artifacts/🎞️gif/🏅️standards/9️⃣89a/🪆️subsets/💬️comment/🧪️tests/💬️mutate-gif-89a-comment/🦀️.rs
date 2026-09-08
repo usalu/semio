@@ -115,12 +115,12 @@ mod subject {
     use semio_repo_test_host::{Adapter, Context, Json, Outcome};
     use semio_s_plugin_stdio_test_oracle::artifacts::gif::standards::v89a::subsets::any::project;
     use semio_s_plugin_stdio::ArtifactDsl;
-    use semio_s_plugin_stdio::artifacts::gif::standards::v89a::subsets::any::io::{decode_gif, encode_gif};
-    use semio_s_plugin_stdio::artifacts::gif::standards::v89a::subsets::any::schema::mutations::{
+    use crate::standards::v89a::subsets::any::io::{decode_gif, encode_gif};
+    use crate::standards::v89a::subsets::any::schema::mutations::{
         add_app_extension, apply_gif_mutation, insert_comment, insert_frame, inverse_gif_mutation, move_frame, remove_app_extension, remove_comment, remove_frame, set_background_color_index, set_frame_delay, set_frame_disposal, set_frame_geometry,
         set_frame_interlace, set_frame_pixels, set_frame_transparency, set_frame_user_input, set_global_color_table, set_loop_count, set_pixel_aspect_ratio, set_screen_size, set_snapshot, GifMutation,
     };
-    use semio_s_plugin_stdio::artifacts::gif::standards::v89a::subsets::any::schema::snapshot::{GifAppExtension, GifColorTable, GifDisposal, GifFrame, GifRgb, GifSnapshot, STDIO_GIF89A_DOCUMENT_SCHEMA};
+    use crate::standards::v89a::subsets::any::schema::snapshot::{GifAppExtension, GifColorTable, GifDisposal, GifFrame, GifRgb, GifSnapshot, STDIO_GIF89A_DOCUMENT_SCHEMA};
 
     //#region 🔖️SpecToMutation
     fn disposal_from_spec(value: &str) -> GifDisposal {

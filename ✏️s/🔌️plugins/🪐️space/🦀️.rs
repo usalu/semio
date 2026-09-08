@@ -14,6 +14,9 @@
 //! in the move: every call site always passed `&HomeApp::default()`, so it never varied and coupling this
 //! plugin-root file to `editor::home::HomeApp` for it would have bought nothing.
 
+/// 🗺️ Shared lookup of admitted studio backbone ports.
+type SharedStudioPorts = Arc<Mutex<HashMap<String, Arc<dyn OsBackbonePort>>>>;
+
 use crate::artifacts::space::standards::v1::subsets::any::schema::mutations::SSpaceMutation;
 use crate::artifacts::space::standards::v1::subsets::any::schema::snapshot::SSpaceSnapshot;
 use crate::artifacts::space::S_SPACE_INDEX_DOCUMENT_SCHEMA;
@@ -163,8 +166,8 @@ async fn draft_backbone_port_concrete() -> Arc<BackbonePorts> {
 /// instance-scoped port-catalog service threaded into Home and Studio operation context; moving the
 /// same map behind another static would remain invalid. This source-only packet cannot install that
 /// host seam, so every route traversing this registry remains fail-closed and the residue is reported.
-async fn shared_studio_ports() -> Arc<Mutex<HashMap<String, Arc<dyn OsBackbonePort>>>> {
-    static REGISTRY: OnceLock<Arc<Mutex<HashMap<String, Arc<dyn OsBackbonePort>>>>> = OnceLock::new();
+async fn shared_studio_ports() -> SharedStudioPorts {
+    static REGISTRY: OnceLock<SharedStudioPorts> = OnceLock::new();
     REGISTRY.get_or_init(|| Arc::new(Mutex::new(HashMap::new()))).clone()
 }
 

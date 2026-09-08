@@ -42,5 +42,5 @@ pub fn handle(_payload: &AddPage, doc: &ArtifactView<'_, LayoutSnapshot>, cfg: &
     // rather than reproduced as a meaningless `interactionSelect` (ticket
     // 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM). `setActivePage` still switches the Blueprint
     // surface to the new page.
-    Ok(Emit { artifact_mutations: vec![LayoutMutation::CreatePage(CreatePage { page, index: Some(index) })], config_mutations: vec![LayoutConfigMutation::SetActivePage(crate::editor::layout::config::SetActivePage { page_id: page_id.clone() })], ..Default::default() })
+    Ok(Emit { artifact_mutations: vec![LayoutMutation::CreatePage(CreatePage { page, index: Some(index) })], config_mutations: vec![LayoutConfigMutation::SetActivePage(crate::editor::layout::config::SetActivePage { page_id: page_id })], ..Default::default() })
 }

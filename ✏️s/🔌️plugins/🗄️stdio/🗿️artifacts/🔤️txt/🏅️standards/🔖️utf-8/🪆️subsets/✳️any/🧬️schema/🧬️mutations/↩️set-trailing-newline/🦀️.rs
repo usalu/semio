@@ -1,8 +1,8 @@
 //! 🧬️ Direct set-trailing-newline mutation owner.
 //#region 🔖️Payload
-use crate::artifacts::txt::TxtSnapshot;
-use crate::artifacts::txt::schema::diff::TxtDiff;
-use crate::artifacts::txt::schema::mutation_support::{native_shape_error, native_snapshot_error, native_text_error};
+use crate::TxtSnapshot;
+use crate::schema::diff::TxtDiff;
+use crate::schema::mutation_support::{native_shape_error, native_snapshot_error, native_text_error};
 
 #[path = "💾️binary/🦀️.rs"]
 pub mod binary;
@@ -19,7 +19,7 @@ pub struct SetTrailingNewlineMutation {
 pub type SetTrailingNewlinePayload = SetTrailingNewlineMutation;
 
 pub fn decode_set_trailing_newline_payload(value: &dsl::DslValue) -> Result<SetTrailingNewlinePayload, String> {
-    let fields = crate::artifacts::txt::schema::mutation_support::txt_required_object(value, &["value"])?;
+    let fields = crate::schema::mutation_support::txt_required_object(value, &["value"])?;
     let value = fields[0].1.as_bool().ok_or_else(|| "payload field `value` must be boolean".to_string())?;
     Ok(SetTrailingNewlinePayload { value })
 }
@@ -64,7 +64,7 @@ impl protocol::MutationKind<TxtSnapshot, super::TxtMutation> for SetTrailingNewl
 mod tests {
     use super::super::{TxtMutation, apply_txt_mutation};
     use super::*;
-    use crate::artifacts::txt::schema::snapshot::LineEnding;
+    use crate::schema::snapshot::LineEnding;
     use protocol::{Mutation, MutationKind, MutationLeaf, OpBinary, OpText};
     #[test]
     fn canonical_leaf_metadata_matches_descriptor_and_provenance() {

@@ -5,7 +5,7 @@
   "displayName": "Discard Try Values Batch",
   "emoji": "🧹️",
   "aggregateVariant": "DiscardTryValuesBatch",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "discard-try-values-batch",
   "binaryTag": 7,
   "invertibility": "non-invertible",

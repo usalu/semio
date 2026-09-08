@@ -16,9 +16,9 @@
 //! `.pack.semio`/`.patch.semio` encodings are derived from it by `fixtures generate` and are
 //! asserted by the shared codec-matrix harness, not here.
 
-use crate::artifacts::docx::standards::v_ecma_376::subsets::base::schema::diff::DocxDiff;
-use crate::artifacts::docx::standards::v_ecma_376::subsets::base::schema::mutations::{apply_docx_mutation, DocxMutation};
-use crate::artifacts::docx::standards::v_ecma_376::subsets::base::schema::snapshot::DocxSnapshot;
+use crate::standards::v_ecma_376::subsets::base::schema::diff::DocxDiff;
+use crate::standards::v_ecma_376::subsets::base::schema::mutations::{apply_docx_mutation, DocxMutation};
+use crate::standards::v_ecma_376::subsets::base::schema::snapshot::DocxSnapshot;
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");
@@ -44,7 +44,7 @@ async fn applies_to_committed_after() {
     assert!(outcome.messages().is_empty(), "set-snapshot/bolds-the-tower-run-of-the-opening-paragraph: set-snapshot raised diagnostics it should not have");
     assert_eq!(snapshot, expected_after(), "set-snapshot/bolds-the-tower-run-of-the-opening-paragraph: applied state differs from committed after-snapshot");
     let paragraph = match &snapshot.document.body[0] {
-        crate::artifacts::docx::standards::v_ecma_376::subsets::base::schema::snapshot::DocxBlock::Paragraph(paragraph) => paragraph.clone(),
+        crate::standards::v_ecma_376::subsets::base::schema::snapshot::DocxBlock::Paragraph(paragraph) => paragraph.clone(),
         other => panic!("set-snapshot/bolds-the-tower-run-of-the-opening-paragraph: the opening block must stay a paragraph, got {other:?}"),
     };
     assert!(paragraph.runs[1].bold, "set-snapshot/bolds-the-tower-run-of-the-opening-paragraph: the second run must come back bold");
@@ -129,7 +129,7 @@ async fn produces_committed_diff() {
     let body = document.body.as_ref().expect("set-snapshot/bolds-the-tower-run-of-the-opening-paragraph: the body triple must be present");
     assert!(body.removed.is_empty() && body.added.is_empty(), "set-snapshot/bolds-the-tower-run-of-the-opening-paragraph: the block sequence keeps its length");
     let runs = match &body.modified[0].diff {
-        crate::artifacts::docx::standards::v_ecma_376::subsets::base::schema::diff::DocxBlockDiff::Paragraph(paragraph) => {
+        crate::standards::v_ecma_376::subsets::base::schema::diff::DocxBlockDiff::Paragraph(paragraph) => {
             assert!(paragraph.style.is_none(), "set-snapshot/bolds-the-tower-run-of-the-opening-paragraph: the paragraph style is unchanged and must stay absent");
             paragraph.runs.clone().expect("set-snapshot/bolds-the-tower-run-of-the-opening-paragraph: the runs triple must be present")
         }
@@ -149,7 +149,7 @@ async fn committed_diff_is_canonical() {
     assert_eq!(reencoded, original, "set-snapshot/bolds-the-tower-run-of-the-opening-paragraph: committed diff JSON is not canonical");
     let body = decoded.document.as_ref().expect("document diff").body.as_ref().expect("body triple");
     assert!(
-        matches!(&body.modified[0].diff, crate::artifacts::docx::standards::v_ecma_376::subsets::base::schema::diff::DocxBlockDiff::Paragraph(paragraph) if paragraph.style.is_none()),
+        matches!(&body.modified[0].diff, crate::standards::v_ecma_376::subsets::base::schema::diff::DocxBlockDiff::Paragraph(paragraph) if paragraph.style.is_none()),
         "set-snapshot/bolds-the-tower-run-of-the-opening-paragraph: the tri-state style slot must round-trip as absent — a committed null would collapse the Some(None) 'style cleared' state that Option<Option<String>> cannot express in JSON"
     );
 }

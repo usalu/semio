@@ -1,5 +1,5 @@
-use crate::artifacts::wav::standards::riff_pcm::subsets::any::schema::diff::{diff_set_snapshot, WavDiff};
-use crate::artifacts::wav::standards::riff_pcm::subsets::any::schema::snapshot::WavSnapshot;
+use crate::standards::riff_pcm::subsets::any::schema::diff::{diff_set_snapshot, WavDiff};
+use crate::standards::riff_pcm::subsets::any::schema::snapshot::WavSnapshot;
 
 /// 🔺️ Diff helper for set-snapshot.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

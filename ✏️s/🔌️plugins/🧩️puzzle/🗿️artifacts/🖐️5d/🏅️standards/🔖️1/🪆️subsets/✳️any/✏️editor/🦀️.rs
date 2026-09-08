@@ -102,7 +102,7 @@ const PUZZLE5D_IMPORT_SEMANTIC_ITEMS: usize = 32;
 const PUZZLE5D_IMPORT_DECODED_ITEMS: usize = PUZZLE5D_IMPORT_SEMANTIC_ITEMS * PUZZLE5D_IMPORT_SEMANTIC_ITEMS + PUZZLE5D_IMPORT_SEMANTIC_ITEMS * 5;
 const PUZZLE5D_IMPORT_MUTATION_ITEMS: usize = PUZZLE5D_IMPORT_SEMANTIC_ITEMS * 2 + 1;
 const PUZZLE5D_IMPORT_MUTATIONS_PER_PAGE: usize = semio_framework_job::JOB_PAYLOAD_PAGE_BYTES / size_of::<Puzzle5dMutation>();
-const PUZZLE5D_IMPORT_MUTATION_PAGES: usize = (PUZZLE5D_IMPORT_MUTATION_ITEMS + PUZZLE5D_IMPORT_MUTATIONS_PER_PAGE - 1) / PUZZLE5D_IMPORT_MUTATIONS_PER_PAGE;
+const PUZZLE5D_IMPORT_MUTATION_PAGES: usize = PUZZLE5D_IMPORT_MUTATION_ITEMS.div_ceil(PUZZLE5D_IMPORT_MUTATIONS_PER_PAGE);
 
 macro_rules! puzzle5d_reserved_publication {
     ("copy") => {
@@ -465,7 +465,7 @@ struct Puzzle5dExampleOperations {
 }
 
 static PUZZLE5D_EXAMPLE_OPERATIONS: LazyLock<Vec<Puzzle5dExampleOperations>> = LazyLock::new(|| {
-    let documents = vec![empty_document(), concrete_forest_example_document(), nakagin_example_document(), capsule_dream_example_document()];
+    let documents = [empty_document(), concrete_forest_example_document(), nakagin_example_document(), capsule_dream_example_document()];
     let values: Vec<Value> = documents.iter().map(value_from_document).collect();
     let mut entries = Vec::new();
     for before in &values {
@@ -744,7 +744,7 @@ pub fn add_palette_part(envelope: &mut Puzzle5dScene, part_kind: &str, x: f64, y
     let mesh_url = resolve_part_kind_mesh_url(part_kind, envelope.document.kind_catalogs.as_ref());
     let grips = grips_from_templates(&envelope.document, part_kind);
     envelope.document.parts.push(Puzzle5dPart {
-        id: id.clone(),
+        id: id,
         anchor: Default::default(),
         part_kind: part_kind.into(),
         part_2d: Puzzle5dPart2d { x, y, shape: "circle".into(), radius: PUZZLE5D_DEFAULT_PART_RADIUS, width: None, height: None, text: part_kind.into(), icon_kind: None, hidden: None, locked: None },
@@ -4423,7 +4423,7 @@ impl Puzzle5dPlayApp {
         let source_world = source_grip.as_ref().and_then(|full_id| find_part_by_grip_full_id(&envelope.document, full_id).map(|(part, grip)| (world_grip_position(part, grip), world_grip_direction(part, grip))));
         let origin = source_world.map_or([0.0, 0.0, 0.0], |(position, direction)| [position[0] + direction[0], position[1] + direction[1], position[2] + direction[2]]);
         envelope.document.parts.push(Puzzle5dPart {
-            id: id.clone(),
+            id: id,
             anchor: Default::default(),
             part_kind: node_kind.clone(),
             part_2d: Puzzle5dPart2d { x, y, shape: "circle".into(), radius: PUZZLE5D_DEFAULT_PART_RADIUS, width: None, height: None, text: node_kind, icon_kind: None, hidden: None, locked: None },
@@ -4491,9 +4491,7 @@ impl Puzzle5dPlayApp {
                     if !source.is_empty() && !target.is_empty() && !envelope.document.fasteners.iter().any(|entry| entry.source == source && entry.target == target || entry.source == target && entry.target == source) {
                         let id = payload
                             .get("id")
-                            .and_then(|value| value.as_str())
-                            .map(str::to_string)
-                            .unwrap_or_else(|| Puzzle5dFreshIds::from_document(&envelope.document).next_fastener());
+                            .and_then(|value| value.as_str()).map_or_else(|| Puzzle5dFreshIds::from_document(&envelope.document).next_fastener(), str::to_string);
                         envelope.document.fasteners.push(Puzzle5dFastener {
                             id,
                             source,
@@ -4531,7 +4529,7 @@ impl Puzzle5dPlayApp {
     /// `Emit` (document + config operations) instead of mutating `self`.
     fn handle_action_impl(&self, action: &str, args: Option<&Value>, window_id: Option<&str>, snapshot: &Puzzle5dPlaySnapshot, config: &Puzzle5dConfig, selection: &protocol::DomainSelection) -> Emit<Puzzle5dMutation, Puzzle5dConfigMutation> {
         let projection = puzzle5d_projection_value(&snapshot.0);
-        let before = projection.clone();
+        let before = projection;
         let active_utility_initial = puzzle5d_scene_active_utility(config, window_id);
         let wid = window_id.map_or_else(|| world3d::WINDOW_KIND_ID.to_string(), str::to_string);
         let mut scene = scene_from_projection(&before, config.clone(), &active_utility_initial);
@@ -5947,7 +5945,7 @@ impl Puzzle5dEditFastenerWork {
         let keys = ["gap", "shift", "rise", "rotation", "turn", "tilt", "x", "y"];
         let mut changed = false;
         for (index, key) in keys.iter().enumerate() {
-            if let Some(value) = args.get(*key) {
+            if let Some(value) = args.get(key) {
                 if let Some(updated) = puzzle5d_resolve_number_edit(geometry[index], Some(value), None) {
                     changed |= updated != geometry[index];
                     geometry[index] = updated;
@@ -7235,7 +7233,7 @@ impl Default for Puzzle5dBoardEventsWork {
 }
 
 impl Puzzle5dBoardEventsWork {
-    fn source<'a>(command: &'a Puzzle5dCommand) -> Result<&'a str, Fault> {
+    fn source(command: &Puzzle5dCommand) -> Result<&str, Fault> {
         command.args().and_then(|args| args.get("eventsJson")).and_then(Value::as_str).ok_or_else(|| Fault::from("puzzle5d-board-events-input-missing"))
     }
 
@@ -7322,7 +7320,7 @@ impl Puzzle5dBoardEventsWork {
     }
 
     fn take_payload(&mut self) -> Value {
-        self.event.as_mut().and_then(Value::as_object_mut).and_then(|event| event.get_mut("payload")).map(|value| std::mem::replace(value, Value::Null)).unwrap_or(Value::Null)
+        self.event.as_mut().and_then(Value::as_object_mut).and_then(|event| event.get_mut("payload")).map_or(Value::Null, |value| std::mem::replace(value, Value::Null))
     }
 
     fn schedule_move(&mut self, payload: &Value) {
@@ -7383,7 +7381,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
                     Some("nodeMove") => self.schedule_move(&payload),
                     Some("nodeDragEnd") => {
                         let mut payload = payload;
-                        self.drag_moves = Some(payload.as_object_mut().and_then(|payload| payload.get_mut("moves")).map(|value| std::mem::replace(value, Value::Null)).unwrap_or(Value::Array(Vec::new())));
+                        self.drag_moves = Some(payload.as_object_mut().and_then(|payload| payload.get_mut("moves")).map_or(Value::Array(Vec::new()), |value| std::mem::replace(value, Value::Null)));
                         self.drag_cursor = 0;
                         self.stage = Puzzle5dBoardEventsStage::DragMove;
                     }
@@ -7771,7 +7769,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
                 Ok(Puzzle5dPatchPartWork::progress("puzzle5d-create-fastener-compatibility", "Checking kind compatibility", "Artkompatibilität wird geprüft"))
             }
             Puzzle5dCreateFastenerStage::Emit => {
-                let id = command.args().and_then(|args| args.get("id").or_else(|| args.get("fastenerId"))).and_then(Value::as_str).filter(|id| !id.is_empty()).map(str::to_string).unwrap_or_else(|| format!("fastener-{:016x}-0", self.operation_nonce));
+                let id = command.args().and_then(|args| args.get("id").or_else(|| args.get("fastenerId"))).and_then(Value::as_str).filter(|id| !id.is_empty()).map_or_else(|| format!("fastener-{:016x}-0", self.operation_nonce), str::to_string);
                 let fastener_kind = command.args().and_then(|args| args.get("fastenerKind").or_else(|| args.get("edgeKind"))).and_then(Value::as_str).filter(|kind| !kind.is_empty()).map(str::to_string);
                 self.mutation = Some(crate::artifacts::puzzle5d::mutations::connect_grips(
                     id,
@@ -9083,7 +9081,7 @@ impl ArtifactEditor for Puzzle5dPlayApp {
         _engines: &EngineHandles,
     ) -> Result<Emit<Puzzle5dMutation, Puzzle5dConfigMutation, Self::DraftMutation>, Fault> {
         let selection = interaction.selection(PUZZLE5D_INTERACTION_DOMAIN);
-        with_puzzle5d_app(|app| Ok(app.handle_action_impl(command.action_id(), command.args(), command.window_id(), doc.snapshot, &cfg.snapshot, &selection)))
+        with_puzzle5d_app(|app| Ok(app.handle_action_impl(command.action_id(), command.args(), command.window_id(), doc.snapshot, cfg.snapshot, selection)))
     }
 
     /// 🕹️ `vortex` domain topology (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM):

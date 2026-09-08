@@ -5,7 +5,7 @@
   "displayName": "Rename Setpoint Manager",
   "emoji": "🖇️",
   "aggregateVariant": "RenameSetpointManager",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "rename-setpoint-manager",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

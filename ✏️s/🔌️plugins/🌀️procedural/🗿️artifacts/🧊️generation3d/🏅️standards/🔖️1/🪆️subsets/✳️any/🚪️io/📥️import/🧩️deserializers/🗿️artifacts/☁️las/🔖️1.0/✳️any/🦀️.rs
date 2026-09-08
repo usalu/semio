@@ -1,6 +1,6 @@
 //! generation3d <- las
 use crate::artifacts::generation3d::Generation3dSnapshot;
-use semio_s_plugin_stdio::artifacts::las::{LasSnapshot, STDIO_LAS_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_las::{LasSnapshot, STDIO_LAS_DOCUMENT_SCHEMA};
 
 pub fn register() {}
 

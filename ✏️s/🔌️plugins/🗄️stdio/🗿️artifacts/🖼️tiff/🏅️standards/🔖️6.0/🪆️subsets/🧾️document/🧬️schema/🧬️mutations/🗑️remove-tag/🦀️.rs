@@ -1,7 +1,7 @@
 //! 🧬️ Authoritative remove-tag mutation.
-use crate::artifacts::tiff::schema::diff::*;
-use crate::artifacts::tiff::schema::mutations::TiffMutation;
-use crate::artifacts::tiff::schema::snapshot::*;
+use crate::schema::diff::*;
+use crate::schema::mutations::TiffMutation;
+use crate::schema::snapshot::*;
 
 //#region Payload
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
@@ -34,7 +34,7 @@ impl protocol::MutationKind<TiffSnapshot, TiffMutation> for RemoveTagMutation {
             return Vec::new();
         }
         match base.ifds.get(*ifd_index).and_then(|ifd| ifd.entries.iter().find(|t| t.tag == *tag)) {
-            Some(existing) => vec![TiffMutation::ReplaceTag(crate::artifacts::tiff::schema::mutations::ReplaceTagMutation { ifd_index: *ifd_index, tag: *tag, kind: existing.kind, values: existing.values.clone() })],
+            Some(existing) => vec![TiffMutation::ReplaceTag(crate::schema::mutations::ReplaceTagMutation { ifd_index: *ifd_index, tag: *tag, kind: existing.kind, values: existing.values.clone() })],
             None => Vec::new(),
         }
     }

@@ -5,7 +5,7 @@
   "displayName": "Change Battery Max Charge",
   "emoji": "⏫️",
   "aggregateVariant": "ChangeBatteryMaxCharge",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-battery-max-charge",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

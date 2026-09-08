@@ -1,0 +1,29 @@
+[package]
+name = "semio-s-artifact-stdio-wav"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Stdio wav artifact"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[features]
+default = []
+component-app-assembly = []
+
+[dependencies]
+pack = { workspace = true }
+semio-framework = { workspace = true }
+semio-framework-os-kernel = { workspace = true }
+semio-framework-plugin = { workspace = true }
+semio-framework-schema = { workspace = true }
+semio-framework-value-derive = { workspace = true }
+semio-s-artifact-stdio-contract = { workspace = true }
+serde_json = { workspace = true }
+
+[dev-dependencies]
+semio-framework-async-macros = { workspace = true }

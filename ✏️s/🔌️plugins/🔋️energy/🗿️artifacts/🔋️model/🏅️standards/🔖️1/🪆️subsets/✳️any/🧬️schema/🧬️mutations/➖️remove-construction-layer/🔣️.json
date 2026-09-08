@@ -5,7 +5,7 @@
   "displayName": "Remove Construction Layer",
   "emoji": "➖️",
   "aggregateVariant": "RemoveConstructionLayer",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "remove-construction-layer",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

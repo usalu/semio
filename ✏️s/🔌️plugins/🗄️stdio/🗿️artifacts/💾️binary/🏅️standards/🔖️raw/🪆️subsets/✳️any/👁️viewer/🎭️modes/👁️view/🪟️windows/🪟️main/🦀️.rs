@@ -4,7 +4,7 @@
 //! (`window_kind()`, the read-only variant, not the editable one). Same
 //! `HEX_PREVIEW_CAP_BYTES`-capped display as the sibling authoring surface.
 
-use crate::artifacts::binary::BinarySnapshot;
+use crate::BinarySnapshot;
 use semio_framework_plugin::app::{TextView, TextWindowKit, WindowKit};
 use semio_framework_plugin::{BuiltNode, LocalizedLabel, WindowKindDefinition};
 

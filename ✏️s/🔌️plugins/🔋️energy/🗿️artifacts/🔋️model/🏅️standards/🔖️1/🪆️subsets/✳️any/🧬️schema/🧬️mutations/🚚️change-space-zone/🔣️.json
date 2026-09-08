@@ -5,7 +5,7 @@
   "displayName": "Change Space Zone",
   "emoji": "🚚️",
   "aggregateVariant": "ChangeSpaceZone",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-space-zone",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

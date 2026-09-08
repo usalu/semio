@@ -1,5 +1,5 @@
 //! 🚪️ IO stdio.gltf (2.0/♾️any) — registration now flows through the `s.stdio.gltf`
-//! `ArtifactDeclaration` (`crate::artifacts::gltf::declaration`), not per-leaf register().
+//! `ArtifactDeclaration` (`crate::declaration`), not per-leaf register().
 //!
 //! ⚙️ Owns the byte/container-level glTF 2.0 codecs (base64 data-uri, typed accessor decode,
 //! `.gltf` JSON text, `.glb` binary container). Ticket 26/08/10/ARTIFACT-SYSTEM-OVERHAUL-
@@ -18,9 +18,9 @@
 //! build) still serializes a `GltfSnapshot` through them, so gating them broke that build — see
 //! `GltfSnapshot`'s own doc comment in the sibling `📸️snapshot` module.
 #[cfg(test)]
-use crate::artifacts::gltf::schema::snapshot::{GltfAccessor, GltfBuffer, GltfBufferView, GltfJson, GltfMesh, GltfPrimitive, GltfSparseAccessor, GltfSparseIndices, GltfSparseValues};
-use crate::artifacts::gltf::schema::snapshot::{GltfDocument, GltfSourceForm};
-use crate::artifacts::gltf::{GltfSnapshot, STDIO_GLTF_DOCUMENT_SCHEMA};
+use crate::schema::snapshot::{GltfAccessor, GltfBuffer, GltfBufferView, GltfJson, GltfMesh, GltfPrimitive, GltfSparseAccessor, GltfSparseIndices, GltfSparseValues};
+use crate::schema::snapshot::{GltfDocument, GltfSourceForm};
+use crate::{GltfSnapshot, STDIO_GLTF_DOCUMENT_SCHEMA};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Base64
@@ -217,7 +217,7 @@ impl GltfAccessorType {
 /// [`decode_glb`] use, via `pack::json`) — kept UNCONDITIONAL, not `#[cfg(test)]`, because the
 /// sibling `📸️snapshot` module's own `GltfAccessor`/`GltfSparseIndices` etc. still derive real
 /// `Serialize`/`Deserialize` for a production call site outside this file (see
-/// [`GltfSnapshot`](crate::artifacts::gltf::schema::snapshot::GltfSnapshot)'s doc comment).
+/// [`GltfSnapshot`](crate::schema::snapshot::GltfSnapshot)'s doc comment).
 impl Serialize for GltfComponentType {
     fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         serializer.serialize_u64(self.code())
@@ -567,8 +567,8 @@ pub fn decode_glb(bytes: &[u8]) -> Result<GltfSnapshot, String> {
 
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use crate::artifacts::gltf::standards::v2_0::subsets::any::schema::GltfAnalyzer;
-    use crate::artifacts::gltf::GltfSnapshot;
+    use crate::standards::v2_0::subsets::any::schema::GltfAnalyzer;
+    use crate::GltfSnapshot;
     use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.gltf", standard: StandardId("2.0"), subset: SubsetId("*") };
@@ -620,13 +620,13 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn empty_snapshot_matches_schema() {
-        let snapshot = crate::artifacts::gltf::engine::empty_gltf_snapshot();
+        let snapshot = crate::engine::empty_gltf_snapshot();
         assert_eq!(snapshot.schema, STDIO_GLTF_DOCUMENT_SCHEMA);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn codec_round_trip() {
-        let snap = crate::artifacts::gltf::engine::empty_gltf_snapshot();
+        let snap = crate::engine::empty_gltf_snapshot();
         let text = store::ArtifactDsl::print_dsl(&snap);
         let parsed = <GltfSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
         assert_eq!(parsed.schema, snap.schema);
@@ -919,8 +919,8 @@ mod tests {
             buffer_views: vec![GltfBufferView { buffer: 0, byte_offset: 0, byte_length: bytes.len(), byte_stride: None, target: None, name: None, extensions: None, extras: None }],
             accessors: vec![accessor(0, GltfComponentType::Float, GltfAccessorType::Vec3, 2)],
             meshes: vec![GltfMesh { primitives: vec![GltfPrimitive { attributes: vec![("POSITION".into(), 0)], mode: Some(4), ..GltfPrimitive::default() }], ..GltfMesh::default() }],
-            nodes: vec![crate::artifacts::gltf::schema::snapshot::GltfNode { mesh: Some(0), name: Some("root".into()), ..Default::default() }],
-            scenes: vec![crate::artifacts::gltf::schema::snapshot::GltfScene { nodes: vec![0], ..Default::default() }],
+            nodes: vec![crate::schema::snapshot::GltfNode { mesh: Some(0), name: Some("root".into()), ..Default::default() }],
+            scenes: vec![crate::schema::snapshot::GltfScene { nodes: vec![0], ..Default::default() }],
             scene: Some(0),
             extensions_used: vec!["KHR_materials_unlit".into()],
             ..GltfDocument::default()
@@ -957,11 +957,11 @@ mod tests {
     /// wave (json/csv/zip/png/txt/binary) established.
     mod conformance_laws {
         use super::*;
-        use crate::artifacts::gltf::io::mutations as mutation_transport;
-        use crate::artifacts::gltf::schema::mutations::change_material_alpha_mode::{ChangeMaterialAlphaModeMutation, GltfChangeMaterialAlphaModePayload};
-        use crate::artifacts::gltf::schema::mutations::GltfMutation;
-        use crate::artifacts::gltf::schema::snapshot::GltfAlphaMode;
-        use crate::artifacts::gltf::schema::{diff, snapshot};
+        use crate::io::mutations as mutation_transport;
+        use crate::schema::mutations::change_material_alpha_mode::{ChangeMaterialAlphaModeMutation, GltfChangeMaterialAlphaModePayload};
+        use crate::schema::mutations::GltfMutation;
+        use crate::schema::snapshot::GltfAlphaMode;
+        use crate::schema::{diff, snapshot};
         use protocol::{DiffCodec, Mutation, OpBinary, OpText};
 
         // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -998,7 +998,7 @@ mod tests {
         async fn grammar_conformance_law() {
             let grammar = dsl::parse_grammar(snapshot::text::COMPONENT_GRAMMAR_SEMIO).expect("parse snapshot grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
-            let text = store::ArtifactDsl::print_dsl(&crate::artifacts::gltf::engine::demo_gltf_snapshot());
+            let text = store::ArtifactDsl::print_dsl(&crate::engine::demo_gltf_snapshot());
             let (envelope, body) = store::semio_format::split_text_preamble(&text).expect("split preamble");
             let reconstructed = format!("{}\n{body}", envelope.envelope_id());
             assert!(recognizer.recognize(&reconstructed).expect("recognize"), "grammar did not recognize demo dsl body:\n{reconstructed}");
@@ -1050,7 +1050,7 @@ mod tests {
         #[semio_framework_async_macros::async_test]
         async fn protocol_walk_law() {
             let pack_spec = dsl::parse_protocol(snapshot::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse snapshot protocol");
-            let packed = store::ArtifactPack::encode_pack(&crate::artifacts::gltf::engine::demo_gltf_snapshot());
+            let packed = store::ArtifactPack::encode_pack(&crate::engine::demo_gltf_snapshot());
             let (_, inner) = store::semio_format::unwrap_binary(&packed).expect("unwrap semio envelope");
             let trace = dsl::walk_protocol(&pack_spec, &inner).unwrap_or_else(|e| panic!("walk_protocol(pack) failed @{}: {}", e.offset, e.message));
             assert_eq!(trace.consumed, inner.len(), "pack walk did not consume every byte");
@@ -1082,7 +1082,7 @@ mod tests {
             const FIXTURE_DSL: &str = include_str!("../📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio");
             const FIXTURE_PACK: &[u8] = include_bytes!("../📚️examples/🎬️demo/🖼️assets/🎒️.pack.semio");
 
-            let demo = crate::artifacts::gltf::engine::demo_gltf_snapshot();
+            let demo = crate::engine::demo_gltf_snapshot();
 
             let parsed = <GltfSnapshot as store::ArtifactDsl>::parse_dsl(FIXTURE_DSL).expect("parse shipped .dsl.semio fixture");
             assert_eq!(parsed, demo, "shipped .dsl.semio fixture does not parse back to demo_gltf_snapshot()");
@@ -1107,7 +1107,7 @@ mod tests {
 //#region 🚪️DerivedIoRegistry
 /// 🚪️ Dissolved out of `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES).
 pub mod io_registry {
-    use crate::artifacts::gltf::standards::v2_0::subsets::any::schema::GltfComposer as GltfRawAnyComposer;
+    use crate::standards::v2_0::subsets::any::schema::GltfComposer as GltfRawAnyComposer;
     use semio_framework_plugin::{composer_entry_of, ComposerEntry};
     use std::sync::OnceLock;
 

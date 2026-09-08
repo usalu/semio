@@ -17,7 +17,7 @@
 //! ...` (space-separated, same shape the derive's own handcrafted-wrapper convention uses),
 //! reusing `🔺️diff`'s `pub(crate)` grammar primitives rather than duplicating them a second time.
 
-use crate::artifacts::dxf::schema::diff::{
+use crate::schema::diff::{
     block_diff_between,
     dec_block,
     // 🧪️ P2-FG1: real recursive binary twins backing the upgraded `OpBinary` impl below (see
@@ -77,8 +77,8 @@ use crate::artifacts::dxf::schema::diff::{
     write_str_lp,
     DxfDiff,
 };
-use crate::artifacts::dxf::schema::snapshot::{DxfBlock, DxfEntity, DxfHeaderVar, DxfLayer, DxfLinetype, DxfStyle};
-use crate::artifacts::dxf::DxfSnapshot;
+use crate::schema::snapshot::{DxfBlock, DxfEntity, DxfHeaderVar, DxfLayer, DxfLinetype, DxfStyle};
+use crate::DxfSnapshot;
 use protocol::OpBinary;
 use protocol::{Mutation, MutationDiff, OpText};
 
@@ -587,7 +587,7 @@ impl OpBinary for DxfMutation {
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_mutation_cases() -> Vec<DxfMutation> {
-    use crate::artifacts::dxf::schema::snapshot::{DxfOtherTable, DxfTables, DxfTag, DxfValue, DxfVertex};
+    use crate::schema::snapshot::{DxfOtherTable, DxfTables, DxfTag, DxfValue, DxfVertex};
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn demo_snapshot_for_set() -> DxfSnapshot {
@@ -652,8 +652,8 @@ pub(crate) fn demo_mutation_cases() -> Vec<DxfMutation> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::dxf::schema::diff::DxfEntitiesDiff;
-    use crate::artifacts::dxf::schema::snapshot::{DxfOtherTable, DxfTables, DxfTag, DxfValue, DxfVertex};
+    use crate::schema::diff::DxfEntitiesDiff;
+    use crate::schema::snapshot::{DxfOtherTable, DxfTables, DxfTag, DxfValue, DxfVertex};
     use protocol::command::DiffAlgebra;
 
     #[semio_framework_async_macros::async_test]
@@ -951,7 +951,7 @@ mod tests {
         let ed_ab = d_ab.entities.as_ref().expect("entities diff populated (a->b)");
         assert!(ed_ab.removed.is_empty() && !ed_ab.modified.is_empty() && !ed_ab.added.is_empty());
         let em1 = &ed_ab.modified.iter().find(|m| m.index == 1).expect("entities[1] modified").diff;
-        assert!(matches!(em1, crate::artifacts::dxf::schema::diff::DxfEntityDiff::Replace { .. }), "kind change (Circle->Text) must be a Replace");
+        assert!(matches!(em1, crate::schema::diff::DxfEntityDiff::Replace { .. }), "kind change (Circle->Text) must be a Replace");
         let ed_ba = d_ba.entities.as_ref().expect("entities diff populated (b->a)");
         assert!(!ed_ba.removed.is_empty() && !ed_ba.modified.is_empty() && ed_ba.added.is_empty());
     }

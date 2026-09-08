@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/norm/din16798/1/any/mutation/change-n50-h-inv.json",
+  "title": "ChangeN50HInv",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newN50HInv"
+  ],
+  "properties": {
+    "newN50HInv": {
+      "type": "number"
+    }
+  }
+}

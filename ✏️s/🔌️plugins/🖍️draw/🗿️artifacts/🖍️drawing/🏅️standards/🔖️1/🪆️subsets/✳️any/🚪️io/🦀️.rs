@@ -12,12 +12,12 @@ use crate::artifacts::drawing::{DrawingSnapshot, FillStyle, PathSegment};
 /// 🌉️ Relocated verbatim from the `⚙️engine` directory (ticket
 /// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES, rule 5: sniff/codec dispatch and
 /// cross-format bridge functions live in `🚪️io/`).
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioPoint3, SemioQuaternion, SemioRgba, SemioTransform};
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{
+use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioPoint3, SemioQuaternion, SemioRgba, SemioTransform};
+use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::{
     DrawCanvas as SemioDrawCanvas, DrawLayer as SemioDrawLayer, DrawNode as SemioDrawNode, DrawStyle as SemioDrawStyle, PathSegment as SemioPathSegment, SemioDrawingSnapshot, STDIO_SEMIODRAWING_DOCUMENT_SCHEMA,
 };
-use semio_s_plugin_stdio::artifacts::svg::standards::v1_1::subsets::base::schema::snapshot::write_svg_xml;
-use semio_s_plugin_stdio::artifacts::svg::SvgSnapshot;
+use semio_s_artifact_stdio_svg::standards::v1_1::subsets::base::schema::snapshot::write_svg_xml;
+use semio_s_artifact_stdio_svg::SvgSnapshot;
 
 /// 🕳️ stdio_gap: `s.stdio.semio/v1/drawing` bridges only to svg/dxf/pdf (per the master plan's
 /// format lattice — dwg lives under `s.stdio.semio/v1/cad`, standard `ac1024`, a different hub
@@ -37,7 +37,7 @@ const SVG_DIALECT: semio_framework::Dialect = semio_framework::Dialect { artifac
 /// registered").
 fn ensure_semio_drawing_bridge_registered() {
     static ONCE: std::sync::Once = std::sync::Once::new();
-    ONCE.call_once(semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::drawing::io::register);
+    ONCE.call_once(semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::io::register);
 }
 
 fn resolve_drawing_document_artboard(doc: &DrawingSnapshot) -> (u32, u32) {
@@ -247,7 +247,7 @@ mod tests {
     /// of substring-matching hand-rolled markup, since the markup is no longer hand-rolled.
     #[semio_framework_async_macros::async_test]
     async fn drawing_document_to_svg_bridges_shape_text_image_and_gradient_nodes_through_semio_drawing() {
-        use semio_s_plugin_stdio::artifacts::svg::standards::v1_1::subsets::base::schema::snapshot::{parse_svg_xml, svg_element_from_xml_node, SvgElement};
+        use semio_s_artifact_stdio_svg::standards::v1_1::subsets::base::schema::snapshot::{parse_svg_xml, svg_element_from_xml_node, SvgElement};
 
         let mut rect = create_drawing_shape_layer_rect("Rect");
         if let DrawingLayerNode::Shape(shape) = &mut rect {

@@ -71,7 +71,7 @@
         {
           "id": "insert-frame-component",
           "capability": "jpg-jfif-1-01-baseline-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -91,7 +91,7 @@
         {
           "id": "insert-huffman-table",
           "capability": "jpg-jfif-1-01-baseline-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -111,7 +111,7 @@
         {
           "id": "remove-frame-component",
           "capability": "jpg-jfif-1-01-baseline-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -131,7 +131,7 @@
         {
           "id": "remove-huffman-table",
           "capability": "jpg-jfif-1-01-baseline-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -151,7 +151,7 @@
         {
           "id": "set-arithmetic",
           "capability": "jpg-jfif-1-01-baseline-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -171,7 +171,7 @@
         {
           "id": "set-component-sampling",
           "capability": "jpg-jfif-1-01-baseline-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -191,7 +191,7 @@
         {
           "id": "set-sample-precision",
           "capability": "jpg-jfif-1-01-baseline-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -211,7 +211,7 @@
         {
           "id": "set-snapshot",
           "capability": "jpg-jfif-1-01-baseline-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -231,7 +231,7 @@
         {
           "id": "set-sof-marker",
           "capability": "jpg-jfif-1-01-baseline-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],

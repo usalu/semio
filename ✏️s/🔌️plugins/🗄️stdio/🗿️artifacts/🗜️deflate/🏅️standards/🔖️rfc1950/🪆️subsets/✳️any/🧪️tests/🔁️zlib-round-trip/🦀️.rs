@@ -32,7 +32,7 @@ mod subject {
     use super::payload;
     use semio_s_plugin_stdio_test_oracle::archive::project_zlib;
     use semio_repo_test_host::{Context, Outcome};
-    use semio_s_plugin_stdio::artifacts::deflate::standards::v_rfc1950::subsets::any::io::{zlib_compress, zlib_decompress};
+    use crate::standards::v_rfc1950::subsets::any::io::{zlib_compress, zlib_decompress};
 
     pub fn run(ctx: &Context) -> Result<Outcome, String> {
         let input = payload(ctx);

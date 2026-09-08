@@ -5,7 +5,7 @@
   "displayName": "Add Output Variable",
   "emoji": "📊️",
   "aggregateVariant": "AddOutputVariable",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "add-output-variable",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

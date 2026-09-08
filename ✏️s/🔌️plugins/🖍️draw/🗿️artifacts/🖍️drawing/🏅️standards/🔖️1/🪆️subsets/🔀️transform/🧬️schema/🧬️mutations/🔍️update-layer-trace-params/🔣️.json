@@ -5,7 +5,7 @@
   "displayName": "Update Layer Trace Params",
   "emoji": "🔍️",
   "aggregateVariant": "UpdateLayerTraceParams",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "update-layer-trace-params",
   "binaryTag": 9,
   "invertibility": "explicit-mutation",

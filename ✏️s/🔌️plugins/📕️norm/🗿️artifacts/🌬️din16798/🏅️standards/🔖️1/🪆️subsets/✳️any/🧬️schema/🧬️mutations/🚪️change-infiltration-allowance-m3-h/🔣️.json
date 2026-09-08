@@ -5,7 +5,7 @@
   "displayName": "Change Infiltration Allowance M3 H",
   "emoji": "🚪️",
   "aggregateVariant": "ChangeInfiltrationAllowanceM3H",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

@@ -9,9 +9,9 @@
 //! has exactly one global header per file, `video` has per-stream dimensions, a genuine cardinality
 //! mismatch when there is more than one stream).
 
-use crate::artifacts::avi::standards::v1_0::subsets::any::schema::snapshot::{AviChunk, AviMainHeader, AviStream, AviStreamFormat, AviStreamHeader};
-use crate::artifacts::avi::AviSnapshot;
-use crate::artifacts::semio::standards::v1::subsets::video::schema::snapshot::{SemioVideoSnapshot, SemioVideoStreamKind};
+use semio_s_artifact_stdio_avi::standards::v1_0::subsets::any::schema::snapshot::{AviChunk, AviMainHeader, AviStream, AviStreamFormat, AviStreamHeader};
+use semio_s_artifact_stdio_avi::AviSnapshot;
+use crate::standards::v1::subsets::video::schema::snapshot::{SemioVideoSnapshot, SemioVideoStreamKind};
 use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
 
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("video") };
@@ -97,8 +97,8 @@ impl ArtifactSerializer for SemioVideoToAvi {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::semio::standards::v1::subsets::video::io::avi_deserializer::SemioVideoFromAvi;
-    use crate::artifacts::semio::standards::v1::subsets::video::schema::snapshot::{SemioRational, SemioVideoSample, SemioVideoStream, STDIO_SEMIOVIDEO_DOCUMENT_SCHEMA};
+    use crate::standards::v1::subsets::video::io::avi_deserializer::SemioVideoFromAvi;
+    use crate::standards::v1::subsets::video::schema::snapshot::{SemioRational, SemioVideoSample, SemioVideoStream, STDIO_SEMIOVIDEO_DOCUMENT_SCHEMA};
     use semio_framework_plugin::ArtifactDeserializer;
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9

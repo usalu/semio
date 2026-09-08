@@ -111,9 +111,9 @@ mod subject {
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_plugin_stdio_test_oracle::artifacts::png::standards::v1_2::subsets::any::project_png_mutation;
     use semio_s_plugin_stdio::ArtifactDsl;
-    use semio_s_plugin_stdio::artifacts::png::standards::v1_2::subsets::any::io::{decode_png, encode_png};
-    use semio_s_plugin_stdio::artifacts::png::standards::v1_2::subsets::any::schema::mutations::{apply_png_mutation, inverse_png_mutation, PngMutation};
-    use semio_s_plugin_stdio::artifacts::png::standards::v1_2::subsets::any::schema::snapshot::{PngBackground, PngChromaticities, PngChunk, PngChunkMarker, PngColorType, PngPhysicalDims, PngRgb, PngSnapshot, PngSrgbIntent, PngTextChunk, PngTextKind, PngTimestamp};
+    use crate::standards::v1_2::subsets::any::io::{decode_png, encode_png};
+    use crate::standards::v1_2::subsets::any::schema::mutations::{apply_png_mutation, inverse_png_mutation, PngMutation};
+    use crate::standards::v1_2::subsets::any::schema::snapshot::{PngBackground, PngChromaticities, PngChunk, PngChunkMarker, PngColorType, PngPhysicalDims, PngRgb, PngSnapshot, PngSrgbIntent, PngTextChunk, PngTextKind, PngTimestamp};
 
     //#region 🔖️Json
     fn num(params: &Json, key: &str) -> Option<f64> {
@@ -191,32 +191,32 @@ mod subject {
     /// mutation pipeline; `apply_png_mutation` does the rest.
     fn mutation_from_spec(kind: &str, params: &Json, base: &PngSnapshot) -> Result<PngMutation, String> {
         match kind {
-            "change-header" => Ok(PngMutation::ChangeHeader(semio_s_plugin_stdio::artifacts::png::schema::mutations::ChangeHeaderMutation { width: num(params, "width").unwrap_or(base.width as f64) as u32, height: num(params, "height").unwrap_or(base.height as f64) as u32, bit_depth: num(params, "bitDepth").unwrap_or(base.bit_depth as f64) as u8, color_type: color_type_from(as_str(params, "colorType").unwrap_or("rgba")), interlace: as_bool(params, "interlace").unwrap_or(base.interlace) })),
+            "change-header" => Ok(PngMutation::ChangeHeader(crate::schema::mutations::ChangeHeaderMutation { width: num(params, "width").unwrap_or(base.width as f64) as u32, height: num(params, "height").unwrap_or(base.height as f64) as u32, bit_depth: num(params, "bitDepth").unwrap_or(base.bit_depth as f64) as u8, color_type: color_type_from(as_str(params, "colorType").unwrap_or("rgba")), interlace: as_bool(params, "interlace").unwrap_or(base.interlace) })),
             "replace-palette" => {
                 let entries = as_arr(params.get("plte").unwrap_or(&Json::Null));
                 let plte = entries.iter().map(|entry| { let channels = as_arr(entry); PngRgb { r: num_at(channels, 0).unwrap_or(0.0) as u8, g: num_at(channels, 1).unwrap_or(0.0) as u8, b: num_at(channels, 2).unwrap_or(0.0) as u8 } }).collect();
-                Ok(PngMutation::ReplacePalette(semio_s_plugin_stdio::artifacts::png::schema::mutations::ReplacePaletteMutation { plte: Some(plte) }))
+                Ok(PngMutation::ReplacePalette(crate::schema::mutations::ReplacePaletteMutation { plte: Some(plte) }))
             }
             // 👁️ tRNS is structurally invalid alongside color type 6 (truecolor+alpha) — see this
             // subset's own oracle module for the full reasoning. `None` is the only decode-safe
             // exercise given `encode_png`'s always-RGBA6 output.
-            "change-transparency" => Ok(PngMutation::ChangeTransparency(semio_s_plugin_stdio::artifacts::png::schema::mutations::ChangeTransparencyMutation { trns: None })),
-            "change-gamma" => Ok(PngMutation::ChangeGamma(semio_s_plugin_stdio::artifacts::png::schema::mutations::ChangeGammaMutation { gama: num(params, "gama").map(|value| value as u32) })),
-            "change-chromaticities" => Ok(PngMutation::ChangeChromaticities(semio_s_plugin_stdio::artifacts::png::schema::mutations::ChangeChromaticitiesMutation {
+            "change-transparency" => Ok(PngMutation::ChangeTransparency(crate::schema::mutations::ChangeTransparencyMutation { trns: None })),
+            "change-gamma" => Ok(PngMutation::ChangeGamma(crate::schema::mutations::ChangeGammaMutation { gama: num(params, "gama").map(|value| value as u32) })),
+            "change-chromaticities" => Ok(PngMutation::ChangeChromaticities(crate::schema::mutations::ChangeChromaticitiesMutation {
                 chrm: Some(PngChromaticities { white_x: num(params, "whiteX").unwrap_or(0.0) as u32, white_y: num(params, "whiteY").unwrap_or(0.0) as u32, red_x: num(params, "redX").unwrap_or(0.0) as u32, red_y: num(params, "redY").unwrap_or(0.0) as u32, green_x: num(params, "greenX").unwrap_or(0.0) as u32, green_y: num(params, "greenY").unwrap_or(0.0) as u32, blue_x: num(params, "blueX").unwrap_or(0.0) as u32, blue_y: num(params, "blueY").unwrap_or(0.0) as u32 }),
             })),
-            "change-srgb-intent" => Ok(PngMutation::ChangeSrgbIntent(semio_s_plugin_stdio::artifacts::png::schema::mutations::ChangeSrgbIntentMutation { srgb: Some(srgb_from(as_str(params, "srgb").unwrap_or("perceptual"))) })),
-            "change-physical-dims" => Ok(PngMutation::ChangePhysicalDims(semio_s_plugin_stdio::artifacts::png::schema::mutations::ChangePhysicalDimsMutation { phys: Some(PngPhysicalDims { ppu_x: num(params, "ppuX").unwrap_or(0.0) as u32, ppu_y: num(params, "ppuY").unwrap_or(0.0) as u32, unit_is_meter: as_bool(params, "unitIsMeter").unwrap_or(false) }) })),
-            "change-timestamp" => Ok(PngMutation::ChangeTimestamp(semio_s_plugin_stdio::artifacts::png::schema::mutations::ChangeTimestampMutation { time: Some(PngTimestamp { year: num(params, "year").unwrap_or(2024.0) as u16, month: num(params, "month").unwrap_or(1.0) as u8, day: num(params, "day").unwrap_or(1.0) as u8, hour: num(params, "hour").unwrap_or(0.0) as u8, minute: num(params, "minute").unwrap_or(0.0) as u8, second: num(params, "second").unwrap_or(0.0) as u8 }) })),
+            "change-srgb-intent" => Ok(PngMutation::ChangeSrgbIntent(crate::schema::mutations::ChangeSrgbIntentMutation { srgb: Some(srgb_from(as_str(params, "srgb").unwrap_or("perceptual"))) })),
+            "change-physical-dims" => Ok(PngMutation::ChangePhysicalDims(crate::schema::mutations::ChangePhysicalDimsMutation { phys: Some(PngPhysicalDims { ppu_x: num(params, "ppuX").unwrap_or(0.0) as u32, ppu_y: num(params, "ppuY").unwrap_or(0.0) as u32, unit_is_meter: as_bool(params, "unitIsMeter").unwrap_or(false) }) })),
+            "change-timestamp" => Ok(PngMutation::ChangeTimestamp(crate::schema::mutations::ChangeTimestampMutation { time: Some(PngTimestamp { year: num(params, "year").unwrap_or(2024.0) as u16, month: num(params, "month").unwrap_or(1.0) as u8, day: num(params, "day").unwrap_or(1.0) as u8, hour: num(params, "hour").unwrap_or(0.0) as u8, minute: num(params, "minute").unwrap_or(0.0) as u8, second: num(params, "second").unwrap_or(0.0) as u8 }) })),
             // 🖼️ Always the `Rgb{r,g,b}` (6-byte) variant — the only bKGD layout compatible with
             // the color-type-6 output every re-encode here produces (§11.3.5.1).
-            "change-background" => Ok(PngMutation::ChangeBackground(semio_s_plugin_stdio::artifacts::png::schema::mutations::ChangeBackgroundMutation { bkgd: Some(PngBackground::Rgb { r: num(params, "r").unwrap_or(0.0) as u16, g: num(params, "g").unwrap_or(0.0) as u16, b: num(params, "b").unwrap_or(0.0) as u16 }) })),
-            "insert-text-chunk" => Ok(PngMutation::InsertTextChunk(semio_s_plugin_stdio::artifacts::png::schema::mutations::InsertTextChunkMutation { index: num(params, "index").unwrap_or(0.0) as usize, chunk: text_chunk_from(params) })),
-            "remove-text-chunk" => Ok(PngMutation::RemoveTextChunk(semio_s_plugin_stdio::artifacts::png::schema::mutations::RemoveTextChunkMutation { index: num(params, "index").unwrap_or(0.0) as usize })),
-            "replace-text-chunk" => Ok(PngMutation::ReplaceTextChunk(semio_s_plugin_stdio::artifacts::png::schema::mutations::ReplaceTextChunkMutation { index: num(params, "index").unwrap_or(0.0) as usize, chunk: text_chunk_from(params) })),
-            "replace-pixels" => Ok(PngMutation::ReplacePixels(semio_s_plugin_stdio::artifacts::png::schema::mutations::ReplacePixelsMutation { pixels: solid_pixels(base, params) })),
-            "insert-unknown-chunk" => Ok(PngMutation::InsertUnknownChunk(semio_s_plugin_stdio::artifacts::png::schema::mutations::InsertUnknownChunkMutation { index: num(params, "index").unwrap_or(0.0) as usize, chunk: unknown_chunk_from(params) })),
-            "remove-unknown-chunk" => Ok(PngMutation::RemoveUnknownChunk(semio_s_plugin_stdio::artifacts::png::schema::mutations::RemoveUnknownChunkMutation { index: num(params, "index").unwrap_or(0.0) as usize })),
+            "change-background" => Ok(PngMutation::ChangeBackground(crate::schema::mutations::ChangeBackgroundMutation { bkgd: Some(PngBackground::Rgb { r: num(params, "r").unwrap_or(0.0) as u16, g: num(params, "g").unwrap_or(0.0) as u16, b: num(params, "b").unwrap_or(0.0) as u16 }) })),
+            "insert-text-chunk" => Ok(PngMutation::InsertTextChunk(crate::schema::mutations::InsertTextChunkMutation { index: num(params, "index").unwrap_or(0.0) as usize, chunk: text_chunk_from(params) })),
+            "remove-text-chunk" => Ok(PngMutation::RemoveTextChunk(crate::schema::mutations::RemoveTextChunkMutation { index: num(params, "index").unwrap_or(0.0) as usize })),
+            "replace-text-chunk" => Ok(PngMutation::ReplaceTextChunk(crate::schema::mutations::ReplaceTextChunkMutation { index: num(params, "index").unwrap_or(0.0) as usize, chunk: text_chunk_from(params) })),
+            "replace-pixels" => Ok(PngMutation::ReplacePixels(crate::schema::mutations::ReplacePixelsMutation { pixels: solid_pixels(base, params) })),
+            "insert-unknown-chunk" => Ok(PngMutation::InsertUnknownChunk(crate::schema::mutations::InsertUnknownChunkMutation { index: num(params, "index").unwrap_or(0.0) as usize, chunk: unknown_chunk_from(params) })),
+            "remove-unknown-chunk" => Ok(PngMutation::RemoveUnknownChunk(crate::schema::mutations::RemoveUnknownChunkMutation { index: num(params, "index").unwrap_or(0.0) as usize })),
             other => Err(format!("mutation kind {other:?} has no subject implementation")),
         }
     }

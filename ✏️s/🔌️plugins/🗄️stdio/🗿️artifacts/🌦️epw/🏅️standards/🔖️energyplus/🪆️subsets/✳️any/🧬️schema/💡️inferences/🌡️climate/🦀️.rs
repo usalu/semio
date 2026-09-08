@@ -9,7 +9,7 @@
 //! `avgDryBulbC` fold only over the successfully-parsed values. Zero parsed values (including the
 //! empty-`records` case) is the fold's identity: all three temperature fields default to `0.0`.
 
-use crate::artifacts::epw::standards::energyplus::subsets::any::schema::snapshot::EpwSnapshot;
+use crate::standards::energyplus::subsets::any::schema::snapshot::EpwSnapshot;
 
 //#region 🔖️ClimateSummary
 /// 🌡️ Epw's hourly dry-bulb temperature min/max/avg.
@@ -60,7 +60,7 @@ pub fn compute_epw_climate_summary(snapshot: &EpwSnapshot) -> EpwClimateSummary 
 //#region 🧪️Tests
 mod tests {
     use super::*;
-    use crate::artifacts::epw::standards::energyplus::subsets::any::schema::snapshot::{EpwRecord, STDIO_EPW_DOCUMENT_SCHEMA};
+    use crate::standards::energyplus::subsets::any::schema::snapshot::{EpwRecord, STDIO_EPW_DOCUMENT_SCHEMA};
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn record(dry_bulb_temp: &str) -> EpwRecord {

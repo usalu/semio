@@ -9,6 +9,6 @@ pub fn diff(payload: &ChangePileNProfiles, base: &En1997Snapshot) -> protocol::M
     if base.pile_n_profiles == payload.new_pile_n_profiles {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Number of investigated pile profiles is already {}.", payload.new_pile_n_profiles));
     }
-    protocol::MutationOutcome::new(En1997Diff { pile_n_profiles: Some(payload.new_pile_n_profiles.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1997Diff { pile_n_profiles: Some(payload.new_pile_n_profiles), ..Default::default() })
 }
 //#endregion 🔖️Diff

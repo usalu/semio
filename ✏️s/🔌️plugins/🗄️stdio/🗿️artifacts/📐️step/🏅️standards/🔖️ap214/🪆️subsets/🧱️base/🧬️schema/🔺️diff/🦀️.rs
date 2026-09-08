@@ -12,11 +12,11 @@ pub(crate) type IndexedDiffParts<D, T> = (Vec<usize>, Vec<(usize, D)>, Vec<(usiz
 
 use std::collections::{BTreeMap, BTreeSet, HashSet};
 
-use crate::artifacts::step::schema::snapshot::{StepComplexType, StepEntity, StepFileDescription, StepFileName, StepFileSchema, StepValue};
-use crate::artifacts::step::StepSnapshot;
+use crate::schema::snapshot::{StepComplexType, StepEntity, StepFileDescription, StepFileName, StepFileSchema, StepValue};
+use crate::StepSnapshot;
 use protocol::command::DiffAlgebra;
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
-use schema::ArtifactSchema;
+use framework_schema::ArtifactSchema;
 
 //#region 🔖️IndexTransport
 /// 📐️ Shared rank/unrank arithmetic for index-keyed collection diffs (`between`/`absorb`/
@@ -936,7 +936,7 @@ pub(crate) fn dec_step_snapshot(s: &str) -> Result<StepSnapshot, String> {
     };
     Ok(StepSnapshot {
         schema: dec_str(schema)?,
-        header: crate::artifacts::step::schema::snapshot::StepHeader { file_description: dec_file_description(file_description)?, file_name: dec_file_name(file_name)?, file_schema: dec_file_schema(file_schema)? },
+        header: crate::schema::snapshot::StepHeader { file_description: dec_file_description(file_description)?, file_name: dec_file_name(file_name)?, file_schema: dec_file_schema(file_schema)? },
         entities: split_top_level(strip_brackets(entities)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_entity).collect::<Result<Vec<_>, String>>()?,
     })
 }
@@ -1121,7 +1121,7 @@ pub(crate) fn dec_step_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Resul
     let file_schema = dec_file_schema_bin(reader)?;
     let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let entities = (0..count).map(|_| dec_entity_bin(reader)).collect::<Result<Vec<_>, String>>()?;
-    Ok(StepSnapshot { schema, header: crate::artifacts::step::schema::snapshot::StepHeader { file_description, file_name, file_schema }, entities })
+    Ok(StepSnapshot { schema, header: crate::schema::snapshot::StepHeader { file_description, file_name, file_schema }, entities })
 }
 //#endregion 🔖️ValueBinaryCodecs
 
@@ -1407,7 +1407,7 @@ impl protocol::DiffCodec for StepDiff {
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_diff_cases() -> Vec<StepDiff> {
-    let a = crate::artifacts::step::engine::demo_step_snapshot();
+    let a = crate::engine::demo_step_snapshot();
     let mut b = a.clone();
     b.header.file_schema.schemas.push("CONFIG_CONTROL_DESIGN".into());
     b.header.file_name.originating_system = "changed".into();
@@ -1435,8 +1435,8 @@ mod tests {
         assert_eq!(error.target, vec!["entities", "1"]);
         assert_eq!(base, StepSnapshot::default());
     }
-    use crate::artifacts::step::schema::snapshot::{StepFileDescription, StepFileName, StepFileSchema, StepHeader};
-    use crate::artifacts::step::STDIO_STEP_DOCUMENT_SCHEMA;
+    use crate::schema::snapshot::{StepFileDescription, StepFileName, StepFileSchema, StepHeader};
+    use crate::STDIO_STEP_DOCUMENT_SCHEMA;
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn entity(id: u64, name: &str, args: Vec<StepValue>) -> StepEntity {
@@ -1643,8 +1643,8 @@ mod tests {
 #[cfg(test)]
 mod handcrafted_diff_codec_tests {
     use super::*;
-    use crate::artifacts::step::schema::snapshot::{StepFileDescription, StepFileName, StepFileSchema, StepHeader};
-    use crate::artifacts::step::STDIO_STEP_DOCUMENT_SCHEMA;
+    use crate::schema::snapshot::{StepFileDescription, StepFileName, StepFileSchema, StepHeader};
+    use crate::STDIO_STEP_DOCUMENT_SCHEMA;
     use protocol::DiffCodec;
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9

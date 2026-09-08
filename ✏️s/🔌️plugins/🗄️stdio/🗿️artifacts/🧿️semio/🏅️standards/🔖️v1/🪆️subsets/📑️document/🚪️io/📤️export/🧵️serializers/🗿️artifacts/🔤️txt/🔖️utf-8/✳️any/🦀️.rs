@@ -16,10 +16,10 @@
 //!   would be indistinguishable from (and so falsely suggest equivalence with) a genuinely empty
 //!   paragraph on the way back through this pair's deserializer.
 
-use crate::artifacts::semio::standards::v1::subsets::document::schema::snapshot::SemioDocumentSnapshot;
-use crate::artifacts::semio::standards::v1::subsets::document::schema::snapshot::{DocBlock, DocRun};
-use crate::artifacts::txt::schema::snapshot::LineEnding;
-use crate::artifacts::txt::TxtSnapshot;
+use crate::standards::v1::subsets::document::schema::snapshot::SemioDocumentSnapshot;
+use crate::standards::v1::subsets::document::schema::snapshot::{DocBlock, DocRun};
+use semio_s_artifact_stdio_txt::schema::snapshot::LineEnding;
+use semio_s_artifact_stdio_txt::TxtSnapshot;
 use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
 
 //#region 🔖️FieldMapping
@@ -55,7 +55,7 @@ impl ArtifactSerializer for SemioDocumentToTxt {
 
     async fn serialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
         let lines = from.blocks.iter().flat_map(block_to_lines).collect();
-        Ok(TxtSnapshot { schema: crate::artifacts::txt::STDIO_TXT_DOCUMENT_SCHEMA.into(), lines, trailing_newline: true, line_ending: LineEnding::Lf })
+        Ok(TxtSnapshot { schema: semio_s_artifact_stdio_txt::STDIO_TXT_DOCUMENT_SCHEMA.into(), lines, trailing_newline: true, line_ending: LineEnding::Lf })
     }
 }
 //#endregion 🔖️Serializer
@@ -64,7 +64,7 @@ impl ArtifactSerializer for SemioDocumentToTxt {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::semio::standards::v1::subsets::document::schema::snapshot::{DocListItem, RunStyle, STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA};
+    use crate::standards::v1::subsets::document::schema::snapshot::{DocListItem, RunStyle, STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA};
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn sample_semio() -> SemioDocumentSnapshot {

@@ -1,6 +1,6 @@
 //! 💾️ Direct replace-pixels binary codec.
 use super::*;
-use crate::artifacts::tiff::schema::mutations::binary::Entry;
+use crate::schema::mutations::binary::Entry;
 pub const BINARY_TAG: u8 = 7;
 pub const CODEC: Entry = Entry { tag: BINARY_TAG, encode, decode };
 

@@ -60,7 +60,8 @@ mod carrier_contract {
     use crate::artifacts::sequence::standards::v1::subsets::any::io::{export::serializers::artifacts as export, import::deserializers::artifacts as import};
     use semio_framework::io::io_mechanism::{Deserializer, Serializer};
     use semio_framework::io_schema::IoPayload;
-    use semio_s_plugin_stdio::artifacts::{csv::CsvSnapshot, md::{MdSnapshot, schema::snapshot::MdBlock}};
+    use semio_s_artifact_stdio_csv::CsvSnapshot;
+use semio_s_artifact_stdio_md::{MdSnapshot, schema::snapshot::MdBlock};
     use dsl::os_pack as pack;
 
     #[semio_framework_async_macros::async_test]

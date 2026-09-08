@@ -1,0 +1,104 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/tiff/6.0/baseline/mutations.json",
+  "title": "TiffBaselineMutation",
+  "description": "Discriminated union over this module's mutation leaves (externally tagged); every payload is the leaf's own schema, referenced, never restated.",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "InsertTileTags"
+      ],
+      "properties": {
+        "InsertTileTags": {
+          "$ref": "./🧱️insert-tile-tags/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "RemoveStripOffsets"
+      ],
+      "properties": {
+        "RemoveStripOffsets": {
+          "$ref": "./✂️remove-strip-offsets/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "RemoveTileTags"
+      ],
+      "properties": {
+        "RemoveTileTags": {
+          "$ref": "./🗑️remove-tile-tags/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "SetBitsPerSample"
+      ],
+      "properties": {
+        "SetBitsPerSample": {
+          "$ref": "./🔢️set-bits-per-sample/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "SetCompression"
+      ],
+      "properties": {
+        "SetCompression": {
+          "$ref": "./🗜️set-compression/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "SetPhotometricInterpretation"
+      ],
+      "properties": {
+        "SetPhotometricInterpretation": {
+          "$ref": "./🌈️set-photometric-interpretation/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "SetSnapshot"
+      ],
+      "properties": {
+        "SetSnapshot": {
+          "$ref": "./📸️set-snapshot/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "SetStripOffsets"
+      ],
+      "properties": {
+        "SetStripOffsets": {
+          "$ref": "./📍️set-strip-offsets/🧬️schema/🔣️.json"
+        }
+      }
+    }
+  ]
+}

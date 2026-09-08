@@ -6,7 +6,7 @@
 //! (Decision #5: 1.7 folds 1.4 in) — `declared_version` records whatever the file's `%PDF-x.y`
 //! header actually says, without rejecting it. 🦑 Dissolved out of the former `⚙️engine` (ticket
 //! 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES); registration flows through
-//! `crate::artifacts::pdf::declaration()` (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE).
+//! `crate::declaration()` (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE).
 //!
 //! Predictor math (PNG Up/Sub/Average/Paeth) and the xref-stream `/W` field-width decode were
 //! verified standalone first (scratch crate, `/private/tmp/.../scratchpad/pdf17`) before landing
@@ -16,12 +16,12 @@
 
 use std::collections::{HashMap, HashSet};
 
-use crate::artifacts::pdf::standards::v1_7::subsets::base::schema::snapshot::{ObjRef, PdfDecimal, PdfDictEntry, PdfIndirectObject, PdfInfo, PdfObject, PdfPage, PdfPredictor, PdfSnapshot, PdfStreamFilter, STDIO_PDF17_DOCUMENT_SCHEMA};
+use crate::standards::v1_7::subsets::base::schema::snapshot::{ObjRef, PdfDecimal, PdfDictEntry, PdfIndirectObject, PdfInfo, PdfObject, PdfPage, PdfPredictor, PdfSnapshot, PdfStreamFilter, STDIO_PDF17_DOCUMENT_SCHEMA};
 
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use crate::artifacts::pdf::standards::v1_7::subsets::base::schema::snapshot::PdfSnapshot;
-    use crate::artifacts::pdf::standards::v1_7::subsets::base::schema::PdfAnalyzer;
+    use crate::standards::v1_7::subsets::base::schema::snapshot::PdfSnapshot;
+    use crate::standards::v1_7::subsets::base::schema::PdfAnalyzer;
     use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.pdf", standard: StandardId("1.7"), subset: SubsetId("*") };
@@ -721,7 +721,7 @@ pub fn decode_stream(dict: &[PdfDictEntry], raw: &[u8]) -> PResult<(Vec<u8>, Vec
     for filter in &filters {
         match filter.as_str() {
             "FlateDecode" | "Fl" => {
-                data = crate::artifacts::deflate::standards::v_rfc1950::subsets::any::io::zlib_decompress(&data).map_err(|e| PdfEngineError::Malformed(format!("FlateDecode: {e}")))?;
+                data = semio_s_artifact_stdio_deflate::standards::v_rfc1950::subsets::any::io::zlib_decompress(&data).map_err(|e| PdfEngineError::Malformed(format!("FlateDecode: {e}")))?;
                 let (predictor, colors, bpc, columns) = decode_parms(dict);
                 if predictor >= 10 {
                     data = png_predictor_decode(&data, columns, colors, bpc)?;
@@ -2168,9 +2168,9 @@ fn encode_stream_data(data: &[u8], filters: &[PdfStreamFilter], illustrator: boo
             PdfStreamFilter::Flate { predictor } => {
                 let predicted = predictor.as_ref().map_or_else(|| encoded.clone(), |value| encode_predictor(&encoded, value));
                 if illustrator {
-                    crate::artifacts::deflate::standards::v_rfc1950::subsets::any::io::zlib_compress_illustrator(&predicted).expect("logical Illustrator stream is zlib-encodable")
+                    semio_s_artifact_stdio_deflate::standards::v_rfc1950::subsets::any::io::zlib_compress_illustrator(&predicted).expect("logical Illustrator stream is zlib-encodable")
                 } else {
-                    crate::artifacts::deflate::standards::v_rfc1950::subsets::any::io::zlib_compress_deterministic(&predicted).expect("logical PDF stream is zlib-encodable")
+                    semio_s_artifact_stdio_deflate::standards::v_rfc1950::subsets::any::io::zlib_compress_deterministic(&predicted).expect("logical PDF stream is zlib-encodable")
                 }
             }
             PdfStreamFilter::AsciiHex => encode_ascii_hex(&encoded),
@@ -2803,7 +2803,7 @@ pub fn encode_pdf(snap: &PdfSnapshot) -> PResult<Vec<u8>> {
     let mut objects: Vec<(u32, Vec<u8>)> = Vec::new();
 
     if let Some(cnum) = cmap_num {
-        let compressed = crate::artifacts::deflate::standards::v_rfc1950::subsets::any::io::zlib_compress(TOUNICODE_IDENTITY_CMAP.as_bytes()).map_err(|e| PdfEngineError::Malformed(format!("cmap compress: {e}")))?;
+        let compressed = semio_s_artifact_stdio_deflate::standards::v_rfc1950::subsets::any::io::zlib_compress(TOUNICODE_IDENTITY_CMAP.as_bytes()).map_err(|e| PdfEngineError::Malformed(format!("cmap compress: {e}")))?;
         let mut cbytes = Vec::new();
         cbytes.extend_from_slice(format!("{cnum} 0 obj\n<< /Length {} /Filter /FlateDecode >>\nstream\n", compressed.len()).as_bytes());
         cbytes.extend_from_slice(&compressed);
@@ -2823,7 +2823,7 @@ pub fn encode_pdf(snap: &PdfSnapshot) -> PResult<Vec<u8>> {
         let pnum = page_nums[i];
         let cnum = content_nums[i];
         let ops = build_content_ops(&page.text, "F1");
-        let compressed = crate::artifacts::deflate::standards::v_rfc1950::subsets::any::io::zlib_compress(ops.as_bytes()).map_err(|e| PdfEngineError::Malformed(format!("content compress: {e}")))?;
+        let compressed = semio_s_artifact_stdio_deflate::standards::v_rfc1950::subsets::any::io::zlib_compress(ops.as_bytes()).map_err(|e| PdfEngineError::Malformed(format!("content compress: {e}")))?;
         let mut cbytes = Vec::new();
         cbytes.extend_from_slice(format!("{cnum} 0 obj\n<< /Length {} /Filter /FlateDecode >>\nstream\n", compressed.len()).as_bytes());
         cbytes.extend_from_slice(&compressed);
@@ -2921,7 +2921,7 @@ pub fn sniff_pdf(bytes: &[u8]) -> Option<String> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::pdf::standards::v1_7::subsets::base::schema::snapshot::demo_pdf17_snapshot;
+    use crate::standards::v1_7::subsets::base::schema::snapshot::demo_pdf17_snapshot;
 
     //#region Filters
     #[test]
@@ -2970,9 +2970,9 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn bachelor_thesis_logical_lifecycle_preserves_original_native_bytes() {
-        use crate::artifacts::pdf::standards::v1_7::subsets::base::schema::diff::PdfDiff;
-        use crate::artifacts::pdf::standards::v1_7::subsets::base::schema::mutations::{apply_pdf_mutation, PdfMutation, SetInfo};
-        use crate::artifacts::pdf::standards::v1_7::subsets::base::schema::PdfAnalyzer;
+        use crate::standards::v1_7::subsets::base::schema::diff::PdfDiff;
+        use crate::standards::v1_7::subsets::base::schema::mutations::{apply_pdf_mutation, PdfMutation, SetInfo};
+        use crate::standards::v1_7::subsets::base::schema::PdfAnalyzer;
         use protocol::command::DiffAlgebra;
         use protocol::{DiffCodec, Mutation, MutationDiff, OpBinary, OpText};
         use semio_framework_plugin::{AnalyzeSource, ArtifactAnalyzer, ArtifactComposition, ComposeSource, Dialect, StandardId, SubsetId};
@@ -3077,9 +3077,9 @@ mod tests {
     /// §2.3's own documented exception), and the fixture-honesty round-trip.
     mod conformance_laws {
         use super::*;
-        use crate::artifacts::pdf::standards::v1_7::subsets::base::schema::diff::{PdfDiff, PdfPathSegment};
-        use crate::artifacts::pdf::standards::v1_7::subsets::base::schema::mutations::*;
-        use crate::artifacts::pdf::standards::v1_7::subsets::base::schema::{diff, snapshot};
+        use crate::standards::v1_7::subsets::base::schema::diff::{PdfDiff, PdfPathSegment};
+        use crate::standards::v1_7::subsets::base::schema::mutations::*;
+        use crate::standards::v1_7::subsets::base::schema::{diff, snapshot};
 
         use protocol::command::DiffAlgebra;
         use protocol::{DiffCodec, OpBinary, OpText};
@@ -3372,7 +3372,7 @@ mod tests {
                 predicted.push(row[x].wrapping_sub(a));
             }
         }
-        let compressed = crate::artifacts::deflate::standards::v_rfc1950::subsets::any::io::zlib_compress(&predicted).unwrap();
+        let compressed = semio_s_artifact_stdio_deflate::standards::v_rfc1950::subsets::any::io::zlib_compress(&predicted).unwrap();
         let o4 = body.len();
         let xref_dict = format!("4 0 obj\n<< /Type /XRef /Size 5 /W [1 2 1] /Root 1 0 R /Filter /FlateDecode /DecodeParms << /Predictor 12 /Columns {row_bytes} /Colors 1 /BitsPerComponent 8 >> /Length {} >>\nstream\n", compressed.len());
         body.extend_from_slice(xref_dict.as_bytes());
@@ -3402,7 +3402,7 @@ mod tests {
         let objstm_header = b"3 0 ".to_vec(); // objnum=3 at local offset 0
         let mut objstm_body = objstm_header.clone();
         objstm_body.extend_from_slice(&page_obj);
-        let compressed = crate::artifacts::deflate::standards::v_rfc1950::subsets::any::io::zlib_compress(&objstm_body).unwrap();
+        let compressed = semio_s_artifact_stdio_deflate::standards::v_rfc1950::subsets::any::io::zlib_compress(&objstm_body).unwrap();
         let first = objstm_header.len();
         body.extend_from_slice(format!("4 0 obj\n<< /Type /ObjStm /N 1 /First {first} /Filter /FlateDecode /Length {} >>\nstream\n", compressed.len()).as_bytes());
         body.extend_from_slice(&compressed);
@@ -3491,13 +3491,13 @@ mod tests {
 
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
-    use crate::artifacts::pdf::standards::v1_7::subsets::a::schema::PdfAComposer;
-    use crate::artifacts::pdf::standards::v1_7::subsets::base::schema::PdfComposer as PdfRawAnyComposer;
-    use crate::artifacts::pdf::standards::v1_7::subsets::e::schema::PdfEComposer;
-    use crate::artifacts::pdf::standards::v1_7::subsets::h::schema::PdfHComposer;
-    use crate::artifacts::pdf::standards::v1_7::subsets::ua::schema::PdfUaComposer;
-    use crate::artifacts::pdf::standards::v1_7::subsets::vt::schema::PdfVtComposer;
-    use crate::artifacts::pdf::standards::v1_7::subsets::x::schema::PdfXComposer;
+    use crate::standards::v1_7::subsets::a::schema::PdfAComposer;
+    use crate::standards::v1_7::subsets::base::schema::PdfComposer as PdfRawAnyComposer;
+    use crate::standards::v1_7::subsets::e::schema::PdfEComposer;
+    use crate::standards::v1_7::subsets::h::schema::PdfHComposer;
+    use crate::standards::v1_7::subsets::ua::schema::PdfUaComposer;
+    use crate::standards::v1_7::subsets::vt::schema::PdfVtComposer;
+    use crate::standards::v1_7::subsets::x::schema::PdfXComposer;
     use semio_framework_plugin::{composer_entry_of, ComposerEntry};
     use std::sync::OnceLock;
 

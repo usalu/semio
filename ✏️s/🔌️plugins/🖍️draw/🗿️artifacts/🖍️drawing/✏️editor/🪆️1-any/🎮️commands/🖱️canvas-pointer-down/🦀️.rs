@@ -559,7 +559,7 @@ impl TracePointerJob {
                     match layer {
                         DrawingLayerNode::Path(path_layer) if !path_layer.segments.is_empty() => self.push_work(TracePointerWork::PathBounds { path, next: 0, min: [f64::INFINITY; 2], max: [f64::NEG_INFINITY; 2], control_hit: false }),
                         DrawingLayerNode::Shape(shape) if shape.shape_kind == "polygon" && shape.polygon.as_ref().is_some_and(|polygon| !polygon.points.is_empty()) => {
-                            self.push_work(TracePointerWork::PolygonBounds { path, next: 0, min: [f64::INFINITY; 2], max: [f64::NEG_INFINITY; 2] })
+                            self.push_work(TracePointerWork::PolygonBounds { path, next: 0, min: [f64::INFINITY; 2], max: [f64::NEG_INFINITY; 2] });
                         }
                         _ => consider_trace_candidate(self, layer, trace_layer_world_bounds(layer), false),
                     }
@@ -715,10 +715,10 @@ fn trace_layer_world_bounds(layer: &DrawingLayerNode) -> (f64, f64, f64, f64) {
         DrawingLayerNode::Text(value) => (value.x, value.y, (value.content.len() as f64 * value.size * 0.6).max(8.0), (value.size * 1.2).max(8.0)),
         DrawingLayerNode::Image(value) => (0.0, 0.0, value.width, value.height),
         DrawingLayerNode::Shape(value) => match value.shape_kind.as_str() {
-            "rect" => value.rect.as_ref().map(|rect| (rect.x, rect.y, rect.width, rect.height)).unwrap_or((-64.0, -64.0, 128.0, 128.0)),
-            "ellipse" => value.ellipse.as_ref().map(|ellipse| (ellipse.cx - ellipse.rx, ellipse.cy - ellipse.ry, ellipse.rx * 2.0, ellipse.ry * 2.0)).unwrap_or((-64.0, -64.0, 128.0, 128.0)),
-            "circle" => value.circle.as_ref().map(|circle| (circle.cx - circle.r, circle.cy - circle.r, circle.r * 2.0, circle.r * 2.0)).unwrap_or((-64.0, -64.0, 128.0, 128.0)),
-            "line" => value.line.as_ref().map(|line| (line.x1.min(line.x2), line.y1.min(line.y2), (line.x2 - line.x1).abs(), (line.y2 - line.y1).abs())).unwrap_or((-64.0, -64.0, 128.0, 128.0)),
+            "rect" => value.rect.as_ref().map_or((-64.0, -64.0, 128.0, 128.0), |rect| (rect.x, rect.y, rect.width, rect.height)),
+            "ellipse" => value.ellipse.as_ref().map_or((-64.0, -64.0, 128.0, 128.0), |ellipse| (ellipse.cx - ellipse.rx, ellipse.cy - ellipse.ry, ellipse.rx * 2.0, ellipse.ry * 2.0)),
+            "circle" => value.circle.as_ref().map_or((-64.0, -64.0, 128.0, 128.0), |circle| (circle.cx - circle.r, circle.cy - circle.r, circle.r * 2.0, circle.r * 2.0)),
+            "line" => value.line.as_ref().map_or((-64.0, -64.0, 128.0, 128.0), |line| (line.x1.min(line.x2), line.y1.min(line.y2), (line.x2 - line.x1).abs(), (line.y2 - line.y1).abs())),
             _ => (-64.0, -64.0, 128.0, 128.0),
         },
         DrawingLayerNode::Path(_) => (-64.0, -64.0, 128.0, 128.0),

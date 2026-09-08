@@ -1,43 +1,224 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s.stdio.pdf.1.7.e/mutation.json",
+  "$id": "https://semio.tech/schema/s/stdio/pdf/1.7/e/mutations.json",
   "title": "PdfEMutation",
+  "description": "Discriminated union over this module's mutation leaves (internally tagged); every payload is the leaf's own schema, referenced, never restated.",
   "oneOf": [
     {
-      "$ref": "./🔒️insert-encryption-dictionary/🧬️.schema.json"
+      "allOf": [
+        {
+          "$ref": "./🔤️embed-font-file/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "embedFontFile"
+            }
+          }
+        }
+      ]
     },
     {
-      "$ref": "./🔓️remove-encryption-dictionary/🧬️.schema.json"
+      "allOf": [
+        {
+          "$ref": "./🔒️insert-encryption-dictionary/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "insertEncryptionDictionary"
+            }
+          }
+        }
+      ]
     },
     {
-      "$ref": "./📜️insert-javascript-action/🧬️.schema.json"
+      "allOf": [
+        {
+          "$ref": "./📜️insert-javascript-action/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "insertJavascriptAction"
+            }
+          }
+        }
+      ]
     },
     {
-      "$ref": "./🚫️remove-javascript-action/🧬️.schema.json"
+      "allOf": [
+        {
+          "$ref": "./🚀️insert-launch-action/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "insertLaunchAction"
+            }
+          }
+        }
+      ]
     },
     {
-      "$ref": "./🚀️insert-launch-action/🧬️.schema.json"
+      "allOf": [
+        {
+          "$ref": "./🎬️insert-media-annotation/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "insertMediaAnnotation"
+            }
+          }
+        }
+      ]
     },
     {
-      "$ref": "./🛬️remove-launch-action/🧬️.schema.json"
+      "allOf": [
+        {
+          "$ref": "./🔓️remove-encryption-dictionary/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "removeEncryptionDictionary"
+            }
+          }
+        }
+      ]
     },
     {
-      "$ref": "./🎬️insert-media-annotation/🧬️.schema.json"
+      "allOf": [
+        {
+          "$ref": "./🧺️remove-font-file/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "removeFontFile"
+            }
+          }
+        }
+      ]
     },
     {
-      "$ref": "./⏹️remove-media-annotation/🧬️.schema.json"
+      "allOf": [
+        {
+          "$ref": "./🚫️remove-javascript-action/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "removeJavascriptAction"
+            }
+          }
+        }
+      ]
     },
     {
-      "$ref": "./🏳️set-output-intent/🧬️.schema.json"
+      "allOf": [
+        {
+          "$ref": "./🛬️remove-launch-action/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "removeLaunchAction"
+            }
+          }
+        }
+      ]
     },
     {
-      "$ref": "./🧽️remove-output-intent/🧬️.schema.json"
+      "allOf": [
+        {
+          "$ref": "./⏹️remove-media-annotation/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "removeMediaAnnotation"
+            }
+          }
+        }
+      ]
     },
     {
-      "$ref": "./🔤️embed-font-file/🧬️.schema.json"
+      "allOf": [
+        {
+          "$ref": "./🧽️remove-output-intent/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "removeOutputIntent"
+            }
+          }
+        }
+      ]
     },
     {
-      "$ref": "./🧺️remove-font-file/🧬️.schema.json"
+      "allOf": [
+        {
+          "$ref": "./🏳️set-output-intent/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setOutputIntent"
+            }
+          }
+        }
+      ]
     }
   ]
 }

@@ -1,6 +1,6 @@
 //! shooting -> gif
 use crate::artifacts::shooting::schema::snapshot::ShootingSnapshot;
-use semio_s_plugin_stdio::artifacts::gif::{GifSnapshot, STDIO_GIF_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_gif::{GifSnapshot, STDIO_GIF_DOCUMENT_SCHEMA};
 
 pub fn register() {}
 

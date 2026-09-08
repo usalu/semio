@@ -1,13 +1,13 @@
 //! 🧩️ WordprocessingML (docx) import — `word/document.xml`/`word/styles.xml` XML parse into a
 //! `DocxDocument`, real OPC package decode, and magic-shape sniff. Zip/OPC/XML byte-level work is
-//! never reimplemented here: it is reused from the shared `crate::artifacts::zip::opc` layer and,
-//! transitively, `crate::artifacts::zip::engine` + `crate::artifacts::xml::schema::snapshot`.
+//! never reimplemented here: it is reused from the shared `semio_s_artifact_stdio_zip::opc` layer and,
+//! transitively, `semio_s_artifact_stdio_zip::engine` + `semio_s_artifact_stdio_xml::schema::snapshot`.
 
 use super::super::super::{DocxError, MAIN_DOCUMENT_PART, REL_TYPE_STYLES, STRICT_REL_TYPE_OFFICE_DOCUMENT, STRICT_REL_TYPE_STYLES, STYLES_PART};
-use crate::artifacts::docx::schema::snapshot::{DocxBlock, DocxDocument, DocxParagraph, DocxRun, DocxStyle, DocxTable, DocxTableCell, DocxTableRow};
-use crate::artifacts::docx::DocxSnapshot;
-use crate::artifacts::xml::schema::snapshot::{xml_document_from_text, XmlAttr, XmlDocument, XmlNode};
-use crate::artifacts::zip::opc::{self, REL_TYPE_OFFICE_DOCUMENT};
+use crate::schema::snapshot::{DocxBlock, DocxDocument, DocxParagraph, DocxRun, DocxStyle, DocxTable, DocxTableCell, DocxTableRow};
+use crate::DocxSnapshot;
+use semio_s_artifact_stdio_xml::schema::snapshot::{xml_document_from_text, XmlAttr, XmlDocument, XmlNode};
+use semio_s_artifact_stdio_zip::opc::{self, REL_TYPE_OFFICE_DOCUMENT};
 
 //#region 🔖️XmlHelpers
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

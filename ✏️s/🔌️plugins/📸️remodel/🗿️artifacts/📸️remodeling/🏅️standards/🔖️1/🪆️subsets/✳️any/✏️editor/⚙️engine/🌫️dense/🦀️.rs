@@ -1149,6 +1149,12 @@ pub struct TsdfIntegrationPreparation {
     complete: bool,
 }
 
+impl Default for TsdfIntegrationPreparation {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl TsdfIntegrationPreparation {
     pub fn new() -> Self {
         Self { pixel: 0, ray_step: 0, complete: false }

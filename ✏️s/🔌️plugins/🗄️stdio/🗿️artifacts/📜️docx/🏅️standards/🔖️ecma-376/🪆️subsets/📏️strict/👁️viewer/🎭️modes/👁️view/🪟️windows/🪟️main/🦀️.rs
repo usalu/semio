@@ -3,8 +3,8 @@
 //! sibling mutation-capable surface — the same block-to-page mapping, no edit affordances
 //! (`window_kind()`, the read-only variant, not the editable one).
 
-use crate::artifacts::docx::schema::snapshot::DocxBlock;
-use crate::artifacts::docx::DocxSnapshot;
+use crate::schema::snapshot::DocxBlock;
+use crate::DocxSnapshot;
 use semio_framework_plugin::app::{DocumentPage, DocumentView, DocumentWindowKit, WindowKit};
 use semio_framework_plugin::{BuiltNode, LocalizedLabel, WindowKindDefinition};
 

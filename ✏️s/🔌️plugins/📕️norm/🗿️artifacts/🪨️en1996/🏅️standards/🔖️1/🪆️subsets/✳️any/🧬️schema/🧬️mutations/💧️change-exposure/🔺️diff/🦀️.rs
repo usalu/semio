@@ -9,6 +9,6 @@ pub fn diff(payload: &ChangeExposure, base: &En1996Snapshot) -> protocol::Mutati
     if base.exposure == payload.new_exposure {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "Exposure already has this value.");
     }
-    protocol::MutationOutcome::new(En1996Diff { exposure: Some(payload.new_exposure.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1996Diff { exposure: Some(payload.new_exposure), ..Default::default() })
 }
 //#endregion 🔖️Diff

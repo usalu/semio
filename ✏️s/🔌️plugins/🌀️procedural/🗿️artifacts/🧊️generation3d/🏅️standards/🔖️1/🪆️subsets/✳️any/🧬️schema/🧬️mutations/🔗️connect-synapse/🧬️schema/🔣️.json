@@ -1,0 +1,46 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/procedural/generation3d/1/any/mutation/connect-synapse.json",
+  "title": "ConnectSynapse",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "index",
+    "synapse"
+  ],
+  "properties": {
+    "index": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "synapse": {
+      "title": "SynapseSpec",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "from",
+        "fromPort",
+        "id",
+        "to",
+        "toPort"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "string"
+        },
+        "to": {
+          "type": "string"
+        },
+        "fromPort": {
+          "type": "string"
+        },
+        "toPort": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

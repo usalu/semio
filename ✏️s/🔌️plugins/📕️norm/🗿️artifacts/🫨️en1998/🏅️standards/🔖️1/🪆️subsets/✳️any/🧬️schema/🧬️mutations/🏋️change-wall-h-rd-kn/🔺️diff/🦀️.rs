@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeWallHRdKn, base: &En1998Snapshot) -> protocol::Mutat
     if base.wall_h_rd_kn == payload.new_wall_h_rd_kn {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Wall horizontal resistance H_Rd [kN] is already {}.", payload.new_wall_h_rd_kn));
     }
-    protocol::MutationOutcome::new(En1998Diff { wall_h_rd_kn: Some(payload.new_wall_h_rd_kn.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1998Diff { wall_h_rd_kn: Some(payload.new_wall_h_rd_kn), ..Default::default() })
 }
 //#endregion 🔖️Diff

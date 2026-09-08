@@ -685,7 +685,7 @@ pub type Puzzle5dCatalogGrip = Puzzle5dCatalogGripKind;
 // `🔖️CatalogComposition` region, this migration's primary precedent): every kind-catalog row splits
 // into a shared `SemioKitType` half (id/name/category) plus a puzzle5d-owned `*Extra` half carrying
 // everything `SemioKitType` cannot, id-joined back together by `kind_catalogs_of`.
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::{SemioKitSnapshot, SemioKitType};
+use semio_s_artifact_stdio_semio::standards::v1::subsets::kit::schema::snapshot::{SemioKitSnapshot, SemioKitType};
 
 /// 🧩️ Puzzle5d-owned overflow for one part-kind catalog row — everything `SemioKitType` cannot
 /// represent. Id-joined 1:1 to a `SemioKitType` (`category = "part"`) in the composed
@@ -1087,7 +1087,7 @@ pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
 pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
     use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
 
-    let rows: &[(&str, &str, &str, &[(&str, &str)], Option<(&str, &str)>)] = &[
+    let rows: &[semio_framework_plugin::ArtifactCapabilityRow<'_>] = &[
         ("s.puzzle.puzzle5d.standard.v1", "standard", "1", &[], None),
         ("s.puzzle.puzzle5d.standard.v1.profile.any", "profile", "any", &[], None),
         ("s.puzzle.puzzle5d.schema.artifact", "schema", "s.puzzle.puzzle5d", &[("schema", "s.puzzle.puzzle5d")], None),

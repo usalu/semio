@@ -957,7 +957,7 @@ fn fem2d_frame_axes(doc: &Fem2dSnapshot) -> (Vec<String>, Vec<(String, String)>,
     let nodes: Vec<String> = doc.nodes.iter().map(|node| node.id.clone()).filter(|id| active.iter().any(|(node, _)| node == id)).collect();
     let mut pairs = Vec::new();
     for node in &nodes {
-        let flags = active.iter().find(|(id, _)| id == node).map(|(_, flags)| *flags).unwrap_or([false; 3]);
+        let flags = active.iter().find(|(id, _)| id == node).map_or([false; 3], |(_, flags)| *flags);
         for (at, name) in PLANAR_DOFS.iter().enumerate() {
             let held = doc.supports.iter().any(|support| &support.node_id == node && support.fixed.iter().any(|dof| fem2d_dof_name(*dof) == *name));
             if flags[at] && held {
@@ -987,14 +987,14 @@ fn fem2d_case_value(result: &crate::model::StaticResult, nodes: &[String], pairs
         .iter()
         .map(|node| {
             let found = result.displacements.iter().find(|entry| &entry.node_id == node);
-            let values = found.map(|entry| entry.values).unwrap_or([0.0; 6]);
+            let values = found.map_or([0.0; 6], |entry| entry.values);
             dsl::DslValue::Array(vec![dsl::DslValue::float(values[0]), dsl::DslValue::float(values[1]), dsl::DslValue::float(values[5])])
         })
         .collect();
     let reactions = pairs
         .iter()
         .map(|(node, dof)| {
-            let value = result.reactions.iter().find(|entry| &entry.node_id == node && fem2d_dof_name_of(entry.dof) == dof.as_str()).map(|entry| entry.value).unwrap_or(0.0);
+            let value = result.reactions.iter().find(|entry| &entry.node_id == node && fem2d_dof_name_of(entry.dof) == dof.as_str()).map_or(0.0, |entry| entry.value);
             dsl::DslValue::float(value)
         })
         .collect();

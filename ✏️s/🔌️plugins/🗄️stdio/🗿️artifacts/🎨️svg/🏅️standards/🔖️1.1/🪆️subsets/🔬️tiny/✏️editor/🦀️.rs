@@ -3,9 +3,9 @@
 //! SVG has no pixel buffer: `set-pixel-region` replaces the whole vector snapshot via the artifact's own DSL text round-trip (`parse_dsl`/`SetSnapshot`), the closest real mutation this format declares — not a pixel edit.
 //! MUST NOT be reached by the sibling `viewer` module (`policyViewerPurityBreaches`).
 
-use crate::artifacts::svg::standards::v1_1::subsets::tiny::schema::mutations::{set_snapshot, SvgTinyMutation};
-use crate::artifacts::svg::standards::v1_1::subsets::tiny::schema::snapshot::SvgSnapshot;
-use crate::artifacts::svg::{STDIO_SVG_DOCUMENT_SCHEMA, SVG_TINY_DIALECT};
+use crate::standards::v1_1::subsets::tiny::schema::mutations::{set_snapshot, SvgTinyMutation};
+use crate::standards::v1_1::subsets::tiny::schema::snapshot::SvgSnapshot;
+use crate::{STDIO_SVG_DOCUMENT_SCHEMA, SVG_TINY_DIALECT};
 use crate::editor::svg_tiny::modes::edit;
 use crate::editor::svg_tiny::modes::edit::windows::main;
 use semio_framework_plugin::{ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation};

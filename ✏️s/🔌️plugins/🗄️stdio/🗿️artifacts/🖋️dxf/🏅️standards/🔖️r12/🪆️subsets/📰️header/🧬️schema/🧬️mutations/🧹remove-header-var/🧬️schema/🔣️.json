@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/dxf/r12/header/mutation/remove-header-var.json",
+  "title": "RemoveHeaderVar",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "name"
+  ],
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "mutation": {
+      "const": "removeHeaderVar",
+      "description": "Aggregate discriminator spliced in by DxfMutation; absent when the payload stands alone."
+    }
+  }
+}

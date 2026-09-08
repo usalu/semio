@@ -2,8 +2,8 @@
 //! (called once from 🔌️plugin/🔧️setup via ⚙️engine::register), not per-leaf register().
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use crate::artifacts::svg::standards::v1_1::subsets::base::schema::SvgAnalyzer;
-    use crate::artifacts::svg::SvgSnapshot;
+    use crate::standards::v1_1::subsets::base::schema::SvgAnalyzer;
+    use crate::SvgSnapshot;
     use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.svg", standard: StandardId("1.1"), subset: SubsetId("*") };
@@ -52,9 +52,9 @@ pub use derived_composition::*;
 // module by its fully-qualified path, never the bare `io_registry::entries()` shortcut, per this
 // ticket's own "silent rebind" hazard).
 pub mod io_registry {
-    use crate::artifacts::svg::standards::v1_1::subsets::base::schema::SvgComposer as SvgRawAnyComposer;
-    use crate::artifacts::svg::standards::v1_1::subsets::basic::schema::SvgBasicComposer;
-    use crate::artifacts::svg::standards::v1_1::subsets::tiny::schema::SvgTinyComposer;
+    use crate::standards::v1_1::subsets::base::schema::SvgComposer as SvgRawAnyComposer;
+    use crate::standards::v1_1::subsets::basic::schema::SvgBasicComposer;
+    use crate::standards::v1_1::subsets::tiny::schema::SvgTinyComposer;
     use semio_framework_plugin::{composer_entry_of, ComposerEntry};
     use std::sync::OnceLock;
 
@@ -71,8 +71,8 @@ pub mod io_registry {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::svg::schema::{demo_svg_snapshot, empty_svg_snapshot};
-    use crate::artifacts::svg::{SvgSnapshot, STDIO_SVG_DOCUMENT_SCHEMA};
+    use crate::schema::{demo_svg_snapshot, empty_svg_snapshot};
+    use crate::{SvgSnapshot, STDIO_SVG_DOCUMENT_SCHEMA};
     use semio_framework_plugin::{AnalyzeSource, ArtifactAnalysis, ArtifactComposition, ComposeSource, Dialect, StandardId, SubsetId};
 
     const SVG_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.svg", standard: StandardId("1.1"), subset: SubsetId("*") };
@@ -103,13 +103,13 @@ mod tests {
     async fn exact_native_analyzer_text_and_pack_roundtrip() {
         let original = exact_fixture_bytes().await;
         let text = std::str::from_utf8(&original).expect("fixture UTF-8");
-        let text_analysis = <crate::artifacts::svg::standards::v1_1::subsets::base::schema::SvgAnalyzerAnalysis as ArtifactAnalysis>::analyze(&[AnalyzeSource::Text(text)]);
+        let text_analysis = <crate::standards::v1_1::subsets::base::schema::SvgAnalyzerAnalysis as ArtifactAnalysis>::analyze(&[AnalyzeSource::Text(text)]);
         assert!(text_analysis.diagnostics.is_empty(), "text diagnostics: {:?}", text_analysis.diagnostics);
         let text_snapshot = text_analysis.parts.snapshot.expect("text snapshot");
         assert_eq!(text_snapshot.export_utf8().expect("text analyzer export"), original);
 
         let pack = store::ArtifactPack::encode_pack(&text_snapshot);
-        let pack_analysis = <crate::artifacts::svg::standards::v1_1::subsets::base::schema::SvgAnalyzerAnalysis as ArtifactAnalysis>::analyze(&[AnalyzeSource::Binary(&pack)]);
+        let pack_analysis = <crate::standards::v1_1::subsets::base::schema::SvgAnalyzerAnalysis as ArtifactAnalysis>::analyze(&[AnalyzeSource::Binary(&pack)]);
         assert!(pack_analysis.diagnostics.is_empty(), "pack diagnostics: {:?}", pack_analysis.diagnostics);
         assert_eq!(pack_analysis.parts.snapshot.expect("pack snapshot").export_utf8().expect("pack analyzer export"), original);
     }
@@ -140,7 +140,7 @@ mod tests {
     /// that harness does not auto-discover at all.
     mod conformance_laws {
         use super::*;
-        use crate::artifacts::svg::schema::{diff, mutations, snapshot};
+        use crate::schema::{diff, mutations, snapshot};
         use protocol::{DiffCodec, OpBinary, OpText};
 
         /// ✅️ "committed files parse": all 6 handcrafted `.grammar.semio`/`.protocol.semio` files

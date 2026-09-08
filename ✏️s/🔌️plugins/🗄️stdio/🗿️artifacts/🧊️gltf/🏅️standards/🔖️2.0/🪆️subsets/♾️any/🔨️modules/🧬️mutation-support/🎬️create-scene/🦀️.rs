@@ -1,7 +1,7 @@
 //! 🔒️ Command-local create-scene validation and scene-reference mechanics.
 
-use crate::artifacts::gltf::schema::snapshot::GltfScene;
-use crate::artifacts::gltf::GltfSnapshot;
+use crate::schema::snapshot::GltfScene;
+use crate::GltfSnapshot;
 
 //#region 🔖️Rejection
 #[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]

@@ -18,11 +18,11 @@ pub mod mp4_deserializer;
 pub mod mp4_serializer;
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use crate::artifacts::semio::standards::v1::subsets::animation::io::{
+    use crate::standards::v1::subsets::animation::io::{
         gif_deserializer::SemioAnimationFromGif, gif_serializer::SemioAnimationToGif, gltf_deserializer::SemioAnimationFromGltf, gltf_serializer::SemioAnimationToGltf, mp4_deserializer::SemioAnimationFromMp4, mp4_serializer::SemioAnimationToMp4,
     };
-    use crate::artifacts::semio::standards::v1::subsets::animation::schema::snapshot::SemioAnimationSnapshot;
-    use crate::artifacts::semio::standards::v1::subsets::animation::schema::SemioAnimationAnalyzer;
+    use crate::standards::v1::subsets::animation::schema::snapshot::SemioAnimationSnapshot;
+    use crate::standards::v1::subsets::animation::schema::SemioAnimationAnalyzer;
     use semio_framework_plugin::{
         deserializer_entry_of, register_composer_entries, register_subset_validator, serializer_entry_of, subset_validator_entry_of, AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, ComposerEntry, Composition, Dialect, IoPayload,
         StandardId, SubsetId, SubsetValidator, SubsetValidatorEntry,
@@ -118,9 +118,9 @@ pub mod derived_composition {
     /// this artifact's standard-level `engine::register()`.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn register() {
-        ::schema::register_artifact_schema_descriptor(crate::artifacts::semio::standards::v1::subsets::animation::schema::semio_animation_artifact_schema_descriptor());
-        store::register_document_codec(store::ArtifactCodec::of::<SemioAnimationSnapshot, crate::artifacts::semio::standards::v1::subsets::animation::schema::mutations::SemioAnimationMutation>(
-            crate::artifacts::semio::standards::v1::subsets::animation::schema::snapshot::STDIO_SEMIOANIMATION_DOCUMENT_SCHEMA,
+        ::framework_schema::register_artifact_schema_descriptor(crate::standards::v1::subsets::animation::schema::semio_animation_artifact_schema_descriptor());
+        store::register_document_codec(store::ArtifactCodec::of::<SemioAnimationSnapshot, crate::standards::v1::subsets::animation::schema::mutations::SemioAnimationMutation>(
+            crate::standards::v1::subsets::animation::schema::snapshot::STDIO_SEMIOANIMATION_DOCUMENT_SCHEMA,
         )).expect("static Stdio registration must be available and conflict-free");
         register_subset_validator(validator_entry()).expect("static Stdio registration must be available and conflict-free");
         register_composer_entries(bridge_entries()).expect("static Stdio registration must be available and conflict-free");
@@ -132,7 +132,7 @@ pub mod derived_composition {
     /// ticket 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn register_artifact_inferences() {
-        ::schema::register_artifact_inference_descriptor(crate::artifacts::semio::standards::v1::subsets::animation::schema::inferences::semio_animation_artifact_inference_descriptor());
+        ::framework_schema::register_artifact_inference_descriptor(crate::standards::v1::subsets::animation::schema::inferences::semio_animation_artifact_inference_descriptor());
     }
 
     /// 🌉️ animation↔gltf / animation↔mp4 / animation↔gif bridge entries (W4) -- forward + reverse rows
@@ -159,7 +159,7 @@ pub mod derived_composition {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use crate::artifacts::semio::standards::v1::subsets::animation::schema::snapshot::{AnimChannel, AnimKeyframe, AnimTarget, AnimTargetProperty, AnimTimeline, AnimValue};
+        use crate::standards::v1::subsets::animation::schema::snapshot::{AnimChannel, AnimKeyframe, AnimTarget, AnimTargetProperty, AnimTimeline, AnimValue};
 
         // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         fn snapshot_with_channel(keyframes: Vec<AnimKeyframe>) -> SemioAnimationSnapshot {
@@ -206,7 +206,7 @@ pub mod derived_composition {
         /// edit scope) — same home every prior semio wave's report identifies as correct.
         mod conformance_laws {
 
-            use crate::artifacts::semio::standards::v1::subsets::animation::schema::{diff, mutations, snapshot};
+            use crate::standards::v1::subsets::animation::schema::{diff, mutations, snapshot};
             use protocol::{DiffCodec, OpBinary, OpText};
 
             /// ✅️ "committed files parse": all 6 handcrafted `.grammar.semio`/`.protocol.semio` files

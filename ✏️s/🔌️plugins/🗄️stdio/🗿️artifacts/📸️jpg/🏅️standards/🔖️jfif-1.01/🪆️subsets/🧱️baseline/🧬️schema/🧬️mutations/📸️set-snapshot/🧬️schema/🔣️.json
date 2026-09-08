@@ -1,0 +1,346 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/jpg/jfif-1.01/baseline/mutation/set-snapshot.json",
+  "title": "SetSnapshot",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "snapshot"
+  ],
+  "properties": {
+    "snapshot": {
+      "$ref": "#/$defs/JpgSnapshot"
+    }
+  },
+  "$defs": {
+    "JpgSnapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema"
+      ],
+      "properties": {
+        "schema": {
+          "type": "string"
+        },
+        "width": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "height": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "pixels": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          }
+        },
+        "reEncodeQuality": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 255
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "jfifVersion": {
+          "type": "array",
+          "items": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 255
+            },
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 255
+            }
+          ],
+          "additionalItems": false,
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "jfifDensityUnits": {
+          "$ref": "#/$defs/JfifDensityUnits"
+        },
+        "jfifXDensity": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "jfifYDensity": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "jfifThumbnail": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/JfifThumbnail"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "frame": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/JpgFrameHeader"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "sofMarker": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "arithmetic": {
+          "type": "boolean"
+        },
+        "quantTables": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/JpgQuantTable"
+          }
+        },
+        "huffmanTables": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/JpgHuffmanTable"
+          }
+        },
+        "restartInterval": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 65535
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "otherSegments": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/JpgSegment"
+          }
+        }
+      }
+    },
+    "JfifDensityUnits": {
+      "type": "string",
+      "enum": [
+        "aspect",
+        "pixelsPerInch",
+        "pixelsPerCm"
+      ]
+    },
+    "JfifThumbnail": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "width",
+        "height"
+      ],
+      "properties": {
+        "width": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "height": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "rgbData": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          }
+        }
+      }
+    },
+    "JpgFrameHeader": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "precision",
+        "width",
+        "height",
+        "components"
+      ],
+      "properties": {
+        "precision": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "width": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "height": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "components": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/JpgFrameComponent"
+          }
+        }
+      }
+    },
+    "JpgFrameComponent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "hSampling",
+        "vSampling",
+        "quantTableId"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "hSampling": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "vSampling": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "quantTableId": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        }
+      }
+    },
+    "JpgQuantTable": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "precision",
+        "values"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "precision": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "values": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 65535
+          },
+          "minItems": 64,
+          "maxItems": 64
+        }
+      }
+    },
+    "JpgHuffmanTable": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "class",
+        "bits"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "class": {
+          "$ref": "#/$defs/JpgHuffmanClass"
+        },
+        "bits": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          },
+          "minItems": 16,
+          "maxItems": 16
+        },
+        "values": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          }
+        }
+      }
+    },
+    "JpgHuffmanClass": {
+      "type": "string",
+      "enum": [
+        "dc",
+        "ac"
+      ]
+    },
+    "JpgSegment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "marker"
+      ],
+      "properties": {
+        "marker": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          }
+        }
+      }
+    }
+  }
+}

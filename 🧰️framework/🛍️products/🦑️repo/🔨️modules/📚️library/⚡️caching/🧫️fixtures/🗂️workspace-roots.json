@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "cases": [
+    { "name": "Nx Overrides Repository Hint", "nx": true, "hint": true, "expected": "workspace" },
+    { "name": "Nx Supplies Workspace", "nx": true, "hint": false, "expected": "workspace" },
+    { "name": "Explicit Standalone Root", "nx": false, "hint": true, "expected": "hint" },
+    { "name": "Standalone Root Discovery", "nx": false, "hint": false, "expected": "workspace" }
+  ]
+}

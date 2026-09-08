@@ -1,0 +1,32 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/framework/os/config/mutation/sign-in.json",
+  "title": "SignIn",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "displayName",
+    "email",
+    "hubBaseUrl",
+    "issuedAtMs",
+    "userId"
+  ],
+  "properties": {
+    "userId": {
+      "type": "string"
+    },
+    "email": {
+      "type": "string"
+    },
+    "displayName": {
+      "type": "string"
+    },
+    "hubBaseUrl": {
+      "type": "string"
+    },
+    "issuedAtMs": {
+      "type": "integer",
+      "minimum": 0
+    }
+  }
+}

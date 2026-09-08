@@ -1,0 +1,116 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/jpg/jfif-1.01/baseline/mutations.json",
+  "title": "JpgBaselineMutation",
+  "description": "Discriminated union over this module's mutation leaves (externally tagged); every payload is the leaf's own schema, referenced, never restated.",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "InsertFrameComponent"
+      ],
+      "properties": {
+        "InsertFrameComponent": {
+          "$ref": "./🧩️insert-frame-component/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "InsertHuffmanTable"
+      ],
+      "properties": {
+        "InsertHuffmanTable": {
+          "$ref": "./🌳️insert-huffman-table/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "RemoveFrameComponent"
+      ],
+      "properties": {
+        "RemoveFrameComponent": {
+          "$ref": "./✂️remove-frame-component/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "RemoveHuffmanTable"
+      ],
+      "properties": {
+        "RemoveHuffmanTable": {
+          "$ref": "./🪓️remove-huffman-table/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "SetArithmetic"
+      ],
+      "properties": {
+        "SetArithmetic": {
+          "$ref": "./➗️set-arithmetic/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "SetComponentSampling"
+      ],
+      "properties": {
+        "SetComponentSampling": {
+          "$ref": "./🎨️set-component-sampling/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "SetSamplePrecision"
+      ],
+      "properties": {
+        "SetSamplePrecision": {
+          "$ref": "./🎯️set-sample-precision/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "SetSnapshot"
+      ],
+      "properties": {
+        "SetSnapshot": {
+          "$ref": "./📸️set-snapshot/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "SetSofMarker"
+      ],
+      "properties": {
+        "SetSofMarker": {
+          "$ref": "./🏁️set-sof-marker/🧬️schema/🔣️.json"
+        }
+      }
+    }
+  ]
+}

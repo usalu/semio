@@ -1,6 +1,6 @@
 //! puzzle2d <- pdf
 use crate::artifacts::puzzle2d::Puzzle2dSnapshot;
-use semio_s_plugin_stdio::artifacts::pdf::{PdfSnapshot, STDIO_PDF_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_pdf::{PdfSnapshot, STDIO_PDF_DOCUMENT_SCHEMA};
 
 pub fn register() {}
 

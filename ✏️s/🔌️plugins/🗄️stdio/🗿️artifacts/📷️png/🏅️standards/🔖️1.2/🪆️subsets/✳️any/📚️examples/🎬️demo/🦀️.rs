@@ -28,8 +28,8 @@ mod tests {
     /// parsed through the real `ArtifactDsl` codec — not a hand-built stub).
     #[semio_framework_async_macros::async_test]
     async fn inference_determinism_law() {
-        use crate::artifacts::png::standards::v1_2::subsets::any::schema::inferences::PngInference;
-        use crate::artifacts::png::PngSnapshot;
+        use crate::standards::v1_2::subsets::any::schema::inferences::PngInference;
+        use crate::PngSnapshot;
         use protocol::Inference;
         let snapshot = <PngSnapshot as store::ArtifactDsl>::parse_dsl(PRIMARY_TEXT).expect("demo fixture must parse");
         assert_eq!(PngInference::infer(&snapshot), PngInference::infer(&snapshot));
@@ -37,8 +37,8 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn inference_default_law() {
-        use crate::artifacts::png::standards::v1_2::subsets::any::schema::inferences::PngInference;
-        use crate::artifacts::png::PngSnapshot;
+        use crate::standards::v1_2::subsets::any::schema::inferences::PngInference;
+        use crate::PngSnapshot;
         use protocol::Inference;
         assert_eq!(PngInference::infer(&PngSnapshot::default()), PngInference::default());
     }

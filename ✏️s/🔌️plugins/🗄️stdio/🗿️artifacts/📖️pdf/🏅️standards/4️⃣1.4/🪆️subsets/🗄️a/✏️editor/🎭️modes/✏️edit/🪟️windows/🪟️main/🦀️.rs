@@ -10,8 +10,8 @@
 //! APPENDS to the page's existing text rather than replacing it; a true in-place edit would need a
 //! new mutation variant, out of scope for this ticket (UI-surface-only, no schema changes).
 
-use crate::artifacts::pdf::standards::v1_7::subsets::base::schema::snapshot::PdfPage;
-use crate::artifacts::pdf::PdfSnapshot;
+use crate::standards::v1_7::subsets::base::schema::snapshot::PdfPage;
+use crate::PdfSnapshot;
 use semio_framework_plugin::app::{DocumentPage, DocumentView, DocumentWindowKit, WindowKit};
 use semio_framework_plugin::{LocalizedLabel, WindowKindDefinition};
 use semio_framework_ui_contract::BuiltNode;
@@ -50,7 +50,7 @@ pub fn render(document: &PdfSnapshot) -> semio_framework_plugin::UiAssemblyResul
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::pdf::standards::v1_7::subsets::base::schema::snapshot::demo_pdf17_snapshot;
+    use crate::standards::v1_7::subsets::base::schema::snapshot::demo_pdf17_snapshot;
 
     #[test]
     fn definition_declares_a_document_window() {

@@ -2,7 +2,7 @@
 //! object kinds (parametric geometry + typology + availability) and a curated selection.
 
 use semio_framework_plugin::{ArtifactKindSpec, Dialect, MediaClass, MediaForm, MediaType, OsMediaCapability, StandardId, SubsetId};
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::{SemioKitSnapshot, SemioKitType};
+use semio_s_artifact_stdio_semio::standards::v1::subsets::kit::schema::snapshot::{SemioKitSnapshot, SemioKitType};
 
 pub use crate::artifacts::curation::schema::mutations::SourcingMutation;
 
@@ -256,7 +256,7 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 /// the artifact (kind, schema, io ports, ownership), which is not engine behaviour.
 pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
     use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
-    let rows: &[(&str, &str, &str, &[(&str, &str)], Option<(&str, &str)>)] = &[
+    let rows: &[semio_framework_plugin::ArtifactCapabilityRow<'_>] = &[
         ("s.sourcing.curation.standard.v1", "standard", "1", &[], None),
         ("s.sourcing.curation.standard.v1.profile.any", "profile", "any", &[], None),
         ("s.sourcing.curation.schema.artifact", "schema", "s.sourcing.curation", &[("schema", "s.sourcing.curation")], None),

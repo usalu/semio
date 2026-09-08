@@ -27,7 +27,7 @@ default = ["sqlite", "native-artifact-execution"]
 sqlite = ["dep:rusqlite", "db/sqlite"]
 postgres = ["dep:sqlx_core", "dep:sqlx_postgres", "db/postgres"]
 neo4j = ["dep:neo4rs", "db/neo4j"]
-native-artifact-execution = ["dep:semio-s-plugin-stdio", "semio-s-plugin-stdio/full-artifact-catalog", "dep:semio-s-plugin-gis", "dep:semio-s-plugin-vcs"]
+native-artifact-execution = ["dep:semio-s-artifact-stdio-json", "dep:semio-s-artifact-stdio-semio", "dep:semio-s-plugin-stdio", "semio-s-plugin-stdio/full-artifact-catalog", "dep:semio-s-plugin-gis", "dep:semio-s-plugin-vcs"]
 # 🏗️ Test-only, cross-target: compiles the real GIS Map profile builder in
 # `🗿️artifact-authority/🔏️trusted-catalog/🏗️test-support/` so the `os-hub` BINARY target's own laws can
 # construct a verified catalog and frozen Map binding. `#[cfg(test)]` cannot serve another target, so
@@ -44,6 +44,8 @@ semio-framework-async = { workspace = true }
 semio-framework-job = { workspace = true }
 semio-framework-hash = { path = "../../../🧰️framework/🔨️modules/🔏️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
 semio-s-plugin-stdio = { path = "../../../✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust", default-features = false, optional = true }
+semio-s-artifact-stdio-json = { workspace = true, optional = true }
+semio-s-artifact-stdio-semio = { workspace = true, optional = true }
 semio-s-plugin-gis = { path = "../../../✏️s/🔌️plugins/🌍️gis/📦️packages/🦀️rust", default-features = false, optional = true }
 semio-s-plugin-vcs = { path = "../../../✏️s/🔌️plugins/🌿️vcs/📦️packages/🦀️rust", default-features = false, optional = true }
 semio-framework-plugin-host = { path = "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust" }

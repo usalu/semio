@@ -5,9 +5,9 @@
 //! `mutation.no-op`; otherwise the entry is inserted into the node's nested ordered `properties` at
 //! `min(index, len)`. The property type is `🔢️value`'s own `SemioValueEntry`, reused verbatim — a
 //! `Float` keeps its SOURCE LEXEME as a string, never a JSON number.
-use crate::artifacts::semio::standards::v1::subsets::graph::schema::diff::SemioGraphDiff;
-use crate::artifacts::semio::standards::v1::subsets::graph::schema::mutations::SemioGraphMutation;
-use crate::artifacts::semio::standards::v1::subsets::graph::schema::snapshot::SemioGraphSnapshot;
+use crate::standards::v1::subsets::graph::schema::diff::SemioGraphDiff;
+use crate::standards::v1::subsets::graph::schema::mutations::SemioGraphMutation;
+use crate::standards::v1::subsets::graph::schema::snapshot::SemioGraphSnapshot;
 use protocol::{Mutation, MutationDiff};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");

@@ -1,0 +1,32 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/node-camera/bind.json",
+  "title": "GltfBindNodeCameraMutation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "node",
+    "camera"
+  ],
+  "properties": {
+    "node": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "camera": {
+      "type": "integer",
+      "minimum": 0
+    }
+  },
+  "x-semio": {
+    "id": "s.stdio.gltf.mutation.bind-node-camera.v1",
+    "version": 1,
+    "phase": "mutation",
+    "kind": "bind",
+    "touchedPaths": [
+      "document/nodes/*/camera"
+    ],
+    "referencePolicy": "validates the typed camera reference"
+  },
+  "x-semio-mutation": "bind-node-camera"
+}

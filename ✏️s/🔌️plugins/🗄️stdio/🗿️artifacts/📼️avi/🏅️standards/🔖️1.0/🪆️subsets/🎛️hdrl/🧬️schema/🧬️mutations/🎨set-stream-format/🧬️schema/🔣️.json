@@ -1,0 +1,183 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/avi/1.0/hdrl/mutation/set-stream-format.json",
+  "title": "SetStreamFormat",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "stream_index",
+    "strf"
+  ],
+  "properties": {
+    "stream_index": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "strf": {
+      "$ref": "#/$defs/AviStreamFormat"
+    },
+    "mutation": {
+      "const": "setStreamFormat",
+      "description": "Aggregate discriminator spliced in by AviMutation; absent when the payload stands alone."
+    }
+  },
+  "$defs": {
+    "AviStreamFormat": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "format",
+            "size",
+            "width",
+            "height",
+            "planes",
+            "bitCount",
+            "compression",
+            "sizeImage",
+            "xPelsPerMeter",
+            "yPelsPerMeter",
+            "colorsUsed",
+            "colorsImportant"
+          ],
+          "properties": {
+            "format": {
+              "const": "bitmapInfo"
+            },
+            "size": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4294967295
+            },
+            "width": {
+              "type": "integer",
+              "minimum": -2147483648,
+              "maximum": 2147483647
+            },
+            "height": {
+              "type": "integer",
+              "minimum": -2147483648,
+              "maximum": 2147483647
+            },
+            "planes": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 65535
+            },
+            "bitCount": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 65535
+            },
+            "compression": {
+              "type": "string"
+            },
+            "sizeImage": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4294967295
+            },
+            "xPelsPerMeter": {
+              "type": "integer",
+              "minimum": -2147483648,
+              "maximum": 2147483647
+            },
+            "yPelsPerMeter": {
+              "type": "integer",
+              "minimum": -2147483648,
+              "maximum": 2147483647
+            },
+            "colorsUsed": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4294967295
+            },
+            "colorsImportant": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4294967295
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "format",
+            "formatTag",
+            "channels",
+            "samplesPerSec",
+            "avgBytesPerSec",
+            "blockAlign",
+            "bitsPerSample"
+          ],
+          "properties": {
+            "format": {
+              "const": "waveFormat"
+            },
+            "formatTag": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 65535
+            },
+            "channels": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 65535
+            },
+            "samplesPerSec": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4294967295
+            },
+            "avgBytesPerSec": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4294967295
+            },
+            "blockAlign": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 65535
+            },
+            "bitsPerSample": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 65535
+            },
+            "extra": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 255
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "format",
+            "data"
+          ],
+          "properties": {
+            "format": {
+              "const": "raw"
+            },
+            "data": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 255
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

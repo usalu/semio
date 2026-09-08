@@ -18,13 +18,6 @@ extern crate semio_framework_os_kernel as store;
 #[cfg(test)]
 extern crate semio_framework_os_kernel as vcs;
 extern crate semio_framework_schema as schema;
-// 🧯️ `clippy::result_large_err` — every `🎮️commands/*` handler returns
-// `Result<Emit<SequenceMutation, SequenceConfigMutation>, Fault>`, the exact signature
-// `ArtifactApp::handle` and `app_commands!`'s generated `dispatch` require. `Fault` is a
-// framework-owned error type; boxing it here would diverge from the trait it must satisfy, and the
-// lint does not fire on the trait impl itself (only on the free functions the taxonomy split
-// creates), so this is a pure artefact of decomposition.
-#[allow(clippy::result_large_err)]
 extern crate infinite_canvas as infinite_board_port_directed_dag;
 
 //#region 🗿️Artifacts
@@ -548,8 +541,6 @@ semio_framework_plugin::plugin_exports!(plugin::plugin, plugin::SequenceApps);
 //#region 📚️Examples
 #[path = "."]
 pub mod examples {
-    #[path = "../../🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️.rs"]
-    pub mod art_sequence_demo;
 }
 //#endregion 📚️Examples
 

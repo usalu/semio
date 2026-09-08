@@ -10,7 +10,7 @@ use crate::artifacts::program::ProgramSnapshot;
 pub fn diff(payload: &CreateValidationRecord, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
     let id = payload.validation_record.header.id.clone();
     if base.validations.iter().any(|row| row.header.id == id) {
-        return protocol::MutationOutcome::fatal("mutation.duplicate-id", "A validation record already exists with this id.", [id.0.clone()]);
+        return protocol::MutationOutcome::fatal("mutation.duplicate-id", "A validation record already exists with this id.", [id.0]);
     }
     protocol::MutationOutcome::new(ProgramDiff { validations: Some(ProgramValidationsDelta { added: vec![payload.validation_record.clone()], ..Default::default() }), ..Default::default() })
 }

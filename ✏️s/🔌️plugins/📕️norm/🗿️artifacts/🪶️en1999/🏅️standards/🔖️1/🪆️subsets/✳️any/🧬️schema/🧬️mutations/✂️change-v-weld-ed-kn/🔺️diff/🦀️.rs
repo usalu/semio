@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeVWeldEdKn, base: &En1999Snapshot) -> protocol::Mutat
     if base.v_weld_ed_kn == payload.new_v_weld_ed_kn {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Design weld shear force V_Ed [kN] is already {}.", payload.new_v_weld_ed_kn));
     }
-    protocol::MutationOutcome::new(En1999Diff { v_weld_ed_kn: Some(payload.new_v_weld_ed_kn.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1999Diff { v_weld_ed_kn: Some(payload.new_v_weld_ed_kn), ..Default::default() })
 }
 //#endregion 🔖️Diff

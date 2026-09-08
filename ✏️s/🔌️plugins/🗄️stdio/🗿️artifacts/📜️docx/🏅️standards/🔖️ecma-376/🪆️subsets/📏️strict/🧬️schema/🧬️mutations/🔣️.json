@@ -1,0 +1,116 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/docx/ecma-376/strict/mutations.json",
+  "title": "DocxStrictMutation",
+  "description": "Discriminated union over this module's mutation leaves (externally tagged); every payload is the leaf's own schema, referenced, never restated.",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "InsertAlternateContent"
+      ],
+      "properties": {
+        "InsertAlternateContent": {
+          "$ref": "./🪆️insert-alternate-content/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "InsertVmlPart"
+      ],
+      "properties": {
+        "InsertVmlPart": {
+          "$ref": "./✒️insert-vml-part/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "RemoveAlternateContent"
+      ],
+      "properties": {
+        "RemoveAlternateContent": {
+          "$ref": "./📤️remove-alternate-content/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "RemoveConformanceAttribute"
+      ],
+      "properties": {
+        "RemoveConformanceAttribute": {
+          "$ref": "./🚫️remove-conformance-attribute/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "RemoveVmlPart"
+      ],
+      "properties": {
+        "RemoveVmlPart": {
+          "$ref": "./🧹️remove-vml-part/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "SetConformanceAttribute"
+      ],
+      "properties": {
+        "SetConformanceAttribute": {
+          "$ref": "./✅️set-conformance-attribute/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "SetMainNamespace"
+      ],
+      "properties": {
+        "SetMainNamespace": {
+          "$ref": "./🌐️set-main-namespace/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "SetRelationshipBase"
+      ],
+      "properties": {
+        "SetRelationshipBase": {
+          "$ref": "./🔗️set-relationship-base/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "SetSnapshot"
+      ],
+      "properties": {
+        "SetSnapshot": {
+          "$ref": "./📸️set-snapshot/🧬️schema/🔣️.json"
+        }
+      }
+    }
+  ]
+}

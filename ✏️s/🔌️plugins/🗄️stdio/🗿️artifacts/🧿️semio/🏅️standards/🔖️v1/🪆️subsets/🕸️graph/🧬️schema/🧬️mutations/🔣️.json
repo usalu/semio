@@ -1,18 +1,140 @@
 {
-  "$id": "https://semio.tech/schema/s.stdio.semio.graph/mutations.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/graph/mutations.json",
   "title": "SemioGraphMutation",
-  "description": "Closed, eleven-variant mutation dispatch over SemioGraphSnapshot's id-keyed nodes/edges and each node's nested ports/properties collections. Edges are id-keyed entities (create/delete), never connect/disconnect.",
+  "description": "Discriminated union over this module's mutation leaves (externally tagged); every payload is the leaf's own schema, referenced, never restated.",
   "oneOf": [
-    { "properties": { "mutation": { "const": "createNode" }, "payload": { "type": "object" } } },
-    { "properties": { "mutation": { "const": "deleteNode" }, "payload": { "type": "object", "properties": { "id": { "type": "object" } } } } },
-    { "properties": { "mutation": { "const": "changeNodeKind" }, "payload": { "type": "object", "properties": { "id": { "type": "object" }, "newKind": { "type": "string" } } } } },
-    { "properties": { "mutation": { "const": "changeNodeLabel" }, "payload": { "type": "object", "properties": { "id": { "type": "object" }, "newLabel": { "type": "string" } } } } },
-    { "properties": { "mutation": { "const": "moveNode" }, "payload": { "type": "object", "properties": { "id": { "type": "object" }, "newPosition": { "type": "object" } } } } },
-    { "properties": { "mutation": { "const": "addNodePort" }, "payload": { "type": "object", "properties": { "nodeId": { "type": "object" }, "index": { "type": "integer" }, "port": { "type": "object" } } } } },
-    { "properties": { "mutation": { "const": "removeNodePort" }, "payload": { "type": "object", "properties": { "nodeId": { "type": "object" }, "index": { "type": "integer" } } } } },
-    { "properties": { "mutation": { "const": "addNodeProperty" }, "payload": { "type": "object", "properties": { "nodeId": { "type": "object" }, "index": { "type": "integer" }, "property": { "type": "object" } } } } },
-    { "properties": { "mutation": { "const": "removeNodeProperty" }, "payload": { "type": "object", "properties": { "nodeId": { "type": "object" }, "index": { "type": "integer" } } } } },
-    { "properties": { "mutation": { "const": "createEdge" }, "payload": { "type": "object" } } },
-    { "properties": { "mutation": { "const": "deleteEdge" }, "payload": { "type": "object", "properties": { "id": { "type": "object" } } } } }
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "AddNodePort"
+      ],
+      "properties": {
+        "AddNodePort": {
+          "$ref": "./🔌add-node-port/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "AddNodeProperty"
+      ],
+      "properties": {
+        "AddNodeProperty": {
+          "$ref": "./➕add-node-property/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeNodeKind"
+      ],
+      "properties": {
+        "ChangeNodeKind": {
+          "$ref": "./🔧change-node-kind/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeNodeLabel"
+      ],
+      "properties": {
+        "ChangeNodeLabel": {
+          "$ref": "./🖍️change-node-label/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "CreateEdge"
+      ],
+      "properties": {
+        "CreateEdge": {
+          "$ref": "./🌉️create-edge/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "CreateNode"
+      ],
+      "properties": {
+        "CreateNode": {
+          "$ref": "./🏗️create-node/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "DeleteEdge"
+      ],
+      "properties": {
+        "DeleteEdge": {
+          "$ref": "./✂️delete-edge/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "DeleteNode"
+      ],
+      "properties": {
+        "DeleteNode": {
+          "$ref": "./🗑️delete-node/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "MoveNode"
+      ],
+      "properties": {
+        "MoveNode": {
+          "$ref": "./📍move-node/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "RemoveNodePort"
+      ],
+      "properties": {
+        "RemoveNodePort": {
+          "$ref": "./🔚remove-node-port/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "RemoveNodeProperty"
+      ],
+      "properties": {
+        "RemoveNodeProperty": {
+          "$ref": "./➖remove-node-property/🧬️schema/🔣️.json"
+        }
+      }
+    }
   ]
 }

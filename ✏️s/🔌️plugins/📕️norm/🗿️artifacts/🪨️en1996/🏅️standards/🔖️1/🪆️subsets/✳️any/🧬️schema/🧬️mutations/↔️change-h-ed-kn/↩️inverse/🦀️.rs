@@ -7,6 +7,6 @@ use crate::artifacts::en1996::En1996Snapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(_payload: &ChangeHEdKn, base: &En1996Snapshot) -> Vec<En1996Mutation> {
-    vec![En1996Mutation::ChangeHEdKn(ChangeHEdKn { new_h_ed_kn: base.h_ed_kn.clone() })]
+    vec![En1996Mutation::ChangeHEdKn(ChangeHEdKn { new_h_ed_kn: base.h_ed_kn })]
 }
 //#endregion 🔖️Inverse

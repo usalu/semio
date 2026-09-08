@@ -8,8 +8,8 @@
 //! honestly-2D placements. A pure whole-snapshot scalar (one min/max fold) — no `InferredField`
 //! needed.
 
-use crate::artifacts::ifc::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot;
-use crate::artifacts::step::engine::part21::Part21Value;
+use crate::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot;
+use semio_s_artifact_stdio_step::engine::part21::Part21Value;
 
 //#region 🔖️Bounds
 /// 📦️ IFC2X3's `IFCCARTESIANPOINT`-derived spatial bounding box.
@@ -65,8 +65,8 @@ pub fn compute_ifc2x3_bounds(snapshot: &Ifc2x3Snapshot) -> Ifc2x3Bounds {
 //#region 🧪️Tests
 mod tests {
     use super::*;
-    use crate::artifacts::ifc::standards::v2x3::subsets::base::schema::snapshot::STDIO_IFC2X3_DOCUMENT_SCHEMA;
-    use crate::artifacts::step::engine::part21::{Part21Document, Part21Header, Part21Instance};
+    use crate::standards::v2x3::subsets::base::schema::snapshot::STDIO_IFC2X3_DOCUMENT_SCHEMA;
+    use semio_s_artifact_stdio_step::engine::part21::{Part21Document, Part21Header, Part21Instance};
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn point_instance(id: u64, x: f64, y: f64, z: f64) -> Part21Instance {

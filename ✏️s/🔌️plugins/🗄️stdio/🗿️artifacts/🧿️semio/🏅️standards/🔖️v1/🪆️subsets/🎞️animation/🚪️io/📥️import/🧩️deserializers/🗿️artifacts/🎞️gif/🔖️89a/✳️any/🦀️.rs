@@ -12,8 +12,8 @@
 //! concept at all (by design, per the master plan's subset recipe), so none of it is fabricated
 //! into a fake transform channel here.
 
-use crate::artifacts::gif::GifSnapshot;
-use crate::artifacts::semio::standards::v1::subsets::animation::schema::snapshot::{AnimChannel, AnimInterpolation, AnimKeyframe, AnimTarget, AnimTargetProperty, AnimTimeline, AnimValue, SemioAnimationSnapshot, STDIO_SEMIOANIMATION_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_gif::GifSnapshot;
+use crate::standards::v1::subsets::animation::schema::snapshot::{AnimChannel, AnimInterpolation, AnimKeyframe, AnimTarget, AnimTargetProperty, AnimTimeline, AnimValue, SemioAnimationSnapshot, STDIO_SEMIOANIMATION_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId};
 
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.gif", standard: StandardId("89a"), subset: SubsetId("*") };
@@ -57,7 +57,7 @@ impl ArtifactDeserializer for SemioAnimationFromGif {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::gif::schema::snapshot::GifFrame;
+    use semio_s_artifact_stdio_gif::schema::snapshot::GifFrame;
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn real_world_gif() -> GifSnapshot {

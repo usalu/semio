@@ -11,9 +11,9 @@
 //! `NoMutation` is dropped: the derive requires every variant to wrap exactly one leaf payload, and
 //! `no` is not an approved semantic verb.
 
-use crate::artifacts::semio::standards::v1::subsets::animation::schema::diff::{diff_set_snapshot, AnimChannelDiff, AnimKeyframeDiff, AnimTimelineDiff, SemioAnimationDiff};
-use crate::artifacts::semio::standards::v1::subsets::animation::schema::snapshot::{AnimChannel, AnimInterpolation, AnimKeyframe, AnimTarget, AnimTimeline, AnimValue, SemioAnimationSnapshot};
-use crate::artifacts::semio::standards::v1::subsets::base::schema::triples::{IndexAdded, IndexModified, IndexedTripleDiff};
+use crate::standards::v1::subsets::animation::schema::diff::{diff_set_snapshot, AnimChannelDiff, AnimKeyframeDiff, AnimTimelineDiff, SemioAnimationDiff};
+use crate::standards::v1::subsets::animation::schema::snapshot::{AnimChannel, AnimInterpolation, AnimKeyframe, AnimTarget, AnimTimeline, AnimValue, SemioAnimationSnapshot};
+use crate::standards::v1::subsets::base::schema::triples::{IndexAdded, IndexModified, IndexedTripleDiff};
 use protocol::Mutation;
 /// 🔧️ `MutationDiff` added — the `#[cfg(test)] mod tests` block below calls `diff.apply(&base)`
 /// via method syntax on `SemioAnimationDiff`, which needs `MutationDiff` in scope (W2b closer fix).
@@ -225,13 +225,13 @@ pub(crate) fn agg_inverse(this: &SemioAnimationMutation, base: &SemioAnimationSn
 /// here, unlike the sibling `🔺️diff` facet, which was already fully real pre-wave).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn enc_animation_snapshot(s: &SemioAnimationSnapshot) -> String {
-    use crate::artifacts::semio::standards::v1::subsets::animation::schema::diff::{enc_list, enc_str, enc_timeline};
+    use crate::standards::v1::subsets::animation::schema::diff::{enc_list, enc_str, enc_timeline};
     format!("[{},{}]", enc_str(&s.schema), enc_list(&s.timelines, enc_timeline))
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_animation_snapshot(s: &str) -> Result<SemioAnimationSnapshot, String> {
-    use crate::artifacts::semio::standards::v1::subsets::animation::schema::diff::{dec_list, dec_str, dec_timeline};
-    use crate::artifacts::semio::standards::v1::subsets::base::schema::triples::{split_top_level, strip_brackets};
+    use crate::standards::v1::subsets::animation::schema::diff::{dec_list, dec_str, dec_timeline};
+    use crate::standards::v1::subsets::base::schema::triples::{split_top_level, strip_brackets};
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [schema, timelines] = parts.as_slice() else { return Err(format!("snapshot-lit: expected 2 fields, got {}", parts.len())) };
     Ok(SemioAnimationSnapshot { schema: dec_str(schema)?, timelines: dec_list(timelines, dec_timeline)? })
@@ -246,7 +246,7 @@ fn dec_animation_snapshot(s: &str) -> Result<SemioAnimationSnapshot, String> {
 /// snapshot codec above (W2c closer fix — was `serde_json`, see that region's doc comment).
 impl OpText for SemioAnimationMutation {
     fn print_op(&self) -> String {
-        use crate::artifacts::semio::standards::v1::subsets::animation::schema::diff::{enc_channel, enc_interpolation, enc_keyframe, enc_str, enc_target, enc_timeline, enc_value};
+        use crate::standards::v1::subsets::animation::schema::diff::{enc_channel, enc_interpolation, enc_keyframe, enc_str, enc_target, enc_timeline, enc_value};
         use SemioAnimationMutation::*;
         match self {
             SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => format!("S:{}", enc_animation_snapshot(snapshot)),
@@ -271,8 +271,8 @@ impl OpText for SemioAnimationMutation {
     }
 
     fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        use crate::artifacts::semio::standards::v1::subsets::animation::schema::diff::{dec_channel, dec_interpolation, dec_keyframe, dec_str, dec_target, dec_timeline, dec_value};
-        use crate::artifacts::semio::standards::v1::subsets::base::schema::triples::{split_top_level, strip_brackets};
+        use crate::standards::v1::subsets::animation::schema::diff::{dec_channel, dec_interpolation, dec_keyframe, dec_str, dec_target, dec_timeline, dec_value};
+        use crate::standards::v1::subsets::base::schema::triples::{split_top_level, strip_brackets};
         use SemioAnimationMutation::*;
         let fail = |e: String| store::TextError::new(e, dsl::TextSpan::at(1, 1));
         let parse_usize = |s: &str| s.parse::<usize>().map_err(|e: std::num::ParseIntError| e.to_string());
@@ -408,7 +408,7 @@ fn fixture() -> SemioAnimationSnapshot {
         timelines: vec![AnimTimeline {
             name: Some("walk".into()),
             channels: vec![AnimChannel {
-                target: AnimTarget { node: "hip".into(), property: crate::artifacts::semio::standards::v1::subsets::animation::schema::snapshot::AnimTargetProperty::Translation },
+                target: AnimTarget { node: "hip".into(), property: crate::standards::v1::subsets::animation::schema::snapshot::AnimTargetProperty::Translation },
                 interpolation: AnimInterpolation::Linear,
                 keyframes: vec![AnimKeyframe { t: 0.0, value: AnimValue::Scalar { value: 1.0 } }],
             }],
@@ -429,7 +429,7 @@ pub(crate) fn demo_mutation_cases() -> Vec<SemioAnimationMutation> {
         SetTimelineName(set_timeline_name::SetTimelineName { index: 0, name: None }),
         InsertChannel(insert_channel::InsertChannel { timeline_index: 0, index: 1, channel: base.timelines[0].channels[0].clone() }),
         RemoveChannel(remove_channel::RemoveChannel { timeline_index: 0, index: 0 }),
-        SetChannelTarget(set_channel_target::SetChannelTarget { timeline_index: 0, index: 0, target: AnimTarget { node: "spine".into(), property: crate::artifacts::semio::standards::v1::subsets::animation::schema::snapshot::AnimTargetProperty::Rotation } }),
+        SetChannelTarget(set_channel_target::SetChannelTarget { timeline_index: 0, index: 0, target: AnimTarget { node: "spine".into(), property: crate::standards::v1::subsets::animation::schema::snapshot::AnimTargetProperty::Rotation } }),
         SetChannelInterpolation(set_channel_interpolation::SetChannelInterpolation { timeline_index: 0, index: 0, interpolation: AnimInterpolation::Step }),
         InsertKeyframe(insert_keyframe::InsertKeyframe { timeline_index: 0, channel_index: 0, index: 1, keyframe: AnimKeyframe { t: 2.0, value: AnimValue::Scalar { value: 5.0 } } }),
         RemoveKeyframe(remove_keyframe::RemoveKeyframe { timeline_index: 0, channel_index: 0, index: 0 }),

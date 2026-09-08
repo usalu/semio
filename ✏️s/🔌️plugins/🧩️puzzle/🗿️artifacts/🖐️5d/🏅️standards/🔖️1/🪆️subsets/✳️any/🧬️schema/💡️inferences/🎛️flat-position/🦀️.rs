@@ -140,7 +140,7 @@ fn diagram_centers_with_grip_t(snapshot: &Puzzle5dSnapshot, seed_poses: &HashMap
         let mut queue = VecDeque::new();
         queue.push_back(part.id.clone());
         visited.insert(part.id.clone());
-        let seed = seed_poses.get(&part.id).map(|pose| pose.center).unwrap_or([part.part_2d.x, part.part_2d.y]);
+        let seed = seed_poses.get(&part.id).map_or([part.part_2d.x, part.part_2d.y], |pose| pose.center);
         centers.insert(part.id.clone(), seed);
         while let Some(current_id) = queue.pop_front() {
             let parent_center = *centers.get(&current_id).unwrap_or(&[0.0, 0.0]);
@@ -156,10 +156,10 @@ fn diagram_centers_with_grip_t(snapshot: &Puzzle5dSnapshot, seed_poses: &HashMap
                     queue.push_back(neighbor_id);
                     continue;
                 };
-                let current_grip_id = if design_parent_id == current_id { design_parent_grip } else { parse_endpoint(&fastener.target).map(|(_, grip)| grip).unwrap_or("") };
+                let current_grip_id = if design_parent_id == current_id { design_parent_grip } else { parse_endpoint(&fastener.target).map_or("", |(_, grip)| grip) };
                 let current_part = part_map.get(current_id.as_str()).expect("current");
                 let grip = current_part.grips.iter().find(|grip| grip.id == current_grip_id);
-                let parent_t = grip.map(grip_t).unwrap_or(0.0);
+                let parent_t = grip.map_or(0.0, grip_t);
                 let mut parent_direction = grip.and_then(|grip| grip.grip_3d.direction).unwrap_or([0.0, 0.0, 1.0]);
                 let len = (parent_direction[0].powi(2) + parent_direction[1].powi(2) + parent_direction[2].powi(2)).sqrt();
                 if len > 0.0 {

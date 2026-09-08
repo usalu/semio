@@ -5,7 +5,7 @@
 //! no hand-rolled bridge needed here.
 use crate::artifacts::raster::{RasterSnapshot, RASTER_DOCUMENT_SCHEMA};
 use dsl::FromValue;
-use semio_s_plugin_stdio::artifacts::json::schema::snapshot::{parse_json_text, JsonSnapshot};
+use semio_s_artifact_stdio_json::schema::snapshot::{parse_json_text, JsonSnapshot};
 pub fn register() {}
 
 pub fn deserialize(from: &JsonSnapshot) -> Result<RasterSnapshot, String> {

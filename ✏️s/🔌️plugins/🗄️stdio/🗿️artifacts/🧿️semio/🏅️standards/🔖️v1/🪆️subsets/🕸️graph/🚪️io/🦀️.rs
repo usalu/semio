@@ -7,8 +7,8 @@
 //! `io_entries()` below is empty and `reads()` only advertises this subset's own native dialect.
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use crate::artifacts::semio::standards::v1::subsets::graph::schema::snapshot::SemioGraphSnapshot;
-    use crate::artifacts::semio::standards::v1::subsets::graph::schema::SemioGraphAnalyzer;
+    use crate::standards::v1::subsets::graph::schema::snapshot::SemioGraphSnapshot;
+    use crate::standards::v1::subsets::graph::schema::SemioGraphAnalyzer;
     use semio_framework_plugin::{
         register_composer_entries, register_subset_validator, subset_validator_entry_of, AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, ComposerEntry, Composition, Dialect, IoPayload, StandardId, SubsetId, SubsetValidator,
         SubsetValidatorEntry,
@@ -85,9 +85,9 @@ pub mod derived_composition {
     /// from this artifact's standard-level `engine::register()`.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn register() {
-        ::schema::register_artifact_schema_descriptor(crate::artifacts::semio::standards::v1::subsets::graph::schema::semio_graph_artifact_schema_descriptor());
-        store::register_document_codec(store::ArtifactCodec::of::<SemioGraphSnapshot, crate::artifacts::semio::standards::v1::subsets::graph::schema::mutations::SemioGraphMutation>(
-            crate::artifacts::semio::standards::v1::subsets::graph::schema::snapshot::STDIO_SEMIOGRAPH_DOCUMENT_SCHEMA,
+        ::framework_schema::register_artifact_schema_descriptor(crate::standards::v1::subsets::graph::schema::semio_graph_artifact_schema_descriptor());
+        store::register_document_codec(store::ArtifactCodec::of::<SemioGraphSnapshot, crate::standards::v1::subsets::graph::schema::mutations::SemioGraphMutation>(
+            crate::standards::v1::subsets::graph::schema::snapshot::STDIO_SEMIOGRAPH_DOCUMENT_SCHEMA,
         )).expect("static Stdio registration must be available and conflict-free");
         register_subset_validator(validator_entry()).expect("static Stdio registration must be available and conflict-free");
         register_composer_entries(io_entries()).expect("static Stdio registration must be available and conflict-free");
@@ -99,7 +99,7 @@ pub mod derived_composition {
     /// ticket 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn register_artifact_inferences() {
-        ::schema::register_artifact_inference_descriptor(crate::artifacts::semio::standards::v1::subsets::graph::schema::inferences::semio_graph_artifact_inference_descriptor());
+        ::framework_schema::register_artifact_inference_descriptor(crate::standards::v1::subsets::graph::schema::inferences::semio_graph_artifact_inference_descriptor());
     }
     //#endregion 🔖️Register
 
@@ -110,7 +110,7 @@ pub mod derived_composition {
         /// 🧪️ The 6 real-codec conformance-law tests, mirroring `🔤️text`'s own proven template —
         /// same 6 test names, same shape, only the facet modules and demo-case helpers differ.
         mod conformance_laws {
-            use crate::artifacts::semio::standards::v1::subsets::graph::schema::{diff, mutations, snapshot};
+            use crate::standards::v1::subsets::graph::schema::{diff, mutations, snapshot};
             use protocol::{DiffCodec, OpBinary, OpText};
 
             /// ✅️ "committed files parse": all 6 handcrafted `.grammar.semio`/`.protocol.semio`

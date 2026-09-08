@@ -2,10 +2,10 @@
 
 use crate::artifacts::shooting::{ShootingAsset, ShootingCamera, ShootingEmblemChild, ShootingSavedCamera, ShootingSceneLighting, ShootingShot, ShootingSnapshot};
 use schema::ArtifactSchema;
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioRgba, SemioTransform};
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{DrawCanvas, DrawLayer, DrawNode, DrawStyle, PathSegment, SemioDrawingSnapshot, STDIO_SEMIODRAWING_DOCUMENT_SCHEMA};
-use semio_s_plugin_stdio::artifacts::svg::schema::snapshot::write_svg_xml;
-use semio_s_plugin_stdio::artifacts::svg::SvgSnapshot;
+use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioRgba, SemioTransform};
+use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::{DrawCanvas, DrawLayer, DrawNode, DrawStyle, PathSegment, SemioDrawingSnapshot, STDIO_SEMIODRAWING_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_svg::schema::snapshot::write_svg_xml;
+use semio_s_artifact_stdio_svg::SvgSnapshot;
 use dsl::json;
 use dsl::os_pack::json::Value;
 
@@ -171,7 +171,7 @@ pub fn is_transparent_shooting_background(background: &str) -> bool {
 
 //#region 🔖️MediaExport
 /// 🌉️ Builds a real `SemioDrawingSnapshot` (canvas + one named `DrawStyle` per painted primitive
-/// + a single "scene" `DrawLayer`) from the active shot/asset/scene — replaces the old hand-rolled
+/// and a single "scene" `DrawLayer`) from the active shot/asset/scene — replaces the old hand-rolled
 /// SVG string builder. The shot `shape` becomes a real `Path` (a rectangle as four `Line`
 /// segments, an ellipse as two `Arc` segments — `DrawNode` has no native ellipse/rect primitive,
 /// `Path` is the recursive scene graph's only drawable shape, see `shooting_shape_path_segments`);
@@ -257,7 +257,7 @@ fn shooting_hex_color_to_rgba(hex: &str) -> Option<SemioRgba> {
 /// OS/plugin runtime already ran stdio's own boot-time `plugin()` registration first.
 fn shooting_ensure_semio_drawing_bridge_registered() {
     static ONCE: std::sync::Once = std::sync::Once::new();
-    ONCE.call_once(semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::drawing::io::register);
+    ONCE.call_once(semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::io::register);
 }
 
 /// 🌉️ `SemioDrawingSnapshot` → real SVG text, entirely through stdio's registered

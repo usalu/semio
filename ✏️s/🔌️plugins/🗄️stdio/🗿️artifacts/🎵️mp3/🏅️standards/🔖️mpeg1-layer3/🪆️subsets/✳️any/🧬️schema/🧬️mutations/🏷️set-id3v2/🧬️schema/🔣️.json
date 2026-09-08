@@ -1,0 +1,79 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/mp3/mpeg1-layer3/any/mutation/set-id3v2.json",
+  "title": "SetId3v2",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "id3v2": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Id3v2Tag"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "$defs": {
+    "Id3v2Tag": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "majorVersion",
+        "minorVersion",
+        "flags"
+      ],
+      "properties": {
+        "majorVersion": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "minorVersion": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "flags": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "frames": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Id3Frame"
+          }
+        }
+      }
+    },
+    "Id3Frame": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "flags"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "flags": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          }
+        }
+      }
+    }
+  }
+}

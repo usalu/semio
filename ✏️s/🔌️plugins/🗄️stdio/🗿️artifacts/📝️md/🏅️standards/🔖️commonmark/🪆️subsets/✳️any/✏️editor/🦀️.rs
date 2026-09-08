@@ -3,10 +3,10 @@
 //! Emits the frozen `replace-text` action: the incoming text is the artifact's own DSL text envelope (`print_dsl`/`parse_dsl`), round-tripped into a whole-document `SetSnapshot`.
 //! MUST NOT be reached by the sibling `viewer` module (`policyViewerPurityBreaches`).
 
-use crate::artifacts::md::standards::v_commonmark::subsets::any::schema::mutations::set_snapshot::SetSnapshot;
-use crate::artifacts::md::standards::v_commonmark::subsets::any::schema::mutations::MdMutation;
-use crate::artifacts::md::standards::v_commonmark::subsets::any::schema::snapshot::MdSnapshot;
-use crate::artifacts::md::{MD_DIALECT, STDIO_MD_DOCUMENT_SCHEMA};
+use crate::standards::v_commonmark::subsets::any::schema::mutations::set_snapshot::SetSnapshot;
+use crate::standards::v_commonmark::subsets::any::schema::mutations::MdMutation;
+use crate::standards::v_commonmark::subsets::any::schema::snapshot::MdSnapshot;
+use crate::{MD_DIALECT, STDIO_MD_DOCUMENT_SCHEMA};
 use crate::editor::md::modes::edit;
 use crate::editor::md::modes::edit::windows::main;
 use semio_framework_plugin::{ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation};

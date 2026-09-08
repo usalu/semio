@@ -3,13 +3,16 @@
 import { readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { defineLint, getWorkspaceRoot, runPolicyOnlyMain, type FolderLinter } from "./📦️packages/🟦️typescript/🟦️.ts";
+import { loadCatalogTaxonomy } from "./🔍️discovery/🟦️.ts";
 
 export const policy = defineLint("repo-lib-folder", (l: FolderLinter) => {
   const root = getWorkspaceRoot();
   const dir = join(root, l.path());
+  const taxonomy = loadCatalogTaxonomy();
+  const generated = new Set([taxonomy.schemaExportResolution.catalogPath, taxonomy.schemaExportResolution.catalogDocumentPath].map((path) => path.slice(path.lastIndexOf("/") + 1)));
   const big: string[] = [];
   for (const name of readdirSync(dir, { withFileTypes: true })) {
-    if (!name.isFile()) continue;
+    if (!name.isFile() || generated.has(name.name)) continue;
     const p = join(dir, name.name);
     if (statSync(p).size > 1 << 20) big.push(name.name);
   }
@@ -17,7 +20,7 @@ export const policy = defineLint("repo-lib-folder", (l: FolderLinter) => {
   return [
     l.breach({
       id: "big-child",
-      summary: `Child files exceed 1 MiB: ${big.join(", ")}`,
+      summary: `Authored child files exceed 1 MiB: ${big.join(", ")}`,
       kind: "lint/folder/child-size",
       priority: "medium",
     }),

@@ -4,8 +4,8 @@
 //! slug dirs directly — `🦀️.rs` is the sole mounting mechanism, same as mutations); each named
 //! inference gets its own `<emoji><slug>/` child (currently: `🧾outline/`).
 
-use crate::artifacts::md::MdSnapshot;
-use schema::ArtifactSchema;
+use crate::MdSnapshot;
+use framework_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 
 use super::outline::MdOutline;
@@ -41,7 +41,7 @@ impl protocol::InferenceSpec<MdSnapshot> for MdInference {
 //#endregion 🔖️Inference
 
 //#region 🔖️ArtifactInferrer
-impl ArtifactInferrer for crate::artifacts::md::standards::v_commonmark::subsets::any::schema::MdBuilder {
+impl ArtifactInferrer for crate::standards::v_commonmark::subsets::any::schema::MdBuilder {
     type Snapshot = MdSnapshot;
     type Inference = MdInference;
 }
@@ -51,10 +51,10 @@ impl ArtifactInferrer for crate::artifacts::md::standards::v_commonmark::subsets
 /// 💡️ Registers `s.stdio.md.inference`'s facet leaves into the OS-wide inference catalog — call
 /// once at plugin init, alongside `md_artifact_schema_descriptor`'s registration.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn md_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
-    schema::ArtifactInferenceDescriptor {
+pub fn md_artifact_inference_descriptor() -> framework_schema::ArtifactInferenceDescriptor {
+    framework_schema::ArtifactInferenceDescriptor {
         id: "s.stdio.md.inference",
-        inference: schema::FacetLeaves {
+        inference: framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),

@@ -4,9 +4,9 @@
 //! the sole runtime adapter, so this file can never structurally emit an artifact or draft mutation.
 //! MUST NOT import anything from the sibling `editor` module (`policyViewerPurityBreaches`).
 
-use crate::artifacts::mp3::standards::mpeg1_layer3::subsets::any::schema::mutations::Mp3Mutation;
-use crate::artifacts::mp3::standards::mpeg1_layer3::subsets::any::schema::snapshot::Mp3Snapshot;
-use crate::artifacts::mp3::{MP3_DIALECT, STDIO_MP3_DOCUMENT_SCHEMA};
+use crate::standards::mpeg1_layer3::subsets::any::schema::mutations::Mp3Mutation;
+use crate::standards::mpeg1_layer3::subsets::any::schema::snapshot::Mp3Snapshot;
+use crate::{MP3_DIALECT, STDIO_MP3_DOCUMENT_SCHEMA};
 use crate::viewer::mp3::modes::view;
 use crate::viewer::mp3::modes::view::windows::main;
 use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, ViewEmit, Viewer};

@@ -5,7 +5,7 @@
 //! leaf exists so `🪆️subsets/✅️valid/🧬️schema/` is present per `🔣️taxonomy.json`'s
 //! `subsetChildDirs`, without duplicating the schema definition.
 
-pub use crate::artifacts::xml::standards::v1_0::subsets::base::schema::*;
+pub use crate::standards::v1_0::subsets::base::schema::*;
 
 //#region 🧬️Mutations
 /// 🧬️ THIS subset's own mutation vocabulary — `XmlValidMutation`, not the `✳️any` subset's
@@ -22,10 +22,10 @@ pub use valid_mutations::{apply_xml_valid_mutation, inverse_xml_valid_mutation, 
 
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use crate::artifacts::xml::standards::v1_0::subsets::base::schema::diff::XmlDiff;
-    use crate::artifacts::xml::standards::v1_0::subsets::base::schema::snapshot::XmlSnapshot;
-    use crate::artifacts::xml::standards::v1_0::subsets::valid::schema::check_valid_conformance;
-    use crate::artifacts::xml::standards::v1_0::subsets::valid::schema::valid_mutations::{apply_xml_valid_mutation, XmlValidMutation};
+    use crate::standards::v1_0::subsets::base::schema::diff::XmlDiff;
+    use crate::standards::v1_0::subsets::base::schema::snapshot::XmlSnapshot;
+    use crate::standards::v1_0::subsets::valid::schema::check_valid_conformance;
+    use crate::standards::v1_0::subsets::valid::schema::valid_mutations::{apply_xml_valid_mutation, XmlValidMutation};
     use dsl::{Diagnostic, Severity};
     use semio_framework_plugin::ArtifactBuilder;
 
@@ -116,9 +116,9 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use crate::artifacts::xml::standards::v1_0::subsets::base::schema::snapshot::{XmlNode, XmlSnapshot};
-    use crate::artifacts::xml::standards::v1_0::subsets::base::schema::XmlAnalyzer as XmlAnyAnalyzer;
-    pub use crate::artifacts::xml::standards::v1_0::subsets::base::schema::XmlParts;
+    use crate::standards::v1_0::subsets::base::schema::snapshot::{XmlNode, XmlSnapshot};
+    use crate::standards::v1_0::subsets::base::schema::XmlAnalyzer as XmlAnyAnalyzer;
+    pub use crate::standards::v1_0::subsets::base::schema::XmlParts;
     use dsl::{Diagnostic, FaultCode, FaultScope, Severity, TextSpan};
     use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
@@ -214,7 +214,7 @@ pub mod derived_analysis {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use crate::artifacts::xml::standards::v1_0::subsets::base::schema::snapshot::{XmlDeclaration, XmlDocument};
+        use crate::standards::v1_0::subsets::base::schema::snapshot::{XmlDeclaration, XmlDocument};
 
         // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         fn snapshot_with(doctype: Option<&str>, standalone: Option<bool>, root_name: &str) -> XmlSnapshot {
@@ -282,7 +282,7 @@ semio_framework_plugin::derive_artifact_facets!(
     pub spec XmlValidBuilderFacets {
         construction: XmlValidBuilderConstruction,
         analysis: XmlValidAnalyzerAnalysis,
-        composition: crate::artifacts::xml::standards::v1_0::subsets::valid::io::derived_composition::XmlValidComposerComposition,
+        composition: crate::standards::v1_0::subsets::valid::io::derived_composition::XmlValidComposerComposition,
     }
     builder: XmlValidBuilder,
     analyzer: XmlValidAnalyzer,

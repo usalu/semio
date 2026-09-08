@@ -5,7 +5,7 @@
   "displayName": "Create Electrical Load Center",
   "emoji": "🏦️",
   "aggregateVariant": "CreateElectricalLoadCenter",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "create-electrical-load-center",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

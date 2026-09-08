@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeSettlementLimitMm, base: &En1997Snapshot) -> protoco
     if base.settlement_limit_mm == payload.new_settlement_limit_mm {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Settlement limit [mm] is already {}.", payload.new_settlement_limit_mm));
     }
-    protocol::MutationOutcome::new(En1997Diff { settlement_limit_mm: Some(payload.new_settlement_limit_mm.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1997Diff { settlement_limit_mm: Some(payload.new_settlement_limit_mm), ..Default::default() })
 }
 //#endregion 🔖️Diff

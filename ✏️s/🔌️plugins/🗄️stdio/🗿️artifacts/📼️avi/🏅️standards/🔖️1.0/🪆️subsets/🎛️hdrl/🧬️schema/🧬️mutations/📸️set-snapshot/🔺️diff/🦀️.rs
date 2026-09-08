@@ -1,5 +1,5 @@
-use crate::artifacts::avi::standards::v1_0::subsets::any::schema::diff::{diff_set_snapshot, AviDiff};
-use crate::artifacts::avi::standards::v1_0::subsets::any::schema::snapshot::AviSnapshot;
+use crate::standards::v1_0::subsets::any::schema::diff::{diff_set_snapshot, AviDiff};
+use crate::standards::v1_0::subsets::any::schema::snapshot::AviSnapshot;
 
 /// 🔺️ Diff helper for set-snapshot.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

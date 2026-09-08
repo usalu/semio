@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeFKMpa, base: &En1996Snapshot) -> protocol::MutationO
     if base.f_k_mpa == payload.new_f_k_mpa {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "Fk mpa already has this value.");
     }
-    protocol::MutationOutcome::new(En1996Diff { f_k_mpa: Some(payload.new_f_k_mpa.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1996Diff { f_k_mpa: Some(payload.new_f_k_mpa), ..Default::default() })
 }
 //#endregion 🔖️Diff

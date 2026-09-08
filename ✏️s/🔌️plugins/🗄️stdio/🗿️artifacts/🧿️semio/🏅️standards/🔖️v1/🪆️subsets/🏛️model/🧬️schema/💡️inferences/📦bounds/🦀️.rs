@@ -7,8 +7,8 @@
 //! incremental caching needed for a single min/max pass (same ruling `cad`'s own `📦bounds` facet
 //! reaches for its own entity-point fold).
 
-use crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioPoint3;
-use crate::artifacts::semio::standards::v1::subsets::model::schema::snapshot::SemioModelSnapshot;
+use crate::standards::v1::subsets::base::schema::geometry::SemioPoint3;
+use crate::standards::v1::subsets::model::schema::snapshot::SemioModelSnapshot;
 
 //#region 🔖️Bounds
 /// 📦️ Semio model position envelope.
@@ -62,8 +62,8 @@ pub fn compute_semio_model_bounds(snapshot: &SemioModelSnapshot) -> SemioModelBo
 //#region 🧪️Tests
 mod tests {
     use super::*;
-    use crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::{SemioQuaternion, SemioTransform};
-    use crate::artifacts::semio::standards::v1::subsets::model::schema::snapshot::{ElementClass, GeometryRef, SemioModelElement, SpatialKind, SpatialNode, STDIO_SEMIOMODEL_DOCUMENT_SCHEMA};
+    use crate::standards::v1::subsets::base::schema::geometry::{SemioQuaternion, SemioTransform};
+    use crate::standards::v1::subsets::model::schema::snapshot::{ElementClass, GeometryRef, SemioModelElement, SpatialKind, SpatialNode, STDIO_SEMIOMODEL_DOCUMENT_SCHEMA};
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn placed(x: f64, y: f64, z: f64) -> SemioTransform {

@@ -29,10 +29,10 @@ impl Vdi3805Diff {
                 next.edition_profile = value.clone();
             }
             if let Some(value) = &self.correction_as_of {
-                next.correction_as_of = value.clone();
+                next.correction_as_of = *value;
             }
             if let Some(value) = &self.strict_mode {
-                next.strict_mode = value.clone();
+                next.strict_mode = *value;
             }
             if let Some(value) = &self.index {
                 next.index = value.clone();
@@ -44,7 +44,7 @@ impl Vdi3805Diff {
                 next.curves = value.clone();
             }
             if let Some(value) = &self.limits {
-                next.limits = value.clone();
+                next.limits = *value;
             }
             if let Some(value) = &self.selected_check_index {
                 next.selected_check_index = *value;
@@ -71,10 +71,10 @@ impl MutationDiff<Vdi3805Snapshot> for Vdi3805Diff {
                 next.edition_profile = value.clone();
             }
             if let Some(value) = &self.correction_as_of {
-                next.correction_as_of = value.clone();
+                next.correction_as_of = *value;
             }
             if let Some(value) = &self.strict_mode {
-                next.strict_mode = value.clone();
+                next.strict_mode = *value;
             }
             if let Some(value) = &self.index {
                 next.index = value.clone();
@@ -86,7 +86,7 @@ impl MutationDiff<Vdi3805Snapshot> for Vdi3805Diff {
                 next.curves = value.clone();
             }
             if let Some(value) = &self.limits {
-                next.limits = value.clone();
+                next.limits = *value;
             }
             next
         })

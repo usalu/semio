@@ -12,8 +12,8 @@ pub mod derived_composition {
     use super::super::import::deserializers::artifacts::md::v_commonmark::any::SemioDocumentFromMd;
     use super::super::import::deserializers::artifacts::pdf::v1_7::any::SemioDocumentFromPdf;
     use super::super::import::deserializers::artifacts::txt::v_utf_8::any::SemioDocumentFromTxt;
-    use crate::artifacts::semio::standards::v1::subsets::document::schema::snapshot::{DocBlock, SemioDocumentSnapshot};
-    use crate::artifacts::semio::standards::v1::subsets::document::schema::SemioDocumentAnalyzer;
+    use crate::standards::v1::subsets::document::schema::snapshot::{DocBlock, SemioDocumentSnapshot};
+    use crate::standards::v1::subsets::document::schema::SemioDocumentAnalyzer;
     use semio_framework_plugin::{
         deserializer_entry_of, register_composer_entries, register_subset_validator, serializer_entry_of, subset_validator_entry_of, AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, ComposerEntry, Composition, Dialect, IoPayload,
         StandardId, SubsetId, SubsetValidator, SubsetValidatorEntry,
@@ -174,9 +174,9 @@ pub mod derived_composition {
     /// `engine::register()`.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn register() {
-        ::schema::register_artifact_schema_descriptor(crate::artifacts::semio::standards::v1::subsets::document::schema::semio_document_artifact_schema_descriptor());
-        store::register_document_codec(store::ArtifactCodec::of::<SemioDocumentSnapshot, crate::artifacts::semio::standards::v1::subsets::document::schema::mutations::SemioDocumentMutation>(
-            crate::artifacts::semio::standards::v1::subsets::document::schema::snapshot::STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA,
+        ::framework_schema::register_artifact_schema_descriptor(crate::standards::v1::subsets::document::schema::semio_document_artifact_schema_descriptor());
+        store::register_document_codec(store::ArtifactCodec::of::<SemioDocumentSnapshot, crate::standards::v1::subsets::document::schema::mutations::SemioDocumentMutation>(
+            crate::standards::v1::subsets::document::schema::snapshot::STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA,
         )).expect("static Stdio registration must be available and conflict-free");
         register_subset_validator(validator_entry()).expect("static Stdio registration must be available and conflict-free");
         register_composer_entries(io_entries()).expect("static Stdio registration must be available and conflict-free");
@@ -188,7 +188,7 @@ pub mod derived_composition {
     /// ticket 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn register_artifact_inferences() {
-        ::schema::register_artifact_inference_descriptor(crate::artifacts::semio::standards::v1::subsets::document::schema::inferences::semio_document_artifact_inference_descriptor());
+        ::framework_schema::register_artifact_inference_descriptor(crate::standards::v1::subsets::document::schema::inferences::semio_document_artifact_inference_descriptor());
     }
     //#endregion 🔖️Register
 
@@ -196,13 +196,13 @@ pub mod derived_composition {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use crate::artifacts::semio::standards::v1::subsets::document::schema::snapshot::{DocImage, DocStyle};
+        use crate::standards::v1::subsets::document::schema::snapshot::{DocImage, DocStyle};
         use semio_framework_plugin::{ArtifactDeserializer, ArtifactSerializer};
 
         #[semio_framework_async_macros::async_test]
         async fn clean_document_validates_with_no_diagnostics() {
             let snapshot = SemioDocumentSnapshot {
-                schema: crate::artifacts::semio::standards::v1::subsets::document::schema::snapshot::STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA.into(),
+                schema: crate::standards::v1::subsets::document::schema::snapshot::STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA.into(),
                 styles: vec![DocStyle { id: "base".into(), name: "Base".into(), based_on: None }, DocStyle { id: "child".into(), name: "Child".into(), based_on: Some("base".into()) }],
                 images: vec![DocImage { id: "img1".into(), mime: "image/png".into(), bytes: vec![1] }],
                 blocks: vec![DocBlock::Paragraph { style_id: Some("child".into()), runs: Vec::new() }, DocBlock::Image { image_id: "img1".into(), alt: "alt".into(), width: None, height: None }],
@@ -215,7 +215,7 @@ pub mod derived_composition {
         #[semio_framework_async_macros::async_test]
         async fn unresolved_image_and_style_references_are_flagged() {
             let snapshot = SemioDocumentSnapshot {
-                schema: crate::artifacts::semio::standards::v1::subsets::document::schema::snapshot::STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA.into(),
+                schema: crate::standards::v1::subsets::document::schema::snapshot::STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA.into(),
                 styles: Vec::new(),
                 images: Vec::new(),
                 blocks: vec![DocBlock::Paragraph { style_id: Some("missing-style".into()), runs: Vec::new() }, DocBlock::Image { image_id: "missing-image".into(), alt: String::new(), width: None, height: None }],
@@ -229,7 +229,7 @@ pub mod derived_composition {
         #[semio_framework_async_macros::async_test]
         async fn based_on_cycle_is_flagged() {
             let snapshot = SemioDocumentSnapshot {
-                schema: crate::artifacts::semio::standards::v1::subsets::document::schema::snapshot::STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA.into(),
+                schema: crate::standards::v1::subsets::document::schema::snapshot::STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA.into(),
                 styles: vec![DocStyle { id: "a".into(), name: "A".into(), based_on: Some("b".into()) }, DocStyle { id: "b".into(), name: "B".into(), based_on: Some("a".into()) }],
                 images: Vec::new(),
                 blocks: Vec::new(),
@@ -241,12 +241,12 @@ pub mod derived_composition {
         #[semio_framework_async_macros::async_test]
         async fn nested_table_cell_reference_is_checked() {
             let snapshot = SemioDocumentSnapshot {
-                schema: crate::artifacts::semio::standards::v1::subsets::document::schema::snapshot::STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA.into(),
+                schema: crate::standards::v1::subsets::document::schema::snapshot::STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA.into(),
                 styles: Vec::new(),
                 images: Vec::new(),
                 blocks: vec![DocBlock::Table {
-                    rows: vec![crate::artifacts::semio::standards::v1::subsets::document::schema::snapshot::DocTableRow {
-                        cells: vec![crate::artifacts::semio::standards::v1::subsets::document::schema::snapshot::DocTableCell { blocks: vec![DocBlock::Image { image_id: "nested-missing".into(), alt: String::new(), width: None, height: None }] }],
+                    rows: vec![crate::standards::v1::subsets::document::schema::snapshot::DocTableRow {
+                        cells: vec![crate::standards::v1::subsets::document::schema::snapshot::DocTableCell { blocks: vec![DocBlock::Image { image_id: "nested-missing".into(), alt: String::new(), width: None, height: None }] }],
                     }],
                 }],
             };
@@ -272,9 +272,9 @@ pub mod derived_composition {
 
         #[semio_framework_async_macros::async_test]
         async fn docx_round_trip_is_stable() {
-            use crate::artifacts::docx::schema::snapshot::{DocxBlock, DocxDocument, DocxParagraph, DocxRun, DocxStyle};
-            use crate::artifacts::docx::DocxSnapshot;
-            use crate::artifacts::zip::opc::OpcPackage;
+            use semio_s_artifact_stdio_docx::schema::snapshot::{DocxBlock, DocxDocument, DocxParagraph, DocxRun, DocxStyle};
+            use semio_s_artifact_stdio_docx::DocxSnapshot;
+            use semio_s_artifact_stdio_zip::opc::OpcPackage;
 
             let docx1 = DocxSnapshot::from_parts(
                 OpcPackage::default(),
@@ -298,11 +298,11 @@ pub mod derived_composition {
 
         #[semio_framework_async_macros::async_test]
         async fn md_round_trip_is_stable() {
-            use crate::artifacts::md::schema::snapshot::{MdBlock, MdInline};
-            use crate::artifacts::md::MdSnapshot;
+            use semio_s_artifact_stdio_md::schema::snapshot::{MdBlock, MdInline};
+            use semio_s_artifact_stdio_md::MdSnapshot;
 
             let md1 = MdSnapshot {
-                schema: crate::artifacts::md::STDIO_MD_DOCUMENT_SCHEMA.into(),
+                schema: semio_s_artifact_stdio_md::STDIO_MD_DOCUMENT_SCHEMA.into(),
                 blocks: vec![
                     MdBlock::Heading { level: 1, inlines: vec![MdInline::Strong { inlines: vec![MdInline::Text { text: "Title".into() }] }] },
                     MdBlock::Paragraph { inlines: vec![MdInline::Text { text: "Body".into() }] },
@@ -317,10 +317,10 @@ pub mod derived_composition {
 
         #[semio_framework_async_macros::async_test]
         async fn txt_round_trip_is_stable() {
-            use crate::artifacts::txt::schema::snapshot::LineEnding;
-            use crate::artifacts::txt::TxtSnapshot;
+            use semio_s_artifact_stdio_txt::schema::snapshot::LineEnding;
+            use semio_s_artifact_stdio_txt::TxtSnapshot;
 
-            let txt1 = TxtSnapshot { schema: crate::artifacts::txt::STDIO_TXT_DOCUMENT_SCHEMA.into(), lines: vec!["First line.".into(), String::new(), "Third line.".into()], trailing_newline: true, line_ending: LineEnding::Lf };
+            let txt1 = TxtSnapshot { schema: semio_s_artifact_stdio_txt::STDIO_TXT_DOCUMENT_SCHEMA.into(), lines: vec!["First line.".into(), String::new(), "Third line.".into()], trailing_newline: true, line_ending: LineEnding::Lf };
             let semio1 = semio_framework_plugin::resolve_ready(SemioDocumentFromTxt::deserialize(&txt1)).expect("deserialize");
             let txt2 = semio_framework_plugin::resolve_ready(SemioDocumentToTxt::serialize(&semio1)).expect("serialize");
             let semio2 = semio_framework_plugin::resolve_ready(SemioDocumentFromTxt::deserialize(&txt2)).expect("deserialize round 2");
@@ -329,7 +329,7 @@ pub mod derived_composition {
 
         #[semio_framework_async_macros::async_test]
         async fn pdf_round_trip_is_stable() {
-            use crate::artifacts::pdf::standards::v1_7::subsets::base::schema::snapshot::{PdfPage, PdfSnapshot};
+            use semio_s_artifact_stdio_pdf::standards::v1_7::subsets::base::schema::snapshot::{PdfPage, PdfSnapshot};
 
             let mut p1 = PdfPage::new(612.0, 792.0);
             p1.text = "Page one text.".into();
@@ -353,7 +353,7 @@ pub mod derived_composition {
         /// edit scope anyway).
         mod conformance_laws {
 
-            use crate::artifacts::semio::standards::v1::subsets::document::schema::{diff, mutations, snapshot};
+            use crate::standards::v1::subsets::document::schema::{diff, mutations, snapshot};
             use protocol::{DiffCodec, OpBinary, OpText};
 
             /// ✅️ "committed files parse": all 6 handcrafted `.grammar.semio`/`.protocol.semio` files

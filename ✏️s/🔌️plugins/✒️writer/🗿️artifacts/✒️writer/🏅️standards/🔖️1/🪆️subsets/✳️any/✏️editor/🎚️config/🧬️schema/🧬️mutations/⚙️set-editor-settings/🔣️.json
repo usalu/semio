@@ -5,7 +5,7 @@
   "displayName": "Set Editor Settings",
   "emoji": "⚙️",
   "aggregateVariant": "SetEditorSettings",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "set-editor-settings",
   "binaryTag": 5,
   "invertibility": "explicit-mutation",

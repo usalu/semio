@@ -1,6 +1,6 @@
 //! ∿ Univariate polynomials in monomial and Bernstein form, closed-form low-degree solvers, and a
 //! certified general root isolator (Bernstein sign-variation subdivision + safeguarded Newton).
-//! The Bernstein form is the workhorse for [`crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::bezier`] and [`crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::bspline`]: its control
+//! The Bernstein form is the workhorse for [`crate::standards::v1::subsets::brep::schema::snapshot::curve::bezier`] and [`crate::standards::v1::subsets::brep::schema::snapshot::curve::bspline`]: its control
 //! polygon convex-hulls the curve, so a control-polygon sign change is a *necessary* condition for
 //! a root, which is exactly what Descartes' rule of signs turns into a certified root count.
 //!
@@ -224,7 +224,7 @@ fn binomial(n: usize, k: usize) -> f64 {
 /// ∿ Recursively subdivides `b` over `[0, 1]` until every sub-interval has `0` or `1` sign
 /// variation (certified root-free or root-isolating), returning the isolating `(lo, hi)`
 /// intervals in increasing order. `max_depth` bounds recursion for pathological clustered-root
-/// inputs — see [`crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::error`] for how callers should react if isolation is incomplete
+/// inputs — see [`crate::standards::v1::subsets::brep::schema::snapshot::error`] for how callers should react if isolation is incomplete
 /// (the kernel's "never wrong, fail loud" invariant: a caller hitting `max_depth` should treat
 /// the sub-interval as unresolved rather than guess).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

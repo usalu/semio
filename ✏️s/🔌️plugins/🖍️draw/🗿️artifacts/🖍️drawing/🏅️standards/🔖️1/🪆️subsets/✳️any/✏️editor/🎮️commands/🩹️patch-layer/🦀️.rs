@@ -13,7 +13,7 @@ use dsl::{FromValue, ToValue};
 /// `drawing_op_for_layer_field` value type (bool/number/string) — mirrors
 /// `shooting_protocol::ShootingCommand`'s `PatchShots`/`PatchAssets` shape.
 fn patch_value_json(value: &str) -> dsl::DslValue {
-    dsl::json::parse(value).map(|parsed| dsl::json::to_dsl_value(&parsed)).unwrap_or_else(|_| dsl::DslValue::String(value.to_string()))
+    dsl::json::parse(value).map_or_else(|_| dsl::DslValue::String(value.to_string()), |parsed| dsl::json::to_dsl_value(&parsed))
 }
 //#endregion 🔖️DocumentHelpers
 

@@ -3,8 +3,8 @@
 //! (table cells may themselves hold nested paragraphs/tables — both count is recursive);
 //! `wordCount` is a whitespace-split word count over every run's `text`, anywhere in the tree.
 
-use crate::artifacts::docx::schema::snapshot::DocxBlock;
-use crate::artifacts::docx::DocxSnapshot;
+use crate::schema::snapshot::DocxBlock;
+use crate::DocxSnapshot;
 
 //#region 🔖️Outline
 /// 🧾️ `Docx` document outline.
@@ -57,7 +57,7 @@ impl DocxOutline {
 //#region 🧪️Tests
 mod tests {
     use super::*;
-    use crate::artifacts::docx::schema::snapshot::{DocxDocument, DocxTable, DocxTableCell, DocxTableRow};
+    use crate::schema::snapshot::{DocxDocument, DocxTable, DocxTableCell, DocxTableRow};
 
     #[semio_framework_async_macros::async_test]
     async fn counts_paragraphs_tables_and_words_including_nested_cells() {

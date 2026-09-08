@@ -9,8 +9,8 @@
 //! `.composers(...)` and this artifact's own root `io_registry` both reach it).
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use crate::artifacts::md::standards::v_commonmark::subsets::any::schema::MdAnalyzer;
-    use crate::artifacts::md::MdSnapshot;
+    use crate::standards::v_commonmark::subsets::any::schema::MdAnalyzer;
+    use crate::MdSnapshot;
     use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.md", standard: StandardId("commonmark"), subset: SubsetId("*") };
@@ -53,7 +53,7 @@ pub use derived_composition::*;
 
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
-    use crate::artifacts::md::standards::v_commonmark::subsets::any::schema::MdComposer as MdRawAnyComposer;
+    use crate::standards::v_commonmark::subsets::any::schema::MdComposer as MdRawAnyComposer;
     use semio_framework_plugin::{composer_entry_of, ComposerEntry};
     use std::sync::OnceLock;
 

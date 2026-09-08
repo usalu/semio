@@ -7,6 +7,6 @@ use crate::artifacts::en1997::En1997Snapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(_payload: &ChangePileBaseAreaM2, base: &En1997Snapshot) -> Vec<En1997Mutation> {
-    vec![En1997Mutation::ChangePileBaseAreaM2(ChangePileBaseAreaM2 { new_pile_base_area_m2: base.pile_base_area_m2.clone() })]
+    vec![En1997Mutation::ChangePileBaseAreaM2(ChangePileBaseAreaM2 { new_pile_base_area_m2: base.pile_base_area_m2 })]
 }
 //#endregion 🔖️Inverse

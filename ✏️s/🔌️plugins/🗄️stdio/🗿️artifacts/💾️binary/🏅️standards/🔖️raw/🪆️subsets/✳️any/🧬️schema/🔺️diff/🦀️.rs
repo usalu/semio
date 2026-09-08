@@ -4,13 +4,13 @@
 //! index-transport "key" (the recipe's own novel design point for this one artifact, since its
 //! "collection" is raw byte ranges rather than typed items).
 
-use crate::artifacts::binary::BinarySnapshot;
+use crate::BinarySnapshot;
 use protocol::MutationDiff;
 // 🧭️ `DiffAlgebra` isn't yet on the `protocol` facade's curated re-export list (S1 added the
 // trait but the facade wasn't updated — see s1-spine-report.md) so it's reached via the
 // still-public `os_spr::command` path instead of touching that framework facade file.
 use protocol::os_spr::command::DiffAlgebra;
-use schema::ArtifactSchema;
+use framework_schema::ArtifactSchema;
 
 //#region 🔖️Splice
 /// ✂️ One byte-range edit against the BASE array: replace `[offset, offset+remove_len)` with

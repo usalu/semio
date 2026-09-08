@@ -5,7 +5,7 @@
   "displayName": "Change Pv System Tilt",
   "emoji": "📈️",
   "aggregateVariant": "ChangePvSystemTilt",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-pv-system-tilt",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

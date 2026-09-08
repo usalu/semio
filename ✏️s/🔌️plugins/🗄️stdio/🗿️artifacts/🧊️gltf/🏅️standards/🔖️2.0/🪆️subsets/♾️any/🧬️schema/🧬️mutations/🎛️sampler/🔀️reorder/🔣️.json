@@ -5,7 +5,7 @@
   "displayName": "Reorder Samplers",
   "emoji": "🔀️",
   "aggregateVariant": "ReorderSamplers",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

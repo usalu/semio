@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeVolumeM3, base: &Din16798Snapshot) -> protocol::Muta
     if base.volume_m3 == payload.new_volume_m3 {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Building volume is already {}.", payload.new_volume_m3));
     }
-    protocol::MutationOutcome::new(Din16798Diff { volume_m3: Some(payload.new_volume_m3.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(Din16798Diff { volume_m3: Some(payload.new_volume_m3), ..Default::default() })
 }
 //#endregion 🔖️Diff

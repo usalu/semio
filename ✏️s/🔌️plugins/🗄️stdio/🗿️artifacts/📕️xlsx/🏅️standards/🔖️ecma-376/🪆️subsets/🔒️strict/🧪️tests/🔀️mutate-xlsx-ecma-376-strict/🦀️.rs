@@ -91,10 +91,10 @@ fn round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::{arranged_input, mutable_input};
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_plugin_stdio::artifacts::xlsx::standards::v_ecma_376::subsets::base::io::export::serializers::encode_xlsx;
-    use semio_s_plugin_stdio::artifacts::xlsx::standards::v_ecma_376::subsets::base::io::import::deserializers::decode_xlsx;
-    use semio_s_plugin_stdio::artifacts::xlsx::standards::v_ecma_376::subsets::strict::schema::mutations::{apply_xlsx_strict_mutation, stamp_conformance_class, vml_markup, XlsxStrictMutation};
-    use semio_s_plugin_stdio::artifacts::xlsx::XlsxSnapshot;
+    use crate::standards::v_ecma_376::subsets::base::io::export::serializers::encode_xlsx;
+    use crate::standards::v_ecma_376::subsets::base::io::import::deserializers::decode_xlsx;
+    use crate::standards::v_ecma_376::subsets::strict::schema::mutations::{apply_xlsx_strict_mutation, stamp_conformance_class, vml_markup, XlsxStrictMutation};
+    use crate::XlsxSnapshot;
     use semio_s_plugin_stdio_test_oracle::artifacts::xlsx::standards::v_ecma_376::subsets::strict::{oracle_inverse_spec, project_package};
 
     fn decode(bytes: &[u8]) -> Result<XlsxSnapshot, String> {
@@ -116,14 +116,14 @@ mod subject {
     fn mutation_from_spec(ctx: &Context, spec: &Json) -> Result<XlsxStrictMutation, String> {
         let params = spec.get("params").cloned().unwrap_or(Json::Null);
         Ok(match spec.str("kind").as_str() {
-            "set-snapshot" => XlsxStrictMutation::SetSnapshot(semio_s_plugin_stdio::artifacts::xlsx::standards::v_ecma_376::subsets::strict::schema::mutations::set_snapshot::SetSnapshot { snapshot: stamped(&decode(&mutable_input(ctx)?)?, params.str("conformanceClass") == "strict")? }),
-            "set-main-namespace" => XlsxStrictMutation::SetMainNamespace(semio_s_plugin_stdio::artifacts::xlsx::standards::v_ecma_376::subsets::strict::schema::mutations::set_main_namespace::SetMainNamespace { namespace: params.str("namespace") }),
-            "set-relationships-namespace" => XlsxStrictMutation::SetRelationshipsNamespace(semio_s_plugin_stdio::artifacts::xlsx::standards::v_ecma_376::subsets::strict::schema::mutations::set_relationships_namespace::SetRelationshipsNamespace { namespace: params.str("namespace") }),
-            "set-conformance-attribute" => XlsxStrictMutation::SetConformanceAttribute(semio_s_plugin_stdio::artifacts::xlsx::standards::v_ecma_376::subsets::strict::schema::mutations::set_conformance_attribute::SetConformanceAttribute { value: params.str("value") }),
+            "set-snapshot" => XlsxStrictMutation::SetSnapshot(crate::standards::v_ecma_376::subsets::strict::schema::mutations::set_snapshot::SetSnapshot { snapshot: stamped(&decode(&mutable_input(ctx)?)?, params.str("conformanceClass") == "strict")? }),
+            "set-main-namespace" => XlsxStrictMutation::SetMainNamespace(crate::standards::v_ecma_376::subsets::strict::schema::mutations::set_main_namespace::SetMainNamespace { namespace: params.str("namespace") }),
+            "set-relationships-namespace" => XlsxStrictMutation::SetRelationshipsNamespace(crate::standards::v_ecma_376::subsets::strict::schema::mutations::set_relationships_namespace::SetRelationshipsNamespace { namespace: params.str("namespace") }),
+            "set-conformance-attribute" => XlsxStrictMutation::SetConformanceAttribute(crate::standards::v_ecma_376::subsets::strict::schema::mutations::set_conformance_attribute::SetConformanceAttribute { value: params.str("value") }),
             "remove-conformance-attribute" => XlsxStrictMutation::RemoveConformanceAttribute(remove_conformance_attribute::RemoveConformanceAttribute {}),
-            "insert-vml-part" => XlsxStrictMutation::InsertVmlPart(semio_s_plugin_stdio::artifacts::xlsx::standards::v_ecma_376::subsets::strict::schema::mutations::insert_vml_part::InsertVmlPart { path: params.str("path"), markup: vml_markup() }),
-            "remove-vml-part" => XlsxStrictMutation::RemoveVmlPart(semio_s_plugin_stdio::artifacts::xlsx::standards::v_ecma_376::subsets::strict::schema::mutations::remove_vml_part::RemoveVmlPart { path: params.str("path") }),
-            "set-worksheet-content-type" => XlsxStrictMutation::SetWorksheetContentType(semio_s_plugin_stdio::artifacts::xlsx::standards::v_ecma_376::subsets::strict::schema::mutations::set_worksheet_content_type::SetWorksheetContentType { path: params.str("path"), content_type: params.str("contentType") }),
+            "insert-vml-part" => XlsxStrictMutation::InsertVmlPart(crate::standards::v_ecma_376::subsets::strict::schema::mutations::insert_vml_part::InsertVmlPart { path: params.str("path"), markup: vml_markup() }),
+            "remove-vml-part" => XlsxStrictMutation::RemoveVmlPart(crate::standards::v_ecma_376::subsets::strict::schema::mutations::remove_vml_part::RemoveVmlPart { path: params.str("path") }),
+            "set-worksheet-content-type" => XlsxStrictMutation::SetWorksheetContentType(crate::standards::v_ecma_376::subsets::strict::schema::mutations::set_worksheet_content_type::SetWorksheetContentType { path: params.str("path"), content_type: params.str("contentType") }),
             other => return Err(format!("no subject rule for kind {other:?}")),
         })
     }

@@ -129,9 +129,9 @@ impl Vdi3805Mutation {
     pub fn from_snapshot(base: &Vdi3805Snapshot, target: &Vdi3805Snapshot) -> Vec<Vdi3805Mutation> {
         let mut mutations = Vec::new();
         mutations.push(Vdi3805Mutation::UpdateManufacturerFile(update_manufacturer_file::UpdateManufacturerFile { new_manufacturer_file: target.manufacturer_file.clone() }));
-        mutations.push(Vdi3805Mutation::ChangeCorrectionAsOf(change_correction_as_of::ChangeCorrectionAsOf { new_correction_as_of: target.correction_as_of.clone() }));
-        mutations.push(Vdi3805Mutation::ChangeStrictMode(change_strict_mode::ChangeStrictMode { new_strict_mode: target.strict_mode.clone() }));
-        mutations.push(Vdi3805Mutation::UpdateLimits(update_limits::UpdateLimits { new_limits: target.limits.clone() }));
+        mutations.push(Vdi3805Mutation::ChangeCorrectionAsOf(change_correction_as_of::ChangeCorrectionAsOf { new_correction_as_of: target.correction_as_of }));
+        mutations.push(Vdi3805Mutation::ChangeStrictMode(change_strict_mode::ChangeStrictMode { new_strict_mode: target.strict_mode }));
+        mutations.push(Vdi3805Mutation::UpdateLimits(update_limits::UpdateLimits { new_limits: target.limits }));
 
         for sheet in base.edition_profile.keys() {
             if !target.edition_profile.contains_key(sheet) {
@@ -139,7 +139,7 @@ impl Vdi3805Mutation {
             }
         }
         for (sheet, choice) in target.edition_profile.iter() {
-            mutations.push(Vdi3805Mutation::ChangeEditionProfile(change_edition_profile::ChangeEditionProfile { sheet: sheet.clone(), new_choice: choice.clone() }));
+            mutations.push(Vdi3805Mutation::ChangeEditionProfile(change_edition_profile::ChangeEditionProfile { sheet: sheet.clone(), new_choice: *choice }));
         }
 
         for product in base.catalog.products.iter() {

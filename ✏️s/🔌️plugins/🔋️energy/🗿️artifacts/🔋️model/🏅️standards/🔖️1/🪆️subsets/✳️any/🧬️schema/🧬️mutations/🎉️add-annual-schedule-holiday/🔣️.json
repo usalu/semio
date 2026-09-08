@@ -5,7 +5,7 @@
   "displayName": "Add Annual Schedule Holiday",
   "emoji": "🎉️",
   "aggregateVariant": "AddAnnualScheduleHoliday",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "add-annual-schedule-holiday",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

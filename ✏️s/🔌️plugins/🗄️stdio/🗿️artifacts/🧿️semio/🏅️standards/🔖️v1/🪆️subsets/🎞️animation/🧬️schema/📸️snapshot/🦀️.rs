@@ -7,9 +7,9 @@
 //! throughout — no bare tuples (f6-final-summary.md §4.3), rotation reuses the shared
 //! `engine::geometry::SemioQuaternion{x,y,z,w}` instead of a local 4-field redefinition.
 
-use crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::{SemioPoint3, SemioQuaternion};
-use crate::artifacts::semio::standards::v1::subsets::base::schema::triples::{split_top_level, strip_brackets};
-use schema::ArtifactSchema;
+use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint3, SemioQuaternion};
+use crate::standards::v1::subsets::base::schema::triples::{split_top_level, strip_brackets};
+use framework_schema::ArtifactSchema;
 
 //#region 🔖️Ids
 pub const STDIO_SEMIOANIMATION_DOCUMENT_SCHEMA: &str = "s.stdio.semio.animation";

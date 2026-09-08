@@ -5,7 +5,7 @@
   "displayName": "Change Fenestration Sill Height",
   "emoji": "⬇️",
   "aggregateVariant": "ChangeFenestrationSillHeight",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-fenestration-sill-height",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

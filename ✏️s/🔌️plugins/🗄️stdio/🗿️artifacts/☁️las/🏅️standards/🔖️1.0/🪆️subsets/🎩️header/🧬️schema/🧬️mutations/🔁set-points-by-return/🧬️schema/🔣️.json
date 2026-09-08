@@ -1,0 +1,26 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/las/1.0/header/mutation/set-points-by-return.json",
+  "title": "SetPointsByReturn",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "counts"
+  ],
+  "properties": {
+    "counts": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 4294967295
+      },
+      "minItems": 5,
+      "maxItems": 5
+    },
+    "mutation": {
+      "const": "setPointsByReturn",
+      "description": "Aggregate discriminator spliced in by LasMutation; absent when the payload stands alone."
+    }
+  }
+}

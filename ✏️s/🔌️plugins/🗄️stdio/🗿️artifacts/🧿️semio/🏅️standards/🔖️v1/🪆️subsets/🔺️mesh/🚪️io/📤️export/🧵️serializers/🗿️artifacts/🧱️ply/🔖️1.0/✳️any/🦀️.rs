@@ -18,9 +18,9 @@
 //! - Colors are written as `uchar` `red`/`green`/`blue`[/`alpha`] (`round(channel * 255)`,
 //!   clamped `[0,255]`) — the near-universal real-world PLY color convention.
 
-use crate::artifacts::ply::schema::snapshot::{PlyElement, PlyFormat, PlyProperty, PlyRow, PlyScalarType, PlyValue};
-use crate::artifacts::ply::PlySnapshot;
-use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::{SemioMesh, SemioMeshSnapshot, SemioTopology};
+use semio_s_artifact_stdio_ply::schema::snapshot::{PlyElement, PlyFormat, PlyProperty, PlyRow, PlyScalarType, PlyValue};
+use semio_s_artifact_stdio_ply::PlySnapshot;
+use crate::standards::v1::subsets::mesh::schema::snapshot::{SemioMesh, SemioMeshSnapshot, SemioTopology};
 use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
 
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("mesh") };
@@ -153,9 +153,9 @@ impl ArtifactSerializer for SemioMeshToPly {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::{SemioPoint3, SemioRgba};
-    use crate::artifacts::semio::standards::v1::subsets::mesh::io::import::deserializers::artifacts::ply::v1_0::any::SemioMeshFromPly;
-    use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::SemioPrimitive;
+    use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint3, SemioRgba};
+    use crate::standards::v1::subsets::mesh::io::import::deserializers::artifacts::ply::v1_0::any::SemioMeshFromPly;
+    use crate::standards::v1::subsets::mesh::schema::snapshot::SemioPrimitive;
     use semio_framework_plugin::ArtifactDeserializer;
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9

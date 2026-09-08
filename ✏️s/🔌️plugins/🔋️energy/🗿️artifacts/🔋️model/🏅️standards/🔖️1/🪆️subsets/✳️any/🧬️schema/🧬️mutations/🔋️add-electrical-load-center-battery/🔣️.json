@@ -5,7 +5,7 @@
   "displayName": "Add Electrical Load Center Battery",
   "emoji": "🔋️",
   "aggregateVariant": "AddElectricalLoadCenterBattery",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "add-electrical-load-center-battery",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

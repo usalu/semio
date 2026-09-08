@@ -5,7 +5,7 @@
   "displayName": "Change Infiltration Design Flow Ach",
   "emoji": "🔄️",
   "aggregateVariant": "ChangeInfiltrationDesignFlowAch",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-infiltration-design-flow-ach",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

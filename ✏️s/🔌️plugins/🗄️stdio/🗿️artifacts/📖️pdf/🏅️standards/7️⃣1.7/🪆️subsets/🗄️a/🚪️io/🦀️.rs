@@ -5,9 +5,9 @@
 //! `🧱️base/🚪️io` already established for this artifact.
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use crate::artifacts::pdf::standards::v1_7::subsets::a::schema::check_pdf_a_conformance;
-    use crate::artifacts::pdf::standards::v1_7::subsets::base::schema::snapshot::PdfSnapshot;
-    use crate::artifacts::pdf::standards::v1_7::subsets::base::schema::PdfComposer as PdfAnyComposer;
+    use crate::standards::v1_7::subsets::a::schema::check_pdf_a_conformance;
+    use crate::standards::v1_7::subsets::base::schema::snapshot::PdfSnapshot;
+    use crate::standards::v1_7::subsets::base::schema::PdfComposer as PdfAnyComposer;
     use dsl::{Diagnostic, FaultCode, Severity, TextSpan};
     use semio_framework_plugin::{register_subset_validator, subset_validator_entry_of, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, IoPayload, StandardId, SubsetId, SubsetValidator, SubsetValidatorEntry};
     use std::sync::OnceLock;
@@ -79,12 +79,12 @@ pub mod derived_composition {
     }
 
     /// 📌️ Registers this subset's `SubsetValidator` with the generic io registry (D5's
-    /// validate-on-build hook). Reached via `crate::artifacts::pdf::declaration()`'s
+    /// validate-on-build hook). Reached via `crate::declaration()`'s
     /// `.subset_validators(...)` field (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE) --
     /// the former side-effecting `⚙️engine::register()` call chain is dissolved (ticket
     /// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES). The `ComposerEntry` itself is
     /// registered separately by the standard-level composer aggregator
-    /// (`crate::artifacts::pdf::standards::v1_7::subsets::base::io::io_registry::entries()`),
+    /// (`crate::standards::v1_7::subsets::base::io::io_registry::entries()`),
     /// matching how `🧱️base`'s own entry is registered.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn register() {
@@ -95,8 +95,8 @@ pub mod derived_composition {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use crate::artifacts::pdf::standards::v1_7::subsets::a::schema::PdfABuilderConstruction as PdfABuilder;
-        use crate::artifacts::pdf::standards::v1_7::subsets::a::schema::{CODE_JAVASCRIPT, CODE_LAUNCH};
+        use crate::standards::v1_7::subsets::a::schema::PdfABuilderConstruction as PdfABuilder;
+        use crate::standards::v1_7::subsets::a::schema::{CODE_JAVASCRIPT, CODE_LAUNCH};
         use semio_framework_plugin::AnalyzeSource;
         use semio_framework_plugin::ArtifactBuilder as _;
 
@@ -140,7 +140,7 @@ pub mod derived_composition {
 
         #[semio_framework_async_macros::async_test]
         async fn conforming_builder_snapshot_composes_and_stamps_a() {
-            let snapshot = PdfABuilder::new("sRGB IEC61966-2.1").add_page(crate::artifacts::pdf::standards::v1_7::subsets::base::schema::snapshot::PdfPage::new(100.0, 100.0)).build().unwrap();
+            let snapshot = PdfABuilder::new("sRGB IEC61966-2.1").add_page(crate::standards::v1_7::subsets::base::schema::snapshot::PdfPage::new(100.0, 100.0)).build().unwrap();
             let bytes = <PdfSnapshot as store::ArtifactPack>::encode_pack(&snapshot);
             let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Binary(&bytes) }];
             let composed = PdfAComposerComposition::compose(&sources).expect("clean document must compose to a");
@@ -189,7 +189,7 @@ pub mod derived_composition {
 
         #[semio_framework_async_macros::async_test]
         async fn subset_validator_recheck_flags_soft_diagnostics_on_the_wire_payload() {
-            let snapshot = PdfABuilder::new("sRGB IEC61966-2.1").add_page(crate::artifacts::pdf::standards::v1_7::subsets::base::schema::snapshot::PdfPage::new(50.0, 50.0)).build().unwrap();
+            let snapshot = PdfABuilder::new("sRGB IEC61966-2.1").add_page(crate::standards::v1_7::subsets::base::schema::snapshot::PdfPage::new(50.0, 50.0)).build().unwrap();
             let bytes = <PdfSnapshot as store::ArtifactPack>::encode_pack(&snapshot);
             // The registered validator, called directly (same fn the generic io hook calls): today's
             // writer drops `objects` on encode, so the OutputIntent genuinely isn't in these bytes --

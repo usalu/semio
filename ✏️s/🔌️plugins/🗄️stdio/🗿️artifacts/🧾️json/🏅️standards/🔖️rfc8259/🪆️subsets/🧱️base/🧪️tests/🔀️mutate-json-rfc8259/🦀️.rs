@@ -156,13 +156,13 @@ mod subject {
     use super::{inverse_spec, mutable_input, number};
     use semio_s_plugin_stdio_test_oracle::law::{inverse_restores, mutation_is_observable, round_trip_preserves};
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_plugin_stdio::artifacts::json::standards::v_rfc8259::subsets::base::schema::mutations::apply_json_mutation;
-    use semio_s_plugin_stdio::artifacts::json::standards::v_rfc8259::subsets::base::schema::mutations::{
+    use crate::standards::v_rfc8259::subsets::base::schema::mutations::apply_json_mutation;
+    use crate::standards::v_rfc8259::subsets::base::schema::mutations::{
         InsertArrayElementMutation, InsertArrayElementPayload, JsonMutation, JsonPath, JsonPathSegment, RemoveArrayElementMutation, RemoveArrayElementPayload, RemoveMemberMutation,
         RemoveMemberPayload, SetMemberMutation, SetMemberPayload, SetScalarMutation, SetScalarPayload,
     };
-    use semio_s_plugin_stdio::artifacts::json::standards::v_rfc8259::subsets::base::schema::snapshot::{parse_json_text, write_json_text, JsonMember, JsonSnapshot, JsonValue};
-    use semio_s_plugin_stdio::artifacts::json::STDIO_JSON_DOCUMENT_SCHEMA;
+    use crate::standards::v_rfc8259::subsets::base::schema::snapshot::{parse_json_text, write_json_text, JsonMember, JsonSnapshot, JsonValue};
+    use crate::STDIO_JSON_DOCUMENT_SCHEMA;
     use semio_s_plugin_stdio_test_oracle::artifacts::json::standards::v_rfc8259::subsets::base::project_json_value;
 
     /// 🔀️ A mutation spec's `path` param into this repository's own `JsonPath` — a string entry is

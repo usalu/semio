@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeChi, base: &En1999Snapshot) -> protocol::MutationOut
     if base.chi == payload.new_chi {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Buckling reduction factor chi is already {}.", payload.new_chi));
     }
-    protocol::MutationOutcome::new(En1999Diff { chi: Some(payload.new_chi.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1999Diff { chi: Some(payload.new_chi), ..Default::default() })
 }
 //#endregion 🔖️Diff

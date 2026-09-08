@@ -11,6 +11,6 @@ pub fn diff(payload: &ChangeMoistureMuExterior, base: &Din4108Snapshot) -> proto
     if base.moisture_mu_exterior == payload.new_moisture_mu_exterior {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "Moisture mu exterior already has this value.");
     }
-    protocol::MutationOutcome::new(Din4108Diff { moisture_mu_exterior: Some(payload.new_moisture_mu_exterior.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(Din4108Diff { moisture_mu_exterior: Some(payload.new_moisture_mu_exterior), ..Default::default() })
 }
 //#endregion 🔖️Diff

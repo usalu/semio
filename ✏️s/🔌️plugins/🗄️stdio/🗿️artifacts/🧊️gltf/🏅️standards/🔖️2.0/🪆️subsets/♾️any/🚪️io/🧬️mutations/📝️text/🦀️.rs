@@ -3,7 +3,7 @@
 pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 
-use crate::artifacts::gltf::schema::mutations::GltfMutation;
+use crate::schema::mutations::GltfMutation;
 
 const GLTF_MUTATION_MAX_PAYLOAD_BYTES: usize = 64 * 1024;
 

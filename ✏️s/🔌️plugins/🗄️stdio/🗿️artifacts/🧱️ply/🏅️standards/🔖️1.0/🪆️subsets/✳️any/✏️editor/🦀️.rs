@@ -2,8 +2,8 @@
 //! 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §2.1). `PlyAnyEditor`
 //! implements `ArtifactEditor`, wiring the shared `MeshWindowKit` to a single Main window.
 
-use crate::artifacts::ply::standards::v1_0::subsets::any::schema::mutations::PlyMutation;
-use crate::artifacts::ply::standards::v1_0::subsets::any::schema::snapshot::PlySnapshot;
+use crate::standards::v1_0::subsets::any::schema::mutations::PlyMutation;
+use crate::standards::v1_0::subsets::any::schema::snapshot::PlySnapshot;
 use crate::editor::ply::modes::edit;
 use crate::editor::ply::modes::edit::windows::main;
 use semio_framework_plugin::app::InteractionView;

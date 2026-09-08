@@ -8,9 +8,9 @@
 //! A child handle is exactly two strings: `childId` plus the target `ArtifactRef`; the child's
 //! own content never appears in the parent.
 
-use crate::artifacts::semio::standards::v1::subsets::object::schema::diff::SemioObjectDiff;
-use crate::artifacts::semio::standards::v1::subsets::object::schema::mutations::SemioObjectMutation;
-use crate::artifacts::semio::standards::v1::subsets::object::schema::snapshot::SemioObjectSnapshot;
+use crate::standards::v1::subsets::object::schema::diff::SemioObjectDiff;
+use crate::standards::v1::subsets::object::schema::mutations::SemioObjectMutation;
+use crate::standards::v1::subsets::object::schema::snapshot::SemioObjectSnapshot;
 use protocol::{Mutation, MutationDiff};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
@@ -51,7 +51,7 @@ async fn the_undo_delete_brep_detaches_the_handle_again() {
     let undo = mutation.inverse(&base);
     assert_eq!(
         undo,
-        vec![SemioObjectMutation::DeleteBrep(crate::artifacts::semio::standards::v1::subsets::object::schema::mutations::delete_brep::DeleteBrep {})],
+        vec![SemioObjectMutation::DeleteBrep(crate::standards::v1::subsets::object::schema::mutations::delete_brep::DeleteBrep {})],
         "creating a child into an EMPTY slot must undo as the matching delete, not as another create"
     );
     let mut current = mutation.diff(&base).diff().apply(&base).expect("forward 🧱create-brep applies");

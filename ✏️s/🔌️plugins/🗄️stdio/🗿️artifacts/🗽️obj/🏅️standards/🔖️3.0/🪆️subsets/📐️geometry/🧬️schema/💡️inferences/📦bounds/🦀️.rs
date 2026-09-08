@@ -4,7 +4,7 @@
 //! `vertices`/`faces`/`groups` (no fold needed). A pure whole-snapshot scalar (one min/max fold) —
 //! no `InferredField` needed.
 
-use crate::artifacts::obj::schema::snapshot::ObjSnapshot;
+use crate::schema::snapshot::ObjSnapshot;
 
 //#region 🔖️Bounds
 /// 📦️ Obj's vertex-derived spatial bounding box.
@@ -57,8 +57,8 @@ pub fn compute_obj_bounds(snapshot: &ObjSnapshot) -> ObjBounds {
 //#region 🧪️Tests
 mod tests {
     use super::*;
-    use crate::artifacts::obj::schema::snapshot::{ObjFace, ObjFaceVertex, ObjGroup, ObjVertex};
-    use crate::artifacts::obj::STDIO_OBJ_DOCUMENT_SCHEMA;
+    use crate::schema::snapshot::{ObjFace, ObjFaceVertex, ObjGroup, ObjVertex};
+    use crate::STDIO_OBJ_DOCUMENT_SCHEMA;
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn vertex(x: f64, y: f64, z: f64) -> ObjVertex {

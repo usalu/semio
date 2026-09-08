@@ -10,9 +10,9 @@
 //! replaced, never sub-diffed — same treatment `BcfCamera`/`XlsxCellValue` get), so
 //! `CadEntityRecordDiff.entity` is a plain `Option<CadEntity>`, not a nested diff type.
 
-use crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioPoint2;
-use crate::artifacts::semio::standards::v1::subsets::base::schema::triples::{dec_named_triple, enc_named_triple, split_top_level, strip_brackets, NamedModified, NamedTripleDiff};
-use crate::artifacts::semio::standards::v1::subsets::cad::schema::snapshot::{CadBlock, CadEntity, CadEntityRecord, CadLayer, SemioCadSnapshot};
+use crate::standards::v1::subsets::base::schema::geometry::SemioPoint2;
+use crate::standards::v1::subsets::base::schema::triples::{dec_named_triple, enc_named_triple, split_top_level, strip_brackets, NamedModified, NamedTripleDiff};
+use crate::standards::v1::subsets::cad::schema::snapshot::{CadBlock, CadEntity, CadEntityRecord, CadLayer, SemioCadSnapshot};
 use protocol::command::DiffAlgebra;
 use protocol::MutationDiff;
 
@@ -221,15 +221,15 @@ impl MutationDiff<SemioCadSnapshot> for SemioCadDiff {
     fn apply(&self, base: &SemioCadSnapshot) -> protocol::MutationApplyResult<SemioCadSnapshot> {
         let mut next = base.clone();
         if let Some(ld) = &self.layers {
-            crate::artifacts::semio::standards::v1::subsets::base::schema::triples::validate_named_triple(&next.layers, ld, |layer| layer.name.clone(), |layer| layer.name.clone(), ["layers"])?;
+            crate::standards::v1::subsets::base::schema::triples::validate_named_triple(&next.layers, ld, |layer| layer.name.clone(), |layer| layer.name.clone(), ["layers"])?;
             apply_named(&mut next.layers, ld, |l| l.name.clone(), apply_layer);
         }
         if let Some(bd) = &self.blocks {
-            crate::artifacts::semio::standards::v1::subsets::base::schema::triples::validate_named_triple(&next.blocks, bd, |block| block.name.clone(), |block| block.name.clone(), ["blocks"])?;
+            crate::standards::v1::subsets::base::schema::triples::validate_named_triple(&next.blocks, bd, |block| block.name.clone(), |block| block.name.clone(), ["blocks"])?;
             apply_named(&mut next.blocks, bd, |b| b.name.clone(), apply_block);
         }
         if let Some(ed) = &self.entities {
-            crate::artifacts::semio::standards::v1::subsets::base::schema::triples::validate_named_triple(&next.entities, ed, |entity| entity.handle.clone(), |entity| entity.handle.clone(), ["entities"])?;
+            crate::standards::v1::subsets::base::schema::triples::validate_named_triple(&next.entities, ed, |entity| entity.handle.clone(), |entity| entity.handle.clone(), ["entities"])?;
             apply_named(&mut next.entities, ed, |e| e.handle.clone(), apply_entity_record);
         }
         Ok(next)
@@ -756,7 +756,7 @@ impl protocol::DiffCodec for SemioCadDiff {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_diff_cases() -> Vec<SemioCadDiff> {
     let a = SemioCadSnapshot {
-        schema: crate::artifacts::semio::standards::v1::subsets::cad::schema::snapshot::STDIO_SEMIOCAD_DOCUMENT_SCHEMA.into(),
+        schema: crate::standards::v1::subsets::cad::schema::snapshot::STDIO_SEMIOCAD_DOCUMENT_SCHEMA.into(),
         layers: vec![CadLayer { name: "keep".into(), color_index: 1, line_type: "CONTINUOUS".into(), visible: true }, CadLayer { name: "layer-removed".into(), color_index: 2, line_type: "DASHED".into(), visible: false }],
         blocks: vec![CadBlock {
             name: "keep-block".into(),
@@ -769,7 +769,7 @@ pub(crate) fn demo_diff_cases() -> Vec<SemioCadDiff> {
         ],
     };
     let b = SemioCadSnapshot {
-        schema: crate::artifacts::semio::standards::v1::subsets::cad::schema::snapshot::STDIO_SEMIOCAD_DOCUMENT_SCHEMA.into(),
+        schema: crate::standards::v1::subsets::cad::schema::snapshot::STDIO_SEMIOCAD_DOCUMENT_SCHEMA.into(),
         layers: vec![CadLayer { name: "keep".into(), color_index: 9, line_type: "DASHDOT".into(), visible: false }, CadLayer { name: "layer-added".into(), color_index: 4, line_type: "HIDDEN".into(), visible: true }],
         blocks: vec![CadBlock {
             name: "keep-block".into(),
@@ -801,7 +801,7 @@ mod tests {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn sweep_a() -> SemioCadSnapshot {
         SemioCadSnapshot {
-            schema: crate::artifacts::semio::standards::v1::subsets::cad::schema::snapshot::STDIO_SEMIOCAD_DOCUMENT_SCHEMA.into(),
+            schema: crate::standards::v1::subsets::cad::schema::snapshot::STDIO_SEMIOCAD_DOCUMENT_SCHEMA.into(),
             layers: vec![CadLayer { name: "keep".into(), color_index: 1, line_type: "CONTINUOUS".into(), visible: true }, CadLayer { name: "layer-remove".into(), color_index: 2, line_type: "DASHED".into(), visible: false }],
             blocks: vec![
                 CadBlock {
@@ -824,7 +824,7 @@ mod tests {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn sweep_b() -> SemioCadSnapshot {
         SemioCadSnapshot {
-            schema: crate::artifacts::semio::standards::v1::subsets::cad::schema::snapshot::STDIO_SEMIOCAD_DOCUMENT_SCHEMA.into(),
+            schema: crate::standards::v1::subsets::cad::schema::snapshot::STDIO_SEMIOCAD_DOCUMENT_SCHEMA.into(),
             layers: vec![CadLayer { name: "keep".into(), color_index: 9, line_type: "DASHDOT".into(), visible: false }, CadLayer { name: "layer-add".into(), color_index: 4, line_type: "HIDDEN".into(), visible: true }],
             blocks: vec![
                 CadBlock {

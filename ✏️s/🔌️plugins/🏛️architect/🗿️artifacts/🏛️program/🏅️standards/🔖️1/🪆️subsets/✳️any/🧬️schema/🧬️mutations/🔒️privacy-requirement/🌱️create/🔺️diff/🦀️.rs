@@ -10,7 +10,7 @@ use crate::artifacts::program::ProgramSnapshot;
 pub fn diff(payload: &CreatePrivacyRequirement, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
     let id = payload.privacy_requirement.header.id.clone();
     if base.privacy.iter().any(|row| row.header.id == id) {
-        return protocol::MutationOutcome::fatal("mutation.duplicate-id", "A privacy requirement already exists with this id.", [id.0.clone()]);
+        return protocol::MutationOutcome::fatal("mutation.duplicate-id", "A privacy requirement already exists with this id.", [id.0]);
     }
     protocol::MutationOutcome::new(ProgramDiff { privacy: Some(ProgramPrivacyDelta { added: vec![payload.privacy_requirement.clone()], ..Default::default() }), ..Default::default() })
 }

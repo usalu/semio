@@ -1,0 +1,32 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/sequence/sequence/1/any/editor/config/mutation/set-camera.json",
+  "title": "SetCamera",
+  "type": "object",
+  "properties": {
+    "camera": {
+      "type": "object",
+      "properties": {
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "zoom": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "x",
+        "y",
+        "zoom"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "camera"
+  ],
+  "additionalProperties": false
+}

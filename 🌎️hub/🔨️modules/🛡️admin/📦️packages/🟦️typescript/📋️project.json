@@ -5,6 +5,7 @@
   "namedInputs": {
     "default": [
       "{projectRoot}/**/*",
+      "{workspaceRoot}/🌎️hub/🔨️modules/🛡️admin/🧬️schema/**/*",
       "{workspaceRoot}/🌎️hub/🔨️modules/🛡️admin/🧱️elements/**/*"
     ]
   },

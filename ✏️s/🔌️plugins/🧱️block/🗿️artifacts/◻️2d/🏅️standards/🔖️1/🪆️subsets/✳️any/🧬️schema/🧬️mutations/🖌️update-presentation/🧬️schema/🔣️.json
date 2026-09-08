@@ -1,0 +1,27 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/block/2d/1/any/mutation/update-presentation.json",
+  "title": "UpdatePresentation",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "newShape": {
+      "type": "string"
+    },
+    "newRadius": {
+      "type": "number"
+    },
+    "newWidth": {
+      "type": "number"
+    },
+    "newHeight": {
+      "type": "number"
+    },
+    "newColor": {
+      "type": "string"
+    },
+    "newIconKind": {
+      "type": "string"
+    }
+  }
+}

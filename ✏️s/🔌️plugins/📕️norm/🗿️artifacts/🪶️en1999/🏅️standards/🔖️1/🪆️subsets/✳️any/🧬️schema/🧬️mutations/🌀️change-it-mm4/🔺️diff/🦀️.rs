@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeITMm4, base: &En1999Snapshot) -> protocol::MutationO
     if base.i_t_mm4 == payload.new_i_t_mm4 {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Torsion constant I_t [mm4] is already {}.", payload.new_i_t_mm4));
     }
-    protocol::MutationOutcome::new(En1999Diff { i_t_mm4: Some(payload.new_i_t_mm4.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1999Diff { i_t_mm4: Some(payload.new_i_t_mm4), ..Default::default() })
 }
 //#endregion 🔖️Diff

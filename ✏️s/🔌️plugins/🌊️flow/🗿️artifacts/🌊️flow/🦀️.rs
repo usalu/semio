@@ -15,7 +15,7 @@
 
 use flow::{SynapseSpec, Widget, WidgetLayout};
 use semio_framework_plugin::{ArtifactKindSpec, Dialect, MediaClass, MediaForm, MediaType, OsMediaCapability, StandardId, SubsetId};
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::{
+use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::{
     FlowEdge as SemioFlowEdge, FlowNode as SemioFlowNode, FlowParam as SemioFlowParam, PortRef as SemioPortRef, SemioFlowSnapshot, STDIO_SEMIOFLOW_DOCUMENT_SCHEMA,
 };
 use std::collections::HashMap;
@@ -147,7 +147,7 @@ pub fn flow_content_snapshot_from_working(widgets: &[Widget], synapses: &[Synaps
 pub fn flow_content_node_from_working(widget: &Widget, layout: Option<&WidgetLayout>) -> SemioFlowNode {
     let id = crate::artifacts::flow::schema::widget_id(widget).to_string();
     let kind = crate::artifacts::flow::schema::widget_kind_label(widget).to_string();
-    let position = layout.map(|entry| semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioPoint2 { x: entry.x, y: entry.y }).unwrap_or_default();
+    let position = layout.map(|entry| semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::SemioPoint2 { x: entry.x, y: entry.y }).unwrap_or_default();
     let label = match widget { Widget::InputSlider { label, .. } => label.clone(), _ => kind.clone() };
     SemioFlowNode { id, kind, label, params: widget_params(widget), position }
 }

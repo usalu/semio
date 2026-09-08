@@ -5,7 +5,7 @@
   "displayName": "Create Infiltration",
   "emoji": "💨️",
   "aggregateVariant": "CreateInfiltration",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "create-infiltration",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

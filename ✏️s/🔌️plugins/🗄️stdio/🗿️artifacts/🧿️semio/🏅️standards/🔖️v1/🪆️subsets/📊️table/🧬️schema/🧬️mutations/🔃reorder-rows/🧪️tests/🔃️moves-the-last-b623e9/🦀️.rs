@@ -5,9 +5,9 @@
 //! REMOVED first and re-inserted at `min(to, len_after_removal)`. `columns` stays `None`: rows are
 //! an anonymous ordered collection, so a permutation of them cannot affect the schema.
 
-use crate::artifacts::semio::standards::v1::subsets::table::schema::diff::SemioTableDiff;
-use crate::artifacts::semio::standards::v1::subsets::table::schema::mutations::SemioTableMutation;
-use crate::artifacts::semio::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot;
+use crate::standards::v1::subsets::table::schema::diff::SemioTableDiff;
+use crate::standards::v1::subsets::table::schema::mutations::SemioTableMutation;
+use crate::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot;
 use protocol::{Mutation, MutationDiff};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
@@ -47,7 +47,7 @@ async fn the_undo_reorder_sends_the_row_back_to_the_tail() {
     let undo = mutation.inverse(&base);
     assert_eq!(
         undo,
-        vec![SemioTableMutation::ReorderRows(crate::artifacts::semio::standards::v1::subsets::table::schema::mutations::reorder_rows::ReorderRows { from: 0, to: 2 })],
+        vec![SemioTableMutation::ReorderRows(crate::standards::v1::subsets::table::schema::mutations::reorder_rows::ReorderRows { from: 0, to: 2 })],
         "the undo must address the landed index #0 and send it back to #2"
     );
     let mut current = mutation.diff(&base).diff().apply(&base).expect("forward reorder-rows applies");

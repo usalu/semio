@@ -43,7 +43,7 @@ Use the latest wip ueli branch: github.com/usalu/semio/tree/🐙ueli/⛳wip at t
 
 ---
 
-Use the main chat with GPT 5.6 Sol Ultra for main plan coordination, use multiple GPT 5.6 Sol Extra High agents for task execution, use multiple GPT 5.6 Terra Extra High agents for read-only exploration and audits.
+Use the main chat with GPT 6 Astra Extra High for main plan coordination, use multiple GPT 5.6 Sol Extra High agents for task execution, use multiple GPT 5.6 Terra Extra High agents for read-only exploration and audits.
 Always use a work fleet of maximum possible parallel agents.
 There are other agents working on other logical, even if they work on the same files, dont stop and keep on to work in conjuntion with them, just focus on your task.
 
@@ -578,7 +578,10 @@ TODO: Start new project `elements` that offers domain-agnostic primitives (such 
 
 ---
 
+Turn every artifact into a package because currently compiling stdio takes too long and it should be composable later. Make sure to properly integrate it with nx, etc.
 
+e.g.
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/📦️packages/… just has the package declarations but not the implementation. the implementations are in the domain-driven package-neutral taxonomy tree.
 
 ---
 

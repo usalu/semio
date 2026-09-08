@@ -1,6 +1,6 @@
 //! Serialize flow to stdio.json.
 use crate::artifacts::flow::FlowSnapshot;
-use semio_s_plugin_stdio::artifacts::json::JsonSnapshot;
+use semio_s_artifact_stdio_json::JsonSnapshot;
 
 pub fn register() {}
 

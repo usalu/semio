@@ -3,6 +3,7 @@ import * as React from "react";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectScrollDownButton, SelectSeparator, SelectTrigger, SelectValue, resolveSelectPlacement } from "../🟦️.tsx";
+import { Dialog, DialogContent, DialogPortal, DialogTitle } from "../../💬️Dialog/🟦️.tsx";
 // #endregion 🔌️Adapters
 
 // #region ☑️SelectMatrix
@@ -193,6 +194,40 @@ describe("Select", () => {
     expect(second).toHaveBeenCalledWith(false);
     expect(first).not.toHaveBeenCalled();
     expect(screen.getAllByRole("listbox")).toHaveLength(2);
+  });
+
+  it("does not let a page Select consume events owned by a scoped application dialog", async () => {
+    const pageChange = vi.fn(), scopedChange = vi.fn();
+    const page = render(<BasicSelect open onOpenChange={pageChange} />);
+    const root = document.createElement("section"), app = document.createElement("div"), layer = document.createElement("div");
+    root.style.position = "relative";
+    layer.style.position = "absolute";
+    root.append(app, layer);
+    document.body.appendChild(root);
+    const scoped = render(
+      <Dialog defaultOpen isolationRoot={root} onOpenChange={scopedChange}>
+        <DialogPortal container={layer}>
+          <DialogContent showCloseButton={false}>
+            <DialogTitle>Scoped application</DialogTitle>
+            <button type="button">Scoped action</button>
+          </DialogContent>
+        </DialogPortal>
+      </Dialog>,
+      { container: app, baseElement: root },
+    );
+    try {
+      await page.findByRole("listbox");
+      const action = scoped.getByRole("button", { name: "Scoped action" });
+      fireEvent.pointerDown(action);
+      expect(pageChange).not.toHaveBeenCalled();
+      fireEvent.keyDown(action, { key: "Escape" });
+      expect(pageChange).not.toHaveBeenCalled();
+      expect(scopedChange).toHaveBeenCalledWith(false);
+    } finally {
+      scoped.unmount();
+      page.unmount();
+      root.remove();
+    }
   });
 
   it("routes Escape to a logically nested portal before its parent", async () => {

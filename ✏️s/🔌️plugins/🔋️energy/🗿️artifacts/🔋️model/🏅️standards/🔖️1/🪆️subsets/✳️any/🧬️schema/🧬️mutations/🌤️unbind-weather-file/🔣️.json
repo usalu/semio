@@ -5,7 +5,7 @@
   "displayName": "Unbind Weather File",
   "emoji": "🌤️",
   "aggregateVariant": "UnbindWeatherFile",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "unbind-weather-file",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

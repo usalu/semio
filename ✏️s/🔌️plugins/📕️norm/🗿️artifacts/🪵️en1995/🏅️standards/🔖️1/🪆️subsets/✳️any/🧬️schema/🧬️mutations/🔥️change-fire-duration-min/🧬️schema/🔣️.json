@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/norm/en1995/1/any/mutation/change-fire-duration-min.json",
+  "title": "ChangeFireDurationMin",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newFireDurationMin"
+  ],
+  "properties": {
+    "newFireDurationMin": {
+      "type": "number"
+    }
+  }
+}

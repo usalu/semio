@@ -5,7 +5,7 @@
   "displayName": "Delete Thermostat",
   "emoji": "🛑️",
   "aggregateVariant": "DeleteThermostat",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "delete-thermostat",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

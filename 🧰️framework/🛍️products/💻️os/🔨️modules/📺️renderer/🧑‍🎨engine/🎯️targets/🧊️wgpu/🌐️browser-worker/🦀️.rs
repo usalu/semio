@@ -1,6 +1,5 @@
 //! 🧵️ Dedicated browser Worker owner for the complete frame transaction and OffscreenCanvas surface.
 
-use crate::kernel_seam::{HostWaker, KernelSeam};
 use crate::program_bridge::{filter_plugins, parse_plugin_entries, ProgramBridgeEntry};
 use crate::shell::ShellState;
 use crate::{AppInteractionState, AppPresenter, AppRuntime, RendererAssetFetchOwner, RuntimeMailbox};
@@ -573,7 +572,6 @@ pub struct BrowserRendererBootstrap {
     plugin_filter: String,
     width: u32,
     height: u32,
-    dpr: f32,
     wake: js_sys::Function,
     atlas: Option<FontAtlas>,
     icons: Option<IconAtlas>,
@@ -689,10 +687,6 @@ impl BrowserRendererBootstrap {
         host.runtime.set_waker(Rc::new(move || {
             let _ = runtime_wake.call0(&JsValue::NULL);
         }));
-        let kernel_wake = self.wake.clone();
-        host.kernel.set_waker(HostWaker::new(move || {
-            let _ = kernel_wake.call0(&JsValue::NULL);
-        }));
         host.scheduler.invalidate(InvalidationReason::STRUCTURE);
         Ok(BrowserRendererWorker {
             host: Some(host),
@@ -719,7 +713,7 @@ pub async fn semio_wgpu_worker_bootstrap(canvas: web_sys::OffscreenCanvas, plugi
     canvas.set_width(width.max(1));
     canvas.set_height(height.max(1));
     let gpu = GpuContext::from_offscreen_canvas(canvas, css_width, css_height, dpr).await.map_err(|error| js_error("gpu-boot", &error))?;
-    Ok(BrowserRendererBootstrap { gpu: Some(gpu), plugins, plugin_filter, width, height, dpr, wake, atlas: None, icons: None, entries: None, shell: None, phase: 0 })
+    Ok(BrowserRendererBootstrap { gpu: Some(gpu), plugins, plugin_filter, width, height, wake, atlas: None, icons: None, entries: None, shell: None, phase: 0 })
 }
 //#endregion 🚀️Boot
 

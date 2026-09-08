@@ -68,7 +68,7 @@ impl ToValue for EnergyModelDiff {
 impl FromValue for EnergyModelDiff {
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
         let entries = DslValue::into_object(value)?;
-        let field = |key: &str| entries.iter().find(|(k, _)| k == key).map(|(_, v)| v.clone()).unwrap_or(DslValue::Null);
+        let field = |key: &str| entries.iter().find(|(k, _)| k == key).map_or(DslValue::Null, |(_, v)| v.clone());
         Ok(Self {
             artifact: Option::from_value(field("artifact"))?,
             schema: Option::from_value(field("schema"))?,

@@ -5,7 +5,7 @@
   "displayName": "Create Daily Schedule",
   "emoji": "🕞️",
   "aggregateVariant": "CreateDailySchedule",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "create-daily-schedule",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

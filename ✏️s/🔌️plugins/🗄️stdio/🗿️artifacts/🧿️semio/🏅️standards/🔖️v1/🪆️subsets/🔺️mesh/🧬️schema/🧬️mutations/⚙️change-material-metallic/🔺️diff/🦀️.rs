@@ -1,12 +1,12 @@
 //! 🔺️ Diff for `ChangeMaterialMetallic`.
 
-use crate::artifacts::semio::standards::v1::subsets::mesh::schema::diff::SemioMeshDiff;
-use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
+use crate::standards::v1::subsets::mesh::schema::diff::SemioMeshDiff;
+use crate::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
 
 //#region 🔖️Diff
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn diff(payload: &super::ChangeMaterialMetallic, base: &SemioMeshSnapshot) -> protocol::MutationOutcome<SemioMeshDiff> {
-    let Some(material) = crate::artifacts::semio::standards::v1::subsets::mesh::schema::diff::material_at(base, &payload.id) else {
+    let Some(material) = crate::standards::v1::subsets::mesh::schema::diff::material_at(base, &payload.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Material \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     };
     if material.metallic == payload.new_metallic {
@@ -15,6 +15,6 @@ pub fn diff(payload: &super::ChangeMaterialMetallic, base: &SemioMeshSnapshot) -
     if !payload.new_metallic.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Material \"{}\" metallic factor {} is not finite.", payload.id, payload.new_metallic), [payload.id.clone()]);
     }
-    protocol::MutationOutcome::new(crate::artifacts::semio::standards::v1::subsets::mesh::schema::diff::diff_change_material_metallic(base, &payload.id, payload.new_metallic))
+    protocol::MutationOutcome::new(crate::standards::v1::subsets::mesh::schema::diff::diff_change_material_metallic(base, &payload.id, payload.new_metallic))
 }
 //#endregion 🔖️Diff

@@ -5,7 +5,7 @@
   "displayName": "Change Solar Thermal System Tilt",
   "emoji": "🔼️",
   "aggregateVariant": "ChangeSolarThermalSystemTilt",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-solar-thermal-system-tilt",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

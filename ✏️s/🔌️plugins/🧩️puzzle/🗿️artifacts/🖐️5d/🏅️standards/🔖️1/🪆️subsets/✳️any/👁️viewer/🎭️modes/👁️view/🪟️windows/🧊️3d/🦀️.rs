@@ -44,7 +44,7 @@ fn scale_json(scale: Option<Puzzle5dScale>) -> serde_json::Value {
 const FALLBACK_MESH_ID: &str = "box";
 
 fn mesh_id_for(part: &Puzzle5dPart) -> String {
-    part.part_3d.mesh_url.as_deref().map(world3d_mesh_id_from_url).unwrap_or_else(|| FALLBACK_MESH_ID.into())
+    part.part_3d.mesh_url.as_deref().map_or_else(|| FALLBACK_MESH_ID.into(), world3d_mesh_id_from_url)
 }
 
 fn meshes_json(document: &Puzzle5dSnapshot) -> String {

@@ -2,6 +2,7 @@
 /** @emoji 🧭️ `@semio-tech/framework-os-dev` task router — Rust plugin OS dev host. */
 import { ACTOR_COMPONENT_EXPORTS, assertActorComponentExports, artifactFiles, browserModuleRoot, finalizePluginDescriptor, PLUGIN_DESCRIPTOR_PROBE_SOURCE } from "../../../🔌️plugin/📦️packages/🟦️typescript/📜️script.ts";
 import { ACTIVATION_RECEIPT_FILE, developmentRuntimeRoot, nextActivationReceipt, publishActivationReceipt, readActivationReceipt } from "../../♻️activation/🟦️.ts";
+import { closeTestBrowserHostStagingV1, parseTestBrowserHostStagingReceiptV1, prepareTestBrowserHostRootsV1, resolveTestBrowserHostRootsV1, TEST_BROWSER_ACTIVATION_ROOT_ENV, TEST_BROWSER_HOST_RECEIPT_ENV, TEST_BROWSER_MODULE_ROOT_ENV, type TestBrowserHostRootsV1 } from "../../♻️activation/🌐️browser-host/🟦️.ts";
 import { stageArtifacts } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️.ts";
 import { FONT_ASSET, validateFontAsset } from "../../../♾️infinite/📦️packages/🦀️rust/📜️script.ts";
 import { SCALE_COMPONENT_ARTIFACT } from "../../../../🧫️fixtures/⚖️scale/🟦️.ts";
@@ -9,7 +10,7 @@ import { constants as fsConstants, createReadStream, createWriteStream, copyFile
 import { createHash } from "node:crypto";
 import { EventEmitter } from "node:events";
 import { tmpdir } from "node:os";
-import { basename, dirname, join, relative, resolve } from "node:path";
+import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import {
   BundleScript,
@@ -44,7 +45,7 @@ import {
   semioBuildMode,
   semioShipEnv,
 } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { decodeDocumentPackBytes, decodePackValue, encodeDocumentPackBytes, encodePackValue, packValueToExactJson } from "@semio-tech/framework-os";
+import { decodeDocumentPackBytes, decodePackValue, DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES, DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES, encodeDocumentPackBytes, encodePackValue, packValueToExactJson } from "@semio-tech/framework-os";
 import type { PackValue } from "@semio-tech/framework-os";
 import {
   CANONICAL_BOOTSTRAP_FOLDER_MIRROR_MAX_BYTES,
@@ -65,7 +66,7 @@ import type { PluginSourceEvent } from "@semio-tech/framework";
 import { filterProjectedPluginRegistry, generatePluginRegistry, readGeneratedCatalogProjection, writePlaygroundSession, type PluginRegistryEntry } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📜️script.ts";
 import { isHostPlaygroundFilter } from "../../../🔌️plugin/📇️registry/🟦️.ts";
 import { DEFAULT_HOST_VARIANT } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🎮️playgrounds.ts";
-import { PLUGIN_HOST_CONFIGS } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🧩️plugins.ts";
+import { PLUGIN_BUILD_TARGETS, PLUGIN_HOST_CONFIGS } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🧩️plugins.ts";
 import {
   ensurePreview2ShimVendorAt,
   hostShimSource,
@@ -337,13 +338,16 @@ async function describeBuiltPlugin(target: PluginRegistryEntry, artifact: string
 }
 //#endregion 🛂️DescriptorPublication
 /** 🎯️ Serial component compilation; descriptor extraction runs after materialization. */
-async function buildPluginCargo(target: PluginRegistryEntry): Promise<{ readonly target: PluginRegistryEntry; readonly artifact: string }> {
+async function buildPluginCargo(target: PluginRegistryEntry, ownedTargetRoot?: string): Promise<{ readonly target: PluginRegistryEntry; readonly artifact: string }> {
   const packageName = await readPackageName(target.cratePath);
   const profile = pluginWasmProfile();
-  if (runCmdStatus("cargo", pluginCargoArgs(packageName, profile), { cwd: repoRoot, budgetMs: buildBudgetMs() }) !== 0) {
+  const cargoTargetRoot = ownedTargetRoot ? resolve(ownedTargetRoot) : process.env.CARGO_TARGET_DIR ? resolve(repoRoot, process.env.CARGO_TARGET_DIR) : join(repoRoot, "target");
+  if (ownedTargetRoot && !isAbsolute(ownedTargetRoot)) throw new Error("plugin build target owner must be absolute");
+  if (ownedTargetRoot) mkdirSync(cargoTargetRoot, { recursive: true, mode: 0o700 });
+  const env = ownedTargetRoot ? { ...process.env, CARGO_TARGET_DIR: cargoTargetRoot, CARGO_BUILD_JOBS: "1", CARGO_INCREMENTAL: "0", RUSTC_WRAPPER: "", RUSTC_WORKSPACE_WRAPPER: "" } : process.env;
+  if (runCmdStatus("cargo", pluginCargoArgs(packageName, profile), { cwd: repoRoot, env, budgetMs: buildBudgetMs() }) !== 0) {
     throw new Error(`plugin build failed: ${target.pluginId}`);
   }
-  const cargoTargetRoot = process.env.CARGO_TARGET_DIR ? resolve(repoRoot, process.env.CARGO_TARGET_DIR) : join(repoRoot, "target");
   const artifact = join(cargoTargetRoot, PLUGIN_WASM_TARGET, cargoProfileDir(profile), `${packageName.replace(/-/g, "_")}.wasm`);
   return { target, artifact };
 }
@@ -379,6 +383,117 @@ async function materializePlugin(target: PluginRegistryEntry, artifact: string):
   const hotSwapMarker = join(pluginOutRoot, MODULE_HOT_SWAP_FILE);
   writeFileSync(hotSwapMarker, `${JSON.stringify({ pluginId: target.pluginId, rebuiltAt: Date.now() })}\n`);
   console.log(`built program ${target.pluginId} (${PLUGIN_WASM_TARGET}, ${pluginWasmProfile()}) -> ${outDir}`);
+}
+
+export type TestBrowserHostStageInputV1 = Readonly<{
+  artifactRoot: string;
+  selectedGis: Readonly<{
+    generationId: string;
+    currentSha256: string;
+    componentPath: string;
+    componentSha256: string;
+    descriptorPath: string;
+    descriptorSha256: string;
+  }>;
+}>;
+
+function ownedTestBrowserHostInput(artifactRoot: string, path: string, maximum: number, label: string): Readonly<{ path: string; size: number }> {
+  if (!isAbsolute(path)) throw new Error(`${label} must be absolute`);
+  const sourceInfo = lstatSync(path), canonical = realpathSync(path), child = relative(artifactRoot, canonical), info = lstatSync(canonical);
+  if (!child || child.startsWith("..") || isAbsolute(child) || sourceInfo.isSymbolicLink() || info.isSymbolicLink() || !info.isFile() || info.size < 1 || info.size > maximum) throw new Error(`${label} is not an owned bounded regular file`);
+  return Object.freeze({ path: canonical, size: info.size });
+}
+
+function exactSpaceCreateArtifactArgs(value: unknown): boolean {
+  const pending: Array<Readonly<{ value: unknown; depth: number }>> = [{ value, depth: 0 }];
+  const matches: string[][] = [];
+  let visited = 0;
+  while (pending.length) {
+    const current = pending.pop()!;
+    if (++visited > 32_768 || current.depth > 64) throw new Error("Space descriptor structure exceeds its inspection bound");
+    if (Array.isArray(current.value)) {
+      for (const child of current.value) pending.push({ value: child, depth: current.depth + 1 });
+      continue;
+    }
+    if (!current.value || typeof current.value !== "object") continue;
+    const row = current.value as Record<string, unknown>;
+    if (row.id === "createArtifact" && Array.isArray(row.args)) {
+      const ids = row.args.map((arg) => (arg && typeof arg === "object" && !Array.isArray(arg) ? (arg as Record<string, unknown>).id : undefined));
+      if (ids.some((id) => typeof id !== "string")) return false;
+      matches.push(ids as string[]);
+    }
+    for (const child of Object.values(row)) pending.push({ value: child, depth: current.depth + 1 });
+  }
+  return matches.length === 1 && JSON.stringify(matches[0]) === JSON.stringify(["name", "kindChoice"]);
+}
+
+async function materializeTestBrowserPluginV1(input: Readonly<{
+  target: PluginRegistryEntry;
+  artifact: string;
+  moduleRoot: string;
+  descriptorPath?: string;
+}>): Promise<void> {
+  const outDir = join(input.moduleRoot, moduleDirectoryName(input.target.pluginId));
+  mkdirSync(outDir, { recursive: true, mode: 0o700 });
+  const componentBase = `${input.target.wasmOut.replace(/\.wasm$/u, "")}_component`;
+  writeFileSync(join(outDir, PLUGIN_HOST_SHIM_FILE), hostShimSource());
+  await transpilePluginComponentAsync(input.artifact, outDir, componentBase, { repoRoot, preview2VendorDir: join(input.moduleRoot, PREVIEW2_VENDOR_RELATIVE), optimize: pluginWasmProfile() === "wasm-release", wasmOptBin: join(repoRoot, "node_modules/binaryen/bin/wasm-opt") });
+  if (input.descriptorPath) {
+    copyFileSync(input.descriptorPath, join(outDir, "🛂️.descriptor.semio"));
+  } else {
+    const probe = runProbe("node", ["--experimental-wasm-jspi", "--input-type=module", "--eval", PLUGIN_DESCRIPTOR_PROBE_SOURCE, join(outDir, `${componentBase}.js`)], { cwd: repoRoot, budgetMs: 60_000 });
+    if (probe.status !== 0) throw new Error(`Test browser host descriptor failed for ${input.target.pluginId}: ${probe.stderr}`);
+    const base64 = probe.stdout.trim();
+    if (!/^[A-Za-z0-9+/]+={0,2}$/u.test(base64)) throw new Error(`Invalid test browser host descriptor for ${input.target.pluginId}`);
+    const descriptor = finalizePluginDescriptor(Buffer.from(base64, "base64"), input.target.pluginId, await pluginFileDigest(input.artifact), await pluginFileDigest(join(outDir, `${componentBase}.core.wasm`)));
+    writeFileSync(join(outDir, "🛂️.descriptor.semio"), descriptor.pack);
+    writeFileSync(join(outDir, "🔣️.json"), descriptor.json);
+    if (input.target.pluginId === "space" && !exactSpaceCreateArtifactArgs(JSON.parse(descriptor.json))) throw new Error("Fresh Space host descriptor does not expose exact name/kindChoice creation args");
+  }
+  writeFileSync(join(outDir, MODULE_BRIDGE_FILE), pluginComponentBridgeSource(componentBase, input.target.wasmOut));
+}
+
+/** 🧊️ Builds and atomically closes the exact test-only Space host over one retained selected GIS current. */
+export async function stageTestBrowserHostV1(input: TestBrowserHostStageInputV1): Promise<TestBrowserHostRootsV1> {
+  if (!isAbsolute(input.artifactRoot)) throw new Error("Test browser host requires an absolute ticket artifact root");
+  const artifactRoot = realpathSync(input.artifactRoot);
+  if (!artifactRoot.split(/[\\/]/u).includes("🗑️generated")) throw new Error("Test browser host requires a ticket-generated owner");
+  const component = ownedTestBrowserHostInput(artifactRoot, input.selectedGis.componentPath, DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES, "Selected GIS component");
+  const descriptor = ownedTestBrowserHostInput(artifactRoot, input.selectedGis.descriptorPath, DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES, "Selected GIS descriptor");
+  if (![input.selectedGis.generationId, input.selectedGis.currentSha256, input.selectedGis.componentSha256, input.selectedGis.descriptorSha256].every((value) => /^[0-9a-f]{64}$/u.test(value))) throw new Error("Selected GIS identity is invalid");
+  if (await pluginFileDigest(component.path) !== input.selectedGis.componentSha256 || await pluginFileDigest(descriptor.path) !== input.selectedGis.descriptorSha256) throw new Error("Selected GIS bytes differ from their retained current");
+  const entries = readGeneratedCatalogProjection().entries;
+  const space = entries.find((entry) => entry.pluginId === "space" && entry.role === "plugin");
+  const gis = entries.find((entry) => entry.pluginId === "gis" && entry.role === "plugin");
+  if (!space || !gis || PLUGIN_BUILD_TARGETS.filter((entry) => ["space", "gis"].includes(entry.pluginId)).length !== 2) throw new Error("Test browser host registry selection is not exact");
+  ensureAppleDeveloperDir();
+  ensureWasmTarget();
+  const builtSpace = await buildPluginCargo(space, join(artifactRoot, "browser-host-wasi-target"));
+  const stagingOwner = mkdtempSync(join(artifactRoot, ".browser-host-build-"));
+  try {
+    const stagingArtifactRoot = join(stagingOwner, "🗑️generated");
+    mkdirSync(stagingArtifactRoot, { mode: 0o700 });
+    const roots = prepareTestBrowserHostRootsV1(stagingArtifactRoot);
+    ensurePreview2ShimVendorAt(join(roots.moduleRoot, PREVIEW2_VENDOR_RELATIVE), repoRoot);
+    const shardRoot = join(roots.moduleRoot, MODULE_SHARD_DIRECTORY);
+    mkdirSync(shardRoot, { recursive: true, mode: 0o700 });
+    writeFileSync(join(shardRoot, SHARD_WORKER_FILE), shardWorkerSource());
+    await materializeTestBrowserPluginV1({ target: space, artifact: builtSpace.artifact, moduleRoot: roots.moduleRoot });
+    await materializeTestBrowserPluginV1({ target: gis, artifact: component.path, descriptorPath: descriptor.path, moduleRoot: roots.moduleRoot });
+    if (await pluginFileDigest(component.path) !== input.selectedGis.componentSha256 || await pluginFileDigest(descriptor.path) !== input.selectedGis.descriptorSha256) throw new Error("Selected GIS bytes changed during browser staging");
+    writeFileSync(join(roots.browserHostRoot, "extensions", ".nx-artifact.json"), `${JSON.stringify({ owner: "test-browser-host:extensions", version: 1 })}\n`);
+    const closed = closeTestBrowserHostStagingV1(stagingArtifactRoot, { generationId: input.selectedGis.generationId, currentSha256: input.selectedGis.currentSha256 });
+    stageArtifacts(join(artifactRoot, "browser-host"), "test-browser-host:s:dev", artifactFiles(closed.browserHostRoot));
+    const finalRoot = join(artifactRoot, "browser-host");
+    return resolveTestBrowserHostRootsV1({
+      SEMIO_TEST_ARTIFACT_DIR: artifactRoot,
+      [TEST_BROWSER_MODULE_ROOT_ENV]: join(finalRoot, "modules"),
+      [TEST_BROWSER_ACTIVATION_ROOT_ENV]: join(finalRoot, "activation"),
+      [TEST_BROWSER_HOST_RECEIPT_ENV]: join(finalRoot, "🔣️receipt.json"),
+    })!;
+  } finally {
+    rmSync(stagingOwner, { recursive: true, force: true });
+  }
 }
 
 /** @emoji 🎯️ Builds exactly one target end to end (cargo then materialize then the shared shard-worker
@@ -5379,6 +5494,81 @@ if (import.meta.vitest) {
    * 30 s `quick` wall-clock budget. They stay in the suite and run from `test long` upwards; `test quick`
    * keeps every pure-helper case. */
   const itLong = atTestLevel(it, "long");
+
+  describe("ticket-owned browser host staging", () => {
+    it("matches the neutral schema and closes only the exact Space, GIS and support module set", async () => {
+      const contractRoot = join(dirname(fileURLToPath(import.meta.url)), "../../♻️activation/🌐️browser-host");
+      const schema = JSON.parse(readFileSync(join(contractRoot, "🧬️.schema.json"), "utf8"));
+      const fixture = JSON.parse(readFileSync(join(contractRoot, "🔣️.json"), "utf8"));
+      const { default: Ajv2020 } = await import("ajv/dist/2020.js");
+      const validate = new Ajv2020({ strict: true, allErrors: true }).compile(schema);
+      expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
+      expect(parseTestBrowserHostStagingReceiptV1(fixture)).toEqual(fixture);
+      expect(exactSpaceCreateArtifactArgs({ dialogs: [{ id: "createArtifact", args: [{ id: "name" }, { id: "kindChoice" }] }] })).toBe(true);
+      expect(exactSpaceCreateArtifactArgs({ dialogs: [{ id: "createArtifact", args: [{ id: "name" }, { id: "kindId" }] }] })).toBe(false);
+      const source = readFileSync(fileURLToPath(import.meta.url), "utf8");
+      expect(source).toContain('buildPluginCargo(space, join(artifactRoot, "browser-host-wasi-target"))');
+      expect(source).toContain('CARGO_TARGET_DIR: cargoTargetRoot, CARGO_BUILD_JOBS: "1", CARGO_INCREMENTAL: "0", RUSTC_WRAPPER: "", RUSTC_WORKSPACE_WRAPPER: ""');
+
+      const owner = mkdtempSync(join(tmpdir(), "semio-browser-host-law-"));
+      const artifactRoot = join(owner, "🗑️generated");
+      mkdirSync(artifactRoot, { recursive: true });
+      try {
+        const roots = prepareTestBrowserHostRootsV1(artifactRoot);
+        const files = new Map([
+          ["🪞️vendor/.nx-artifact.json", "vendor"],
+          ["🧵️shard/🟨️shard-worker.js", "shard"],
+          ["🪐️space/semio_s_plugin_space_component.core.wasm", "space-component"],
+          ["🪐️space/🛂️.descriptor.semio", "space-descriptor"],
+          ["🪐️space/🌉️bridge.js", "space-bridge"],
+          ["🌍️gis/semio_s_plugin_gis_component.core.wasm", "gis-component"],
+          ["🌍️gis/🛂️.descriptor.semio", "gis-descriptor"],
+          ["🌍️gis/🌉️bridge.js", "gis-bridge"],
+        ]);
+        for (const [name, body] of files) {
+          const path = join(roots.moduleRoot, name);
+          mkdirSync(dirname(path), { recursive: true });
+          writeFileSync(path, body);
+        }
+        const current = { generationId: "a".repeat(64), currentSha256: "b".repeat(64) };
+        const closed = closeTestBrowserHostStagingV1(artifactRoot, current);
+        expect(validate(closed.receipt), JSON.stringify(validate.errors)).toBe(true);
+        expect(closed.receipt.selectedGis).toEqual(current);
+        expect(closed.receipt.host.pluginId).toBe("space");
+        expect(readActivationReceipt(closed.activationRoot).plugins.map((row) => row.pluginId)).toEqual(["gis", "space"]);
+        const environment = {
+          SEMIO_TEST_ARTIFACT_DIR: artifactRoot,
+          [TEST_BROWSER_MODULE_ROOT_ENV]: closed.moduleRoot,
+          [TEST_BROWSER_ACTIVATION_ROOT_ENV]: closed.activationRoot,
+          [TEST_BROWSER_HOST_RECEIPT_ENV]: closed.receiptPath,
+        };
+        expect(resolveTestBrowserHostRootsV1(environment)?.receipt).toEqual(closed.receipt);
+        expect(resolveTestBrowserHostRootsV1({})).toBeNull();
+        expect(() => resolveTestBrowserHostRootsV1({ SEMIO_TEST_ARTIFACT_DIR: artifactRoot, [TEST_BROWSER_MODULE_ROOT_ENV]: closed.moduleRoot })).toThrow("complete ticket authority");
+
+        const descriptor = join(closed.moduleRoot, "🪐️space/🛂️.descriptor.semio");
+        writeFileSync(descriptor, "substituted-space-descriptor");
+        expect(() => resolveTestBrowserHostRootsV1(environment)).toThrow("module set changed");
+        writeFileSync(descriptor, "space-descriptor");
+        expect(resolveTestBrowserHostRootsV1(environment)?.receipt).toEqual(closed.receipt);
+
+        const bridge = join(closed.moduleRoot, "🪐️space/🌉️bridge.js");
+        writeFileSync(bridge, "substituted-space-module");
+        expect(() => resolveTestBrowserHostRootsV1(environment)).toThrow("module set changed");
+        writeFileSync(bridge, "space-bridge");
+        expect(resolveTestBrowserHostRootsV1(environment)?.receipt).toEqual(closed.receipt);
+
+        const activationPath = join(closed.activationRoot, ACTIVATION_RECEIPT_FILE);
+        const activation = readFileSync(activationPath);
+        writeFileSync(activationPath, `${activation.toString("utf8").trim()} `);
+        expect(() => resolveTestBrowserHostRootsV1(environment)).toThrow("activation changed");
+        writeFileSync(activationPath, activation);
+        expect(resolveTestBrowserHostRootsV1(environment)?.receipt).toEqual(closed.receipt);
+      } finally {
+        rmSync(owner, { recursive: true, force: true });
+      }
+    });
+  });
 
   //#region 🌉️LinkedSessionEnginesTests
   describe("scaleFixtureArtifacts", () => {

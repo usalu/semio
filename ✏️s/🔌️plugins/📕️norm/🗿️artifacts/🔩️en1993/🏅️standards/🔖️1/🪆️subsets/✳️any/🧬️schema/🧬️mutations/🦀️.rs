@@ -107,105 +107,105 @@ impl En1993Mutation {
     /// document replacement into a single atomic `Emit::commit`.
     pub fn from_snapshot(snapshot: &En1993Snapshot) -> Vec<En1993Mutation> {
         let mut mutations = Vec::with_capacity(17);
-        mutations.push(En1993Mutation::ChangeAnnex(change_annex::ChangeAnnex { new_annex: snapshot.annex.clone() }));
+        mutations.push(En1993Mutation::ChangeAnnex(change_annex::ChangeAnnex { new_annex: snapshot.annex }));
         mutations.push(En1993Mutation::UpdatePileInputs(update_pile_inputs::UpdatePileInputs {
-            new_pile_sigma_mpa: snapshot.pile_sigma_mpa.clone(),
-            new_pile_k_red: snapshot.pile_k_red.clone(),
-            new_pile_n_ed_kn: snapshot.pile_n_ed_kn.clone(),
+            new_pile_sigma_mpa: snapshot.pile_sigma_mpa,
+            new_pile_k_red: snapshot.pile_k_red,
+            new_pile_n_ed_kn: snapshot.pile_n_ed_kn,
         }));
         mutations.push(En1993Mutation::UpdateWeldInputs(update_weld_inputs::UpdateWeldInputs {
-            new_weld_a_mm: snapshot.weld_a_mm.clone(),
-            new_weld_l_mm: snapshot.weld_l_mm.clone(),
-            new_weld_f_u_mpa: snapshot.weld_f_u_mpa.clone(),
+            new_weld_a_mm: snapshot.weld_a_mm,
+            new_weld_l_mm: snapshot.weld_l_mm,
+            new_weld_f_u_mpa: snapshot.weld_f_u_mpa,
             new_weld_steel_grade: snapshot.weld_steel_grade.clone(),
-            new_weld_f_ed_kn: snapshot.weld_f_ed_kn.clone(),
+            new_weld_f_ed_kn: snapshot.weld_f_ed_kn,
         }));
         mutations.push(En1993Mutation::UpdateBridgeInputs(update_bridge_inputs::UpdateBridgeInputs {
-            new_bridge_lambda: snapshot.bridge_lambda.clone(),
-            new_bridge_phi_2: snapshot.bridge_phi_2.clone(),
-            new_bridge_delta_sigma_p_mpa: snapshot.bridge_delta_sigma_p_mpa.clone(),
+            new_bridge_lambda: snapshot.bridge_lambda,
+            new_bridge_phi_2: snapshot.bridge_phi_2,
+            new_bridge_delta_sigma_p_mpa: snapshot.bridge_delta_sigma_p_mpa,
         }));
         mutations.push(En1993Mutation::UpdateMemberProperties(update_member_properties::UpdateMemberProperties {
-            new_n_ed_kn: snapshot.n_ed_kn.clone(),
-            new_m_ed_knm: snapshot.m_ed_knm.clone(),
-            new_v_ed_kn: snapshot.v_ed_kn.clone(),
-            new_a_mm2: snapshot.a_mm2.clone(),
-            new_a_v_mm2: snapshot.a_v_mm2.clone(),
-            new_w_pl_mm3: snapshot.w_pl_mm3.clone(),
-            new_f_y_mpa: snapshot.f_y_mpa.clone(),
-            new_f_u_mpa: snapshot.f_u_mpa.clone(),
-            new_chi: snapshot.chi.clone(),
-            new_a_net_mm2: snapshot.a_net_mm2.clone(),
-            new_tension_n_ed_kn: snapshot.tension_n_ed_kn.clone(),
+            new_n_ed_kn: snapshot.n_ed_kn,
+            new_m_ed_knm: snapshot.m_ed_knm,
+            new_v_ed_kn: snapshot.v_ed_kn,
+            new_a_mm2: snapshot.a_mm2,
+            new_a_v_mm2: snapshot.a_v_mm2,
+            new_w_pl_mm3: snapshot.w_pl_mm3,
+            new_f_y_mpa: snapshot.f_y_mpa,
+            new_f_u_mpa: snapshot.f_u_mpa,
+            new_chi: snapshot.chi,
+            new_a_net_mm2: snapshot.a_net_mm2,
+            new_tension_n_ed_kn: snapshot.tension_n_ed_kn,
         }));
         mutations.push(En1993Mutation::UpdateCraneInputs(update_crane_inputs::UpdateCraneInputs {
-            new_crane_f_z_ed_kn: snapshot.crane_f_z_ed_kn.clone(),
-            new_crane_wheel_contact_length_mm: snapshot.crane_wheel_contact_length_mm.clone(),
-            new_crane_dispersion_mm: snapshot.crane_dispersion_mm.clone(),
-            new_crane_t_w_mm: snapshot.crane_t_w_mm.clone(),
+            new_crane_f_z_ed_kn: snapshot.crane_f_z_ed_kn,
+            new_crane_wheel_contact_length_mm: snapshot.crane_wheel_contact_length_mm,
+            new_crane_dispersion_mm: snapshot.crane_dispersion_mm,
+            new_crane_t_w_mm: snapshot.crane_t_w_mm,
         }));
         mutations.push(En1993Mutation::UpdateHssInputs(update_hss_inputs::UpdateHssInputs {
-            new_hss_w_el_mm3: snapshot.hss_w_el_mm3.clone(),
-            new_hss_f_y_mpa: snapshot.hss_f_y_mpa.clone(),
-            new_hss_section_class: snapshot.hss_section_class.clone(),
-            new_hss_m_ed_knm: snapshot.hss_m_ed_knm.clone(),
+            new_hss_w_el_mm3: snapshot.hss_w_el_mm3,
+            new_hss_f_y_mpa: snapshot.hss_f_y_mpa,
+            new_hss_section_class: snapshot.hss_section_class,
+            new_hss_m_ed_knm: snapshot.hss_m_ed_knm,
         }));
         mutations.push(En1993Mutation::UpdateThroughThicknessInputs(update_through_thickness_inputs::UpdateThroughThicknessInputs {
             new_t10_steel_subgrade: snapshot.t10_steel_subgrade.clone(),
-            new_t10_actual_thickness_mm: snapshot.t10_actual_thickness_mm.clone(),
-            new_t10_t_ed_c: snapshot.t10_t_ed_c.clone(),
+            new_t10_actual_thickness_mm: snapshot.t10_actual_thickness_mm,
+            new_t10_t_ed_c: snapshot.t10_t_ed_c,
         }));
         mutations.push(En1993Mutation::UpdateColdFormedInputs(update_cold_formed_inputs::UpdateColdFormedInputs {
-            new_cf_b_bar_mm: snapshot.cf_b_bar_mm.clone(),
-            new_cf_t_mm: snapshot.cf_t_mm.clone(),
-            new_cf_k_sigma: snapshot.cf_k_sigma.clone(),
-            new_cf_psi: snapshot.cf_psi.clone(),
-            new_cf_n_ed_kn: snapshot.cf_n_ed_kn.clone(),
-            new_cf_gross_resistance_kn: snapshot.cf_gross_resistance_kn.clone(),
+            new_cf_b_bar_mm: snapshot.cf_b_bar_mm,
+            new_cf_t_mm: snapshot.cf_t_mm,
+            new_cf_k_sigma: snapshot.cf_k_sigma,
+            new_cf_psi: snapshot.cf_psi,
+            new_cf_n_ed_kn: snapshot.cf_n_ed_kn,
+            new_cf_gross_resistance_kn: snapshot.cf_gross_resistance_kn,
         }));
         mutations.push(En1993Mutation::UpdateFatigueInputs(update_fatigue_inputs::UpdateFatigueInputs {
-            new_delta_sigma_mpa: snapshot.delta_sigma_mpa.clone(),
-            new_fatigue_category: snapshot.fatigue_category.clone(),
+            new_delta_sigma_mpa: snapshot.delta_sigma_mpa,
+            new_fatigue_category: snapshot.fatigue_category,
             new_fatigue_method: snapshot.fatigue_method.clone(),
         }));
         mutations.push(En1993Mutation::UpdateTensionComponentInputs(update_tension_component_inputs::UpdateTensionComponentInputs {
-            new_tension_component_f_uk_kn: snapshot.tension_component_f_uk_kn.clone(),
-            new_tension_component_f_k_kn: snapshot.tension_component_f_k_kn.clone(),
-            new_tension_component_n_ed_kn: snapshot.tension_component_n_ed_kn.clone(),
+            new_tension_component_f_uk_kn: snapshot.tension_component_f_uk_kn,
+            new_tension_component_f_k_kn: snapshot.tension_component_f_k_kn,
+            new_tension_component_n_ed_kn: snapshot.tension_component_n_ed_kn,
         }));
         mutations.push(En1993Mutation::UpdateFireInputs(update_fire_inputs::UpdateFireInputs {
-            new_fire_thickness_mm: snapshot.fire_thickness_mm.clone(),
+            new_fire_thickness_mm: snapshot.fire_thickness_mm,
             new_fire_rating: snapshot.fire_rating.clone(),
-            new_fire_massivity: snapshot.fire_massivity.clone(),
-            new_fire_mu_0: snapshot.fire_mu_0.clone(),
-            new_fire_design_temperature_c: snapshot.fire_design_temperature_c.clone(),
+            new_fire_massivity: snapshot.fire_massivity,
+            new_fire_mu_0: snapshot.fire_mu_0,
+            new_fire_design_temperature_c: snapshot.fire_design_temperature_c,
         }));
         mutations.push(En1993Mutation::UpdateBoltInputs(update_bolt_inputs::UpdateBoltInputs {
-            new_bolt_f_ed_kn: snapshot.bolt_f_ed_kn.clone(),
-            new_bolt_n_bolts: snapshot.bolt_n_bolts.clone(),
-            new_bolt_a_s_mm2: snapshot.bolt_a_s_mm2.clone(),
-            new_bolt_e1_mm: snapshot.bolt_e1_mm.clone(),
-            new_bolt_e2_mm: snapshot.bolt_e2_mm.clone(),
-            new_bolt_d0_mm: snapshot.bolt_d0_mm.clone(),
-            new_bolt_d_mm: snapshot.bolt_d_mm.clone(),
-            new_bolt_t_mm: snapshot.bolt_t_mm.clone(),
-            new_bolt_f_u_mpa: snapshot.bolt_f_u_mpa.clone(),
-            new_bolt_f_ub_mpa: snapshot.bolt_f_ub_mpa.clone(),
+            new_bolt_f_ed_kn: snapshot.bolt_f_ed_kn,
+            new_bolt_n_bolts: snapshot.bolt_n_bolts,
+            new_bolt_a_s_mm2: snapshot.bolt_a_s_mm2,
+            new_bolt_e1_mm: snapshot.bolt_e1_mm,
+            new_bolt_e2_mm: snapshot.bolt_e2_mm,
+            new_bolt_d0_mm: snapshot.bolt_d0_mm,
+            new_bolt_d_mm: snapshot.bolt_d_mm,
+            new_bolt_t_mm: snapshot.bolt_t_mm,
+            new_bolt_f_u_mpa: snapshot.bolt_f_u_mpa,
+            new_bolt_f_ub_mpa: snapshot.bolt_f_ub_mpa,
         }));
-        mutations.push(En1993Mutation::UpdateTowerInputs(update_tower_inputs::UpdateTowerInputs { new_tower_wind_factor: snapshot.tower_wind_factor.clone(), new_tower_n_ed_kn: snapshot.tower_n_ed_kn.clone() }));
+        mutations.push(En1993Mutation::UpdateTowerInputs(update_tower_inputs::UpdateTowerInputs { new_tower_wind_factor: snapshot.tower_wind_factor, new_tower_n_ed_kn: snapshot.tower_n_ed_kn }));
         mutations.push(En1993Mutation::UpdateSiloShellInputs(update_silo_shell_inputs::UpdateSiloShellInputs {
-            new_silo_t_mm: snapshot.silo_t_mm.clone(),
-            new_silo_r_mm: snapshot.silo_r_mm.clone(),
-            new_shell_sigma_x_ed_mpa: snapshot.shell_sigma_x_ed_mpa.clone(),
-            new_silo_k: snapshot.silo_k.clone(),
-            new_silo_gamma_kn_m3: snapshot.silo_gamma_kn_m3.clone(),
-            new_silo_depth_m: snapshot.silo_depth_m.clone(),
+            new_silo_t_mm: snapshot.silo_t_mm,
+            new_silo_r_mm: snapshot.silo_r_mm,
+            new_shell_sigma_x_ed_mpa: snapshot.shell_sigma_x_ed_mpa,
+            new_silo_k: snapshot.silo_k,
+            new_silo_gamma_kn_m3: snapshot.silo_gamma_kn_m3,
+            new_silo_depth_m: snapshot.silo_depth_m,
         }));
-        mutations.push(En1993Mutation::UpdatePlatedInputs(update_plated_inputs::UpdatePlatedInputs { new_plated_lambda_p: snapshot.plated_lambda_p.clone(), new_plated_sigma_ed_mpa: snapshot.plated_sigma_ed_mpa.clone() }));
+        mutations.push(En1993Mutation::UpdatePlatedInputs(update_plated_inputs::UpdatePlatedInputs { new_plated_lambda_p: snapshot.plated_lambda_p, new_plated_sigma_ed_mpa: snapshot.plated_sigma_ed_mpa }));
         mutations.push(En1993Mutation::UpdateStainlessInputs(update_stainless_inputs::UpdateStainlessInputs {
-            new_stainless_m_ed_knm: snapshot.stainless_m_ed_knm.clone(),
-            new_stainless_w_pl_mm3: snapshot.stainless_w_pl_mm3.clone(),
-            new_stainless_f_y_mpa: snapshot.stainless_f_y_mpa.clone(),
+            new_stainless_m_ed_knm: snapshot.stainless_m_ed_knm,
+            new_stainless_w_pl_mm3: snapshot.stainless_w_pl_mm3,
+            new_stainless_f_y_mpa: snapshot.stainless_f_y_mpa,
         }));
         mutations
     }

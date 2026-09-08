@@ -5,7 +5,7 @@
   "displayName": "Create Construction",
   "emoji": "🏗️",
   "aggregateVariant": "CreateConstruction",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "create-construction",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

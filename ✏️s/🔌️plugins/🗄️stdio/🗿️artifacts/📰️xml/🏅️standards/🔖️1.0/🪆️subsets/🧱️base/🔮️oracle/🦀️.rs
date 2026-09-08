@@ -20,7 +20,7 @@
 //! `Event::GeneralRef`, so a text run is accumulated across `Text`/`GeneralRef` events rather than
 //! read as one event — see [`resolve_general_ref`]. DOCTYPE internal-subset support is intentionally
 //! narrowed to SYSTEM/PUBLIC external ids plus typed `<!ENTITY>` declarations, the exact same scope
-//! `crate::artifacts::xml::schema::snapshot::XmlDoctype` itself models (this subset's own writer
+//! `crate::schema::snapshot::XmlDoctype` itself models (this subset's own writer
 //! freedom, documented rather than silently dropped).
 //!
 //! @see ./🔣️.json — the mutation catalog this module is measured against.
@@ -40,7 +40,7 @@ mod oracles {
     use std::io::Cursor;
 
     //#region 🔖️Tree
-    /// 🌳 Owned XML node, independent of `crate::artifacts::xml::schema::snapshot::XmlNode` (this
+    /// 🌳 Owned XML node, independent of `crate::schema::snapshot::XmlNode` (this
     /// crate never depends on `semio-s-plugin-stdio`, the production crate that type lives in — see
     /// this file's own header) but shaped identically variant for variant, so a spec written for the
     /// oracle reads the same as one written for the subject.
@@ -234,7 +234,7 @@ mod oracles {
 
     //#region 🔖️PathAddressing
     /// 🔎️ Immutable walk of `path` (a chain of child indices) from `root`, mirroring
-    /// `crate::artifacts::xml::schema::mutations::XmlNodePath::resolve` — `path == []` addresses
+    /// `crate::schema::mutations::XmlNodePath::resolve` — `path == []` addresses
     /// `root` itself.
     fn resolve<'a>(root: Option<&'a XNode>, path: &[usize]) -> Option<&'a XNode> {
         let mut current = root?;
@@ -259,7 +259,7 @@ mod oracles {
     /// 🔓️ Resolves one `Event::GeneralRef` (`&name;` or `&#NNN;`) to its literal text — numeric
     /// character references via `resolve_char_ref`, the five predefined XML entities via
     /// `resolve_xml_entity`, anything else a hard parse error. Exactly the same 5-entity-plus-numeric
-    /// scope `crate::artifacts::xml::schema::snapshot::xml_unescape_text` narrows production to.
+    /// scope `crate::schema::snapshot::xml_unescape_text` narrows production to.
     fn resolve_general_ref(reference: &BytesRef) -> Result<String, String> {
         if let Some(ch) = reference.resolve_char_ref().map_err(|error| error.to_string())? {
             return Ok(ch.to_string());
@@ -345,7 +345,7 @@ mod oracles {
     /// 📜️ Parses the DOCTYPE content `quick-xml`'s `Event::DocType` hands back (everything between
     /// `<!DOCTYPE` and the matching `>`) into `name (SYSTEM "sysid" | PUBLIC "pubid" "sysid")? ([
     /// <!ENTITY (%)? name "value"> ... ])?`, the same narrowed scope
-    /// `crate::artifacts::xml::schema::snapshot::parse_doctype` models. Independent hand-rolled
+    /// `crate::schema::snapshot::parse_doctype` models. Independent hand-rolled
     /// parser (this crate never depends on that production module).
     fn parse_doctype(raw: &str) -> Result<XDoctype, String> {
         let mut pos = 0usize;
@@ -507,7 +507,7 @@ mod oracles {
     }
 
     /// ✂️️ Minimal escaping for a quoted DTD literal (system/public id, entity value) — mirrors
-    /// `crate::artifacts::xml::schema::snapshot::xml_escape_attr`'s own narrow scope (`&`, `"`).
+    /// `crate::schema::snapshot::xml_escape_attr`'s own narrow scope (`&`, `"`).
     fn escape_dtd_literal(raw: &str) -> String {
         raw.replace('&', "&amp;").replace('"', "&quot;")
     }

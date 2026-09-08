@@ -1,0 +1,121 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/mit-bestand/demonstrator/runtime/schema.json",
+  "title": "DemonstratorRuntimeCatalog",
+  "description": "Panes, runtime variants and the build pipeline the mit-bestand demonstrator boots.",
+  "$ref": "#/$defs/DemonstratorRuntimeCatalog",
+  "$defs": {
+    "DemonstratorRuntimeCatalog": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "host",
+        "assetsDirectory",
+        "panes"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": 1
+        },
+        "host": {
+          "type": "string",
+          "minLength": 1
+        },
+        "assetsDirectory": {
+          "type": "string",
+          "minLength": 1
+        },
+        "panes": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/DemonstratorRuntimePane"
+          }
+        }
+      }
+    },
+    "DemonstratorRuntimePane": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "variant",
+        "runtimeVariant"
+      ],
+      "properties": {
+        "variant": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "runtimeVariant": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+        }
+      }
+    },
+    "DemonstratorPipelineContract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "profiles",
+        "variants",
+        "preparationProject",
+        "primaryVariant",
+        "command",
+        "forbiddenCommandImports",
+        "forbiddenOrchestration"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": 1
+        },
+        "profiles": {
+          "const": [
+            "dev",
+            "release"
+          ]
+        },
+        "variants": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+          }
+        },
+        "preparationProject": {
+          "type": "string",
+          "minLength": 1
+        },
+        "primaryVariant": {
+          "type": "string",
+          "minLength": 1
+        },
+        "command": {
+          "type": "string",
+          "pattern": "📜️script\\.ts$"
+        },
+        "forbiddenCommandImports": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "forbiddenOrchestration": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    }
+  }
+}

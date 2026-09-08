@@ -5,7 +5,7 @@
   "displayName": "Rename Thermal Enclosure",
   "emoji": "🖋️",
   "aggregateVariant": "RenameThermalEnclosure",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "rename-thermal-enclosure",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

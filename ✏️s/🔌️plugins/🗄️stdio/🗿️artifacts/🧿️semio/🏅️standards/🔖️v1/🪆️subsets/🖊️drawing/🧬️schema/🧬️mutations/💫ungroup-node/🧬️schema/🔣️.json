@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/drawing/mutation/ungroup-node.json",
+  "title": "UngroupNode",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "at"
+  ],
+  "properties": {
+    "at": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      }
+    }
+  }
+}

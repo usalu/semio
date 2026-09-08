@@ -33,6 +33,15 @@ pub struct PlanarDomain {
 pub const MOUNTED_DOMAIN_POINT_SLOTS: usize = 128;
 pub const MOUNTED_DOMAIN_HOLE_SLOTS: usize = 32;
 
+/// 🚧️ A mounted polygon admission cannot fit or address the requested slot.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum MountedDomainFault {
+    PointCapacity { requested: usize, maximum: usize },
+    HoleCapacity { requested: usize, maximum: usize },
+    HoleNotAdmitted,
+    InvalidHole { index: usize },
+}
+
 /// 🧩 Fixed mounted polygon whose admission and copy advance one slot at a time.
 pub struct MountedPlanarPolygon {
     points: [[f64; 2]; MOUNTED_DOMAIN_POINT_SLOTS],
@@ -45,9 +54,9 @@ impl MountedPlanarPolygon {
         Self { points: [[0.0; 2]; MOUNTED_DOMAIN_POINT_SLOTS], admitted: 0, len: 0 }
     }
 
-    pub fn admit_one(&mut self, target: usize) -> Result<bool, ()> {
+    pub fn admit_one(&mut self, target: usize) -> Result<bool, MountedDomainFault> {
         if target > MOUNTED_DOMAIN_POINT_SLOTS {
-            return Err(());
+            return Err(MountedDomainFault::PointCapacity { requested: target, maximum: MOUNTED_DOMAIN_POINT_SLOTS });
         }
         if self.admitted < target {
             self.admitted += 1;
@@ -96,7 +105,7 @@ impl MountedPlanarDomain {
         Self { outer: MountedPlanarPolygon::new(), holes: std::array::from_fn(|_| MountedPlanarPolygon::new()), admitted_holes: 0, hole_count: 0, close_hole: 0 }
     }
 
-    pub fn admit_outer_one(&mut self, target: usize) -> Result<bool, ()> {
+    pub fn admit_outer_one(&mut self, target: usize) -> Result<bool, MountedDomainFault> {
         self.outer.admit_one(target)
     }
 
@@ -104,9 +113,9 @@ impl MountedPlanarDomain {
         self.outer.push(point)
     }
 
-    pub fn admit_hole_one(&mut self, target: usize) -> Result<bool, ()> {
+    pub fn admit_hole_one(&mut self, target: usize) -> Result<bool, MountedDomainFault> {
         if target > MOUNTED_DOMAIN_HOLE_SLOTS {
-            return Err(());
+            return Err(MountedDomainFault::HoleCapacity { requested: target, maximum: MOUNTED_DOMAIN_HOLE_SLOTS });
         }
         if self.admitted_holes < target {
             self.admitted_holes += 1;
@@ -115,17 +124,17 @@ impl MountedPlanarDomain {
         Ok(true)
     }
 
-    pub fn begin_hole(&mut self) -> Result<usize, ()> {
+    pub fn begin_hole(&mut self) -> Result<usize, MountedDomainFault> {
         if self.hole_count == self.admitted_holes {
-            return Err(());
+            return Err(MountedDomainFault::HoleNotAdmitted);
         }
         let index = self.hole_count;
         self.hole_count += 1;
         Ok(index)
     }
 
-    pub fn admit_hole_point_one(&mut self, hole: usize, target: usize) -> Result<bool, ()> {
-        self.holes.get_mut(hole).ok_or(())?.admit_one(target)
+    pub fn admit_hole_point_one(&mut self, hole: usize, target: usize) -> Result<bool, MountedDomainFault> {
+        self.holes.get_mut(hole).ok_or(MountedDomainFault::InvalidHole { index: hole })?.admit_one(target)
     }
 
     pub fn push_hole_point(&mut self, hole: usize, point: [f64; 2]) -> Result<(), [f64; 2]> {
@@ -145,7 +154,7 @@ impl MountedPlanarDomain {
     }
 
     pub fn close_step(&mut self) -> bool {
-        while self.close_hole < self.hole_count {
+        if self.close_hole < self.hole_count {
             if !self.holes[self.close_hole].close_step() {
                 return false;
             }
@@ -947,10 +956,7 @@ impl MeshInputPreparation {
             self.grid_edge += 1;
             return;
         }
-        if self.grid_polygon == 0 && !self.grid_inside {
-            self.grid_candidate = None;
-            self.advance_grid_cell();
-        } else if self.grid_polygon > 0 && self.grid_inside {
+        if (self.grid_polygon == 0 && !self.grid_inside) || (self.grid_polygon > 0 && self.grid_inside) {
             self.grid_candidate = None;
             self.advance_grid_cell();
         } else if self.grid_polygon < domain.holes_len() {

@@ -162,11 +162,11 @@ fn identity_round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::{mutable_input, KINDS};
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_plugin_stdio::artifacts::dxf::standards::v_r12::subsets::any::schema::mutations::{
+    use crate::standards::v_r12::subsets::any::schema::mutations::{
         apply_dxf_mutation, insert_block, insert_entity, insert_layer, insert_linetype, insert_style, remove_block, remove_entity, remove_header_var, remove_layer, remove_linetype, remove_style, set_block, set_entity, set_header_var, set_layer, set_linetype, set_snapshot, set_style, DxfMutation,
     };
-    use semio_s_plugin_stdio::artifacts::dxf::standards::v_r12::subsets::any::schema::snapshot::{parse_dxf_document, print_dxf_document, DxfBlock, DxfEntity, DxfHeaderVar, DxfLayer, DxfLinetype, DxfStyle, DxfValue};
-    use semio_s_plugin_stdio::artifacts::dxf::DxfSnapshot;
+    use crate::standards::v_r12::subsets::any::schema::snapshot::{parse_dxf_document, print_dxf_document, DxfBlock, DxfEntity, DxfHeaderVar, DxfLayer, DxfLinetype, DxfStyle, DxfValue};
+    use crate::DxfSnapshot;
     use semio_s_plugin_stdio_test_oracle::artifacts::dxf::standards::v_r12::subsets::any::project_dxf_r12;
 
     //#region 🔖️SpecCodec

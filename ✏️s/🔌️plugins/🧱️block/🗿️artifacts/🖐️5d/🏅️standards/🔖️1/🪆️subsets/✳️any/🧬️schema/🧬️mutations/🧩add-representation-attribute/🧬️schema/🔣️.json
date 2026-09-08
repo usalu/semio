@@ -1,0 +1,36 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/block/5d/1/any/mutation/add-representation-attribute.json",
+  "title": "AddRepresentationAttribute",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "attribute",
+    "id"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "attribute": {
+      "title": "BlockAttribute",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key",
+        "value"
+      ],
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        },
+        "definition": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

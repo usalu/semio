@@ -7,6 +7,6 @@ use crate::artifacts::en1992::En1992Snapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(_payload: &ChangeLiquidSigmaSMpa, base: &En1992Snapshot) -> Vec<En1992Mutation> {
-    vec![En1992Mutation::ChangeLiquidSigmaSMpa(ChangeLiquidSigmaSMpa { new_liquid_sigma_s_mpa: base.liquid_sigma_s_mpa.clone() })]
+    vec![En1992Mutation::ChangeLiquidSigmaSMpa(ChangeLiquidSigmaSMpa { new_liquid_sigma_s_mpa: base.liquid_sigma_s_mpa })]
 }
 //#endregion 🔖️Inverse

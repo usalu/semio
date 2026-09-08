@@ -9,7 +9,7 @@ use crate::artifacts::writer::{writer_snapshot_with_text, WriterSnapshot, WRITER
 use semio_framework::io::io_mechanism::Deserializer;
 use semio_framework::io_schema::{IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{Dialect, StandardId, SubsetId};
-use semio_s_plugin_stdio::artifacts::txt::TxtSnapshot;
+use semio_s_artifact_stdio_txt::TxtSnapshot;
 
 pub const TXT_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.txt", standard: StandardId("utf-8"), subset: SubsetId("*") };
 

@@ -7,7 +7,7 @@
 //! bcf/docx `enc_indexed_triple` precedent's SHAPE without needing that shared engine (mp4 is a
 //! top-level format artifact, not a semio subset).
 
-use crate::artifacts::mp4::standards::isobmff::subsets::any::schema::snapshot::{Mp4Codec, Mp4Ftyp, Mp4Movie, Mp4Sample, Mp4Snapshot, Mp4Track, Mp4TrackMetadata};
+use crate::standards::isobmff::subsets::any::schema::snapshot::{Mp4Codec, Mp4Ftyp, Mp4Movie, Mp4Sample, Mp4Snapshot, Mp4Track, Mp4TrackMetadata};
 use protocol::command::DiffAlgebra;
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
 
@@ -526,7 +526,7 @@ pub fn diff_set_snapshot(base: &Mp4Snapshot, snapshot: &Mp4Snapshot) -> Mp4Diff 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::mp4::standards::isobmff::subsets::any::schema::snapshot::STDIO_MP4_DOCUMENT_SCHEMA;
+    use crate::standards::isobmff::subsets::any::schema::snapshot::STDIO_MP4_DOCUMENT_SCHEMA;
 
     fn sample(n: u8) -> Mp4Sample {
         Mp4Sample { data: vec![n], duration: u32::from(n) * 10, cts_offset: 0, sync: n % 2 == 0 }
@@ -676,22 +676,22 @@ mod tests {
     fn exact_fixture_empty_inverse_absorb_and_source_removal_laws() {
         let path = concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../temp/bauen-mit-bestand.mp4");
         let bytes = std::fs::read(path).expect("read exact MP4 fixture");
-        let base = crate::artifacts::mp4::standards::isobmff::subsets::any::io::decode_mp4(&bytes).expect("decode exact MP4 fixture");
+        let base = crate::standards::isobmff::subsets::any::io::decode_mp4(&bytes).expect("decode exact MP4 fixture");
 
         let empty = Mp4Diff::default();
         assert!(empty.is_empty());
-        assert_eq!(crate::artifacts::mp4::standards::isobmff::subsets::any::io::encode_mp4(&empty.apply(&base).unwrap()), bytes);
+        assert_eq!(crate::standards::isobmff::subsets::any::io::encode_mp4(&empty.apply(&base).unwrap()), bytes);
 
         let mut changed = base.clone();
         changed.tracks[0].width += 1;
         let diff = Mp4Diff::between(&base, &changed);
         let after = diff.apply(&base).unwrap();
         let inverse = diff.inverse(&base);
-        assert_eq!(crate::artifacts::mp4::standards::isobmff::subsets::any::io::encode_mp4(&inverse.apply(&after).unwrap()), bytes);
+        assert_eq!(crate::standards::isobmff::subsets::any::io::encode_mp4(&inverse.apply(&after).unwrap()), bytes);
 
         let mut absorbed = diff;
         absorbed.absorb(inverse);
-        assert_eq!(crate::artifacts::mp4::standards::isobmff::subsets::any::io::encode_mp4(&absorbed.apply(&base).unwrap()), bytes);
+        assert_eq!(crate::standards::isobmff::subsets::any::io::encode_mp4(&absorbed.apply(&base).unwrap()), bytes);
     }
     //#endregion
 }

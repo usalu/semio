@@ -1,7 +1,7 @@
 //! 📥️ Deserialize `stdio.obj` from stdio.txt.
 
-use crate::artifacts::obj::ObjSnapshot;
-use crate::artifacts::txt::TxtSnapshot;
+use crate::ObjSnapshot;
+use semio_s_artifact_stdio_txt::TxtSnapshot;
 
 //#region 🔖️Codec
 /// 🗂️ Register deserializer hooks.
@@ -11,7 +11,7 @@ pub fn register() {}
 /// 📥 Parse obj text into a ObjSnapshot.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn deserialize(from: &TxtSnapshot) -> Result<ObjSnapshot, store::TextError> {
-    crate::artifacts::obj::engine::decode_obj(&from.to_body()).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+    crate::engine::decode_obj(&from.to_body()).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
 }
 
 /// 📥 Parse DSL/text bytes via txt then obj.

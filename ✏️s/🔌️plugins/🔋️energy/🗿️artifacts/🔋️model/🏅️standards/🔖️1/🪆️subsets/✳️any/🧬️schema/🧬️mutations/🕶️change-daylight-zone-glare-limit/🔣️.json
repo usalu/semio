@@ -5,7 +5,7 @@
   "displayName": "Change Daylight Zone Glare Limit",
   "emoji": "🕶️",
   "aggregateVariant": "ChangeDaylightZoneGlareLimit",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-daylight-zone-glare-limit",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

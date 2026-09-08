@@ -1,7 +1,7 @@
 //! program -> xlsx
 use crate::artifacts::program::ProgramSnapshot;
-pub use semio_s_plugin_stdio::artifacts::xlsx::XlsxSnapshot;
-pub use semio_s_plugin_stdio::artifacts::xlsx::schema::snapshot::{XlsxCell, XlsxCellValue, XlsxSheet, XlsxWorkbook};
+pub use semio_s_artifact_stdio_xlsx::XlsxSnapshot;
+pub use semio_s_artifact_stdio_xlsx::schema::snapshot::{XlsxCell, XlsxCellValue, XlsxSheet, XlsxWorkbook};
 use std::collections::BTreeSet;
 
 pub fn register() {}
@@ -47,14 +47,14 @@ pub fn serialize_bytes(snapshot: &ProgramSnapshot) -> Result<Vec<u8>, store::Tex
 
 pub fn serialize_raw_bytes(snapshot: &ProgramSnapshot) -> Result<Vec<u8>, store::TextError> {
     let workbook = serialize(snapshot)?;
-    semio_s_plugin_stdio::artifacts::xlsx::standards::v_ecma_376::subsets::base::io::export::serializers::encode_xlsx(&workbook).map_err(|error| export_error(format!("program->xlsx: {error}")))
+    semio_s_artifact_stdio_xlsx::standards::v_ecma_376::subsets::base::io::export::serializers::encode_xlsx(&workbook).map_err(|error| export_error(format!("program->xlsx: {error}")))
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use semio_s_plugin_stdio::artifacts::xlsx::standards::v_ecma_376::subsets::base::io::export::serializers::encode_xlsx;
-    use semio_s_plugin_stdio::artifacts::xlsx::standards::v_ecma_376::subsets::base::io::import::deserializers::decode_xlsx;
+    use semio_s_artifact_stdio_xlsx::standards::v_ecma_376::subsets::base::io::export::serializers::encode_xlsx;
+    use semio_s_artifact_stdio_xlsx::standards::v_ecma_376::subsets::base::io::import::deserializers::decode_xlsx;
 
     #[semio_framework_async_macros::async_test]
     async fn exports_every_program_table_to_a_real_workbook() {

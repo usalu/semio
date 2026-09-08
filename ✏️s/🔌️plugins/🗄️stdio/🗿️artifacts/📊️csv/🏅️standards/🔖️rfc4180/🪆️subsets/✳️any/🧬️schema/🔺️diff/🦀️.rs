@@ -5,14 +5,14 @@
 //! so a record's field vector never structurally resizes except via a whole-record
 //! add/remove at the `records` collection level).
 
-use crate::artifacts::csv::schema::snapshot::{CsvField, CsvRecord, CsvSnapshot};
+use crate::schema::snapshot::{CsvField, CsvRecord, CsvSnapshot};
 // 🔗 `DiffAlgebra` (spine S-1) isn't in the `protocol` facade's curated re-export list yet
 // (`.🧬semio/🦑️repo/🎫️tickets/…/ARTIFACT-SYSTEM-OVERHAUL…/f1-csv-report.md` `## Deviations`); reach it
 // via the same crate's directly-mounted `command` module instead of editing the shared facade.
 use protocol::command::DiffAlgebra;
 use protocol::DiffCodec;
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
-use schema::ArtifactSchema;
+use framework_schema::ArtifactSchema;
 use std::collections::{BTreeMap, HashMap};
 
 //#region 🔖️FieldDiff
@@ -824,7 +824,7 @@ fn write_bin_records_diff(w: &mut dsl::ByteWriter, d: &CsvRecordsDiff) {
     w.write_varint_u64(d.added.len() as u64);
     for a in &d.added {
         w.write_varint_u64(a.index as u64);
-        crate::artifacts::csv::schema::mutations::write_bin_record(w, &a.record);
+        crate::schema::mutations::write_bin_record(w, &a.record);
     }
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -845,7 +845,7 @@ fn read_bin_records_diff(r: &mut dsl::ByteReader<'_>) -> Result<CsvRecordsDiff, 
     let mut added = Vec::with_capacity(added_n);
     for _ in 0..added_n {
         let index = r.read_varint_u64()? as usize;
-        let record = crate::artifacts::csv::schema::mutations::read_bin_record(r)?;
+        let record = crate::schema::mutations::read_bin_record(r)?;
         added.push(CsvRecordAdded { index, record });
     }
     Ok(CsvRecordsDiff { removed, modified, added })
@@ -897,7 +897,7 @@ impl DiffCodec for CsvDiff {
 #[cfg(test)]
 mod handcrafted_diff_codec_tests {
     use super::*;
-    use crate::artifacts::csv::schema::snapshot::CsvField;
+    use crate::schema::snapshot::CsvField;
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn field(value: &str, quoted: bool) -> CsvField {
@@ -931,7 +931,7 @@ mod handcrafted_diff_codec_tests {
     /// (removed/modified/added) — the first real collection-triple grammar in this program.
     #[semio_framework_async_macros::async_test]
     async fn diff_grammar_conformance_law() {
-        let grammar_text = crate::artifacts::csv::schema::diff::text::COMPONENT_GRAMMAR_SEMIO;
+        let grammar_text = crate::schema::diff::text::COMPONENT_GRAMMAR_SEMIO;
         let grammar = dsl::parse_grammar(grammar_text).expect("parse diff grammar");
         let recognizer = dsl::Recognizer::compile(&grammar);
 

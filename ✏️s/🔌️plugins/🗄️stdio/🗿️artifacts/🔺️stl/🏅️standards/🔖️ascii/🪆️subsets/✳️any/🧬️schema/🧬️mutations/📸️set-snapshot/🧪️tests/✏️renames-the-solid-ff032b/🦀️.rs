@@ -9,9 +9,9 @@
 //! produce a `triangles` triple whose `modified` and `removed` lists are BOTH empty — an
 //! index-keyed append, never a re-listing of the whole soup.
 
-use crate::artifacts::stl::schema::diff::StlDiff;
-use crate::artifacts::stl::schema::mutations::{apply_stl_mutation, StlMutation};
-use crate::artifacts::stl::schema::snapshot::StlSnapshot;
+use crate::schema::diff::StlDiff;
+use crate::schema::mutations::{apply_stl_mutation, StlMutation};
+use crate::schema::snapshot::StlSnapshot;
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");

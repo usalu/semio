@@ -61,9 +61,9 @@ const KINDS: &[&str] = &[
 mod subject {
     use semio_repo_test_host::{digest, parse_json, Context, Json, Outcome};
     use semio_s_plugin_stdio_test_oracle::law::carrier_is_exact;
-    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::base::schema::mutations::semio_mutation_refusals;
-    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::cad::schema::mutations::{apply_semio_cad_mutation, decode_semio_cad_mutation_json, inverse_semio_cad_mutation, set_snapshot, SemioCadMutation};
-    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::cad::schema::snapshot::{
+    use crate::standards::v1::subsets::base::schema::mutations::semio_mutation_refusals;
+    use crate::standards::v1::subsets::cad::schema::mutations::{apply_semio_cad_mutation, decode_semio_cad_mutation_json, inverse_semio_cad_mutation, set_snapshot, SemioCadMutation};
+    use crate::standards::v1::subsets::cad::schema::snapshot::{
         decode_semio_cad_pack, decode_semio_cad_snapshot_json, encode_semio_cad_pack, encode_semio_cad_snapshot_json, parse_semio_cad_dsl, print_semio_cad_dsl, SemioCadSnapshot,
     };
 

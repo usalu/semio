@@ -1,0 +1,34 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/stl/ascii/any/mutation/set-triangle-vertices.json",
+  "title": "SetTriangleVertices",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "index",
+    "vertices"
+  ],
+  "properties": {
+    "index": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "vertices": {
+      "type": "array",
+      "items": {
+        "type": "array",
+        "items": {
+          "type": "number"
+        },
+        "minItems": 3,
+        "maxItems": 3
+      },
+      "minItems": 3,
+      "maxItems": 3
+    },
+    "mutation": {
+      "const": "setTriangleVertices",
+      "description": "Aggregate discriminator spliced in by StlMutation; absent when the payload stands alone."
+    }
+  }
+}

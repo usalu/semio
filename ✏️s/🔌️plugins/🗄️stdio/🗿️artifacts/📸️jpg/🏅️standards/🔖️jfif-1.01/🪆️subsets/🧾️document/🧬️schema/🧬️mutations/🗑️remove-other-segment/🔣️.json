@@ -5,7 +5,7 @@
   "displayName": "Remove Other Segment",
   "emoji": "🗑️",
   "aggregateVariant": "RemoveOtherSegment",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "remove-other-segment",
   "binaryTag": 9,
   "invertibility": "explicit-mutation",

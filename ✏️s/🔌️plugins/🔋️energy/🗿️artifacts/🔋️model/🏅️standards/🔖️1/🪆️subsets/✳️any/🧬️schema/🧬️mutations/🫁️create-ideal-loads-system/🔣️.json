@@ -5,7 +5,7 @@
   "displayName": "Create Ideal Loads System",
   "emoji": "🫁️",
   "aggregateVariant": "CreateIdealLoadsSystem",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "create-ideal-loads-system",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

@@ -5,7 +5,7 @@
   "displayName": "Change Zone Equipment Zone",
   "emoji": "🏬️",
   "aggregateVariant": "ChangeZoneEquipmentZone",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-zone-equipment-zone",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

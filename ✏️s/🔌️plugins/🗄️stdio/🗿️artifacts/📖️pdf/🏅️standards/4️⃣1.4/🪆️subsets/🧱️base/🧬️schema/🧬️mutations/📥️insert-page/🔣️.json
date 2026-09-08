@@ -5,7 +5,7 @@
   "displayName": "Insert Page",
   "emoji": "📥️",
   "aggregateVariant": "InsertPage",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "insert-page",
   "binaryTag": 0,
   "invertibility": "explicit-mutation",

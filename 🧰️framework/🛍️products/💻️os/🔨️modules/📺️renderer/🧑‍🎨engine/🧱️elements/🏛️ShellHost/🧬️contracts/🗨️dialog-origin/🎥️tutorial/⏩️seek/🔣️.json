@@ -1,0 +1,11 @@
+{
+  "schema": "semio.shell.paused-tutorial-seek-fixture.v1",
+  "cases": [
+    { "id": "playing-seek", "playing": true, "requested": true, "interrupt": "none", "mutations": 1, "playhead": 200, "resumed": true },
+    { "id": "user-pauses-during-seek", "playing": true, "requested": true, "interrupt": "pause", "mutations": 1, "playhead": 200, "resumed": false },
+    { "id": "owner-closes-during-seek", "playing": true, "requested": true, "interrupt": "close", "mutations": 1, "playhead": 0, "resumed": false },
+    { "id": "requested-play-before-clock-starts", "playing": false, "requested": true, "interrupt": "none", "mutations": 1, "playhead": 200, "resumed": true },
+    { "id": "paused-seek-stays-paused", "playing": false, "requested": false, "interrupt": "none", "mutations": 1, "playhead": 200, "resumed": false },
+    { "id": "new-play-during-paused-seek", "playing": false, "requested": false, "interrupt": "play", "mutations": 1, "playhead": 200, "resumed": true }
+  ]
+}

@@ -1,0 +1,64 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/gif/89a/base/mutation/add-app-extension.json",
+  "title": "AddAppExtension",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "index",
+    "extension"
+  ],
+  "properties": {
+    "index": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "extension": {
+      "$ref": "#/$defs/GifAppExtension"
+    },
+    "mutation": {
+      "const": "addAppExtension",
+      "description": "Aggregate discriminator spliced in by GifMutation; absent when the payload stands alone."
+    }
+  },
+  "$defs": {
+    "GifAppExtension": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "identifier",
+        "authCode"
+      ],
+      "properties": {
+        "identifier": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          },
+          "minItems": 8,
+          "maxItems": 8
+        },
+        "authCode": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          },
+          "minItems": 3,
+          "maxItems": 3
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          }
+        }
+      }
+    }
+  }
+}

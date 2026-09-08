@@ -1,6 +1,6 @@
 //! 📝️ Direct remove-other-segment text codec.
 use super::*;
-use crate::artifacts::jpg::schema::mutations::text::Entry;
+use crate::schema::mutations::text::Entry;
 pub const TEXT_OPCODE: &str = "remove-other-segment";
 pub const CODEC: Entry = Entry { opcode: TEXT_OPCODE, print, parse };
 

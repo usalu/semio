@@ -5,7 +5,7 @@
   "displayName": "Remove Launch Action",
   "emoji": "🛬️",
   "aggregateVariant": "RemoveLaunchAction",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

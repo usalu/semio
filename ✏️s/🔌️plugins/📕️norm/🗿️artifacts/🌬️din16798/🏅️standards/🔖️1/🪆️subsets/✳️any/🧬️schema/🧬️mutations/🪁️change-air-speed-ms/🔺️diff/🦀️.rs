@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeAirSpeedMS, base: &Din16798Snapshot) -> protocol::Mu
     if base.air_speed_m_s == payload.new_air_speed_m_s {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Air speed is already {}.", payload.new_air_speed_m_s));
     }
-    protocol::MutationOutcome::new(Din16798Diff { air_speed_m_s: Some(payload.new_air_speed_m_s.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(Din16798Diff { air_speed_m_s: Some(payload.new_air_speed_m_s), ..Default::default() })
 }
 //#endregion 🔖️Diff

@@ -1,0 +1,27 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/audio/mutation/set-channel-samples.json",
+  "title": "SetChannelSamples",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "index",
+    "samples"
+  ],
+  "properties": {
+    "index": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "samples": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      }
+    },
+    "mutation": {
+      "const": "setChannelSamples",
+      "description": "Aggregate discriminator spliced in by SemioAudioMutation; absent when the payload stands alone."
+    }
+  }
+}

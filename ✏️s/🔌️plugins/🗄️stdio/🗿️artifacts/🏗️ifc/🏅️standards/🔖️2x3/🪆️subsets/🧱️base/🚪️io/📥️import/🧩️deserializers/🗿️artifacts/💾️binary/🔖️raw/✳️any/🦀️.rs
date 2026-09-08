@@ -1,14 +1,14 @@
 //! deser ifc.2x3 via binary
 
-use crate::artifacts::binary::BinarySnapshot;
-use crate::artifacts::ifc::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot;
+use semio_s_artifact_stdio_binary::BinarySnapshot;
+use crate::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot;
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn register() {}
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn deserialize(from: &BinarySnapshot) -> Result<Ifc2x3Snapshot, store::PackError> {
-    crate::artifacts::ifc::standards::v2x3::engine::decode_ifc2x3(&from.bytes).map_err(store::PackError::Schema)
+    crate::standards::v2x3::engine::decode_ifc2x3(&from.bytes).map_err(store::PackError::Schema)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

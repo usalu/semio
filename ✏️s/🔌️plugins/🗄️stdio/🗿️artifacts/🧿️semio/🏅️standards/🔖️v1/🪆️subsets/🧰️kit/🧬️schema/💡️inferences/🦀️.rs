@@ -7,8 +7,8 @@
 //! slots (`objects`/`models`/`properties`) and link slot (`representations`) are handles, never
 //! embedded content).
 
-use crate::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
-use schema::ArtifactSchema;
+use crate::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
+use framework_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 
 use super::entries::{compute_semio_kit_entries, SemioKitEntries};
@@ -57,7 +57,7 @@ impl protocol::InferenceSpec<SemioKitSnapshot> for SemioKitInference {
 /// 💡️ No `InferredField`s here (a catalog census is a single whole-snapshot fold over already-flat
 /// collections, no per-entity incremental decomposition applies) — the default `infer_cached`
 /// passthrough (`ArtifactInferrer::infer_cached`) is exact.
-impl ArtifactInferrer for crate::artifacts::semio::standards::v1::subsets::kit::schema::SemioKitBuilder {
+impl ArtifactInferrer for crate::standards::v1::subsets::kit::schema::SemioKitBuilder {
     type Snapshot = SemioKitSnapshot;
     type Inference = SemioKitInference;
 }
@@ -67,10 +67,10 @@ impl ArtifactInferrer for crate::artifacts::semio::standards::v1::subsets::kit::
 /// 💡️ Registers `s.stdio.semio.kit.inference`'s facet leaves into the OS-wide inference catalog —
 /// call once at plugin init, alongside `semio_kit_artifact_schema_descriptor`'s registration.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn semio_kit_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
-    schema::ArtifactInferenceDescriptor {
+pub fn semio_kit_artifact_inference_descriptor() -> framework_schema::ArtifactInferenceDescriptor {
+    framework_schema::ArtifactInferenceDescriptor {
         id: "s.stdio.semio.kit.inference",
-        inference: schema::FacetLeaves {
+        inference: framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),

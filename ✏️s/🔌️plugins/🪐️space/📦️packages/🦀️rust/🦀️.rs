@@ -940,8 +940,6 @@ pub mod examples {
     pub mod app_home_demo_session;
     #[path = "../../⚙️engine/🪐️space/📚️examples/🎬️demo-session/🦀️.rs"]
     pub mod app_space_demo_session;
-    #[path = "../../🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️.rs"]
-    pub mod art_home_demo;
     #[cfg(test)]
     #[path = "../../🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🦀️.rs"]
     mod art_home_demo_tests;

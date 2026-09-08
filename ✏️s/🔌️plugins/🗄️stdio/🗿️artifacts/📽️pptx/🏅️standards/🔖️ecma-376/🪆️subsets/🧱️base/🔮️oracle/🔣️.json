@@ -114,7 +114,7 @@
         {
           "id": "insert-shape",
           "capability": "pptx-ecma-376-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -134,7 +134,7 @@
         {
           "id": "insert-slide",
           "capability": "pptx-ecma-376-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -154,7 +154,7 @@
         {
           "id": "move-slide",
           "capability": "pptx-ecma-376-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -174,7 +174,7 @@
         {
           "id": "remove-shape",
           "capability": "pptx-ecma-376-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -194,7 +194,7 @@
         {
           "id": "remove-slide",
           "capability": "pptx-ecma-376-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -214,7 +214,7 @@
         {
           "id": "set-shape-position",
           "capability": "pptx-ecma-376-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -234,7 +234,7 @@
         {
           "id": "set-shape-text",
           "capability": "pptx-ecma-376-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
@@ -254,7 +254,7 @@
         {
           "id": "set-snapshot",
           "capability": "pptx-ecma-376-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],

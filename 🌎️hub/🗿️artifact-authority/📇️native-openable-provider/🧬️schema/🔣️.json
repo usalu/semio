@@ -1,0 +1,128 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/hub/artifact-authority/native-openable-provider/schema.json",
+  "$ref": "#/$defs/NativeCodecProviderSetIdentityV1",
+  "$defs": {
+    "digest": {"type": "string", "pattern": "^[0-9a-f]{64}$", "not": {"const": "0000000000000000000000000000000000000000000000000000000000000000"}},
+    "hexBytes": {"type": "string", "minLength": 2, "maxLength": 4096, "pattern": "^(?:[0-9a-f]{2})+$"},
+    "identity": {"type": "string", "minLength": 1, "maxLength": 256, "pattern": "^[^\\u0000-\\u001f\\u007f]+$"},
+    "packageId": {"type": "string", "minLength": 1, "maxLength": 256, "pattern": "^semio:[a-z0-9-]+$"},
+    "cargoFeature": {"type": "string", "minLength": 1, "maxLength": 64, "pattern": "^[a-z0-9-]+$"},
+    "linkedPackageId": {"enum": ["semio:stdio", "semio:gis", "semio:vcs"]},
+    "NativeArtifactProviderHeadlessProfileV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["defaultFeatures", "features", "directPluginDependencies"],
+      "properties": {
+        "defaultFeatures": {"const": false},
+        "features": {"type": "array", "minItems": 1, "maxItems": 8, "uniqueItems": true, "items": {"$ref": "#/$defs/cargoFeature"}},
+        "directPluginDependencies": {"type": "array", "maxItems": 0, "items": {"$ref": "#/$defs/cargoFeature"}}
+      }
+    },
+    "NativeCodecProviderSetIdentityV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["feature", "providerId", "receiptCount", "pluginDependencies"],
+      "properties": {
+        "feature": {"$ref": "#/$defs/cargoFeature"},
+        "providerId": {"type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-z0-9+/-]+/v[1-9][0-9]*$"},
+        "receiptCount": {"type": "integer", "minimum": 1, "maximum": 4096},
+        "pluginDependencies": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 16,
+          "uniqueItems": true,
+          "items": {"type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-z0-9-]+(?:/[a-z0-9-]+)?$"}
+        }
+      }
+    },
+    "NativeCodecProviderSelectionCaseV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "pluginId", "packageId", "version", "cancelled", "nowMs", "deadlineMs", "accepted", "stage", "code"],
+      "properties": {
+        "name": {"type": "string", "minLength": 1, "maxLength": 80},
+        "pluginId": {"type": "string", "minLength": 1, "maxLength": 256, "pattern": "^[a-z0-9-]+$"},
+        "packageId": {"$ref": "#/$defs/packageId"},
+        "version": {"type": "string", "minLength": 1, "maxLength": 32, "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"},
+        "cancelled": {"type": "boolean"},
+        "nowMs": {"type": "integer", "minimum": 0, "maximum": 9007199254740991},
+        "deadlineMs": {"type": "integer", "minimum": 1, "maximum": 9007199254740991},
+        "accepted": {"type": "boolean"},
+        "stage": {"enum": ["contract", "domain", "bounds"]},
+        "code": {"type": "string", "minLength": 1, "maxLength": 64, "pattern": "^[a-z0-9-]+$"}
+      },
+      "allOf": [
+        {
+          "if": {"required": ["accepted"], "properties": {"accepted": {"const": true}}, "type": "object"},
+          "then": {"properties": {"cancelled": {"const": false}}, "type": "object"}
+        }
+      ]
+    },
+    "NativeCodecUnconsumedProfileV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "selected", "previews"],
+      "properties": {
+        "name": {"type": "string", "minLength": 1, "maxLength": 80},
+        "selected": {"type": "array", "minItems": 1, "maxItems": 3, "uniqueItems": true, "items": {"$ref": "#/$defs/linkedPackageId"}},
+        "previews": {"type": "array", "minItems": 1, "maxItems": 3, "uniqueItems": true, "items": {"$ref": "#/$defs/linkedPackageId"}}
+      }
+    },
+    "NativeOpenableAttestationV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["componentHex", "componentSha256", "descriptorProjectionHex", "descriptorProjectionSha256"],
+      "properties": {
+        "componentHex": {"$ref": "#/$defs/hexBytes"},
+        "componentSha256": {"$ref": "#/$defs/digest"},
+        "descriptorProjectionHex": {"$ref": "#/$defs/hexBytes"},
+        "descriptorProjectionSha256": {"$ref": "#/$defs/digest"}
+      }
+    },
+    "NativeOpenableOpenTargetV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["artifactKind", "artifactSchema", "packSchemaHash", "surfaceId", "appId", "windowKindId", "role", "rendererTarget"],
+      "properties": {
+        "artifactKind": {"$ref": "#/$defs/identity"},
+        "artifactSchema": {"$ref": "#/$defs/identity"},
+        "packSchemaHash": {"$ref": "#/$defs/digest"},
+        "surfaceId": {"type": "string", "minLength": 1, "maxLength": 256, "pattern": "^s\\.[^#]+#(viewer|editor)$"},
+        "appId": {"type": "string", "minLength": 1, "maxLength": 256, "pattern": "^s\\.[^#]+#(viewer|editor)$"},
+        "windowKindId": {"type": "string", "minLength": 1, "maxLength": 128, "pattern": "^framework\\.window\\.[a-z0-9-]+$"},
+        "role": {"enum": ["viewer", "editor"]},
+        "rendererTarget": {"enum": ["wasm", "wgpu"]}
+      }
+    },
+    "NativeOpenableHostileExpectationV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "mutation", "stage", "result", "code", "publishedTargets"],
+      "properties": {
+        "name": {"type": "string", "minLength": 1, "maxLength": 128},
+        "mutation": {
+          "enum": [
+            "missing-owner",
+            "extra-projection",
+            "duplicate-factory",
+            "duplicate-descriptor-codec",
+            "missing-runtime-capability",
+            "wrong-protocol-hash",
+            "zero-protocol-hash",
+            "wrong-component-hash",
+            "wrong-descriptor-hash",
+            "wrong-surface",
+            "wrong-role",
+            "wrong-renderer",
+            "duplicate-target"
+          ]
+        },
+        "stage": {"enum": ["contract", "domain", "bounds"]},
+        "result": {"enum": ["accepted", "rejected"]},
+        "code": {"type": "string", "minLength": 1, "maxLength": 64, "pattern": "^[a-z0-9-]+$"},
+        "publishedTargets": {"const": 0}
+      }
+    }
+  }
+}

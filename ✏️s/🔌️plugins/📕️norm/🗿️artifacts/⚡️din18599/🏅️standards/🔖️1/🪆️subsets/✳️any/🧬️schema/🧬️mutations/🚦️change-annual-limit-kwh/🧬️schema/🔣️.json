@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/norm/din18599/1/any/mutation/change-annual-limit-kwh.json",
+  "title": "ChangeAnnualLimitKwh",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newAnnualLimitKwh"
+  ],
+  "properties": {
+    "newAnnualLimitKwh": {
+      "type": "number"
+    }
+  }
+}

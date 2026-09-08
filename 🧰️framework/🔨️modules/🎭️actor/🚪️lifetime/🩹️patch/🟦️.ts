@@ -67,10 +67,10 @@ if (import.meta.vitest) {
     const { readFileSync } = await import("node:fs");
     const { default: Ajv } = await import("ajv");
     const fixture = JSON.parse(readFileSync(new URL("./🧫️fixture/🔣️.json", import.meta.url), "utf8"));
-    const schema = JSON.parse(readFileSync(new URL("./🧬️schema.json", import.meta.url), "utf8"));
-    const fixtureSchema = JSON.parse(readFileSync(new URL("./📐️schema/🔣️.json", import.meta.url), "utf8"));
-    const lifetimeSchema = JSON.parse(readFileSync(new URL("../🧬️schema.json", import.meta.url), "utf8"));
-    const validate = new Ajv({ strict: true }).addSchema(lifetimeSchema).addSchema(schema).compile(fixtureSchema);
+    const schema = JSON.parse(readFileSync(new URL("./🧬️schema/🔣️.json", import.meta.url), "utf8"));
+    const fixtureSchema = schema;
+    const lifetimeSchema = JSON.parse(readFileSync(new URL("../🧬️schema/🔣️.json", import.meta.url), "utf8"));
+    const validate = new Ajv({ strict: true }).addSchema(lifetimeSchema).addSchema(schema).addSchema(schema).getSchema(`${schema.$id}#/$defs/PatchFixture`)!;
     expect(validate(fixture)).toBe(true);
     expect(validate({ ...fixture, maximumBytes: 36 })).toBe(false);
     const moduleName = "@webassemblyjs/leb128/lib/leb.js";

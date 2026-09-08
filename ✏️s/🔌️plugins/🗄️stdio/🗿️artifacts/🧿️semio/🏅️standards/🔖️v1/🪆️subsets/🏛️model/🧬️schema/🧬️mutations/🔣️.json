@@ -1,32 +1,188 @@
 {
-  "$id": "https://semio.tech/schema/s.stdio.semio.model/mutation.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/model/mutations.json",
   "title": "SemioModelMutation",
-  "description": "Named-variant mutation vocabulary, discriminated on the mutation field.",
-  "type": "object",
-  "required": ["mutation"],
-  "properties": {
-    "mutation": {
-      "enum": [
-        "setSnapshot",
-        "insertSpatialNode", "removeSpatialNode", "setSpatialNode",
-        "insertElement", "removeElement", "setElement",
-        "insertRelation", "removeRelation", "setRelation"
+  "description": "Discriminated union over this module's mutation leaves (internally tagged); every payload is the leaf's own schema, referenced, never restated.",
+  "oneOf": [
+    {
+      "allOf": [
+        {
+          "$ref": "./🧱insert-element/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "insertElement"
+            }
+          }
+        }
       ]
     },
-    "snapshot": { "type": "object" },
-    "node": { "type": "object" },
-    "element": { "type": "object" },
-    "relation": { "type": "object" },
-    "id": { "type": "string" },
-    "kind": {},
-    "name": { "type": "string" },
-    "parentId": { "type": ["string", "null"] },
-    "placement": { "type": "object" },
-    "class": { "type": "object" },
-    "geometry": { "type": "object" },
-    "spatialId": { "type": ["string", "null"] },
-    "psets": { "type": "array" },
-    "from": { "type": "string" },
-    "to": { "type": "string" }
-  }
+    {
+      "allOf": [
+        {
+          "$ref": "./🪢insert-relation/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "insertRelation"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "./🏗️insert-spatial-node/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "insertSpatialNode"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "./🔨remove-element/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "removeElement"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "./✂️remove-relation/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "removeRelation"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "./🕳️remove-spatial-node/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "removeSpatialNode"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "./🎛️set-element/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setElement"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "./🔧️set-relation/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setRelation"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "./📸️set-snapshot/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setSnapshot"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "./🧭set-spatial-node/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setSpatialNode"
+            }
+          }
+        }
+      ]
+    }
+  ]
 }

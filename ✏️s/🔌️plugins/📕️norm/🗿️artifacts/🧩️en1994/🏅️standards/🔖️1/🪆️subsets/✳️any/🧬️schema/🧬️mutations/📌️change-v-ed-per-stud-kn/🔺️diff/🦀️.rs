@@ -11,6 +11,6 @@ pub fn diff(payload: &ChangeVEdPerStudKn, base: &En1994Snapshot) -> protocol::Mu
     if base.v_ed_per_stud_kn == payload.new_v_ed_per_stud_kn {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "V ed per stud kn already has this value.");
     }
-    protocol::MutationOutcome::new(En1994Diff { v_ed_per_stud_kn: Some(payload.new_v_ed_per_stud_kn.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1994Diff { v_ed_per_stud_kn: Some(payload.new_v_ed_per_stud_kn), ..Default::default() })
 }
 //#endregion 🔖️Diff

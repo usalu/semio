@@ -6,9 +6,9 @@ use crate::artifacts::note::{NoteBlockNode, NoteSnapshot};
 use semio_framework::io::io_mechanism::Serializer;
 use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};
-use semio_s_plugin_stdio::artifacts::pdf::standards::v1_4::subsets::base::schema::snapshot::PageDoc;
-use semio_s_plugin_stdio::artifacts::pdf::standards::v1_4::subsets::base::io::encode_pdf;
-use semio_s_plugin_stdio::artifacts::pdf::standards::v1_4::subsets::base::schema::snapshot::empty_pdf_snapshot;
+use semio_s_artifact_stdio_pdf::standards::v1_4::subsets::base::schema::snapshot::PageDoc;
+use semio_s_artifact_stdio_pdf::standards::v1_4::subsets::base::io::encode_pdf;
+use semio_s_artifact_stdio_pdf::standards::v1_4::subsets::base::schema::snapshot::empty_pdf_snapshot;
 
 pub const PDF_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.pdf", standard: StandardId("1.4"), subset: SubsetId::ANY };
 

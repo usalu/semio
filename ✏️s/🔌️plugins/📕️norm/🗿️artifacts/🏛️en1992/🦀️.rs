@@ -24,7 +24,6 @@ pub mod part_3 {
     }
 }
 
-/// 📸️ Persisted snapshot — defined in `📸️snapshot/🧬️schema`, re-exported here.
 //#endregion 🔖️Types
 
 //#region 🔖️ArtifactKind

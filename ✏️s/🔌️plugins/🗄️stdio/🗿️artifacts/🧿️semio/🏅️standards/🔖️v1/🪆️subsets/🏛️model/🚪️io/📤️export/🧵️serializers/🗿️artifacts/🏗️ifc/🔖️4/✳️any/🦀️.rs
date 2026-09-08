@@ -22,10 +22,10 @@
 //! - `geometry`/non-unit `scale` on a placement have no IFC representation in this analyzer's
 //!   model and are dropped (`GeometryRef` is never read; `SemioTransform.scale` is ignored).
 
-use crate::artifacts::ifc::IfcSnapshot;
-use crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::{SemioQuaternion, SemioTransform};
-use crate::artifacts::semio::standards::v1::subsets::model::schema::snapshot::{ElementClass, PsetValue, SemioModelSnapshot, SpatialKind};
-use crate::artifacts::step::engine::part21::{Part21Document, Part21Header, Part21Instance, Part21Value};
+use semio_s_artifact_stdio_ifc::IfcSnapshot;
+use crate::standards::v1::subsets::base::schema::geometry::{SemioQuaternion, SemioTransform};
+use crate::standards::v1::subsets::model::schema::snapshot::{ElementClass, PsetValue, SemioModelSnapshot, SpatialKind};
+use semio_s_artifact_stdio_step::engine::part21::{Part21Document, Part21Header, Part21Instance, Part21Value};
 use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
 use std::collections::HashMap;
 
@@ -209,7 +209,7 @@ fn part21_value_of_pset_value(v: &PsetValue) -> Part21Value {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn build_pset(instances: &mut Vec<Part21Instance>, alloc: &mut IdAlloc, owner_id: u64, element_id: u64, pset: &crate::artifacts::semio::standards::v1::subsets::model::schema::snapshot::PropertySet) {
+fn build_pset(instances: &mut Vec<Part21Instance>, alloc: &mut IdAlloc, owner_id: u64, element_id: u64, pset: &crate::standards::v1::subsets::model::schema::snapshot::PropertySet) {
     let mut prop_ids = Vec::new();
     for prop in &pset.properties {
         let pid = alloc.next();
@@ -310,7 +310,7 @@ pub fn ifc_from_model(from: &SemioModelSnapshot) -> IfcSnapshot {
         },
         instances,
     };
-    crate::artifacts::ifc::schema::snapshot::from_part21_document(crate::artifacts::ifc::STDIO_IFC_DOCUMENT_SCHEMA, &doc)
+    semio_s_artifact_stdio_ifc::schema::snapshot::from_part21_document(semio_s_artifact_stdio_ifc::STDIO_IFC_DOCUMENT_SCHEMA, &doc)
 }
 //#endregion 🔖️Entry
 
@@ -318,13 +318,13 @@ pub fn ifc_from_model(from: &SemioModelSnapshot) -> IfcSnapshot {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::semio::standards::v1::subsets::model::io::import::deserializers::artifacts::ifc::v4::any::model_from_ifc;
-    use crate::artifacts::semio::standards::v1::subsets::model::schema::snapshot::{GeometryRef, ModelRelation, Property, PropertySet, RelationKind, SemioModelElement, SpatialNode};
+    use crate::standards::v1::subsets::model::io::import::deserializers::artifacts::ifc::v4::any::model_from_ifc;
+    use crate::standards::v1::subsets::model::schema::snapshot::{GeometryRef, ModelRelation, Property, PropertySet, RelationKind, SemioModelElement, SpatialNode};
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn rich_model() -> SemioModelSnapshot {
         SemioModelSnapshot {
-            schema: crate::artifacts::semio::standards::v1::subsets::model::schema::snapshot::STDIO_SEMIOMODEL_DOCUMENT_SCHEMA.into(),
+            schema: crate::standards::v1::subsets::model::schema::snapshot::STDIO_SEMIOMODEL_DOCUMENT_SCHEMA.into(),
             spatial: vec![
                 SpatialNode { id: "site-1".into(), kind: SpatialKind::Site, name: "Site One".into(), parent_id: None, placement: SemioTransform::identity() },
                 SpatialNode {
@@ -333,9 +333,9 @@ mod tests {
                     name: "Ground Floor".into(),
                     parent_id: Some("site-1".into()),
                     placement: SemioTransform {
-                        translation: crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioPoint3 { x: 0.0, y: 0.0, z: 3.0 },
+                        translation: crate::standards::v1::subsets::base::schema::geometry::SemioPoint3 { x: 0.0, y: 0.0, z: 3.0 },
                         rotation: SemioQuaternion::default(),
-                        scale: crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioPoint3 { x: 1.0, y: 1.0, z: 1.0 },
+                        scale: crate::standards::v1::subsets::base::schema::geometry::SemioPoint3 { x: 1.0, y: 1.0, z: 1.0 },
                     },
                 },
             ],
@@ -394,16 +394,16 @@ mod tests {
         let half = std::f64::consts::FRAC_PI_8;
         let rotation = SemioQuaternion { x: 0.0, y: 0.0, z: half.sin(), w: half.cos() };
         let s1 = SemioModelSnapshot {
-            schema: crate::artifacts::semio::standards::v1::subsets::model::schema::snapshot::STDIO_SEMIOMODEL_DOCUMENT_SCHEMA.into(),
+            schema: crate::standards::v1::subsets::model::schema::snapshot::STDIO_SEMIOMODEL_DOCUMENT_SCHEMA.into(),
             spatial: vec![SpatialNode {
                 id: "site-1".into(),
                 kind: SpatialKind::Site,
                 name: "Rotated Site".into(),
                 parent_id: None,
                 placement: SemioTransform {
-                    translation: crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioPoint3 { x: 5.0, y: -2.0, z: 0.0 },
+                    translation: crate::standards::v1::subsets::base::schema::geometry::SemioPoint3 { x: 5.0, y: -2.0, z: 0.0 },
                     rotation,
-                    scale: crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioPoint3 { x: 1.0, y: 1.0, z: 1.0 },
+                    scale: crate::standards::v1::subsets::base::schema::geometry::SemioPoint3 { x: 1.0, y: 1.0, z: 1.0 },
                 },
             }],
             elements: vec![],

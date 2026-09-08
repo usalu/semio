@@ -1,6 +1,6 @@
 //! 🗂 `structure` — logical drawing statistics derived only from modeled layers and entities.
 
-use crate::artifacts::dwg::standards::v_ac1024::subsets::any::schema::snapshot::DwgSnapshot;
+use crate::standards::v_ac1024::subsets::any::schema::snapshot::DwgSnapshot;
 
 //#region 🔖️Structure
 /// 🗂️ Dwg (ac1024) logical drawing statistics.
@@ -38,7 +38,7 @@ pub fn compute_dwg_structure(snapshot: &DwgSnapshot) -> DwgStructure {
 //#region 🧪️Tests
 mod tests {
     use super::*;
-    use crate::artifacts::dwg::standards::v_ac1024::subsets::any::schema::snapshot::{DwgEntityBody, DwgEntityCommon, DwgLineEntity, DwgLogicalDrawing, DwgLogicalLayer, DwgLogicalObject, DwgLogicalObjectBody, DwgObjectCategory};
+    use crate::standards::v_ac1024::subsets::any::schema::snapshot::{DwgEntityBody, DwgEntityCommon, DwgLineEntity, DwgLogicalDrawing, DwgLogicalLayer, DwgLogicalObject, DwgLogicalObjectBody, DwgObjectCategory};
 
     #[semio_framework_async_macros::async_test]
     async fn structure_matches_hand_built_logical_drawing() {

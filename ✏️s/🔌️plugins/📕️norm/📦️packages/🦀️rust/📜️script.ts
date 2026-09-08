@@ -125,24 +125,24 @@ class ConfigMutationSourceScript extends BundleScript {
     const configRoot = join(this.root, "..", "..", "🎚️config");
     const declarations = filesBelow(configRoot).filter((path) => path.endsWith(".rs")).flatMap((path) => [...readFileSync(path, "utf8").matchAll(/pub struct NormConfig\b/g)].map(() => path));
     if (declarations.length !== 1 || declarations[0] !== join(configRoot, "🧬️schema", "🦀️.rs")) throw new Error("NormConfig must have one schema-owned Rust declaration");
-    const schema = JSON.parse(readFileSync(join(configRoot, "🧬️schema", "🧬️mutations", "☑️change-selected-check-index", "🧬️.schema.json"), "utf8"));
+    const schema = JSON.parse(readFileSync(join(configRoot, "🧬️schema", "🧬️mutations", "☑️change-selected-check-index", "🧬️schema", "🔣️.json"), "utf8"));
     const fixture = JSON.parse(readFileSync(join(configRoot, "🧪️tests", "🔣️.json"), "utf8"));
-    const aggregate = JSON.parse(readFileSync(join(configRoot, "🧬️schema", "🧬️mutations", "🔣️.schema.json"), "utf8"));
+    const aggregate = JSON.parse(readFileSync(join(configRoot, "🧬️schema", "🧬️mutations", "🔣️.json"), "utf8"));
     const ajv = new Ajv({ allErrors: true, strict: true });
     const fixtureSchema = JSON.parse(readFileSync(join(configRoot, "🧪️tests", "🧬️.schema.json"), "utf8"));
     const validateFixture = ajv.compile(fixtureSchema);
     if (!validateFixture(fixture)) throw new Error(`config fixture schema failed: ${JSON.stringify(validateFixture.errors)}`);
-    const payloadRef = aggregate.properties.ChangeSelectedCheckIndex.$ref;
-    if (decodeURI(payloadRef) !== "☑️change-selected-check-index/🧬️.schema.json") throw new Error("config aggregate schema does not reference its owned payload");
+    const payloadRef = aggregate.oneOf[0].$ref;
+    if (decodeURI(payloadRef) !== "./☑️change-selected-check-index/🧬️schema/🔣️.json") throw new Error("config aggregate schema does not reference its owned payload");
     ajv.addSchema(schema, payloadRef);
     const validate = ajv.compile(schema);
     const validateMutation = ajv.compile(aggregate);
     for (const test of fixture.cases) {
-      if (!validate(test.payload) || !validateMutation({ ChangeSelectedCheckIndex: test.payload })) throw new Error(`config fixture ${test.id} failed AJV: ${JSON.stringify(validate.errors ?? validateMutation.errors)}`);
+      if (!validate(test.payload) || !validateMutation(test.payload)) throw new Error(`config fixture ${test.id} failed AJV: ${JSON.stringify(validate.errors ?? validateMutation.errors)}`);
       if ((test.payload.index ?? null) !== test.after || (test.before === test.after) !== test.warning) throw new Error(`config fixture ${test.id} has inconsistent results`);
     }
-    for (const payload of fixture.invalid) if (validate(payload) || validateMutation({ ChangeSelectedCheckIndex: payload })) throw new Error("AJV accepted a hostile config mutation payload");
-    for (const mutation of [{}, { Snapshot: {} }, { SetSelectedCheckIndex: { index: 1 } }, { ChangeSelectedCheckIndex: {}, unknown: true }]) if (validateMutation(mutation)) throw new Error("AJV accepted an undeclared config mutation");
+    for (const payload of fixture.invalid) if (validate(payload) || validateMutation(payload)) throw new Error("AJV accepted a hostile config mutation payload");
+    for (const mutation of [{ Snapshot: {} }, { SetSelectedCheckIndex: { index: 1 } }, { index: 1, unknown: true }, { index: "5" }]) if (validateMutation(mutation)) throw new Error("AJV accepted an undeclared config mutation");
     for (const rows of [fixture.text, fixture.binary]) if (new Set(rows.map((row: { id: string }) => row.id)).size !== rows.length) throw new Error("config wire fixture has duplicate vector identities");
     for (const row of fixture.text) {
       const match = /^\s*change-selected-check-index(?:\s+index\s*=\s*([0-9]+))?\s*$/.exec(row.wire);

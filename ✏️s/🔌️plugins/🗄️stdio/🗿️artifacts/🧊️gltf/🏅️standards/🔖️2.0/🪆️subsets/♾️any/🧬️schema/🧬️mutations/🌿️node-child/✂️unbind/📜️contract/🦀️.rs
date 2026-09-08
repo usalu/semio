@@ -1,8 +1,8 @@
 //! 🧪️ Rust executor for the shared unbind-node-child vectors.
 #[cfg(test)]
 mod tests {
-    use crate::artifacts::gltf::schema::mutations::unbind_node_child::{diff, inverse, mutation};
-    use crate::artifacts::gltf::GltfSnapshot;
+    use crate::schema::mutations::unbind_node_child::{diff, inverse, mutation};
+    use crate::GltfSnapshot;
 
     #[derive(value_derive::FromValue)]
     #[value(rename_all = "camelCase")]

@@ -15,6 +15,9 @@ pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio"
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.protocol.semio");
 //#endregion 📡️SemioProtocol
 
+/// 📨️ Decodes one text mutation or returns its unclaimed wire record.
+type ProcedureMutationDecoder = fn(ProcedureMutationDsl) -> Result<ProcedureMutation, ProcedureMutationDsl>;
+
 use crate::artifacts::procedure::mutations::ProcedureMutation;
 use protocol::OpBinary;
 
@@ -69,9 +72,16 @@ fn procedure_operation_to_dsl(operation: &ProcedureMutation) -> ProcedureMutatio
 }
 
 fn procedure_operation_from_dsl(dsl_op: ProcedureMutationDsl) -> ProcedureMutation {
-    let converters: &[fn(ProcedureMutationDsl) -> Result<ProcedureMutation, ProcedureMutationDsl>] =
+    let converters: &[ProcedureMutationDecoder] =
         &[super::create_step::text::from_dsl, super::delete_step::text::from_dsl, super::reorder_steps::text::from_dsl, super::edit_step_params::text::from_dsl];
-    converters.iter().fold(Err(dsl_op), |operation, convert| operation.or_else(convert)).expect("every wire record has a direct mutation owner")
+    let mut wire = dsl_op;
+    for convert in converters {
+        match convert(wire) {
+            Ok(operation) => return operation,
+            Err(unclaimed) => wire = unclaimed,
+        }
+    }
+    unreachable!("every wire record has a direct mutation owner")
 }
 
 impl protocol::OpText for ProcedureMutation {

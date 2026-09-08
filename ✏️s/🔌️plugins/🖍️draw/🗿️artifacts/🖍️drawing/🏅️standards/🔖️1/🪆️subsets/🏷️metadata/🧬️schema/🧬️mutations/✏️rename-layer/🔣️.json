@@ -5,7 +5,7 @@
   "displayName": "Rename Layer",
   "emoji": "✏️",
   "aggregateVariant": "RenameLayer",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "rename-layer",
   "binaryTag": 4,
   "invertibility": "explicit-mutation",

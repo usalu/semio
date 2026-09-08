@@ -19,8 +19,8 @@
 //! @see 🪆️subsets/✳️sav/🧬️schema/🧬️mutations/🦀️.rs — Structural Analysis View's vocabulary.
 //! @see 🦀️oracle.rs — the reference Part-21 codec the same three subsets' oracles share.
 
-use crate::artifacts::ifc::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot;
-use crate::artifacts::step::engine::part21::{Part21Instance, Part21Value};
+use crate::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot;
+use semio_s_artifact_stdio_step::engine::part21::{Part21Instance, Part21Value};
 
 //#region 🔖️ViewDefinition
 /// 🏷️ The view definition the document declares — `FILE_DESCRIPTION`'s first description string,
@@ -147,7 +147,7 @@ pub fn canonical(snapshot: &Ifc2x3Snapshot) -> Ifc2x3Snapshot {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::step::engine::part21::{Part21Document, Part21Header};
+    use semio_s_artifact_stdio_step::engine::part21::{Part21Document, Part21Header};
 
     fn snapshot() -> Ifc2x3Snapshot {
         let header = Part21Header {

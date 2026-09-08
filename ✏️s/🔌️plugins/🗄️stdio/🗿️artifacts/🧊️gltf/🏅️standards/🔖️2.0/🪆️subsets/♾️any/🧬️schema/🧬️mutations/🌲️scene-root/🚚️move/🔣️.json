@@ -5,7 +5,7 @@
   "displayName": "Move Scene Root Node",
   "emoji": "🚚️",
   "aggregateVariant": "MoveSceneRootNode",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

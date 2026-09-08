@@ -12,6 +12,6 @@ pub fn diff(payload: &ChangeAreaMm2, base: &En1996Snapshot) -> protocol::Mutatio
     if base.area_mm2 == payload.new_area_mm2 {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "Area mm2 already has this value.");
     }
-    protocol::MutationOutcome::new(En1996Diff { area_mm2: Some(payload.new_area_mm2.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1996Diff { area_mm2: Some(payload.new_area_mm2), ..Default::default() })
 }
 //#endregion 🔖️Diff

@@ -7,12 +7,12 @@
 //! tuple variant wrapping its own mutation leaf (`./*/🦀️.rs`), and this file's `agg_diff`/
 //! `agg_inverse` carry the handcrafted semantics every leaf's `MutationKind` impl delegates back to.
 
-use crate::artifacts::semio::standards::v1::subsets::base::schema::triples::{split_top_level, strip_brackets};
-use crate::artifacts::semio::standards::v1::subsets::video::schema::diff::{
+use crate::standards::v1::subsets::base::schema::triples::{split_top_level, strip_brackets};
+use crate::standards::v1::subsets::video::schema::diff::{
     dec_bool, dec_kind, dec_list, dec_rational, dec_sample, dec_str, dec_stream, diff_insert_sample, diff_insert_stream, diff_remove_sample, diff_remove_stream, diff_set_sample_data, diff_set_sample_flags, diff_set_snapshot, diff_set_stream_meta,
     enc_bool, enc_kind, enc_list, enc_rational, enc_sample, enc_str, enc_stream, hex_decode, hex_encode, parse_usize, SemioVideoDiff,
 };
-use crate::artifacts::semio::standards::v1::subsets::video::schema::snapshot::{SemioRational, SemioVideoSample, SemioVideoSnapshot, SemioVideoStream, SemioVideoStreamKind};
+use crate::standards::v1::subsets::video::schema::snapshot::{SemioRational, SemioVideoSample, SemioVideoSnapshot, SemioVideoStream, SemioVideoStreamKind};
 use protocol::OpBinary;
 use protocol::{Mutation, OpText};
 
@@ -306,7 +306,7 @@ mod tests {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn fixture() -> SemioVideoSnapshot {
         SemioVideoSnapshot {
-            schema: crate::artifacts::semio::standards::v1::subsets::video::schema::snapshot::STDIO_SEMIOVIDEO_DOCUMENT_SCHEMA.into(),
+            schema: crate::standards::v1::subsets::video::schema::snapshot::STDIO_SEMIOVIDEO_DOCUMENT_SCHEMA.into(),
             streams: vec![
                 SemioVideoStream {
                     kind: SemioVideoStreamKind::Video,
@@ -331,7 +331,7 @@ mod tests {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn sweep_a() -> SemioVideoSnapshot {
         SemioVideoSnapshot {
-            schema: crate::artifacts::semio::standards::v1::subsets::video::schema::snapshot::STDIO_SEMIOVIDEO_DOCUMENT_SCHEMA.into(),
+            schema: crate::standards::v1::subsets::video::schema::snapshot::STDIO_SEMIOVIDEO_DOCUMENT_SCHEMA.into(),
             streams: vec![
                 SemioVideoStream {
                     kind: SemioVideoStreamKind::Video,
@@ -350,7 +350,7 @@ mod tests {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn sweep_b() -> SemioVideoSnapshot {
         SemioVideoSnapshot {
-            schema: crate::artifacts::semio::standards::v1::subsets::video::schema::snapshot::STDIO_SEMIOVIDEO_DOCUMENT_SCHEMA.into(),
+            schema: crate::standards::v1::subsets::video::schema::snapshot::STDIO_SEMIOVIDEO_DOCUMENT_SCHEMA.into(),
             streams: vec![
                 SemioVideoStream {
                     kind: SemioVideoStreamKind::Audio,
@@ -459,7 +459,7 @@ mod tests {
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn streams_diff(diff: &SemioVideoDiff) -> &crate::artifacts::semio::standards::v1::subsets::video::schema::diff::SemioVideoStreamsDiff {
+    fn streams_diff(diff: &SemioVideoDiff) -> &crate::standards::v1::subsets::video::schema::diff::SemioVideoStreamsDiff {
         diff.streams.as_ref().expect("streams diff present")
     }
 

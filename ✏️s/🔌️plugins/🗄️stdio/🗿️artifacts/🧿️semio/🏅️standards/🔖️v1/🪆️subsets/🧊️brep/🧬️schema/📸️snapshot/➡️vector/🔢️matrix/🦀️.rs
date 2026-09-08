@@ -8,7 +8,7 @@
 //! under `➡️vector` (its sole dependency) since no target stub was pre-mounted for it.
 
 use super::{Pnt3, Vec3};
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::polynomial::solve_cubic;
+use crate::standards::v1::subsets::brep::schema::snapshot::polynomial::solve_cubic;
 
 // #region 🔖️Mat
 
@@ -375,8 +375,8 @@ impl Affine3 {
     /// 🧭️ `Some((rotation, uniform_scale, is_reflection))` when `linear` is `uniform_scale ·
     /// rotation` (optionally composed with a fixed reflection, iff `is_reflection`) — i.e. exactly
     /// the maps that keep an analytic curve/surface's own kind analytic after [`Curve3::transformed`]
-    /// / [`Surface::transformed`] ([`crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::Curve3`] /
-    /// [`crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::surface::Surface`]). `None` for shear or non-uniform scale, which
+    /// / [`Surface::transformed`] ([`crate::standards::v1::subsets::brep::schema::snapshot::curve::Curve3`] /
+    /// [`crate::standards::v1::subsets::brep::schema::snapshot::surface::Surface`]). `None` for shear or non-uniform scale, which
     /// force a NURBS conversion instead. Decomposition: `uniform_scale = |det|^(1/3)`;
     /// `linear/uniform_scale` must be orthogonal (checked numerically) to qualify at all; a
     /// negative `det` means that orthogonal matrix is an improper rotation (`det = -1`), factored

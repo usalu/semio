@@ -27,9 +27,8 @@ pub use crate::artifacts::program::schema::snapshot::ProgramSnapshot;
 /// mutation-rich shape (`📓️migration-recipe.md` §3/§4 — no `LinkResolver`/child-dispatch seam
 /// exists in `ArtifactApp::handle` yet, checked directly against `🔌️plugin/🦀️.rs`,
 /// W1-owned, read-only).
-
 //#region 🔖️ChildTypes
-pub type ProgramBenchmarksChild = store::ArtifactChild<semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot>;
+pub type ProgramBenchmarksChild = store::ArtifactChild<semio_s_artifact_stdio_semio::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot>;
 //#endregion 🔖️ChildTypes
 
 //#region 🔖️Converters
@@ -38,9 +37,9 @@ pub type ProgramBenchmarksChild = store::ArtifactChild<semio_s_plugin_stdio::art
 /// truth on decode); `id`/`name` are a redundant native-column projection for table-shaped tooling
 /// that only understands the neutral subset — the same split `🕸️dag`'s node/edge converter uses for
 /// its own richer-than-native domain type.
-pub fn benchmark_table_from_records(records: &[BenchmarkRecord]) -> semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot {
-    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::table::schema::snapshot::{SemioTableCellKind, SemioTableColumn, SemioTableRow, SemioTableSnapshot, STDIO_SEMIOTABLE_DOCUMENT_SCHEMA};
-    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValue;
+pub fn benchmark_table_from_records(records: &[BenchmarkRecord]) -> semio_s_artifact_stdio_semio::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot {
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::table::schema::snapshot::{SemioTableCellKind, SemioTableColumn, SemioTableRow, SemioTableSnapshot, STDIO_SEMIOTABLE_DOCUMENT_SCHEMA};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::value::schema::snapshot::SemioValue;
     SemioTableSnapshot {
         schema: STDIO_SEMIOTABLE_DOCUMENT_SCHEMA.into(),
         columns: vec![SemioTableColumn { name: "id".into(), kind: SemioTableCellKind::Str }, SemioTableColumn { name: "name".into(), kind: SemioTableCellKind::Str }, SemioTableColumn { name: "json".into(), kind: SemioTableCellKind::Str }],
@@ -55,8 +54,8 @@ pub fn benchmark_table_from_records(records: &[BenchmarkRecord]) -> semio_s_plug
 /// never a stub. A row whose `json` cell is missing or fails to parse is honestly SKIPPED (not
 /// fabricated from `id`/`name` alone, since `BenchmarkRecord` has no `Default` and a partial
 /// reconstruction would silently invent data) — documented here rather than hidden.
-pub fn benchmark_records_from_table(table: &semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot) -> Vec<BenchmarkRecord> {
-    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValue;
+pub fn benchmark_records_from_table(table: &semio_s_artifact_stdio_semio::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot) -> Vec<BenchmarkRecord> {
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::value::schema::snapshot::SemioValue;
     table
         .rows
         .iter()
@@ -107,15 +106,14 @@ pub fn program_benchmarks(snapshot: &ProgramSnapshot) -> Vec<BenchmarkRecord> {
 /// `patch_register_item_operation`'s reflection dispatch), composed identically to `benchmarks`
 /// above. `KnowledgeRecord` also nests a rich `EntityHeader` with no clean native `table`-column
 /// mapping, so it follows the identical `id`/`name`-native-plus-full-`json` converter shape.
-
 //#region 🔖️ChildTypes
-pub type ProgramKnowledgeChild = store::ArtifactChild<semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot>;
+pub type ProgramKnowledgeChild = store::ArtifactChild<semio_s_artifact_stdio_semio::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot>;
 //#endregion 🔖️ChildTypes
 
 //#region 🔖️Converters
-pub fn knowledge_table_from_records(records: &[KnowledgeRecord]) -> semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot {
-    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::table::schema::snapshot::{SemioTableCellKind, SemioTableColumn, SemioTableRow, SemioTableSnapshot, STDIO_SEMIOTABLE_DOCUMENT_SCHEMA};
-    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValue;
+pub fn knowledge_table_from_records(records: &[KnowledgeRecord]) -> semio_s_artifact_stdio_semio::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot {
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::table::schema::snapshot::{SemioTableCellKind, SemioTableColumn, SemioTableRow, SemioTableSnapshot, STDIO_SEMIOTABLE_DOCUMENT_SCHEMA};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::value::schema::snapshot::SemioValue;
     SemioTableSnapshot {
         schema: STDIO_SEMIOTABLE_DOCUMENT_SCHEMA.into(),
         columns: vec![SemioTableColumn { name: "id".into(), kind: SemioTableCellKind::Str }, SemioTableColumn { name: "name".into(), kind: SemioTableCellKind::Str }, SemioTableColumn { name: "json".into(), kind: SemioTableCellKind::Str }],
@@ -126,8 +124,8 @@ pub fn knowledge_table_from_records(records: &[KnowledgeRecord]) -> semio_s_plug
     }
 }
 
-pub fn knowledge_records_from_table(table: &semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot) -> Vec<KnowledgeRecord> {
-    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValue;
+pub fn knowledge_records_from_table(table: &semio_s_artifact_stdio_semio::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot) -> Vec<KnowledgeRecord> {
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::value::schema::snapshot::SemioValue;
     table
         .rows
         .iter()

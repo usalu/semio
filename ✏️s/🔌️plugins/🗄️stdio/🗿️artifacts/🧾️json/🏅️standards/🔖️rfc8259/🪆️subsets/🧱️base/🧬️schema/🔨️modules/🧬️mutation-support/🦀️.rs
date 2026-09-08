@@ -1,6 +1,6 @@
 //! 🧰 Shared path addressing for direct JSON mutations.
-use crate::artifacts::json::schema::diff::{JsonArrayDiff, JsonArrayModified, JsonDiff, JsonObjectDiff, JsonObjectModified, JsonValueDiff};
-use crate::artifacts::json::schema::snapshot::JsonValue;
+use crate::schema::diff::{JsonArrayDiff, JsonArrayModified, JsonDiff, JsonObjectDiff, JsonObjectModified, JsonValueDiff};
+use crate::schema::snapshot::JsonValue;
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(tag = "kind", rename_all = "camelCase")]

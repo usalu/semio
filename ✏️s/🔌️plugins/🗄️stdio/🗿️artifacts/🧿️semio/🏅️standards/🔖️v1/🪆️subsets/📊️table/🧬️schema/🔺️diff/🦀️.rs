@@ -7,10 +7,10 @@
 //! `snapshot: Option<SemioTableSnapshot>` full-replace slot anywhere — whole-document replace is
 //! `ArtifactStore::reset`, outside history.
 
-use crate::artifacts::semio::standards::v1::subsets::base::schema::triples::split_top_level;
-use crate::artifacts::semio::standards::v1::subsets::table::schema::snapshot::{SemioTableColumn, SemioTableRow, SemioTableSnapshot};
+use crate::standards::v1::subsets::base::schema::triples::split_top_level;
+use crate::standards::v1::subsets::table::schema::snapshot::{SemioTableColumn, SemioTableRow, SemioTableSnapshot};
 use protocol::MutationDiff;
-use schema::ArtifactSchema;
+use framework_schema::ArtifactSchema;
 
 //#region 🔖️ColumnList
 /// 📋 Whole-list wrapper for the `columns` field diff — every mutation triad rebuilds the full
@@ -98,7 +98,7 @@ impl protocol::command::DiffAlgebra<SemioTableSnapshot> for SemioTableDiff {
 /// both present). `split_top_level(line, ';')` parses back (bracket-nesting aware, so a `;` can
 /// never appear inside an encoded column/row's own hex/bracket payload — there is none — this is
 /// purely a top-level field separator).
-use crate::artifacts::semio::standards::v1::subsets::table::schema::snapshot::{dec_column, dec_row, enc_column, enc_row};
+use crate::standards::v1::subsets::table::schema::snapshot::{dec_column, dec_row, enc_column, enc_row};
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn enc_columns(list: &SemioTableColumnList) -> String {
@@ -106,7 +106,7 @@ fn enc_columns(list: &SemioTableColumnList) -> String {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_columns(s: &str) -> Result<SemioTableColumnList, String> {
-    use crate::artifacts::semio::standards::v1::subsets::base::schema::triples::strip_brackets;
+    use crate::standards::v1::subsets::base::schema::triples::strip_brackets;
     let values = split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_column).collect::<Result<Vec<_>, String>>()?;
     Ok(SemioTableColumnList { values })
 }
@@ -116,7 +116,7 @@ fn enc_rows(list: &SemioTableRowList) -> String {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_rows(s: &str) -> Result<SemioTableRowList, String> {
-    use crate::artifacts::semio::standards::v1::subsets::base::schema::triples::strip_brackets;
+    use crate::standards::v1::subsets::base::schema::triples::strip_brackets;
     let values = split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_row).collect::<Result<Vec<_>, String>>()?;
     Ok(SemioTableRowList { values })
 }
@@ -165,8 +165,8 @@ impl protocol::DiffCodec for SemioTableDiff {
     /// value subset's own `enc_semio_value_bin`/`dec_semio_value_bin` for row cells).
     fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const DIFF_BINARY_FORMAT: u8 = 1;
-        use crate::artifacts::semio::standards::v1::subsets::table::schema::snapshot::write_column;
-        use crate::artifacts::semio::standards::v1::subsets::value::schema::diff::enc_semio_value_bin;
+        use crate::standards::v1::subsets::table::schema::snapshot::write_column;
+        use crate::standards::v1::subsets::value::schema::diff::enc_semio_value_bin;
         let presence: u8 = (if self.columns.is_some() { 0b0000_0001 } else { 0 }) | (if self.rows.is_some() { 0b0000_0010 } else { 0 });
         let mut out = vec![DIFF_BINARY_FORMAT, presence];
         if let Some(list) = &self.columns {
@@ -188,8 +188,8 @@ impl protocol::DiffCodec for SemioTableDiff {
     }
     fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         const DIFF_BINARY_FORMAT: u8 = 1;
-        use crate::artifacts::semio::standards::v1::subsets::table::schema::snapshot::{read_column, SemioTableRow};
-        use crate::artifacts::semio::standards::v1::subsets::value::schema::diff::dec_semio_value_bin;
+        use crate::standards::v1::subsets::table::schema::snapshot::{read_column, SemioTableRow};
+        use crate::standards::v1::subsets::value::schema::diff::dec_semio_value_bin;
         if bytes.len() < 2 {
             return Err(protocol::ProtocolError::Malformed { what: "diff header", offset: 0, detail: "truncated (need format+presence)".to_string() });
         }
@@ -235,8 +235,8 @@ impl protocol::DiffCodec for SemioTableDiff {
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_diff_cases() -> Vec<SemioTableDiff> {
-    use crate::artifacts::semio::standards::v1::subsets::table::schema::snapshot::{demo_table_snapshot, SemioTableCellKind, SemioTableColumn, SemioTableRow};
-    use crate::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValue;
+    use crate::standards::v1::subsets::table::schema::snapshot::{demo_table_snapshot, SemioTableCellKind, SemioTableColumn, SemioTableRow};
+    use crate::standards::v1::subsets::value::schema::snapshot::SemioValue;
     vec![
         SemioTableDiff::default(),
         SemioTableDiff { columns: Some(SemioTableColumnList { values: demo_table_snapshot().columns }), rows: None },
@@ -253,8 +253,8 @@ pub(crate) fn demo_diff_cases() -> Vec<SemioTableDiff> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::semio::standards::v1::subsets::table::schema::snapshot::{SemioTableCellKind, STDIO_SEMIOTABLE_DOCUMENT_SCHEMA};
-    use crate::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValue;
+    use crate::standards::v1::subsets::table::schema::snapshot::{SemioTableCellKind, STDIO_SEMIOTABLE_DOCUMENT_SCHEMA};
+    use crate::standards::v1::subsets::value::schema::snapshot::SemioValue;
     use protocol::DiffCodec;
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9

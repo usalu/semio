@@ -8,6 +8,6 @@ pub fn diff(payload: &ChangeExchangeProcess, base: &Iso16757Snapshot) -> protoco
     if base.exchange_process == payload.new_exchange_process {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "Exchange process already has this value.");
     }
-    protocol::MutationOutcome::new(Iso16757Diff { exchange_process: Some(payload.new_exchange_process.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(Iso16757Diff { exchange_process: Some(payload.new_exchange_process), ..Default::default() })
 }
 //#endregion 🔖️Diff

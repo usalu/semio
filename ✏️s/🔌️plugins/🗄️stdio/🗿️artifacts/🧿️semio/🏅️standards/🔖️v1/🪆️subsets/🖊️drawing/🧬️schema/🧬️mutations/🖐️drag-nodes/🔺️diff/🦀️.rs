@@ -1,8 +1,8 @@
 //! 🔺️ Diff for `DragNodes`.
 
-use crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioPoint2;
-use crate::artifacts::semio::standards::v1::subsets::drawing::schema::diff::{SemioDrawingDiff, diff_move_node, node_origin};
-use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot;
+use crate::standards::v1::subsets::base::schema::geometry::SemioPoint2;
+use crate::standards::v1::subsets::drawing::schema::diff::{SemioDrawingDiff, diff_move_node, node_origin};
+use crate::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot;
 use protocol::MutationDiff;
 
 //#region 🔖️Diff

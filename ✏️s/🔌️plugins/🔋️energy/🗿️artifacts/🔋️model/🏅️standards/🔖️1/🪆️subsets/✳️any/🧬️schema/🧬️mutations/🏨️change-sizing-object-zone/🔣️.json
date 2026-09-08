@@ -5,7 +5,7 @@
   "displayName": "Change Sizing Object Zone",
   "emoji": "🏨️",
   "aggregateVariant": "ChangeSizingObjectZone",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-sizing-object-zone",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

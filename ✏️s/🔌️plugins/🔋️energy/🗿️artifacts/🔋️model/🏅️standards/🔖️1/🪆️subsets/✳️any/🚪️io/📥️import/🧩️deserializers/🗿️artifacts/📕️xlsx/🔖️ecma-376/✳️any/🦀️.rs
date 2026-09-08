@@ -1,6 +1,6 @@
 //! model <- xlsx
 use crate::artifacts::model::EnergyModelSnapshot;
-use semio_s_plugin_stdio::artifacts::xlsx::{XlsxSnapshot, STDIO_XLSX_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_xlsx::{XlsxSnapshot, STDIO_XLSX_DOCUMENT_SCHEMA};
 
 pub async fn register() {}
 

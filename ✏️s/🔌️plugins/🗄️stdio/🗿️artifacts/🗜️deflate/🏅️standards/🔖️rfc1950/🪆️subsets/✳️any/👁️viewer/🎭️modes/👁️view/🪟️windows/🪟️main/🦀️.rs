@@ -5,8 +5,8 @@
 //! variant, not the editable one). The decompressed `payload` itself is never shown as text (only a
 //! byte-count comment), same honest scope as the sibling authoring surface.
 
-use crate::artifacts::deflate::schema::snapshot::DeflateLevelHint;
-use crate::artifacts::deflate::DeflateSnapshot;
+use crate::schema::snapshot::DeflateLevelHint;
+use crate::DeflateSnapshot;
 use semio_framework_plugin::app::{TextView, TextWindowKit, WindowKit};
 use semio_framework_plugin::{BuiltNode, LocalizedLabel, WindowKindDefinition};
 

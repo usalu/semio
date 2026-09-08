@@ -12,17 +12,13 @@ use store::ArtifactPack;
 #[value(rename_all = "camelCase", default)]
 #[dsl(extension = "trinity.rewriting.presence")]
 #[dsl(layout = "lines")]
+#[derive(Default)]
 pub struct RewritingPresence {
     #[dsl(block)]
     pub before_pane_camera: Camera,
     pub lod_mode_by_window: BTreeMap<String, String>,
 }
 
-impl Default for RewritingPresence {
-    fn default() -> Self {
-        Self { before_pane_camera: Camera::default(), lod_mode_by_window: BTreeMap::new() }
-    }
-}
 
 impl protocol::MutationDiff<RewritingPresence> for RewritingPresence {
     fn apply(&self, _base: &RewritingPresence) -> protocol::MutationApplyResult<RewritingPresence> {

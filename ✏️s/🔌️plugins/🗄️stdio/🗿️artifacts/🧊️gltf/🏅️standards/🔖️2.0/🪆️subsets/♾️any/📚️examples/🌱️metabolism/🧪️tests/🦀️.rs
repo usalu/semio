@@ -5,11 +5,11 @@
 //! (c) analyzer→builder round-trip (the project's core acceptance test). F4: rewritten against the
 //! fully typed `GltfDocument` model -- no `serde_json::Value` indexing anywhere in this file.
 
-use crate::artifacts::gltf::engine::{decode_accessor, decode_glb, encode_glb, GltfAccessorType, GltfComponentType};
-use crate::artifacts::gltf::examples::metabolism::{decoded_snapshot, BASE_GLB_BYTES};
-use crate::artifacts::gltf::schema::snapshot::{GltfAlphaMode, GltfMesh, GltfNode, GltfScene};
-use crate::artifacts::gltf::standards::v2_0::subsets::any::schema::GltfAnalyzer;
-use crate::artifacts::gltf::standards::v2_0::subsets::any::schema::{GltfAccessorSpec, GltfBuilderConstruction as GltfBuilder};
+use crate::engine::{decode_accessor, decode_glb, encode_glb, GltfAccessorType, GltfComponentType};
+use crate::examples::metabolism::{decoded_snapshot, BASE_GLB_BYTES};
+use crate::schema::snapshot::{GltfAlphaMode, GltfMesh, GltfNode, GltfScene};
+use crate::standards::v2_0::subsets::any::schema::GltfAnalyzer;
+use crate::standards::v2_0::subsets::any::schema::{GltfAccessorSpec, GltfBuilderConstruction as GltfBuilder};
 use semio_framework_plugin::{AnalyzeSource, ArtifactBuilder};
 
 //#region 🔖️(a) RealDecode

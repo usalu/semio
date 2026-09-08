@@ -5,7 +5,7 @@
   "displayName": "Replace Presence",
   "emoji": "👥️",
   "aggregateVariant": "ReplacePresence",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "replace-presence",
   "binaryTag": 0,
   "invertibility": "explicit-mutation",

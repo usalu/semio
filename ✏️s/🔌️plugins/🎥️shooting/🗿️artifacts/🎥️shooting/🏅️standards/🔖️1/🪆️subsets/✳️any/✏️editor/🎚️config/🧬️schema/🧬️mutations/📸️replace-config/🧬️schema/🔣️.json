@@ -1,0 +1,117 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/shooting/shooting/1/any/editor/config/mutation/replace-config.json",
+  "title": "ReplaceConfig",
+  "type": "object",
+  "properties": {
+    "config": {
+      "type": "object",
+      "properties": {
+        "defaultShotFormat": {
+          "type": "string"
+        },
+        "defaultShotShape": {
+          "type": "string"
+        },
+        "defaultAssetFormat": {
+          "type": "string"
+        },
+        "selectedShotIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "centerModel": {
+          "type": "boolean"
+        },
+        "fitRevision": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "cameraDraftLabel": {
+          "type": "string"
+        },
+        "camera": {
+          "type": "object",
+          "properties": {
+            "position": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 3,
+              "maxItems": 3
+            },
+            "target": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 3,
+              "maxItems": 3
+            },
+            "zoom": {
+              "type": "number"
+            },
+            "fov": {
+              "type": "number"
+            },
+            "up": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "number"
+                  },
+                  "minItems": 3,
+                  "maxItems": 3
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "projection": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "position",
+            "target",
+            "zoom",
+            "fov"
+          ],
+          "additionalProperties": false
+        },
+        "activeUtilityId": {
+          "type": "string"
+        },
+        "locale": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "defaultShotFormat",
+        "defaultShotShape",
+        "defaultAssetFormat",
+        "selectedShotIds",
+        "centerModel",
+        "fitRevision",
+        "cameraDraftLabel",
+        "camera",
+        "activeUtilityId",
+        "locale"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "config"
+  ],
+  "additionalProperties": false
+}

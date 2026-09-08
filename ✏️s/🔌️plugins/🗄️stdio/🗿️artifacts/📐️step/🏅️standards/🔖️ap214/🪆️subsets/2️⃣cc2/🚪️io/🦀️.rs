@@ -4,10 +4,10 @@
 //! `SubsetValidator` directly), not per-leaf `register()` — same pattern `🧱️base/🚪️io` established.
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use crate::artifacts::step::standards::v_ap214::engine::ladder::ensure_file_schema;
-    use crate::artifacts::step::standards::v_ap214::subsets::base::schema::snapshot::StepSnapshot;
-    use crate::artifacts::step::standards::v_ap214::subsets::base::schema::StepComposer as StepAnyComposer;
-    use crate::artifacts::step::standards::v_ap214::subsets::cc2::schema::check_cc2_conformance;
+    use crate::standards::v_ap214::engine::ladder::ensure_file_schema;
+    use crate::standards::v_ap214::subsets::base::schema::snapshot::StepSnapshot;
+    use crate::standards::v_ap214::subsets::base::schema::StepComposer as StepAnyComposer;
+    use crate::standards::v_ap214::subsets::cc2::schema::check_cc2_conformance;
     use dsl::{Diagnostic, FaultCode, Severity, TextSpan};
     use semio_framework_plugin::{register_subset_validator, subset_validator_entry_of, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, IoPayload, StandardId, SubsetId, SubsetValidator, SubsetValidatorEntry};
     use std::sync::OnceLock;
@@ -84,7 +84,7 @@ pub mod derived_composition {
     /// 📌️ Registers this subset's `SubsetValidator` with the generic io registry (D5's
     /// validate-on-build hook). Called from the ap214 standard's own `⚙️engine::register()`. The
     /// `ComposerEntry` itself is registered separately by the standard-level composer aggregator
-    /// (`crate::artifacts::step::standards::v_ap214::engine::io_registry::entries()`).
+    /// (`crate::standards::v_ap214::engine::io_registry::entries()`).
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn register() {
         register_subset_validator(validator_entry()).expect("static Stdio registration must be available and conflict-free");
@@ -94,7 +94,7 @@ pub mod derived_composition {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use crate::artifacts::step::standards::v_ap214::engine::part21::{Part21Document, Part21Header, Part21Instance};
+        use crate::standards::v_ap214::engine::part21::{Part21Document, Part21Header, Part21Instance};
         use semio_framework_plugin::AnalyzeSource;
 
         // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -116,7 +116,7 @@ pub mod derived_composition {
             let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Binary(&bytes) }];
             let composed = StepCc2ComposerComposition::compose(&sources).expect("a document with no illegal representation must compose to cc2");
             assert!(composed.diagnostics.iter().all(|d| d.severity != Severity::Error), "no hard diagnostics expected: {:?}", composed.diagnostics);
-            assert!(crate::artifacts::step::standards::v_ap214::engine::ladder::file_schema_contains(&composed.snapshot.to_part21_document(), "AUTOMOTIVE_DESIGN"), "composer must inject FILE_SCHEMA=AUTOMOTIVE_DESIGN");
+            assert!(crate::standards::v_ap214::engine::ladder::file_schema_contains(&composed.snapshot.to_part21_document(), "AUTOMOTIVE_DESIGN"), "composer must inject FILE_SCHEMA=AUTOMOTIVE_DESIGN");
         }
 
         #[semio_framework_async_macros::async_test]
@@ -125,7 +125,7 @@ pub mod derived_composition {
             // skipped this subset's own composer genuinely lacks the injection.
             let bytes = clean_bytes();
             let diagnostics = StepCc2Validator::validate(&IoPayload::Binary(bytes)).await;
-            assert!(diagnostics.iter().any(|d| d.code.0 == crate::artifacts::step::standards::v_ap214::subsets::cc2::schema::CODE_FILE_SCHEMA), "got {diagnostics:?}");
+            assert!(diagnostics.iter().any(|d| d.code.0 == crate::standards::v_ap214::subsets::cc2::schema::CODE_FILE_SCHEMA), "got {diagnostics:?}");
         }
     }
 }

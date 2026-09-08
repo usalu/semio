@@ -4,12 +4,10 @@ import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 import { playgroundAssetVitePlugins, playgroundFlowWasmDevStubPlugin, playgroundSceneHostResolveAliases, resolveGisMapTileServeMode, semioAssetsVitePlugin, semioEmojiIndexHtmlVitePlugin, semioHostHtmlVitePlugin, semioViteProductionBuild, staticDirVitePlugin } from "../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/🟦️.ts";
-import { PLAYGROUND_BUILD_TARGETS } from "../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🎮️playgrounds.ts";
 import { MODULE_EXTENSION_ROUTE, MODULE_PLUGIN_ROUTE } from "../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
 import { semioBackboneVitePlugin, semioBlobVitePlugin, semioPluginHotSwapVitePlugin } from "../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/🔌️vite-plugins.ts";
 import { defaultExtensionInstallRoot, semioExtensionStoreVitePlugin } from "../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏪️store/📥️store.ts";
-import { DEMONSTRATOR_ASSETS_DIR, DEMONSTRATOR_HOST, DEMONSTRATOR_PANES, demonstratorPaneRuntimeVariant } from "./🪧️brand.ts";
-import { demonstratorRuntimeModuleLayout } from "./📜️script.ts";
+import { DEMONSTRATOR_ASSETS_DIR, DEMONSTRATOR_HOST, DEMONSTRATOR_RUNTIME_TARGETS, demonstratorRuntimeModuleLayout } from "./🔨️modules/🧩️runtime/🟦️.ts";
 
 const playDir = path.dirname(fileURLToPath(import.meta.url));
 
@@ -30,11 +28,9 @@ const installedExtensionsDir = defaultExtensionInstallRoot(repoRoot);
 /** @emoji 🎪️ Registry rows for exactly this demonstrator's six panes — the union this page needs to
  * actually mount, not every playground variant in the monorepo (mirrors `os/dev`'s own `resolvedPlaygroundAssets`,
  * scoped down from its "studio serves everything" fallback since a demonstrator pane list is fixed). */
-const demonstratorRuntimeVariants = new Set(DEMONSTRATOR_PANES.flatMap((pane) => [pane.variant, demonstratorPaneRuntimeVariant(pane.variant)]));
-const demonstratorTargets = PLAYGROUND_BUILD_TARGETS.filter((target) => demonstratorRuntimeVariants.has(target.variant));
-const resolvedPlaygroundAssets = demonstratorTargets.flatMap((target) => target.assets);
+const resolvedPlaygroundAssets = DEMONSTRATOR_RUNTIME_TARGETS.flatMap((target) => target.assets);
 /** @emoji 🔌️ Transitive runtime assets for every pane, split by the exact public roots encoded in the generated catalog. */
-const { pluginModuleDirNames, extensionModuleDirNames } = demonstratorRuntimeModuleLayout([...new Set(demonstratorTargets.map((target) => target.pluginId))]);
+const { pluginModuleDirNames, extensionModuleDirNames } = demonstratorRuntimeModuleLayout([...new Set(DEMONSTRATOR_RUNTIME_TARGETS.map((target) => target.pluginId))]);
 //#endregion 🔖️DemonstratorUnionAssets
 
 export default defineConfig({

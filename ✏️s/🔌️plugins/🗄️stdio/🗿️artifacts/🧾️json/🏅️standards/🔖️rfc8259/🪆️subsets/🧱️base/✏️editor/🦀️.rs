@@ -6,9 +6,9 @@
 //! is a "replace this node" editor, not a structural insert/remove editor — `SetMember`/
 //! `RemoveMember`/`InsertArrayElement`/`RemoveArrayElement` stay unreachable through this window).
 
-use crate::artifacts::json::schema::mutations::{JsonPath, JsonPathSegment, SetScalarMutation, SetScalarPayload};
-use crate::artifacts::json::schema::snapshot::JsonValue;
-use crate::artifacts::json::{JsonMutation, JsonSnapshot, STDIO_JSON_DOCUMENT_SCHEMA};
+use crate::schema::mutations::{JsonPath, JsonPathSegment, SetScalarMutation, SetScalarPayload};
+use crate::schema::snapshot::JsonValue;
+use crate::{JsonMutation, JsonSnapshot, STDIO_JSON_DOCUMENT_SCHEMA};
 use crate::editor::json_any::modes::edit;
 use crate::editor::json_any::modes::edit::windows::main;
 use semio_framework_plugin::{

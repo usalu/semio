@@ -3,9 +3,9 @@
 //! Emits the frozen `set-pixel-region` action onto the artifact's own whole-raster replace mutation.
 //! MUST NOT be reached by the sibling `viewer` module (`policyViewerPurityBreaches`).
 
-use crate::artifacts::tiff::standards::v6_0::subsets::baseline::schema::mutations::TiffBaselineMutation;
-use crate::artifacts::tiff::standards::v6_0::subsets::baseline::schema::snapshot::TiffSnapshot;
-use crate::artifacts::tiff::{STDIO_TIFF_DOCUMENT_SCHEMA, TIFF_BASELINE_DIALECT};
+use crate::standards::v6_0::subsets::baseline::schema::mutations::TiffBaselineMutation;
+use crate::standards::v6_0::subsets::baseline::schema::snapshot::TiffSnapshot;
+use crate::{STDIO_TIFF_DOCUMENT_SCHEMA, TIFF_BASELINE_DIALECT};
 use crate::editor::tiff_baseline::modes::edit;
 use crate::editor::tiff_baseline::modes::edit::windows::main;
 use semio_framework_plugin::{ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation};
@@ -64,7 +64,7 @@ impl ArtifactEditor for TiffBaselineEditor {
             TiffBaselineEditCommand::SetPixelRegion { pixels } => {
                 let mut snapshot = doc.snapshot.clone();
                 snapshot.pixels = pixels.clone();
-                Ok(Emit::mutations(vec![TiffBaselineMutation::SetSnapshot(crate::artifacts::tiff::standards::v6_0::subsets::baseline::schema::mutations::set_snapshot::SetSnapshot { snapshot })]))
+                Ok(Emit::mutations(vec![TiffBaselineMutation::SetSnapshot(crate::standards::v6_0::subsets::baseline::schema::mutations::set_snapshot::SetSnapshot { snapshot })]))
             }
         }
     }

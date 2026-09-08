@@ -3,12 +3,12 @@
 //! weather-file-epw-data-dictionary.html — see `…/schema/snapshot` module doc for the full
 //! rationale) plus composition/registration. 🦑 Codec + registration dissolved out of the former
 //! `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES).
-use crate::artifacts::epw::standards::energyplus::subsets::any::schema::snapshot::{EpwDataPeriod, EpwDataPeriods, EpwLocation, EpwRecord, EpwSnapshot, EPW_RECORD_FIELD_COUNT, STDIO_EPW_DOCUMENT_SCHEMA};
+use crate::standards::energyplus::subsets::any::schema::snapshot::{EpwDataPeriod, EpwDataPeriods, EpwLocation, EpwRecord, EpwSnapshot, EPW_RECORD_FIELD_COUNT, STDIO_EPW_DOCUMENT_SCHEMA};
 
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use crate::artifacts::epw::standards::energyplus::subsets::any::schema::snapshot::EpwSnapshot;
-    use crate::artifacts::epw::standards::energyplus::subsets::any::schema::EpwAnalyzer;
+    use crate::standards::energyplus::subsets::any::schema::snapshot::EpwSnapshot;
+    use crate::standards::energyplus::subsets::any::schema::EpwAnalyzer;
     use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.epw", standard: StandardId("energyplus"), subset: SubsetId("*") };
@@ -48,10 +48,10 @@ pub mod derived_composition {
     /// this artifact's root-level `register()` (former standard-level `engine::register()`).
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn register() {
-        ::schema::register_artifact_schema_descriptor(crate::artifacts::epw::standards::energyplus::subsets::any::schema::epw_artifact_schema_descriptor());
+        ::framework_schema::register_artifact_schema_descriptor(crate::standards::energyplus::subsets::any::schema::epw_artifact_schema_descriptor());
         register_artifact_inferences();
-        store::register_document_codec(store::ArtifactCodec::of::<EpwSnapshot, crate::artifacts::epw::standards::energyplus::subsets::any::schema::mutations::EpwMutation>(
-            crate::artifacts::epw::standards::energyplus::subsets::any::schema::snapshot::STDIO_EPW_DOCUMENT_SCHEMA,
+        store::register_document_codec(store::ArtifactCodec::of::<EpwSnapshot, crate::standards::energyplus::subsets::any::schema::mutations::EpwMutation>(
+            crate::standards::energyplus::subsets::any::schema::snapshot::STDIO_EPW_DOCUMENT_SCHEMA,
         )).expect("static Stdio registration must be available and conflict-free");
     }
 
@@ -60,7 +60,7 @@ pub mod derived_composition {
     /// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn register_artifact_inferences() {
-        ::schema::register_artifact_inference_descriptor(crate::artifacts::epw::standards::energyplus::subsets::any::schema::inferences::epw_artifact_inference_descriptor());
+        ::framework_schema::register_artifact_inference_descriptor(crate::standards::energyplus::subsets::any::schema::inferences::epw_artifact_inference_descriptor());
     }
     //#endregion 🔖️Register
 }
@@ -292,7 +292,7 @@ mod tests {
 
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
-    use crate::artifacts::epw::standards::energyplus::subsets::any::schema::EpwComposer as EpwRawAnyComposer;
+    use crate::standards::energyplus::subsets::any::schema::EpwComposer as EpwRawAnyComposer;
     use semio_framework_plugin::{composer_entry_of, ComposerEntry};
     use std::sync::OnceLock;
 

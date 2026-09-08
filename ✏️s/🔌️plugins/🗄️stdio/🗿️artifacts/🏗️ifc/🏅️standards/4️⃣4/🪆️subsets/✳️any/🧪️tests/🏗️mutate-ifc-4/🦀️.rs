@@ -218,11 +218,11 @@ fn round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::{inverse_spec, json_obj, json_spec, mutable_input};
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_plugin_stdio::artifacts::ifc::standards::v4::subsets::any::schema::mutations::{
+    use crate::standards::v4::subsets::any::schema::mutations::{
         apply_ifc_mutation, insert_entity, insert_entity_arg, remove_entity, remove_entity_arg, set_entity_arg, set_entity_name, set_file_description, set_file_name, set_file_schema, set_snapshot, IfcMutation,
     };
-    use semio_s_plugin_stdio::artifacts::ifc::standards::v4::subsets::any::schema::snapshot::{from_part21_document, to_part21_document, IfcEntity, IfcSnapshot, IfcValue};
-    use semio_s_plugin_stdio::artifacts::step::engine::part21::{parse_part21, write_part21};
+    use crate::standards::v4::subsets::any::schema::snapshot::{from_part21_document, to_part21_document, IfcEntity, IfcSnapshot, IfcValue};
+    use semio_s_artifact_stdio_step::engine::part21::{parse_part21, write_part21};
     use semio_s_plugin_stdio_test_oracle::artifacts::ifc::standards::v4::subsets::any::project_ifc_4_any;
 
     //#region 🔖️SpecReading

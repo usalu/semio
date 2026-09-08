@@ -5,7 +5,7 @@
 //! `JsonSnapshot::to_serde_value` bridge and stdio's own real `parse_json_text`.
 use crate::artifacts::shooting::ShootingSnapshot;
 use crate::artifacts::shooting::SHOOTING_DOCUMENT_SCHEMA;
-use semio_s_plugin_stdio::artifacts::json::schema::snapshot::{parse_json_text, JsonSnapshot};
+use semio_s_artifact_stdio_json::schema::snapshot::{parse_json_text, JsonSnapshot};
 
 pub fn register() {}
 

@@ -2036,10 +2036,6 @@ pub mod examples {
     pub mod app_2d_demo_session;
     #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/📚️examples/🎬️demo-session/🦀️.rs"]
     pub mod app_3d_demo_session;
-    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/📚️examples/🎬️demo/🦀️.rs"]
-    pub mod art_2d_demo;
-    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/📚️examples/🎬️demo/🦀️.rs"]
-    pub mod art_3d_demo;
 }
 //#endregion 📚️Examples
 

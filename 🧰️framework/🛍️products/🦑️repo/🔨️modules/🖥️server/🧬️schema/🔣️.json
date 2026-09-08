@@ -1,0 +1,2809 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/repo/server/schema.json",
+  "title": "RepoServerPersistence",
+  "description": "Documents persisted by the repo server. The native implementation of this contract is the sibling 🐘️postgres/🗄️.sql; every table there has exactly one <Table>Row export here.",
+  "$defs": {
+    "Timestamp": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(?:\\.[0-9]+)?(?:Z|[+-][0-9]{2}:[0-9]{2})$"
+    },
+    "Date": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+    },
+    "JsonDocument": {},
+    "DevelopersRow": {
+      "$comment": "Row of the developers table in 🐘️postgres/🗄️.sql.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "email",
+        "github_login",
+        "display_name",
+        "trusted",
+        "active",
+        "role",
+        "discord_user_id",
+        "created_at",
+        "revoked_at"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string"
+        },
+        "github_login": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "display_name": {
+          "type": "string"
+        },
+        "trusted": {
+          "type": "boolean"
+        },
+        "active": {
+          "type": "boolean"
+        },
+        "role": {
+          "type": "string",
+          "enum": [
+            "developer",
+            "admin",
+            "owner"
+          ]
+        },
+        "discord_user_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "created_at": {
+          "$ref": "#/$defs/Timestamp"
+        },
+        "revoked_at": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Timestamp"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "DeveloperApiKeysRow": {
+      "$comment": "Row of the developer_api_keys table in 🐘️postgres/🗄️.sql.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "developer_id",
+        "key_hash",
+        "label",
+        "created_at",
+        "last_used_at",
+        "revoked_at"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "developer_id": {
+          "type": "string"
+        },
+        "key_hash": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "created_at": {
+          "$ref": "#/$defs/Timestamp"
+        },
+        "last_used_at": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Timestamp"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "revoked_at": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Timestamp"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "AuditLogRow": {
+      "$comment": "Row of the audit_log table in 🐘️postgres/🗄️.sql.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "actor_id",
+        "action",
+        "target",
+        "detail",
+        "created_at"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "actor_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "action": {
+          "type": "string"
+        },
+        "target": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "detail": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/JsonDocument"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "created_at": {
+          "$ref": "#/$defs/Timestamp"
+        }
+      }
+    },
+    "ReposRow": {
+      "$comment": "Row of the repos table in 🐘️postgres/🗄️.sql.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "path",
+        "created_at"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        },
+        "created_at": {
+          "$ref": "#/$defs/Timestamp"
+        }
+      }
+    },
+    "KitsRow": {
+      "$comment": "Row of the kits table in 🐘️postgres/🗄️.sql.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "repo_id",
+        "name",
+        "description",
+        "icon",
+        "image",
+        "preview",
+        "version",
+        "remote",
+        "homepage",
+        "license",
+        "uri",
+        "initial_snapshot_id",
+        "current_checkpoint_id",
+        "current_materialized_snapshot_id",
+        "created_at",
+        "updated_at"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "repo_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "icon": {
+          "type": "string"
+        },
+        "image": {
+          "type": "string"
+        },
+        "preview": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        },
+        "remote": {
+          "type": "string"
+        },
+        "homepage": {
+          "type": "string"
+        },
+        "license": {
+          "type": "string"
+        },
+        "uri": {
+          "type": "string"
+        },
+        "initial_snapshot_id": {
+          "type": "string"
+        },
+        "current_checkpoint_id": {
+          "type": "string"
+        },
+        "current_materialized_snapshot_id": {
+          "type": "string"
+        },
+        "created_at": {
+          "$ref": "#/$defs/Timestamp"
+        },
+        "updated_at": {
+          "$ref": "#/$defs/Timestamp"
+        }
+      }
+    },
+    "KitSnapshotsRow": {
+      "$comment": "Row of the kit_snapshots table in 🐘️postgres/🗄️.sql.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "kit_id",
+        "snapshot_kind",
+        "source_checkpoint_id",
+        "name",
+        "description",
+        "icon",
+        "image",
+        "preview",
+        "version",
+        "remote",
+        "homepage",
+        "license",
+        "uri",
+        "source_json",
+        "created_at",
+        "updated_at"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "kit_id": {
+          "type": "string"
+        },
+        "snapshot_kind": {
+          "type": "string",
+          "enum": [
+            "initial",
+            "materialized",
+            "draft-base",
+            "session-cache"
+          ]
+        },
+        "source_checkpoint_id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "icon": {
+          "type": "string"
+        },
+        "image": {
+          "type": "string"
+        },
+        "preview": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        },
+        "remote": {
+          "type": "string"
+        },
+        "homepage": {
+          "type": "string"
+        },
+        "license": {
+          "type": "string"
+        },
+        "uri": {
+          "type": "string"
+        },
+        "source_json": {
+          "$ref": "#/$defs/JsonDocument"
+        },
+        "created_at": {
+          "$ref": "#/$defs/Timestamp"
+        },
+        "updated_at": {
+          "$ref": "#/$defs/Timestamp"
+        }
+      }
+    },
+    "KitCheckpointsRow": {
+      "$comment": "Row of the kit_checkpoints table in 🐘️postgres/🗄️.sql.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "kit_id",
+        "parent_checkpoint_id",
+        "ordinal_on_main_backbone",
+        "message",
+        "hash",
+        "release_marked_at",
+        "created_at"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "kit_id": {
+          "type": "string"
+        },
+        "parent_checkpoint_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "ordinal_on_main_backbone": {
+          "type": "integer"
+        },
+        "message": {
+          "type": "string"
+        },
+        "hash": {
+          "type": "string"
+        },
+        "release_marked_at": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Timestamp"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "created_at": {
+          "$ref": "#/$defs/Timestamp"
+        }
+      }
+    },
+    "KitCheckpointAuthorsRow": {
+      "$comment": "Row of the kit_checkpoint_authors table in 🐘️postgres/🗄️.sql.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "author_id",
+        "ordinal"
+      ],
+      "properties": {
+        "author_id": {
+          "type": "string"
+        },
+        "ordinal": {
+          "type": "integer"
+        }
+      }
+    },
+    "KitCheckpointChangesRow": {
+      "$comment": "Row of the kit_checkpoint_changes table in 🐘️postgres/🗄️.sql.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "ordinal",
+        "change_kind",
+        "author",
+        "changed_at",
+        "forward_json",
+        "inverse_json"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "ordinal": {
+          "type": "integer"
+        },
+        "change_kind": {
+          "type": "string"
+        },
+        "author": {
+          "type": "string"
+        },
+        "changed_at": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Timestamp"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "forward_json": {
+          "$ref": "#/$defs/JsonDocument"
+        },
+        "inverse_json": {
+          "$ref": "#/$defs/JsonDocument"
+        }
+      }
+    },
+    "KitAlternativesRow": {
+      "$comment": "Row of the kit_alternatives table in 🐘️postgres/🗄️.sql.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "kit_id",
+        "name",
+        "root_checkpoint_id",
+        "created_at"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "kit_id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "root_checkpoint_id": {
+          "type": "string"
+        },
+        "created_at": {
+          "$ref": "#/$defs/Timestamp"
+        }
+      }
+    },
+    "KitAlternativeCheckpointsRow": {
+      "$comment": "Row of the kit_alternative_checkpoints table in 🐘️postgres/🗄️.sql.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "alternative_id",
+        "ordinal"
+      ],
+      "properties": {
+        "alternative_id": {
+          "type": "string"
+        },
+        "ordinal": {
+          "type": "integer"
+        }
+      }
+    },
+    "KitSessionsRow": {
+      "$comment": "Row of the kit_sessions table in 🐘️postgres/🗄️.sql.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "kit_id",
+        "client_id",
+        "person_id",
+        "read_only",
+        "opened_at",
+        "closed_at",
+        "last_seen_at"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "kit_id": {
+          "type": "string"
+        },
+        "client_id": {
+          "type": "string"
+        },
+        "person_id": {
+          "type": "string"
+        },
+        "read_only": {
+          "type": "boolean"
+        },
+        "opened_at": {
+          "$ref": "#/$defs/Timestamp"
+        },
+        "closed_at": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Timestamp"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "last_seen_at": {
+          "$ref": "#/$defs/Timestamp"
+        }
+      }
+    },
+    "KitDraftsRow": {
+      "$comment": "Row of the kit_drafts table in 🐘️postgres/🗄️.sql.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "session_id",
+        "base_checkpoint_id",
+        "target_alternative_id",
+        "before_snapshot_id",
+        "before_snapshot_json",
+        "created_at",
+        "closed_at"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "session_id": {
+          "type": "string"
+        },
+        "base_checkpoint_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "target_alternative_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "before_snapshot_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "before_snapshot_json": {
+          "$ref": "#/$defs/JsonDocument"
+        },
+        "created_at": {
+          "$ref": "#/$defs/Timestamp"
+        },
+        "closed_at": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Timestamp"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "KitTransactionsRow": {
+      "$comment": "Row of the kit_transactions table in 🐘️postgres/🗄️.sql.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "draft_id",
+        "state",
+        "created_at",
+        "closed_at"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "draft_id": {
+          "type": "string"
+        },
+        "state": {
+          "type": "string",
+          "enum": [
+            "open",
+            "finalized",
+            "aborted"
+          ]
+        },
+        "created_at": {
+          "$ref": "#/$defs/Timestamp"
+        },
+        "closed_at": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Timestamp"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "KitTransactionChangesRow": {
+      "$comment": "Row of the kit_transaction_changes table in 🐘️postgres/🗄️.sql.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "transaction_id",
+        "ordinal",
+        "change_kind",
+        "forward_json",
+        "inverse_json",
+        "created_at"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "transaction_id": {
+          "type": "string"
+        },
+        "ordinal": {
+          "type": "integer"
+        },
+        "change_kind": {
+          "type": "string"
+        },
+        "forward_json": {
+          "$ref": "#/$defs/JsonDocument"
+        },
+        "inverse_json": {
+          "$ref": "#/$defs/JsonDocument"
+        },
+        "created_at": {
+          "$ref": "#/$defs/Timestamp"
+        }
+      }
+    },
+    "KitReleasesRow": {
+      "$comment": "Row of the kit_releases table in 🐘️postgres/🗄️.sql.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "initial_snapshot_id",
+        "materialized_snapshot_id",
+        "change_list_json",
+        "released_at"
+      ],
+      "properties": {
+        "initial_snapshot_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "materialized_snapshot_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "change_list_json": {
+          "$ref": "#/$defs/JsonDocument"
+        },
+        "released_at": {
+          "$ref": "#/$defs/Timestamp"
+        }
+      }
+    },
+    "KitSnapshotPeopleRow": {
+      "$comment": "Row of the kit_snapshot_people table in 🐘️postgres/🗄️.sql.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "snapshot_id",
+        "external_id",
+        "ordinal",
+        "name",
+        "email",
+        "role",
+        "rank_value"
+      ],
+      "properties": {
+        "snapshot_id": {
+          "type": "string"
+        },
+        "external_id": {
+          "type": "string"
+        },
+        "ordinal": {
+          "type": "integer"
+        },
+        "name": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string"
+        },
+        "role": {
+          "type": "string"
+        },
+        "rank_value": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        }
+      }
+    },
+    "KitSnapshotConceptsRow": {
+      "$comment": "Row of the kit_snapshot_concepts table in 🐘️postgres/🗄️.sql.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "snapshot_id",
+        "external_id",
+        "ordinal",
+        "name",
+        "description",
+        "order_value"
+      ],
+      "properties": {
+        "snapshot_id": {
+          "type": "string"
+        },
+        "external_id": {
+          "type": "string"
+        },
+        "ordinal": {
+          "type": "integer"
+        },
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "order_value": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        }
+      }
+    },
+    "KitSnapshotTagsRow": {
+      "$comment": "Row of the kit_snapshot_tags table in 🐘️postgres/🗄️.sql.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "snapshot_id",
+        "external_id",
+        "ordinal",
+        "name",
+        "order_value"
+      ],
+      "properties": {
+        "snapshot_id": {
+          "type": "string"
+        },
+        "external_id": {
+          "type": "string"
+        },
+        "ordinal": {
+          "type": "integer"
+        },
+        "name": {
+          "type": "string"
+        },
+        "order_value": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        }
+      }
+    },
+    "KitSnapshotFamiliesRow": {
+      "$comment": "Row of the kit_snapshot_families table in 🐘️postgres/🗄️.sql.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "snapshot_id",
+        "external_id",
+        "ordinal",
+        "name"
+      ],
+      "properties": {
+        "snapshot_id": {
+          "type": "string"
+        },
+        "external_id": {
+          "type": "string"
+        },
+        "ordinal": {
+          "type": "integer"
+        },
+        "name": {
+          "type": "string"
+        }
+      }
+    },
+    "KitSnapshotTypologiesRow": {
+      "$comment": "Row of the kit_snapshot_typologies table in 🐘️postgres/🗄️.sql.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "snapshot_id",
+        "external_id",
+        "ordinal",
+        "name",
+        "description",
+        "icon",
+        "folder_external_id"
+      ],
+      "properties": {
+        "snapshot_id": {
+          "type": "string"
+        },
+        "external_id": {
+          "type": "string"
+        },
+        "ordinal": {
+          "type": "integer"
+        },
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "icon": {
+          "type": "string"
+        },
+        "folder_external_id": {
+          "type": "string"
+        }
+      }
+    },
+    "KitSnapshotFamilyEndpointsRow": {
+      "$comment": "Row of the kit_snapshot_family_endpoints table in 🐘️postgres/🗄️.sql.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "snapshot_id",
+        "family_external_id",
+        "external_id",
+        "ordinal",
+        "name"
+      ],
+      "properties": {
+        "snapshot_id": {
+          "type": "string"
+        },
+        "family_external_id": {
+          "type": "string"
+        },
+        "external_id": {
+          "type": "string"
+        },
+        "ordinal": {
+          "type": "integer"
+        },
+        "name": {
+          "type": "string"
+        }
+      }
+    },
+    "KitSnapshotFamilyEndpointCompatibilityRow": {
+      "$comment": "Row of the kit_snapshot_family_endpoint_compatibility table in 🐘️postgres/🗄️.sql.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "snapshot_id",
+        "family_endpoint_external_id",
+        "compatible_endpoint_external_id",
+        "ordinal"
+      ],
+      "properties": {
+        "snapshot_id": {
+          "type": "string"
+        },
+        "family_endpoint_external_id": {
+          "type": "string"
+        },
+        "compatible_endpoint_external_id": {
+          "type": "string"
+        },
+        "ordinal": {
+          "type": "integer"
+        }
+      }
+    },
+    "KitSnapshotQualitiesRow": {
+      "$comment": "Row of the kit_snapshot_qualities table in 🐘️postgres/🗄️.sql.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "snapshot_id",
+        "owner_kind",
+        "owner_external_id",
+        "external_id",
+        "ordinal",
+        "key_name",
+        "value_text",
+        "unit_name",
+        "definition_uri",
+        "description"
+      ],
+      "properties": {
+        "snapshot_id": {
+          "type": "string"
+        },
+        "owner_kind": {
+          "type": "string",
+          "enum": [
+            "kit",
+            "kind",
+            "kind-endpoint",
+            "kind-connector",
+            "kind-representation",
+            "layout"
+          ]
+        },
+        "owner_external_id": {
+          "type": "string"
+        },
+        "external_id": {
+          "type": "string"
+        },
+        "ordinal": {
+          "type": "integer"
+        },
+        "key_name": {
+          "type": "string"
+        },
+        "value_text": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "unit_name": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "definition_uri": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "description": {
+          "type": "string"
+        }
+      }
+    },
+    "KitSnapshotQualityBenchmarksRow": {
+      "$comment": "Row of the kit_snapshot_quality_benchmarks table in 🐘️postgres/🗄️.sql.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "snapshot_id",
+        "quality_external_id",
+        "ordinal",
+        "external_id",
+        "name",
+        "min_value",
+        "max_value",
+        "min_excluded",
+        "max_excluded"
+      ],
+      "properties": {
+        "snapshot_id": {
+          "type": "string"
+        },
+        "quality_external_id": {
+          "type": "string"
+        },
+        "ordinal": {
+          "type": "integer"
+        },
+        "external_id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "min_value": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "max_value": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "min_excluded": {
+          "type": "boolean"
+        },
+        "max_excluded": {
+          "type": "boolean"
+        }
+      }
+    },
+    "KitSnapshotFilesRow": {
+      "$comment": "Row of the kit_snapshot_files table in 🐘️postgres/🗄️.sql.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "snapshot_id",
+        "external_id",
+        "ordinal",
+        "parent_folder_external_id",
+        "url",
+        "mime_kind",
+        "size_value",
+        "hash_value",
+        "description",
+        "created_value",
+        "updated_value"
+      ],
+      "properties": {
+        "snapshot_id": {
+          "type": "string"
+        },
+        "external_id": {
+          "type": "string"
+        },
+        "ordinal": {
+          "type": "integer"
+        },
+        "parent_folder_external_id": {
+          "type": "string"
+        },
+        "url": {
+          "type": "string"
+        },
+        "mime_kind": {
+          "type": "string"
+        },
+        "size_value": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "hash_value": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "created_value": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Timestamp"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "updated_value": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Timestamp"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "KitSnapshotFoldersRow": {
+      "$comment": "Row of the kit_snapshot_folders table in 🐘️postgres/🗄️.sql.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "snapshot_id",
+        "external_id",
+        "ordinal",
+        "path",
+        "description"
+      ],
+      "properties": {
+        "snapshot_id": {
+          "type": "string"
+        },
+        "external_id": {
+          "type": "string"
+        },
+        "ordinal": {
+          "type": "integer"
+        },
+        "path": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        }
+      }
+    },
+    "KitSnapshotKindEntitiesRow": {
+      "$comment": "Row of the kit_snapshot_kind_entities table in 🐘️postgres/🗄️.sql.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "snapshot_id",
+        "typology_external_id",
+        "external_id",
+        "ordinal",
+        "folder_external_id",
+        "location_external_id",
+        "name",
+        "description",
+        "icon",
+        "image",
+        "variant",
+        "stock_value",
+        "is_abstract",
+        "is_virtual",
+        "unit_name",
+        "created_value",
+        "updated_value"
+      ],
+      "properties": {
+        "snapshot_id": {
+          "type": "string"
+        },
+        "typology_external_id": {
+          "type": "string"
+        },
+        "external_id": {
+          "type": "string"
+        },
+        "ordinal": {
+          "type": "integer"
+        },
+        "folder_external_id": {
+          "type": "string"
+        },
+        "location_external_id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "icon": {
+          "type": "string"
+        },
+        "image": {
+          "type": "string"
+        },
+        "variant": {
+          "type": "string"
+        },
+        "stock_value": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "is_abstract": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "is_virtual": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "unit_name": {
+          "type": "string"
+        },
+        "created_value": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Timestamp"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "updated_value": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Timestamp"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "KitSnapshotKindFamilyRefsRow": {
+      "$comment": "Row of the kit_snapshot_kind_family_refs table in 🐘️postgres/🗄️.sql.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "snapshot_id",
+        "kind_external_id",
+        "family_external_id",
+        "ordinal"
+      ],
+      "properties": {
+        "snapshot_id": {
+          "type": "string"
+        },
+        "kind_external_id": {
+          "type": "string"
+        },
+        "family_external_id": {
+          "type": "string"
+        },
+        "ordinal": {
+          "type": "integer"
+        }
+      }
+    },
+    "KitSnapshotKindAuthorRefsRow": {
+      "$comment": "Row of the kit_snapshot_kind_author_refs table in 🐘️postgres/🗄️.sql.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "snapshot_id",
+        "kind_external_id",
+        "person_external_id",
+        "ordinal"
+      ],
+      "properties": {
+        "snapshot_id": {
+          "type": "string"
+        },
+        "kind_external_id": {
+          "type": "string"
+        },
+        "person_external_id": {
+          "type": "string"
+        },
+        "ordinal": {
+          "type": "integer"
+        }
+      }
+    },
+    "KitSnapshotKindConceptRefsRow": {
+      "$comment": "Row of the kit_snapshot_kind_concept_refs table in 🐘️postgres/🗄️.sql.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "snapshot_id",
+        "kind_external_id",
+        "concept_external_id",
+        "ordinal"
+      ],
+      "properties": {
+        "snapshot_id": {
+          "type": "string"
+        },
+        "kind_external_id": {
+          "type": "string"
+        },
+        "concept_external_id": {
+          "type": "string"
+        },
+        "ordinal": {
+          "type": "integer"
+        }
+      }
+    },
+    "KitSnapshotKindTagRefsRow": {
+      "$comment": "Row of the kit_snapshot_kind_tag_refs table in 🐘️postgres/🗄️.sql.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "snapshot_id",
+        "kind_external_id",
+        "tag_external_id",
+        "ordinal"
+      ],
+      "properties": {
+        "snapshot_id": {
+          "type": "string"
+        },
+        "kind_external_id": {
+          "type": "string"
+        },
+        "tag_external_id": {
+          "type": "string"
+        },
+        "ordinal": {
+          "type": "integer"
+        }
+      }
+    },
+    "KitSnapshotKindEndpointsRow": {
+      "$comment": "Row of the kit_snapshot_kind_endpoints table in 🐘️postgres/🗄️.sql.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "snapshot_id",
+        "kind_external_id",
+        "external_id",
+        "ordinal",
+        "family_name",
+        "mandatory",
+        "t_value",
+        "description",
+        "point_json",
+        "direction_json"
+      ],
+      "properties": {
+        "snapshot_id": {
+          "type": "string"
+        },
+        "kind_external_id": {
+          "type": "string"
+        },
+        "external_id": {
+          "type": "string"
+        },
+        "ordinal": {
+          "type": "integer"
+        },
+        "family_name": {
+          "type": "string"
+        },
+        "mandatory": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "t_value": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "description": {
+          "type": "string"
+        },
+        "point_json": {
+          "$ref": "#/$defs/JsonDocument"
+        },
+        "direction_json": {
+          "$ref": "#/$defs/JsonDocument"
+        }
+      }
+    },
+    "KitSnapshotKindEndpointCompatibilityRow": {
+      "$comment": "Row of the kit_snapshot_kind_endpoint_compatibility table in 🐘️postgres/🗄️.sql.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "snapshot_id",
+        "endpoint_external_id",
+        "compatible_family_name",
+        "ordinal"
+      ],
+      "properties": {
+        "snapshot_id": {
+          "type": "string"
+        },
+        "endpoint_external_id": {
+          "type": "string"
+        },
+        "compatible_family_name": {
+          "type": "string"
+        },
+        "ordinal": {
+          "type": "integer"
+        }
+      }
+    },
+    "KitSnapshotKindConnectorsRow": {
+      "$comment": "Row of the kit_snapshot_kind_connectors table in 🐘️postgres/🗄️.sql.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "snapshot_id",
+        "kind_external_id",
+        "external_id",
+        "ordinal",
+        "endpoint_external_id",
+        "code",
+        "description"
+      ],
+      "properties": {
+        "snapshot_id": {
+          "type": "string"
+        },
+        "kind_external_id": {
+          "type": "string"
+        },
+        "external_id": {
+          "type": "string"
+        },
+        "ordinal": {
+          "type": "integer"
+        },
+        "endpoint_external_id": {
+          "type": "string"
+        },
+        "code": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        }
+      }
+    },
+    "KitSnapshotKindRepresentationsRow": {
+      "$comment": "Row of the kit_snapshot_kind_representations table in 🐘️postgres/🗄️.sql.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "snapshot_id",
+        "kind_external_id",
+        "external_id",
+        "ordinal",
+        "file_external_id",
+        "url",
+        "description",
+        "payload_json"
+      ],
+      "properties": {
+        "snapshot_id": {
+          "type": "string"
+        },
+        "kind_external_id": {
+          "type": "string"
+        },
+        "external_id": {
+          "type": "string"
+        },
+        "ordinal": {
+          "type": "integer"
+        },
+        "file_external_id": {
+          "type": "string"
+        },
+        "url": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "payload_json": {
+          "$ref": "#/$defs/JsonDocument"
+        }
+      }
+    },
+    "KitSnapshotLayoutsRow": {
+      "$comment": "Row of the kit_snapshot_layouts table in 🐘️postgres/🗄️.sql.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "snapshot_id",
+        "typology_external_id",
+        "external_id",
+        "ordinal",
+        "folder_external_id",
+        "active_stratum_external_id",
+        "location_external_id",
+        "name",
+        "description",
+        "icon",
+        "image",
+        "unit_name",
+        "is_abstract",
+        "can_scale",
+        "can_mirror",
+        "created_value",
+        "updated_value"
+      ],
+      "properties": {
+        "snapshot_id": {
+          "type": "string"
+        },
+        "typology_external_id": {
+          "type": "string"
+        },
+        "external_id": {
+          "type": "string"
+        },
+        "ordinal": {
+          "type": "integer"
+        },
+        "folder_external_id": {
+          "type": "string"
+        },
+        "active_stratum_external_id": {
+          "type": "string"
+        },
+        "location_external_id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "icon": {
+          "type": "string"
+        },
+        "image": {
+          "type": "string"
+        },
+        "unit_name": {
+          "type": "string"
+        },
+        "is_abstract": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "can_scale": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "can_mirror": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "created_value": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Timestamp"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "updated_value": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Timestamp"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "KitSnapshotLayoutFamilyRefsRow": {
+      "$comment": "Row of the kit_snapshot_layout_family_refs table in 🐘️postgres/🗄️.sql.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "snapshot_id",
+        "layout_external_id",
+        "family_external_id",
+        "ordinal"
+      ],
+      "properties": {
+        "snapshot_id": {
+          "type": "string"
+        },
+        "layout_external_id": {
+          "type": "string"
+        },
+        "family_external_id": {
+          "type": "string"
+        },
+        "ordinal": {
+          "type": "integer"
+        }
+      }
+    },
+    "KitSnapshotLayoutAuthorRefsRow": {
+      "$comment": "Row of the kit_snapshot_layout_author_refs table in 🐘️postgres/🗄️.sql.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "snapshot_id",
+        "layout_external_id",
+        "person_external_id",
+        "ordinal"
+      ],
+      "properties": {
+        "snapshot_id": {
+          "type": "string"
+        },
+        "layout_external_id": {
+          "type": "string"
+        },
+        "person_external_id": {
+          "type": "string"
+        },
+        "ordinal": {
+          "type": "integer"
+        }
+      }
+    },
+    "KitSnapshotLayoutConceptRefsRow": {
+      "$comment": "Row of the kit_snapshot_layout_concept_refs table in 🐘️postgres/🗄️.sql.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "snapshot_id",
+        "layout_external_id",
+        "concept_external_id",
+        "ordinal"
+      ],
+      "properties": {
+        "snapshot_id": {
+          "type": "string"
+        },
+        "layout_external_id": {
+          "type": "string"
+        },
+        "concept_external_id": {
+          "type": "string"
+        },
+        "ordinal": {
+          "type": "integer"
+        }
+      }
+    },
+    "KitSnapshotLayoutTagRefsRow": {
+      "$comment": "Row of the kit_snapshot_layout_tag_refs table in 🐘️postgres/🗄️.sql.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "snapshot_id",
+        "layout_external_id",
+        "tag_external_id",
+        "ordinal"
+      ],
+      "properties": {
+        "snapshot_id": {
+          "type": "string"
+        },
+        "layout_external_id": {
+          "type": "string"
+        },
+        "tag_external_id": {
+          "type": "string"
+        },
+        "ordinal": {
+          "type": "integer"
+        }
+      }
+    },
+    "KitSnapshotLayoutPiecesRow": {
+      "$comment": "Row of the kit_snapshot_layout_pieces table in 🐘️postgres/🗄️.sql.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "snapshot_id",
+        "layout_external_id",
+        "external_id",
+        "ordinal",
+        "kind_external_id",
+        "child_layout_external_id",
+        "name",
+        "description",
+        "plane_json",
+        "center_json",
+        "scale_json",
+        "mirror_plane_json",
+        "color",
+        "hidden",
+        "locked",
+        "payload_json"
+      ],
+      "properties": {
+        "snapshot_id": {
+          "type": "string"
+        },
+        "layout_external_id": {
+          "type": "string"
+        },
+        "external_id": {
+          "type": "string"
+        },
+        "ordinal": {
+          "type": "integer"
+        },
+        "kind_external_id": {
+          "type": "string"
+        },
+        "child_layout_external_id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "plane_json": {
+          "$ref": "#/$defs/JsonDocument"
+        },
+        "center_json": {
+          "$ref": "#/$defs/JsonDocument"
+        },
+        "scale_json": {
+          "$ref": "#/$defs/JsonDocument"
+        },
+        "mirror_plane_json": {
+          "$ref": "#/$defs/JsonDocument"
+        },
+        "color": {
+          "type": "string"
+        },
+        "hidden": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "locked": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "payload_json": {
+          "$ref": "#/$defs/JsonDocument"
+        }
+      }
+    },
+    "KitSnapshotLayoutConnectionsRow": {
+      "$comment": "Row of the kit_snapshot_layout_connections table in 🐘️postgres/🗄️.sql.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "snapshot_id",
+        "layout_external_id",
+        "external_id",
+        "ordinal",
+        "connected_side_json",
+        "connecting_side_json",
+        "gap_value",
+        "shift_value",
+        "rise_value",
+        "rotation_value",
+        "turn_value",
+        "tilt_value",
+        "x_value",
+        "y_value",
+        "description"
+      ],
+      "properties": {
+        "snapshot_id": {
+          "type": "string"
+        },
+        "layout_external_id": {
+          "type": "string"
+        },
+        "external_id": {
+          "type": "string"
+        },
+        "ordinal": {
+          "type": "integer"
+        },
+        "connected_side_json": {
+          "$ref": "#/$defs/JsonDocument"
+        },
+        "connecting_side_json": {
+          "$ref": "#/$defs/JsonDocument"
+        },
+        "gap_value": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "shift_value": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "rise_value": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "rotation_value": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "turn_value": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "tilt_value": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "x_value": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "y_value": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "description": {
+          "type": "string"
+        }
+      }
+    },
+    "KitSnapshotLayoutStrataRow": {
+      "$comment": "Row of the kit_snapshot_layout_strata table in 🐘️postgres/🗄️.sql.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "snapshot_id",
+        "layout_external_id",
+        "external_id",
+        "ordinal",
+        "name",
+        "description",
+        "color",
+        "order_value",
+        "visible",
+        "locked"
+      ],
+      "properties": {
+        "snapshot_id": {
+          "type": "string"
+        },
+        "layout_external_id": {
+          "type": "string"
+        },
+        "external_id": {
+          "type": "string"
+        },
+        "ordinal": {
+          "type": "integer"
+        },
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "color": {
+          "type": "string"
+        },
+        "order_value": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "visible": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "locked": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        }
+      }
+    },
+    "KitSnapshotLayoutGroupsRow": {
+      "$comment": "Row of the kit_snapshot_layout_groups table in 🐘️postgres/🗄️.sql.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "snapshot_id",
+        "layout_external_id",
+        "external_id",
+        "ordinal",
+        "name",
+        "description",
+        "color",
+        "icon"
+      ],
+      "properties": {
+        "snapshot_id": {
+          "type": "string"
+        },
+        "layout_external_id": {
+          "type": "string"
+        },
+        "external_id": {
+          "type": "string"
+        },
+        "ordinal": {
+          "type": "integer"
+        },
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "color": {
+          "type": "string"
+        },
+        "icon": {
+          "type": "string"
+        }
+      }
+    },
+    "KitSnapshotLayoutGroupPieceRefsRow": {
+      "$comment": "Row of the kit_snapshot_layout_group_piece_refs table in 🐘️postgres/🗄️.sql.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "snapshot_id",
+        "group_external_id",
+        "piece_external_id",
+        "ordinal"
+      ],
+      "properties": {
+        "snapshot_id": {
+          "type": "string"
+        },
+        "group_external_id": {
+          "type": "string"
+        },
+        "piece_external_id": {
+          "type": "string"
+        },
+        "ordinal": {
+          "type": "integer"
+        }
+      }
+    },
+    "KitSnapshotPropertiesRow": {
+      "$comment": "Row of the kit_snapshot_properties table in 🐘️postgres/🗄️.sql.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "snapshot_id",
+        "owner_kind",
+        "owner_external_id",
+        "external_id",
+        "ordinal",
+        "quality_external_id",
+        "key_name",
+        "value_text",
+        "unit_name"
+      ],
+      "properties": {
+        "snapshot_id": {
+          "type": "string"
+        },
+        "owner_kind": {
+          "type": "string",
+          "enum": [
+            "kit",
+            "kind",
+            "layout",
+            "piece"
+          ]
+        },
+        "owner_external_id": {
+          "type": "string"
+        },
+        "external_id": {
+          "type": "string"
+        },
+        "ordinal": {
+          "type": "integer"
+        },
+        "quality_external_id": {
+          "type": "string"
+        },
+        "key_name": {
+          "type": "string"
+        },
+        "value_text": {
+          "type": "string"
+        },
+        "unit_name": {
+          "type": "string"
+        }
+      }
+    },
+    "KitSnapshotAttributesRow": {
+      "$comment": "Row of the kit_snapshot_attributes table in 🐘️postgres/🗄️.sql.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "snapshot_id",
+        "owner_kind",
+        "owner_external_id",
+        "external_id",
+        "ordinal",
+        "key_name",
+        "value_text",
+        "definition_text"
+      ],
+      "properties": {
+        "snapshot_id": {
+          "type": "string"
+        },
+        "owner_kind": {
+          "type": "string",
+          "enum": [
+            "kit",
+            "kind",
+            "layout",
+            "piece",
+            "connection",
+            "kind-endpoint",
+            "kind-connector",
+            "kind-representation"
+          ]
+        },
+        "owner_external_id": {
+          "type": "string"
+        },
+        "external_id": {
+          "type": "string"
+        },
+        "ordinal": {
+          "type": "integer"
+        },
+        "key_name": {
+          "type": "string"
+        },
+        "value_text": {
+          "type": "string"
+        },
+        "definition_text": {
+          "type": "string"
+        }
+      }
+    },
+    "KitSnapshotMetricsRow": {
+      "$comment": "Row of the kit_snapshot_metrics table in 🐘️postgres/🗄️.sql.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "snapshot_id",
+        "layout_external_id",
+        "external_id",
+        "ordinal",
+        "key_name",
+        "value_text",
+        "unit_name",
+        "definition_text",
+        "description"
+      ],
+      "properties": {
+        "snapshot_id": {
+          "type": "string"
+        },
+        "layout_external_id": {
+          "type": "string"
+        },
+        "external_id": {
+          "type": "string"
+        },
+        "ordinal": {
+          "type": "integer"
+        },
+        "key_name": {
+          "type": "string"
+        },
+        "value_text": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "unit_name": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "definition_text": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "description": {
+          "type": "string"
+        }
+      }
+    },
+    "TicketsRow": {
+      "$comment": "Row of the tickets table in 🐘️postgres/🗄️.sql.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "status",
+        "title",
+        "prompt",
+        "summary",
+        "llm",
+        "client",
+        "author",
+        "github_issue",
+        "goal",
+        "parent",
+        "created_at",
+        "closed_at"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "open",
+            "closed"
+          ]
+        },
+        "title": {
+          "type": "string"
+        },
+        "prompt": {
+          "type": "string"
+        },
+        "summary": {
+          "type": "string"
+        },
+        "llm": {
+          "type": "string"
+        },
+        "client": {
+          "type": "string"
+        },
+        "author": {
+          "type": "string"
+        },
+        "github_issue": {
+          "type": "string"
+        },
+        "goal": {
+          "type": "string"
+        },
+        "parent": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "created_at": {
+          "$ref": "#/$defs/Timestamp"
+        },
+        "closed_at": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Timestamp"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "TicketFilesRow": {
+      "$comment": "Row of the ticket_files table in 🐘️postgres/🗄️.sql.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "ticket_id",
+        "file_path"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "ticket_id": {
+          "type": "string"
+        },
+        "file_path": {
+          "type": "string"
+        }
+      }
+    },
+    "ScopesRow": {
+      "$comment": "Row of the scopes table in 🐘️postgres/🗄️.sql.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "kind",
+        "file_path",
+        "section_path",
+        "definition_name",
+        "start_line",
+        "end_line",
+        "updated_at"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "file",
+            "section",
+            "definition"
+          ]
+        },
+        "file_path": {
+          "type": "string"
+        },
+        "section_path": {
+          "type": "string"
+        },
+        "definition_name": {
+          "type": "string"
+        },
+        "start_line": {
+          "type": "integer"
+        },
+        "end_line": {
+          "type": "integer"
+        },
+        "updated_at": {
+          "$ref": "#/$defs/Timestamp"
+        }
+      }
+    },
+    "TicketClaimsRow": {
+      "$comment": "Row of the ticket_claims table in 🐘️postgres/🗄️.sql.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ticket_id",
+        "scope_id",
+        "claim_kind",
+        "first_seen_at",
+        "last_seen_at"
+      ],
+      "properties": {
+        "ticket_id": {
+          "type": "string"
+        },
+        "scope_id": {
+          "type": "string"
+        },
+        "claim_kind": {
+          "type": "string"
+        },
+        "first_seen_at": {
+          "$ref": "#/$defs/Timestamp"
+        },
+        "last_seen_at": {
+          "$ref": "#/$defs/Timestamp"
+        }
+      }
+    },
+    "WarningsRow": {
+      "$comment": "Row of the warnings table in 🐘️postgres/🗄️.sql.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "kind",
+        "severity",
+        "message",
+        "ticket_id",
+        "scope_id",
+        "created_at",
+        "acknowledged_at",
+        "ack_by"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "severity": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        },
+        "ticket_id": {
+          "type": "string"
+        },
+        "scope_id": {
+          "type": "string"
+        },
+        "created_at": {
+          "$ref": "#/$defs/Timestamp"
+        },
+        "acknowledged_at": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Timestamp"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "ack_by": {
+          "type": "string"
+        }
+      }
+    },
+    "BreachesRow": {
+      "$comment": "Row of the breaches table in 🐘️postgres/🗄️.sql.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "kind",
+        "priority",
+        "scope_id",
+        "file_path",
+        "line",
+        "col",
+        "summary",
+        "excerpt",
+        "autofixable",
+        "detected_at",
+        "ticket_id",
+        "resolved_at"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "priority": {
+          "type": "string"
+        },
+        "scope_id": {
+          "type": "string"
+        },
+        "file_path": {
+          "type": "string"
+        },
+        "line": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "col": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "summary": {
+          "type": "string"
+        },
+        "excerpt": {
+          "type": "string"
+        },
+        "autofixable": {
+          "type": "boolean"
+        },
+        "detected_at": {
+          "$ref": "#/$defs/Timestamp"
+        },
+        "ticket_id": {
+          "type": "string"
+        },
+        "resolved_at": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Timestamp"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "EventsRow": {
+      "$comment": "Row of the events table in 🐘️postgres/🗄️.sql.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "kind",
+        "source",
+        "payload_json",
+        "created_at"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "source": {
+          "type": "string"
+        },
+        "payload_json": {
+          "$ref": "#/$defs/JsonDocument"
+        },
+        "created_at": {
+          "$ref": "#/$defs/Timestamp"
+        }
+      }
+    },
+    "ContributorWorkRow": {
+      "$comment": "Row of the contributor_work table in 🐘️postgres/🗄️.sql.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "github",
+        "kind",
+        "item_id"
+      ],
+      "properties": {
+        "github": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "item_id": {
+          "type": "string"
+        }
+      }
+    },
+    "GoalsRow": {
+      "$comment": "Row of the goals table in 🐘️postgres/🗄️.sql.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "title",
+        "description",
+        "status",
+        "parent",
+        "due_date",
+        "created_at",
+        "closed_at"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "open",
+            "closed"
+          ]
+        },
+        "parent": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "due_date": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Date"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "created_at": {
+          "$ref": "#/$defs/Timestamp"
+        },
+        "closed_at": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Timestamp"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "ArtifactsRow": {
+      "$comment": "Row of the artifacts table in 🐘️postgres/🗄️.sql.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "ticket_id",
+        "file_name",
+        "file_size",
+        "mime_kind",
+        "blob_path",
+        "uploaded_at"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "ticket_id": {
+          "type": "string"
+        },
+        "file_name": {
+          "type": "string"
+        },
+        "file_size": {
+          "type": "integer"
+        },
+        "mime_kind": {
+          "type": "string"
+        },
+        "blob_path": {
+          "type": "string"
+        },
+        "uploaded_at": {
+          "$ref": "#/$defs/Timestamp"
+        }
+      }
+    },
+    "DiscordChannelsRow": {
+      "$comment": "Row of the discord_channels table in 🐘️postgres/🗄️.sql.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "event_kind",
+        "channel_id",
+        "webhook_url",
+        "created_at"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "event_kind": {
+          "type": "string"
+        },
+        "channel_id": {
+          "type": "string"
+        },
+        "webhook_url": {
+          "type": "string"
+        },
+        "created_at": {
+          "$ref": "#/$defs/Timestamp"
+        }
+      }
+    },
+    "DiscordDeliveriesRow": {
+      "$comment": "Row of the discord_deliveries table in 🐘️postgres/🗄️.sql.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "event_id",
+        "channel_id",
+        "status",
+        "attempts",
+        "last_error",
+        "created_at",
+        "sent_at"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "event_id": {
+          "type": "string"
+        },
+        "channel_id": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "pending",
+            "sent",
+            "failed",
+            "dead"
+          ]
+        },
+        "attempts": {
+          "type": "integer"
+        },
+        "last_error": {
+          "type": "string"
+        },
+        "created_at": {
+          "$ref": "#/$defs/Timestamp"
+        },
+        "sent_at": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Timestamp"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "MigrationRunsRow": {
+      "$comment": "Row of the migration_runs table in 🐘️postgres/🗄️.sql.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "source",
+        "status",
+        "rows_ok",
+        "rows_fail",
+        "started_at",
+        "ended_at"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "source": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "running",
+            "completed",
+            "failed"
+          ]
+        },
+        "rows_ok": {
+          "type": "integer"
+        },
+        "rows_fail": {
+          "type": "integer"
+        },
+        "started_at": {
+          "$ref": "#/$defs/Timestamp"
+        },
+        "ended_at": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Timestamp"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "MigrationFailuresRow": {
+      "$comment": "Row of the migration_failures table in 🐘️postgres/🗄️.sql.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "run_id",
+        "source_path",
+        "reason",
+        "raw_data",
+        "created_at"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "run_id": {
+          "type": "string"
+        },
+        "source_path": {
+          "type": "string"
+        },
+        "reason": {
+          "type": "string"
+        },
+        "raw_data": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/JsonDocument"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "created_at": {
+          "$ref": "#/$defs/Timestamp"
+        }
+      }
+    }
+  }
+}

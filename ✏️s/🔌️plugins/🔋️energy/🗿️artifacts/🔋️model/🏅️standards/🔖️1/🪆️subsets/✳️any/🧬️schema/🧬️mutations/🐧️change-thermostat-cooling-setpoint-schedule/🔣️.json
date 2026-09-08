@@ -5,7 +5,7 @@
   "displayName": "Change Thermostat Cooling Setpoint Schedule",
   "emoji": "🐧️",
   "aggregateVariant": "ChangeThermostatCoolingSetpointSchedule",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-thermostat-cooling-setpoint-schedule",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

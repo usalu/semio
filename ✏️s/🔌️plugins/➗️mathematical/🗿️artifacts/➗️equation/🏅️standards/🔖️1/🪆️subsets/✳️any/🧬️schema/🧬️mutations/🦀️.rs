@@ -429,8 +429,8 @@ pub fn equation_mutation_report_json(base_json: &str, mutation_json: &str, after
     // scope) — its two call sites here go through the PRE-EXISTING `protocol::to_dsl_value` serde
     // bridge (framework-internal, exempt) and land in `pack::json::Value` via `pack::json::from_dsl_value`,
     // same as every other field below.
-    let messages_json = protocol::to_dsl_value(forward.messages()).map(|value| pack::json::from_dsl_value(&value)).map_err(|error| error.to_string())?;
-    let inverse_messages_json = protocol::to_dsl_value(&inverse_messages).map(|value| pack::json::from_dsl_value(&value)).map_err(|error| error.to_string())?;
+    let messages_json = protocol::to_dsl_value(forward.messages()).map(|value| pack::json::from_dsl_value(&value)).map_err(|error| error)?;
+    let inverse_messages_json = protocol::to_dsl_value(&inverse_messages).map(|value| pack::json::from_dsl_value(&value)).map_err(|error| error)?;
     let report = pack::json::object([
         ("base".to_string(), pack::json::from_dsl_value(&base.to_value())),
         ("expectedSnapshot".to_string(), pack::json::from_dsl_value(&expected.to_value())),

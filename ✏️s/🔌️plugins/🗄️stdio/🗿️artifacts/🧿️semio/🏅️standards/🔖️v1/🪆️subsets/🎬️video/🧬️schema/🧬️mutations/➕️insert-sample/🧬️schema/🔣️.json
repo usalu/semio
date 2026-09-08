@@ -1,0 +1,55 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/video/mutation/insert-sample.json",
+  "title": "InsertSample",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "streamIndex",
+    "index",
+    "sample"
+  ],
+  "properties": {
+    "streamIndex": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "index": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "sample": {
+      "$ref": "#/$defs/SemioVideoSample"
+    },
+    "mutation": {
+      "const": "insertSample",
+      "description": "Aggregate discriminator spliced in by SemioVideoMutation; absent when the payload stands alone."
+    }
+  },
+  "$defs": {
+    "SemioVideoSample": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "pts"
+      ],
+      "properties": {
+        "pts": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "key": {
+          "type": "boolean"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,237 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/hub/artifact-authority/creation/schema.json",
+  "$ref": "#/$defs/ArtifactCreationTransitionV1",
+  "$defs": {
+    "safeInteger": {"type": "integer", "minimum": 0, "maximum": 9007199254740991},
+    "identity": {"type": "string", "minLength": 1, "maxLength": 64},
+    "openTransitions": {
+      "anyOf": [
+        {"required": ["state", "fact"], "properties": {"state": {"const": "absent"}, "fact": {"const": "accepted"}}, "type": "object"},
+        {"required": ["state", "fact"], "properties": {"state": {"const": "accepted"}, "fact": {"const": "prepared"}}, "type": "object"},
+        {"required": ["state", "fact"], "properties": {"state": {"const": "prepared"}, "fact": {"const": "committed"}}, "type": "object"},
+        {"required": ["state", "fact"], "properties": {"state": {"enum": ["accepted", "prepared"]}, "fact": {"const": "cancelled"}}, "type": "object"},
+        {"required": ["state", "fact"], "properties": {"state": {"enum": ["accepted", "prepared"]}, "fact": {"const": "failed"}}, "type": "object"}
+      ]
+    },
+    "ArtifactCreationPhaseV1": {"enum": ["accepted", "preparing", "ready", "indeterminate", "failed", "cancelled"]},
+    "ArtifactCreationFactKindV1": {"enum": ["accepted", "prepared", "committed", "cancelled", "failed"]},
+    "ArtifactCreationOperationStateV1": {"enum": ["absent", "accepted", "prepared", "committed", "cancelled", "failed"]},
+    "ArtifactCreationTransitionV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["state", "fact", "next"],
+      "properties": {
+        "state": {"$ref": "#/$defs/ArtifactCreationOperationStateV1"},
+        "fact": {"$ref": "#/$defs/ArtifactCreationFactKindV1"},
+        "next": {"oneOf": [{"$ref": "#/$defs/ArtifactCreationFactKindV1"}, {"type": "null"}]}
+      },
+      "oneOf": [
+        {
+          "allOf": [
+            {"$ref": "#/$defs/openTransitions"},
+            {
+              "anyOf": [
+                {"required": ["fact", "next"], "properties": {"fact": {"const": "accepted"}, "next": {"const": "accepted"}}, "type": "object"},
+                {"required": ["fact", "next"], "properties": {"fact": {"const": "prepared"}, "next": {"const": "prepared"}}, "type": "object"},
+                {"required": ["fact", "next"], "properties": {"fact": {"const": "committed"}, "next": {"const": "committed"}}, "type": "object"},
+                {"required": ["fact", "next"], "properties": {"fact": {"const": "cancelled"}, "next": {"const": "cancelled"}}, "type": "object"},
+                {"required": ["fact", "next"], "properties": {"fact": {"const": "failed"}, "next": {"const": "failed"}}, "type": "object"}
+              ]
+            }
+          ]
+        },
+        {"allOf": [{"required": ["next"], "properties": {"next": {"type": "null"}}, "type": "object"}, {"not": {"$ref": "#/$defs/openTransitions"}}]}
+      ]
+    },
+    "ArtifactCreationCancellationDecisionV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["state", "expectedRevision", "observedAtMs", "accepted", "phase"],
+      "properties": {
+        "state": {"enum": ["accepted", "prepared", "committed", "cancelled", "failed"]},
+        "expectedRevision": {"type": "integer", "minimum": 0, "maximum": 3},
+        "observedAtMs": {"$ref": "#/$defs/safeInteger"},
+        "accepted": {"type": "boolean"},
+        "phase": {"oneOf": [{"$ref": "#/$defs/ArtifactCreationPhaseV1"}, {"type": "null"}]}
+      },
+      "allOf": [
+        {
+          "if": {"required": ["accepted"], "properties": {"accepted": {"const": true}}, "type": "object"},
+          "then": {"properties": {"phase": {"$ref": "#/$defs/ArtifactCreationPhaseV1"}}, "type": "object"},
+          "else": {"properties": {"phase": {"type": "null"}}, "type": "object"}
+        }
+      ]
+    },
+    "ArtifactCreationTransactionKindV1": {
+      "enum": [
+        "success",
+        "ack-loss",
+        "ack-receipt-unreadable",
+        "ack-events-unreadable",
+        "cancelled",
+        "fault-descriptor",
+        "fault-index",
+        "fault-index-missing",
+        "fault-index-digest",
+        "fault-checkpoint",
+        "fault-authority",
+        "fault-cas-ledger",
+        "fault-cas-reference",
+        "fault-completion",
+        "revoked-session",
+        "expired-session",
+        "changed-generation",
+        "archived-space",
+        "removed-member",
+        "spectator",
+        "future-clock",
+        "wrong-event-order",
+        "wrong-event-actor",
+        "wrong-event-user",
+        "wrong-event-space",
+        "wrong-index-name",
+        "wrong-checkpoint-id",
+        "wrong-pack-locator",
+        "wrong-spr-locator",
+        "wrong-reservation-generation",
+        "wrong-reservation-epoch",
+        "wrong-reservation-expiry"
+      ]
+    },
+    "ArtifactCreationTransactionOutcomeV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "committed", "publicEvents", "terminal", "delivery"],
+      "properties": {
+        "kind": {"$ref": "#/$defs/ArtifactCreationTransactionKindV1"},
+        "committed": {"type": "boolean"},
+        "publicEvents": {"enum": [0, 3]},
+        "terminal": {"enum": ["preparing", "ready", "cancelled"]},
+        "delivery": {"enum": ["none", "broadcast", "reconnect"]}
+      },
+      "allOf": [
+        {
+          "if": {"required": ["kind"], "properties": {"kind": {"enum": ["success", "ack-loss"]}}, "type": "object"},
+          "then": {
+            "properties": {"committed": {"const": true}, "publicEvents": {"const": 3}, "terminal": {"const": "ready"}, "delivery": {"const": "broadcast"}},
+            "type": "object"
+          }
+        },
+        {
+          "if": {"required": ["kind"], "properties": {"kind": {"enum": ["ack-receipt-unreadable", "ack-events-unreadable"]}}, "type": "object"},
+          "then": {
+            "properties": {"committed": {"const": true}, "publicEvents": {"const": 3}, "terminal": {"const": "ready"}, "delivery": {"const": "reconnect"}},
+            "type": "object"
+          }
+        },
+        {
+          "if": {"required": ["kind"], "properties": {"kind": {"const": "cancelled"}}, "type": "object"},
+          "then": {
+            "properties": {"committed": {"const": false}, "publicEvents": {"const": 0}, "terminal": {"const": "cancelled"}, "delivery": {"const": "none"}},
+            "type": "object"
+          }
+        },
+        {
+          "if": {
+            "required": ["kind"],
+            "properties": {"kind": {"not": {"enum": ["success", "ack-loss", "ack-receipt-unreadable", "ack-events-unreadable", "cancelled"]}}},
+            "type": "object"
+          },
+          "then": {
+            "properties": {"committed": {"const": false}, "publicEvents": {"const": 0}, "terminal": {"const": "preparing"}, "delivery": {"const": "none"}},
+            "type": "object"
+          }
+        }
+      ]
+    },
+    "ArtifactCreationAcceptedRecoveryV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "recoveryCandidates", "terminal", "facts"],
+      "properties": {
+        "kind": {"enum": ["live", "revoked", "expired"]},
+        "recoveryCandidates": {"type": "integer", "minimum": 0, "maximum": 1},
+        "terminal": {"enum": ["accepted", "failed"]},
+        "facts": {"type": "integer", "minimum": 1, "maximum": 3}
+      },
+      "allOf": [
+        {
+          "if": {"required": ["kind"], "properties": {"kind": {"const": "live"}}, "type": "object"},
+          "then": {"properties": {"recoveryCandidates": {"const": 0}, "terminal": {"const": "accepted"}, "facts": {"const": 1}}, "type": "object"}
+        },
+        {
+          "if": {"required": ["kind"], "properties": {"kind": {"const": "revoked"}}, "type": "object"},
+          "then": {"properties": {"recoveryCandidates": {"const": 0}, "terminal": {"const": "failed"}, "facts": {"const": 2}}, "type": "object"}
+        },
+        {
+          "if": {"required": ["kind"], "properties": {"kind": {"const": "expired"}}, "type": "object"},
+          "then": {"properties": {"recoveryCandidates": {"const": 1}, "terminal": {"const": "failed"}, "facts": {"const": 2}}, "type": "object"}
+        }
+      ]
+    },
+    "ArtifactCreationHttpLimitsV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["bodyBytes", "liveOperations", "lifetimeMs"],
+      "properties": {
+        "bodyBytes": {"type": "integer", "minimum": 1, "maximum": 65536},
+        "liveOperations": {"type": "integer", "minimum": 1, "maximum": 64},
+        "lifetimeMs": {"type": "integer", "minimum": 1, "maximum": 30000}
+      }
+    },
+    "ArtifactCreationHttpRouteV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "method", "path", "accepted"],
+      "properties": {
+        "id": {"$ref": "#/$defs/identity"},
+        "method": {"enum": ["GET", "POST"]},
+        "path": {"type": "string", "minLength": 1, "maxLength": 512, "pattern": "^/_semio/hub/"},
+        "accepted": {"type": "boolean"}
+      }
+    },
+    "ArtifactCreationHttpAuthorityV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "authenticated", "sessionCurrent", "member", "role", "backendAvailable", "expected"],
+      "properties": {
+        "id": {"$ref": "#/$defs/identity"},
+        "authenticated": {"type": "boolean"},
+        "sessionCurrent": {"type": "boolean"},
+        "member": {"type": "boolean"},
+        "role": {"enum": ["author", "spectator", "none"]},
+        "backendAvailable": {"type": "boolean"},
+        "expected": {"enum": ["admitted", "unauthorized", "forbidden", "unavailable"]}
+      },
+      "allOf": [
+        {
+          "if": {"required": ["expected"], "properties": {"expected": {"const": "admitted"}}, "type": "object"},
+          "then": {
+            "properties": {
+              "authenticated": {"const": true},
+              "sessionCurrent": {"const": true},
+              "member": {"const": true},
+              "role": {"const": "author"},
+              "backendAvailable": {"const": true}
+            },
+            "type": "object"
+          }
+        }
+      ]
+    },
+    "ArtifactCreationHttpResponseV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["phase", "status"],
+      "properties": {"phase": {"$ref": "#/$defs/ArtifactCreationPhaseV1"}, "status": {"enum": [200, 202]}},
+      "allOf": [
+        {
+          "if": {"required": ["phase"], "properties": {"phase": {"enum": ["accepted", "preparing"]}}, "type": "object"},
+          "then": {"properties": {"status": {"const": 202}}, "type": "object"},
+          "else": {"properties": {"status": {"const": 200}}, "type": "object"}
+        }
+      ]
+    }
+  }
+}

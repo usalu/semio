@@ -1,7 +1,7 @@
 //! 👤️ Authoritative PDF/H mutation for setting the document author conformance axis.
 
 use super::PdfHMutation;
-use crate::artifacts::pdf::standards::v1_7::subsets::base::schema::{diff::PdfDiff, snapshot::PdfSnapshot};
+use crate::standards::v1_7::subsets::base::schema::{diff::PdfDiff, snapshot::PdfSnapshot};
 use protocol::command::DiffAlgebra;
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
 

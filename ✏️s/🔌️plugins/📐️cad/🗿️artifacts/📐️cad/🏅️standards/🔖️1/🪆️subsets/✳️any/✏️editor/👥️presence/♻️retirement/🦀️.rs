@@ -84,6 +84,12 @@ pub struct CadPresenceStoreDisposer {
     active: Option<store::PresenceStoreRetirement<CadPresence>>,
 }
 
+impl Default for CadPresenceStoreDisposer {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl CadPresenceStoreDisposer {
     pub fn new() -> Self {
         Self { terminal: Some(Arc::new(empty_terminal())), active: None }

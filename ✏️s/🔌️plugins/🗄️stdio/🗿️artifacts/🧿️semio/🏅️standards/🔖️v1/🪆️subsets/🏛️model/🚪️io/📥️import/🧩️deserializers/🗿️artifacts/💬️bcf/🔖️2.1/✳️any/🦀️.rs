@@ -34,10 +34,10 @@
 //!
 //! `model.spatial` is always empty from this bridge (BCF has no spatial-structure concept).
 
-use crate::artifacts::bcf::schema::snapshot::{BcfComponents, BcfTopic};
-use crate::artifacts::bcf::BcfSnapshot;
-use crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioTransform;
-use crate::artifacts::semio::standards::v1::subsets::model::schema::snapshot::{ElementClass, GeometryRef, ModelRelation, Property, PropertySet, PsetValue, RelationKind, SemioModelElement, SemioModelSnapshot, STDIO_SEMIOMODEL_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_bcf::schema::snapshot::{BcfComponents, BcfTopic};
+use semio_s_artifact_stdio_bcf::BcfSnapshot;
+use crate::standards::v1::subsets::base::schema::geometry::SemioTransform;
+use crate::standards::v1::subsets::model::schema::snapshot::{ElementClass, GeometryRef, ModelRelation, Property, PropertySet, PsetValue, RelationKind, SemioModelElement, SemioModelSnapshot, STDIO_SEMIOMODEL_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId};
 
 //#region 🔖️Deserializer
@@ -159,12 +159,12 @@ pub fn model_from_bcf(from: &BcfSnapshot) -> SemioModelSnapshot {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::bcf::schema::snapshot::{BcfComment, BcfComponents as BcfComponentsT, BcfViewpoint, BcfVisibility};
+    use semio_s_artifact_stdio_bcf::schema::snapshot::{BcfComment, BcfComponents as BcfComponentsT, BcfViewpoint, BcfVisibility};
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn fixture() -> BcfSnapshot {
         BcfSnapshot {
-            schema: crate::artifacts::bcf::STDIO_BCF_DOCUMENT_SCHEMA.into(),
+            schema: semio_s_artifact_stdio_bcf::STDIO_BCF_DOCUMENT_SCHEMA.into(),
             version: "2.1".into(),
             topics: vec![BcfTopic {
                 guid: "topic-1".into(),

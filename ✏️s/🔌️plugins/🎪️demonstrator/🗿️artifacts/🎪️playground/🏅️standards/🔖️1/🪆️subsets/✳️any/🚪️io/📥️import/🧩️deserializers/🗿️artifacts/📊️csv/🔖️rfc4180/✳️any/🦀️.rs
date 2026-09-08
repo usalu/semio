@@ -1,6 +1,6 @@
 //! playground <- csv
 use crate::artifacts::playground::standards::v1::subsets::any::schema::snapshot::PlaygroundSnapshot;
-use semio_s_plugin_stdio::artifacts::csv::{CsvSnapshot, STDIO_CSV_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_csv::{CsvSnapshot, STDIO_CSV_DOCUMENT_SCHEMA};
 
 /// 📥️ Inverse of the serializer's single-column table: takes the first data record's first field as
 /// `schema`, skipping the header record when the table declares one. A table that carries no data

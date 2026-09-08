@@ -1,7 +1,7 @@
 //! 📤️ Serialize `stdio.csv` to stdio.txt.
 
-use crate::artifacts::csv::CsvSnapshot;
-use crate::artifacts::txt::TxtSnapshot;
+use crate::CsvSnapshot;
+use semio_s_artifact_stdio_txt::TxtSnapshot;
 
 //#region 🔖️Codec
 /// 🗂️ Register serializer hooks.
@@ -11,7 +11,7 @@ pub fn register() {}
 /// 📤️ Encode csv into a TxtSnapshot.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn serialize(from: &CsvSnapshot) -> Result<TxtSnapshot, store::PackError> {
-    let text = crate::artifacts::csv::schema::snapshot::encode_csv(from);
+    let text = crate::schema::snapshot::encode_csv(from);
     Ok(TxtSnapshot::from_body(&text))
 }
 

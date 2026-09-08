@@ -1,7 +1,7 @@
 //! 🧬️ Direct set-doctype mutation owner.
-use crate::artifacts::xml::schema::diff::XmlDiff;
-use crate::artifacts::xml::schema::snapshot::XmlDoctype;
-use crate::artifacts::xml::XmlSnapshot;
+use crate::schema::diff::XmlDiff;
+use crate::schema::snapshot::XmlDoctype;
+use crate::XmlSnapshot;
 
 #[path = "📝️text/🦀️.rs"]
 pub mod text;

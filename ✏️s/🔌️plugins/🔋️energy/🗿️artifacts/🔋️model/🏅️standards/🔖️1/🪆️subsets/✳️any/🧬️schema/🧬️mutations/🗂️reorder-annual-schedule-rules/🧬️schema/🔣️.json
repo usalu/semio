@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/energy/model/1/any/mutation/reorder-annual-schedule-rules.json",
+  "title": "ReorderAnnualScheduleRules",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "from",
+    "to"
+  ],
+  "properties": {
+    "id": {
+      "type": "integer"
+    },
+    "from": {
+      "type": "integer"
+    },
+    "to": {
+      "type": "integer"
+    }
+  }
+}

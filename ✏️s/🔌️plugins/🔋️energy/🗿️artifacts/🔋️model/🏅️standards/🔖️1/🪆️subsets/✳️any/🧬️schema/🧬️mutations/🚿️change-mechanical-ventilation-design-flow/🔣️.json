@@ -5,7 +5,7 @@
   "displayName": "Change Mechanical Ventilation Design Flow",
   "emoji": "🚿️",
   "aggregateVariant": "ChangeMechanicalVentilationDesignFlow",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-mechanical-ventilation-design-flow",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

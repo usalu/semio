@@ -4,7 +4,7 @@
 //! artifact-level `SemioDocumentSnapshot` — this window itself never mutates; mutation is the surface
 //! root's `handle()` responsibility.
 
-use crate::artifacts::semio::standards::v1::subsets::document::schema::snapshot::SemioDocumentSnapshot;
+use crate::standards::v1::subsets::document::schema::snapshot::SemioDocumentSnapshot;
 use semio_framework_plugin::{mesh_from_kind, world3d_camera_json, world3d_selection_json, BuiltNode, MeshView, MeshWindowKit, WindowKindDefinition, WindowKit};
 
 //#region 🔖️Constants

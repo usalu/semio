@@ -5,7 +5,7 @@
   "displayName": "Set Lod Mode",
   "emoji": "🔍️",
   "aggregateVariant": "SetLodMode",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "set-lod-mode",
   "binaryTag": 10,
   "invertibility": "explicit-mutation",

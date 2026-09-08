@@ -27,6 +27,20 @@ class DescribeScript extends BundleScript {
   }
 }
 
+const GIS_SCHEMA_MODULE = "✏️s/🔌️plugins/🌍️gis/🧬️schema/🔣️.json";
+const GIS_MAP_SCHEMA_MODULE = "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json";
+
+/** 🧬️ Compiles one PascalCase `$defs` export of a scope-owned draft-07 schema module.
+ * @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️schema-catalog.json */
+async function compileGisScopeExport(repoRoot: string, moduleRel: string, exportId: string) {
+  const module = JSON.parse(readFileSync(join(repoRoot, moduleRel), "utf8"));
+  const Ajv = (await import("ajv")).default;
+  const ajv = new Ajv({ strict: true, allErrors: true });
+  ajv.addKeyword("x-semio-state").addFormat("double", true);
+  ajv.addSchema(module);
+  return ajv.compile({ $ref: `${module.$id}#/$defs/${exportId}` });
+}
+
 /** 🪢 Independently validates literal GIS codec identity and protocol-byte receipts. */
 export async function proveGisNativeCodecReceipts(repoRoot: string): Promise<void> {
   const owner = join(repoRoot, "✏️s/🔌️plugins/🌍️gis");
@@ -83,8 +97,7 @@ export async function proveGisNativeCodecReceipts(repoRoot: string): Promise<voi
 export async function proveGisControlledProposal(repoRoot: string): Promise<void> {
   const root = join(repoRoot, "✏️s/🔌️plugins/🌍️gis/🧪️fixtures/💡️inference-control");
   const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
-  const Ajv2020 = (await import("ajv/dist/2020.js")).default;
-  const validate = new Ajv2020({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(root, "🧬️.schema.json"), "utf8")));
+  const validate = await compileGisScopeExport(repoRoot, GIS_SCHEMA_MODULE, "GisInferenceControl");
   if (!validate(fixture)) throw new Error(`invalid GIS controlled corpus: ${JSON.stringify(validate.errors)}`);
   const points = [[fixture.snapshot.positions[0].data.lon, fixture.snapshot.positions[0].data.lat], ...fixture.snapshot.routes[0].data.points];
   const x = points.map((point: number[]) => point[0]), y = points.map((point: number[]) => point[1]);
@@ -124,8 +137,7 @@ export async function proveGisControlledProposal(repoRoot: string): Promise<void
 export async function proveGisMapCreateRegionGroup(repoRoot: string): Promise<void> {
   const root = join(repoRoot, "✏️s/🔌️plugins/🌍️gis/🧪️fixtures/🧩️map-create-region-group");
   const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
-  const Ajv2020 = (await import("ajv/dist/2020.js")).default;
-  const validate = new Ajv2020({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(root, "🧬️.schema.json"), "utf8")));
+  const validate = await compileGisScopeExport(repoRoot, GIS_MAP_SCHEMA_MODULE, "GisMapCreateRegionGroup");
   if (!validate(fixture)) throw new Error(`invalid GIS Map group corpus: ${JSON.stringify(validate.errors)}`);
   const points = [
     ...fixture.base.positions.map((feature: any) => [feature.data.lon, feature.data.lat]),
@@ -167,8 +179,7 @@ export async function proveGisMapCreateRegionGroup(repoRoot: string): Promise<vo
     if (hostile === "oversize") candidate.expected.maximumBytes++;
     if (admitted(candidate)) throw new Error(`GIS Map hostile group admitted ${hostile}`);
   }
-  const membershipSchema = JSON.parse(readFileSync(join(root, "🧬️.schema.json"), "utf8")).$defs.groupMembership;
-  const validateMembership = new Ajv2020({ strict: true, allErrors: true }).compile(membershipSchema);
+  const validateMembership = await compileGisScopeExport(repoRoot, GIS_MAP_SCHEMA_MODULE, "GisMapCreateRegionGroupMembership");
   for (const row of fixture.membershipCases) {
     const membership = { drawingChildId: row.deriveChildren ? "gismap-drawing" : row.drawingChildId, valueChildId: row.deriveChildren ? "gismap-value" : row.valueChildId, imageChildId: row.imageChildId };
     const accepted = membership.drawingChildId === "gismap-drawing" && membership.valueChildId === "gismap-value" && membership.imageChildId === null;
@@ -183,8 +194,7 @@ export async function proveGisDurableThreeStoreAssembly(repoRoot: string): Promi
   const fixtureRoot = join(repoRoot, "✏️s/🔌️plugins/🌍️gis/🧪️fixtures/🗄️durable-three-store-assembly");
   const fixtureBytes = readFileSync(join(fixtureRoot, "🔣️.json"));
   const fixture = JSON.parse(fixtureBytes.toString("utf8"));
-  const Ajv2020 = (await import("ajv/dist/2020.js")).default;
-  const validate = new Ajv2020({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(fixtureRoot, "🧬️.schema.json"), "utf8")));
+  const validate = await compileGisScopeExport(repoRoot, GIS_SCHEMA_MODULE, "GisDurableThreeStoreAssembly");
   if (!validate(fixture)) throw new Error(`invalid GIS durable three-Store assembly corpus: ${JSON.stringify(validate.errors)}`);
   const identity = [
     fixture.schema,
@@ -226,8 +236,7 @@ export async function proveGisComponentColdMapPatch(repoRoot: string): Promise<v
   const fixtureRoot = join(repoRoot, "✏️s/🔌️plugins/🌍️gis/🧪️fixtures/🌉️component-cold-map-patch");
   const fixtureBytes = readFileSync(join(fixtureRoot, "🔣️.json"));
   const fixture = JSON.parse(fixtureBytes.toString("utf8"));
-  const Ajv2020 = (await import("ajv/dist/2020.js")).default;
-  const validate = new Ajv2020({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(fixtureRoot, "🧬️.schema.json"), "utf8")));
+  const validate = await compileGisScopeExport(repoRoot, GIS_SCHEMA_MODULE, "GisComponentColdMapPatch");
   if (!validate(fixture)) throw new Error(`invalid GIS component cold-map corpus: ${JSON.stringify(validate.errors)}`);
   const nodeHash = createHash("sha256").update(fixtureBytes).digest("hex");
   const webHash = Buffer.from(await crypto.subtle.digest("SHA-256", fixtureBytes)).toString("hex");

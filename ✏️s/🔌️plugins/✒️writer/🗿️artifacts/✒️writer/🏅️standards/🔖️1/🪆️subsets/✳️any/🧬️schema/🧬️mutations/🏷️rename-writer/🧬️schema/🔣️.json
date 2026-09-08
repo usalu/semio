@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/writer/writer/1/any/mutation/rename-writer.json",
+  "title": "RenameWriter",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newId"
+  ],
+  "properties": {
+    "newId": {
+      "type": "string"
+    }
+  }
+}

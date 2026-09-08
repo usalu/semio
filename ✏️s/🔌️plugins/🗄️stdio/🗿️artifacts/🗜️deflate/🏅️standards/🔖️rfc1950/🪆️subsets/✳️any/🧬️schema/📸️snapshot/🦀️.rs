@@ -1,7 +1,7 @@
 //! 🧬️ DeflateSnapshot schema — typed RFC1950 zlib container + real codecs.
 
-use crate::artifacts::deflate::STDIO_DEFLATE_DOCUMENT_SCHEMA;
-use schema::ArtifactSchema;
+use crate::STDIO_DEFLATE_DOCUMENT_SCHEMA;
+use framework_schema::ArtifactSchema;
 
 //#region 🔖️CompressionLevelHint
 /// 🎚️ RFC1950 §2.2 FLG.FLEVEL: a two-bit hint the encoder leaves for tooling about which
@@ -120,10 +120,10 @@ impl store::ArtifactDsl for DeflateSnapshot {
             zlib_bytes.push(byte);
             i += 2;
         }
-        crate::artifacts::deflate::standards::v_rfc1950::subsets::any::io::decode_deflate_snapshot(&zlib_bytes).map_err(|e| store::TextError::new(format!("zlib decode: {e}"), dsl::TextSpan::at(1, 1)))
+        crate::standards::v_rfc1950::subsets::any::io::decode_deflate_snapshot(&zlib_bytes).map_err(|e| store::TextError::new(format!("zlib decode: {e}"), dsl::TextSpan::at(1, 1)))
     }
     fn print_dsl(&self) -> String {
-        let zlib_bytes = crate::artifacts::deflate::standards::v_rfc1950::subsets::any::io::encode_deflate_snapshot(self);
+        let zlib_bytes = crate::standards::v_rfc1950::subsets::any::io::encode_deflate_snapshot(self);
         let body: String = zlib_bytes.iter().map(|b| format!("{b:02x}")).collect();
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
@@ -135,7 +135,7 @@ impl store::ArtifactPack for DeflateSnapshot {
         let _ = options;
 
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        let zlib_bytes = crate::artifacts::deflate::standards::v_rfc1950::subsets::any::io::encode_deflate_snapshot(self);
+        let zlib_bytes = crate::standards::v_rfc1950::subsets::any::io::encode_deflate_snapshot(self);
         Ok(store::semio_format::wrap_binary(&envelope, &zlib_bytes))
     }
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
@@ -144,7 +144,7 @@ impl store::ArtifactPack for DeflateSnapshot {
             return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
         }
         let _ = options;
-        crate::artifacts::deflate::standards::v_rfc1950::subsets::any::io::decode_deflate_snapshot(&inner).map_err(store::PackError::Schema)
+        crate::standards::v_rfc1950::subsets::any::io::decode_deflate_snapshot(&inner).map_err(store::PackError::Schema)
     }
 }
 //#endregion 🔖️HandcraftedArtifactCodecs

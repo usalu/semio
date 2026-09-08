@@ -1,6 +1,6 @@
 //! 🧬️ AC1018 DWG logical mutations.
 
-pub use crate::artifacts::dwg::standards::v_ac1024::subsets::any::schema::mutations::*;
+pub use crate::standards::v_ac1024::subsets::any::schema::mutations::*;
 
 //#region 🧪️FixtureCases
 /// 🧪️ Handcrafted `📸️set-snapshot` fixture cases for the AC1018 tree, wired from this tree's own

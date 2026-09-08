@@ -1,0 +1,252 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/hub/local-bootstrap/schema.json",
+  "$ref": "#/$defs/LocalBootstrapPipeV1",
+  "$defs": {
+    "hex16": { "type": "string", "pattern": "^[0-9a-f]{32}$" },
+    "hex32": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "boundedId": { "type": "string", "minLength": 1, "maxLength": 64, "pattern": "^[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?$" },
+    "clientClass": { "enum": ["native", "mcp", "react-relay", "admin-relay"] },
+    "safeInteger": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
+    "generation": { "type": "integer", "minimum": 1, "maximum": 9007199254740991 },
+    "readyComponent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["ready"],
+      "properties": { "ready": { "type": "boolean" } }
+    },
+    "authenticated": {
+      "type": "object",
+      "required": ["schema", "runId", "sequence", "exchangeId", "issuedAt", "expiresAt", "proof"],
+      "properties": {
+        "schema": { "const": "semio.hub.local-bootstrap/v1" },
+        "runId": { "$ref": "#/$defs/hex16" },
+        "sequence": { "$ref": "#/$defs/generation" },
+        "exchangeId": { "$ref": "#/$defs/hex16" },
+        "issuedAt": { "$ref": "#/$defs/safeInteger" },
+        "expiresAt": { "$ref": "#/$defs/generation" },
+        "proof": { "$ref": "#/$defs/hex32" }
+      }
+    },
+
+    "LocalBootstrapProfileV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["profileId", "subject", "displayName", "allowedClientClasses"],
+      "properties": {
+        "profileId": { "$ref": "#/$defs/boundedId" },
+        "subject": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "displayName": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "allowedClientClasses": { "type": "array", "minItems": 1, "maxItems": 4, "uniqueItems": true, "items": { "$ref": "#/$defs/clientClass" } }
+      }
+    },
+
+    "LocalBootstrapPipeInitializeV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "kind", "runId", "channelKey", "profiles"],
+      "properties": {
+        "schema": { "const": "semio.hub.local-bootstrap/v1" },
+        "kind": { "const": "initialize" },
+        "runId": { "$ref": "#/$defs/hex16" },
+        "channelKey": { "$ref": "#/$defs/hex32" },
+        "profiles": { "type": "array", "minItems": 1, "maxItems": 8, "items": { "$ref": "#/$defs/LocalBootstrapProfileV1" } }
+      }
+    },
+
+    "LocalBootstrapPipeHelloV1": {
+      "allOf": [
+        { "$ref": "#/$defs/authenticated" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["schema", "kind", "runId", "sequence", "exchangeId", "issuedAt", "expiresAt", "launcherNonce", "proof"],
+          "properties": {
+            "schema": {}, "kind": { "const": "hello" }, "runId": {}, "sequence": {}, "exchangeId": {}, "issuedAt": {}, "expiresAt": {},
+            "launcherNonce": { "$ref": "#/$defs/hex32" }, "proof": {}
+          }
+        }
+      ]
+    },
+
+    "LocalBootstrapPipeHelloAcceptedV1": {
+      "allOf": [
+        { "$ref": "#/$defs/authenticated" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["schema", "kind", "runId", "sequence", "exchangeId", "issuedAt", "expiresAt", "hubNonce", "proof"],
+          "properties": {
+            "schema": {}, "kind": { "const": "hello-accepted" }, "runId": {}, "sequence": {}, "exchangeId": {}, "issuedAt": {}, "expiresAt": {},
+            "hubNonce": { "$ref": "#/$defs/hex32" }, "proof": {}
+          }
+        }
+      ]
+    },
+
+    "LocalBootstrapPipeIssueV1": {
+      "allOf": [
+        { "$ref": "#/$defs/authenticated" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["schema", "kind", "runId", "sequence", "exchangeId", "issuedAt", "expiresAt", "profileId", "deviceInstanceId", "clientClass", "proof"],
+          "properties": {
+            "schema": {}, "kind": { "const": "issue" }, "runId": {}, "sequence": {}, "exchangeId": {}, "issuedAt": {}, "expiresAt": {},
+            "profileId": { "$ref": "#/$defs/boundedId" },
+            "deviceInstanceId": { "type": "string", "minLength": 1, "maxLength": 128 },
+            "clientClass": { "$ref": "#/$defs/clientClass" }, "proof": {}
+          }
+        }
+      ]
+    },
+
+    "LocalBootstrapPipeRejectV1": {
+      "allOf": [
+        { "$ref": "#/$defs/authenticated" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["schema", "kind", "runId", "sequence", "exchangeId", "issuedAt", "expiresAt", "code", "proof"],
+          "properties": {
+            "schema": {}, "kind": { "const": "reject" }, "runId": {}, "sequence": {}, "exchangeId": {}, "issuedAt": {}, "expiresAt": {},
+            "code": { "enum": ["cancelled", "denied", "expired", "resource-limit", "unavailable"] }, "proof": {}
+          }
+        }
+      ]
+    },
+
+    "LocalBootstrapPipeCancelV1": {
+      "allOf": [
+        { "$ref": "#/$defs/authenticated" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["schema", "kind", "runId", "sequence", "exchangeId", "issuedAt", "expiresAt", "proof"],
+          "properties": { "schema": {}, "kind": { "const": "cancel" }, "runId": {}, "sequence": {}, "exchangeId": {}, "issuedAt": {}, "expiresAt": {}, "proof": {} }
+        }
+      ]
+    },
+
+    "LocalBootstrapPipeShutdownV1": {
+      "allOf": [
+        { "$ref": "#/$defs/authenticated" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["schema", "kind", "runId", "sequence", "exchangeId", "issuedAt", "expiresAt", "proof"],
+          "properties": { "schema": {}, "kind": { "const": "shutdown" }, "runId": {}, "sequence": {}, "exchangeId": {}, "issuedAt": {}, "expiresAt": {}, "proof": {} }
+        }
+      ]
+    },
+
+    "LocalBootstrapPipeV1": {
+      "oneOf": [
+        { "$ref": "#/$defs/LocalBootstrapPipeInitializeV1" },
+        { "$ref": "#/$defs/LocalBootstrapPipeHelloV1" },
+        { "$ref": "#/$defs/LocalBootstrapPipeHelloAcceptedV1" },
+        { "$ref": "#/$defs/LocalBootstrapPipeIssueV1" },
+        { "$ref": "#/$defs/LocalBootstrapPipeRejectV1" },
+        { "$ref": "#/$defs/LocalBootstrapPipeCancelV1" },
+        { "$ref": "#/$defs/LocalBootstrapPipeShutdownV1" }
+      ]
+    },
+
+    "LocalBootstrapCredentialEnvelopeV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "runId", "sequence", "exchangeId", "issuedAt", "expiresAt", "profileId", "clientClass", "sessionId", "sessionKind", "authorizationGeneration", "capability", "proof"],
+      "properties": {
+        "schema": { "const": "semio.hub.local-credential-envelope/v1" },
+        "runId": { "$ref": "#/$defs/hex16" },
+        "sequence": { "$ref": "#/$defs/generation" },
+        "exchangeId": { "$ref": "#/$defs/hex16" },
+        "issuedAt": { "$ref": "#/$defs/safeInteger" },
+        "expiresAt": { "$ref": "#/$defs/generation" },
+        "profileId": { "$ref": "#/$defs/boundedId" },
+        "clientClass": { "$ref": "#/$defs/clientClass" },
+        "sessionId": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "sessionKind": { "const": "development-local" },
+        "authorizationGeneration": { "$ref": "#/$defs/generation" },
+        "capability": { "type": "string", "maxLength": 108, "pattern": "^session\\.v1\\.[0-9a-f]{32}\\.[0-9a-f]{64}$" },
+        "proof": { "$ref": "#/$defs/hex32" }
+      }
+    },
+
+    "LocalBootstrapReadinessV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "status", "runId", "mode", "bindScope", "authentication", "directory", "storage", "artifactAuthority", "adminAssets", "features"],
+      "properties": {
+        "schema": { "const": "semio.hub.readiness/v1" },
+        "status": { "enum": ["ready", "not-ready"] },
+        "runId": { "type": "string", "maxLength": 32, "pattern": "^(?:[0-9a-f]{32}|production)$" },
+        "mode": { "enum": ["development", "production"] },
+        "bindScope": { "const": "loopback" },
+        "authentication": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "bootstrapReady", "publicSessionIssuance"],
+          "properties": {
+            "kind": { "enum": ["local-bootstrap-pipe-v1", "identity-assertion-verifier"] },
+            "bootstrapReady": { "type": "boolean" },
+            "publicSessionIssuance": { "const": false }
+          }
+        },
+        "directory": { "$ref": "#/$defs/readyComponent" },
+        "storage": { "$ref": "#/$defs/readyComponent" },
+        "artifactAuthority": { "$ref": "#/$defs/readyComponent" },
+        "adminAssets": { "$ref": "#/$defs/readyComponent" },
+        "features": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["openPlan", "rebootstrap", "mcpWorkspace", "inference"],
+          "properties": {
+            "openPlan": { "type": "boolean" },
+            "rebootstrap": { "type": "boolean" },
+            "mcpWorkspace": { "type": "boolean" },
+            "inference": { "type": "boolean" }
+          }
+        }
+      },
+      "allOf": [
+        {
+          "if": { "type": "object", "required": ["status"], "properties": { "status": { "const": "ready" } } },
+          "then": {
+            "type": "object",
+            "properties": {
+              "authentication": { "type": "object", "properties": { "bootstrapReady": { "const": true } } },
+              "directory": { "type": "object", "properties": { "ready": { "const": true } } },
+              "storage": { "type": "object", "properties": { "ready": { "const": true } } },
+              "artifactAuthority": { "type": "object", "properties": { "ready": { "const": true } } },
+              "adminAssets": { "type": "object", "properties": { "ready": { "const": true } } }
+            }
+          },
+          "else": {
+            "type": "object",
+            "anyOf": [
+              { "type": "object", "properties": { "authentication": { "type": "object", "properties": { "bootstrapReady": { "const": false } } } } },
+              { "type": "object", "properties": { "directory": { "type": "object", "properties": { "ready": { "const": false } } } } },
+              { "type": "object", "properties": { "storage": { "type": "object", "properties": { "ready": { "const": false } } } } },
+              { "type": "object", "properties": { "artifactAuthority": { "type": "object", "properties": { "ready": { "const": false } } } } },
+              { "type": "object", "properties": { "adminAssets": { "type": "object", "properties": { "ready": { "const": false } } } } }
+            ]
+          }
+        }
+      ]
+    },
+
+    "LocalBootstrapIdleAdmissionV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "exchangeDeadlineMs", "idleBeforeAdmissionMs", "frameHex", "payloadHex"],
+      "properties": {
+        "schema": { "const": "semio.hub.local-bootstrap-idle-admission/v1" },
+        "exchangeDeadlineMs": { "const": 15000 },
+        "idleBeforeAdmissionMs": { "type": "integer", "minimum": 15001, "maximum": 60000 },
+        "frameHex": { "type": "string", "pattern": "^[0-9a-f]{10,32768}$" },
+        "payloadHex": { "type": "string", "pattern": "^[0-9a-f]{2,32760}$" }
+      }
+    }
+  }
+}

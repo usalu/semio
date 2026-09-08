@@ -1,7 +1,7 @@
 //! 🧬️ Transparent TxtMutation aggregate.
 //#region 🔖️Aggregate
-use crate::artifacts::txt::TxtSnapshot;
-use crate::artifacts::txt::schema::diff::TxtDiff;
+use crate::TxtSnapshot;
+use crate::schema::diff::TxtDiff;
 
 #[path = "📥️insert-line/🦀️.rs"]
 pub mod insert_line;

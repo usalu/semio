@@ -4,9 +4,9 @@
 //! the sole runtime adapter, so this file can never structurally emit an artifact or draft mutation.
 //! MUST NOT import anything from the sibling `editor` module (`policyViewerPurityBreaches`).
 
-use crate::artifacts::mp4::standards::isobmff::subsets::any::schema::mutations::Mp4Mutation;
-use crate::artifacts::mp4::standards::isobmff::subsets::any::schema::snapshot::Mp4Snapshot;
-use crate::artifacts::mp4::{MP4_DIALECT, STDIO_MP4_DOCUMENT_SCHEMA};
+use crate::standards::isobmff::subsets::any::schema::mutations::Mp4Mutation;
+use crate::standards::isobmff::subsets::any::schema::snapshot::Mp4Snapshot;
+use crate::{MP4_DIALECT, STDIO_MP4_DOCUMENT_SCHEMA};
 use crate::viewer::mp4::modes::view;
 use crate::viewer::mp4::modes::view::windows::main;
 use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, ViewEmit, Viewer};

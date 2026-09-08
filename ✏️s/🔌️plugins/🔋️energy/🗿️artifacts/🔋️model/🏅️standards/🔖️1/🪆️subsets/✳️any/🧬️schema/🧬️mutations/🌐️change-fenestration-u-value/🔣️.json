@@ -5,7 +5,7 @@
   "displayName": "Change Fenestration U-Value",
   "emoji": "🌐️",
   "aggregateVariant": "ChangeFenestrationUValue",
-  "payloadSchema": "🧬️.schema.json",
+  "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-fenestration-u-value",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

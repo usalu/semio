@@ -8,6 +8,7 @@
 // #region 🔌️Adapters
 import * as React from "react";
 import { createPortal } from "react-dom";
+import { useDialogLayer } from "../💬️Dialog/🟦️.tsx";
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.ts";
 import { Slot } from "../../🔨️modules/🏷️class-name-composition/🪆️slot.tsx";
 import { glassClass } from "../../🔨️modules/🌈️surface-presentation/🟦️.ts";
@@ -308,6 +309,7 @@ const PopoverContent = React.forwardRef<HTMLDivElement, PopoverContentProps>(fun
   const context = usePopoverContext();
   const flow = useFlow();
   const contentRef = React.useRef<HTMLDivElement | null>(null);
+  const modalLayer = useDialogLayer(context.open, contentRef);
   const [placement, setPlacement] = React.useState<PopoverPlacement | null>(null);
   const dismissedRef = React.useRef(false);
   const ref = React.useMemo(() => composedRef(forwardedRef, contentRef), [forwardedRef]);
@@ -332,7 +334,7 @@ const PopoverContent = React.forwardRef<HTMLDivElement, PopoverContentProps>(fun
       window.removeEventListener("resize", measure);
       window.removeEventListener("scroll", measure, true);
     };
-  }, [align, alignOffset, avoidCollisions, collisionPadding, context.anchorRef, context.open, context.triggerRef, flow.inline, side, sideOffset]);
+  }, [align, alignOffset, avoidCollisions, collisionPadding, context.anchorRef, context.open, context.triggerRef, flow.inline, side, sideOffset, modalLayer.ready]);
 
   React.useLayoutEffect(() => {
     if (!context.open || !contentRef.current) return;
@@ -346,7 +348,7 @@ const PopoverContent = React.forwardRef<HTMLDivElement, PopoverContentProps>(fun
       onCloseAutoFocus?.(closeEvent);
       if (!closeEvent.defaultPrevented) context.triggerRef.current?.focus({ preventScroll: true });
     };
-  }, [context.open, context.token, context.triggerRef, onCloseAutoFocus, onOpenAutoFocus]);
+  }, [context.open, context.token, context.triggerRef, onCloseAutoFocus, onOpenAutoFocus, modalLayer.ready]);
 
   React.useEffect(() => {
     if (!context.open) return;
@@ -393,7 +395,7 @@ const PopoverContent = React.forwardRef<HTMLDivElement, PopoverContentProps>(fun
     };
   }, [context, onEscapeKeyDown, onFocusOutside, onInteractOutside, onPointerDownOutside]);
 
-  if (!context.open || typeof document === "undefined") return null;
+  if (!context.open || !modalLayer.ready || typeof document === "undefined") return null;
   const resolvedSide = placement?.side ?? side;
   return createPortal(
     <div
@@ -429,7 +431,7 @@ const PopoverContent = React.forwardRef<HTMLDivElement, PopoverContentProps>(fun
         {children}
       </SurfaceScope>
     </div>,
-    document.body,
+    modalLayer.container ?? document.body,
   );
 });
 // #endregion 🪟️Content

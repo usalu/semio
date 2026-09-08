@@ -4,7 +4,7 @@
 //! artifact-level `GltfSnapshot` — this window itself never mutates; mutation is the surface
 //! root's `handle()` responsibility.
 
-use crate::artifacts::gltf::standards::v2_0::subsets::any::schema::snapshot::GltfSnapshot;
+use crate::standards::v2_0::subsets::any::schema::snapshot::GltfSnapshot;
 use semio_framework_plugin::{world3d_meshes_json_from_kinds, world3d_camera_json, world3d_selection_json, BuiltNode, MeshView, MeshWindowKit, WindowKindDefinition, WindowKit};
 
 //#region 🔖️Constants
